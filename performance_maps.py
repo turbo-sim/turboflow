@@ -14,8 +14,8 @@ from main_cascade_series import data_structure
 # Script with functions to generate performance maps
 
 def m_vs_PR(data_structure):
-    N = 20
-    PR = np.linspace(2,5,N)
+    N = 30
+    PR = np.linspace(1.5,5,N)
     R = np.zeros(N)
     
     # PR = [3.1578947368421053]
@@ -33,30 +33,34 @@ def m_vs_PR(data_structure):
     sol_vec = np.zeros((N, 17))
     err_vec = np.zeros((N, 17))
     x0_vec  = np.zeros((N, 17))
-    # 
-    x0 = None
-    
-    # sol = None
-    use_previous = False
+        
+    use_previous = True
+        
+    CS.number_stages(data_structure)
     
     for i in range(N):
         data_structure["BC"]["p_out"] = data_structure["BC"]["p0_in"]/PR[i]
         starttime = time.time()
         
-        # # Solve the set of equations for the currrent cascade
-        # if use_previous and i > 0:
-        #     x0 = sol.x
-        # else:
-        x0 = CS.generate_initial_guess(data_structure, R = 0.4)
-            
-        sol, conv_hist = CS.cascade_series_analysis(data_structure, x0)
+        CS.update_fixed_params(data_structure)
+        
+        # Solve the set of equations for the currrent cascade
+        if use_previous and i > 0:
+            x0 = x_real
+        else:
+            x0 = CS.generate_initial_guess(data_structure, R = 0.4)
+        
+        x_scaled = CS.scale_x0(x0, data_structure)
+        print(x_scaled)
+        sol, conv_hist = CS.cascade_series_analysis(data_structure, x_scaled)
+        x_real = CS.rescale_x0(sol.x, data_structure)
         endtime = time.time()-starttime
         print("\n")
         print(f"Pressure ratio: {PR[i]}")
         print(f"Number of evaluations: {sol.nfev}")
         print(f"max residual: {np.max(abs(sol.fun))}")
         print(f"Time: {endtime}")
-        # x0 = sol.x
+        print("\n")
         # R[i] = data_structure["overall"]["R"]
         m[i] = data_structure["overall"]["m"]
         Ma2[i] = data_structure["plane"]["Marel"].values[1]
@@ -65,12 +69,12 @@ def m_vs_PR(data_structure):
         Ma6[i] = data_structure["plane"]["Marel"].values[5]
         eta[i] = data_structure["overall"]["eta_ts"]
         
-        sol_vec[i] = abs(x0)
-        x0_vec[i]  = abs(data_structure["x0"])
-        err_vec[i] = x0-data_structure["x0"]
+        # sol_vec[i] = abs(x0)
+        # x0_vec[i]  = abs(data_structure["x0"])
+        # err_vec[i] = x0-data_structure["x0"]
     
-    keys = ["v1", "v2", "v3", "s2", "s3", "a3", "w5", "w6", "s5", "s6", "b6",
-            "v1*", "v2*", "s2*", "w4*", "w5*", "s5*"]
+    # keys = ["v1", "v2", "v3", "s2", "s3", "a3", "w5", "w6", "s5", "s6", "b6",
+    #         "v1*", "v2*", "s2*", "w4*", "w5*", "s5*"]
     
     # fig1, ax1 = plt.subplots()
     # ax1.plot(PR, x0_vec[:, 0:6], label = keys[0:6])

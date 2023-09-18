@@ -487,11 +487,15 @@ def root_function(x, data_structure):
         
     return residuals
     
-def cascade_series_analysis(data_structure, x0):
+def cascade_series_analysis(data_structure, x0, scaled = True):
     
-    # Check geometry
+    # Check if geometry is valid
     check_geometry(data_structure["geometry"], data_structure["fixed_params"]["n_cascades"])
     
+    # Update velocity scale and 
+    update_fixed_params(data_structure)
+            
+    # Solve nonlinear system of equations
     sol, conv_hist = solve_nonlinear_system(root_function, x0, args = (data_structure), method = 'hybr')
         
     return sol, conv_hist
@@ -610,10 +614,11 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
     p_out      = data_structure["BC"]["p_out"]
     fluid      = data_structure["BC"]["fluid"]
     n_cascades = data_structure["fixed_params"]["n_cascades"]
+    n_stages   = data_structure["fixed_params"]["n_stages"]
+    h_out_s    = data_structure["fixed_params"]["h_out_s"]
     omega      = data_structure["overall"]["omega"]
     radius     = data_structure["geometry"]["radius"].values[0] #XXX: Constant radius
     
-    n_stages = number_stages(n_cascades)
     u        = radius*omega
     
     # Inlet stagnation state
@@ -621,14 +626,6 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
     h0_in      = stag_props["h"]
     d0_in      = stag_props["d"]
     s_in       = stag_props["s"]
-    s_ref      = s_in
-        
-    # Exit static state for isentoprc expansion
-    isentropic_exit = fluid.compute_properties_meanline(CP.PSmass_INPUTS, p_out, s_in)
-    h_out_s = isentropic_exit["h"]
-    
-    v0 = np.sqrt(2*(h0_in-h_out_s))
-    
     h_out = h0_in - eta*(h0_in-h_out_s) 
     
     # Exit static state for expansion with given efficiency
@@ -686,7 +683,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
             vel2_data = evaluate_velocity_triangle_in(u, v2, alpha2)
             w2 = vel2_data["w"]
             h0rel2 = h2 + 0.5*w2**2
-            x0 = np.append(x0, np.array([v2/v0, v2/v0, s2/s_ref, s2/s_ref, alpha2]))
+            x0 = np.append(x0, np.array([v2, v2, s2, s2, alpha2]))
             
             # Critical conditions stator exit
             static_props2 = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h2, s2)
@@ -699,7 +696,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
             m2_crit = d2_crit*v2_crit*np.cos(alpha2)*A2
             vm1_crit = m2_crit/(d1*A1)
             v1_crit = vm1_crit/np.cos(alpha1)
-            x0_crit = np.append(x0_crit, np.array([v1_crit/v0, v2_crit/v0, s2/s_ref]))
+            x0_crit = np.append(x0_crit, np.array([v1_crit, v2_crit, s2]))
         
             # Conditions rotor exit
             w3 = np.sqrt(2*(h0rel2-h3))
@@ -707,7 +704,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
             v3 = vel3_data["v"]
             vm3 = vel3_data["v_m"]
             h03 = h3 + 0.5*v3**2
-            x0 = np.append(x0, np.array([w3/v0, w3/v0, s3/s_ref, s3/s_ref, beta3]))
+            x0 = np.append(x0, np.array([w3, w3, s3, s3, beta3]))
 
             # Critical conditions rotor exit
             static_props3 = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h3, s3)
@@ -719,7 +716,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
             m3_crit = d3_crit*v3_crit*np.cos(beta3)*A3
             vm2_crit = m3_crit/(d2*A2)
             v2_crit = vm2_crit/np.cos(alpha2) 
-            x0_crit = np.append(x0_crit, np.array([v2_crit/v0, v3_crit/v0, s3/s_ref]))
+            x0_crit = np.append(x0_crit, np.array([v2_crit, v3_crit, s3]))
             
             # Inlet stagnation state for next cascade equal stagnation state for current cascade
             h01 = h03
@@ -730,7 +727,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
         A_out = data_structure["geometry"]["A_out"].values[[n_cascades-1]]
         m_out = d_out*vm3*A_out
         v_in = m_out/(A_in*d0_in)
-        x0 = np.insert(x0, 0, v_in/v0)
+        x0 = np.insert(x0, 0, v_in)
         
                     
     else:
@@ -749,7 +746,7 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
         A3 = cascade["A_out"]
         v3 = np.sqrt(2*(h01-h3))
         vm3 = v3*np.cos(alpha3)
-        x0 = np.append(x0, np.array([v3/v0, v3/v0, s3/s_ref, s3/s_ref, alpha3]))
+        x0 = np.append(x0, np.array([v3, v3, s3, s3, alpha3]))
         
         # Critical conditions
         static_props3 = fluid.compute_properties_meanline(CP.PSmass_INPUTS, h3, s3)
@@ -761,34 +758,22 @@ def generate_initial_guess(data_structure, eta = 0.9, R = 0.4, Macrit = 0.92):
         m3_crit = d3_crit*v3_crit*np.cos(alpha3)*A3
         vm1_crit = m3_crit/(d1*A1)
         v1_crit = vm1_crit/np.cos(alpha1)
-        x0_crit = np.array([v1_crit/v0, v3_crit, s3/s_ref])
+        x0_crit = np.array([v1_crit, v3_crit, s3])
         
         
         # Inlet guess from mass convervation
         m3 = d3*vm3*A3
         v1 = m3/(A1*d1)
-        x0 = np.insert(x0, 0, v1/v0)
+        x0 = np.insert(x0, 0, v1)
         
     # Merge initial guess for critical state and actual point
     x0 = np.concatenate((x0, x0_crit))
-    
-    data_structure["x0"] = x0
-        
-    # Store variables
-    #FIXME: Add more variables
-    data_structure["fixed_params"]["v0"] = v0
-    data_structure["fixed_params"]["h_out_s"] = h_out_s
-    data_structure["fixed_params"]["s_ref"] = s_in
-    data_structure["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
-    m_ref = A_in*v0*d0_in
-    data_structure["fixed_params"]["m_ref"] = m_ref
-    data_structure["fixed_params"]["n_stages"] = n_stages
-    data_structure["overall"]["blade_speed"] = u
-    
             
     return x0
     
-def number_stages(n_cascades):
+def number_stages(data_structure):
+    
+    n_cascades = data_structure["fixed_params"]["n_cascades"]
     
     if n_cascades == 1:
         n_stages = 0
@@ -799,9 +784,11 @@ def number_stages(n_cascades):
     else:
         raise Exception("Invalid number of cascades")
     
-    return n_stages
+    data_structure["fixed_params"]["n_stages"] = n_stages
 
 def loss_fractions(data_structure, loss_data):
+    
+    #FIXME
     
     h_out_s    = data_structure["fixed_params"]["h_out_s"]
     n_cascades = data_structure["fixed_params"]["n_cascades"]
@@ -881,45 +868,110 @@ def check_radius(geometry):
         raise Exception("Mean radius is not constant for each cascade")
 
 def check_n_cascades(geometry, n_cascades):
+    # Check if the given number of cascades equal the number of geometries given
     n = len(geometry["r_ht_in"])
     if n != n_cascades:
         n_cascades = n
         
     return n_cascades
 
-import multiprocessing
+def rescale_x0(x, data_structure):
+    
+    # Convert the array of degrees of freedom from scaled to real values
+    
+    v0         = data_structure["fixed_params"]["v0"]
+    s_ref      = data_structure["fixed_params"]["s_ref"]
+    n_cascades = data_structure["fixed_params"]["n_cascades"]
 
-def multiprocess(data_structure, Rs):
+    x_real = x.copy()[0:5*n_cascades+1]
+    xcrit_real = x.copy()[5*n_cascades+1:]
     
-    pool = multiprocessing.Pool()
+    vel_indices = np.array([])
+    s_indices   = np.array([])
     
-    results = [pool.apply_async(cascade_series_analysis, (data_structure, R)) for R in Rs]
-    
-    fastest_result = multiprocessing.connection.wait([result._event for result in results])[0]
-    
-    pool.terminate()
-    pool.join()
-    
-    return fastest_result
-    
-# def scale_initial_guess(data_structure):
-    
-#     state_inlet
-#     state_exit_isentropic
-    
-#     data_structure["fixed_params"]["v0"] = v0
-#     data_structure["fixed_params"]["h_out_s"] = h_out_s
-#     data_structure["fixed_params"]["s_ref"] = s_in
-#     data_structure["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
-#     m_ref = A_in*v0*d0_in
-#     data_structure["fixed_params"]["m_ref"] = m_ref
-#     data_structure["fixed_params"]["n_stages"] = n_stages
-#     data_structure["overall"]["blade_speed"] = u
-    
-#     return data_structure
-    
+    scrit_indices   = np.array([])
 
+    for i in range(n_cascades):
+        vel_indices = np.append(vel_indices, 5*i+1)
+        vel_indices = np.append(vel_indices, 5*i+2)
+        s_indices   = np.append(s_indices,   5*i+3)
+        s_indices   = np.append(s_indices,   5*i+4)
+        
+        scrit_indices = np.append(scrit_indices, 3*i+2)
+    
+    x_real[0] *= v0
+    for vel_i, s_i in zip(vel_indices, s_indices):
+        x_real[int(vel_i)] *= v0 
+        x_real[int(s_i)]   *= s_ref
+        
+    xcrit_real *=v0
+    for s_i in scrit_indices:
+        xcrit_real[int(s_i)] *= (s_ref/v0)
+        
+    x_real = np.concatenate((x_real, xcrit_real))
+    return x_real
 
+def scale_x0(x, data_structure):
+    
+    # Convert the array of degrees of freedom from real to scaled values
+    v0         = data_structure["fixed_params"]["v0"]
+    s_ref      = data_structure["fixed_params"]["s_ref"]
+    n_cascades = data_structure["fixed_params"]["n_cascades"]
+    
+    x_scaled = x.copy()[0:5*n_cascades+1]
+    xcrit_scaled = x.copy()[5*n_cascades+1:]
+    
+    vel_indices = np.array([])
+    s_indices   = np.array([])
+    
+    scrit_indices   = np.array([])
 
-# This is a change
+    for i in range(n_cascades):
+        vel_indices = np.append(vel_indices, 5*i+1)
+        vel_indices = np.append(vel_indices, 5*i+2)
+        s_indices   = np.append(s_indices,   5*i+3)
+        s_indices   = np.append(s_indices,   5*i+4)
+        
+        scrit_indices = np.append(scrit_indices, 3*i+2)
+        
+    x_scaled[0] /= v0
+    for vel_i, s_i in zip(vel_indices, s_indices):
+        x_scaled[int(vel_i)] /= v0 
+        x_scaled[int(s_i)]   /= s_ref
+    
+    xcrit_scaled /= v0
+        
+   
+    for s_i in scrit_indices:
+        xcrit_scaled[int(s_i)] *= (v0/s_ref)
+        
+    x_scaled = np.concatenate((x_scaled, xcrit_scaled))
+    return x_scaled
+
+def update_fixed_params(data_structure):
+    
+    p0_in      = data_structure["BC"]["p0_in"]
+    T0_in      = data_structure["BC"]["T0_in"]
+    p_out      = data_structure["BC"]["p_out"]
+    fluid      = data_structure["BC"]["fluid"]
+    A_in       = data_structure["geometry"]["A_in"][0]
+    radius     = data_structure["geometry"]["radius"][0]
+    omega      = data_structure["overall"]["omega"]
+
+    stag_props = fluid.compute_properties_meanline(CP.PT_INPUTS, p0_in, T0_in)
+    s_in  = stag_props["s"]
+    h0_in = stag_props["h"]
+    d0_in = stag_props["d"]
+    static_isentropic_props = fluid.compute_properties_meanline(CP.PSmass_INPUTS, p_out, s_in)
+    h_out_s = static_isentropic_props["h"]
+    v0 = np.sqrt(2*(h0_in-h_out_s))
+    u = omega*radius
+    
+    data_structure["fixed_params"]["v0"] = v0
+    data_structure["fixed_params"]["h_out_s"] = h_out_s
+    data_structure["fixed_params"]["s_ref"] = s_in
+    data_structure["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
+    m_ref = A_in*v0*d0_in
+    data_structure["fixed_params"]["m_ref"] = m_ref
+    data_structure["overall"]["blade_speed"] = u
     
