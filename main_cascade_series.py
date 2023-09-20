@@ -75,12 +75,14 @@ data_structure["overall"] = overall
 
 if __name__ == '__main__':
     
-    R = np.linspace(0.2,0.6, 3)
     
-    # starttime = time.time()
-    # solution, convergence_history = CS.cascade_series_analysis(data_structure, x = x0)
-    # endtime = time.time()-starttime
+    starttime = time.time()
+    CS.number_stages(data_structure)
+    CS.update_fixed_params(data_structure)
+    x0 = CS.generate_initial_guess(data_structure, R = 0.4)
+    x_scaled = CS.scale_x0(x0, data_structure)
+    solution, convergence_history = CS.cascade_series_analysis(data_structure, x_scaled)
+    endtime = time.time()-starttime
     
-    fastest_result = CS.multiprocess(data_structure, R)
 
 

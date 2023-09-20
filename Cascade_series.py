@@ -13,6 +13,7 @@ from turbo_functions import FluidCoolProp_2Phase
 import CoolProp as CP
 from print_convergence_history import solve_nonlinear_system
 from scipy.optimize._numdiff import approx_derivative
+from df_keys import *
 
 def evaluate_velocity_triangle_in(u, v, alpha):
     # Compute the velocity triangle at the inlet of the cascade
@@ -86,9 +87,6 @@ def evaluate_cascade_series(x, data_structure):
     # Define vector for storing residuals
     residuals = np.array([])
     
-    # Need some initialization of state dataframe # FIXME: Intergrate in data_structure?
-    loss_data = pd.DataFrame(columns = ['Profile', 'Secondary', 'Clearance', 'Total'])
-    
     # Define degrees of freedom
     x_series = x[0:n_dof*n_cascades+1]
     x_crit   = x[n_dof*n_cascades+1:]
@@ -96,9 +94,9 @@ def evaluate_cascade_series(x, data_structure):
     x_series = np.delete(x_series, 0)
     
     # Ensure data_structure elements are is empty
-    df = pd.DataFrame(columns=data_structure["plane"].columns)
+    df = pd.DataFrame(columns=keys_plane)
     data_structure["plane"] = df
-    df = pd.DataFrame(columns=data_structure["cascade"].columns)
+    df = pd.DataFrame(columns=keys_cascade)
     data_structure["cascade"] = df
         
     # Construct 
@@ -131,7 +129,7 @@ def evaluate_cascade_series(x, data_structure):
         x_cascade[3] = x_cascade[3]*s_ref
         
         # Evaluate the current cascade at the given conditions
-        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, data_structure, loss_data, Ma_crit)
+        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, data_structure, Ma_crit)
         
         # Change boundary conditins for next cascade (for critical mach calculation)
         data_structure_crit["BC"]["p0_in"]    = data_structure["plane"]["p0rel"].values[-1]
@@ -156,13 +154,13 @@ def evaluate_cascade_series(x, data_structure):
     stag_h = data_structure["plane"]["h0"].values
     data_structure["overall"]["eta_ts"] = (stag_h[0]-stag_h[-1])/(stag_h[0]-h_out_s)
     
-    loss_fracs, fracs = loss_fractions(data_structure, loss_data)
-    data_structure["loss_fractions"] = loss_fracs
-    data_structure["fractions"] = fracs
-    
-    return residuals, loss_data
+    loss_fracs = loss_fractions(data_structure)
+    data_structure["loss_fracs"] = loss_fracs
+    data_structure["cascade"] = pd.concat([data_structure["cascade"], loss_fracs], axis = 1)
 
-def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
+    return residuals
+
+def evaluate_cascade(i, v_in, x_cascade, u, data_structure, Macrit):
     
     # Evaluate current cascade
     # 1: Load parameters and degrees of freedom
@@ -170,6 +168,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
     # 3: Returns array of residuals and dataframe of the states at each plane
     
     # Load necessary parameters
+    fluid     = data_structure["BC"]["fluid"]
     geometry  = data_structure["geometry"].loc[i]
     A_out     = geometry["A_out"]
     theta_out = geometry["theta_out"]
@@ -205,7 +204,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
     # Evaluate throat
     throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, data_structure, u, A_out, inlet_plane) # Using A_out to compensate for using axial velocity in mass flow rate calculation
     data_structure["plane"].loc[len(data_structure["plane"])] = throat_plane # Add plane state to dataframe
-    loss_data.loc[len(loss_data)] = Y_info_throat # Add plane state to dataframe
+
 
     Y_err_throat = throat_plane["Y_err"]
     cascade_res = np.append(cascade_res, Y_err_throat)
@@ -213,7 +212,6 @@ def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
     # Evaluate exit
     exit_plane, Y_info_exit = evaluate_outlet(x_out, geometry, data_structure, u, A_out, inlet_plane)
     data_structure["plane"].loc[len(data_structure["plane"])] = exit_plane # Add plane state to dataframe
-    loss_data.loc[len(loss_data)] = Y_info_exit # Add plane state to dataframe
     Y_err_out = exit_plane["Y_err"]
     cascade_res = np.append(cascade_res, Y_err_out)
     
@@ -222,9 +220,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
     
     alpha = -16
     actual_mach = (data_structure["plane"]["Marel"].values[outlet]**alpha + Macrit **alpha)**(1/alpha)
-    
-    # print(actual_mach_0, actual_mach)
-    
+        
     mach_err = data_structure["plane"]["Marel"].values[throat] - actual_mach
     cascade_res = np.append(cascade_res, mach_err)
     
@@ -232,10 +228,13 @@ def evaluate_cascade(i, v_in, x_cascade, u, data_structure, loss_data, Macrit):
     cascade_res = np.concatenate((cascade_res, (data_structure["plane"]["m"][inlet:outlet].values-data_structure["plane"]["m"][throat:outlet+1].values)))/m_ref
 
     # Add cascade information to cascade dataframe
+    props_isen = fluid.compute_properties_meanline(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+    dhs = exit_plane["h"]-props_isen["h"]
     cascade_data = {"Y_tot" : Y_info_exit["Total"],
                     "Y_p" : Y_info_exit["Profile"],
                     "Y_s" : Y_info_exit["Secondary"],
-                    "Y_cl" : Y_info_exit["Clearance"]}
+                    "Y_cl" : Y_info_exit["Clearance"],
+                    "dh_s" : dhs}
     
     data_structure["cascade"].loc[len(data_structure["cascade"])] = cascade_data
 
@@ -449,10 +448,6 @@ def evaluate_outlet(x, geometry, data_structure, u,  A, inlet_plane):
     plane["delta"] = np.nan # Not relevant for exit/throat plane
     plane["Y_err"] = Y_err
     plane["Y"] = Y
-    
-    # Isentropic expansion 
-    props_isen = fluid.compute_properties_meanline(CP.PSmass_INPUTS, p, s_in)
-    plane["dh_s"] = h - props_isen["h"]
         
     return plane, Y_info
     
@@ -480,10 +475,7 @@ def root_function(x, data_structure):
     # Function evaluating the cascade series with x degrees of freedom
     # Returns the residuals
     
-    residuals, loss_data = evaluate_cascade_series(x, data_structure)
-    
-    # Store the dataframe containg the state at each plane
-    data_structure["loss_data"] = loss_data
+    residuals = evaluate_cascade_series(x, data_structure)
         
     return residuals
     
@@ -491,9 +483,6 @@ def cascade_series_analysis(data_structure, x0, scaled = True):
     
     # Check if geometry is valid
     check_geometry(data_structure["geometry"], data_structure["fixed_params"]["n_cascades"])
-    
-    # Update velocity scale and 
-    update_fixed_params(data_structure)
             
     # Solve nonlinear system of equations
     sol, conv_hist = solve_nonlinear_system(root_function, x0, args = (data_structure), method = 'hybr')
@@ -507,8 +496,6 @@ def critical_residuals(x, data_structure_crit):
     m_ref = data_structure_crit["fixed_params"]["m_ref"] 
     
     f0 = evaluate_critical_cascade(x, data_structure_crit) # Evaluate first to give both f0 to estimate Jac and evaluate constraints
-
-    #XXX: Check if giving f0 is giving same results
     J = critical_cascade_jacobian(x, data_structure_crit, f0) # Calculate Jacobian of a function returning f, g1 and g2
     
     a11 = J[1,0] 
@@ -786,45 +773,37 @@ def number_stages(data_structure):
     
     data_structure["fixed_params"]["n_stages"] = n_stages
 
-def loss_fractions(data_structure, loss_data):
+def loss_fractions(data_structure):
     
-    #FIXME
-    
+    # Calculate efficiency penalty for each loss component
+        
     h_out_s    = data_structure["fixed_params"]["h_out_s"]
     n_cascades = data_structure["fixed_params"]["n_cascades"]
     h0_in      = data_structure["plane"]["h0"].values[0]
-    dhs_vec    = data_structure["plane"]["dh_s"].values
     h_out      = data_structure["plane"]["h"].values[-1]
+    v_out      = data_structure["plane"]["v"].values[-1]
+    cascade    = data_structure["cascade"]
     
-    i_exit = 2
-    dhs = 0
- 
-    for i in range(n_cascades):
-
-        dhs += dhs_vec[i_exit] 
-        i_exit += 3
+    dhs_sum = sum(cascade["dh_s"])
                 
     dhss = h_out-h_out_s
-    a = dhss/dhs
+    a = dhss/dhs_sum
     
-    i_exit = 2
-    index = 1
-        
-    loss_fractions = pd.DataFrame(columns = ["Profile", "Secondary", "Clearance"]) 
-    fractions = pd.DataFrame(columns = ["Profile", "Secondary", "Clearance"])        
+    loss_fractions = pd.DataFrame(columns = ["eta_drop_p", "eta_drop_s", "eta_drop_cl"]) 
     
     for i in range(n_cascades):
         
-        fractions_temp = loss_data.loc[index].values[0:-1]/loss_data.loc[index].values[-1]
-        fractions.loc[len(fractions)] = fractions_temp
-        index += 2
+        fractions_temp = cascade.loc[i]["Y_p":"Y_cl"]/cascade.loc[i]["Y_tot"]
         
-        dhs = dhs_vec[i_exit]
-        i_exit += 3
+        dhs = cascade["dh_s"][i]
         eta_drop = a*dhs/(h0_in-h_out_s)
-        loss_fractions.loc[len(loss_fractions)] = fractions_temp*eta_drop
+        loss_fractions_temp = fractions_temp*eta_drop
+        loss_fractions.loc[len(loss_fractions)] = loss_fractions_temp.values
         
-    return loss_fractions, fractions
+    eta_drop_kinetic = 0.5*v_out**2/(h0_in-h_out_s)
+    data_structure["overall"]["eta_drop_kinetic"] = eta_drop_kinetic
+        
+    return loss_fractions
 
 def stage_variables(data_structure):
     
@@ -940,7 +919,6 @@ def scale_x0(x, data_structure):
         x_scaled[int(s_i)]   /= s_ref
     
     xcrit_scaled /= v0
-        
    
     for s_i in scrit_indices:
         xcrit_scaled[int(s_i)] *= (v0/s_ref)

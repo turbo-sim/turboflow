@@ -13,7 +13,7 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
        'Y_err', 'Y', 'dh_s']
 
-keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl"]
+keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s"]
     
 
     

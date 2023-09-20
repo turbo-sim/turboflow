@@ -14,25 +14,22 @@ from main_cascade_series import data_structure
 # Script with functions to generate performance maps
 
 def m_vs_PR(data_structure):
-    N = 30
+    N = 50
     PR = np.linspace(1.5,5,N)
-    R = np.zeros(N)
     
-    # PR = [3.1578947368421053]
-    # PR = [3.15]
-    # N = len(PR)
-    
-    Ma2 = np.zeros(N)
-    Ma3 = np.zeros(N)
-    Ma5 = np.zeros(N)
-    Ma6 = np.zeros(N)
-    
-    m = np.zeros(N)
-    eta = np.zeros(N)
-    
-    sol_vec = np.zeros((N, 17))
-    err_vec = np.zeros((N, 17))
-    x0_vec  = np.zeros((N, 17))
+    Ma2         = np.zeros(N)
+    Ma3         = np.zeros(N)
+    Ma5         = np.zeros(N)
+    Ma6         = np.zeros(N)
+    m           = np.zeros(N)
+    eta         = np.zeros(N)
+    Y_p_stator  = np.zeros(N)
+    Y_s_stator  = np.zeros(N)
+    Y_cl_stator = np.zeros(N)
+    Y_p_rotor   = np.zeros(N)
+    Y_s_rotor   = np.zeros(N)
+    Y_cl_rotor  = np.zeros(N)
+
         
     use_previous = True
         
@@ -51,7 +48,6 @@ def m_vs_PR(data_structure):
             x0 = CS.generate_initial_guess(data_structure, R = 0.4)
         
         x_scaled = CS.scale_x0(x0, data_structure)
-        print(x_scaled)
         sol, conv_hist = CS.cascade_series_analysis(data_structure, x_scaled)
         x_real = CS.rescale_x0(sol.x, data_structure)
         endtime = time.time()-starttime
@@ -61,93 +57,23 @@ def m_vs_PR(data_structure):
         print(f"max residual: {np.max(abs(sol.fun))}")
         print(f"Time: {endtime}")
         print("\n")
-        # R[i] = data_structure["overall"]["R"]
         m[i] = data_structure["overall"]["m"]
         Ma2[i] = data_structure["plane"]["Marel"].values[1]
         Ma3[i] = data_structure["plane"]["Marel"].values[2]
         Ma5[i] = data_structure["plane"]["Marel"].values[4]
         Ma6[i] = data_structure["plane"]["Marel"].values[5]
         eta[i] = data_structure["overall"]["eta_ts"]
-        
-        # sol_vec[i] = abs(x0)
-        # x0_vec[i]  = abs(data_structure["x0"])
-        # err_vec[i] = x0-data_structure["x0"]
-    
-    # keys = ["v1", "v2", "v3", "s2", "s3", "a3", "w5", "w6", "s5", "s6", "b6",
-    #         "v1*", "v2*", "s2*", "w4*", "w5*", "s5*"]
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, x0_vec[:, 0:6], label = keys[0:6])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('x0')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('x0')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, x0_vec[:, 6:11], label = keys[6:11])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('x0')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('x0')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, x0_vec[:, 11:], label = keys[11:])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('x0')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('x0')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, sol_vec[:, 0:6], label = keys[0:6])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, sol_vec[:, 6:11], label = keys[6:11])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, sol_vec[:, 11:], label = keys[11:])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, err_vec[:, 0:6], label = keys[0:6])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Deviation between x0 and solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x-x0')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, err_vec[:, 6:11], label = keys[6:11])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Deviation between x0 and solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x-x0')
-    
-    # fig1, ax1 = plt.subplots()
-    # ax1.plot(PR, err_vec[:, 11:], label = keys[11:])
-    # ax1.legend(bbox_to_anchor = (1,1))
-    # ax1.set_title('Deviation between x0 and solution')
-    # ax1.set_xlabel('Pressure ratio')
-    # ax1.set_ylabel('sol.x-x0')
+        Y_p_stator[i]  = data_structure["cascade"]["eta_drop_p"].values[0]
+        Y_s_stator[i]  = data_structure["cascade"]["eta_drop_s"].values[0]
+        Y_cl_stator[i] = data_structure["cascade"]["eta_drop_cl"].values[0]
+        Y_p_rotor[i]   = data_structure["cascade"]["eta_drop_p"].values[1]
+        Y_s_rotor[i]   = data_structure["cascade"]["eta_drop_s"].values[1]
+        Y_cl_rotor[i]  = data_structure["cascade"]["eta_drop_cl"].values[1]
     
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("PR")
     ax1.set_ylabel("mass flow")
     ax1.plot(PR, m)
-        
-    # fig1, ax1 = plt.subplots()
-    # ax1.set_xlabel("PR")
-    # ax1.set_ylabel("reaction")
-    # ax1.plot(PR, R)
     
     fig1, ax1 = plt.subplots()
     ax1.set_xlabel("PR")
@@ -162,6 +88,13 @@ def m_vs_PR(data_structure):
     ax1.plot(PR, Ma5, label="Ma5")
     ax1.plot(PR, Ma6, label="Ma6")
     ax1.legend()
+    
+    fig1, ax1 = plt.subplots()
+    ax1.set_xlabel("PR")
+    ax1.set_ylabel(r"$\eta_{drop}$")
+    labels = ["$p_{stator}$", "$s_{stator}$", "$cl_{stator}$", "$p_{rotor}$", "$s_{rotor}$", "$cl_{rotor}$"]
+    ax1.stackplot(PR, Y_p_stator, Y_s_stator, Y_cl_stator, Y_p_rotor, Y_s_rotor, Y_cl_rotor, labels = labels)
+    ax1.legend(loc = "upper right", bbox_to_anchor = (1.2,1.2))
     
     plt.show()
     
