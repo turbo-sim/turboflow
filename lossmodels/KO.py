@@ -104,11 +104,10 @@ def KO(cascade_data):
     
     Y=Yp+Ys+Ycl+Yte
     
-    loss_dict = {"Yp" : Yp,
-                 "Ys" : Ys,
-                 "Ycl" : Ycl,
-                 "Yte" : Yte,
-                 "Ytot" : Y}
+    loss_dict = {"Profile" : Yp+Yte,
+                 "Secondary" : Ys,
+                 "Clearance" : Ycl,
+                 "Total" : Y}
     
     return [Y, loss_dict]
 
