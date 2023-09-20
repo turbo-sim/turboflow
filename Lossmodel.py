@@ -5,8 +5,8 @@ Created on Fri May 20 10:49:45 2022
 @author: lasseba
 """
 
-import KO
-import Benner as br
+from lossmodels import KO
+from lossmodels import Benner as br
 
 def loss(cascade_data, lossmodel):
     
