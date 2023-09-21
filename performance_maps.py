@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import Cascade_series as CS
-from validation_cases import data_structure
-from validation_data import *
+from examples import data_structure
+from load_validation_data import *
 
 # Script with functions to generate performance maps
 
