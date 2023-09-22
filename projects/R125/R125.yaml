@@ -1,0 +1,31 @@
+BC:
+  fluid_name: R125         # Fluid
+  p0_in: 3.65e6            # Inlet total pressure
+  T0_in: 463.15            # Inlet total temperature
+  p_out: 1.585e6           # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 3458              # Rotational speed
+
+
+loss_model: Benner  # Loss model (Benner only for off-design, KO only other option)
+
+geometry:
+  n_cascades: 2
+  r_ht_in: [0.6, 0.6]     # Hub to tip ratio
+  s: [0.0081, 0.0073]     # Pitch
+  c: [0.0132, 0.0109]     # Chord
+  b: [0.0101, 0.0076]     # Axial chord
+  H: [0.0204, 0.0218]     # Blade halloght
+  t_max: [0.0026, 0.0019] # Maximum blade thickness
+  o: [0.0014, 0.0017]     # Throat opening
+  We: [0.7854, np.pi/180*45]    # Wedge angle (45 degrees in radians)
+  le: [0.006, 0.006]      # Leading edge radius
+  te: [0.00076, 0.0076]   # Trialing edge thickness
+  xi: [0.698132, -0.80116] # Stagger angle
+  theta_in: [0, -0.2618]   # Inlet metal angle
+  theta_out: [1.3963, -1.3405] # Exit metal angle
+  A_in: [0.0052, 0.0052]     # Inlet area
+  A_throat: [0.0009, 0.001352] # Throat area
+  A_out: [0.0052, 0.005952*1.4]   # Exit area
+  t_cl: [0, 5e-4]            # Tip clearance
+  radius: [0.0408, 0.0408]    # Radius (should be constant)
