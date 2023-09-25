@@ -203,6 +203,7 @@ class OptimizationSolver:
             method=method,
             tol=tol,
             options=options,
+            hess=lambda x: np.zeros((self.x0.size,))
         )
 
         # Print report footer

@@ -1,0 +1,30 @@
+BC:
+  fluid_name: air          # Fluid
+  p0_in: 12.4e4            # Inlet total pressure
+  T0_in: 298.9             # Inlet total temperature
+  p_out:  12.4e4/4.64      # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 1627              # Rotational speed
+
+loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+
+geometry:
+  n_cascades: 4
+  r_ht_in: [0.7160, 0.7160, 0.6748, 0.6385]                                   # Hub to tip ratio
+  s: [1.8294e-2, 1.524e-2, 1.484e-2, 1.451e-2]                                # Pitch
+  c: [2.616e-2, 2.606e-2, 2.182e-2, 2.408e-2]                                 # Chord
+  b: [1.9123e-2, 2.2326e-2, 1.9136e-2, 2.2366e-2]                             # Axial chord
+  H: [3.363e-2, 3.658e-2, 4.214e-2, 4.801e-2]                                 # Blade hight
+  t_max: [0.505e-2, 0.447e-2, 0.328e-2, 0.280e-2]                             # Maximum blade thickness
+  o: [0.7731e-2, 0.7249e-2, 0.8469e-2, 0.9538e-2]                             # Throat opening
+  We: [43.03*np.pi/180, 31.05*np.pi/180, 28.72*np.pi/180, 21.75*np.pi/180]    # Wedge angle (45 degrees in radians)
+  le: [0.127e-2, 0.081e-2, 0.097e-2, 0.081e-2]                                # Leading edge radius
+  te: [2*0.025e-2, 2*0.025e-2, 2*0.025e-2, 2*0.025e-2]                        # Trialing edge thickness
+  xi: [43.03*np.pi/180, 31.05*np.pi/180, 28.72*np.pi/180, 21.75*np.pi/180]    # Stagger angle
+  theta_in: [0, 29.6*np.pi/180, -26.1*np.pi/180, 13.9*np.pi/180]              # Inlet metal angle
+  theta_out: [65*np.pi/180,-61.6*np.pi/180, 55.2*np.pi/180, -48.9*np.pi/180]  # Exit metal angle
+  A_in: [0.021468, 0.021468, 0.025197, 0.028618]                              # Inlet area
+  A_throat: [9.10e-03, 1.20e-02, 1.63e-02, 2.15e-02]                          # Throat area
+  A_out: [0.021468, 0.025197, 0.028618, 0.032678]                             # Exit area
+  t_cl: [0, 0.030e-2,0,0.038e-2]                                              # Tip clearance
+  radius: [10.16e-2, 10.16e-2, 10.16e-2, 10.16e-2]                            # Radius (should be constant)

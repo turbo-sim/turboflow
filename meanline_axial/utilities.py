@@ -1,5 +1,6 @@
 import yaml
 import numpy as np
+from .properties import FluidCoolProp_2Phase
 
 
 def read_configuration_file(filename):
@@ -66,4 +67,16 @@ def print_dict(data, indent=0):
             print_dict(value, indent+1)
         else:
             print(value)
+            
+def get_cascades_data(filename):
+    cascades_data = read_configuration_file(filename)
+
+    fluid_name = cascades_data["BC"]["fluid_name"]
+    cascades_data["geometry"] = {key: np.asarray(value) for key, value in cascades_data["geometry"].items()}
+    cascades_data["BC"]["fluid"] = FluidCoolProp_2Phase(fluid_name)
+    cascades_data["fixed_params"] = {}
+    cascades_data["overall"] = {}
+    
+    return cascades_data
+
 

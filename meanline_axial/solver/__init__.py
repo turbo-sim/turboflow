@@ -16,5 +16,3 @@ from .optimization_problems import *
 from .nonlinear_system import *
 from .nonlinear_system_problems import *
 
-
-from .print_convergence_history import *

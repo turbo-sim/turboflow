@@ -10,7 +10,7 @@ from . import loss_model_kacker_okapuu as ko
 
 
 # Define a list of available loss models
-available_loss_models = ['KO', 'Benner']
+available_loss_models = ['ko', 'benner']
 
 def loss(cascade_data, lossmodel):
     """
@@ -24,9 +24,9 @@ def loss(cascade_data, lossmodel):
         list: [Y, loss_dict], where Y is the loss coefficient and loss_dict is a dictionary of loss components.
     """
     if lossmodel in available_loss_models:
-        if lossmodel == 'KO':
+        if lossmodel == 'ko':
             Y, loss_dict = ko.calculate_loss_coefficient(cascade_data)
-        elif lossmodel == 'Benner':
+        elif lossmodel == 'benner':
             Y, loss_dict = br.calculate_loss_coefficient(cascade_data)
         return [Y, loss_dict]
     else:

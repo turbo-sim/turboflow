@@ -1,0 +1,30 @@
+BC:
+  fluid_name: air          # Fluid
+  p0_in: 10.82e4           # Inlet total pressure
+  T0_in: 310.0             # Inlet total temperature
+  p_out: 10.82e4/2.144     # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 1963              # Rotational speed
+
+loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+
+geometry:
+  n_cascades: 2
+  r_ht_in: [0.6769, 0.6769]                  # Hub to tip ratio
+  s: [1.1858e-2, 1.1409e-2]                  # Pitch
+  c: [1.9-2, 1.757e-2]                       # Chord
+  b: [0.015935, 0.016914]                    # Axial chord
+  H: [3.99e-2, 3.99e-2]                      # Blade hight
+  t_max: [0.003467, 0.002636]                # Maximum blade thickness
+  o: [0.7505e-2, 0.65e-2]                    # Throat opening
+  We: [45*np.pi/180, 45*np.pi/180]           # Wedge angle (45 degrees in radians)
+  le: [0.006, 0.006]                         # Leading edge radius
+  te: [0.05e-2, 0.05e-2]                     # Trialing edge thickness
+  xi: [0.575959, -0.274017]                  # Stagger angle
+  theta_in: [0, 23.2*np.pi/180]              # Inlet metal angle
+  theta_out: [66*np.pi/180,-54.6*np.pi/180]  # Exit metal angle
+  A_in: [0.025947, 0.025947]                 # Inlet area
+  A_throat: [0.025947, 0.027659]             # Throat area
+  A_out: [0.025947, 0.027659]                # Exit area
+  t_cl: [0, 0.28e-3]                         # Tip clearance
+  radius: [10.35e-2, 10.35e-2]               # Radius (should be constant)
