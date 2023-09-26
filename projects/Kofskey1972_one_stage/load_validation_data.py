@@ -1,41 +1,75 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Sep 20 15:50:45 2023
+Created on Tue Sep 26 10:42:49 2023
 
 @author: laboan
 """
 
 import numpy as np
+from scipy.optimize import curve_fit
 import pandas as pd
 import matplotlib.pyplot as plt
+import CoolProp as CP
 
-# Validation data of kofskey et al. 1972
-df = pd.read_csv("validation_data.txt", header = None, sep = ",")
+data = pd.read_excel('Data_Kofskey1972_1stage.xlsx')
 
-T0   = 295.6
-T_st = 288.15
-p0   = 13.8e4
-p_st = 101352
+data_sorted = data.sort_values(by = 'PR')
+data_sorted_110 = data_sorted[data_sorted["omega"] == 110]
+data_sorted_110 = data_sorted_110.round({'PR' : 2})
 
-fac = np.sqrt(T0/T_st)/(p0/p_st)
+omega = data["omega"].unique()
+omega_real = 1627
+fluid_name = 'air'
+fluid = CP.AbstractState('HEOS', fluid_name)
+p0_in = 13.8e4            # Inlet total pressure
+T0_in = 295.6             # Inlet total temperature
+theta = (T0_in/288.15)**2
+fluid.update(CP.PT_INPUTS, p0_in, T0_in)
+h0_in = fluid.hmass()
+s_in = fluid.smass()
 
-x1 = df[0].values
-y1 = df[1].values/fac
-x2 = df[2].values
-y2 = df[3].values/fac
-x3 = df[4].values
-y3 = df[5].values/fac
-x4 = df[6].values
-y4 = df[7].values/fac
+# Get Mass flow rate
+for i in range(len(omega)):
+    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
+    data_plot = data_omega[data_omega["m"] > 0]
+    PR = data_plot["PR"]
+    m = data_plot["m"]
 
+# Get Torque
+for i in range(len(omega)):
+    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
+    data_plot = data_omega[data_omega["Torque"] > 0]
+    PR = data_plot["PR"]
+    tau = data_plot["Torque"]
+    
+# Get efficiency
+for i in range(len(omega)):
+    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
+    
+    m = data_omega[data_omega["m"]>0]["m"]
+    tau = data_omega[data_omega["Torque"]>0]["Torque"]
+    PR_m = data_omega[data_omega["m"]>0]["PR"]
+    PR_tau = data_omega[data_omega["Torque"]>0]["PR"]
 
-if __name__ == "__main__":
-    fig, ax = plt.subplots()
-    ax.plot(x1,y1,'o',label = '110')
-    ax.plot(x2,y2,'v',label = '100')
-    ax.plot(x3,y3,'s',label = '90')
-    ax.plot(x4,y4,'D',label = '70')
-    ax.legend(title = 'Percent of design speed')
-    ax.set_xlabel("Total-to-static pressure ratio")
-    ax.set_ylabel("Mass flow rate")
-    ax.set_title("Kofskey et al 1972, one stage")
+    tau_nan = np.interp(PR_m, PR_tau, tau)
+    m_nan = np.interp(PR_tau, PR_m, m)
+    index_m = data_omega.loc[data_omega["Torque"]>0]["m"].index
+    index_tau = data_omega.loc[data_omega["m"]>0]["Torque"].index
+    
+    data_omega_interp = data_omega.copy()
+    data_omega_interp.loc[index_tau, "Torque"] = tau_nan
+    data_omega_interp.loc[index_m, "m"] = m_nan
+    
+    PR = data_omega_interp["PR"]    
+    m = data_omega_interp["m"]
+    tau = data_omega_interp["Torque"]
+
+    h_out_s = np.zeros(len(PR))
+    for j in range(len(PR)):
+        fluid.update(CP.PSmass_INPUTS, p0_in/PR[j], s_in)
+        h_out_s[i] = fluid.hmass()
+    
+    W = tau*omega[i]*omega_real/100
+    W_is = m*(h0_in-h_out_s)*np.sqrt(theta)
+    eta = W/W_is*100
+        
