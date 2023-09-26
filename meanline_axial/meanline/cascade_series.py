@@ -784,7 +784,7 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-def generate_initial_guess(cascades_data, eta=0.9, R=0.4, Macrit=0.92):
+def generate_initial_guess(cascades_data, ig):
     """
     Generate an initial guess for the root-finder and design optimization.
 
@@ -797,6 +797,12 @@ def generate_initial_guess(cascades_data, eta=0.9, R=0.4, Macrit=0.92):
     Returns:
         numpy.ndarray: Initial guess for the root-finder.
     """
+    # FIXME: fix docstring
+    
+    # Load initial giuess from ig
+    R = ig["R"]
+    eta = ig["eta"]
+    Macrit = ig["Ma_crit"]
     
     # Load necessary parameters
     p0_in      = cascades_data["BC"]["p0_in"]
