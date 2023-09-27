@@ -18,6 +18,29 @@ data_sorted_110 = data_sorted[data_sorted["omega"] == 110]
 data_sorted_110 = data_sorted_110.round({'PR' : 2})
 
 omega = data["omega"].unique()
+
+
+# Get Mass flow rate
+mass_flow_rate = {}
+for i in range(len(omega)):
+    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
+    data_plot = data_omega[data_omega["m"] > 0]
+    PR = data_plot["PR"]
+    m = data_plot["m"]
+    mass_flow_rate[str(omega[i])] = {'PR' : PR,
+                                  'm' : m}
+    
+# Get Torque
+torque = {}
+for i in range(len(omega)):
+    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
+    data_plot = data_omega[data_omega["Torque"] > 0]
+    PR = data_plot["PR"]
+    tau = data_plot["Torque"]
+    torque[str(omega[i])] = {'PR' : PR,
+                                  'tau' : tau}
+    
+# Get efficiency (Calculated from angular speed, mass flow rate, torque and isentropic specific work)
 omega_real = 1627
 fluid_name = 'air'
 fluid = CP.AbstractState('HEOS', fluid_name)
@@ -28,21 +51,8 @@ fluid.update(CP.PT_INPUTS, p0_in, T0_in)
 h0_in = fluid.hmass()
 s_in = fluid.smass()
 
-# Get Mass flow rate
-for i in range(len(omega)):
-    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
-    data_plot = data_omega[data_omega["m"] > 0]
-    PR = data_plot["PR"]
-    m = data_plot["m"]
-
-# Get Torque
-for i in range(len(omega)):
-    data_omega = data_sorted[data_sorted["omega"] == omega[i]]
-    data_plot = data_omega[data_omega["Torque"] > 0]
-    PR = data_plot["PR"]
-    tau = data_plot["Torque"]
-    
-# Get efficiency
+efficiency_ts = {}
+interp_values = {}
 for i in range(len(omega)):
     data_omega = data_sorted[data_sorted["omega"] == omega[i]]
     
@@ -66,10 +76,99 @@ for i in range(len(omega)):
 
     h_out_s = np.zeros(len(PR))
     for j in range(len(PR)):
-        fluid.update(CP.PSmass_INPUTS, p0_in/PR[j], s_in)
-        h_out_s[i] = fluid.hmass()
+        fluid.update(CP.PSmass_INPUTS, p0_in/PR.values[j], s_in)
+        h_out_s[j] = fluid.hmass()
     
     W = tau*omega[i]*omega_real/100
     W_is = m*(h0_in-h_out_s)*np.sqrt(theta)
-    eta = W/W_is*100
+    eta_ts = W/W_is*100
+    
+    efficiency_ts[str(omega[i])] = {'PR' : PR,
+                                    'eta_ts' : eta_ts}
+    
+    interp_values[str(omega[i])] = {'PR' : PR,
+                                    'tau' : tau,
+                                    'm' : m}
         
+if __name__ == '__main__':
+    
+    # Plot mass flow rate
+    fig1, ax1 = plt.subplots()
+    for i in range(len(omega)):
+        PR = mass_flow_rate[str(omega[i])]["PR"]
+        m = mass_flow_rate[str(omega[i])]["m"]
+        
+        ax1.scatter(PR, m, label = str(omega[i]))
+    
+    ax1.set_xlabel('Total-to-static pressure ratio')
+    ax1.set_ylabel('Mass flow rate') 
+    ax1.legend()
+    
+    
+    # Plot Torque
+    fig2, ax2 = plt.subplots()
+    for i in range(len(omega)):
+        PR = torque[str(omega[i])]["PR"]
+        tau = torque[str(omega[i])]["tau"]
+        
+        ax2.scatter(PR, tau, label = str(omega[i]))
+    
+    ax2.set_xlabel('Total-to-static pressure ratio')
+    ax2.set_ylabel('Torque') 
+    ax2.legend()
+    
+    
+    # Plot efficiency
+    fig3, ax3 = plt.subplots()
+    for i in range(len(omega)):
+        PR = efficiency_ts[str(omega[i])]["PR"]
+        eta_ts = efficiency_ts[str(omega[i])]["eta_ts"]
+        
+        ax3.scatter(PR, eta_ts, label = str(omega[i]))
+    
+    ax3.set_xlabel('Total-to-static pressure ratio')
+    ax3.set_ylabel('Total to static efficiency')
+    ax3.legend()
+    
+    # Plot interpolated data with real data
+    fig4, ax4 = plt.subplots()
+    fig5, ax5 = plt.subplots()
+    colors = plt.cm.viridis(np.linspace(0, 1, len(omega)))
+    for i in range(len(omega)):
+        PR = mass_flow_rate[str(omega[i])]["PR"]
+        m = mass_flow_rate[str(omega[i])]["m"]
+        PR_interp = interp_values[str(omega[i])]["PR"]
+        m_interp = interp_values[str(omega[i])]["m"]
+        
+        ax4.scatter(PR, m, color = colors[i], label = str(int(omega[i])))
+        ax4.scatter(PR_interp, m_interp, color = colors[i], marker = 'x', label = str(int(omega[i])))
+        
+        PR = torque[str(omega[i])]["PR"]
+        tau = torque[str(omega[i])]["tau"]
+        tau_interp = interp_values[str(omega[i])]["tau"]
+        
+        ax5.scatter(PR, tau, color = colors[i], label = str(int(omega[i])))
+        ax5.scatter(PR_interp, tau_interp, color = colors[i], marker = 'x', label = str(int(omega[i])))
+        
+    ax4.set_xlabel('Total-to-static pressure ratio')
+    ax4.set_ylabel('Mass flow rate') 
+    ax4.set_title('Measured and interpolated values')
+    ax4.legend(ncols = 2, title = "Measured  Interpolated")
+        
+    ax5.set_xlabel('Total-to-static pressure ratio')
+    ax5.set_ylabel('Torque') 
+    ax4.set_title('Measured and interpolated values')
+    ax5.legend(ncols = 2, title = "Measured  Interpolated")
+
+    # Close figures
+    plt.close(fig1)
+    plt.close(fig2)
+    plt.close(fig3)
+    plt.close(fig4)
+    plt.close(fig5)
+
+        
+        
+        
+    
+    
