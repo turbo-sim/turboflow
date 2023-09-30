@@ -32,6 +32,6 @@ if __name__ == '__main__':
     # Solve using optimization algorithm
     # cascade_problem = ml.CascadesOptimizationProblem(cascades_data)
     # solver = ml.solver.OptimizationSolver(cascade_problem, cascade_problem.x0, display=True, plot=False)
-    # sol = solver.solve(method="trust-constr")
+    # sol = solver.solve(method="slsqp")
     
 

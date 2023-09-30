@@ -21,7 +21,7 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
        'Y_err', 'Y']
 
-keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s"]
+keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit"]
 
 def evaluate_velocity_triangle_in(u, v, alpha):
     """
@@ -237,7 +237,7 @@ def evaluate_cascade_series(x, cascades_data):
     cascades_data["overall"]["m"] = cascades_data["plane"]["m"].values[-1]
 
     stag_h = cascades_data["plane"]["h0"].values
-    cascades_data["overall"]["eta_ts"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s)
+    cascades_data["overall"]["eta_ts"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s)*100
 
     loss_fracs = calculate_eta_drop_fractions(cascades_data)
     cascades_data["loss_fracs"] = loss_fracs
@@ -285,7 +285,6 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
     """
     # Load necessary parameters
     fluid = cascades_data["BC"]["fluid"]
-    # geometry = {key: values[i] for key, values in cascades_data["geometry"].items() if key != "n_cascades"}
     A_out = geometry["A_out"]
     theta_out = geometry["theta_out"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
@@ -313,6 +312,11 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
 
     # Evaluate throat
     throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane)
+    
+    # delta_star = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
+    delta_star = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
+    correction = 1-2*delta_star/geometry["o"]
+    throat_plane["m"] = throat_plane["m"]*correction
     cascades_data["plane"].loc[len(cascades_data["plane"])] = throat_plane
 
     Y_err_throat = throat_plane["Y_err"]
@@ -344,7 +348,8 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
         "Y_p": Y_info_exit["Profile"],
         "Y_s": Y_info_exit["Secondary"],
         "Y_cl": Y_info_exit["Clearance"],
-        "dh_s": dhs
+        "dh_s": dhs,
+        "Ma_crit" : Macrit
     }
 
     cascades_data["cascade"].loc[len(cascades_data["cascade"])] = cascade_data
@@ -784,7 +789,7 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-def generate_initial_guess(cascades_data, eta=0.9, R=0.4, Macrit=0.92):
+def generate_initial_guess(cascades_data, ig):
     """
     Generate an initial guess for the root-finder and design optimization.
 
@@ -797,6 +802,12 @@ def generate_initial_guess(cascades_data, eta=0.9, R=0.4, Macrit=0.92):
     Returns:
         numpy.ndarray: Initial guess for the root-finder.
     """
+    # FIXME: fix docstring
+    
+    # Load initial giuess from ig
+    R = ig["R"]
+    eta = ig["eta"]
+    Macrit = ig["Ma_crit"]
     
     # Load necessary parameters
     p0_in      = cascades_data["BC"]["p0_in"]

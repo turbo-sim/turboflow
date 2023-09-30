@@ -10,12 +10,23 @@ from .solver import NonlinearSystemProblem, OptimizationProblem
 
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
      
-    def __init__(self, cascades_data):
+    def __init__(self, cascades_data, x0 = None, ig = None):
         
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
-        x0 = cs.generate_initial_guess(cascades_data, R = 0.4)
+        
+        if ig == None:
+            ig = {'R' : 0.4, 'eta' : 0.9, 'Ma_crit' : 0.92}
+            
+        if ig is not None:
+            keys = ['R','Ma_crit','eta']
+            if not all(elem in ig for elem in keys):
+                raise Exception('invalid key in ig: needs to contain R, eta, Ma_crit')
+                
+        if x0 is None:
+            x0 = cs.generate_initial_guess(cascades_data, ig)
+        
         x_scaled = cs.scale_x0(x0, cascades_data)
         
         self.x0 = x_scaled
@@ -29,12 +40,24 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
     
 class CascadesOptimizationProblem(OptimizationProblem):
     
-    def __init__(self, cascades_data):
+    def __init__(self, cascades_data, x0 = None, ig = None):
         
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
-        x0 = cs.generate_initial_guess(cascades_data, R = 0.4)
+        
+        if ig == None:
+            ig = {'R' : 0.4, 'eta' : 0.9, 'Ma_crit' : 0.92}
+            
+        if ig is not None:
+            keys = ['R','Ma_crit','eta']
+            if not all(elem in ig for elem in keys):
+                raise Exception('invalid key in ig: needs to contain R, eta, Ma_crit')
+            
+        if x0 == None:
+            x0 = cs.generate_initial_guess(cascades_data, ig)
+            
+        
         x_scaled = cs.scale_x0(x0, cascades_data)
         
         self.x0 = x_scaled
