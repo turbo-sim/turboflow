@@ -80,3 +80,10 @@ def get_cascades_data(filename):
     return cascades_data
 
 
+
+
+def softmin(a, b, alpha=10):  # Set a default value for alpha, adjust as needed
+    return -1/alpha * np.log(np.exp(-alpha*a) + np.exp(-alpha*b))
+
+
+
