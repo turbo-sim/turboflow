@@ -12,11 +12,20 @@ docs/build/
 .doctrees/
 environment.pickle
 
+# Output directories
+_output/
+_results/
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
+# Generated LaTeX files
+*.latex
+
 # Virtual environment
 venv/
+
+
 
 # Visual Studio Code specific
 .vscode/         # VS Code settings and cache
