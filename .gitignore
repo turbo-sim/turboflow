@@ -1,0 +1,44 @@
+# Compiled Python files
+__pycache__/
+*.pyc
+*.pyo
+
+# Compiled documentation
+_build/
+docs/_build/
+docs/build/
+
+# Sphinx generated files
+.doctrees/
+environment.pickle
+
+# Output directories
+_output/
+_results/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Generated LaTeX files
+*.latex
+
+# Virtual environment
+venv/
+
+
+
+# Visual Studio Code specific
+.vscode/         # VS Code settings and cache
+settings.json    # VS Code settings file
+*.code-workspace # VS Code workspace file
+
+# Other
+*.log
+*.tmp
+*.bak
+.DS_Store       # Mac OS X desktop services store
+*.swp           # Vim swap files
+
+# Results folders
+**/output/
+**/results/
