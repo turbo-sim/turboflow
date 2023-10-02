@@ -19,7 +19,7 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        's0', 'd0', 'Z0', 'a0', 'mu0', 'k0', 'cp0', 'cv0', 'gamma0', 'p0rel',
        'T0rel', 'h0rel', 's0rel', 'd0rel', 'Z0rel', 'a0rel', 'mu0rel', 'k0rel',
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
-       'Y_err', 'Y']
+       'Y_err', 'Y', 'Yp', 'Ycl', 'Ys']
 
 keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit"]
 
@@ -203,7 +203,7 @@ def evaluate_cascade_series(x, cascades_data):
         crit_res = evaluate_lagrange_gradient(x_crit_cascade, critical_cascade_data, geometry)
         residuals = np.concatenate((residuals, crit_res))
         Ma_crit = critical_cascade_data["Ma_crit"]
-
+        
         # Retrieve the DOF for the current cascade
         x_cascade = x_series[i * n_dof:(i + 1) * n_dof]
 
@@ -314,9 +314,10 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
     throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane)
     
     # delta_star = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
-    delta_star = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
-    correction = 1-2*delta_star/geometry["o"]
-    throat_plane["m"] = throat_plane["m"]*correction
+    # delta_star = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
+    # correction = 1-2*delta_star/geometry["o"]
+    # throat_plane["m"] = throat_plane["m"]*correction
+    throat_plane["m"] = throat_plane["m"]
     cascades_data["plane"].loc[len(cascades_data["plane"])] = throat_plane
 
     Y_err_throat = throat_plane["Y_err"]
@@ -330,8 +331,10 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
 
     # Compute mach number error
     # actual_mach = min(cascades_data["plane"]["Marel"].values[outlet], Macrit)
-    alpha = -16
-    actual_mach = (cascades_data["plane"]["Marel"].values[outlet] ** alpha + Macrit ** alpha) ** (1 / alpha)
+    alpha = -100
+    # actual_mach = (cascades_data["plane"]["Marel"].values[outlet] ** alpha + Macrit ** alpha) ** (1 / alpha)
+    xi = np.array([Macrit, cascades_data["plane"]["Marel"].values[outlet]])
+    actual_mach = max_boltzmann(xi, alpha)
 
     mach_err = cascades_data["plane"]["Marel"].values[throat] - actual_mach
     cascade_res = np.append(cascade_res, mach_err)
@@ -422,6 +425,10 @@ def evaluate_first_inlet(v, cascades_data, u, geometry):
     plane["delta"] = delta
     plane["Y_err"] = np.nan
     plane["Y"] = np.nan
+    plane["Yp"] = np.nan
+    plane["Ys"] = np.nan 
+    plane["Ycl"] = np.nan 
+
 
     return plane
 
@@ -492,6 +499,10 @@ def evaluate_inlet(cascades_data, u, geometry, exit_plane):
     plane["delta"] = delta
     plane["Y_err"] = np.nan # Not relevant for inblet plane
     plane["Y"] = np.nan
+    plane["Yp"] = np.nan 
+    plane["Ys"] = np.nan 
+    plane["Ycl"] = np.nan 
+
 
     return plane    
 
@@ -596,7 +607,10 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     plane["delta"] = np.nan # Not relevant for exit/throat plane
     plane["Y_err"] = Y_err
     plane["Y"] = Y
-        
+    plane["Yp"] = Y_info["Profile"]
+    plane["Ys"] = Y_info["Secondary"]
+    plane["Ycl"] = Y_info["Clearance"]
+
     return plane, Y_info
     
 def evaluate_loss_model(cascade_data):
@@ -669,21 +683,37 @@ def evaluate_lagrange_gradient(x, critical_cascade_data, geometry):
 
     # Evaluate the Jacobian of the evaluate_critical_cascade function
     J = compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0)
-
+    
     # Rename gradients
-    a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1], J[2, 1], -1 * J[0, 0], -1 * J[0, 1]
+    a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1+1], J[2, 1+1], -1 * J[0, 0], -1 * J[0, 1+1]
 
     # Calculate the Lagrange multipliers explicitly
     l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
     l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21)
+    # print(f"{a11 * a22 - a12 * a21:+0.6e}, {a11:+0.6e}, {a12:+0.6e}, {a21:+0.6e}, {a22:+0.6e}")
 
     # Evaluate the last equation
-    df, dg1, dg2 = J[0, 2], J[1, 2], J[2, 2]
+    df, dg1, dg2 = J[0, 2-1], J[1, 2-1], J[2, 2-1]
     grad = (df + l1 * dg1 + l2 * dg2) / m_ref
 
     # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
     g = f0[1:]  # The two constraints
     res = np.insert(g, 0, grad)
+
+    # # Rename gradients
+    # a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1], J[2, 1], -1 * J[0, 0], -1 * J[0, 1]
+
+    # # Calculate the Lagrange multipliers explicitly
+    # l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
+    # l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21)
+
+    # # Evaluate the last equation
+    # df, dg1, dg2 = J[0, 2], J[1, 2], J[2, 2]
+    # grad = (df + l1 * dg1 + l2 * dg2) / m_ref
+
+    # # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
+    # g = f0[1:]  # The two constraints
+    # res = np.insert(g, 0, grad)
 
     return res
 
@@ -701,7 +731,7 @@ def compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0):
         np.ndarray: The Jacobian matrix.
     """
     eps = 1e-3 * x
-    # eps = 1e-3*np.maximum(1, abs(x))*np.sign(x)
+    # eps = 1e-6*np.maximum(1, abs(x))*np.sign(x)
     J = approx_derivative(evaluate_critical_cascade, x, method='2-point', f0=f0, abs_step=eps,
                          args=(critical_cascade_data, geometry))
 
@@ -806,7 +836,8 @@ def generate_initial_guess(cascades_data, ig):
     
     # Load initial giuess from ig
     R = ig["R"]
-    eta = ig["eta"]
+    eta_ts = ig["eta_ts"]
+    eta_tt = ig["eta_tt"]
     Macrit = ig["Ma_crit"]
     
     # Load necessary parameters
@@ -824,7 +855,9 @@ def generate_initial_guess(cascades_data, ig):
     h0_in      = stagnation_properties_in["h"]
     d0_in      = stagnation_properties_in["d"]
     s_in       = stagnation_properties_in["s"]
-    h_out = h0_in - eta*(h0_in-h_out_s) 
+    h0_out = h0_in - eta_ts*(h0_in-h_out_s) 
+    v_out = np.sqrt(2*(h0_in-h_out_s-(h0_in-h0_out)/eta_tt))
+    h_out = h0_out-0.5*v_out**2
     
     # Exit static state for expansion with guessed efficiency
     static_properties_exit = fluid.compute_properties_meanline(CP.HmassP_INPUTS, h_out, p_out)
@@ -1265,5 +1298,14 @@ def get_dof_bounds(n_cascades):
         ub = np.append(ub, [0.99, 1.2])
 
     return (lb, ub)
-    
+
+def max_boltzmann(xi, alpha):
+
+    shift = np.sign(alpha) * max(np.sign(alpha) * xi)
+
+    num = np.sum(xi * np.exp(alpha * (xi - shift)))
+
+    denom = np.sum(np.exp(alpha * (xi - shift))) + np.finfo(float).eps
+
+    return num / denom
     

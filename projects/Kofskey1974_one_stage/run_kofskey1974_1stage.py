@@ -26,9 +26,10 @@ cascades_data = ml.get_cascades_data(filename)
 if __name__ == '__main__':
     
     # Solve using nonlinear equation solver
-    cascade_problem = ml.CascadesNonlinearSystemProblem(cascades_data)
+    ig = {'R' : 0.2, 'Ma_crit' : 0.9, 'eta' : 0.8}
+    cascade_problem = ml.CascadesNonlinearSystemProblem(cascades_data, ig = ig)
     solver = ml.solver.NonlinearSystemSolver(cascade_problem, cascade_problem.x0)
-    solution = solver.solve(method='hybr')
+    solution = solver.solve(method='lm')
     
     # Solve using optimization algorithm
     # cascade_problem = ml.CascadesOptimizationProblem(cascades_data)

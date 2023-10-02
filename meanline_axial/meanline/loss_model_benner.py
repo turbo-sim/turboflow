@@ -41,6 +41,7 @@ def calculate_loss_coefficient(cascade_data):
     Y_inc = coefficient_conversion(dPhip,gamma,Ma_rel_out)
         
     Ymid = YpKO+Y_inc
+    # Ymid = YpKO
     
     CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
     
@@ -298,3 +299,18 @@ def Y_sec(CR,AR,beta_out,xi,BL_rel):
         Y_sec = (0.052+0.56*np.tanh(1.2*BL_rel))/denom
         
     return Y_sec
+
+if __name__ == '__main__':
+    
+    We = 31.05*np.pi/180
+    d = 0.081e-2 
+    s = 1.524e-2 
+    theta_in = 29.6*np.pi/180
+    theta_out = -61.6*np.pi/180
+    beta_in = 50*np.pi/180
+    beta_des = theta_in
+    chi = Chi(d,s,We,theta_in,theta_out,beta_in,beta_des)
+    print(chi)
+    print(beta_in)
+    
+    

@@ -10,7 +10,7 @@ from . import loss_model_kacker_okapuu as ko
 
 
 # Define a list of available loss models
-available_loss_models = ['ko', 'benner']
+available_loss_models = ['ko', 'benner', 'isentropic']
 
 def loss(cascade_data, lossmodel):
     """
@@ -28,6 +28,13 @@ def loss(cascade_data, lossmodel):
             Y, loss_dict = ko.calculate_loss_coefficient(cascade_data)
         elif lossmodel == 'benner':
             Y, loss_dict = br.calculate_loss_coefficient(cascade_data)
+        elif lossmodel == 'isentropic':
+            loss_dict = {"Profile" : 0,
+                         "Secondary" : 0,
+                         "Clearance" : 0,
+                         "Total" : 0}
+            Y = 0
+            
         return [Y, loss_dict]
     else:
         raise ValueError(f"Invalid loss model. Available options: {', '.join(available_loss_models)}")

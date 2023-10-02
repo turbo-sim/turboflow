@@ -17,12 +17,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.check_geometry(cascades_data)
         
         if ig == None:
-            ig = {'R' : 0.4, 'eta' : 0.9, 'Ma_crit' : 0.92}
+            ig = {'R' : 0.4, 'eta_ts' : 0.9, 'eta_tt' : 0.95, 'Ma_crit' : 0.92}
             
         if ig is not None:
-            keys = ['R','Ma_crit','eta']
+            keys = ['R','Ma_crit','eta_ts','eta_tt']
             if not all(elem in ig for elem in keys):
-                raise Exception('invalid key in ig: needs to contain R, eta, Ma_crit')
+                raise Exception('invalid key in ig: needs to contain R, eta_ts, eta_tt, Ma_crit')
                 
         if x0 is None:
             x0 = cs.generate_initial_guess(cascades_data, ig)

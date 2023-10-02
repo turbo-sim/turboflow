@@ -6,7 +6,6 @@ Created on Tue Sep 26 10:42:49 2023
 """
 
 import numpy as np
-from scipy.optimize import curve_fit
 import pandas as pd
 import matplotlib.pyplot as plt
 import CoolProp as CP
@@ -14,9 +13,6 @@ import CoolProp as CP
 data = pd.read_excel('Data_Kofskey1972_1stage.xlsx')
 
 data_sorted = data.sort_values(by = 'PR')
-data_sorted_110 = data_sorted[data_sorted["omega"] == 110]
-data_sorted_110 = data_sorted_110.round({'PR' : 2})
-
 omega = data["omega"].unique()
 
 
@@ -157,7 +153,7 @@ if __name__ == '__main__':
         
     ax5.set_xlabel('Total-to-static pressure ratio')
     ax5.set_ylabel('Torque') 
-    ax4.set_title('Measured and interpolated values')
+    ax5.set_title('Measured and interpolated values')
     ax5.legend(ncols = 2, title = "Measured  Interpolated")
 
     # Close figures
