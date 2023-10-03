@@ -1,0 +1,7 @@
+# requirements.txt
+sphinx
+sphinx-book-theme
+sphinx-rtd-theme
+pydata-sphinx-theme
+numpydoc
+sphinxcontrib-bibtex
