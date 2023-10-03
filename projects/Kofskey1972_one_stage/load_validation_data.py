@@ -76,7 +76,7 @@ for i in range(len(omega)):
         h_out_s[j] = fluid.hmass()
     
     W = tau*omega[i]*omega_real/100
-    W_is = m*(h0_in-h_out_s)*np.sqrt(theta)
+    W_is = m*(h0_in-h_out_s)/np.sqrt(theta)
     eta_ts = W/W_is*100
     
     efficiency_ts[str(omega[i])] = {'PR' : PR,
@@ -157,11 +157,11 @@ if __name__ == '__main__':
     ax5.legend(ncols = 2, title = "Measured  Interpolated")
 
     # Close figures
-    plt.close(fig1)
-    plt.close(fig2)
-    plt.close(fig3)
-    plt.close(fig4)
-    plt.close(fig5)
+    # plt.close(fig1)
+    # plt.close(fig2)
+    # plt.close(fig3)
+    # plt.close(fig4)
+    # plt.close(fig5)
 
         
         

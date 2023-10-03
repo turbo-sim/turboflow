@@ -27,7 +27,7 @@ from ..math_utils import softmin, softmax
 # We can sit together one day and prepare a draft of the explanation of each function with help of chatGPT
 # In this way I also get the chance to understand how the loss model works in detail
 
-def calculate_loss_coefficient(cascade_data):
+def calculate_loss_coefficient(cascade_data, is_throat):
     
     # Load kinetic variables from turbine
     beta_out=cascade_data["flow"]["beta_out"]
@@ -44,12 +44,12 @@ def calculate_loss_coefficient(cascade_data):
     b=cascade_data["geometry"]["b"] # Axial chord
     h=cascade_data["geometry"]["H"] # Mean bade height
     xi = cascade_data["geometry"]["xi"] # Stagger
-    d = cascade_data["geometry"]["le"] # Leading edge thickness
+    d = cascade_data["geometry"]["le"]*2 # Leading edge thickness
     We = cascade_data["geometry"]["We"] # Wedge angle
     cascade_type=cascade_data["type"]
     t_cl = cascade_data["geometry"]["t_cl"]
     
-    YpKO = Yp_KO(cascade_data)
+    Y_p, Y_te = get_profile_loss(cascade_data)
     
     beta_des = theta_in # Assume zero incidence at design 
     
@@ -58,10 +58,7 @@ def calculate_loss_coefficient(cascade_data):
     dPhip = get_incidence_profile_loss_increment(chi)
     
     Y_inc = coefficient_conversion(dPhip,gamma,Ma_rel_out)
-        
-    Ymid = YpKO+Y_inc
-    # Ymid = YpKO
-    
+            
     CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
     
     BSx = b/s # Axial blade solidity
@@ -71,13 +68,23 @@ def calculate_loss_coefficient(cascade_data):
     ZTE = Z_TE(CR,AR,BSx,beta_in,beta_out,BL_rel) # ZTE/h
     ZTE = min(ZTE, 0.99) # TODO: smoothing
     
-    Yp = Ymid*(1-ZTE)
+    Y_p *= (1-ZTE)
+    Y_te *= (1-ZTE)
+    Y_inc *= (1-ZTE)
     
-    Ysec = Y_sec(CR,AR,beta_out,xi,BL_rel)
+    Y_s = get_secondary_loss(CR,AR,beta_out,xi,BL_rel)
     
-    Ycl = Y_cl(beta_in, beta_out, cascade_type, t_cl, c, h)
+    Y_cl = get_tip_clearance_loss(beta_in, beta_out, cascade_type, t_cl, c, h)
     
-    Y = Yp+Ysec+Ycl
+    Y = Y_p + Y_te + Y_inc + Y_s + Y_cl
+    
+    if is_throat:
+        Y_p = Y_p
+        Y_inc = Y_inc
+        Y_te = 0
+        Y_s = Y_s
+        Y_cl = Y_cl
+        Y = Y_p + Y_te + Y_inc + Y_s + Y_cl
     
     # Comments
     # What is beta_des: Assume zero incidence at design 
@@ -86,16 +93,18 @@ def calculate_loss_coefficient(cascade_data):
     # Get in leading edge diameter and wedge angle as design parameters
     
     
-    loss_dict = {"Profile" : Yp,
-                 "Secondary" : Ysec,
-                 "Clearance" : Ycl,
+    loss_dict = {"Profile" : Y_p,
+                 "Incidence": Y_inc,
+                 "Trailing": Y_te,
+                 "Secondary" : Y_s,
+                 "Clearance" : Y_cl,
                  "Total" : Y}
     
     
     return [Y, loss_dict]
     
 
-def Yp_KO(cascade_data):
+def get_profile_loss(cascade_data):
 
     # TODO: add docstring explaning the equations and the original paper
     # TODO: possibly include the equation number (or figure number) of the original paper
@@ -124,7 +133,7 @@ def Yp_KO(cascade_data):
     
     
     f_Re=(Re/2e5)**(-0.4)*(Re<2e5)+1*(Re >= 2e5 and Re <= 1e6) + (Re/1e6)**(-0.2)*(Re>1e6)
-    f_Ma=1+60*(Ma_rel_out-1)**2*(Ma_rel_out > 1)  
+    f_Ma=1+60*(Ma_rel_out-1)**2*(Ma_rel_out > 1)  ## TODO smoothing / mach crit
     
     fhub=f_hub(r_ht_in,cascade_type)
     
@@ -162,11 +171,11 @@ def Yp_KO(cascade_data):
     # Corrected profile loss coefficient
     Yp=f_Re*f_Ma*Y_p
     
-    Yte = Y_te(theta_in,beta_out,t_te,o)    
+    Yte = get_trailing_edge_loss(theta_in,beta_out,t_te,o)    
     
-    return Yp+Yte
+    return Yp,Yte
     
-def Y_te(angle_in,angle_out,t_te,o):
+def get_trailing_edge_loss(angle_in,angle_out,t_te,o):
 
     # TODO:
     
@@ -195,7 +204,7 @@ def Y_te(angle_in,angle_out,t_te,o):
     
     return Y_te
 
-def Y_cl(beta_in,beta_out,cascade_type,t_cl,c,H):
+def get_tip_clearance_loss(beta_in,beta_out,cascade_type,t_cl,c,H):
     angle_m=np.arctan((np.tan(beta_in)+np.tan(beta_out))/2)
     Z=4*(np.tan(beta_in)-np.tan(beta_out))**2*np.cos(beta_out)**2/np.cos(angle_m)
     
@@ -458,7 +467,7 @@ def F_t(BSx,beta_in,beta_out):
     
     return F_t
 
-def Y_sec(CR,AR,beta_out,xi,BL_rel):
+def get_secondary_loss(CR,AR,beta_out,xi,BL_rel):
 
 
     # TODO: add docstring explaning the equations and the original paper
