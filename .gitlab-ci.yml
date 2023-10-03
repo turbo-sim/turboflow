@@ -3,14 +3,14 @@ stages:
 
 pages:
   stage: deploy
-  image: python:3.10-alpine
+  image: python:3.10
   before_script:
     - apt-get update && apt-get install make --no-install-recommends -y
     - python -m pip install -r ./docs/requirements.txt
   script:
     - cd docs && make html
   after_script:
-    - mv docs/_build/ ./public/
+    - mv ./docs/_build/ ./public/
   artifacts:
     paths:
     - public
