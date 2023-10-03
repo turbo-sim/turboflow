@@ -1,25 +1,82 @@
-# Meanline Axial
 
-## Installation instructions
+# Meanline Axial: Axial Turbine Mean-line Modelling
 
-If you are using [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html), you can use the following [Bash](https://gitforwindows.org/) command to create a new virtual environment with all the dependencies required to run the code in this repository:
-``` bash
-conda env create --file environment.yaml
-```
-This will create the `meanline_env` virtual environment and install all the packages in the specified in the YAML file.
+**Meanline Axial** is a tool designed for mean-line modelling of axial turbines. It provides a systematic approach to analyze and optimize axial turbines based on specified requirements.
 
-To activate the virtual environment use:
-``` bash
-conda activate meanline_env
-```
-If you need to install additional packages you can use the following command:
-``` bash
-conda install <name of the package>
-```
-You can also install new packages by adding their names to the `environment.yaml` file and updating the environment (using `--prune` removes any dependencies that are no longer required):
-``` bash
-conda env update --file environment.yaml --prune
-```
+## Core Features
+- **Performance Analysis Mode**: 
+  - Evaluate single operating points
+  - Produce performance maps
+- **Design Optimization Mode**: 
+  - Single point optimization
+  - Multi-point optimization
+- **Problem formulation and solution**
+  - Equation-oriented problem formulation for performance analysis and design optimization
+  - Consistency between both calculation modes is guaranteed by design
+  - Efficient solution with gradient-based root-finding and optimization solvers
+  - Multi-start strategies or derivative-free optimizers for global optimization
+- **Fluid Property Analysis**:
+  - Use CoolProp to determine real gas fluid properties.
+- **Design Flexibility**: 
+  - Supports modelling with any number of turbine stages.
+  - Specify turbine geometry using main geometric parameters.
+- **Choking Calculations**:
+  - General computational strategy to evaluate cascade choking.
+  - Formulation autonomously identifies choked cascades for a set of operating conditions
+- **Loss Models**: 
+  - Kacker Okapuu model.
+  - Benner model.
+
+
+## Installation Instructions
+
+1. **Install Conda**:
+
+   Before proceeding, ensure you have [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html) installed on your system.
+
+2. **Create a virtual environment with dependencies**:
+
+   Run the following command in [Bash](https://gitforwindows.org/) to set up a new virtual environment with all the required dependencies:
+
+   ```bash
+   conda env create --file environment.yaml
+   ```
+
+   This command will create a virtual environment named `meanline_env` and will install all the packages specified in the `environment.yaml` file.
+
+3. **Activate the virtual environment**:
+
+   ```bash
+   conda activate meanline_env
+   ```
+
+4. **Installing additional packages (optional)**:
+
+   If you need any additional packages, they can be installed using:
+
+   ```bash
+   conda install <name of the package>
+   ```
+
+   Alternatively, you can add package names directly to the `environment.yaml` file and then update the environment:
+
+   ```bash
+   conda env update --file environment.yaml --prune
+   ```
+
+5. **Setting up for local development**
+
+   To ensure that you can import the package for local development, you need to add the package directory to the `PYTHONPATH` variable. We have provided a convenient script named `install_local.py` to do this for you.
+
+   Just run:
+
+   ```bash
+   python install_local.py
+   ```
+
+   This will append the current working directory (which should be the root of this repository) to your `PYTHONPATH` by adding a line to your `~/.bashrc` file.
+
+   **Note:** This is a temporary development solution. In the future, you will be able to install the package via pip.
 
 
 
