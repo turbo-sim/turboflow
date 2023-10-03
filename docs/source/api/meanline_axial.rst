@@ -17,6 +17,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   meanline_axial.calculate
+   meanline_axial.math
    meanline_axial.non_linear_problem
    meanline_axial.performance_maps
    meanline_axial.plot_options

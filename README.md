@@ -1,7 +1,7 @@
 
 # Meanline Axial: Axial Turbine Mean-line Modelling
 
-**Meanline Axial** is a tool designed for mean-line modelling of axial turbines. It provides a systematic approach to analyze and optimize axial turbines based on specified requirements.
+**Meanline Axial** is a tool for mean-line modelling of axial turbines. It provides a systematic approach to analyze and optimize axial turbines based on specified requirements.
 
 ## Core Features
 - **Performance Analysis Mode**: 
@@ -76,8 +76,7 @@
 
    This will append the current working directory (which should be the root of this repository) to your `PYTHONPATH` by adding a line to your `~/.bashrc` file.
 
-   **Note:** This is a temporary development solution. In the future, you will be able to install the package via pip.
-
+   **Note:** This is a temporary development solution. In the future the package will be installed via pip/conda.
 
 
 ## To-do list
