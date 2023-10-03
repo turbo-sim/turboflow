@@ -70,16 +70,11 @@ def print_dict(data, indent=0):
             
 def get_cascades_data(filename):
     cascades_data = read_configuration_file(filename)
-
-    fluid_name = cascades_data["BC"]["fluid_name"]
     cascades_data["geometry"] = {key: np.asarray(value) for key, value in cascades_data["geometry"].items()}
-    cascades_data["BC"]["fluid"] = FluidCoolProp_2Phase(fluid_name)
     cascades_data["fixed_params"] = {}
     cascades_data["overall"] = {}
     
     return cascades_data
-
-
 
 
 def softmin(a, b, alpha=10):  # Set a default value for alpha, adjust as needed

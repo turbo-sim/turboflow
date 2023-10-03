@@ -5,6 +5,7 @@ from .solver import *
 from .utilities import *
 from .non_linear_problem import *
 from .performance_maps import *
+from .calculate import *
  
 #from .meanline.df_keys import *
 #from .meanline.cascade_series import *

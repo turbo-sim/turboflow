@@ -19,7 +19,7 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        's0', 'd0', 'Z0', 'a0', 'mu0', 'k0', 'cp0', 'cv0', 'gamma0', 'p0rel',
        'T0rel', 'h0rel', 's0rel', 'd0rel', 'Z0rel', 'a0rel', 'mu0rel', 'k0rel',
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
-       'Y_err', 'Y', 'Yp', 'Ycl', 'Ys']
+       'Y_err', 'Y', 'Y_p', 'Y_cl', 'Y_s', 'Y_te', 'Y_inc']
 
 keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit"]
 
@@ -161,6 +161,7 @@ def evaluate_cascade_series(x, cascades_data):
     m_ref = cascades_data["fixed_params"]["m_ref"]
     delta_ref = cascades_data["fixed_params"]["delta_ref"]
     lossmodel = cascades_data["loss_model"]
+    omega = cascades_data["BC"]["omega"]
     u = cascades_data["overall"]["blade_speed"]
     n_dof = 5  # Number of degrees of freedom for each cascade except for v_in (used for keeping track on indices)
     n_dof_crit = 3  # Number of degrees of freedom for each critical cascade
@@ -234,10 +235,18 @@ def evaluate_cascade_series(x, cascades_data):
         calculate_stage_parameters(cascades_data)
 
     # Store global variables
-    cascades_data["overall"]["m"] = cascades_data["plane"]["m"].values[-1]
+    v_out = cascades_data["plane"]["v"].values[-1]
+    m = cascades_data["plane"]["m"].values[-1]
+    h0_in = cascades_data["plane"]["h0"].values[0]
+    h0_out = cascades_data["plane"]["h0"].values[-1] 
+    
+    cascades_data["overall"]["m"] = m
 
     stag_h = cascades_data["plane"]["h0"].values
     cascades_data["overall"]["eta_ts"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s)*100
+    cascades_data["overall"]["eta_tt"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s-0.5*v_out**2)*100
+    cascades_data["overall"]["power"] = m*(h0_in-h0_out)
+    cascades_data["overall"]["torque"] = m*(h0_in-h0_out)/omega
 
     loss_fracs = calculate_eta_drop_fractions(cascades_data)
     cascades_data["loss_fracs"] = loss_fracs
@@ -245,7 +254,7 @@ def evaluate_cascade_series(x, cascades_data):
     
     return residuals
 
-def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
+def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
     """
     Evaluate the performance of a cascade.
 
@@ -255,7 +264,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
         x_cascade (numpy.ndarray): Array of degrees of freedom for the current cascade.
         u (float): Blade speed.
         cascades_data (dict): Dictionary containing parameters and configurations.
-        Macrit (float): Critical Mach number.
+        Ma_crit (float): Critical Mach number.
 
     Returns:
         numpy.ndarray: Array of residuals representing the performance of the cascade.
@@ -278,7 +287,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
         # Define initial degrees of freedom in x_cascade
         x_cascade = np.array([...])
 
-        # Define other necessary parameters (v_in, u, Macrit)
+        # Define other necessary parameters (v_in, u, Ma_crit)
 
         # Evaluate the cascade
         cascade_res = evaluate_cascade(1, 100, x_cascade, 500, cascades_data, 0.8)
@@ -311,13 +320,16 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
     cascades_data["plane"].loc[len(cascades_data["plane"])] = inlet_plane
 
     # Evaluate throat
-    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane)
+    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane, is_throat=True)
     
-    # delta_star = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
-    # delta_star = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
-    # correction = 1-2*delta_star/geometry["o"]
-    # throat_plane["m"] = throat_plane["m"]*correction
-    throat_plane["m"] = throat_plane["m"]
+    # delta_star1 = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
+    # delta_star2 = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
+    # correction = 1-2*delta_star2/geometry["o"]
+    # print(delta_star1, delta_star2, correction, geometry["o"], throat_plane["Re"])
+    # raise Exception("STOP HERE")
+    correction=1
+    
+    throat_plane["m"] = throat_plane["m"]*correction
     cascades_data["plane"].loc[len(cascades_data["plane"])] = throat_plane
 
     Y_err_throat = throat_plane["Y_err"]
@@ -330,10 +342,10 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
     cascade_res = np.append(cascade_res, Y_err_out)
 
     # Compute mach number error
-    # actual_mach = min(cascades_data["plane"]["Marel"].values[outlet], Macrit)
+    # actual_mach = min(cascades_data["plane"]["Marel"].values[outlet], Ma_crit)
     alpha = -100
-    # actual_mach = (cascades_data["plane"]["Marel"].values[outlet] ** alpha + Macrit ** alpha) ** (1 / alpha)
-    xi = np.array([Macrit, cascades_data["plane"]["Marel"].values[outlet]])
+    # actual_mach = (cascades_data["plane"]["Marel"].values[outlet] ** alpha + Ma_crit ** alpha) ** (1 / alpha)
+    xi = np.array([Ma_crit, cascades_data["plane"]["Marel"].values[outlet]])
     actual_mach = max_boltzmann(xi, alpha)
 
     mach_err = cascades_data["plane"]["Marel"].values[throat] - actual_mach
@@ -352,7 +364,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Macrit):
         "Y_s": Y_info_exit["Secondary"],
         "Y_cl": Y_info_exit["Clearance"],
         "dh_s": dhs,
-        "Ma_crit" : Macrit
+        "Ma_crit" : Ma_crit
     }
 
     cascades_data["cascade"].loc[len(cascades_data["cascade"])] = cascade_data
@@ -425,9 +437,11 @@ def evaluate_first_inlet(v, cascades_data, u, geometry):
     plane["delta"] = delta
     plane["Y_err"] = np.nan
     plane["Y"] = np.nan
-    plane["Yp"] = np.nan
-    plane["Ys"] = np.nan 
-    plane["Ycl"] = np.nan 
+    plane["Y_p"] = np.nan
+    plane["Y_cl"] = np.nan
+    plane["Y_s"] = np.nan
+    plane["Y_te"] = np.nan
+    plane["Y_inc"] = np.nan
 
 
     return plane
@@ -499,14 +513,17 @@ def evaluate_inlet(cascades_data, u, geometry, exit_plane):
     plane["delta"] = delta
     plane["Y_err"] = np.nan # Not relevant for inblet plane
     plane["Y"] = np.nan
-    plane["Yp"] = np.nan 
-    plane["Ys"] = np.nan 
-    plane["Ycl"] = np.nan 
+    plane["Y_p"] = np.nan
+    plane["Y_cl"] = np.nan
+    plane["Y_s"] = np.nan
+    plane["Y_te"] = np.nan
+    plane["Y_inc"] = np.nan
 
 
     return plane    
 
-def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
+
+def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, is_throat=False):
     
     """
      Evaluates the throat or exit plane of a cascade.
@@ -595,7 +612,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     cascade_data["flow"]["delta"] = delta
     cascade_data["flow"]["gamma_out"] = static_properties["gamma"]
     
-    Y, Y_err, Y_info = evaluate_loss_model(cascade_data)
+    Y, Y_err, Y_info = evaluate_loss_model(cascade_data, is_throat)
     
     # Store result
     plane = {**vel_out, **static_properties, **stagnation_properties, **relative_stagnation_properties}
@@ -607,13 +624,15 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     plane["delta"] = np.nan # Not relevant for exit/throat plane
     plane["Y_err"] = Y_err
     plane["Y"] = Y
-    plane["Yp"] = Y_info["Profile"]
-    plane["Ys"] = Y_info["Secondary"]
-    plane["Ycl"] = Y_info["Clearance"]
+    plane["Y_p"] = Y_info["Profile"]
+    plane["Y_cl"] = Y_info["Clearance"]
+    plane["Y_s"] = Y_info["Secondary"]
+    plane["Y_te"] = Y_info["Trailing"]
+    plane["Y_inc"] = Y_info["Incidence"] 
 
     return plane, Y_info
     
-def evaluate_loss_model(cascade_data):
+def evaluate_loss_model(cascade_data, is_throat=False):
     """
     Evaluate the loss according to both loss correlation and definition.
     Return the loss coefficient, error, and breakdown of losses.
@@ -634,7 +653,7 @@ def evaluate_loss_model(cascade_data):
     Y_def = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
 
     # Compute the loss coefficient from the correlations
-    Y, Y_info = lm.loss(cascade_data, lossmodel)
+    Y, Y_info = lm.loss(cascade_data, lossmodel, is_throat)
 
     # Compute loss coefficient error
     Y_err = Y_def - Y
@@ -789,7 +808,7 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
 
     beta_throat = theta_out
     x = np.array([w_throat, beta_throat, s_throat])
-    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_out, inlet_plane)
+    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_out, inlet_plane, is_throat = True)
 
     m_in, m_throat = inlet_plane["m"], throat_plane["m"]
     residuals = np.array([(m_in - m_throat) / m_ref, throat_plane["Y_err"]])
@@ -819,7 +838,7 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-def generate_initial_guess(cascades_data, ig):
+def generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit):
     """
     Generate an initial guess for the root-finder and design optimization.
 
@@ -827,19 +846,13 @@ def generate_initial_guess(cascades_data, ig):
         cascades_data (dict): Data structure containing boundary conditions, geometry, etc.
         eta (float): Efficiency guess (default is 0.9).
         R (float): Degree of reaction guess (default is 0.4).
-        Macrit (float): Critical Mach number guess (default is 0.92).
+        Ma_crit (float): Critical Mach number guess (default is 0.92).
 
     Returns:
         numpy.ndarray: Initial guess for the root-finder.
     """
     # FIXME: fix docstring
-    
-    # Load initial giuess from ig
-    R = ig["R"]
-    eta_ts = ig["eta_ts"]
-    eta_tt = ig["eta_tt"]
-    Macrit = ig["Ma_crit"]
-    
+        
     # Load necessary parameters
     p0_in      = cascades_data["BC"]["p0_in"]
     T0_in      = cascades_data["BC"]["T0_in"]
@@ -922,7 +935,7 @@ def generate_initial_guess(cascades_data, ig):
             h2_crit = h01-0.5*a2**2
             static_properties_2_crit = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h2_crit, s2)
             d2_crit = static_properties_2_crit["d"]
-            v2_crit = Macrit*a2
+            v2_crit = Ma_crit*a2
             m2_crit = d2_crit*v2_crit*np.cos(alpha2)*A2
             vm1_crit = m2_crit/(d1*A1)
             v1_crit = vm1_crit/np.cos(alpha1)
@@ -942,7 +955,7 @@ def generate_initial_guess(cascades_data, ig):
             h3_crit = h0rel2-0.5*a3**2
             static_properties_3_crit = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h3_crit, s3)
             d3_crit = static_properties_3_crit["d"]
-            v3_crit = Macrit*a3
+            v3_crit = Ma_crit*a3
             m3_crit = d3_crit*v3_crit*np.cos(beta3)*A3
             vm2_crit = m3_crit/(d2*A2)
             v2_crit = vm2_crit/np.cos(alpha2) 
@@ -984,7 +997,7 @@ def generate_initial_guess(cascades_data, ig):
         h3_crit = h01-0.5*a3**2
         static_properties_3_crit = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h3_crit, s3)
         d3_crit = static_properties_3_crit["d"]
-        v3_crit = a3*Macrit
+        v3_crit = a3*Ma_crit
         m3_crit = d3_crit*v3_crit*np.cos(alpha3)*A3
         vm1_crit = m3_crit/(d1*A1)
         v1_crit = vm1_crit/np.cos(alpha1)
@@ -1239,10 +1252,14 @@ def update_fixed_params(cascades_data):
     p0_in      = cascades_data["BC"]["p0_in"]
     T0_in      = cascades_data["BC"]["T0_in"]
     p_out      = cascades_data["BC"]["p_out"]
-    fluid      = cascades_data["BC"]["fluid"]
+    fluid_name = cascades_data["BC"]["fluid_name"]
     A_in       = cascades_data["geometry"]["A_in"][0]
     radius     = cascades_data["geometry"]["radius"][0]
     omega      = cascades_data["BC"]["omega"]
+
+
+    fluid = FluidCoolProp_2Phase(fluid_name)
+    cascades_data["BC"]["fluid"] = fluid
 
     # Calculate stagnation properties at inlet
     stagnation_properties_in = fluid.compute_properties_meanline(CP.PT_INPUTS, p0_in, T0_in)
