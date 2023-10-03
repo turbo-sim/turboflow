@@ -6,7 +6,7 @@ pages:
   image: python:3.10-alpine
   before_script:
     - apt-get update && apt-get install make --no-install-recommends -y
-    - python -m pip install -r .docs/requirements.txt
+    - python -m pip install -r ./docs/requirements.txt
   script:
     - cd docs && make html
   after_script:
