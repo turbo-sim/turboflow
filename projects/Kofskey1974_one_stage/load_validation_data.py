@@ -110,7 +110,7 @@ for i in range(len(omega)):
         h_out_s[j] = fluid.hmass()
     
     W = tau*omega[i]*omega_real/100
-    W_is = m*(h0_in-h_out_s)*np.sqrt(theta)
+    W_is = m*(h0_in-h_out_s)/np.sqrt(theta)
     eta_ts = W/W_is*100
     
     efficiency_ts[str(omega[i])] = {'PRtt' : PRtt,

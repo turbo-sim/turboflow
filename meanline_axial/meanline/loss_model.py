@@ -12,7 +12,7 @@ from . import loss_model_kacker_okapuu as ko
 # Define a list of available loss models
 available_loss_models = ['ko', 'benner', 'isentropic']
 
-def loss(cascade_data, lossmodel):
+def loss(cascade_data, lossmodel, is_throat):
     """
     Calculate loss coefficient based on the selected loss model.
 
@@ -27,7 +27,7 @@ def loss(cascade_data, lossmodel):
         if lossmodel == 'ko':
             Y, loss_dict = ko.calculate_loss_coefficient(cascade_data)
         elif lossmodel == 'benner':
-            Y, loss_dict = br.calculate_loss_coefficient(cascade_data)
+            Y, loss_dict = br.calculate_loss_coefficient(cascade_data, is_throat)
         elif lossmodel == 'isentropic':
             loss_dict = {"Profile" : 0,
                          "Secondary" : 0,
