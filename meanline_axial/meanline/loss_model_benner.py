@@ -7,7 +7,7 @@ Created on Tue Jan 31 11:37:42 2023
 
 
 import numpy as np
-from ..utilities import softmin
+from ..math_utils import softmin, softmax
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 # TODO: we can create generic smooth versions of these functions and call them when necessary
