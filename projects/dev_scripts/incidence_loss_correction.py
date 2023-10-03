@@ -2,27 +2,22 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-desired_path = os.path.abspath("../..")
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-
 import meanline_axial.meanline as ml
 
-import numpy as np
-
-
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     # Define the distance parameter
     chi = np.linspace(-20, 20, 1000)
 
     # Define the loss coefficient_increment
-    loss_1 = ml.get_incidence_profile_loss_increment(chi, chi_extrapolation=10, loss_limit=np.inf)
-    loss_2 = ml.get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=np.inf)
-    loss_3 = ml.get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.5)
+    loss_1 = ml.get_incidence_profile_loss_increment(
+        chi, chi_extrapolation=10, loss_limit=np.inf
+    )
+    loss_2 = ml.get_incidence_profile_loss_increment(
+        chi, chi_extrapolation=5, loss_limit=np.inf
+    )
+    loss_3 = ml.get_incidence_profile_loss_increment(
+        chi, chi_extrapolation=5, loss_limit=0.5
+    )
 
     # Create the folder to save figures
     fig_dir = "figures"
