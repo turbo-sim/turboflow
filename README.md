@@ -38,9 +38,9 @@ conda env update --file environment.yaml --prune
 - [ ] Improve initial guess computation for supersonic case (call the function `initialize()`)
 - [ ] Validate model with experimental data
 - [ ] Add automatic testing (pytest) to ensure that new code pushes do not introduce breaking changes
-- [ ] Make function to plot performance maps more general
+- [x] Make function to plot performance maps more general
 - [ ] Add functionality to export/import all the parameters corresponding to a calculated operating point
-- [ ] Make the plotting of performance maps more general and add functionality to save figures
+- [x] Make the plotting of performance maps more general and add functionality to save figures
 - [x] Add environment.yaml file to install all dependencies at once
 - [x] Add Sphinx documentation structure
 - [ ] Add pygmo solvers to the pysolverview interface

@@ -247,6 +247,8 @@ def evaluate_cascade_series(x, cascades_data):
     cascades_data["overall"]["eta_tt"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s-0.5*v_out**2)*100
     cascades_data["overall"]["power"] = m*(h0_in-h0_out)
     cascades_data["overall"]["torque"] = m*(h0_in-h0_out)/omega
+    cascades_data["overall"]["pr_tt"] = cascades_data["BC"]["p0_in"]/cascades_data["plane"]["p0"].values[-1]
+    cascades_data["overall"]["pr_ts"] = cascades_data["BC"]["p0_in"]/cascades_data["plane"]["p"].values[-1]
 
     loss_fracs = calculate_eta_drop_fractions(cascades_data)
     cascades_data["loss_fracs"] = loss_fracs
@@ -295,6 +297,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
     # Load necessary parameters
     fluid = cascades_data["BC"]["fluid"]
     A_out = geometry["A_out"]
+    theta_in = geometry["theta_in"]
     theta_out = geometry["theta_out"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
 
@@ -364,7 +367,8 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
         "Y_s": Y_info_exit["Secondary"],
         "Y_cl": Y_info_exit["Clearance"],
         "dh_s": dhs,
-        "Ma_crit" : Ma_crit
+        "Ma_crit" : Ma_crit,
+        "incidence" : inlet_plane["beta"]-theta_in
     }
 
     cascades_data["cascade"].loc[len(cascades_data["cascade"])] = cascade_data

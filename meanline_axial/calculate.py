@@ -20,6 +20,9 @@ def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, 
     
     # Calculate performance at given boundary conditions with given geometry
     cascades_data["BC"] = boundary_conditions
+    print('\n')
+    print(f'Pressure ration: {cascades_data["BC"]["p0_in"]/cascades_data["BC"]["p_out"]}')
+    print(f'Angular speed: {cascades_data["BC"]["omega"]}')
     cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0)
     solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
     solution = solver.solve(method=method, options = {'maxfev' : 50})
@@ -45,6 +48,9 @@ def performance_map(boundary_conditions, cascades_data):
                 
         conditions = {key : val[i] for key, val in boundary_conditions.items()}
         solution = performance(conditions, cascades_data, x0 = x0)
+    
+        if max(solution.fun)>1e-6:
+            raise Exception(f"Convergence failed. Boundary condition: {i}")
         
         if use_previous == True:
             x0 = cs.convert_scaled_x0(solution.x, cascades_data)
@@ -90,85 +96,7 @@ def performance_map(boundary_conditions, cascades_data):
         overall_data.to_excel(writer, sheet_name = 'overall', index=False)
     
     
-def generic_plot_distribution(lines, fig=None, ax=None, title="", xlabel="", ylabel="", scale_x=1, scale_y=1):
-    
-    if not fig and not ax:
 
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    
-    for line in lines:
-        df = line.get('df')
-        zone = line.get('zone', "")
-        data_key = line.get('data_key', "")
-        legend = line.get('legend', None)
-        linestyle = line.get('linestyle', "-")
-        
-    ax.plot(df[zone]["Position"] * scale_x, df[zone][data_key] * scale_y, linewidth=1.25, linestyle=linestyle, label=legend)
-
-    if len(lines) > 1:
-        ax.legend()
-
-    fig.tight_layout(pad=1)
-
-    return fig, 
-
-def plot_function(filename, x, y, fig=None, ax=None, title="", xlabel="", ylabel="", scale_x=1, scale_y=1):
-    
-    if not fig and not ax:
-
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    
-    x, lines = get_lines(filename, x, y)
-    
-    if isinstance(lines, (list, tuple)):
-        for line in lines:
-            ax.plot(x, line)
-            
-        return fig, ax
-
-    ax.plot(x, line)
-    
-    return fig, ax
-            
-        
-def get_lines(filename, x, y):
-     
-    # Import file that contains all performance parameteres
-    
-    # The resulting variable 'performance_data' will be a dictionary where keys are sheet names and values are DataFrames
-    performance_data = pd.read_excel(filename, sheet_name = ['BC', 'plane', 'cascade', 'stage', 'overall'])
-    
-    x = get_line(performance_data, x)
-    
-    lines = []
-    if isinstance(y, (list, tuple)):
-        for i in range(len(y)):
-            lines.append(get_line(performance_data,y[i]))
-            
-        return x, lines
-    
-    y = get_line(performance_data,y)
-    
-    return x, y
-
-def get_line(performance_data, column):
-    
-    for key in performance_data.keys():
-        
-        if any(element == column for element in performance_data[key].columns):
-            
-            return performance_data[key][column]
-        
-    raise Exception(f"Could not find column {column} in performance_data")
-    
 
         
         

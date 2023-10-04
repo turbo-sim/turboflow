@@ -7,7 +7,6 @@ Created on Wed Sep 20 13:05:13 2023
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 import os
 import sys
@@ -19,10 +18,12 @@ if desired_path not in sys.path:
     
 import meanline_axial as ml
 
-filename = "kofskey1972_1stage.yaml"
+
+filename = "Kofskey1974.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-Case = 2
+
+Case = 0
 
 if Case == 0:
 
@@ -38,8 +39,8 @@ elif Case == 1:
 
 elif Case == 2:
     # Calculate a dataset corresponding to a dataset
-    p_min = 1.6
-    p_max = 4.5 
+    p_min = 1.5
+    p_max = 3.8
     speed_min = 0.3
     speed_max = 1.1
     
@@ -57,6 +58,4 @@ elif Case == 2:
     boundary_conditions["omega"] = angular_speed
     
     ml.calculate.performance_map(boundary_conditions, cascades_data)
-    
-  
-    
+
