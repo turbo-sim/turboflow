@@ -7,7 +7,7 @@ Created on Tue Jan 31 11:37:42 2023
 
 
 import numpy as np
-from ..utilities import softmin
+from ..math import smooth_min, smooth_max
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 # TODO: we can create generic smooth versions of these functions and call them when necessary
@@ -372,7 +372,7 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
         \end{align}
 
     .. math::
-        \Delta \phi_{p}^2 = \mathrm{softmin}(\Delta \phi_{p}^2, \Delta \hat{\phi}_{p}^2)
+        \Delta \phi_{p}^2 = \mathrm{smooth\,min}(\Delta \phi_{p}^2, \Delta \hat{\phi}_{p}^2)
 
         
 
@@ -428,7 +428,7 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
     profile_loss_increment = np.where(chi > _chi, loss_extrap, loss_poly)
 
     # Limit the loss to the loss_limit
-    profile_loss_increment = softmin(profile_loss_increment, loss_limit, alpha=25)
+    profile_loss_increment = smooth_min(profile_loss_increment, loss_limit, alpha=25)
 
     return profile_loss_increment
 
