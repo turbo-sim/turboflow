@@ -12,7 +12,7 @@ import time
 from . import cascade_series as cs
 from .non_linear_problem import CascadesNonlinearSystemProblem
 from .solver import NonlinearSystemSolver
-from .plot_options import set_plot_options
+from .utilities import set_plot_options
 
 set_plot_options()
     

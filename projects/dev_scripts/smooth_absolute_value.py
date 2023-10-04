@@ -6,13 +6,13 @@ import meanline_axial as ml
 if __name__ == "__main__":
 
     # Example data
-    x = np.linspace(-0.5, 0.5, 501)
+    x = np.linspace(-0.1, 0.1, 2001)
 
     # Calculate softmin using various methods
     f_exact = np.abs(x)
     f_quadratic = ml.smooth_abs(x, method='quadratic', epsilon=1e-4)
-    f_logarithmic = ml.smooth_abs(x, method='logarithmic', epsilon=1e-2)
-    # f_softplus = ml.smooth_abs(x, method='softplus', epsilon=1e-3)
+    f_logarithmic = ml.smooth_abs(x, method='logarithmic', epsilon=1e-3)
+    f_hyperbolic = ml.smooth_abs(x, method='hyperbolic', epsilon=1e-3)
  
     # Create the folder to save figures
     fig_dir = "figures"
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     ax.plot(x, f_exact, label='Exact abs', color='black')
     ax.plot(x, f_quadratic, label='Quadratic abs')
     ax.plot(x, f_logarithmic, label='Logarithmic abs')
-    # ax.plot(x, f_softplus, label='Softplus abs', linestyle=":")
+    ax.plot(x, f_hyperbolic, label='Hyperbolic abs')
     ax.legend(fontsize=10)
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
     filename = os.path.join(fig_dir, "smooth_abs_function")
