@@ -425,12 +425,14 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
     coeffs_slope = np.array([i * a for i, a in enumerate(coeffs_1[::-1], start=1)])
     slope = np.sum([a * _chi ** (i - 1) for i, a in enumerate(coeffs_slope, start=1)])
     loss_extrap = loss + slope * (chi - _chi)
-    profile_loss_increment = np.where(chi > _chi, loss_extrap, loss_poly)
+    loss_increment = np.where(chi > _chi, loss_extrap, loss_poly)
 
     # Limit the loss to the loss_limit
-    profile_loss_increment = smooth_min(profile_loss_increment, loss_limit, alpha=25)
+    if loss_limit is not None:
+        loss_increment = np.asarray([loss_increment, np.full_like(loss_increment, loss_limit)])
+        loss_increment = smooth_min(loss_increment, method="logsumexp", alpha=25, axis=0)
 
-    return profile_loss_increment
+    return loss_increment
 
 
 

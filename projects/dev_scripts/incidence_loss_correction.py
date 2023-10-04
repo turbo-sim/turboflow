@@ -10,10 +10,10 @@ if __name__ == "__main__":
 
     # Define the loss coefficient_increment
     loss_1 = ml.get_incidence_profile_loss_increment(
-        chi, chi_extrapolation=10, loss_limit=np.inf
+        chi, chi_extrapolation=10, loss_limit=None
     )
     loss_2 = ml.get_incidence_profile_loss_increment(
-        chi, chi_extrapolation=5, loss_limit=np.inf
+        chi, chi_extrapolation=5, loss_limit=None
     )
     loss_3 = ml.get_incidence_profile_loss_increment(
         chi, chi_extrapolation=5, loss_limit=0.5
