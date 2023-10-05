@@ -1,18 +1,18 @@
-stages:
-  - deploy
+# stages:
+#   - deploy
 
-pages:
-  stage: deploy
-  image: python:3.10
-  before_script:
-    - apt-get update && apt-get install make --no-install-recommends -y
-    - python -m pip install -r ./docs/requirements.txt
-  script:
-    - cd docs && make html
-  after_script:
-    - mv ./docs/_build/ ./public/
-  artifacts:
-    paths:
-    - public
-  rules:
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
+# pages:
+#   stage: deploy
+#   image: python:3.10
+#   before_script:
+#     - apt-get update && apt-get install make --no-install-recommends -y
+#     - python -m pip install -r ./docs/requirements.txt
+#   script:
+#     - cd docs && make html
+#   after_script:
+#     - mv ./docs/_build/ ./public/
+#   artifacts:
+#     paths:
+#     - public
+#   rules:
+#     - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

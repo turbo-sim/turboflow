@@ -20,7 +20,10 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinxcontrib.bibtex",
     "numpydoc",
+    'sphinx.ext.todo',
 ]
+
+todo_include_todos = True
 
 
 # Add bibliography file
@@ -33,9 +36,9 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # exclude_patterns.extend(["source/api/meanline_axial.rst"])
 
 # Define theme
-# html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme
+html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme
 # html_theme = 'pydata_sphinx_theme'
-html_theme = 'sphinx_rtd_theme'
+# html_theme = 'sphinx_rtd_theme'
 
 # Manual formatting override
 html_static_path = ['_static']

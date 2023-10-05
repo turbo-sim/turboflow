@@ -1,13 +1,4 @@
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-table, th, td {
-    border: 1px solid black;
-}
-
-th, td {
-    padding: 8px;
-    text-align: left;
+.nomenclature-center td:first-child,
+.nomenclature-center td:nth-child(3) {
+    text-align: center;
 }
