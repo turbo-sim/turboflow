@@ -23,4 +23,5 @@ dependencies:
     - pydata-sphinx-theme
     - numpydoc
     - sphinxcontrib-bibtex
+    - pyzotero
 

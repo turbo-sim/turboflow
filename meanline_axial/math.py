@@ -205,7 +205,7 @@ def smooth_abs(x, method="quadratic", epsilon=1e-5):
     r"""
     Compute a smooth approximation of the absolute value function according to the specified method.
  
-    1. The quadratic approximation is given by :cite:p:`ramirez_x2_2013`:
+    1. The quadratic approximation is given by :cite:p:`ramirez_x_2013`:
 
     .. math::
        f_{\epsilon}(x) = \sqrt{x^2 + \epsilon}

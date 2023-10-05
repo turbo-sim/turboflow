@@ -5,6 +5,6 @@ Bibliography
 ==============================
 
 
-.. bibliography:: ../references.bib
+.. bibliography:: ./bibliography.bib
 
 
