@@ -63,11 +63,11 @@ def performance_map(boundary_conditions, cascades_data):
         overall = cascades_data["overall"]
         
         plane_stack = plane.stack()
-        plane_stack.index = [f'{idx}_{col}' for col, idx in plane_stack.index]
+        plane_stack.index = [f'{idx}_{col+1}' for col, idx in plane_stack.index]
         cascade_stack = cascade.stack()
-        cascade_stack.index = [f'{idx}_{col}' for col, idx in cascade_stack.index]
+        cascade_stack.index = [f'{idx}_{col+1}' for col, idx in cascade_stack.index]
         stage_stack = stage.stack()
-        stage_stack.index = [f'{idx}_{col}' for col, idx in stage_stack.index]
+        stage_stack.index = [f'{idx}_{col+1}' for col, idx in stage_stack.index]
         
         if i == 0:
             BC_data = pd.DataFrame({key : [val] for key, val in BC.items()})
