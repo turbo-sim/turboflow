@@ -56,8 +56,7 @@ Contents:
    source/nomenclature
    source/glossary
    source/bibliography
-   
-.. source/api/modules
+   source/api/modules
 
 
 

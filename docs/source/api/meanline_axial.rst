@@ -1,6 +1,20 @@
 meanline\_axial package
 =======================
 
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   meanline_axial.calculate
+   meanline_axial.non_linear_problem
+   meanline_axial.plot_functions
+   meanline_axial.math
+   meanline_axial.utilities
+
+
 Subpackages
 -----------
 
@@ -11,17 +25,6 @@ Subpackages
    meanline_axial.properties
    meanline_axial.solver
 
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
-   meanline_axial.calculate
-   meanline_axial.math
-   meanline_axial.non_linear_problem
-   meanline_axial.performance_maps
-   meanline_axial.utilities
 
 Module contents
 ---------------

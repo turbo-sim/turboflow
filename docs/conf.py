@@ -27,7 +27,7 @@ todo_include_todos = True
 
 
 # Add bibliography file
-bibtex_bibfiles = ['references.bib']
+bibtex_bibfiles = ['source/bibliography.bib']
 bibtex_default_style = 'alpha'
 bibtex_reference_style = 'author_year'
 
