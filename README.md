@@ -83,8 +83,8 @@
 - [ ] Verify torque and efficiency deviation match
 - [ ] Check if the correlation for incidence losses from Moustapha 1990 is better
 - [ ] Check if baseline kacker-okapuu + moustapha 1990 is better
-- [ ] Create clean dataset including torque/efficiency/flow angle for each pressure ration/speed
-- [ ] Extend validation Kofskey1972 to exit flow angle
+- [x] Create clean dataset including torque/efficiency/flow angle for each pressure ration/speed
+- [x] Extend validation Kofskey1972 to exit flow angle
 - [ ] Add x=y comparison plots for the validation
 - [ ] Verify the displacement thickness value for kofskey1974
 - [ ] Try to extract the shock loss at the inlet form the profile loss to have a more clear split of the losses
@@ -94,9 +94,9 @@
 - [ ] Improve initial guess computation for supersonic case (call the function `initialize()`)
 - [ ] Validate model with experimental data
 - [ ] Add automatic testing (pytest) to ensure that new code pushes do not introduce breaking changes
-- [ ] Make function to plot performance maps more general
+- [x] Make function to plot performance maps more general
 - [ ] Add functionality to export/import all the parameters corresponding to a calculated operating point
-- [ ] Make the plotting of performance maps more general and add functionality to save figures
+- [x] Make the plotting of performance maps more general and add functionality to save figures
 - [x] Add environment.yaml file to install all dependencies at once
 - [x] Add Sphinx documentation structure
 - [ ] Add pygmo solvers to the pysolverview interface
