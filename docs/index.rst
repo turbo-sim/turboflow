@@ -47,7 +47,6 @@ Contents:
 ==========
 .. toctree::
    :maxdepth: 2
-   :hidden:
 
    source/installation
    source/tutorials
@@ -56,8 +55,7 @@ Contents:
    source/nomenclature
    source/glossary
    source/bibliography
-   
-.. source/api/modules
+   source/api/modules
 
 
 

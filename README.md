@@ -87,7 +87,7 @@
 - [x] Extend validation Kofskey1972 to exit flow angle
 - [ ] Add x=y comparison plots for the validation
 - [ ] Verify the displacement thickness value for kofskey1974
-- [ ] Try to extract the shock loss at the inlet form the profile loss to have a more clear split of the losses
+- [ ] Try to extract the shock loss at the inlet fromm the profile loss to have a more clear split of the losses
 - [x] Add better smoother for Mach number constraint
 - [ ] Add generic smoothing functions for min/max/abs/piecewise
 - [ ] Replace all non-differentiable functions of the code (specially in the loss models)
