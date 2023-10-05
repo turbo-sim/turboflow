@@ -6,7 +6,7 @@ Submodules
 ----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    meanline_axial.calculate
    meanline_axial.non_linear_problem
@@ -19,17 +19,9 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 2
 
    meanline_axial.meanline
    meanline_axial.properties
    meanline_axial.solver
 
-
-Module contents
----------------
-
-.. automodule:: meanline_axial
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -22,6 +22,22 @@ def ensure_unique_keys(entries):
         seen_keys.add(key)
     return entries
 
+def prioritize_doi_over_url(entries):
+    for entry in entries:
+        if 'doi' in entry and 'url' in entry:
+            del entry['url']
+    return entries
+
+def replace_latex_commands(bibtex_str):
+    """Use unicode instead of some LaTeX symbol conversions"""
+    replacements = {
+        r'\textbar': '|',
+    }
+    for latex_cmd, unicode_char in replacements.items():
+        bibtex_str = bibtex_str.replace(latex_cmd, unicode_char)
+    return bibtex_str
+
+
 def export_zotero_to_bibtex(group_id, api_key=None, output_file='bibliography.bib'):
     """
     Exports the Zotero library to a BibTeX file.
@@ -38,12 +54,18 @@ def export_zotero_to_bibtex(group_id, api_key=None, output_file='bibliography.bi
     # Fetch bibtex entries from Zotero
     bibtex_db = zot.everything(zot.items(format='bibtex'))
     ensure_unique_keys(bibtex_db.entries)
+    prioritize_doi_over_url(bibtex_db.entries)
+
+    # for entry in bibtex_db.entries:
+    #     for key, value in entry.items():
+    #         print(key, value)
     
     # Convert bibtex entries to a string
     db = bibtexparser.bibdatabase.BibDatabase()
     db.entries = bibtex_db.entries
     writer = BibTexWriter()
     bibtex_str = bibtexparser.dumps(db, writer=writer)
+    bibtex_str = replace_latex_commands(bibtex_str)
 
     # Write the string to the specified output file
     with open(output_file, 'w', encoding='utf-8') as f:

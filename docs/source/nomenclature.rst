@@ -27,11 +27,17 @@ Nomenclature
    * - :math:`C_{\mathrm{f}}`
      - Diffuser skin friction coefficient
      - --
+   * - :math:`c`
+     - Convergence ratio
+     - m
    * - :math:`d_{\mathrm{m}}`
      - Turbine mean diameter
      - m
    * - :math:`d_{\mathrm{s}}`
      - Turbine specific diameter
+     - --
+   * - :math:`F_t`
+     - Tangential loading parameter of the :cite:`benner_empirical_2006` loss model
      - --
    * - :math:`H`
      - Blade height
@@ -120,6 +126,9 @@ Nomenclature
    * - :math:`Y`
      - Stagnation pressure loss coefficient
      - --
+   * - :math:`Z_{\mathrm{te}}`
+     - Passage vortex penetration depth at the trailing edge
+     - m
 
    * - **Greek Symbols**
      - 
@@ -130,12 +139,21 @@ Nomenclature
    * - :math:`\beta`
      - Relative flow angle
      - :math:`^{\circ}`
+   * - :math:`\gamma`
+     - Heat capacity ratio
+     - --
    * - :math:`\delta`
      - Flow deviation angle
      - :math:`^{\circ}`
    * - :math:`\delta`
      - Diffuser semi-divergence angle
      - :math:`^{\circ}`
+   * - :math:`\delta`
+     - Boundary layer thickness
+     - m
+   * - :math:`\delta^*`
+     - Displacement thickness
+     - m
    * - :math:`\delta_{\mathrm{fl}}`
      - Blade flaring angle
      - :math:`^{\circ}`
@@ -178,6 +196,18 @@ Nomenclature
    * - :math:`\phi`
      - Flow coefficient
      - --
+   * - :math:`\phi^2`
+     - Kinetic energy loss coefficient (:math:`\phi^2+\Delta\phi^2=1`)
+     - --
+   * - :math:`\Delta\phi^2`
+     - Complementary of the kinetic energy loss coefficient
+     - --
+   * - :math:`\chi`
+     - Incidence parameter of the :cite:`moustapha_improved_1990` loss model
+     - --
+   * - :math:`\chi'`
+     - Incidence parameter of the :cite:`benner_influence_1997` loss model
+     - --
    * - :math:`\psi`
      - Loading coefficient
      - --
@@ -213,17 +243,29 @@ Nomenclature
    * - :math:`1,2,3,\ldots`
      - Flow stations
      - 
+   * - :math:`\mathrm{cl}`
+     - Tip clearance
+     - 
    * - :math:`\mathrm{error}`
      - Violation of an equality constraint
      - 
    * - :math:`\mathrm{in}`
      - Inlet of the cascade or turbomachine
      - 
+   * - :math:`\mathrm{inc}`
+     - Incidence loss
+     - 
    * - :math:`m`
      - Meridional direction
      - 
+   * - :math:`\mathrm{mid}`
+     - Blade midspan
+     - 
    * - :math:`\mathrm{out}`
      - Outlet of the cascade or turbomachine
+     - 
+   * - :math:`\mathrm{p}`
+     - Profile loss
      - 
    * - :math:`r`
      - Radial direction
@@ -237,8 +279,14 @@ Nomenclature
    * - :math:`\mathrm{s}`
      - Refers to specific quantitities
      - 
+   * - :math:`\mathrm{sec}`
+     - Secondary loss
+     - 
    * - :math:`\theta`
      - Tangential direction
+     - 
+   * - :math:`\mathrm{te}`
+     - Trailing edge
      - 
    * - :math:`x`
      - Axial direction

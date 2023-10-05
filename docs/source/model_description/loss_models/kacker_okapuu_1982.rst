@@ -7,14 +7,15 @@ Kacker-Okapuu (1982)
 .. _appendix:KO-loss-model:
 
 
-This appendix describes the loss model proposed by :cite:`Kacker1982` to compute aerodynamic losses in axial 
-turbines, see :ref:`chapter:meanline_model`.
+This section describes the loss model proposed by :cite:`kacker_mean_1982` to compute aerodynamic losses in axial 
+turbines.
+
 
 Overview of the method
 ----------------------
 
-The :cite:`Kacker1982` loss system is a refinement of the correlations proposed by
-:cite:`Ainley1951b`, :cite:`Ainley1951a`, and by :cite:`Dunham1970`. 
+The :cite:`kacker_mean_1982` loss system is a refinement of the correlations proposed by
+:cite:`ainley_method_1951`, :cite:`ainley_examination_1951`, and by :cite:`dunham_improvements_1970`. 
 The general form of the loss model is given by:
 
 .. math::
@@ -84,43 +85,47 @@ Profile loss coefficient
 
    Add polynomial curve fit from aungier
 
+   Add figures showing the trend of the loss coefficient
+   
+   Add figure for the Mach number correction factor
 
-The profile loss coefficient :math:`Y_{\mathrm{p}}` is computed according to :eq:`eq-KO-profile`.
+
+The profile loss coefficient :math:`Y_{\mathrm{p}}` is computed according to :eq:`eq:KO-profile`.
 
 .. math::
-   :label: eq-KO-profile
+   :label: eq:KO-profile
 
    Y_{\mathrm{p}} = 0.914 \cdot \left( \frac{2}{3} \cdot  Y_{\mathrm{p}}' \cdot K_{\mathrm{p}} + Y_{\mathrm{shock}} \right)
 
-The term :math:`Y_{\mathrm{p}}'` is given by :eq:`eq-KO-profile1`, where the terms, 
+The term :math:`Y_{\mathrm{p}}'` is given by :eq:`eq:KO-profile1`, where the terms, 
 :math:`Y_{\mathrm{p, \, reaction}}` and :math:`Y_{\mathrm{p, \, impulse}}` are be obtained
-from the graphical data reproduced in Figures :numref:`fig-Yp-reaction` and :numref:`fig-Yp-impulse`. 
+from the graphical data reproduced in ``Figures``. 
 The subscript *reaction* refers to blades with zero inlet metal angle (i.e., axial entry) and the
 subscript *impulse* refers to blades that have an inlet metal angle with the same magnitude but 
 opposite sign as the exit relative flow angle.
 
-The second term of the right-hand side of :eq:`eq-KO-profile1` is a correction factor that accounts
+The second term of the right-hand side of :eq:`eq:KO-profile1` is a correction factor that accounts
 for the effects of the maximum blade thickness. The sign of :math:`\beta_{\mathrm{out}}` in 
-:eq:`eq-KO-profile1` was changed with respect to the original work of Kacker--Okappu to comply
+:eq:`eq:KO-profile1` was changed with respect to the original work of Kacker--Okappu to comply
 with the angle convention used in this paper.
 
 .. math::
-   :label: eq-KO-profile1
+   :label: eq:KO-profile1
 
    Y_{\mathrm{p}}' = \left[ Y_{\mathrm{p, \, reaction}} - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot (Y_{\mathrm{p, \, impulse}}- Y_{\mathrm{p, \, reaction}}) \right] \cdot \left(\frac{t_{\mathrm{max}}/c}{0.20}\right)^{-\frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}}}
 
-The factor :math:`K_{p}` from :eq:`eq-KO-profile` accounts for compressible flow effects when the Mach 
+The factor :math:`K_{p}` from :eq:`eq:KO-profile` accounts for compressible flow effects when the Mach 
 number within the cascade is subsonic and approaches unity. These effects tend to accelerate the flow, 
 make the boundary layers thinner, and decrease the profile losses. :math:`K_{p}` is a function on the
-inlet and outlet relative Mach numbers and it is computed from :eq:`eq-KO-profile2` and :eq:`eq-KO-profile3`.
+inlet and outlet relative Mach numbers and it is computed from :eq:`eq:KO-profile2` and :eq:`eq:KO-profile3`.
 
 .. math::
-   :label: eq-KO-profile2
+   :label: eq:KO-profile2
 
    K_{\mathrm{p}} = 1-K_{2} \cdot \left(1-K_{1} \right)
 
 .. math::
-   :label: eq-KO-profile3
+   :label: eq:KO-profile3
 
    K_{1} =
    \begin{cases}
@@ -130,18 +135,18 @@ inlet and outlet relative Mach numbers and it is computed from :eq:`eq-KO-profil
    \end{cases}
 
 .. math::
-   :label: eq-KO-profile4
+   :label: eq:KO-profile4
 
    K_{2} = \left( \frac{\mathrm{Ma_{\,in}^{\, rel}}}{\mathrm{Ma_{\,out}^{\, rel}}} \right)^2
 
-The term :math:`Y_{\mathrm{shock}}` from :eq:`eq-KO-profile` accounts for the relatively weak shock waves
+The term :math:`Y_{\mathrm{shock}}` from :eq:`eq:KO-profile` accounts for the relatively weak shock waves
 that may occur at the leading edge of the cascade due to the acceleration of the flow. After some algebra, 
-the equations proposed in the Kacker--Okapuu method can be condensed as :eq:`eq-KO-profile5`, where
-:math:`f_{\mathrm{hub}}` is given graphically in Figure :numref:`fig-KO-mach` and it is a function of the
+the equations proposed in the Kacker--Okapuu method can be condensed as :eq:`eq:KO-profile5`, where
+:math:`f_{\mathrm{hub}}` is given graphically in ``Figure`` and it is a function of the
 hub-to-tip ratio only.
 
 .. math::
-   :label: eq-KO-profile5
+   :label: eq:KO-profile5
 
    Y_{\mathrm{shock}}  = 0.75 \cdot \left(f_{\mathrm{hub}} \cdot\mathrm{Ma_{\,in}^{\, rel}} -0.40 \right)^{1.75} \cdot \left( \frac{r_{\mathrm{hub}}}{r_{\mathrm{tip}}} \right)_{\mathrm{in}} \cdot \left( \frac{p_{\mathrm{0rel,in}}-p_{\mathrm{in}}}{p_{\mathrm{0rel,out}}-p_{\mathrm{out}}} \right)
 
@@ -189,7 +194,7 @@ where :math:`K_{\mathrm{p}}` is given by :eq:`eq:KO-profile2` and :math:`K_{3}` 
 
 The Ainley-Mathieson loading parameter :math:`Z` is given by :eq:`eq:Z-ainley1` through 
 :eq:`eq:Z-ainley3`, where the sign of :math:`\beta_{\mathrm{out}}` was changed with respect
-to the original work of [Kacker1982] to comply with the angle convention used in this paper.
+to the original work of [kacker_mean_1982] to comply with the angle convention used in this paper.
 
 .. math::
    :label: eq:Z-ainley1
@@ -222,10 +227,14 @@ where the influence of the number of seals is neglected.
 In this equation, :math:`Z` is given by :eq:`eq:Z-ainley1` through :eq:`eq:Z-ainley3`. 
 The Kacker-Okapuu loss system proposes :math:`B=0.37` for rotor blades with shrouded tips,
 and :math:`B=0.00` for stator blades. In addition, Kacker and Okapuu warn that using :math:`B=0.47`, 
-as suggested by [Dunham1970], over-predicts the loss for rotor blades with plain tips.
+as suggested by [dunham_improvements_1970], over-predicts the loss for rotor blades with plain tips.
 
 Trailing edge loss coefficient
 ------------------------------
+
+.. todo::
+
+   Add figure of trailing edge losses
 
 The trailing edge loss coefficient :math:`Y_{\mathrm{te}}` is computed according to :eq:`eq:KO-trailing1`.
 
@@ -250,7 +259,7 @@ the original work of Kacker--Okappu to comply with the angle convention used in 
 :math:`\Delta \phi_{\mathrm{reaction}}^2` and :math:`\Delta \phi_{\mathrm{impulse}}^2` are the kinetic
 energy loss coefficients of reaction and impulse blades and they are a function of the trailing edge 
 thickness to opening ratio :math:`t_{\mathrm{te}}/o` only. The functional relation was published in 
-graphical form, and it is reproduced in Figure :ref:`fig:KO-trailing`.
+graphical form, and it is reproduced in ``Figure``
 
 
 

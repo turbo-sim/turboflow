@@ -8,6 +8,7 @@ NOMENCLATURE_DATA = {
         ('s3', r':math:`s_\mathrm{ax}`', 'Axial spacing between cascades', r'm'),
         ('o', r':math:`o`', 'Blade opening', r'm'),
         ('c', r':math:`c`', 'Blade chord', r'm'),
+        ('CR', r':math:`c`', 'Convergence ratio', r'm'),
         ('c_a', r':math:`c_\mathrm{ax}`', 'Blade axial chord', r'm'),
         ('r_m', r':math:`r_{\mathrm{m}}`', 'Turbine mean radius', r'm'),
         ('d_m', r':math:`d_{\mathrm{m}}`', 'Turbine mean diameter', r'm'),
@@ -37,28 +38,39 @@ NOMENCLATURE_DATA = {
         ('a', r':math:`a`', 'Speed of sound', r'm/s'),
         ('Y', r':math:`Y`', 'Stagnation pressure loss coefficient', '--'),
         ('Cf', r':math:`C_{\mathrm{f}}`', 'Diffuser skin friction coefficient', '--'),
+        ('Ft', r':math:`F_t`', 'Tangential loading parameter of the :cite:`benner_empirical_2006` loss model', '--'),
+        ('Zte', r':math:`Z_{\mathrm{te}}`', 'Passage vortex penetration depth at the trailing edge', 'm'),
     ],
     'Greek Symbols': [
         ('01', r':math:`\alpha`', 'Absolute flow angle', r':math:`^{\circ}`'),
         ('02', r':math:`\beta`', 'Relative flow angle', r':math:`^{\circ}`'),
+        ('02', r':math:`\gamma`', 'Heat capacity ratio', '--'),
         ('04', r':math:`\delta`', 'Flow deviation angle', r':math:`^{\circ}`'),
-        ('04', r':math:`\delta`', 'Diffuser semi-divergence angle', r':math:`^{\circ}`'),
-        ('04', r':math:`\delta_{\mathrm{fl}}`', 'Blade flaring angle', r':math:`^{\circ}`'),
+        ('04_0', r':math:`\delta`', 'Diffuser semi-divergence angle', r':math:`^{\circ}`'),
+
+        ('04_1', r':math:`\delta`', 'Boundary layer thickness', r'm'),
+        ('04_2', r':math:`\delta^*`', 'Displacement thickness', r'm'),
+        ('04_3', r':math:`\delta_{\mathrm{fl}}`', 'Blade flaring angle', r':math:`^{\circ}`'),
         ('05', r':math:`\epsilon`', 'Blade wedge angle', r':math:`^{\circ}`'),
         ('05', r':math:`\epsilon_{\mathrm{cl}}`', 'Tip clearance gap', r'm'),
-        ('08', r':math:`\eta_{ts}`', 'Total-to-static isentropic efficiency', '--'),
-        ('08', r':math:`\eta_{tt}`', 'Total-to-total isentropic efficiency', '--'),
-        ('09', r':math:`\theta`', 'Metal angle', r':math:`^{\circ}`'),
-        ('09', r':math:`\Delta \theta`', 'Camber angle', r':math:`^{\circ}`'),
-        ('10', r':math:`i`', 'Incidence angle', r':math:`^{\circ}`'),
-        ('12', r':math:`\lambda`', 'Hub-to-tip radii ratio', '--'),
-        ('13', r':math:`\mu`', 'Dynamic viscosity', r'Pa\,s'),
-        ('15', r':math:`\xi`', 'Stagger angle (also known as setting angle)', r':math:`^{\circ}`'),
-        ('20', r':math:`\rho`', 'Density', r'kg/m^3'),
-        ('22', r':math:`\tau_{\mathrm{w}}`', 'Wall shear stress', r'Pa'),
-        ('24', r':math:`\phi`', 'Flow coefficient', '--'),
-        ('25', r':math:`\psi`', 'Loading coefficient', '--'),
-        ('28', r':math:`\omega`', 'Angular velocity', r'rad/s')
+        ('07', r':math:`\eta_{ts}`', 'Total-to-static isentropic efficiency', '--'),
+        ('07', r':math:`\eta_{tt}`', 'Total-to-total isentropic efficiency', '--'),
+        ('08', r':math:`\theta`', 'Metal angle', r':math:`^{\circ}`'),
+        ('08', r':math:`\Delta \theta`', 'Camber angle', r':math:`^{\circ}`'),
+        ('09', r':math:`i`', 'Incidence angle', r':math:`^{\circ}`'),
+        ('11', r':math:`\lambda`', 'Hub-to-tip radii ratio', '--'),
+        ('12', r':math:`\mu`', 'Dynamic viscosity', r'Pa\,s'),
+        ('14', r':math:`\xi`', 'Stagger angle (also known as setting angle)', r':math:`^{\circ}`'),
+        ('17', r':math:`\rho`', 'Density', r'kg/m^3'),
+        ('19', r':math:`\tau_{\mathrm{w}}`', 'Wall shear stress', r'Pa'),
+        ('21', r':math:`\phi`', 'Flow coefficient', '--'),
+        ('21b', r':math:`\phi^2`', r'Kinetic energy loss coefficient (:math:`\phi^2+\Delta\phi^2=1`)', '--'),
+        ('21b', r':math:`\Delta\phi^2`', 'Complementary of the kinetic energy loss coefficient', '--'),
+        ('22', r':math:`\chi`', 'Incidence parameter of the :cite:`moustapha_improved_1990` loss model', '--'),
+        ('22', r":math:`\chi'`", 'Incidence parameter of the :cite:`benner_influence_1997` loss model', '--'),
+        
+        ('23', r':math:`\psi`', 'Loading coefficient', '--'),
+        ('24', r':math:`\omega`', 'Angular velocity', r'rad/s')
     ],
     'Abbreviations': [
         ('E', 'EOS', 'Equation of State', ''),
@@ -80,8 +92,40 @@ NOMENCLATURE_DATA = {
         ('s2', r':math:`\mathrm{s}`', 'Refers to specific quantitities', ''),
         ('rel', r':math:`\mathrm{rel}`', 'Relative to the rotating frame of reference', ''),
         ('error', r':math:`\mathrm{error}`', 'Violation of an equality constraint', ''),
+        ('inc', r':math:`\mathrm{inc}`', 'Incidence loss', ''),
+        ('p', r':math:`\mathrm{p}`', 'Profile loss', ''),
+        ('sec', r':math:`\mathrm{sec}`', 'Secondary loss', ''),
+        ('te', r':math:`\mathrm{te}`', 'Trailing edge', ''),
+        ('cl', r':math:`\mathrm{cl}`', 'Tip clearance', ''),
+        ('mid', r':math:`\mathrm{mid}`', 'Blade midspan', ''),
     ]
 }
+
+# Greek alphabet order
+# 1.  Alpha (Α, α)
+# 2.  Beta (Β, β)
+# 3.  Gamma (Γ, γ)
+# 4.  Delta (Δ, δ)
+# 5.  Epsilon (Ε, ε)
+# 6.  Zeta (Ζ, ζ)
+# 7.  Eta (Η, η)
+# 8.  Theta (Θ, θ)
+# 9.  Iota (Ι, ι)
+# 10. Kappa (Κ, κ)
+# 11. Lambda (Λ, λ)
+# 12. Mu (Μ, μ)
+# 13. Nu (Ν, ν)
+# 14. Xi (Ξ, ξ)
+# 15. Omicron (Ο, ο)
+# 16. Pi (Π, π)
+# 17. Rho (Ρ, ρ)
+# 18. Sigma (Σ, σ)
+# 19. Tau (Τ, τ)
+# 20. Upsilon (Υ, υ)
+# 21. Phi (Φ, φ)
+# 22. Chi (Χ, χ)
+# 23. Psi (Ψ, ψ)
+# 24. Omega (Ω, ω)
 
 
 def generate_rst_table(nomenclature_data):
