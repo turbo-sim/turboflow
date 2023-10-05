@@ -23,7 +23,6 @@ cascades_data = ml.get_cascades_data("kofskey1972_1stage.yaml")
 design_point = cascades_data["BC"]
 filename = 'Performance_data_2023-10-04_14-12-39.xlsx'
 
-
 performance_data = ml.plot_functions.load_data(filename)
 
 # Plot mass flow rate at different angular speed
@@ -44,12 +43,12 @@ fig, ax = ml.plot_functions.plot_lines_on_subset(performance_data, 'pr_ts', colu
 
 # Plot stacked losses at stator on subset
 subset = ["omega", design_point["omega"]]
-column_names = ["Y_p_2", "Y_te_2", "Y_inc_2", "Y_s_2"]
+column_names = [ "Y_inc_2", "Y_p_2", "Y_te_2", "Y_s_2"]
 fig, ax = ml.plot_functions.stack_lines_on_subset(performance_data, 'pr_ts', column_names, subset, xlabel = "Total-to-static pressure ratio", ylabel = "Losses", title = "Rotor losses")
 
 # Plot stacked losses at rotor on subset
 subset = ["omega", design_point["omega"]]
-column_names = ["Y_p_5", "Y_te_5", "Y_inc_5", "Y_s_5", "Y_cl_5"]
+column_names = ["Y_inc_5", "Y_p_5", "Y_te_5", "Y_s_5", "Y_cl_5"]
 fig, ax = ml.plot_functions.stack_lines_on_subset(performance_data, 'pr_ts', column_names, subset, xlabel = "Total-to-static pressure ratio", ylabel = "Losses", title = "Rotor losses")
 
 
