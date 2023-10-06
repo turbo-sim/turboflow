@@ -1,47 +1,33 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct  5 15:37:19 2023
+Created on Fri Oct  6 11:20:34 2023
 
 @author: laboan
 """
 
 import numpy as np
+from ..math import smooth_min, smooth_max
+
+# TODO: Add smoothing to the min/max/abs/piecewise functions
+# TODO: we can create generic smooth versions of these functions and call them when necessary
+
+# TODO: Create test scripts to plot how the different loss model functions behave when smoothing is applied / verify that the behavior is reasonable beyond their intended range
+# TODO: Raise warninings to a log file to be aware when the loss model is outside its range of validity and because of which variables
+# TODO: the log object can be passed as an additional variable to the functions with a default parameter Logger=None
+# TODO: Whenever something is out of range we can do "if Logger: " to check if the logger was actually passed as an input and log an descriptive message
+
+# TODO: Write detailed docstring in .rst format explaning the equations of the loss model?
+# TODO: This could be prepared in latex and then transformed into .rst with chatGPT
+
+# TODO: For all functions:
+    # TODO: add docstring explaning the equations and the original paper
+    # TODO: possibly include the equation number (or figure number) of the original paper
+    # TODO: explain smoothing/blending tricks
+# We can sit together one day and prepare a draft of the explanation of each function with help of chatGPT
+# In this way I also get the chance to understand how the loss model works in detail
 
 def calculate_loss_coefficient(cascade_data, is_throat):
     
-    r"""
-    Calculate the total loss coefficient for a cascade row using the Kacker-Okapuu loss model.
-    
-    The total loss coefficient (Y) is calculated as the sum of individual loss coefficients:
-
-    .. math::
-
-        Y = Y_p + Y_s + Y_{cl} + Y_{te}
-
-    Parameters
-    ----------
-    cascade_data (dict): Dictionary containing cascade information.
-        - "flow" (dict): Dictionary with flow-related parameters.
-        - "geometry" (dict): Dictionary with geometric parameters.
-        - "type" (str): Type of cascade ('stator' or 'rotor').
-
-    Returns
-    -------
-    list: A list containing:
-        - Total pressure loss coefficient (Y).
-        - Dictionary of individual loss coefficients:
-            - "Profile" (float): Profile loss coefficient.
-            - "Incidence" (float): Incidence loss coefficient (always 0).
-            - "Trailing" (float): Trailing edge loss coefficient.
-            - "Secondary" (float): Secondary loss coefficient.
-            - "Clearance" (float): Tip clearance loss coefficient.
-            - "Total" (float): Total loss coefficient.
-
-
-    """
-    
-    
-    # Load data
     flow_parameters = cascade_data["flow"]
     geometry = cascade_data["geometry"]
     cascade_type=cascade_data["type"]
@@ -49,26 +35,27 @@ def calculate_loss_coefficient(cascade_data, is_throat):
     
     # Profile loss coefficient
     Y_p = get_profile_loss(flow_parameters, geometry, cascade_type)
-
+    
+    # Trailing edge coefficient
+    Y_te = get_trailing_edge_loss(flow_parameters, geometry)   
+    
     # Secondary loss coefficient
     Y_s = get_secondary_loss(flow_parameters, geometry)
-
+    
     # Tip clearance loss coefficient
     Y_cl = get_tip_clearance_loss(flow_parameters, geometry, cascade_type)
     
-    # Trailing edge loss coefficienct
-    Y_te=get_trailing_edge_loss(flow_parameters, geometry)
-    
-    # Incidence loss for profile loss
+    # Incidence loss coefficient
     Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des)
-    Y_p += Y_inc
     
-    # Incidence correction factor for secondary loss coefficient
-    Y_corr = get_secondary_loss_correction_factor(flow_parameters, geometry)
-    Y_s *= Y_corr
-    
-    # Calculate total pressure loss coefficient
-    Y=Y_p+Y_s+Y_cl+Y_te
+    # Penetration depth to blade height ratio
+    ZTE = get_penetration_depth(flow_parameters, geometry) 
+
+    Y_p *= (1-ZTE)
+    Y_te *= (1-ZTE)
+    Y_inc *= (1-ZTE)
+            
+    Y = Y_p + Y_te + Y_inc + Y_s + Y_cl
     
     if is_throat:
         Y_p = Y_p
@@ -76,7 +63,7 @@ def calculate_loss_coefficient(cascade_data, is_throat):
         Y_te = 0
         Y_s = Y_s
         Y_cl = Y_cl
-        Y = Y_p + Y_te + Y_inc + Y_s + Y_cl   
+        Y = Y_p + Y_te + Y_inc + Y_s + Y_cl    
     
     loss_dict = {"Profile" : Y_p,
                  "Incidence": Y_inc,
@@ -86,6 +73,7 @@ def calculate_loss_coefficient(cascade_data, is_throat):
                  "Total" : Y}
     
     return Y, loss_dict
+    
 
 def get_profile_loss(flow_parameters, geometry, cascade_type):
     
@@ -136,6 +124,8 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
         Profile loss coefficient (:math:`Y_p`).
 
     """
+    
+    # TODO: explain smoothing/blending tricks
             
     # Load data
     Re = flow_parameters["Re_out"]
@@ -157,13 +147,13 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     f_Re=(Re/2e5)**(-0.4)*(Re<2e5)+1*(Re >= 2e5 and Re <= 1e6) + (Re/1e6)**(-0.2)*(Re>1e6)
     
     # Mach number correction factor
-    f_Ma=1+60*(Ma_rel_out-1)**2*(Ma_rel_out > 1)    
+    f_Ma=1+60*(Ma_rel_out-1)**2*(Ma_rel_out > 1) ## TODO smoothing / mach crit 
         
     # Compute losses related to shock effects at the inlet of the cascade
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in,cascade_type)
-    a = max(0,f_hub*Ma_rel_in-0.4)
+    a = max(0,f_hub*Ma_rel_in-0.4) # TODO: smoothing
     Y_shock = 0.75*a**1.75*r_ht_in*(p0rel_in-p_in)/(p0rel_out-p_out)
-    Y_shock = max(0,Y_shock)
+    Y_shock = max(0,Y_shock) # TODO: smoothing
     
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
@@ -185,10 +175,10 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     # blade profiles with little deflection
     # Low limit to 80% of the axial entry nozzle profile loss
     # This value is completely arbitrary
-    Y_p = max(Y_p,0.8*Yp_reaction)
+    Y_p = max(Y_p,0.8*Yp_reaction) # TODO: smoothing
     
     # Avoid unphysical effect on the thickness by defining the variable aa
-    aa=max(0,-theta_in/beta_out)
+    aa=max(0,-theta_in/beta_out) # TODO: smoothing
     Y_p = Y_p*((t_max/c)/0.2)**aa
     Y_p = 0.914*(2/3*Y_p*Kp+Y_shock)
     
@@ -196,74 +186,7 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     Y_p = f_Re*f_Ma*Y_p
     
     return Y_p
-
-def get_secondary_loss(flow_parameters, geometry):
     
-    r"""    
-    The function calculates the secondary loss coefficient using the Kacker-Okapuu model.
-    The main equation for Y_s is given by:
-
-    .. math::
-
-        Y_s = 1.2 \cdot K_s \cdot 0.0334 \cdot far \cdot Z \cdot \frac{\cos(\beta_{out})}{\cos(\theta_{in})}
-
-    where:
-        - :math:`K_s` is a correction factor accounting for compressible flow effects.
-        - :math:`far` is a factor that account for the aspect ratio of the current cascade.
-        - :math:`Z` is a blade loading parameter.
-        - :math:`\\beta_{out}` is the exit flow angle.
-        - :math:`\\theta_{in}` is the inlet metal angle.
-
-    The function also applies various corrections and computations based on flow parameters and geometry factors.
-
-    Parameters
-    ----------
-    flow_parameters : dict
-        Dictionary containing flow-related parameters.
-            - "Ma_rel_out" (float) : Exit relative Mach number.
-            - "Ma_rel_in" (float) : Inlet relative Mach number.
-            - "beta_out" (float) : Exit flow angle.
-            - "beta_in" (float) : Inlet flow angle.
-
-    geometry : dict
-        Dictionary with geometric parameters.
-            - "b" (float) : Blade span.
-            - "H" (float) : Blade height.
-            - "c" (float) : Chord length.
-            - "theta_in" (float) : Inlet metal angle.
-
-    Returns
-    -------
-    float
-        Secondary loss coefficient (Y_s).
-
-
-    """
-        
-    Ma_rel_out=flow_parameters["Ma_rel_out"]
-    Ma_rel_in=flow_parameters["Ma_rel_in"]
-    beta_out=flow_parameters["beta_out"]
-    beta_in=flow_parameters["beta_in"]
-    
-    b=geometry["b"]
-    H=geometry["H"]
-    c=geometry["c"]
-    theta_in=geometry["theta_in"]
-    
-    # Compute compressible flow correction factors
-    Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
-    
-    # Secondary loss coefficient  
-    K3 = (b/H)**2
-    Ks = 1-K3*(1-Kp)
-    Ks = max(0.1,Ks)
-    angle_m = np.arctan((np.tan(beta_in)+np.tan(beta_out))/2)
-    Z = 4*(np.tan(beta_in)-np.tan(beta_out))**2*np.cos(beta_out)**2/np.cos(angle_m)
-    far = (1-0.25*np.sqrt(abs(2-H/c)))/(H/c)*(H/c < 2)+1/(H/c)*(H/c >= 2)
-    Y_s = 1.2*Ks*0.0334*far*Z*np.cos(beta_out)/np.cos(theta_in)
-    
-    return Y_s
-
 def get_trailing_edge_loss(flow_parameters, geometry):
     
     r"""    
@@ -323,7 +246,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     phi_data_impulse = [0, 0.025, 0.075]
     
     # Numerical trick to avoid too big r_to's
-    r_to = min(0.4,t_te/o)
+    r_to = min(0.4,t_te/o) # TODO: smoothing
     
     # Interpolate data
     d_phi2_reaction = np.interp(r_to,r_to_data,phi_data_reaction)
@@ -333,10 +256,36 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     d_phi2 = d_phi2_reaction-abs(angle_in/angle_out)*(angle_in/angle_out)*(d_phi2_impulse-d_phi2_reaction)
 
     # Limit the extrapolation of the trailing edge loss
-    d_phi2 = max(d_phi2,d_phi2_impulse/2)
+    d_phi2 = max(d_phi2,d_phi2_impulse/2) # TODO: smoothing
     Y_te = 1/(1-d_phi2)-1
     
     return Y_te
+
+def get_secondary_loss(flow_parameters, geometry):
+
+    BL_rel = flow_parameters["delta"]   
+    beta_in = flow_parameters["beta_in"]
+    beta_out = flow_parameters["beta_out"]
+
+    h = geometry["H"]
+    c = geometry["c"]
+    xi = geometry ["xi"]
+
+    # TODO: add docstring explaning the equations and the original paper
+    # TODO: possibly include the equation number (or figure number) of the original paper
+    # TODO: explain smoothing/blending tricks
+        
+    AR = h/c # Aspect ratio
+    CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
+    
+    if AR <= 2:  # TODO: sigmoid blending to convert to smooth piecewise function
+        denom = np.sqrt(np.cos(xi))*CR*AR**0.55*(np.cos(beta_out)/(np.cos(xi)))**0.55
+        Y_sec = (0.038+0.41*np.tanh(1.2*BL_rel))/denom
+    else:
+        denom = np.sqrt(np.cos(xi))*CR*AR*(np.cos(beta_out)/(np.cos(xi)))**0.55
+        Y_sec = (0.052+0.56*np.tanh(1.2*BL_rel))/denom
+        
+    return Y_sec
 
 def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
     
@@ -491,116 +440,8 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
         
     return Y_inc
 
-def get_secondary_loss_correction_factor(flow_parameters, geometry):
+
     
-    r"""
-    Calculate the correction factor for the secondary loss coefficient to account for incidence losses.
-    The correction factor is calculated based on the secondary flow incidence parameter (:math_`chi`), which is determined using
-    geometrical and flow parameters.
-
-    The correction factor (:math:`Y_{corr}`) is given by:
-
-    .. math::
-
-        Y_{corr} = \begin{cases}
-        e^{0.9\chi} + 13\chi^2 + 400\chi^4 & \text{if } \chi \geq 0 \\
-        e^{0.9\chi} & \text{if } \chi < 0
-        \end{cases}
-
-    where:
-        - :math:`\chi` is the secondary flow incidence parameter.
-        - :math:`c` is the chord length.
-        - :math:`le` is the leading edge diameter.
-        - :math:`\theta_{in}` is the inlet metal angle.
-        - :math:`\theta_{out}` is the exit metal angle.
-
-    The function also checks if the secondary incidence parameter falls within the range of the experimental data used to 
-    determine the correction factor.
-
-    Parameters
-    ----------
-    flow_parameters : dict
-        Dictionary containing flow-related parameters.
-            - "beta_in" (float) : Inlet flow angle.
-
-    geometry : dict
-        Dictionary with geometric parameters.
-            - "c" (float) : Chord length.
-            - "le" (float) : Leading edge diameter.
-            - "theta_in" (float) : Inlet metal angle.
-            - "theta_out" (float) : Exit metal angle.
-
-    Returns
-    -------
-    float
-        Secondary loss correction factor (Y_corr).
-
-    """
-    
-    
-    beta_in=flow_parameters["beta_in"]
-
-    c=geometry["c"]
-    le=geometry["le"]
-    theta_in=geometry["theta_in"]
-    theta_out = geometry["theta_out"]
-    
-    chi = get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in)
-    
-    if not (-0.4 < chi < 0.3):
-        raise Warning("Secondary incidence parameter out of range: chi = {chi}")
-
-    if chi >= 0:
-        Y_corr = np.exp(0.9*chi)+13*chi**2+400*chi**4
-    else:
-        Y_corr = np.exp(0.9*chi)
-        
-    return Y_corr
-
-def nozzle_blades(r_sc,angle_out):
-    
-    # Use Aungier correlation to compute the pressure loss coefficient
-    # This correlation is a formula that reproduces the figures from the Ainley
-    # and Mathieson original figures
-    
-    phi = 90-angle_out*180/np.pi
-    r_sc_min = (0.46+phi/77)*(phi < 30) + (0.614+phi/130)*(phi >= 30)
-    X = r_sc-r_sc_min
-    A = (0.025+(27-phi)/530)*(phi < 27) + (0.025+(27-phi)/3085)*(phi >= 27)
-    B = 0.1583-phi/1640
-    C = 0.08*((phi/30)**2-1)
-    n = 1+phi/30
-    Yp_reaction = (A+B*X**2+C*X**3)*(phi < 30) + (A+B*abs(X)**n)*(phi >= 30)
-    
-    return Yp_reaction
-
-def impulse_blades(r_sc,angle_out):
-    
-    # Use Aungier correlation to compute the pressure loss coefficient
-    # This correlation is a formula that reproduces the figures from the Ainley
-    # and Mathieson original figures
-    
-    phi = 90-angle_out*180/np.pi
-    r_sc_min = 0.224+1.575*(phi/90)-(phi/90)**2
-    X = r_sc-r_sc_min
-    A = 0.242-phi/151+(phi/127)**2
-    B = (0.3+(30-phi)/50)*(phi < 30) + (0.3+(30-phi)/275)*(phi >=30)
-    C = 0.88-phi/42.4+(phi/72.8)**2
-    Yp_impulse = A+B*X**2-C*X**3
-    
-    return Yp_impulse
-
-def get_compressible_correction_factors(Ma_rel_in,Ma_rel_out):
-    
-    # Compute compressible flow correction factor according to Kacker and Okapuu loss model
-    # The loss correlation proposed by ainley ant Mathieson overpredicts losses at high mach numbers 
-    # These correction factors reduces losses accordingly at higher mach numbers
-    
-    K1=1*(Ma_rel_out < 0.2) + (1-1.25*(Ma_rel_out-0.2))*(Ma_rel_out > 0.2 and Ma_rel_out < 1.00)
-    K2=(Ma_rel_in/Ma_rel_out)**2
-    Kp=1-K2*(1-K1)
-    Kp=max(0.1,Kp)
-    return [Kp,K2,K1]
 
 def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     
@@ -611,7 +452,7 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     # r_ht is the hub to tip ratio at the inlet of the current cascade
     # cascade_type is a string that specify whether the current cascade is a stator or a rotor
     
-    if r_ht < 0.5:
+    if r_ht < 0.5: # TODO: add smoothing, this is essentially a max(r_ht, 0.5)
         r_ht = 0.5     # Numerical trick to prevent extrapolation
         
     r_ht_data = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
@@ -630,6 +471,86 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
         print("Specify the type of cascade")
         
     return f    
+
+def get_compressible_correction_factors(Ma_rel_in,Ma_rel_out):
+    
+    # Compute compressible flow correction factor according to Kacker and Okapuu loss model
+    # The loss correlation proposed by ainley ant Mathieson overpredicts losses at high mach numbers 
+    # These correction factors reduces losses accordingly at higher mach numbers
+    
+    # TODO: add docstring explaning the equations and the original paper
+    # TODO: possibly include the equation number (or figure number) of the original paper
+    # TODO: explain smoothing/blending tricks
+    
+    K1=1*(Ma_rel_out < 0.2) + (1-1.25*(Ma_rel_out-0.2))*(Ma_rel_out > 0.2 and Ma_rel_out < 1.00) # TODO: this can be converted to a smooth piecewise function (sigmoid blending)
+    K2=(Ma_rel_in/Ma_rel_out)**2
+    Kp=1-K2*(1-K1)
+    Kp=max(0.1,Kp) # TODO: smoothing
+    return [Kp,K2,K1]
+
+def nozzle_blades(r_sc,angle_out):
+    
+    # Use Aungier correlation to compute the pressure loss coefficient
+    # This correlation is a formula that reproduces the figures from the Ainley
+    # and Mathieson original figures
+    
+    phi=90-angle_out*180/np.pi
+    r_sc_min=(0.46+phi/77)*(phi < 30) + (0.614+phi/130)*(phi >= 30) # TODO: sigmoid blending to convert to smooth piecewise function
+    X=r_sc-r_sc_min
+    A=(0.025+(27-phi)/530)*(phi < 27) + (0.025+(27-phi)/3085)*(phi >= 27) # TODO: sigmoid blending to convert to smooth piecewise function
+    B=0.1583-phi/1640
+    C=0.08*((phi/30)**2-1)
+    n=1+phi/30
+    Yp_reaction= (A+B*X**2+C*X**3)*(phi < 30) + (A+B*abs(X)**n)*(phi >= 30) # TODO: sigmoid blending to convert to smooth piecewise function
+    return Yp_reaction
+
+def impulse_blades(r_sc,angle_out):
+    
+    # Use Aungier correlation to compute the pressure loss coefficient
+    # This correlation is a formula that reproduces the figures from the Ainley
+    # and Mathieson original figures
+    
+    phi=90-angle_out*180/np.pi
+    r_sc_min=0.224+1.575*(phi/90)-(phi/90)**2
+    X=r_sc-r_sc_min
+    A=0.242-phi/151+(phi/127)**2
+    B=(0.3+(30-phi)/50)*(phi < 30) + (0.3+(30-phi)/275)*(phi >=30) # TODO: sigmoid blending to convert to smooth piecewise function
+    C=0.88-phi/42.4+(phi/72.8)**2
+    Yp_impulse=A+B*X**2-C*X**3
+    return Yp_impulse
+
+def get_penetration_depth(flow_parameters, geometry):
+    
+    # Return the penetration depth to blade heigh ratio  
+
+    # TODO: add docstring explaning the equations and the original paper
+    # TODO: possibly include the equation number (or figure number) of the original paper
+    # TODO: explain smoothing/blending tricks
+    
+    beta_in = flow_parameters["beta_in"]
+    beta_out = flow_parameters["beta_out"]
+    delta = flow_parameters["delta"]
+    
+    b = geometry["b"]
+    s = geometry["s"]
+    c = geometry["c"]
+    h = geometry["H"]
+
+    
+    CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
+    
+    BSx = b/s # Axial blade solidity
+    BL_rel = delta # Boundary layer displacement thickness relative to blade height
+    AR = h/c # Aspect ratio
+        
+    Ft = F_t(BSx,beta_in,beta_out)
+                
+    Z_TE = 0.10*Ft**0.79/np.sqrt(CR)/(AR)**0.55+32.70*(BL_rel)**2
+    
+    Z_TE = min(Z_TE, 0.99) # TODO: smoothing
+    
+    return Z_TE
+
 
 
 def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
@@ -672,6 +593,31 @@ def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
      
     return Y
 
-def get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in):
     
-    return (beta_in-theta_in)*180/np.pi/(180-(theta_in+theta_out)*180/np.pi)*(np.cos(theta_in)/np.cos(theta_out))**-1.5*(le/c)**-0.3
+def F_t(BSx,beta_in,beta_out):
+
+    # TODO: add docstring explaning the equations and the original paper
+    # TODO: possibly include the equation number (or figure number) of the original paper
+    # TODO: explain smoothing/blending tricks
+    
+    a_m = np.arctan(0.5*(np.tan(beta_in)+np.tan(beta_out)))
+        
+    F_t = 2*1/BSx*np.cos(a_m)**2*(abs(np.tan(beta_in))+abs(np.tan(beta_out)))
+    
+    return F_t
+
+
+if __name__ == '__main__':
+    
+    We = 31.05*np.pi/180
+    le = 0.081e-2 
+    s = 1.524e-2 
+    theta_in = 29.6*np.pi/180
+    theta_out = -61.6*np.pi/180
+    beta_in = 50*np.pi/180
+    beta_des = theta_in
+    chi = get_incidence_parameter(le,s,We,theta_in,theta_out,beta_in,beta_des)
+    print(chi)
+    print(beta_in)
+    
+    

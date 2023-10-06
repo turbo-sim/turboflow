@@ -7,6 +7,9 @@ Created on Wed Oct  4 08:41:53 2023
 
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+
+colormap = 'Blues'
 
 def load_data(filename):
     
@@ -17,13 +20,12 @@ def load_data(filename):
     for key, df in performance_data.items():
         performance_data[key] = df.round(10)
         
-    return performance_data    
-
+    return performance_data
     
 def save_figure(fig, filename):
     fig.savefig(filename, bbox_inches = 'tight')
     
-def stack_lines_on_subset(performance_data, x_name, column_names, subset, fig = None, ax = None, xlabel = "", ylabel = "", title = None):
+def plot_lines_on_subset(performance_data, x_name, column_names, subset, fig = None, ax = None, xlabel = "", ylabel = "", title = None, close_fig = True, stack = False):
         # Plot each parameter in column_names as a function of x_name in the given subset
         # subset can only be one subset
 
@@ -45,45 +47,23 @@ def stack_lines_on_subset(performance_data, x_name, column_names, subset, fig = 
         y = get_lines(performance_data, column_names, subsets = subset)
         x = get_lines(performance_data, x_name, subsets = subset)
         
-        ax.stackplot(x[0], y, labels = column_names)
+        colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(column_names))) 
+        if stack == True:
+            ax.stackplot(x[0], y, labels = column_names, colors = colors)
+        else:
+            for i in range(len(y)):
+                ax.plot(x[0], y[i], label = f"{column_names[i]}", color = colors[i])
             
         ax.legend()
         fig.tight_layout(pad=1)
+        
+        if close_fig == True:
+            plt.close(fig)
             
         return fig, ax
-
-def plot_lines_on_subset(performance_data, x_name, column_names, subset, fig = None, ax = None, xlabel = "", ylabel = "", title = None):
-    # Plot each parameter in column_names as a function of x_name in the given subset
-    # subset can only be one subset
     
 
-    subset[1:] = [round(value, 10) for value in subset[1:]]
-    
-    if len(subset) > 2:
-        raise Exception("Only one subset (i.e. (key, value)) is accepted for this function")
-    
-    if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-    
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    if title == None:
-        ax.set_title(f"{subset[0]} = {subset[1]}")
-    else:
-        ax.set_title(title)
-            
-    y = get_lines(performance_data, column_names, subsets = subset)
-    x = get_lines(performance_data, x_name, subsets = subset)
-    
-    for i in range(len(y)):
-        ax.plot(x[0], y[i], label = f"{column_names[i]}")
-        
-    fig.tight_layout(pad=1)
-        
-    return fig, ax
-    
-
-def plot_lines(performance_data, x_name, column_names, fig = None, ax = None, xlabel = "", ylabel = "", title = ""):
+def plot_lines(performance_data, x_name, column_names, fig = None, ax = None, xlabel = "", ylabel = "", title = "", close_fig = True):
     
     # Plot each parameter in column_names as a function of x_name
     # filename refers to a file to be loaded containing all data needed
@@ -101,16 +81,19 @@ def plot_lines(performance_data, x_name, column_names, fig = None, ax = None, xl
     y = get_lines(performance_data, column_names)
     x = get_lines(performance_data, x_name)
     
-    
+    colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(column_names))) 
     for i in range(len(y)):
-        ax.plot(x, y[i], label = f"{column_names[i]}")
+        ax.plot(x, y[i], label = f"{column_names[i]}", color = colors[i])
     
     fig.tight_layout(pad=1)
+    
+    if close_fig == True:
+        plt.close(fig)
         
     return fig, ax
     
 
-def plot_line(performance_data, x_name, column_name, fig = None, ax = None, xlabel = "", ylabel = "", title = ""):
+def plot_line(performance_data, x_name, column_name, fig = None, ax = None, xlabel = "", ylabel = "", title = "", close_fig = True):
     
     if not fig and not ax:
 
@@ -126,11 +109,14 @@ def plot_line(performance_data, x_name, column_name, fig = None, ax = None, xlab
     ax.plot(x,y)
     
     fig.tight_layout(pad=1)
+    
+    if close_fig == True:
+        plt.close(fig)
         
     return fig, ax
         
 
-def plot_subsets(performance_data, x, y, subsets, fig = None, ax = None, xlabel = "", ylabel = "", title = ""):
+def plot_subsets(performance_data, x, y, subsets, fig = None, ax = None, xlabel = "", ylabel = "", title = "", close_fig = True):
     
     # Plot variable y as a function of x on the subset defined by subsets
     # *Subset is a tuple where first element is the key of a column in performance data
@@ -149,12 +135,16 @@ def plot_subsets(performance_data, x, y, subsets, fig = None, ax = None, xlabel 
     y = get_lines(performance_data, y, subsets = subsets)
     x = get_lines(performance_data, x, subsets = subsets)
         
+    colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(subsets)-1)) 
     for i in range(len(y)):
-        ax.plot(x[i], y[i], label = f"{subsets[0]} = {subsets[i+1]}")
+        ax.plot(x[i], y[i], label = f"{subsets[0]} = {subsets[i+1]}", color = colors[i])
     
     ax.legend()
 
     fig.tight_layout(pad=1)
+    
+    if close_fig == True:
+        plt.close(fig)
         
     return fig, ax
 

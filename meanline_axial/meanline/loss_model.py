@@ -8,9 +8,11 @@ Created on Fri May 20 10:49:45 2022
 from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
+from . import loss_model_benner_moustapha as bm
+
 
 # Define a list of available loss models
-available_loss_models = ['ko', 'benner', 'moustapha', 'isentropic']
+available_loss_models = ['ko', 'benner', 'moustapha','benner_moustapha', 'isentropic']
 
 def loss(cascade_data, lossmodel, is_throat):
     """
@@ -29,7 +31,9 @@ def loss(cascade_data, lossmodel, is_throat):
         elif lossmodel == 'benner':
             Y, loss_dict = br.calculate_loss_coefficient(cascade_data, is_throat)
         elif lossmodel == 'moustapha':
-            Y, loss_dict = mo.calculate_loss_coefficient(cascade_data)
+            Y, loss_dict = mo.calculate_loss_coefficient(cascade_data, is_throat)
+        elif lossmodel == 'benner_moustapha':
+            Y, loss_dict = bm.calculate_loss_coefficient(cascade_data, is_throat)
         elif lossmodel == 'isentropic':
             loss_dict = {"Profile" : 0,
                          "Secondary" : 0,

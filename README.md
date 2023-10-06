@@ -80,12 +80,12 @@
 
 
 ## To-do list
-- [ ] Verify torque and efficiency deviation match
-- [ ] Check if the correlation for incidence losses from Moustapha 1990 is better
-- [ ] Check if baseline kacker-okapuu + moustapha 1990 is better
+- [x] Verify torque and efficiency deviation match
+- [x] Check if the correlation for incidence losses from Moustapha 1990 is better
+- [x] Check if baseline kacker-okapuu + moustapha 1990 is better
 - [x] Create clean dataset including torque/efficiency/flow angle for each pressure ration/speed
 - [x] Extend validation Kofskey1972 to exit flow angle
-- [ ] Add x=y comparison plots for the validation
+- [x] Add x=y comparison plots for the validation
 - [ ] Verify the displacement thickness value for kofskey1974
 - [ ] Try to extract the shock loss at the inlet fromm the profile loss to have a more clear split of the losses
 - [x] Add better smoother for Mach number constraint

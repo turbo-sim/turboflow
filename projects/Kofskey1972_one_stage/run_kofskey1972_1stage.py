@@ -22,7 +22,7 @@ import meanline_axial as ml
 filename = "kofskey1972_1stage.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-Case = 0
+Case = 3
 
 if Case == 0:
 
@@ -57,6 +57,47 @@ elif Case == 2:
     boundary_conditions["omega"] = angular_speed
     
     ml.calculate.performance_map(boundary_conditions, cascades_data)
+
+elif Case == 3:
+    
+    filename = 'Full_Dataset_Kofskey1972_1stage.xlsx'
+    exp_data = pd.read_excel(filename, sheet_name = ['Mass flow rate', 'Torque', 'Total-to-static efficiency', 'Beta_out'])
+    
+    p0_in = cascades_data["BC"]["p0_in"]
+    omega_des = cascades_data["BC"]["omega"]
+    
+    p_out = []
+    omega = []
+    
+    filenames = ['mass_flow_rate.xlsx', 'torque.xlsx', 'total-to-static_efficiency.xlsx', 'beta_out.xlsx']
+    cascades_data_org = cascades_data.copy()
+    i = 0
+    for key in exp_data.keys():            
+        p_out = p0_in/exp_data[key]["PR"] 
+        omega = exp_data[key]["omega"]/100*omega_des
+        
+        if len(p_out) != len(omega):
+            raise Exception("PR and omega have different dimensions")
+        
+        N = len(p_out)
+        boundary_conditions = {key : val*np.ones(N) for key, val in cascades_data["BC"].items() if key != 'fluid_name'}
+        boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
+        boundary_conditions["p_out"] = p_out.values
+        boundary_conditions["omega"] = omega.values
+        
+        ml.calculate.performance_map(boundary_conditions, cascades_data, filename = filenames[i])
+        
+        cascades_data = cascades_data_org.copy()
+        
+        i+=1
+
+        
+            
+        
+        
+        
+        
+    
     
   
     

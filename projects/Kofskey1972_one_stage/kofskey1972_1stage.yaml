@@ -6,7 +6,7 @@ BC:
   alpha_in: 0              # Flow angle at first stator
   omega: 1627              # Rotational speed
 
-loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+loss_model: moustapha  # Loss model (Benner only for off-design, KO only other option)
 
 geometry:
   n_cascades: 2

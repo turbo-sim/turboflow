@@ -23,20 +23,63 @@ def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, 
     print('\n')
     print(f'Pressure ration: {cascades_data["BC"]["p0_in"]/cascades_data["BC"]["p_out"]}')
     print(f'Angular speed: {cascades_data["BC"]["omega"]}')
-    cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0)
-    solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
-    solution = solver.solve(method=method, options = {'maxfev' : 50})
-    
-    # Try different solver if solution fail to converge properly
-    if max(solution.fun)>1e-6:
+    try:
         cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0)
         solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
-        solution = solver.solve(method='lm', options = {'maxiter' : 50})
+        solution = solver.solve(method=method, options = {'maxfev' : 50})
+        if max(solution.fun>1e-6):
+            raise Exception("Convergence failed")
+    except:
+        print("Try different solver")
+        
+        try:
+            cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0)
+            solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
+            solution = solver.solve(method='lm', options = {'maxiter' : 50})  
+            if max(solution.fun>1e-6):
+                raise Exception("Convergence failed")
+            
+        except:        
+            print("Try different initial guess")
+            
+            try: 
+                cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0 = None)
+                solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
+                solution = solver.solve(method='hybr', options = {'maxiter' : 50})
+                if max(solution.fun>1e-6):
+                    raise Exception("Convergence failed")
+                
+            except:
+                print("Try different initial guess and solver")
     
+                try:
+                    cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0 = None)
+                    solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
+                    solution = solver.solve(method='lm', options = {'maxiter' : 50})
+                    if max(solution.fun>1e-6):
+                        raise Exception("Convergence failed")
+                except:
+                    try: 
+                        cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = 0.1, eta_tt = 0.8, eta_ts = 0.6, Ma_crit = 0.9, x0 = None)
+                        solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
+                        solution = solver.solve(method='lm', options = {'maxiter' : 50})
+                        if max(solution.fun>1e-6):
+                            raise Exception("Convergence failed")
+                    except: 
+                        try:
+                            cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = 0.3, eta_tt = 0.8, eta_ts = 0.6, Ma_crit = 0.9, x0 = None)
+                            solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
+                            solution = solver.solve(method='lm', options = {'maxiter' : 50})
+                            if max(solution.fun>1e-6):
+                                raise Exception("Convergence failed")
+                                
+                        except:
+                            raise Exception("Convergence failed for all initial guesse and methods")
+
     return solution
 
 
-def performance_map(boundary_conditions, cascades_data):
+def performance_map(boundary_conditions, cascades_data, filename = None):
     
     # Evaluate the cascades series at all conditions given in boundary_conditions
     # Exports the performance to ...
@@ -86,8 +129,10 @@ def performance_map(boundary_conditions, cascades_data):
             
     
     # Write performance dataframe to excel
-    current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    filename = f"Performance_data_{current_time}.xlsx"
+    if filename == None:
+        current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        filename = f"Performance_data_{current_time}.xlsx"
+        
     with pd.ExcelWriter(filename, engine='openpyxl') as writer:
         BC_data.to_excel(writer, sheet_name = 'BC', index=False)
         plane_data.to_excel(writer, sheet_name = 'plane', index=False)
