@@ -203,7 +203,7 @@ class NonlinearSystemSolver:
         else: 
             # Fall back to finite differences
             jacobian = approx_derivative(
-                self.get_values, x, method="2-point", f0=self.last_residuals
+                self.get_values, x, method="2-point", f0=self.last_residuals, abs_step = 1e-4*x
             )
 
         # Update progress report
