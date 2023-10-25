@@ -573,7 +573,7 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
     # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
 
-    chi = (le/s)**(-1.6)*(np.cos(theta_in)/np.cos(theta_out))**(-2)*(beta_in-beta_des)*180/np.pi
+    chi = (le/s)**(-1.6)*(np.cos(theta_in)/np.cos(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))*180/np.pi
     return chi
     
 def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):

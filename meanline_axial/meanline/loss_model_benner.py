@@ -638,14 +638,13 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
 
     return loss_increment
 
-
 def get_incidence_parameter(le,s,We,theta_in,theta_out,beta_in,beta_des):
 
     # TODO: add docstring explaning the equations and the original paper
     # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
 
-    chi = (le/s)**(-0.05)*(We*180/np.pi)**(-0.2)*(np.cos(theta_in)/np.cos(theta_out))**(-1.4)*(beta_in-beta_des)*180/np.pi
+    chi = (le/s)**(-0.05)*(We*180/np.pi)**(-0.2)*(np.cos(theta_in)/np.cos(theta_out))**(-1.4)*(abs(beta_in)-abs(beta_des))*180/np.pi
     return chi
 
     
