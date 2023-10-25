@@ -47,7 +47,7 @@ def plot_lines_on_subset(performance_data, x_name, column_names, subset, fig = N
         y = get_lines(performance_data, column_names, subsets = subset)
         x = get_lines(performance_data, x_name, subsets = subset)
         
-        colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(column_names))) 
+        colors = plt.get_cmap(colormap)(np.linspace(0.4, 1, len(column_names))) 
         if stack == True:
             ax.stackplot(x[0], y, labels = column_names, colors = colors)
         else:
@@ -55,7 +55,7 @@ def plot_lines_on_subset(performance_data, x_name, column_names, subset, fig = N
                 ax.plot(x[0], y[i], label = f"{column_names[i]}", color = colors[i])
             
         ax.legend()
-        fig.tight_layout(pad=1)
+        fig.tight_layout(pad=1, w_pad=None, h_pad=None)
         
         if close_fig == True:
             plt.close(fig)
@@ -81,11 +81,12 @@ def plot_lines(performance_data, x_name, column_names, fig = None, ax = None, xl
     y = get_lines(performance_data, column_names)
     x = get_lines(performance_data, x_name)
     
-    colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(column_names))) 
+    colors = plt.get_cmap(colormap)(np.linspace(0.4, 1, len(column_names))) 
     for i in range(len(y)):
         ax.plot(x, y[i], label = f"{column_names[i]}", color = colors[i])
     
-    fig.tight_layout(pad=1)
+    ax.legend()
+    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
     
     if close_fig == True:
         plt.close(fig)
@@ -108,7 +109,7 @@ def plot_line(performance_data, x_name, column_name, fig = None, ax = None, xlab
     
     ax.plot(x,y)
     
-    fig.tight_layout(pad=1)
+    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
     
     if close_fig == True:
         plt.close(fig)
@@ -141,7 +142,7 @@ def plot_subsets(performance_data, x, y, subsets, fig = None, ax = None, xlabel 
     
     ax.legend()
 
-    fig.tight_layout(pad=1)
+    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
     
     if close_fig == True:
         plt.close(fig)
@@ -164,11 +165,9 @@ def get_lines(performance_data, column_name, subsets = None):
             lines = []
             for column in column_name:
                 lines.append(get_column(performance_data, column))
-                
             return lines
     
     subsets[1:] = [round(value, 10) for value in subsets[1:]]
-    
     # Get lines covering given subset 
     lines = []
     for val in subsets[1:]:
