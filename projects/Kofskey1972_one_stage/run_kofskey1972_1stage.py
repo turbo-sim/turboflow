@@ -22,13 +22,13 @@ import meanline_axial as ml
 filename = "kofskey1972_1stage.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-Case = 3
+Case = 0
 
 if Case == 0:
 
     # Solve using nonlinear equation solver
     BC = cascades_data["BC"]
-    sol = ml.calculate.performance(BC,cascades_data, R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95)
+    sol = ml.calculate.performance(BC,cascades_data, method = 'hybr', R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95)
     
 elif Case == 1:   
     # Solve using optimization algorithm
@@ -91,7 +91,17 @@ elif Case == 3:
         
         i+=1
 
-        
+elif Case == 4:
+    p_min = 1.8
+    p_max = 4.0
+    N = int((p_max-p_min)*10)+1
+    pressure_ratio = np.linspace(p_min,p_max, N)
+    p_out = cascades_data["BC"]["p0_in"]/pressure_ratio
+    boundary_conditions = {key : val*np.ones(N) for key, val in cascades_data["BC"].items() if key != 'fluid_name'}
+    boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
+    boundary_conditions["p_out"] = p_out
+    ml.calculate.performance_map(boundary_conditions, cascades_data)
+
             
         
         

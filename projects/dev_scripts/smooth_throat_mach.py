@@ -11,14 +11,15 @@ if __name__ == "__main__":
 
     # Calculate softmin using various methods
     f_max = np.min(inputs, axis=0)
-    f_pnorm = ml.softmin(inputs, method="p-norm", alpha=25, axis=0)
-    f_logsumexp = ml.softmin(inputs, method="logsumexp", alpha=25, axis=0)
-    f_boltzmann = ml.softmin(inputs, method="boltzmann", alpha=25, axis=0)
+    f_pnorm = ml.smooth_min(inputs, method="p-norm", alpha=25, axis=0)
+    f_logsumexp = ml.smooth_min(inputs, method="logsumexp", alpha=25, axis=0)
+    f_boltzmann = ml.smooth_min(inputs, method="boltzmann", alpha=25, axis=0)
 
     # Create the folder to save figures
     fig_dir = "figures"
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
+
 
     # Plot the data
     fig, ax = plt.subplots()

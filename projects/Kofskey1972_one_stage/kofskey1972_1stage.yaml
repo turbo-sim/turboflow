@@ -6,7 +6,8 @@ BC:
   alpha_in: 0              # Flow angle at first stator
   omega: 1627              # Rotational speed
 
-loss_model: moustapha  # Loss model (Benner only for off-design, KO only other option)
+loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+blocking : True
 
 geometry:
   n_cascades: 2
@@ -23,7 +24,8 @@ geometry:
   te: [2*0.025e-2, 2*0.025e-2]               # Trialing edge thickness
   xi: [43.03*np.pi/180, 31.05*np.pi/180]     # Stagger angle
   theta_in: [0, 29.6*np.pi/180]              # Inlet metal angle
-  theta_out: [65*np.pi/180,-61.6*np.pi/180]  # Exit metal angle
+ # theta_out: [65*np.pi/180,-61.6*np.pi/180]  # Exit metal angle
+  theta_out: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]  # Exit metal angle
   A_in: [0.021468, 0.021468]                 # Inlet area
   A_throat: [9.10e-03, 1.20e-02]             # Throat area
   A_out: [0.021468, 0.025197]                # Exit area
