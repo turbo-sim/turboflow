@@ -10,19 +10,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import cascade_series as cs
 from .non_linear_problem import CascadesNonlinearSystemProblem
-from .solver import NonlinearSystemSolver
+from .optimization_problem import CascadesOptimizationProblem
+from .solver import NonlinearSystemSolver, OptimizationSolver
 from .utilities import set_plot_options
 from datetime import datetime
 
 set_plot_options()
     
-def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, R = 0.5, eta_tt = 0.9, eta_ts = 0.8, Ma_crit = 0.9):
+def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, R = 0.5, eta_tt = 0.9, eta_ts = 0.8, Ma_crit = 0.95):
     
     # Calculate performance at given boundary conditions with given geometry
     cascades_data["BC"] = boundary_conditions
     print('\n')
     print(f'Pressure ration: {cascades_data["BC"]["p0_in"]/cascades_data["BC"]["p_out"]}')
     print(f'Angular speed: {cascades_data["BC"]["omega"]}')
+    
+
     try:
         cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0)
         solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
@@ -45,36 +48,30 @@ def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, 
             try: 
                 cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0 = None)
                 solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
-                solution = solver.solve(method='hybr', options = {'maxiter' : 50})
+                solution = solver.solve(method='lm', options = {'maxiter' : 50})
                 if max(solution.fun>1e-6):
                     raise Exception("Convergence failed")
                 
             except:
                 print("Try different initial guess and solver")
-    
-                try:
-                    cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R, eta_tt, eta_ts, Ma_crit, x0 = None)
-                    solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
-                    solution = solver.solve(method='lm', options = {'maxiter' : 50})
-                    if max(solution.fun>1e-6):
-                        raise Exception("Convergence failed")
-                except:
-                    try: 
-                        cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = 0.1, eta_tt = 0.8, eta_ts = 0.6, Ma_crit = 0.9, x0 = None)
+                counter = 0
+                R = 0
+                eta_ts = 0.6
+                while max(solution.fun)>1e-6 and counter < 10:
+                    
+                    try:
+                        R += 0.1
+                        eta_ts += 0.1
+                        eta_tt = eta_ts + 0.1
+                        Ma_crit = 1
+                        cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = R, eta_tt = eta_tt, eta_ts = eta_ts, Ma_crit = Ma_crit, x0 = None)
                         solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
                         solution = solver.solve(method='lm', options = {'maxiter' : 50})
+                        counter += 1
                         if max(solution.fun>1e-6):
                             raise Exception("Convergence failed")
-                    except: 
-                        try:
-                            cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = 0.3, eta_tt = 0.8, eta_ts = 0.6, Ma_crit = 0.9, x0 = None)
-                            solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
-                            solution = solver.solve(method='lm', options = {'maxiter' : 50})
-                            if max(solution.fun>1e-6):
-                                raise Exception("Convergence failed")
-                                
-                        except:
-                            raise Exception("Convergence failed for all initial guesse and methods")
+                    except:
+                        print("Try again")
 
     return solution
 
@@ -139,6 +136,22 @@ def performance_map(boundary_conditions, cascades_data, filename = None):
         cascade_data.to_excel(writer, sheet_name = 'cascade', index=False)
         stage_data.to_excel(writer, sheet_name = 'stage', index=False)
         overall_data.to_excel(writer, sheet_name = 'overall', index=False)
+        
+def optimal_turbine(design_point, cascades_data):
+    
+    # Convert design variables (geometry, specific speed) to a flat array
+    geometry = cascades_data["geometry"]
+    specific_speed = cascades_data["BC"]["specific_speed"]
+    x0 = np.array([specific_speed])
+    
+    for i in range(geometry["n_cascades"]):
+        cascade_geometry = np.array([val[i] for val in geometry.values()])
+        x0 = np.concatenate((x0, cascade_geometry))
+    
+    cascades_problem = CascadesOptimizationProblem(cascades_data)
+    solver = OptimizationSolver(cascades_problem, x0)
+    
+
     
     
 
