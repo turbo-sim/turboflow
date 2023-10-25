@@ -21,7 +21,7 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
        'Y_err', 'Y', 'Y_p', 'Y_cl', 'Y_s', 'Y_te', 'Y_inc']
 
-keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit"]
+keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit", "m_crit", "w_crit", "d_crit", "alpha_crit", "incidence"]
 
 def evaluate_velocity_triangle_in(u, v, alpha):
     """
@@ -203,7 +203,7 @@ def evaluate_cascade_series(x, cascades_data):
 
         crit_res = evaluate_lagrange_gradient(x_crit_cascade, critical_cascade_data, geometry)
         residuals = np.concatenate((residuals, crit_res))
-        Ma_crit = critical_cascade_data["Ma_crit"]
+        critical_conditon = critical_cascade_data["condition"]
         
         # Retrieve the DOF for the current cascade
         x_cascade = x_series[i * n_dof:(i + 1) * n_dof]
@@ -215,7 +215,7 @@ def evaluate_cascade_series(x, cascades_data):
         x_cascade[3] = x_cascade[3] * s_ref
 
         # Evaluate the current cascade at the given conditions
-        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, cascades_data, geometry, Ma_crit)
+        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, cascades_data, geometry, critical_conditon)
 
         # Change boundary conditions for next cascade (for critical mach calculation)
         critical_cascade_data["BC"]["p0_in"] = cascades_data["plane"]["p0rel"].values[-1]
@@ -256,7 +256,7 @@ def evaluate_cascade_series(x, cascades_data):
     
     return residuals
 
-def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
+def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_condition):
     """
     Evaluate the performance of a cascade.
 
@@ -296,13 +296,17 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
     """
     # Load necessary parameters
     fluid = cascades_data["BC"]["fluid"]
-    A_out = geometry["A_out"]
     theta_in = geometry["theta_in"]
     theta_out = geometry["theta_out"]
+    A_throat = geometry["A_out"]
+    A_out = geometry["A_out"]
+    opening = geometry["o"]
+    pitch = geometry["s"]
+    chord = geometry["c"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
 
     # Structure degrees of freedom
-    vel_throat, vel_out, s_throat, s_out, beta_out = x_cascade[:5]
+    vel_throat, vel_out, s_throat, s_out, beta_out = x_cascade
 
     x_throat = np.array([vel_throat, theta_out, s_throat])
     x_out = np.array([vel_out, beta_out, s_out])
@@ -323,16 +327,19 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
     cascades_data["plane"].loc[len(cascades_data["plane"])] = inlet_plane
 
     # Evaluate throat
-    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane, is_throat=True)
+    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_throat, inlet_plane)
     
-    # delta_star1 = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
-    # delta_star2 = 0.048/throat_plane["Re"]**(1/5)*0.9*geometry["c"] 
-    # correction = 1-2*delta_star2/geometry["o"]
-    # print(delta_star1, delta_star2, correction, geometry["o"], throat_plane["Re"])
-    # raise Exception("STOP HERE")
-    correction=1
+    # Account for blocking
+    # blocking = True
+    # if blocking == True:
+    #     # delta_star1 = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
+    #     delta_star2 = 0.048/throat_plane["Re"]**(1/5)*0.9*chord
+    #     correction = 1-2*delta_star2/opening
+    # else:
+    #     correction = 1
+        
+    # throat_plane["m"] *= correction
     
-    throat_plane["m"] = throat_plane["m"]*correction
     cascades_data["plane"].loc[len(cascades_data["plane"])] = throat_plane
 
     Y_err_throat = throat_plane["Y_err"]
@@ -343,20 +350,44 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
     cascades_data["plane"].loc[len(cascades_data["plane"])] = exit_plane
     Y_err_out = exit_plane["Y_err"]
     cascade_res = np.append(cascade_res, Y_err_out)
+    
+    # Compute beta according to deviation model
+    Ma_crit = critical_condition["Ma_crit"]
+    m_crit = critical_condition["m_crit"]
+    w_crit = critical_condition["w_crit"]
+    rho_crit = critical_condition["d_crit"]
+    alpha_crit = critical_condition["alpha_crit"]
+    rho_throat = throat_plane["d"]
+    Ma_exit = exit_plane["Marel"]
+    Ma_throat = throat_plane["Marel"]
+    rho_out = exit_plane["d"]
+    w_out = exit_plane["w"]
+    
+    if Ma_exit < Ma_crit:
+        beta_g = np.arcsin(opening/pitch)*180/np.pi
+        delta_0 = np.arcsin(opening/pitch*(1+(1-opening/pitch)*(beta_g/90)**2))*180/np.pi-beta_g
 
-    # Compute mach number error
-    # actual_mach = min(cascades_data["plane"]["Marel"].values[outlet], Ma_crit)
-    alpha = -100
-    # actual_mach = (cascades_data["plane"]["Marel"].values[outlet] ** alpha + Ma_crit ** alpha) ** (1 / alpha)
-    xi = np.array([Ma_crit, cascades_data["plane"]["Marel"].values[outlet]])
-    actual_mach = max_boltzmann(xi, alpha)
+        if Ma_exit < 0.50:
+            delta = delta_0
 
-    mach_err = cascades_data["plane"]["Marel"].values[throat] - actual_mach
-    cascade_res = np.append(cascade_res, mach_err)
-
+        elif Ma_exit > 0.50:
+            X = (2*Ma_exit-1) / (2*Ma_crit-1)
+            delta = delta_0*(1-10*X**3+15*X**4-6*X**5)
+                            
+        beta = np.arccos(opening/pitch)*180/np.pi-delta
+        density_correction = np.nan
+    else:
+        density_correction = rho_throat/rho_crit
+        beta = np.arccos(m_crit/rho_out/w_out/A_out*density_correction)*180/np.pi
+                
+           
+    # Compute error of guessed beta and deviation model
+    error = np.cos(beta*np.pi/180)-np.cos(beta_out)
+    cascade_res = np.append(cascade_res, error)
+        
     # Add mass flow deviations to residuals
     cascade_res = np.concatenate((cascade_res, (cascades_data["plane"]["m"][inlet:outlet].values -
-                                               cascades_data["plane"]["m"][throat:outlet + 1].values))) / m_ref
+                                               cascades_data["plane"]["m"][throat:outlet + 1].values)/ m_ref)) 
 
     # Add cascade information to cascade dataframe
     static_properties_isentropic_expansion = fluid.compute_properties_meanline(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
@@ -368,8 +399,14 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, Ma_crit):
         "Y_cl": Y_info_exit["Clearance"],
         "dh_s": dhs,
         "Ma_crit" : Ma_crit,
-        "incidence" : inlet_plane["beta"]-theta_in
+        "m_crit" : m_crit,
+        "w_crit" : w_crit,
+        "d_crit" : rho_crit,
+        "alpha_crit" : alpha_crit,
+        "incidence" : inlet_plane["beta"]-theta_in,
+        "density_correction" : density_correction
     }
+    
 
     cascades_data["cascade"].loc[len(cascades_data["cascade"])] = cascade_data
 
@@ -527,7 +564,7 @@ def evaluate_inlet(cascades_data, u, geometry, exit_plane):
     return plane    
 
 
-def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, is_throat=False):
+def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     
     """
      Evaluates the throat or exit plane of a cascade.
@@ -553,6 +590,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, is_throat=Fa
     
     # Load geomerrical parameters 
     c = geometry["c"]
+    o = geometry["o"]
     
     # Load inlet state variables from inlet of current cascade
     p0rel_in = inlet_plane["p0rel"]
@@ -595,7 +633,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, is_throat=Fa
     Marel = w / a
     Re = d*w*c/mu;
     m = d*w_m*A
-    
+        
     # Evaluate loss coefficient
     cascade_data = {"geometry" : geometry,
                     "flow" : {},
@@ -616,7 +654,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, is_throat=Fa
     cascade_data["flow"]["delta"] = delta
     cascade_data["flow"]["gamma_out"] = static_properties["gamma"]
     
-    Y, Y_err, Y_info = evaluate_loss_model(cascade_data, is_throat)
+    Y, Y_err, Y_info = evaluate_loss_model(cascade_data)
     
     # Store result
     plane = {**vel_out, **static_properties, **stagnation_properties, **relative_stagnation_properties}
@@ -705,7 +743,7 @@ def evaluate_lagrange_gradient(x, critical_cascade_data, geometry):
     f0 = evaluate_critical_cascade(x, critical_cascade_data, geometry)
 
     # Evaluate the Jacobian of the evaluate_critical_cascade function
-    J = compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0)
+    J = compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0) 
     
     # Rename gradients
     a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1+1], J[2, 1+1], -1 * J[0, 0], -1 * J[0, 1+1]
@@ -723,21 +761,6 @@ def evaluate_lagrange_gradient(x, critical_cascade_data, geometry):
     g = f0[1:]  # The two constraints
     res = np.insert(g, 0, grad)
 
-    # # Rename gradients
-    # a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1], J[2, 1], -1 * J[0, 0], -1 * J[0, 1]
-
-    # # Calculate the Lagrange multipliers explicitly
-    # l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
-    # l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21)
-
-    # # Evaluate the last equation
-    # df, dg1, dg2 = J[0, 2], J[1, 2], J[2, 2]
-    # grad = (df + l1 * dg1 + l2 * dg2) / m_ref
-
-    # # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
-    # g = f0[1:]  # The two constraints
-    # res = np.insert(g, 0, grad)
-
     return res
 
 def compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0):
@@ -753,9 +776,9 @@ def compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0):
     Returns:
         np.ndarray: The Jacobian matrix.
     """
-    eps = 1e-3 * x
+    eps = 5e-5 * x
     # eps = 1e-6*np.maximum(1, abs(x))*np.sign(x)
-    J = approx_derivative(evaluate_critical_cascade, x, method='2-point', f0=f0, abs_step=eps,
+    J = approx_derivative(evaluate_critical_cascade, x, method='2-point', f0 = f0, abs_step=eps,
                          args=(critical_cascade_data, geometry))
 
     return J
@@ -798,9 +821,10 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
         # Evaluate the critical cascade
         critical_cascade_result = evaluate_critical_cascade(x_crit, critical_cascade_data, geometry)
     """
+    
     u = critical_cascade_data["u"]
-    A_out = geometry["A_out"]
     theta_out = geometry["theta_out"]
+    A_throat = geometry["A_out"]
 
     v0 = critical_cascade_data["fixed_params"]["v0"]
     s_ref = critical_cascade_data["fixed_params"]["s_ref"]
@@ -812,12 +836,19 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
 
     beta_throat = theta_out
     x = np.array([w_throat, beta_throat, s_throat])
-    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_out, inlet_plane, is_throat = True)
+    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_throat, inlet_plane)
 
     m_in, m_throat = inlet_plane["m"], throat_plane["m"]
     residuals = np.array([(m_in - m_throat) / m_ref, throat_plane["Y_err"]])
 
-    critical_cascade_data["Ma_crit"] = throat_plane["Marel"]
+    critical_condition = {"Ma_crit" : throat_plane["Marel"],
+                          "m_crit" : throat_plane["m"],
+                          "p_crit" : throat_plane["p"],
+                          "d_crit" : throat_plane["d"],
+                          "alpha_crit" : inlet_plane["alpha"],
+                          "w_crit" : throat_plane["w"]}
+    
+    critical_cascade_data["condition"] = critical_condition
 
     output = np.insert(residuals, 0, m_throat)
 
