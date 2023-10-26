@@ -15,6 +15,17 @@ the turbine, such as viscous friction in boundary layers, wake mixing, or
 shock waves. The work of :cite:`denton_loss_1993`  presents a detailed description of 
 loss mechanisms in turbomachinery.
 
+
+
+Loss coefficient definitions
+
+
+The losses are characterized in terms of the loss coefficient
+This parameter has different possible definitions
+
+
+
+
 Perhaps, the most popular loss model for axial turbines is the one proposed 
 by :cite:`ainley_method_1951,ainley_examination_1951` and its subsequent refinements by 
 :cite:`dunham_improvements_1970` 

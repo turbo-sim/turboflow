@@ -27,9 +27,9 @@ Nomenclature
    * - :math:`C_{\mathrm{f}}`
      - Diffuser skin friction coefficient
      - --
-   * - :math:`c`
-     - Convergence ratio
-     - m
+   * - :math:`CR`
+     - Contraction ratio in the :cite:`benner_empirical_2006` loss model
+     - --
    * - :math:`d_{\mathrm{m}}`
      - Turbine mean diameter
      - m
@@ -37,7 +37,7 @@ Nomenclature
      - Turbine specific diameter
      - --
    * - :math:`F_t`
-     - Tangential loading parameter of the :cite:`benner_empirical_2006` loss model
+     - Tangential loading parameter in the :cite:`benner_empirical_2006` loss model
      - --
    * - :math:`H`
      - Blade height
@@ -203,10 +203,10 @@ Nomenclature
      - Complementary of the kinetic energy loss coefficient
      - --
    * - :math:`\chi`
-     - Incidence parameter of the :cite:`moustapha_improved_1990` loss model
+     - Incidence parameter in the :cite:`moustapha_improved_1990` loss model
      - --
    * - :math:`\chi'`
-     - Incidence parameter of the :cite:`benner_influence_1997` loss model
+     - Incidence parameter in the :cite:`benner_influence_1997` loss model
      - --
    * - :math:`\psi`
      - Loading coefficient

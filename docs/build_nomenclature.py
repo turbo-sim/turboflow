@@ -8,7 +8,7 @@ NOMENCLATURE_DATA = {
         ('s3', r':math:`s_\mathrm{ax}`', 'Axial spacing between cascades', r'm'),
         ('o', r':math:`o`', 'Blade opening', r'm'),
         ('c', r':math:`c`', 'Blade chord', r'm'),
-        ('CR', r':math:`c`', 'Convergence ratio', r'm'),
+        ('CR', r':math:`CR`', 'Contraction ratio in the :cite:`benner_empirical_2006` loss model', r'--'),
         ('c_a', r':math:`c_\mathrm{ax}`', 'Blade axial chord', r'm'),
         ('r_m', r':math:`r_{\mathrm{m}}`', 'Turbine mean radius', r'm'),
         ('d_m', r':math:`d_{\mathrm{m}}`', 'Turbine mean diameter', r'm'),
@@ -38,7 +38,7 @@ NOMENCLATURE_DATA = {
         ('a', r':math:`a`', 'Speed of sound', r'm/s'),
         ('Y', r':math:`Y`', 'Stagnation pressure loss coefficient', '--'),
         ('Cf', r':math:`C_{\mathrm{f}}`', 'Diffuser skin friction coefficient', '--'),
-        ('Ft', r':math:`F_t`', 'Tangential loading parameter of the :cite:`benner_empirical_2006` loss model', '--'),
+        ('Ft', r':math:`F_t`', 'Tangential loading parameter in the :cite:`benner_empirical_2006` loss model', '--'),
         ('Zte', r':math:`Z_{\mathrm{te}}`', 'Passage vortex penetration depth at the trailing edge', 'm'),
     ],
     'Greek Symbols': [
@@ -66,8 +66,8 @@ NOMENCLATURE_DATA = {
         ('21', r':math:`\phi`', 'Flow coefficient', '--'),
         ('21b', r':math:`\phi^2`', r'Kinetic energy loss coefficient (:math:`\phi^2+\Delta\phi^2=1`)', '--'),
         ('21b', r':math:`\Delta\phi^2`', 'Complementary of the kinetic energy loss coefficient', '--'),
-        ('22', r':math:`\chi`', 'Incidence parameter of the :cite:`moustapha_improved_1990` loss model', '--'),
-        ('22', r":math:`\chi'`", 'Incidence parameter of the :cite:`benner_influence_1997` loss model', '--'),
+        ('22', r':math:`\chi`', 'Incidence parameter in the :cite:`moustapha_improved_1990` loss model', '--'),
+        ('22', r":math:`\chi'`", 'Incidence parameter in the :cite:`benner_influence_1997` loss model', '--'),
         
         ('23', r':math:`\psi`', 'Loading coefficient', '--'),
         ('24', r':math:`\omega`', 'Angular velocity', r'rad/s')
