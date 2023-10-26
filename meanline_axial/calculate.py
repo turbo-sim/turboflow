@@ -57,17 +57,17 @@ def performance(boundary_conditions, cascades_data, method = 'hybr', x0 = None, 
                 counter = 0
                 R = 0
                 eta_ts = 0.6
-                while max(solution.fun)>1e-6 and counter < 10:
+                while (max(solution.fun)>1e-6 and counter < 10):
                     
                     try:
                         R += 0.1
-                        eta_ts += 0.1
-                        eta_tt = eta_ts + 0.1
-                        Ma_crit = 1
+                        eta_ts += 0.05
+                        eta_tt = eta_ts + 0.05
+                        Ma_crit = 0.9
+                        counter += 1
                         cascades_problem = CascadesNonlinearSystemProblem(cascades_data, R = R, eta_tt = eta_tt, eta_ts = eta_ts, Ma_crit = Ma_crit, x0 = None)
                         solver = NonlinearSystemSolver(cascades_problem, cascades_problem.x0)
                         solution = solver.solve(method='lm', options = {'maxiter' : 50})
-                        counter += 1
                         if max(solution.fun>1e-6):
                             raise Exception("Convergence failed")
                     except:
