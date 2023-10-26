@@ -19,9 +19,9 @@ keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', '
        's0', 'd0', 'Z0', 'a0', 'mu0', 'k0', 'cp0', 'cv0', 'gamma0', 'p0rel',
        'T0rel', 'h0rel', 's0rel', 'd0rel', 'Z0rel', 'a0rel', 'mu0rel', 'k0rel',
        'cp0rel', 'cv0rel', 'gamma0rel', 'Ma', 'Marel', 'Re', 'm', 'delta',
-       'Y_err', 'Y', 'Y_p', 'Y_cl', 'Y_s', 'Y_te', 'Y_inc']
+       'Y_err', 'Y', 'Y_p', 'Y_cl', 'Y_s', 'Y_te', 'Y_inc', 'blockage']
 
-keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit", "m_crit", "w_crit", "d_crit", "alpha_crit", "incidence"]
+keys_cascade = ["Y_tot", "Y_p", "Y_s", "Y_cl", "dh_s", "Ma_crit", "m_crit", "w_crit", "d_crit", "alpha_crit", "incidence", "density_correction"]
 
 def evaluate_velocity_triangle_in(u, v, alpha):
     """
@@ -161,6 +161,7 @@ def evaluate_cascade_series(x, cascades_data):
     m_ref = cascades_data["fixed_params"]["m_ref"]
     delta_ref = cascades_data["fixed_params"]["delta_ref"]
     lossmodel = cascades_data["loss_model"]
+    displacement_thickness = cascades_data["displacement_thickness"]
     omega = cascades_data["BC"]["omega"]
     u = cascades_data["overall"]["blade_speed"]
     n_dof = 5  # Number of degrees of freedom for each cascade except for v_in (used for keeping track on indices)
@@ -185,7 +186,7 @@ def evaluate_cascade_series(x, cascades_data):
     critical_cascade_data = {
         "BC": {"p0_in": p0_in, "T0_in": T0_in, "fluid": fluid, "alpha_in": alpha_in},
         "fixed_params": {"m_ref": m_ref, "s_ref": s_ref, "v0": v0, "delta_ref": delta_ref},
-        "loss_model": lossmodel
+        "loss_model": lossmodel, "displacement_thickness" : displacement_thickness
     }
 
     for i in range(n_cascades):
@@ -298,12 +299,12 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     fluid = cascades_data["BC"]["fluid"]
     theta_in = geometry["theta_in"]
     theta_out = geometry["theta_out"]
-    A_throat = geometry["A_out"]
     A_out = geometry["A_out"]
     opening = geometry["o"]
     pitch = geometry["s"]
     chord = geometry["c"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
+    displacement_thickness = cascades_data["displacement_thickness"] 
 
     # Structure degrees of freedom
     vel_throat, vel_out, s_throat, s_out, beta_out = x_cascade
@@ -327,18 +328,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     cascades_data["plane"].loc[len(cascades_data["plane"])] = inlet_plane
 
     # Evaluate throat
-    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_throat, inlet_plane)
-    
-    # Account for blocking
-    # blocking = True
-    # if blocking == True:
-    #     # delta_star1 = 0.02/throat_plane["Re"]**(1/7)*0.9*geometry["c"] 
-    #     delta_star2 = 0.048/throat_plane["Re"]**(1/5)*0.9*chord
-    #     correction = 1-2*delta_star2/opening
-    # else:
-    #     correction = 1
-        
-    # throat_plane["m"] *= correction
+    throat_plane, Y_info_throat = evaluate_outlet(x_throat, geometry, cascades_data, u, A_out, inlet_plane, displacement_thickness)
     
     cascades_data["plane"].loc[len(cascades_data["plane"])] = throat_plane
 
@@ -346,7 +336,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     cascade_res = np.append(cascade_res, Y_err_throat)
 
     # Evaluate exit
-    exit_plane, Y_info_exit = evaluate_outlet(x_out, geometry, cascades_data, u, A_out, inlet_plane)
+    exit_plane, Y_info_exit = evaluate_outlet(x_out, geometry, cascades_data, u, A_out, inlet_plane, displacement_thickness)
     cascades_data["plane"].loc[len(cascades_data["plane"])] = exit_plane
     Y_err_out = exit_plane["Y_err"]
     cascade_res = np.append(cascade_res, Y_err_out)
@@ -359,9 +349,9 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     alpha_crit = critical_condition["alpha_crit"]
     rho_throat = throat_plane["d"]
     Ma_exit = exit_plane["Marel"]
-    Ma_throat = throat_plane["Marel"]
     rho_out = exit_plane["d"]
     w_out = exit_plane["w"]
+    blockage = exit_plane["blockage"]
     
     if Ma_exit < Ma_crit:
         beta_g = np.arcsin(opening/pitch)*180/np.pi
@@ -378,7 +368,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
         density_correction = np.nan
     else:
         density_correction = rho_throat/rho_crit
-        beta = np.arccos(m_crit/rho_out/w_out/A_out*density_correction)*180/np.pi
+        beta = np.arccos(m_crit/rho_out/w_out/A_out/blockage*density_correction)*180/np.pi
                 
            
     # Compute error of guessed beta and deviation model
@@ -483,6 +473,7 @@ def evaluate_first_inlet(v, cascades_data, u, geometry):
     plane["Y_s"] = np.nan
     plane["Y_te"] = np.nan
     plane["Y_inc"] = np.nan
+    plane["blockage"] = np.nan
 
 
     return plane
@@ -559,12 +550,13 @@ def evaluate_inlet(cascades_data, u, geometry, exit_plane):
     plane["Y_s"] = np.nan
     plane["Y_te"] = np.nan
     plane["Y_inc"] = np.nan
+    plane["blockage"] = np.nan
 
 
     return plane    
 
 
-def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
+def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, displacement_thickness = 0):
     
     """
      Evaluates the throat or exit plane of a cascade.
@@ -633,6 +625,12 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     Marel = w / a
     Re = d*w*c/mu;
     m = d*w_m*A
+    
+    if displacement_thickness == None:
+        displacement_thickness = 0.048/Re**(1/5)*0.9*c
+
+    correction = 1-2*displacement_thickness/o
+    m *= correction
         
     # Evaluate loss coefficient
     cascade_data = {"geometry" : geometry,
@@ -671,6 +669,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane):
     plane["Y_s"] = Y_info["Secondary"]
     plane["Y_te"] = Y_info["Trailing"]
     plane["Y_inc"] = Y_info["Incidence"] 
+    plane["blockage"] = correction
 
     return plane, Y_info
     
@@ -829,6 +828,8 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
     v0 = critical_cascade_data["fixed_params"]["v0"]
     s_ref = critical_cascade_data["fixed_params"]["s_ref"]
     m_ref = critical_cascade_data["fixed_params"]["m_ref"]
+    
+    displacement_thickness = critical_cascade_data["displacement_thickness"]
 
     v_in, w_throat, s_throat = x_crit[0] * v0, x_crit[1] * v0, x_crit[2] * s_ref
 
@@ -836,7 +837,7 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
 
     beta_throat = theta_out
     x = np.array([w_throat, beta_throat, s_throat])
-    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_throat, inlet_plane)
+    throat_plane, Y_info = evaluate_outlet(x, geometry, critical_cascade_data, u, A_throat, inlet_plane, displacement_thickness)
 
     m_in, m_throat = inlet_plane["m"], throat_plane["m"]
     residuals = np.array([(m_in - m_throat) / m_ref, throat_plane["Y_err"]])
