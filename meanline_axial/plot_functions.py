@@ -81,7 +81,7 @@ def plot_lines(performance_data, x_name, column_names, fig = None, ax = None, xl
     y = get_lines(performance_data, column_names)
     x = get_lines(performance_data, x_name)
     
-    colors = plt.get_cmap(colormap)(np.linspace(0.4, 1, len(column_names))) 
+    colors = plt.get_cmap(colormap)(np.linspace(0.2, 0.8, len(column_names))) 
     for i in range(len(y)):
         ax.plot(x, y[i], label = f"{column_names[i]}", color = colors[i])
     

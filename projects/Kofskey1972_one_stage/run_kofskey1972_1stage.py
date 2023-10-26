@@ -22,7 +22,7 @@ import meanline_axial as ml
 filename = "kofskey1972_1stage.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-Case = 0
+Case = 4
 
 if Case == 0:
 

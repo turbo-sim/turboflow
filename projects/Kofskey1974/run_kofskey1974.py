@@ -23,7 +23,7 @@ filename = "Kofskey1974.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
 
-Case = 0
+Case = 2
 
 if Case == 0:
 
@@ -41,7 +41,7 @@ elif Case == 2:
     # Calculate a dataset corresponding to a dataset
     p_min = 1.5
     p_max = 3.8
-    speed_min = 0.3
+    speed_min = 0.5
     speed_max = 1.1
     
     N_pressure = int((p_max-p_min)*10)+1
@@ -57,5 +57,16 @@ elif Case == 2:
     boundary_conditions["p_out"] = p_out
     boundary_conditions["omega"] = angular_speed
     
+    ml.calculate.performance_map(boundary_conditions, cascades_data)
+    
+elif Case == 4:
+    p_min = 1.5
+    p_max = 3.8
+    N = int((p_max-p_min)*10)+1
+    pressure_ratio = np.linspace(p_min,p_max, N)
+    p_out = cascades_data["BC"]["p0_in"]/pressure_ratio
+    boundary_conditions = {key : val*np.ones(N) for key, val in cascades_data["BC"].items() if key != 'fluid_name'}
+    boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
+    boundary_conditions["p_out"] = p_out
     ml.calculate.performance_map(boundary_conditions, cascades_data)
 
