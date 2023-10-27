@@ -22,9 +22,9 @@ import meanline_axial as ml
 filename = "kofskey1972_1stage.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-Case = 4
-
-if Case == 0:
+Case = 0
+            
+if Case == 0:   
 
     # Solve using nonlinear equation solver
     BC = cascades_data["BC"]
@@ -57,7 +57,7 @@ elif Case == 2:
     boundary_conditions["omega"] = angular_speed
     
     ml.calculate.performance_map(boundary_conditions, cascades_data)
-
+    
 elif Case == 3:
     
     filename = 'Full_Dataset_Kofskey1972_1stage.xlsx'
@@ -101,13 +101,3 @@ elif Case == 4:
     boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
     boundary_conditions["p_out"] = p_out
     ml.calculate.performance_map(boundary_conditions, cascades_data)
-
-            
-        
-        
-        
-        
-    
-    
-  
-    
