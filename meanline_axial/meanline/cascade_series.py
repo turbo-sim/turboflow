@@ -12,6 +12,7 @@ import CoolProp as CP
 from scipy.optimize._numdiff import approx_derivative
 from ..properties import FluidCoolProp_2Phase
 from . import loss_model as lm
+from . import deviation_model as dm
 
 # Keys of the information that should be stored in cascades_data
 keys_plane = ['v', 'v_m', 'v_t', 'alpha', 'w', 'w_m', 'w_t', 'beta', 'p', 'T', 'h',
@@ -161,6 +162,7 @@ def evaluate_cascade_series(x, cascades_data):
     m_ref = cascades_data["fixed_params"]["m_ref"]
     delta_ref = cascades_data["fixed_params"]["delta_ref"]
     lossmodel = cascades_data["loss_model"]
+    deviation_model = cascades_data["deviation_model"]
     displacement_thickness = cascades_data["displacement_thickness"]
     omega = cascades_data["BC"]["omega"]
     u = cascades_data["overall"]["blade_speed"]
@@ -305,6 +307,7 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     chord = geometry["c"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
     displacement_thickness = cascades_data["displacement_thickness"] 
+    deviation_model = cascades_data["deviation_model"]
 
     # Structure degrees of freedom
     vel_throat, vel_out, s_throat, s_out, beta_out = x_cascade
@@ -354,17 +357,9 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     blockage = exit_plane["blockage"]
     
     if Ma_exit < Ma_crit:
-        beta_g = np.arcsin(opening/pitch)*180/np.pi
-        delta_0 = np.arcsin(opening/pitch*(1+(1-opening/pitch)*(beta_g/90)**2))*180/np.pi-beta_g
-
-        if Ma_exit < 0.50:
-            delta = delta_0
-
-        elif Ma_exit > 0.50:
-            X = (2*Ma_exit-1) / (2*Ma_crit-1)
-            delta = delta_0*(1-10*X**3+15*X**4-6*X**5)
-                            
-        beta = np.arccos(opening/pitch)*180/np.pi-delta
+    
+        beta = dm.deviation(deviation_model, theta_out, opening, pitch, Ma_exit, Ma_crit)
+        
         density_correction = np.nan
     else:
         density_correction = rho_throat/rho_crit
