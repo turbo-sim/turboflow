@@ -67,7 +67,6 @@ def initialize_solver(cascades_data, method, initial_guess=None):
     # Define initial guess
     if isinstance(initial_guess, np.ndarray):
         pass  # Keep the initial guess as it is
-
     else:
         if initial_guess is None:
             print("No initial guess provided.")
@@ -87,7 +86,9 @@ def initialize_solver(cascades_data, method, initial_guess=None):
         initial_guess = cs.generate_initial_guess(
             cascades_data, R, eta_tt, eta_ts, Ma_crit
         )
-        initial_guess = cs.scale_x0(initial_guess, cascades_data)
+        
+    # Always scale initial guess    
+    initial_guess = cs.scale_x0(initial_guess, cascades_data)
 
     # Initialize solver object
     solver = NonlinearSystemSolver(
@@ -152,37 +153,50 @@ def compute_operating_point(
 
     # Calculate performance at given boundary conditions with given geometry
     cascades_data["BC"] = boundary_conditions
-
+    
     # Attempt solving with the specified method
     method = cascades_data["solver"]["method"]
     print(f"Trying to solve the problem using {name_map[method]} method")
     solver = initialize_solver(cascades_data, method, initial_guess=initial_guess)
-    solution = solver.solve()
-    if not solution.success:
+    try:
+        solution = solver.solve()
+        success = solution.success
+    except Exception as e:
+        print(f"Error during solving: {e}")
+        success = False    
+    if not success:
         print(f"Solution failed with {name_map[method]} method")
 
     # Attempt solving with Lavenberg-Marquardt method
-    if method != "lm" and not solution.success:
+    if method != "lm" and not success:
         method = "lm"
         print(f"Trying to solve the problem using {name_map[method]} method")
         solver = initialize_solver(cascades_data, method, initial_guess=initial_guess)
-        solution = solver.solve()
-        if not solution.success:
+        try:
+            solution = solver.solve()
+            success = solution.success
+        except Exception as e:
+            print(f"Error during solving: {e}")
+            success = False    
+        if not success:
             print(f"Solution failed with {name_map[method]} method")
 
     # TODO: Attempt solving with optimization algorithms?
 
     # Attempt solving with a heuristic initial guess
-    if isinstance(initial_guess, np.ndarray) and not solution.success:
+    if isinstance(initial_guess, np.ndarray) and not success:
         method = "lm"
         print("Trying to solve the problem with a new initial guess")
         solver = initialize_solver(cascades_data, method, initial_guess=None)
-        solution = solver.solve()
-        if not solution.success:
-            print("Convergence failed with a new initial guess")
+        try:
+            solution = solver.solve()
+            success = solution.success
+        except Exception as e:
+            print(f"Error during solving: {e}")
+            success = False    
 
     # Attempt solving using different initial guesses
-    if not solution.success:
+    if not success:
         N = 11
         x0_arrays = {
             "R": np.linspace(0.0, 0.95, N),
@@ -196,15 +210,21 @@ def compute_operating_point(
             print(f"Trying to solve the problem with a new initial guess")
             print_dict(x0)
             solver = initialize_solver(cascades_data, method, initial_guess=x0)
-            solution = solver.solve()
-            if solution.success:
-                break  # Exit the loop if successful
+            try:
+                solution = solver.solve()
+                success = solution.success
+            except Exception as e:
+                print(f"Error during solving: {e}")
+                success = False    
+            if not success:
+                print(f"Solution failed with {name_map[method]} method")
 
-        if not solution.success:
+        if not success:
             print("WARNING: All attempts failed to converge")
+            solution = False
             # TODO: Add messages to Log file
 
-    return solution
+    return solver
 
 
 def performance_map(boundary_conditions, cascades_data, filename=None):
@@ -213,14 +233,14 @@ def performance_map(boundary_conditions, cascades_data, filename=None):
 
     x0 = None
     use_previous = True
-
+    
     for i in range(len(boundary_conditions["fluid_name"])):
+        
         conditions = {key: val[i] for key, val in boundary_conditions.items()}
-        solution = compute_operating_point(conditions, cascades_data, x0=x0)
-
-        if max(solution.fun) > 1e-6:
-            raise Exception(f"Convergence failed. Boundary condition: {i}")
-
+        solver = compute_operating_point(conditions, cascades_data, initial_guess=x0)
+        solution = solver.solution
+        success = solution.success
+        
         if use_previous == True:
             x0 = cs.convert_scaled_x0(solution.x, cascades_data)
 
@@ -230,6 +250,8 @@ def performance_map(boundary_conditions, cascades_data, filename=None):
         cascade = cascades_data["cascade"]
         stage = cascades_data["stage"]
         overall = cascades_data["overall"]
+        
+        convergence_history = {"success" : success}
 
         plane_stack = plane.stack()
         plane_stack.index = [f"{idx}_{col+1}" for col, idx in plane_stack.index]
@@ -253,6 +275,7 @@ def performance_map(boundary_conditions, cascades_data, filename=None):
                 {key: [val] for key, val in zip(stage_stack.index, stage_stack.values)}
             )
             overall_data = pd.DataFrame({key: [val] for key, val in overall.items()})
+            convergence_data = pd.DataFrame({key: [val] for key, val in convergence_history.items()})
 
         else:
             BC_data.loc[len(BC_data)] = BC
@@ -260,6 +283,7 @@ def performance_map(boundary_conditions, cascades_data, filename=None):
             cascade_data.loc[len(cascade_data)] = cascade_stack
             stage_data.loc[len(stage_data)] = stage_stack
             overall_data.loc[len(overall_data)] = overall
+            convergence_data.loc[len(convergence_data)] = convergence_history
 
     # Write performance dataframe to excel
     if filename == None:
@@ -272,23 +296,7 @@ def performance_map(boundary_conditions, cascades_data, filename=None):
         cascade_data.to_excel(writer, sheet_name="cascade", index=False)
         stage_data.to_excel(writer, sheet_name="stage", index=False)
         overall_data.to_excel(writer, sheet_name="overall", index=False)
-
-
-
-# TODO what does optimal_turbine() do? Roberto
-def optimal_turbine(design_point, cascades_data):
-    # Convert design variables (geometry, specific speed) to a flat array
-    geometry = cascades_data["geometry"]
-    specific_speed = cascades_data["BC"]["specific_speed"]
-    x0 = np.array([specific_speed])
-
-    for i in range(geometry["n_cascades"]):
-        cascade_geometry = np.array([val[i] for val in geometry.values()])
-        x0 = np.concatenate((x0, cascade_geometry))
-
-    cascades_problem = CascadesOptimizationProblem(cascades_data)
-    solver = OptimizationSolver(cascades_problem, x0)
-
+        convergence_data.to_excel(writer, sheet_name="convergence", index=False)
 
 
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):

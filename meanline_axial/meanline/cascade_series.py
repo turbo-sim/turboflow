@@ -1311,7 +1311,7 @@ def update_fixed_params(cascades_data):
     cascades_data["fixed_params"]["v0"] = v0
     cascades_data["fixed_params"]["h0_in"] = h0_in
     cascades_data["fixed_params"]["h_out_s"] = h_out_s
-    cascades_data["fixed_params"]["h_out_s"] = d_out_s
+    cascades_data["fixed_params"]["d_out_s"] = d_out_s
     cascades_data["fixed_params"]["s_ref"] = s_in
     cascades_data["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
     cascades_data["fixed_params"]["m_ref"] = m_ref
