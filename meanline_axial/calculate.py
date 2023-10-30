@@ -137,25 +137,10 @@ def performance_map(boundary_conditions, cascades_data, filename = None):
         stage_data.to_excel(writer, sheet_name = 'stage', index=False)
         overall_data.to_excel(writer, sheet_name = 'overall', index=False)
         
-def optimal_turbine(design_point, cascades_data):
-    
-    # Convert design variables (geometry, specific speed) to a flat array
-    geometry = cascades_data["geometry"]
-    specific_speed = cascades_data["BC"]["specific_speed"]
-    x0 = np.array([specific_speed])
-    
-    for i in range(geometry["n_cascades"]):
-        cascade_geometry = np.array([val[i] for val in geometry.values()])
-        x0 = np.concatenate((x0, cascade_geometry))
-    
-    cascades_problem = CascadesOptimizationProblem(cascades_data)
-    solver = OptimizationSolver(cascades_problem, x0)
-    
+
+             
 
     
-    
-
-
         
         
     

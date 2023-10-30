@@ -7,6 +7,8 @@ BC:
   omega: 2036              # Rotational speed
 
 loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+displacement_thickness : 0
+deviation_model : aungier
 
 geometry:
   n_cascades: 2

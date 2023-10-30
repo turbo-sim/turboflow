@@ -359,8 +359,8 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     if Ma_exit < Ma_crit:
     
         beta = dm.deviation(deviation_model, theta_out, opening, pitch, Ma_exit, Ma_crit)
-        
         density_correction = np.nan
+        
     else:
         density_correction = rho_throat/rho_crit
         beta = np.arccos(m_crit/rho_out/w_out/A_out/blockage*density_correction)*180/np.pi
@@ -770,7 +770,7 @@ def compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0):
     Returns:
         np.ndarray: The Jacobian matrix.
     """
-    eps = 5e-5 * x
+    eps = 1e-3 * x
     # eps = 1e-6*np.maximum(1, abs(x))*np.sign(x)
     J = approx_derivative(evaluate_critical_cascade, x, method='2-point', f0 = f0, abs_step=eps,
                          args=(critical_cascade_data, geometry))
@@ -882,7 +882,6 @@ def generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit):
     Returns:
         numpy.ndarray: Initial guess for the root-finder.
     """
-    # FIXME: fix docstring
         
     # Load necessary parameters
     p0_in      = cascades_data["BC"]["p0_in"]
@@ -1301,6 +1300,7 @@ def update_fixed_params(cascades_data):
     # Calculate properties for isentropic expansion
     static_properites_isentropic_expansion = fluid.compute_properties_meanline(CP.PSmass_INPUTS, p_out, s_in)
     h_out_s = static_properites_isentropic_expansion["h"] # Enthalpy
+    d_out_s = static_properites_isentropic_expansion["d"] # Density
     
     # Calculate paramaters
     v0 = np.sqrt(2*(h0_in-h_out_s)) # spouting velocity
@@ -1309,7 +1309,9 @@ def update_fixed_params(cascades_data):
     
     # Store data in cascades_data
     cascades_data["fixed_params"]["v0"] = v0
+    cascades_data["fixed_params"]["h0_in"] = h0_in
     cascades_data["fixed_params"]["h_out_s"] = h_out_s
+    cascades_data["fixed_params"]["h_out_s"] = d_out_s
     cascades_data["fixed_params"]["s_ref"] = s_in
     cascades_data["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
     cascades_data["fixed_params"]["m_ref"] = m_ref
@@ -1322,7 +1324,7 @@ def update_fixed_params(cascades_data):
 def get_dof_bounds(n_cascades):
     
     """
-    Return bounds on degrees of freedom.
+    Return bounds on degrees of freedom. Used when the nonlinear system of equations are solved as an optimizaition problem.
     """    
     # Define bounds for exite relative flow angle
     lb_beta_out = np.array([40*np.pi/180 if i % 2 == 0 else -80*np.pi/180 for i in range(n_cascades)])
@@ -1346,14 +1348,80 @@ def get_dof_bounds(n_cascades):
         ub = np.append(ub, [0.99, 1.2])
 
     return (lb, ub)
-
-def max_boltzmann(xi, alpha):
-
-    shift = np.sign(alpha) * max(np.sign(alpha) * xi)
-
-    num = np.sum(xi * np.exp(alpha * (xi - shift)))
-
-    denom = np.sum(np.exp(alpha * (xi - shift))) + np.finfo(float).eps
-
-    return num / denom
     
+def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
+    
+    n_cascades = geometry["n_cascades"]
+
+    geometry["s"] = []
+    geometry["c"] = []
+    geometry["b"] = []
+    geometry["H"] = []
+    geometry["t_max"] = []
+    geometry["o"] = []
+    geometry["le"] = []
+    geometry["te"] = []
+    geometry["xi"] = []
+    geometry["A_in"] = []
+    geometry["A_throat"] = []
+    geometry["A_out"] = []
+    geometry["flaring"] = []
+    
+    for i in range(n_cascades):
+        
+        geometry_cascade = {key : val[i] for key, val in geometry.items()}
+        d_s = geometry_cascade["d_s"]
+        r_ht_in = geometry_cascade["r_ht_in"]
+        r_ht_out = geometry_cascade["r_ht_out"]
+        ar =  geometry_cascade["ar"]
+        bs =  geometry_cascade["bs"]
+        theta_in = geometry_cascade["theta_in"]
+        theta_out = geometry_cascade["theta_out"]
+        te_o = geometry_cascade["te_o"]
+        le_c = geometry_cascade["le_c"]
+
+        
+        d = convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s) # Diamater
+        r = d/2 # Radius
+        
+        # Calculate remaining parameters
+        H_in = 2*r*(1-r_ht_in)/(1+r_ht_in) # Inlet blade height
+        H_out = 2*r*(1-r_ht_out)/(1+r_ht_out) # Exit blade height
+        H = (H_in+H_out)/2 # Cascade average blade height 
+        c = H/ar # Chord
+        s = c/bs # Pitch
+        le = le_c*c # Leading edge radius
+        o = s*np.cos(theta_out) # Throat opening
+        te = te_o*o # Trailing edge thickness
+        xi = 0.5*(theta_in+theta_out) # Stagger angle
+        b = c*np.cos(xi) # Axial chord
+        dTheta = abs(theta_in - theta_out) # Camber angle
+        t_max = (0.15*(dTheta*180/np.pi <= 40) + \
+            (0.15+1.25e-3*(dTheta-40))*(40 < dTheta*180/np.pi <= 120) + \
+            0.25*(dTheta*180/np.pi > 120))*c
+        delta_fl = (H_out-H_in)/2/b
+        A_in = 2*np.pi*r*H_in
+        A_throat = 2*np.pi*r*H_out*np.cos(theta_out)
+        A_out = 2*np.pi*r*H_out
+        
+        geometry["s"].append(s)
+        geometry["c"].append(c)
+        geometry["b"].append(b)
+        geometry["H"].append(H)
+        geometry["t_max"].append(t_max)
+        geometry["o"].append(o)
+        geometry["le"].append(le)
+        geometry["te"].append(te)
+        geometry["xi"].append(xi)
+        geometry["A_in"].append(A_in)
+        geometry["A_throat"].append(A_throat)
+        geometry["A_out"].append(A_out)
+        geometry["flaring"].append(delta_fl)
+
+def convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s):
+    # Converts specific diameter to actual diameter
+    return d_s*((m/d_out_s)**0.5)/(h0_in-h_out_s)**0.25
+
+def convert_specific_speed(w_s, m, d_out_s, h0_in, h_out_s):
+    # Converts specific speed to actual rotational speed
+    return w_s*(h0_in-h_out_s)**(0.75)/((m/d_out_s)**0.5)
