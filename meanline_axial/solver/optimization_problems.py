@@ -29,29 +29,28 @@ class RosenbrockProblem(OptimizationProblem):
         Returns the number of inequality constraints.
     """
 
-    
     def __init__(self):
         self.f = None
         self.c_eq = None
         self.c_ineq = None
 
     def get_values(self, x):
-
         # Objective function
         self.x = x
-        self.f = np.sum(100.0 * (x[1:] - x[:-1]**2)**2 + (x[:-1] - 1)**2)
+        self.f = np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (x[:-1] - 1) ** 2)
 
         # Equality constraints
         self.c_eq = []
-            
+
         # No inequality constraints given for this problem
         self.c_ineq = []
 
         # Combine objective function and constraints
-        objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
+        objective_and_constraints = self.merge_objective_and_constraints(
+            self.f, self.c_eq, self.c_ineq
+        )
 
         return objective_and_constraints
-
 
     def get_bounds(self):
         return None
@@ -93,34 +92,41 @@ class RosenbrockProblemConstrained(OptimizationProblem):
     get_n_ineq():  
         Get number of inequality constraints.
     """
-    
+
     def __init__(self):
         self.f = None
         self.c_eq = None
         self.c_ineq = None
 
     def get_values(self, x):
-
         # Objective function
         self.x = x
-        self.f = np.sum(100.0 * (x[1:] - x[:-1]**2)**2 + (x[:-1] - 1)**2)
+        self.f = np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (x[:-1] - 1) ** 2)
 
         # Equality constraints
         self.c_eq = []
         for k in range(len(x) - 2):
-            val = (3 * x[k+1]**3 + 2 * x[k+2] - 5 +
-                np.sin(x[k+1] - x[k+2]) * np.sin(x[k+1] + x[k+2]) +
-                4 * x[k+1] - x[k] * np.exp(x[k] - x[k+1]) - 3)
+            val = (
+                3 * x[k + 1] ** 3
+                + 2 * x[k + 2]
+                - 5
+                + np.sin(x[k + 1] - x[k + 2]) * np.sin(x[k + 1] + x[k + 2])
+                + 4 * x[k + 1]
+                - x[k] * np.exp(x[k] - x[k + 1])
+                - 3
+            )
             self.c_eq.append(val)
 
         # No inequality constraints given for this problem
         self.c_ineq = []
 
         # Combine objective function and constraints
-        objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
+        objective_and_constraints = self.merge_objective_and_constraints(
+            self.f, self.c_eq, self.c_ineq
+        )
 
         return objective_and_constraints
-    
+
     # def get_jacobian(self, x):
     #     jac = approx_derivative(self.get_values, x, method="2-point")
     #     return np.atleast_2d(jac)
@@ -134,7 +140,6 @@ class RosenbrockProblemConstrained(OptimizationProblem):
 
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
-
 
 
 class HS71Problem(OptimizationProblem):
@@ -177,18 +182,19 @@ class HS71Problem(OptimizationProblem):
         self.c_ineq = None
 
     def get_values(self, x):
-
         # Objective function
-        self.f = x[0]*x[3]*(x[0] + x[1] + x[2]) + x[2]
-        
+        self.f = x[0] * x[3] * (x[0] + x[1] + x[2]) + x[2]
+
         # Equality constraints (as a list)
-        self.c_eq = [(x[0]**2 + x[1]**2 + x[2]**2 + x[3]**2) - 40.0]
+        self.c_eq = [(x[0] ** 2 + x[1] ** 2 + x[2] ** 2 + x[3] ** 2) - 40.0]
 
         # Inequality constraints (as a list)
-        self.c_ineq = x[0]*x[1]*x[2]*x[3] - 25.0
+        self.c_ineq = x[0] * x[1] * x[2] * x[3] - 25.0
 
         # Combine objective function and constraints
-        objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
+        objective_and_constraints = self.merge_objective_and_constraints(
+            self.f, self.c_eq, self.c_ineq
+        )
 
         return objective_and_constraints
 
@@ -200,4 +206,3 @@ class HS71Problem(OptimizationProblem):
 
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
-

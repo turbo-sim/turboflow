@@ -7,12 +7,13 @@ except ImportError:
     pass
 else:
     import sys
+
     sys.excepthook = IPython.core.ultratb.ColorTB()
-    
+
 
 from .utilities import *
 from .optimization import *
 from .nonlinear_system import *
+
 # from .optimization_problems import *
 # from .nonlinear_system_problems import *
-
