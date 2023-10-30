@@ -138,7 +138,21 @@ def print_dict(data, indent=0):
         else:
             print(value)
 
-            
+
+def print_boundary_conditions(BC):
+    column_width = 25  # Adjust this to your desired width
+    print("-" * 80)
+    print(" Operating point: ")
+    print("-" * 80)
+    print(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
+    print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']*180/np.pi:<.2f} deg")
+    print(f" {'Total temperature in: ':<{column_width}} {BC['T0_in']-273.15:<.2f} degC")
+    print(f" {'Total pressure in: ':<{column_width}} {BC['p0_in']/1e5:<.3f} bar")
+    print(f" {'Static pressure out: ':<{column_width}} {BC['p_out']/1e5:<.3f} bar")
+    print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
+    print("-" * 80)
+    print()
+
 def create_logger(name, path=None, use_datetime=True):
     """
     Creates and configures a logging object for recording logs during program execution.

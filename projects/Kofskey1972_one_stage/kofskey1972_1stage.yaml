@@ -6,9 +6,21 @@ BC:
   alpha_in: 0              # Flow angle at first stator
   omega: 1627              # Rotational speed
 
+
+
 loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
 displacement_thickness : 0
 deviation_model : metal_angle
+
+
+solver:
+  method: hybr
+  tolerance: 1e-9
+  max_iterations: 50
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-4
+  display_progress: True
+
 
 geometry:
   n_cascades: 2
