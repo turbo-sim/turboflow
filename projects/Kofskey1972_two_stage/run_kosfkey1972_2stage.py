@@ -28,7 +28,7 @@ if Case == 0:
 
     # Solve using nonlinear equation solver
     BC = cascades_data["BC"]
-    sol = ml.calculate.performance(BC,cascades_data, method = 'hybr', R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95)
+    sol = ml.calculate.compute_operating_point(BC,cascades_data, method = 'hybr', R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95)
     
 
 elif Case == 4:

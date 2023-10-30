@@ -5,9 +5,9 @@ Created on Mon Oct 23 09:32:24 2023
 @author: laboan
 """
 
-import numpy as np
-from .solver import OptimizationProblem
-from .meanline import cascade_series as cs
+
+from ..solver import OptimizationProblem
+from . import cascade_series as cs
 
 
 class CascadesOptimizationProblem(OptimizationProblem):
