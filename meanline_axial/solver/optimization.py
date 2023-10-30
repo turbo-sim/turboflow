@@ -9,7 +9,6 @@ from scipy.optimize._numdiff import approx_derivative
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-
 class OptimizationSolver:
     r"""
 
@@ -55,8 +54,6 @@ class OptimizationSolver:
         If True, plots the convergence progress. Defaults to False.
     logger : logging.Logger, optional
         Logger object to which logging messages will be directed. Defaults to None.
-    update_on : str, optional
-        Specifies if the convergence report should be updated on a new function evaluations ("function") or on gradient evaluations ("gradient"). Defaults to "function".
 
     Methods
     -------
@@ -72,9 +69,7 @@ class OptimizationSolver:
         Plot the convergence history of the optimization problem.
     """
 
-    def __init__(
-        self, problem, x0, display=True, plot=False, logger=None, update_on="gradient"
-    ):
+    def __init__(self, problem, x0, display=True, plot=False, logger=None):
         # Initialize class variables
         self.problem = problem
         self.display = display
@@ -87,13 +82,6 @@ class OptimizationSolver:
                 raise ValueError(
                     "The provided logger is not a valid logging.Logger instance."
                 )
-
-        # Check for valid display_on value
-        self.update_on = update_on
-        if update_on not in ["function", "gradient"]:
-            raise ValueError(
-                "Invalid value for 'update_on'. It should be either 'function' or 'gradient'."
-            )
 
         # Initialize problem
         self.x0 = x0
@@ -110,7 +98,7 @@ class OptimizationSolver:
         # Initialize variables for convergence report
         self.last_x = None
         self.grad_count = 0
-        self.func_count = 0
+        self.func_count = 0 
         self.func_count_tot = 0
         self.solution = None
         self.solution_report = []
@@ -145,12 +133,12 @@ class OptimizationSolver:
         }
 
         # Get handles to objective/constraint fucntions and their Jacobians
-        self.f = lambda x: self.get_values(x)[0]
-        self.c_eq = lambda x: self.get_values(x)[1]
-        self.c_ineq = lambda x: self.get_values(x)[2]
-        self.f_jac = lambda x: self.get_jacobian(x)[0]
-        self.c_eq_jac = lambda x: self.get_jacobian(x)[1]
-        self.c_ineq_jac = lambda x: self.get_jacobian(x)[2]
+        self.f = lambda x: self.get_values(x, print_progress=True)[0]
+        self.c_eq = lambda x: self.get_values(x, print_progress=True)[1]
+        self.c_ineq = lambda x: self.get_values(x, print_progress=True)[2]
+        self.f_jac = lambda x: self.get_jacobian(x, print_progress=True)[0]
+        self.c_eq_jac = lambda x: self.get_jacobian(x, print_progress=True)[1]
+        self.c_ineq_jac = lambda x: self.get_jacobian(x, print_progress=True)[2]
 
         # Define list of constraint dictionaries
         self.constraints = []
@@ -165,6 +153,7 @@ class OptimizationSolver:
 
         # Initialize problem bounds
         self.bounds = self.problem.get_bounds()
+
 
     def solve(self, x0=None, method="slsqp", tol=1e-9, options=None):
         """
@@ -222,13 +211,13 @@ class OptimizationSolver:
 
         return self.solution
 
-    def get_values(self, x, single_output=False, called_from_jac=False):
+    def get_values(self, x, single_output=False, print_progress=False):
         """
         Evaluates the optimization problem values at a given point x.
 
-        This method queries the `get_values` method of the OptimizationProblem class to
-        compute the objective function value and constraint values. It first checks the cache
-        to avoid redundant evaluations. If no matching cached result exists, it proceeds to
+        This method queries the `get_values` method of the OptimizationProblem class to 
+        compute the objective function value and constraint values. It first checks the cache 
+        to avoid redundant evaluations. If no matching cached result exists, it proceeds to 
         evaluate the objective function and constraints.
 
         Parameters
@@ -237,7 +226,7 @@ class OptimizationSolver:
             Vector of independent variables (i.e., degrees of freedom).
         single_output : bool, optional
             If True, returns all values (objective and constraints) in a single array.
-            If False, returns a tuple with separate arrays for the objective, equality
+            If False, returns a tuple with separate arrays for the objective, equality 
             constraints, and inequality constraints. Default is False.
 
         Returns
@@ -253,7 +242,7 @@ class OptimizationSolver:
 
         Notes
         -----
-        Cached values are based on the last evaluated point. If `x` matches the cached point,
+        Cached values are based on the last evaluated point. If `x` matches the cached point, 
         the cached results are returned to save computational effort.
         """
 
@@ -289,10 +278,9 @@ class OptimizationSolver:
         # Update progress report
         # Better to hide progress at function evaluations (line searches)
         # Show progress only at jacobian evaluations (true iterations)
-        if not called_from_jac:
+        if print_progress:
             self.func_count += 1  # Does not include finite differences
-            if self.update_on == "function":
-                self._print_convergence_progress(x)
+            self._print_convergence_progress(x)
 
         # Return objective and constraints as array or as tuple
         if single_output:
@@ -300,14 +288,14 @@ class OptimizationSolver:
         else:
             return self.cache["f"], self.cache["c_eq"], self.cache["c_ineq"]
 
-    def get_jacobian(self, x):
+    def get_jacobian(self, x, print_progress=False):
         """
         Evaluates the Jacobians of the optimization problem at the given point x.
 
-        This method will use the `get_jacobian` method of the OptimizationProblem class if it exists.
+        This method will use the `get_jacobian` method of the OptimizationProblem class if it exists. 
         If the `get_jacobian` method is not implemented the Jacobian is approximated using forward finite differences.
 
-        To prevent redundant calculations, cached results are checked first. If a matching
+        To prevent redundant calculations, cached results are checked first. If a matching 
         cached result is found, it is returned; otherwise, a fresh calculation is performed.
 
         Parameters
@@ -325,7 +313,7 @@ class OptimizationSolver:
 
         Notes
         -----
-        Cached values are based on the last evaluated point. If `x` matches the cached point,
+        Cached values are based on the last evaluated point. If `x` matches the cached point, 
         the cached Jacobians are returned to save computational effort.
         """
 
@@ -341,25 +329,23 @@ class OptimizationSolver:
         self.grad_count += 1
         if hasattr(self.problem, "get_jacobian"):
             # If the problem has its own Jacobian method, use it
-            jac = self.problem.get_jacobian(x)
+            jacobian = self.problem.get_jacobian(x)
 
-        else:
+        else: 
             # Fall back to finite differences
-            fun_constr = lambda x: self.get_values(
-                x, single_output=True, called_from_jac=True
-            )
-            fun_constr_0 = (
+            funct_constr = lambda x: self.get_values(x, single_output=True)
+            func_constr_0 = (
                 self.cache["objective_and_constraints"]
                 if np.array_equal(x, self.cache["x"])
-                else fun_constr(x)
-            )
-            jac = approx_derivative(fun_constr, x, method="2-point", f0=fun_constr_0)
-            jac = np.atleast_2d(jac)  # Reshape for unconstrained problems
+                else funct_constr(x)
+            )            
+            jacobian = approx_derivative(funct_constr, x, method="2-point", f0=func_constr_0)
+            jacobian = np.atleast_2d(jacobian)  # Reshape for unconstrained problems
 
         # Get the jacobian of the objective function and constraint separately
-        f_jac = jac[0]
-        c_eq_jac = jac[1 : 1 + self.N_eq]
-        c_ineq_jac = jac[1 + self.N_eq :]
+        f_jac = jacobian[0]
+        c_eq_jac = jacobian[1 : 1 + self.N_eq]
+        c_ineq_jac = jacobian[1 + self.N_eq :]
 
         # Update cache
         self.cache_jac.update(
@@ -368,13 +354,13 @@ class OptimizationSolver:
                 "f_jac": f_jac,
                 "c_eq_jac": c_eq_jac,
                 "c_ineq_jac": c_ineq_jac,
-                "objective_and_constraints_jac": jac,
+                "objective_and_constraints_jac": jacobian,
             }
         )
 
-        # Update progress report
-        if self.update_on == "gradient":
-            self._print_convergence_progress(x)
+        # # Report convergence progress
+        # if print_progress:
+        #     self._print_convergence_progress(x)
 
         return f_jac, c_eq_jac, c_ineq_jac
 
@@ -544,9 +530,7 @@ class OptimizationSolver:
             )
             self.ax_1.set_xlabel("Number of iterations")
             self.ax_1.set_ylabel("Objective function")
-            self.ax_1.xaxis.set_major_locator(
-                MaxNLocator(integer=True)
-            )  # Interger ticks
+            self.ax_1.xaxis.set_major_locator(MaxNLocator(integer=True)) # Interger ticks
             if self.N_eq > 0 or self.N_ineq > 0:
                 self.ax_2 = self.ax_1.twinx()
                 self.ax_2.set_ylabel("Constraint violation")
@@ -561,11 +545,8 @@ class OptimizationSolver:
             self.fig.tight_layout(pad=1)
 
         # Update plot data with current values
-        iteration = (
-            self.convergence_history["func_count"]
-            if self.update_on == "function"
-            else self.convergence_history["grad_count"]
-        )
+        iteration = self.convergence_history["func_count"]
+        # iteration = self.convergence_history["grad_count"]
         objective_function = self.convergence_history["objective_value"]
         constraint_violation = self.convergence_history["constraint_violation"]
         self.obj_line_1.set_xdata(iteration)
@@ -613,9 +594,7 @@ class OptimizationSolver:
                 "This method should be used after invoking the 'solve()' method."
             )
 
-    def plot_convergence_history(
-        self, savefig=True, name=None, use_datetime=False, path=None
-    ):
+    def plot_convergence_history(self, savefig=True, name=None, use_datetime=False, path=None):
         """
         Plot the convergence history of the problem.
 
@@ -637,6 +616,7 @@ class OptimizationSolver:
             )
 
         if savefig:
+
             # Give a name to the figure if it is not specified
             if name is None:
                 name = f"convergence_history_{type(self.problem).__name__}"
@@ -655,10 +635,13 @@ class OptimizationSolver:
                 filename = os.path.join(path, f"{name}_{current_time}")
             else:
                 filename = os.path.join(path, f"{name}")
-
+            
             # Save plots
             self.fig.savefig(filename + ".png", bbox_inches="tight")
             self.fig.savefig(filename + ".svg", bbox_inches="tight")
+ 
+
+        
 
 
 class OptimizationProblem(ABC):
