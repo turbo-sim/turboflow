@@ -24,13 +24,11 @@ cascades_data = ml.get_cascades_data(filename)
 
 # ml.print_dict(cascades_data)
 
-Case = 0
+Case = 4
 
 if Case == 0:
     # Solve using nonlinear equation solver
     BC = cascades_data["BC"]
-    # print(cascades_data)
-    # , R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95
     sol = ml.compute_operating_point(BC, cascades_data)
 
 elif Case == 1:
@@ -133,4 +131,4 @@ elif Case == 4:
     }
     boundary_conditions["fluid_name"] = N * [cascades_data["BC"]["fluid_name"]]
     boundary_conditions["p_out"] = p_out
-    ml.calculate.performance_map(boundary_conditions, cascades_data)
+    ml.performance_map(boundary_conditions, cascades_data)
