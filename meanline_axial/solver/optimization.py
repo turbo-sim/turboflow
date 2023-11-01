@@ -214,7 +214,7 @@ class OptimizationSolver:
             method=method,
             tol=tol,
             options=options,
-            hess=lambda x: np.zeros((self.x0.size,)),  # TODO: Is it necessary?
+            # hess=lambda x: np.zeros((self.x0.size,)),  # TODO: Is it necessary?
         )
 
         # Print report footer
@@ -353,7 +353,7 @@ class OptimizationSolver:
                 if np.array_equal(x, self.cache["x"])
                 else fun_constr(x)
             )
-            eps = 1e-4 * np.abs(x)
+            eps = 1e-5 * np.abs(x)
             jac = approx_derivative(
                 fun_constr, x, method="2-point", f0=fun_constr_0, abs_step=eps
             )
@@ -477,7 +477,37 @@ class OptimizationSolver:
         # Refresh the plot with current values
         if self.plot:
             self._plot_callback()
+        
+        # Print design variables with bounds
+        print("\n")
+        print("Design variables:")
+        lb = [bound[0] for bound in self.bounds]
+        ub = [bound[1] for bound in self.bounds]
+        # keys_design_variables = ["w_s"]+["d_s","r_ht_in", "r_ht_out"]*2
+        keys_design_variables = ["w_s"]+["d_s"]*2
 
+        keys_independant_variables = ["v_in"] + ["v_throat","v_out", "s_throat", "s_out", "beta_out"]*2 + ["v*_in", "v*_out", "s*_out"]*2
+        keys_all = keys_design_variables + keys_independant_variables
+        for key, lower, value, upper in zip(keys_all, lb, x, ub):
+                bounds_satisfied = (lower <= value) and (value <= upper)
+                bounds_active = (np.abs(lower - value) < 1e-3) or (np.abs(upper - value) < 1e-3)
+                print(f"{key:10}:"
+                      f"[{lower:>8.4f}   {value:>8.4f}   {upper:>8.4f}]"
+                      f"\tBounds satisfied: {bounds_satisfied}"
+                      f"\tBounds reached: {bounds_active}")
+                
+        keys_residuals = ["L*_stator", "m*_stator", "Y*_stator", "Y_stator", "Y_stator", "Beta_stator", "m_stator", "m_stator",
+                          "L*_rotor", "m*_rotor", "Y*_rotor", "Y_rotor", "Y_rotor", "Beta_rotor", "m_rotor", "m_rotor", "dp"]
+        
+        # Print residuals 
+        print("\n")
+        print("Error of equations:")
+        # print(len(violation_all))
+        # print(len(keys_residuals))
+        for i in range(len(violation_all)):
+            print(f"{keys_residuals[i]:<22}: {violation_all[i]:+02f}")
+        
+            
     def _write_footer(self):
         """
         Print a formatted footer for the optimization report.
