@@ -161,13 +161,18 @@ def evaluate_cascade_series(x, cascades_data):
     v0 = cascades_data["fixed_params"]["v0"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
     delta_ref = cascades_data["fixed_params"]["delta_ref"]
-    lossmodel = cascades_data["loss_model"]
-    deviation_model = cascades_data["deviation_model"]
-    displacement_thickness = cascades_data["displacement_thickness"]
+    lossmodel = cascades_data["model_options"]["loss_model"]
+    displacement_thickness = cascades_data["model_options"]["displacement_thickness"]
+    choking_condition = cascades_data["model_options"]["choking_condition"]
     omega = cascades_data["BC"]["omega"]
-    u = cascades_data["overall"]["blade_speed"]
+    radius = cascades_data["geometry"]["radius"][0]
     n_dof = 5  # Number of degrees of freedom for each cascade except for v_in (used for keeping track on indices)
     n_dof_crit = 3  # Number of degrees of freedom for each critical cascade
+
+    
+    # Calculate blade speed
+    u = radius*omega
+    cascades_data["overall"]["blade speed"] = u
 
     # Define vector for storing residuals
     residuals = np.array([])
@@ -178,7 +183,7 @@ def evaluate_cascade_series(x, cascades_data):
     v_in = x_series[0] * v0
     x_series = np.delete(x_series, 0)
 
-    # Ensure cascades_data elements are is empty
+    # Ensure cascades_data elements are empty
     df = pd.DataFrame(columns=keys_plane)
     cascades_data["plane"] = df
     df = pd.DataFrame(columns=keys_cascade)
@@ -188,7 +193,7 @@ def evaluate_cascade_series(x, cascades_data):
     critical_cascade_data = {
         "BC": {"p0_in": p0_in, "T0_in": T0_in, "fluid": fluid, "alpha_in": alpha_in},
         "fixed_params": {"m_ref": m_ref, "s_ref": s_ref, "v0": v0, "delta_ref": delta_ref},
-        "loss_model": lossmodel, "displacement_thickness" : displacement_thickness
+        "model_options" : {"loss_model": lossmodel, "displacement_thickness" : displacement_thickness}
     }
 
     for i in range(n_cascades):
@@ -204,10 +209,17 @@ def evaluate_cascade_series(x, cascades_data):
 
         x_crit_cascade = x_crit[i * n_dof_crit:(i + 1) * n_dof_crit]
 
-        crit_res = evaluate_lagrange_gradient(x_crit_cascade, critical_cascade_data, geometry)
-        residuals = np.concatenate((residuals, crit_res))
-        critical_conditon = critical_cascade_data["condition"]
-        
+        if choking_condition == 'mach_unity':
+            critical_condition = {"Ma_crit" : 1,
+                                  "m_crit" : np.nan,
+                                  "w_crit" : np.nan,
+                                  "d_crit" : np.nan,
+                                  "alpha_crit" : np.nan}
+        else:
+            crit_res = evaluate_lagrange_gradient(x_crit_cascade, critical_cascade_data, geometry)
+            residuals = np.concatenate((residuals, crit_res))
+            critical_condition = critical_cascade_data["condition"]
+            
         # Retrieve the DOF for the current cascade
         x_cascade = x_series[i * n_dof:(i + 1) * n_dof]
 
@@ -218,7 +230,7 @@ def evaluate_cascade_series(x, cascades_data):
         x_cascade[3] = x_cascade[3] * s_ref
 
         # Evaluate the current cascade at the given conditions
-        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, cascades_data, geometry, critical_conditon)
+        cascade_res = evaluate_cascade(i, v_in, x_cascade, u_cascade, cascades_data, geometry, critical_condition)
 
         # Change boundary conditions for next cascade (for critical mach calculation)
         critical_cascade_data["BC"]["p0_in"] = cascades_data["plane"]["p0rel"].values[-1]
@@ -243,7 +255,7 @@ def evaluate_cascade_series(x, cascades_data):
     h0_in = cascades_data["plane"]["h0"].values[0]
     h0_out = cascades_data["plane"]["h0"].values[-1] 
     
-    cascades_data["overall"]["m"] = m
+    cascades_data["overall"]["mass_flow_rate"] = m
 
     stag_h = cascades_data["plane"]["h0"].values
     cascades_data["overall"]["eta_ts"] = (stag_h[0] - stag_h[-1]) / (stag_h[0] - h_out_s)*100
@@ -306,9 +318,10 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     pitch = geometry["s"]
     chord = geometry["c"]
     m_ref = cascades_data["fixed_params"]["m_ref"]
-    displacement_thickness = cascades_data["displacement_thickness"] 
-    deviation_model = cascades_data["deviation_model"]
-
+    displacement_thickness = cascades_data["model_options"]["displacement_thickness"] 
+    deviation_model = cascades_data["model_options"]["deviation_model"] 
+    choking_condition = cascades_data["model_options"]["choking_condition"] 
+            
     # Structure degrees of freedom
     vel_throat, vel_out, s_throat, s_out, beta_out = x_cascade
 
@@ -345,30 +358,41 @@ def evaluate_cascade(i, v_in, x_cascade, u, cascades_data, geometry, critical_co
     cascade_res = np.append(cascade_res, Y_err_out)
     
     # Compute beta according to deviation model
-    Ma_crit = critical_condition["Ma_crit"]
     m_crit = critical_condition["m_crit"]
     w_crit = critical_condition["w_crit"]
     rho_crit = critical_condition["d_crit"]
     alpha_crit = critical_condition["alpha_crit"]
+    Ma_crit = critical_condition["Ma_crit"]
     rho_throat = throat_plane["d"]
     Ma_exit = exit_plane["Marel"]
     rho_out = exit_plane["d"]
     w_out = exit_plane["w"]
     blockage = exit_plane["blockage"]
     
-    if Ma_exit < Ma_crit:
+    # Choose closing equation according to deviation model
+    if choking_condition == 'deviation':
     
-        beta = dm.deviation(deviation_model, theta_out, opening, pitch, Ma_exit, Ma_crit)
+        if Ma_exit < Ma_crit:
+            beta = dm.deviation(deviation_model, theta_out, opening, pitch, Ma_exit, Ma_crit)
+            density_correction = np.nan
+        else:
+            density_correction = rho_throat/rho_crit
+            beta = np.arccos(m_crit/rho_out/w_out/A_out/blockage*density_correction)*180/np.pi
+        # Compute error of guessed beta and deviation model
+        error = np.cos(beta*np.pi/180)-np.cos(beta_out)
+        cascade_res = np.append(cascade_res, error)
+        
+    elif choking_condition == 'mach_critical' or choking_condition == 'mach_unity':
+        alpha = -100
+        xi = np.array([Ma_crit, cascades_data["plane"]["Marel"].values[outlet]])
+        actual_mach = max_boltzmann(xi, alpha)
+        mach_err = cascades_data["plane"]["Marel"].values[throat] - actual_mach
+        cascade_res = np.append(cascade_res, mach_err)
         density_correction = np.nan
         
     else:
-        density_correction = rho_throat/rho_crit
-        beta = np.arccos(m_crit/rho_out/w_out/A_out/blockage*density_correction)*180/np.pi
-                
-           
-    # Compute error of guessed beta and deviation model
-    error = np.cos(beta*np.pi/180)-np.cos(beta_out)
-    cascade_res = np.append(cascade_res, error)
+        raise Exception("choking_condition must be 'deviation', 'mach_critical' or 'mach_unity'")
+        
         
     # Add mass flow deviations to residuals
     cascade_res = np.concatenate((cascade_res, (cascades_data["plane"]["m"][inlet:outlet].values -
@@ -573,7 +597,7 @@ def evaluate_outlet(x, geometry, cascades_data, u,  A, inlet_plane, displacement
     
     # Load thermodynamic boundaries
     fluid     = cascades_data["BC"]["fluid"]
-    lossmodel = cascades_data["loss_model"]
+    lossmodel = cascades_data["model_options"]["loss_model"]
     
     # Load geomerrical parameters 
     c = geometry["c"]
@@ -740,7 +764,8 @@ def evaluate_lagrange_gradient(x, critical_cascade_data, geometry):
     J = compute_critical_cascade_jacobian(x, critical_cascade_data, geometry, f0) 
     
     # Rename gradients
-    a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1+1], J[2, 1+1], -1 * J[0, 0], -1 * J[0, 1+1]
+    a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1+1], J[2, 1+1], -1 * J[0, 0], -1 * J[0, 1+1] # For isentropic
+    # a11, a12, a21, a22, b1, b2 = J[1, 0], J[2, 0], J[1, 1], J[2, 1], -1 * J[0, 0], -1 * J[0, 1]
 
     # Calculate the Lagrange multipliers explicitly
     l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
@@ -748,7 +773,8 @@ def evaluate_lagrange_gradient(x, critical_cascade_data, geometry):
     # print(f"{a11 * a22 - a12 * a21:+0.6e}, {a11:+0.6e}, {a12:+0.6e}, {a21:+0.6e}, {a22:+0.6e}")
 
     # Evaluate the last equation
-    df, dg1, dg2 = J[0, 2-1], J[1, 2-1], J[2, 2-1]
+    df, dg1, dg2 = J[0, 2-1], J[1, 2-1], J[2, 2-1] # for isentropic
+    # df, dg1, dg2 = J[0, 2], J[1, 2], J[2, 2]
     grad = (df + l1 * dg1 + l2 * dg2) / m_ref
 
     # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
@@ -823,8 +849,7 @@ def evaluate_critical_cascade(x_crit, critical_cascade_data, geometry):
     v0 = critical_cascade_data["fixed_params"]["v0"]
     s_ref = critical_cascade_data["fixed_params"]["s_ref"]
     m_ref = critical_cascade_data["fixed_params"]["m_ref"]
-    
-    displacement_thickness = critical_cascade_data["displacement_thickness"]
+    displacement_thickness = critical_cascade_data["model_options"]["displacement_thickness"]
 
     v_in, w_throat, s_throat = x_crit[0] * v0, x_crit[1] * v0, x_crit[2] * s_ref
 
@@ -891,7 +916,9 @@ def generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit):
     n_cascades = cascades_data["geometry"]["n_cascades"]    
     n_stages   = cascades_data["fixed_params"]["n_stages"]
     h_out_s    = cascades_data["fixed_params"]["h_out_s"]
-    u          = cascades_data["overall"]["blade_speed"]
+    omega      = cascades_data["BC"]["omega"]
+    radius     = cascades_data["geometry"]["radius"][0]
+    u          = omega*radius
    
     # Inlet stagnation state
     stagnation_properties_in = fluid.compute_properties_meanline(CP.PT_INPUTS, p0_in, T0_in) 
@@ -1283,10 +1310,6 @@ def update_fixed_params(cascades_data):
     T0_in      = cascades_data["BC"]["T0_in"]
     p_out      = cascades_data["BC"]["p_out"]
     fluid_name = cascades_data["BC"]["fluid_name"]
-    A_in       = cascades_data["geometry"]["A_in"][0]
-    radius     = cascades_data["geometry"]["radius"][0]
-    omega      = cascades_data["BC"]["omega"]
-
 
     fluid = FluidCoolProp_2Phase(fluid_name)
     cascades_data["BC"]["fluid"] = fluid
@@ -1304,18 +1327,15 @@ def update_fixed_params(cascades_data):
     
     # Calculate paramaters
     v0 = np.sqrt(2*(h0_in-h_out_s)) # spouting velocity
-    u = omega*radius # Blade speed
-    m_ref = A_in*v0*d0_in # Reference mass flow rate
     
     # Store data in cascades_data
     cascades_data["fixed_params"]["v0"] = v0
     cascades_data["fixed_params"]["h0_in"] = h0_in
+    cascades_data["fixed_params"]["d0_in"] = d0_in
     cascades_data["fixed_params"]["h_out_s"] = h_out_s
     cascades_data["fixed_params"]["d_out_s"] = d_out_s
     cascades_data["fixed_params"]["s_ref"] = s_in
     cascades_data["fixed_params"]["delta_ref"] = 0.011/3e5**(-1/7)
-    cascades_data["fixed_params"]["m_ref"] = m_ref
-    cascades_data["overall"]["blade_speed"] = u
     
     # Initialize dataframe for storing plane and cascade variables
     cascades_data["plane"] = pd.DataFrame(columns = keys_plane)
@@ -1352,25 +1372,16 @@ def get_dof_bounds(n_cascades):
 def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
     
     n_cascades = geometry["n_cascades"]
-
-    geometry["s"] = []
-    geometry["c"] = []
-    geometry["b"] = []
-    geometry["H"] = []
-    geometry["t_max"] = []
-    geometry["o"] = []
-    geometry["le"] = []
-    geometry["te"] = []
-    geometry["xi"] = []
-    geometry["A_in"] = []
-    geometry["A_throat"] = []
-    geometry["A_out"] = []
-    geometry["flaring"] = []
+    
+    keys = ["s", "c", "b", "H", "t_max", "o", "le", "te", "xi", "A_in",
+            "A_out", "flaring", "radius"]
+    
+    for key in keys:
+        geometry[key] = []
     
     for i in range(n_cascades):
         
-        geometry_cascade = {key : val[i] for key, val in geometry.items()}
-        d_s = geometry_cascade["d_s"]
+        geometry_cascade = {key : val[i] for key, val in geometry.items() if key not in  ["n_cascades", "specific_diameter"]+keys}
         r_ht_in = geometry_cascade["r_ht_in"]
         r_ht_out = geometry_cascade["r_ht_out"]
         ar =  geometry_cascade["ar"]
@@ -1379,8 +1390,8 @@ def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
         theta_out = geometry_cascade["theta_out"]
         te_o = geometry_cascade["te_o"]
         le_c = geometry_cascade["le_c"]
-
         
+        d_s = geometry["specific_diameter"][i]
         d = convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s) # Diamater
         r = d/2 # Radius
         
@@ -1401,11 +1412,10 @@ def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
             0.25*(dTheta*180/np.pi > 120))*c
         delta_fl = (H_out-H_in)/2/b
         A_in = 2*np.pi*r*H_in
-        A_throat = 2*np.pi*r*H_out*np.cos(theta_out)
         A_out = 2*np.pi*r*H_out
         
-        geometry["s"].append(s)
         geometry["c"].append(c)
+        geometry["s"].append(s)
         geometry["b"].append(b)
         geometry["H"].append(H)
         geometry["t_max"].append(t_max)
@@ -1414,9 +1424,20 @@ def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
         geometry["te"].append(te)
         geometry["xi"].append(xi)
         geometry["A_in"].append(A_in)
-        geometry["A_throat"].append(A_throat)
         geometry["A_out"].append(A_out)
         geometry["flaring"].append(delta_fl)
+        geometry["radius"].append(r)
+        
+    for key in keys:
+        geometry[key] = np.array(geometry[key])
+        
+def calculate_interspace(v_theta_in, v_m_in, A_in, A_out, r_in, r_out):
+    
+    v_m_out = v_m_in*A_in/A_out
+    v_theta_out = v_theta_in*r_in/r_out
+    v_out = np.sqrt(v_m_out**2+v_theta_out**2)
+    
+    return v_out
 
 def convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s):
     # Converts specific diameter to actual diameter
@@ -1425,3 +1446,14 @@ def convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s):
 def convert_specific_speed(w_s, m, d_out_s, h0_in, h_out_s):
     # Converts specific speed to actual rotational speed
     return w_s*(h0_in-h_out_s)**(0.75)/((m/d_out_s)**0.5)
+
+def max_boltzmann(xi, alpha):
+
+    shift = np.sign(alpha) * max(np.sign(alpha) * xi)
+
+    num = np.sum(xi * np.exp(alpha * (xi - shift)))
+
+    denom = np.sum(np.exp(alpha * (xi - shift))) + np.finfo(float).eps
+
+    return num / denom
+
