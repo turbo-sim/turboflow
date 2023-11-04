@@ -15,7 +15,7 @@ def load_data(filename):
     
     # Import file that contains all performance parameteres
     # The resulting variable 'performance_data' will be a dictionary where keys are sheet names and values are DataFrames
-    performance_data = pd.read_excel(filename, sheet_name = ['BC', 'plane', 'cascade', 'stage', 'overall'])
+    performance_data = pd.read_excel(filename, sheet_name = ['operating point', 'plane', 'cascade', 'stage', 'overall'])
     # Round off to ignore precision loss by loading data from excel 
     for key, df in performance_data.items():
         performance_data[key] = df.round(10)

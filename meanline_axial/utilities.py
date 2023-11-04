@@ -4,13 +4,14 @@ import logging
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from cycler import cycler
 
 
-def get_cascades_data(filename):
+def read_configuration_file(filename):
     """
     Retrieve cascades data from a YAML configuration file and process the geometry data.
 
@@ -22,7 +23,7 @@ def get_cascades_data(filename):
     Parameters
     ----------
     filename : str
-        The path to the YAML configuration file containing cascades data.
+        Path to the YAML configuration file to be read.
 
     Returns
     -------
@@ -31,41 +32,19 @@ def get_cascades_data(filename):
         - "fixed_params": An empty dictionary, initialized for future usage.
         - "overall": An empty dictionary, initialized for future usage.
 
-    """
-    cascades_data = read_configuration_file(filename)
-    cascades_data["geometry"] = {key: np.asarray(value) for key, value in cascades_data["geometry"].items()}
-    cascades_data["fixed_params"] = {}
-    cascades_data["overall"] = {}
-    return cascades_data
-
-
-def read_configuration_file(filename):
-    """
-    Read and postprocess a YAML configuration file.
-
-    This function reads the specified YAML configuration file and postprocesses the data, 
-    particularly converting string representations of numerical expressions into their 
-    actual numerical values.
-
-    Parameters
-    ----------
-    filename : str
-        Path to the YAML configuration file to be read.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the postprocessed data from the configuration file.
-
     Notes
     -----
     The function uses `postprocess_config` to evaluate string expressions found in the 
     YAML data. For example, a YAML entry like "value: "np.pi/2"" will be converted to 
     its numerical equivalent.
     """
-    with open(filename, 'r') as file:
-        return postprocess_config(yaml.safe_load(file))
 
+    with open(filename, 'r') as file:
+        cascades_data = postprocess_config(yaml.safe_load(file))
+        cascades_data["geometry"] = {key: np.asarray(value) for key, value in cascades_data["geometry"].items()}
+        cascades_data["fixed_params"] = {}
+        cascades_data["overall"] = {}
+    return cascades_data
 
 def postprocess_config(config):
     """
@@ -101,6 +80,66 @@ def postprocess_config(config):
             return data
 
     return convert_to_numbers(config)
+
+
+
+
+def numpy_to_python(data):
+    """Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts."""
+    
+    if isinstance(data, dict):
+        return {k: numpy_to_python(v) for k, v in data.items()}
+    
+    elif isinstance(data, list):
+        return [numpy_to_python(item) for item in data]
+    
+    elif isinstance(data, np.ndarray):
+        return data.tolist()
+    
+    elif isinstance(data, (np.int_, np.float_, np.complex_)):
+        return data.item()
+    
+    elif isinstance(data, np.bool_):
+        return bool(data)
+    
+    elif isinstance(data, np.str_):
+        return str(data)
+    
+    return data
+
+
+def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert a DataFrame with multiple rows and columns into a single-row DataFrame with each column
+    renamed to include the original row index as a suffix.
+    
+    Parameters:
+    - df (pd.DataFrame): The original DataFrame to be flattened.
+
+    Returns:
+    - pd.DataFrame: A single-row DataFrame with (n×m) columns.
+
+    Example usage:
+    >>> original_df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
+    >>> flattened_df = flatten_dataframe(original_df)
+    >>> print(flattened_df)
+    
+    Note: Row indices start at 1 for the suffix in the column names.
+    """
+
+    # Stack the DataFrame to create a MultiIndex Series
+    stacked_series = df.stack()
+
+    # Create new column names by combining the original column names with their row index
+    new_index = [f"{var}_{index+1}" for index, var in stacked_series.index]
+
+    # Assign the new index to the stacked Series
+    stacked_series.index = new_index
+
+    # Convert the Series back to a DataFrame and transpose it to get a single row
+    single_row_df = stacked_series.to_frame().T
+
+    return single_row_df
 
 
 def print_dict(data, indent=0):

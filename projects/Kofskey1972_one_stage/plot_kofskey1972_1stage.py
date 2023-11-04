@@ -20,8 +20,14 @@ if desired_path not in sys.path:
     
 import meanline_axial as ml
 
-cascades_data = ml.get_cascades_data("kofskey1972_1stage.yaml")
-design_point = cascades_data["BC"]
+
+RESULTS_PATH = 'output/'
+CONFIG_FILE = "kofskey1972_1stage.yaml"
+
+
+
+cascades_data = ml.read_configuration_file(CONFIG_FILE)
+design_point = cascades_data["operation_points"][0]
 
 Case = 1
 
@@ -152,9 +158,14 @@ if Case == 0:
         
 elif Case == 1:
     
-    filename = 'Performance_data_2023-10-26_14-49-33.xlsx'
+    # Get the name of the latest results file
+    filename = sorted([f for f in os.listdir(RESULTS_PATH) if f.startswith('performance_data_')])[-1]
+    filename = os.path.join(RESULTS_PATH, filename)
+    # filename = "output/performance_data_2023-11-03_16-09-24.xlsx"
+
+    # Load prefromance data
     performance_data = ml.plot_functions.load_data(filename)
-    
+
     lines = ["m_crit_2","m"]
     fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Mass flow rate [kg/s]", close_fig = False)
     
@@ -168,22 +179,26 @@ elif Case == 1:
     lines = ["beta_5", "beta_6"]
     fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Beta [rad]", close_fig = False)
 
-    # lines = ["p_5", "p_6"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Pressure [Pa]", close_fig = False)
+    lines = ["p_5", "p_6"]
+    fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Pressure [Pa]", close_fig = False)
 
     # lines = ["h_5", "h_6"]
     # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Enthalpy [J/kgK]", close_fig = False)
     
-    lines = ["alpha_4", "alpha_crit_2"]
-    fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Alpha [rad]", close_fig = True)
+    # lines = ["alpha_4", "alpha_crit_2"]
+    # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Alpha [rad]", close_fig = False)
 
     lines = ["w_crit_2", "w_5", "w_6"]
     fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Velocity [m/s]", close_fig = False)
     # ax1.set_xlim([3,3.5])
 
-    lines = ["d_crit_2", "d_5"]
+    lines = ["d_crit_2", "d_5", "d_6"]
     fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Density [kg/m^3]", close_fig = False)
     # ax1.set_xlim([3,3.5])
+
+
+    # Show figures
+    plt.show()
 
     
 

@@ -5,13 +5,26 @@ Created on Tue Oct  3 08:40:52 2023
 @author: laboan
 """
 
+import os
+import yaml
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from . import cascade_series as cs
 from .design_optimization import CascadesOptimizationProblem
-from ..solver import NonlinearSystemSolver, OptimizationSolver, NonlinearSystemProblem, OptimizationProblem
-from ..utilities import set_plot_options, print_dict, print_boundary_conditions
+from ..solver import (
+    NonlinearSystemSolver,
+    OptimizationSolver,
+    NonlinearSystemProblem,
+    OptimizationProblem,
+)
+from ..utilities import (
+    set_plot_options,
+    print_dict,
+    print_boundary_conditions,
+    flatten_dataframe,
+    numpy_to_python,
+)
 from datetime import datetime
 
 
@@ -86,9 +99,9 @@ def initialize_solver(cascades_data, method, initial_guess=None):
         initial_guess = cs.generate_initial_guess(
             cascades_data, R, eta_tt, eta_ts, Ma_crit
         )
-        
-    # Always scale initial guess    
-    initial_guess = cs.scale_x0(initial_guess, cascades_data)
+
+    # Always normalize initial guess
+    initial_guess = cs.scale_to_normalized_values(initial_guess, cascades_data)
 
     # Initialize solver object
     solver = NonlinearSystemSolver(
@@ -105,33 +118,34 @@ def initialize_solver(cascades_data, method, initial_guess=None):
     return solver
 
 
-def compute_operating_point(
+def compute_operation_point(
     boundary_conditions,
     cascades_data,
     initial_guess=None,
 ):
     """
-    Compute an operating point for a given set of boundary conditions using multiple solver methods and initial guesses.
+    Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
 
     Parameters:
     ----------
     boundary_conditions : dict
-        A dictionary containing boundary conditions for the operating point.
+        A dictionary containing boundary conditions for the operation point.
 
     cascades_data : dict
         A dictionary containing data related to the cascades problem.
 
     initial_guess : array-like or dict, optional
         The initial guess for the solver. If None, default initial guesses are used.
+        If provided, the initial guess should not be scaled (it is scaled internally)
 
     Returns:
     -------
     solution : object
-        The solution object containing the results of the operating point calculation.
+        The solution object containing the results of the operation point calculation.
 
     Notes:
     -----
-    - This function attempts to compute an operating point for a given set of boundary
+    - This function attempts to compute an operation point for a given set of boundary
       conditions using various solver methods and initial guesses before giving up.
     - The boundary_conditions dictionary should include the necessary parameters for the
       problem.
@@ -148,12 +162,12 @@ def compute_operating_point(
 
     """
 
-    # Print boundary conditions of current operating point
+    # Print boundary conditions of current operation point
     print_boundary_conditions(boundary_conditions)
 
     # Calculate performance at given boundary conditions with given geometry
     cascades_data["BC"] = boundary_conditions
-    
+
     # Attempt solving with the specified method
     method = cascades_data["solver"]["method"]
     print(f"Trying to solve the problem using {name_map[method]} method")
@@ -163,7 +177,7 @@ def compute_operating_point(
         success = solution.success
     except Exception as e:
         print(f"Error during solving: {e}")
-        success = False    
+        success = False
     if not success:
         print(f"Solution failed with {name_map[method]} method")
 
@@ -177,7 +191,7 @@ def compute_operating_point(
             success = solution.success
         except Exception as e:
             print(f"Error during solving: {e}")
-            success = False    
+            success = False
         if not success:
             print(f"Solution failed with {name_map[method]} method")
 
@@ -193,7 +207,7 @@ def compute_operating_point(
             success = solution.success
         except Exception as e:
             print(f"Error during solving: {e}")
-            success = False    
+            success = False
 
     # Attempt solving using different initial guesses
     if not success:
@@ -215,7 +229,7 @@ def compute_operating_point(
                 success = solution.success
             except Exception as e:
                 print(f"Error during solving: {e}")
-                success = False    
+                success = False
             if not success:
                 print(f"Solution failed with {name_map[method]} method")
 
@@ -227,76 +241,140 @@ def compute_operating_point(
     return solver
 
 
-def performance_map(boundary_conditions, cascades_data, filename=None):
-    # Evaluate the cascades series at all conditions given in boundary_conditions
-    # Exports the performance to ...
+def performance_map(
+    operation_points,
+    case_data,
+    filename=None,
+    output_dir="output",
+    use_previous=True,
+):
+    """
+    Evaluates the performance at the specified operation points and exports the results to an Excel file.
+    This function computes the performance of each operation point, collects and compiles them into
+    a single Excel file with separate sheets for each aspect of the data.
 
-    x0 = None
-    use_previous = True
-    
-    for i in range(len(boundary_conditions["fluid_name"])):
-        
-        conditions = {key: val[i] for key, val in boundary_conditions.items()}
-        solver = compute_operating_point(conditions, cascades_data, initial_guess=x0)
-        solution = solver.solution
-        success = solution.success
-        
-        if use_previous == True:
-            x0 = cs.convert_scaled_x0(solution.x, cascades_data)
+    Parameters:
+    - operation_points: List of dicts representing operation points to evaluate.
+    - case_data: Dict with necessary data structures for computing operation points.
+    - filename: Optional; if provided, specifies the output Excel filename.
+                If None, a default unique filename will be created with a timestamp.
+    - output_dir: Optional; directory to save the Excel file. Defaults to 'output'.
+    - use_previous: Optional; a boolean flag to determine whether to use the
+                    solution from the previous operation point as an initial guess
+                    for the current point.
 
-        # Save performance
-        BC = {key: val for key, val in cascades_data["BC"].items() if key != "fluid"}
-        plane = cascades_data["plane"]
-        cascade = cascades_data["cascade"]
-        stage = cascades_data["stage"]
-        overall = cascades_data["overall"]
-        
-        convergence_history = {"success" : success}
+    Returns:
+    - The absolute path to the generated Excel file containing the results.
+    """
 
-        plane_stack = plane.stack()
-        plane_stack.index = [f"{idx}_{col+1}" for col, idx in plane_stack.index]
-        cascade_stack = cascade.stack()
-        cascade_stack.index = [f"{idx}_{col+1}" for col, idx in cascade_stack.index]
-        stage_stack = stage.stack()
-        stage_stack.index = [f"{idx}_{col+1}" for col, idx in stage_stack.index]
+    if not operation_points:
+        raise ValueError("operation_points list is empty or not provided.")
 
-        if i == 0:
-            BC_data = pd.DataFrame({key: [val] for key, val in BC.items()})
-            plane_data = pd.DataFrame(
-                {key: [val] for key, val in zip(plane_stack.index, plane_stack.values)}
-            )
-            cascade_data = pd.DataFrame(
-                {
-                    key: [val]
-                    for key, val in zip(cascade_stack.index, cascade_stack.values)
-                }
-            )
-            stage_data = pd.DataFrame(
-                {key: [val] for key, val in zip(stage_stack.index, stage_stack.values)}
-            )
-            overall_data = pd.DataFrame({key: [val] for key, val in overall.items()})
-            convergence_data = pd.DataFrame({key: [val] for key, val in convergence_history.items()})
+    # Create a directory to save simulation results
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-        else:
-            BC_data.loc[len(BC_data)] = BC
-            plane_data.loc[len(plane_data)] = plane_stack
-            cascade_data.loc[len(cascade_data)] = cascade_stack
-            stage_data.loc[len(stage_data)] = stage_stack
-            overall_data.loc[len(overall_data)] = overall
-            convergence_data.loc[len(convergence_data)] = convergence_history
-
-    # Write performance dataframe to excel
+    # Define filename with unique date-time identifier
     if filename == None:
         current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"Performance_data_{current_time}.xlsx"
+        filename = f"performance_analysis_{current_time}"
 
-    with pd.ExcelWriter(filename, engine="openpyxl") as writer:
-        BC_data.to_excel(writer, sheet_name="BC", index=False)
-        plane_data.to_excel(writer, sheet_name="plane", index=False)
-        cascade_data.to_excel(writer, sheet_name="cascade", index=False)
-        stage_data.to_excel(writer, sheet_name="stage", index=False)
-        overall_data.to_excel(writer, sheet_name="overall", index=False)
-        convergence_data.to_excel(writer, sheet_name="convergence", index=False)
+    # Filter out 'operation_points' and any empty entries
+    config_data = {k: v for k, v in case_data.items() if v and k != "operation_points"}
+    config_data = {**config_data, "operation_points": operation_points}
+    config_data = numpy_to_python(config_data)
+
+    print(config_data)
+
+    # Export input arguments as YAML file
+    config_file = os.path.join(output_dir, f"{filename}.yaml")
+    with open(config_file, "w") as file:
+        yaml.dump(config_data, file, default_flow_style=None)
+
+    # Initialize lists to hold dataframes for each operation point
+    operation_point_data = []
+    overall_data = []
+    plane_data = []
+    cascade_data = []
+    stage_data = []
+    solver_data = []
+    
+
+    # Use default initial guess for the first operation point
+    x0 = None
+
+    for i, operation_point in enumerate(operation_points):
+        print(
+            f"Computing performance for operation point {i + 1} of {len(operation_points)}"
+        )
+
+        try:
+            # Compute performance
+            solver = compute_operation_point(
+                operation_point, case_data, initial_guess=x0
+            )
+
+            # Use converged solution as initial guess for the next operation point
+            if use_previous == True:
+                x0 = cs.scale_to_real_values(solver.solution.x, case_data)
+
+            # Retrieve solver data
+            solver_status = {
+                "completed": True,
+                "success": solver.solution.success,
+                "message": solver.solution.message,
+                "grad_count": solver.convergence_history["grad_count"][-1],
+                "func_count": solver.convergence_history["func_count"][-1],
+                "func_count_total": solver.convergence_history["func_count_total"][-1],
+                "norm_residual_last": solver.convergence_history["norm_residual"][-1],
+                "norm_step_last": solver.convergence_history["norm_step"][-1],
+            }
+
+            # Collect data
+            operation_point_data.append(pd.DataFrame([operation_point]))
+            overall_data.append(pd.DataFrame([case_data["overall"]]))
+            plane_data.append(flatten_dataframe(case_data["plane"]))
+            cascade_data.append(flatten_dataframe(case_data["cascade"]))
+            stage_data.append(flatten_dataframe(case_data["stage"]))
+            solver_data.append(pd.DataFrame([solver_status]))
+
+        except Exception as e:
+            print(
+                f"An error occurred while computing the operation point {i}/{len(operation_points)}:\n\t{e}"
+            )
+
+            # Retrieve solver data
+            solver_status = {"completed": False}
+
+            # Collect data
+            operation_point_data.append(pd.DataFrame([operation_point]))
+            overall_data.append(pd.DataFrame([{}]))
+            plane_data.append(pd.DataFrame([{}]))
+            cascade_data.append(pd.DataFrame([{}]))
+            stage_data.append(pd.DataFrame([{}]))
+            solver_data.append(pd.DataFrame([solver_status]))
+
+    # Dictionary to hold concatenated dataframes
+    dfs = {
+        "operation point": pd.concat(operation_point_data, ignore_index=True),
+        "overall": pd.concat(overall_data, ignore_index=True),
+        "plane": pd.concat(plane_data, ignore_index=True),
+        "cascade": pd.concat(cascade_data, ignore_index=True),
+        "stage": pd.concat(stage_data, ignore_index=True),
+        "solver": pd.concat(solver_data, ignore_index=True),
+    }
+
+    # Add 'operation_point' column to each dataframe
+    for sheet_name, df in dfs.items():
+        df.insert(0, "operation_point", range(1, 1 + len(df)))
+
+    # Write dataframes to excel
+    filepath = os.path.join(output_dir, f"{filename}.xlsx")
+    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+        for sheet_name, df in dfs.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    print(f"Performance data successfully written to {filepath}")
 
 
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
@@ -304,13 +382,6 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
-
-        # if x0 is None:
-        #     x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
-
-        # x_scaled = cs.scale_x0(x0, cascades_data)
-
-        # self.x0 = x_scaled
         self.cascades_data = cascades_data
 
     def get_values(self, vars):
@@ -326,7 +397,7 @@ class CascadesOptimizationProblem(OptimizationProblem):
         cs.check_geometry(cascades_data)
         if x0 == None:
             x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
-        self.x0 = cs.scale_x0(x0, cascades_data)
+        self.x0 = cs.scale_to_normalized_values(x0, cascades_data)
         self.cascades_data = cascades_data
 
     def get_values(self, vars):

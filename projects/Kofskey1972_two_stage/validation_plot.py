@@ -19,7 +19,7 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 filename = "kofskey1972_2stage.yaml"
-cascades_data = ml.get_cascades_data(filename)
+cascades_data = ml.read_configuration_file(filename)
 
 if __name__ == '__main__':
     

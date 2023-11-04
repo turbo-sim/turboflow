@@ -20,7 +20,7 @@ if desired_path not in sys.path:
     
 import meanline_axial as ml
 
-cascades_data = ml.get_cascades_data("Kofskey1972_2stage.yaml")
+cascades_data = ml.read_configuration_file("Kofskey1972_2stage.yaml")
 design_point = cascades_data["BC"]
 
 Case = 1

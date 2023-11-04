@@ -1205,12 +1205,17 @@ def check_n_cascades(geometry, n_cascades):
         raise ValueError("Number of geometries doesn't match the number of cascades")
     return n
 
-def convert_scaled_x0(x, cascades_data):
-    
+def scale_to_real_values(x, cascades_data):
     """
-    Convert scaled solution to real values using reference entropy and spouting velocity.
-    """    
+    Convert a normalized solution vector back to real-world values.
     
+    Parameters:
+    - x: The normalized solution vector from the solver.
+    - cascades_data: Dictionary containing reference values and number of cascades.
+    
+    Returns:
+    - An array of values converted back to their real-world scale.
+    """     
     v0         = cascades_data["fixed_params"]["v0"]
     s_ref      = cascades_data["fixed_params"]["s_ref"]
     n_cascades = cascades_data["geometry"]["n_cascades"]
@@ -1219,7 +1224,7 @@ def convert_scaled_x0(x, cascades_data):
     x_real = x.copy()[0:5*n_cascades+1]
     xcrit_real = x.copy()[5*n_cascades+1:]
 
-    # Convert x0 to real values
+    # Convert x to real values
     x_real[0] *= v0
     xcrit_real *=v0
     for i in range(n_cascades):
@@ -1227,18 +1232,24 @@ def convert_scaled_x0(x, cascades_data):
         x_real[5*i+2] *= v0
         x_real[5*i+3] *= s_ref
         x_real[5*i+4] *= s_ref
-        
-        xcrit_real[3*i+2] *= (s_ref/v0)
+        xcrit_real[3*i+2] *= (s_ref/v0)  # TODO add comment explaining this one
         
     x_real = np.concatenate((x_real, xcrit_real))
     
     return x_real
 
-def scale_x0(x, cascades_data):
-    """
-    Scale initial guess with reference entropy and spouting velocity.
-    """
 
+def scale_to_normalized_values(x, cascades_data):
+    """
+    Scale a solution vector from actual values to a normalized scale.
+    
+    Parameters:
+    - x: The solution vector with actual values to be normalized.
+    - cascades_data: Dictionary containing reference values and number of cascades.
+    
+    Returns:
+    - An array of values scaled to a normalized range for solver computations.
+    """
     # Load parameters
     v0 = cascades_data["fixed_params"]["v0"]
     s_ref = cascades_data["fixed_params"]["s_ref"]
@@ -1258,7 +1269,7 @@ def scale_x0(x, cascades_data):
         x_scaled[5*i+3] /= s_ref
         x_scaled[5*i+4] /= s_ref
         
-        xcrit_scaled[3*i+2] *= (v0/s_ref)
+        xcrit_scaled[3*i+2] *= (v0/s_ref)  # TODO add comment explaining this one
 
     x_scaled = np.concatenate((x_scaled, xcrit_scaled))
 

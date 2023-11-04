@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
+import copy
 
 desired_path = os.path.abspath("../..")
 
@@ -19,17 +20,21 @@ if desired_path not in sys.path:
 
 import meanline_axial as ml
 
-filename = "kofskey1972_1stage.yaml"
-cascades_data = ml.get_cascades_data(filename)
 
-# ml.print_dict(cascades_data)
+CONFIG_FILE = "kofskey1972_1stage.yaml"
+cascades_data = ml.read_configuration_file(CONFIG_FILE)
+
+
+
 
 Case = 4
 
 if Case == 0:
     # Solve using nonlinear equation solver
-    BC = cascades_data["BC"]
-    sol = ml.compute_operating_point(BC, cascades_data)
+    operating_point = cascades_data["operation_points"][0]
+    solver = ml.compute_operating_point(operating_point, cascades_data)
+    solver.plot_convergence_history()
+    # plt.show()
 
 elif Case == 1:
     # Solve using optimization algorithm
@@ -37,7 +42,7 @@ elif Case == 1:
     solver = ml.solver.OptimizationSolver(
         cascade_problem, cascade_problem.x0, display=True, plot=False
     )
-    sol = solver.solve(method="trust-constr")
+    solver = solver.solve(method="trust-constr")
 
 elif Case == 2:
     # Calculate a dataset corresponding to a dataset
@@ -119,16 +124,20 @@ elif Case == 3:
         i += 1
 
 elif Case == 4:
-    p_min = 1.8
-    p_max = 4.0
-    N = int((p_max - p_min) * 10) + 1
-    pressure_ratio = np.linspace(p_min, p_max, N)
-    p_out = cascades_data["BC"]["p0_in"] / pressure_ratio
-    boundary_conditions = {
-        key: val * np.ones(N)
-        for key, val in cascades_data["BC"].items()
-        if key != "fluid_name"
-    }
-    boundary_conditions["fluid_name"] = N * [cascades_data["BC"]["fluid_name"]]
-    boundary_conditions["p_out"] = p_out
-    ml.performance_map(boundary_conditions, cascades_data)
+
+    # Define the range of pressure ratios
+    step = 0.05
+    PR_min, PR_max = 1.5, 4.5
+    pressure_ratio = np.arange(PR_min, PR_max+step, step)
+
+    # Define a list of operation points
+    operation_points = []
+    for PR in pressure_ratio:
+        point = copy.deepcopy(cascades_data["operation_points"][0])
+        point["p_out"] = point["p0_in"] / PR
+        operation_points.append(point)
+    
+    # Compute the performance map
+    # operation_points = cascades_data["operation_points"]
+    ml.performance_map(operation_points, cascades_data)
+
