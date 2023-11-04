@@ -159,14 +159,14 @@ if Case == 0:
 elif Case == 1:
     
     # Get the name of the latest results file
-    filename = sorted([f for f in os.listdir(RESULTS_PATH) if f.startswith('performance_data_')])[-1]
+    filename = sorted([f for f in os.listdir(RESULTS_PATH) if f.startswith('performance_analysis_') and f.endswith(".xlsx")])[-1]
     filename = os.path.join(RESULTS_PATH, filename)
-    # filename = "output/performance_data_2023-11-03_16-09-24.xlsx"
+    # filename = "output/performance_analysis_2023-11-03_16-09-24.xlsx"
 
     # Load prefromance data
     performance_data = ml.plot_functions.load_data(filename)
 
-    lines = ["m_crit_2","m"]
+    lines = ["m_crit_1", "m_crit_2","m_2"]
     fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Mass flow rate [kg/s]", close_fig = False)
     
     lines = ["w_5", "w_6"]

@@ -284,6 +284,8 @@ def performance_map(
     config_data = {**config_data, "operation_points": operation_points}
     config_data = numpy_to_python(config_data)
 
+    print(config_data)
+
     # Export input arguments as YAML file
     config_file = os.path.join(output_dir, f"{filename}.yaml")
     with open(config_file, "w") as file:
@@ -380,6 +382,8 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
+<<<<<<< HEAD
+=======
         
         # Define reference mass flow rate
         v0 = cascades_data["fixed_params"]["v0"]
@@ -388,6 +392,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         m_ref = A_in*v0*d_in # Reference mass flow rate
         cascades_data["fixed_params"]["m_ref"] = m_ref
     
+>>>>>>> a8389831e481eacd8b6f69e8770a80ee09953b02
         self.cascades_data = cascades_data
 
     def get_values(self, vars):
