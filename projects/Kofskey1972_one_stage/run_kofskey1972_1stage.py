@@ -123,5 +123,13 @@ elif Case == 3:
 
 elif Case == 4:
     # Compute performance map according to config file
+    # TODO add option to give operation points as list of lists to define several speed lines
+    # TODO add option to define range of values for all the parameters of the operating point, including T0_in, p0_in and alpha_in
+    # TODO all variables should be ranged to create a nested list of lists
+    # TODO the variables should work if they are scalars as well
+    # TODO update plotting so the different lines are plotted separately
+    # TODO update initial guess strategy so each nested list uses the first element of the parent list as initial guess
+    # TODO for example, when computing a new speed line, the first initial guess should be the final solution of the first point of the previous speed line
+    
     operation_points = ml.generate_operation_points(cascades_data["performance_map"])
     ml.performance_map(operation_points, cascades_data)
