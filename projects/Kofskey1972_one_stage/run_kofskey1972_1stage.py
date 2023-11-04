@@ -25,8 +25,6 @@ CONFIG_FILE = "kofskey1972_1stage.yaml"
 cascades_data = ml.read_configuration_file(CONFIG_FILE)
 
 
-
-
 Case = 4
 
 if Case == 0:
@@ -124,20 +122,6 @@ elif Case == 3:
         i += 1
 
 elif Case == 4:
-
-    # Define the range of pressure ratios
-    step = 0.05
-    PR_min, PR_max = 1.5, 4.5
-    pressure_ratio = np.arange(PR_min, PR_max+step, step)
-
-    # Define a list of operation points
-    operation_points = []
-    for PR in pressure_ratio:
-        point = copy.deepcopy(cascades_data["operation_points"][0])
-        point["p_out"] = point["p0_in"] / PR
-        operation_points.append(point)
-    
-    # Compute the performance map
-    # operation_points = cascades_data["operation_points"]
+    # Compute performance map according to config file
+    operation_points = ml.generate_operation_points(cascades_data["performance_map"])
     ml.performance_map(operation_points, cascades_data)
-

@@ -436,3 +436,30 @@ class CascadesOptimizationProblem(OptimizationProblem):
 
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
+
+
+
+
+def generate_operation_points(performance_map):
+    # Extract base parameters
+    fluid_name = performance_map['fluid_name']
+    T0_in = performance_map['T0_in']
+    alpha_in = performance_map['alpha_in']
+    p0_in = performance_map['p0_in']
+    p_out_values = performance_map['p_out']
+    omega_values = performance_map['omega']
+    
+    # Generate all combinations of operation points
+    operation_points = []
+    for p_out in p_out_values:
+        for omega in omega_values:
+            operation_points.append({
+                'fluid_name': fluid_name,
+                'p0_in': p0_in,
+                'T0_in': T0_in,
+                'p_out': p_out,
+                'alpha_in': alpha_in,
+                'omega': omega
+            })
+    
+    return operation_points
