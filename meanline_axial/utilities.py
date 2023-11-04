@@ -15,8 +15,8 @@ def read_configuration_file(filename):
     """
     Retrieve cascades data from a YAML configuration file and process the geometry data.
 
-    This function reads a YAML configuration file to obtain cascades data, then converts 
-    the geometry values to numpy arrays. It also initializes `fixed_params` and `overall` 
+    This function reads a YAML configuration file to obtain cascades data, then converts
+    the geometry values to numpy arrays. It also initializes `fixed_params` and `overall`
     dictionaries within the cascades data. String expressions in the YAML file representing
     numerical values (e.g., "np.pi/180*45") are evaluated to actual numerical values.
 
@@ -34,17 +34,20 @@ def read_configuration_file(filename):
 
     Notes
     -----
-    The function uses `postprocess_config` to evaluate string expressions found in the 
-    YAML data. For example, a YAML entry like "value: "np.pi/2"" will be converted to 
+    The function uses `postprocess_config` to evaluate string expressions found in the
+    YAML data. For example, a YAML entry like "value: "np.pi/2"" will be converted to
     its numerical equivalent.
     """
 
-    with open(filename, 'r') as file:
+    with open(filename, "r") as file:
         cascades_data = postprocess_config(yaml.safe_load(file))
-        cascades_data["geometry"] = {key: np.asarray(value) for key, value in cascades_data["geometry"].items()}
+        cascades_data["geometry"] = {
+            key: np.asarray(value) for key, value in cascades_data["geometry"].items()
+        }
         cascades_data["fixed_params"] = {}
         cascades_data["overall"] = {}
     return cascades_data
+
 
 def postprocess_config(config):
     """
@@ -66,6 +69,7 @@ def postprocess_config(config):
             The postprocessed configuration data with numerical values.
 
     """
+
     def convert_to_numbers(data):
         if isinstance(data, dict):
             return {key: convert_to_numbers(value) for key, value in data.items()}
@@ -82,29 +86,27 @@ def postprocess_config(config):
     return convert_to_numbers(config)
 
 
-
-
-def numpy_to_python(data):
+def convert_numpy_to_python(data):
     """Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts."""
-    
+
     if isinstance(data, dict):
-        return {k: numpy_to_python(v) for k, v in data.items()}
-    
+        return {k: convert_numpy_to_python(v) for k, v in data.items()}
+
     elif isinstance(data, list):
-        return [numpy_to_python(item) for item in data]
-    
+        return [convert_numpy_to_python(item) for item in data]
+
     elif isinstance(data, np.ndarray):
         return data.tolist()
-    
+
     elif isinstance(data, (np.int_, np.float_, np.complex_)):
         return data.item()
-    
+
     elif isinstance(data, np.bool_):
         return bool(data)
-    
+
     elif isinstance(data, np.str_):
         return str(data)
-    
+
     return data
 
 
@@ -112,7 +114,7 @@ def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert a DataFrame with multiple rows and columns into a single-row DataFrame with each column
     renamed to include the original row index as a suffix.
-    
+
     Parameters:
     - df (pd.DataFrame): The original DataFrame to be flattened.
 
@@ -123,7 +125,7 @@ def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     >>> original_df = pd.DataFrame({'A': [1, 2], 'B': [3, 4]})
     >>> flattened_df = flatten_dataframe(original_df)
     >>> print(flattened_df)
-    
+
     Note: Row indices start at 1 for the suffix in the column names.
     """
 
@@ -168,12 +170,12 @@ def print_dict(data, indent=0):
         d:
             e: 3
     """
-    
+
     for key, value in data.items():
-        print('    ' * indent + str(key) + ':', end=' ')
+        print("    " * indent + str(key) + ":", end=" ")
         if isinstance(value, dict):
-            print('')
-            print_dict(value, indent+1)
+            print("")
+            print_dict(value, indent + 1)
         else:
             print(value)
 
@@ -191,6 +193,7 @@ def print_boundary_conditions(BC):
     print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
     print("-" * 80)
     print()
+
 
 def create_logger(name, path=None, use_datetime=True):
     """
@@ -430,3 +433,22 @@ def _create_sample_plot():
 
     # Display figure
     plt.show()
+
+
+def find_latest_results_file(results_path, prefix="performance_analysis_"):
+    # Retrieve all files that match the given prefix and extension .xlsx
+    files = sorted(
+        [
+            f
+            for f in os.listdir(results_path)
+            if f.startswith(prefix) and f.endswith(".xlsx")
+        ]
+    )
+
+    # Return the first item from the sorted list, which is the latest file
+    if files:
+        return os.path.join(results_path, files[-1])
+    else:
+        raise FileNotFoundError(
+            f"No Excel files found in directory '{results_path}' with prefix '{prefix}'"
+        )

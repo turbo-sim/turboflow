@@ -23,7 +23,7 @@ from ..utilities import (
     print_dict,
     print_boundary_conditions,
     flatten_dataframe,
-    numpy_to_python,
+    convert_numpy_to_python,
 )
 from datetime import datetime
 
@@ -282,7 +282,7 @@ def performance_map(
     # Filter out 'operation_points' and any empty entries
     config_data = {k: v for k, v in case_data.items() if v and k != "operation_points"}
     config_data = {**config_data, "operation_points": operation_points}
-    config_data = numpy_to_python(config_data)
+    config_data = convert_numpy_to_python(config_data)
 
     # Export input arguments as YAML file
     config_file = os.path.join(output_dir, f"{filename}.yaml")
