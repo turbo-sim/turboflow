@@ -382,6 +382,14 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
+        
+        # Define reference mass flow rate
+        v0 = cascades_data["fixed_params"]["v0"]
+        d_in = cascades_data["fixed_params"]["d0_in"]
+        A_in = cascades_data["geometry"]["A_in"][0]
+        m_ref = A_in*v0*d_in # Reference mass flow rate
+        cascades_data["fixed_params"]["m_ref"] = m_ref
+    
         self.cascades_data = cascades_data
 
     def get_values(self, vars):
@@ -395,6 +403,14 @@ class CascadesOptimizationProblem(OptimizationProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
+        
+        # Define reference mass flow rate
+        v0 = cascades_data["fixed_params"]["v0"]
+        d_in = cascades_data["fixed_params"]["d0_in"]
+        A_in = cascades_data["geometry"]["A_in"][0]
+        m_ref = A_in*v0*d_in # Reference mass flow rate
+        cascades_data["fixed_params"]["m_ref"] = m_ref
+        
         if x0 == None:
             x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
         self.x0 = cs.scale_to_normalized_values(x0, cascades_data)
