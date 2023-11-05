@@ -6,11 +6,11 @@ BC:
   alpha_in: 0              # Flow angle at first stator
   omega: 1627              # Rotational speed
 
-
-
-loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
-displacement_thickness : 0
-deviation_model : aungier
+model_options:
+  loss_model: benner 
+  displacement_thickness : 0
+  deviation_model : aungier
+  choking_condition : deviation
 
 
 solver:

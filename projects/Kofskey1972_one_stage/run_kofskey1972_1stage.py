@@ -22,9 +22,9 @@ import meanline_axial as ml
 filename = "kofskey1972_1stage.yaml"
 cascades_data = ml.get_cascades_data(filename)
 
-# ml.print_dict(cascades_data)
+raise Exception("STOP")
 
-Case = 4
+Case = 0
 
 if Case == 0:
     # Solve using nonlinear equation solver
@@ -104,6 +104,7 @@ elif Case == 3:
         boundary_conditions = {
             key: val * np.ones(N)
             for key, val in cascades_data["BC"].items()
+            
             if key != "fluid_name"
         }
         boundary_conditions["fluid_name"] = N * [cascades_data["BC"]["fluid_name"]]
@@ -119,6 +120,7 @@ elif Case == 3:
         i += 1
 
 elif Case == 4:
+    
     p_min = 1.8
     p_max = 4.0
     N = int((p_max - p_min) * 10) + 1
@@ -132,3 +134,19 @@ elif Case == 4:
     boundary_conditions["fluid_name"] = N * [cascades_data["BC"]["fluid_name"]]
     boundary_conditions["p_out"] = p_out
     ml.performance_map(boundary_conditions, cascades_data)
+    
+elif Case == 5:
+    
+    design_point = cascades_data["BC"]
+    x = np.array([0.2, 0.7, 0.7, 1.001, 1.0013,
+        1.12724873, 0.7, 0.7, 1.004, 1.004,
+       -1.07255487, 0.2, 0.89, 1.0018, 0.7,
+        0.82, 1.0048])
+    
+    # x0 = np.array([ 0.0756511 ,  0.66000876,  0.65678993,  1.00205134,  1.00203512,
+    #         1.39691342,  0.65185969,  0.6460505 ,  1.00491815,  1.00487539,
+    #        -1.33537204,  0.07655411,  0.74213538,  1.00246707,  0.66321498,
+    #         0.72677942,  1.00546961])
+    
+    solver = ml.compute_optimal_turbine(design_point, cascades_data, x)
+    print(cascades_data["overall"]["eta_ts"])
