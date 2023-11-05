@@ -268,7 +268,6 @@ class NonlinearSystemSolver:
         beginning of the root finding process. The header includes columns for residual evaluations,
         gradient evaluations, norm of the residuals, and norm of the steps.
         """
-
         # Define header text
         initial_message = (
             f" Solve system of equations for {type(self.problem).__name__}"

@@ -1,17 +1,40 @@
-BC:
-  fluid_name: air          # Fluid
-  p0_in: 13.8e4            # Inlet total pressure
-  T0_in: 295.6             # Inlet total temperature
-  p_out: 13.8e4/2.298      # Exit static pressure
-  alpha_in: 0              # Flow angle at first stator
-  omega: 1627              # Rotational speed
+operation_points:
+
+  - fluid_name: air
+    p0_in: 13.8e4
+    T0_in: 295.6
+    p_out: 13.8e4/2.298
+    alpha_in: 0
+    omega: 1627
+
+  - fluid_name: air
+    p0_in: 14.0e4
+    T0_in: 295.6
+    p_out: 13.8e4/2.5
+    alpha_in: 0
+    omega: 1627
+
+  - fluid_name: air
+    p0_in: 14.0e4
+    T0_in: 295.6
+    p_out: 13.8e4/3.0
+    alpha_in: 0
+    omega: 1627
+
+performance_map:
+  fluid_name: air
+  T0_in: 295.6
+  alpha_in: 0
+  p0_in: 13.8e4
+  p_out: 13.8e4/np.linspace(1.5, 4.5, 50)
+  omega: [1627]
+  # omega: np.asarray([0.7, 0.8, 0.9, 1.0])*1627
 
 model_options:
   loss_model: benner 
   displacement_thickness : 0
   deviation_model : aungier
   choking_condition : deviation
-
 
 solver:
   method: hybr
@@ -20,7 +43,6 @@ solver:
   derivative_method: "2-point"
   derivative_rel_step: 1e-4
   display_progress: True
-
 
 geometry:
   n_cascades: 2

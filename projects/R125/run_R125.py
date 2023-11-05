@@ -22,7 +22,7 @@ import meanline_axial as ml
 # filename = "R125_opt.yaml"
 
 filename = "R125.yaml"
-cascades_data = ml.get_cascades_data(filename)
+cascades_data = ml.read_configuration_file(filename)
 
 Case = 0
 

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 import os
 import sys
+import copy
 
 desired_path = os.path.abspath("../..")
 
@@ -19,17 +20,17 @@ if desired_path not in sys.path:
 
 import meanline_axial as ml
 
-filename = "kofskey1972_1stage.yaml"
-cascades_data = ml.get_cascades_data(filename)
-
-raise Exception("STOP")
+CONFIG_FILE = "kofskey1972_1stage.yaml"
+cascades_data = ml.read_configuration_file(CONFIG_FILE)
 
 Case = 0
 
 if Case == 0:
     # Solve using nonlinear equation solver
-    BC = cascades_data["BC"]
-    sol = ml.compute_operating_point(BC, cascades_data)
+    operating_point = cascades_data["operation_points"][0]
+    solver = ml.compute_operating_point(operating_point, cascades_data)
+    solver.plot_convergence_history()
+    # plt.show()
 
 elif Case == 1:
     # Solve using optimization algorithm
@@ -37,7 +38,7 @@ elif Case == 1:
     solver = ml.solver.OptimizationSolver(
         cascade_problem, cascade_problem.x0, display=True, plot=False
     )
-    sol = solver.solve(method="trust-constr")
+    solver = solver.solve(method="trust-constr")
 
 elif Case == 2:
     # Calculate a dataset corresponding to a dataset
@@ -150,3 +151,15 @@ elif Case == 5:
     
     solver = ml.compute_optimal_turbine(design_point, cascades_data, x)
     print(cascades_data["overall"]["eta_ts"])
+
+    # Compute performance map according to config file
+    # TODO add option to give operation points as list of lists to define several speed lines
+    # TODO add option to define range of values for all the parameters of the operating point, including T0_in, p0_in and alpha_in
+    # TODO all variables should be ranged to create a nested list of lists
+    # TODO the variables should work if they are scalars as well
+    # TODO update plotting so the different lines are plotted separately
+    # TODO update initial guess strategy so each nested list uses the first element of the parent list as initial guess
+    # TODO for example, when computing a new speed line, the first initial guess should be the final solution of the first point of the previous speed line
+    
+    operation_points = ml.generate_operation_points(cascades_data["performance_map"])
+    ml.performance_map(operation_points, cascades_data)

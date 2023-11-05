@@ -23,7 +23,7 @@ from ..utilities import (
     print_dict,
     print_boundary_conditions,
     flatten_dataframe,
-    convert_numpy_to_python,
+    numpy_to_python,
 )
 from datetime import datetime
 
@@ -282,7 +282,9 @@ def performance_map(
     # Filter out 'operation_points' and any empty entries
     config_data = {k: v for k, v in case_data.items() if v and k != "operation_points"}
     config_data = {**config_data, "operation_points": operation_points}
-    config_data = convert_numpy_to_python(config_data)
+    config_data = numpy_to_python(config_data)
+
+    print(config_data)
 
     # Export input arguments as YAML file
     config_file = os.path.join(output_dir, f"{filename}.yaml")
@@ -380,6 +382,8 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
+<<<<<<< HEAD
+=======
         
         # Define reference mass flow rate
         v0 = cascades_data["fixed_params"]["v0"]
@@ -388,6 +392,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         m_ref = A_in*v0*d_in # Reference mass flow rate
         cascades_data["fixed_params"]["m_ref"] = m_ref
     
+>>>>>>> a8389831e481eacd8b6f69e8770a80ee09953b02
         self.cascades_data = cascades_data
 
     def get_values(self, vars):
@@ -436,30 +441,3 @@ class CascadesOptimizationProblem(OptimizationProblem):
 
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
-
-
-
-
-def generate_operation_points(performance_map):
-    # Extract base parameters
-    fluid_name = performance_map['fluid_name']
-    T0_in = performance_map['T0_in']
-    alpha_in = performance_map['alpha_in']
-    p0_in = performance_map['p0_in']
-    p_out_values = performance_map['p_out']
-    omega_values = performance_map['omega']
-    
-    # Generate all combinations of operation points
-    operation_points = []
-    for p_out in p_out_values:
-        for omega in omega_values:
-            operation_points.append({
-                'fluid_name': fluid_name,
-                'p0_in': p0_in,
-                'T0_in': T0_in,
-                'p_out': p_out,
-                'alpha_in': alpha_in,
-                'omega': omega
-            })
-    
-    return operation_points
