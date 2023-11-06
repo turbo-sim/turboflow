@@ -390,55 +390,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
     
         self.cascades_data = cascades_data
 
-    def get_values(self, vars):
-        residuals = cs.evaluate_cascade_series(vars, self.cascades_data)
+    def get_values(self, x):
+        residuals = cs.evaluate_cascade_series(x, self.cascades_data)
 
         return residuals
-
-
-class CascadesOptimizationProblem(OptimizationProblem):
-    def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
-        cs.calculate_number_of_stages(cascades_data)
-        cs.update_fixed_params(cascades_data)
-        cs.check_geometry(cascades_data)
-        
-        # Define reference mass flow rate
-        v0 = cascades_data["fixed_params"]["v0"]
-        d_in = cascades_data["fixed_params"]["d0_in"]
-        A_in = cascades_data["geometry"]["A_in"][0]
-        m_ref = A_in*v0*d_in # Reference mass flow rate
-        cascades_data["fixed_params"]["m_ref"] = m_ref
-        
-        if x0 == None:
-            x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
-        self.x0 = cs.scale_to_normalized_values(x0, cascades_data)
-        self.cascades_data = cascades_data
-
-    def get_values(self, vars):
-        residuals = cs.evaluate_cascade_series(vars, self.cascades_data)
-        self.f = 0
-        self.c_eq = residuals
-        self.c_ineq = None
-        objective_and_constraints = self.merge_objective_and_constraints(
-            self.f, self.c_eq, self.c_ineq
-        )
-
-        return objective_and_constraints
-
-    def get_bounds(self):
-        n_cascades = self.cascades_data["geometry"]["n_cascades"]
-        lb, ub = cs.get_dof_bounds(n_cascades)
-        bounds = [(lb[i], ub[i]) for i in range(len(lb))]
-        return bounds
-
-    def get_n_eq(self):
-        return self.get_number_of_constraints(self.c_eq)
-
-    def get_n_ineq(self):
-        return self.get_number_of_constraints(self.c_ineq)
-
-
-
 
 def generate_operation_points(performance_map):
     # Extract base parameters

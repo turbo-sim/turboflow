@@ -1402,7 +1402,7 @@ def get_geometry(geometry, m, h0_in, d_out_s, h_out_s):
         te_o = geometry_cascade["te_o"]
         le_c = geometry_cascade["le_c"]
         
-        d_s = geometry["specific_diameter"][i]
+        d_s = geometry["d_s"][i]
         d = convert_specific_diamater(d_s, m, d_out_s, h0_in, h_out_s) # Diamater
         r = d/2 # Radius
         

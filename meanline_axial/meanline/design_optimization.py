@@ -118,7 +118,17 @@ class CascadesOptimizationProblem(OptimizationProblem):
             self.cascades_data["BC"]["omega"] = w
             i += 1
             
-        keys_geometry = [key for key in self.cascades_data["geometry"].keys() if key in self.design_variables.keys()]
+        # XXX: This is due to lack of flexibility in code (constant radius)
+        if "d_s" in self.design_variables.keys():
+            self.cascades_data["geometry"]["d_s"] = np.ones(self.n_cascades)*x[i]
+            i += 1
+            
+        if "r_ht" in self.design_variables.keys():
+            self.cascades_data["geometry"]["r_ht_in"] = x[i:i+n_cascades]
+            self.cascades_data["geometry"]["r_ht_out"] = x[i+1:i+1+n_cascades]
+            i += n_cascades+1
+            
+        keys_geometry = [key for key in ["ar", "bs", "theta_in", "theta_out"] if key in self.design_variables.keys()]
         for key in keys_geometry:
             self.cascades_data["geometry"][key] = [val for val in x[i:i+n_cascades]] 
             i += n_cascades
@@ -169,16 +179,13 @@ def get_default_bounds(cascades_data, keys_design_variables):
     """
     
     default_bounds_w_s  = (0.1, 1.5)  
-    default_bounds_stator = {"specific_diameter" : (1, 3),
-                      "r_ht_in" : (0.6, 0.95),
-                      "r_ht_out" : (0.6, 0.95),
+    default_bounds_d_s = (1, 3)
+    default_bounds_r_ht = (0.6, 0.95)
+    default_bounds_stator = {
                       "ar" : (1, 2),
                       "bs" : (1, 2),
                       "theta_in" : (-15*np.pi/180, 15*np.pi/180),
                       "theta_out" : (40*np.pi/180, 80*np.pi/180),
-                      "te_o" : (0.05, 0.4),
-                      "le_c" : (),
-                      "We" : (10*np.pi/180, 60*np.pi/180),
                       "v_in" : (0.01, 0.5),
                       "v_out" : (0.1, 0.99),
                       "beta_out" : (30*np.pi/180, 80*np.pi/180),
@@ -186,16 +193,11 @@ def get_default_bounds(cascades_data, keys_design_variables):
                       "v_in_crit" : (0.01, 0.7),
                       "v_out_crit" : (0.1, 0.99)}
     
-    default_bounds_rotor = {"specific_diameter" : (1, 3),
-                      "r_ht_in" : (0.6, 0.95),
-                      "r_ht_out" : (0.6, 0.95),
+    default_bounds_rotor = {
                       "ar" : (1, 2),
                       "bs" : (1, 2),
                       "theta_in" : (-15*np.pi/180, 80*np.pi/180),
                       "theta_out" : (-80*np.pi/180, -40*np.pi/180),
-                      "te_o" : (0.05, 0.4),
-                      "le_c" : (),
-                      "We" : (10*np.pi/180, 60*np.pi/180),
                       "v_in" : (0.1, 0.99),
                       "v_out" : (0.1, 0.99),
                       "beta_out" : (-80*np.pi/180, -30*np.pi/180),
@@ -210,8 +212,15 @@ def get_default_bounds(cascades_data, keys_design_variables):
     if "w_s" in keys_design_variables:
         bounds += [default_bounds_w_s]
     
+    if "d_s" in keys_design_variables:
+        bounds += [default_bounds_d_s] 
+    
+    if "r_ht" in keys_design_variables:
+        bounds += [default_bounds_r_ht, default_bounds_r_ht, default_bounds_r_ht]
+        
+    
     # Add bounds to geometry
-    keys_geometry = [key for key in cascades_data["geometry"] if key in keys_design_variables]
+    keys_geometry = [key for key in ["ar", "bs", "theta_in", "theta_out"] if key in keys_design_variables]
     for key in keys_geometry:
         bounds += [default_bounds_stator[key]]
         bounds += [default_bounds_rotor[key]]
@@ -250,7 +259,7 @@ def get_initial_guess_array(cascades_data, keys_design_variables, x = None):
         initial_guess += [cascades_data["BC"]["w_s"]]
     
     for i in range(n_cascades):
-        initial_guess += [val[i] for key, val in cascades_data["geometry"].items() if key in keys_design_variables]
+        initial_guess += [val[i] for key, val in ["ar", "bs", "theta_in", "theta_out"] if key in keys_design_variables]
         
     if not isinstance(x, np.ndarray):
         x = cs.generate_initial_guess(cascades_data, R = 0.5, eta_tt = 0.95, eta_ts = 0.9, Ma_crit = 0.95)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct  3 08:40:52 2023
+Created on Sun Nov  5 15:30:57 2023
 
 @author: laboan
 """
@@ -10,7 +10,7 @@ import yaml
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from . import cascade_series as cs
+from . import cascade_seriesCopy as cs
 from .design_optimization import CascadesOptimizationProblem
 from ..solver import (
     NonlinearSystemSolver,
@@ -23,18 +23,16 @@ from ..utilities import (
     print_dict,
     print_boundary_conditions,
     flatten_dataframe,
-    numpy_to_python,
+    convert_numpy_to_python,
 )
 from datetime import datetime
-
-
 set_plot_options()
 
 
 name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
 
-def initialize_solver(cascades_data, method, initial_guess=None):
+def initialize_solver(BC, geometry, model_options, solver_options, initial_guess=None):
     """
     Initialize a nonlinear system solver for solving a given problem.
 
@@ -75,7 +73,7 @@ def initialize_solver(cascades_data, method, initial_guess=None):
     """
 
     # Initialize problem object
-    problem = CascadesNonlinearSystemProblem(cascades_data)
+    problem = CascadesNonlinearSystemProblem(BC, geometry, model_options)
 
     # Define initial guess
     if isinstance(initial_guess, np.ndarray):
@@ -97,30 +95,30 @@ def initialize_solver(cascades_data, method, initial_guess=None):
             raise ValueError("Initial guess must be an array or dictionary.")
 
         initial_guess = cs.generate_initial_guess(
-            cascades_data, R, eta_tt, eta_ts, Ma_crit
+            problem, R, eta_tt, eta_ts, Ma_crit
         )
 
     # Always normalize initial guess
-    initial_guess = cs.scale_to_normalized_values(initial_guess, cascades_data)
+    initial_guess = cs.scale_to_normalized_values(initial_guess, problem)
 
+    
     # Initialize solver object
     solver = NonlinearSystemSolver(
         problem,
         initial_guess,
-        method=method,
-        tol=cascades_data["solver"]["tolerance"],
-        max_iter=cascades_data["solver"]["max_iterations"],
-        derivative_method=cascades_data["solver"]["derivative_method"],
-        derivative_rel_step=cascades_data["solver"]["derivative_rel_step"],
-        display=cascades_data["solver"]["display_progress"],
+        method=solver_options["method"],
+        tol=solver_options["tolerance"],
+        max_iter=solver_options["max_iterations"],
+        derivative_method=solver_options["derivative_method"],
+        derivative_rel_step=solver_options["derivative_rel_step"],
+        display=solver_options["display_progress"],
     )
 
     return solver
 
 
 def compute_operation_point(
-    boundary_conditions,
-    cascades_data,
+    boundary_conditions, geometry, model_options, solver_options,
     initial_guess=None,
 ):
     """
@@ -165,13 +163,9 @@ def compute_operation_point(
     # Print boundary conditions of current operation point
     print_boundary_conditions(boundary_conditions)
 
-    # Calculate performance at given boundary conditions with given geometry
-    cascades_data["BC"] = boundary_conditions
-
     # Attempt solving with the specified method
-    method = cascades_data["solver"]["method"]
-    print(f"Trying to solve the problem using {name_map[method]} method")
-    solver = initialize_solver(cascades_data, method, initial_guess=initial_guess)
+    print(f"Trying to solve the problem using {name_map[solver_options['method']]} method")
+    solver = initialize_solver(boundary_conditions, geometry, model_options, solver_options, initial_guess=initial_guess)
     try:
         solution = solver.solve()
         success = solution.success
@@ -179,13 +173,13 @@ def compute_operation_point(
         print(f"Error during solving: {e}")
         success = False
     if not success:
-        print(f"Solution failed with {name_map[method]} method")
+        print(f"Solution failed with {name_map[solver_options['method']]} method")
 
     # Attempt solving with Lavenberg-Marquardt method
-    if method != "lm" and not success:
-        method = "lm"
-        print(f"Trying to solve the problem using {name_map[method]} method")
-        solver = initialize_solver(cascades_data, method, initial_guess=initial_guess)
+    if solver_options['method'] != "lm" and not success:
+        solver_options['method'] = "lm"
+        print(f"Trying to solve the problem using {name_map[solver_options['method']]} method")
+        solver = initialize_solver(boundary_conditions, geometry, model_options, solver_options, initial_guess=initial_guess)
         try:
             solution = solver.solve()
             success = solution.success
@@ -193,7 +187,7 @@ def compute_operation_point(
             print(f"Error during solving: {e}")
             success = False
         if not success:
-            print(f"Solution failed with {name_map[method]} method")
+            print(f"Solution failed with {name_map[solver_options['method']]} method")
 
     # TODO: Attempt solving with optimization algorithms?
 
@@ -201,7 +195,7 @@ def compute_operation_point(
     if isinstance(initial_guess, np.ndarray) and not success:
         method = "lm"
         print("Trying to solve the problem with a new initial guess")
-        solver = initialize_solver(cascades_data, method, initial_guess=None)
+        solver = initialize_solver(boundary_conditions, geometry, model_options, solver_options, initial_guess=None)
         try:
             solution = solver.solve()
             success = solution.success
@@ -221,9 +215,9 @@ def compute_operation_point(
 
         for i in range(N):
             x0 = {key: values[i] for key, values in x0_arrays.items()}
-            print(f"Trying to solve the problem with a new initial guess")
+            print("Trying to solve the problem with a new initial guess")
             print_dict(x0)
-            solver = initialize_solver(cascades_data, method, initial_guess=x0)
+            solver = initialize_solver(boundary_conditions, geometry, model_options, solver_options, initial_guess=x0)
             try:
                 solution = solver.solve()
                 success = solution.success
@@ -282,9 +276,7 @@ def performance_map(
     # Filter out 'operation_points' and any empty entries
     config_data = {k: v for k, v in case_data.items() if v and k != "operation_points"}
     config_data = {**config_data, "operation_points": operation_points}
-    config_data = numpy_to_python(config_data)
-
-    print(config_data)
+    config_data = convert_numpy_to_python(config_data)
 
     # Export input arguments as YAML file
     config_file = os.path.join(output_dir, f"{filename}.yaml")
@@ -378,66 +370,45 @@ def performance_map(
 
 
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
-    def __init__(self, cascades_data):
-        cs.calculate_number_of_stages(cascades_data)
-        cs.update_fixed_params(cascades_data)
-        cs.check_geometry(cascades_data)
-<<<<<<< HEAD
-=======
-        
-        # Define reference mass flow rate
-        v0 = cascades_data["fixed_params"]["v0"]
-        d_in = cascades_data["fixed_params"]["d0_in"]
-        A_in = cascades_data["geometry"]["A_in"][0]
-        m_ref = A_in*v0*d_in # Reference mass flow rate
-        cascades_data["fixed_params"]["m_ref"] = m_ref
-    
->>>>>>> a8389831e481eacd8b6f69e8770a80ee09953b02
-        self.cascades_data = cascades_data
+    def __init__(self, BC, geometry, model_options):
 
-    def get_values(self, vars):
-        residuals = cs.evaluate_cascade_series(vars, self.cascades_data)
+        BC["fluid"] = cs.initialize_fluid(BC["fluid_name"])
+        self.reference_values = cs.get_reference_values(BC)
+        
+        self.BC = BC
+        self.geometry = geometry
+        self.model_options = model_options
+        self.reference_values["delta_ref"] = 0.011/3e5**(-1/7)
+        
+        m_ref = geometry["A_in"][0]*self.reference_values["d_out_s"]*self.reference_values["v0"]
+        self.reference_values["m_ref"] = m_ref
+
+    def get_values(self, x):
+
+        residuals = cs.evaluate_cascade_series(x, self.BC, self.geometry, self.model_options, self.reference_values)
 
         return residuals
 
-
-class CascadesOptimizationProblem(OptimizationProblem):
-    def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
-        cs.calculate_number_of_stages(cascades_data)
-        cs.update_fixed_params(cascades_data)
-        cs.check_geometry(cascades_data)
-        
-        # Define reference mass flow rate
-        v0 = cascades_data["fixed_params"]["v0"]
-        d_in = cascades_data["fixed_params"]["d0_in"]
-        A_in = cascades_data["geometry"]["A_in"][0]
-        m_ref = A_in*v0*d_in # Reference mass flow rate
-        cascades_data["fixed_params"]["m_ref"] = m_ref
-        
-        if x0 == None:
-            x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
-        self.x0 = cs.scale_to_normalized_values(x0, cascades_data)
-        self.cascades_data = cascades_data
-
-    def get_values(self, vars):
-        residuals = cs.evaluate_cascade_series(vars, self.cascades_data)
-        self.f = 0
-        self.c_eq = residuals
-        self.c_ineq = None
-        objective_and_constraints = self.merge_objective_and_constraints(
-            self.f, self.c_eq, self.c_ineq
-        )
-
-        return objective_and_constraints
-
-    def get_bounds(self):
-        n_cascades = self.cascades_data["geometry"]["n_cascades"]
-        lb, ub = cs.get_dof_bounds(n_cascades)
-        bounds = [(lb[i], ub[i]) for i in range(len(lb))]
-        return bounds
-
-    def get_n_eq(self):
-        return self.get_number_of_constraints(self.c_eq)
-
-    def get_n_ineq(self):
-        return self.get_number_of_constraints(self.c_ineq)
+def generate_operation_points(performance_map):
+    # Extract base parameters
+    fluid_name = performance_map['fluid_name']
+    T0_in = performance_map['T0_in']
+    alpha_in = performance_map['alpha_in']
+    p0_in = performance_map['p0_in']
+    p_out_values = performance_map['p_out']
+    omega_values = performance_map['omega']
+    
+    # Generate all combinations of operation points
+    operation_points = []
+    for p_out in p_out_values:
+        for omega in omega_values:
+            operation_points.append({
+                'fluid_name': fluid_name,
+                'p0_in': p0_in,
+                'T0_in': T0_in,
+                'p_out': p_out,
+                'alpha_in': alpha_in,
+                'omega': omega
+            })
+    
+    return operation_points

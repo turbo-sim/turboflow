@@ -23,12 +23,11 @@ import meanline_axial as ml
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 cascades_data = ml.read_configuration_file(CONFIG_FILE)
 
-Case = 0
-
+Case = 6
 if Case == 0:
     # Solve using nonlinear equation solver
     operating_point = cascades_data["operation_points"][0]
-    solver = ml.compute_operating_point(operating_point, cascades_data)
+    solver = ml.compute_operation_point(operating_point, cascades_data)
     solver.plot_convergence_history()
     # plt.show()
 
@@ -143,11 +142,7 @@ elif Case == 5:
         1.12724873, 0.7, 0.7, 1.004, 1.004,
        -1.07255487, 0.2, 0.89, 1.0018, 0.7,
         0.82, 1.0048])
-    
-    # x0 = np.array([ 0.0756511 ,  0.66000876,  0.65678993,  1.00205134,  1.00203512,
-    #         1.39691342,  0.65185969,  0.6460505 ,  1.00491815,  1.00487539,
-    #        -1.33537204,  0.07655411,  0.74213538,  1.00246707,  0.66321498,
-    #         0.72677942,  1.00546961])
+
     
     solver = ml.compute_optimal_turbine(design_point, cascades_data, x)
     print(cascades_data["overall"]["eta_ts"])
@@ -161,5 +156,15 @@ elif Case == 5:
     # TODO update initial guess strategy so each nested list uses the first element of the parent list as initial guess
     # TODO for example, when computing a new speed line, the first initial guess should be the final solution of the first point of the previous speed line
     
-    operation_points = ml.generate_operation_points(cascades_data["performance_map"])
-    ml.performance_map(operation_points, cascades_data)
+    # operation_points = ml.generate_operation_points(cascades_data["performance_map"])
+    # ml.performance_map(operation_points, cascades_data)
+    
+elif Case == 6:
+    
+    # Solve using nonlinear equation solver
+    operating_point = cascades_data["operation_points"][0]
+    solver = ml.compute_operation_point(operating_point, cascades_data["geometry"], cascades_data["model_options"], cascades_data["solver"])
+    solver.plot_convergence_history()
+    # plt.show()
+    
+    
