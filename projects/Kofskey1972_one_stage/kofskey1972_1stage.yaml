@@ -1,36 +1,33 @@
 operation_points:
 
-  - fluid_name: air
-    p0_in: 13.8e4
-    T0_in: 295.6
-    p_out: 13.8e4/2.298
-    alpha_in: 0
-    omega: 1627
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 13.8e4
+  p_out: 13.8e4/2.298
+  omega: 1627
+  alpha_in: 0
 
-  - fluid_name: air
-    p0_in: 14.0e4
-    T0_in: 295.6
-    p_out: 13.8e4/2.5
-    alpha_in: 0
-    omega: 1627
+  # - fluid_name: air
+  #   T0_in: 295.6
+  #   p0_in: 13.8e4
+  #   p_out: 13.8e4/2.5
+  #   omega: 1627
+  #   alpha_in: 0
 
-  - fluid_name: air
-    p0_in: 14.0e4
-    T0_in: 295.6
-    p_out: 13.8e4/3.0
-    alpha_in: 0
-    omega: 1627
+  # - fluid_name: air
+  #   T0_in: 295.6
+  #   p0_in: 13.8e4
+  #   p_out: 13.8e4/3.0
+  #   omega: 1627
+  #   alpha_in: 0
 
 performance_map:
   fluid_name: air
   T0_in: 295.6
-  alpha_in: 0
   p0_in: 13.8e4
   p_out: 13.8e4/np.linspace(1.5, 4.5, 50)
-  omega: [1627]
-  # omega: np.asarray([0.7, 0.8, 0.9, 1.0])*1627
-
-
+  omega: [1627, 1000, 1000, 1000, 100]
+  alpha_in: 0
 
 model_options:
   loss_model: benner  # Loss model (Benner only for off-design, KO only other option)

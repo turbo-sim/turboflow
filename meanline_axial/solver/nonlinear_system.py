@@ -1,4 +1,5 @@
 import os
+import copy
 import logging
 import warnings
 import numpy as np
@@ -100,7 +101,7 @@ class NonlinearSystemSolver:
         self.method = method
         self.tol = tol
         self.maxiter = max_iter
-        self.options = options
+        self.options = copy.deepcopy(options) if options else {}
         self.derivative_method = derivative_method
         self.derivative_rel_step = derivative_rel_step
 
@@ -142,6 +143,7 @@ class NonlinearSystemSolver:
         self.func_count_tot = 0
         self.solution = None
         self.solution_report = []
+        self.include_solution_in_footer = False
         self.convergence_history = {
             "grad_count": [],
             "func_count": [],
@@ -370,11 +372,11 @@ class NonlinearSystemSolver:
         success_status = f"Success: {self.solution.success}"
         solution_header = "Solution:"
         solution_vars = [f"   x{i} = {x:+6e}" for i, x in enumerate(self.solution.x)]
-        lines_to_output = (
-            [separator, exit_message, success_status, solution_header]
-            + solution_vars
-            + [separator, ""]
-        )
+        lines_to_output = [separator, success_status, exit_message]
+        if self.include_solution_in_footer:
+            lines_to_output += [solution_header]
+            lines_to_output += solution_vars
+        lines_to_output += [separator, ""]
 
         # Display to stdout
         if self.display:

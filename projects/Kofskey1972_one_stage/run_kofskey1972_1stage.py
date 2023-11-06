@@ -1,17 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Sep 20 13:05:13 2023
-
-@author: laboan
-"""
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-
 import os
 import sys
 import copy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 desired_path = os.path.abspath("../..")
 
@@ -20,10 +12,8 @@ if desired_path not in sys.path:
 
 import meanline_axial as ml
 
-
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 cascades_data = ml.read_configuration_file(CONFIG_FILE)
-
 
 Case = 4
 
@@ -32,7 +22,6 @@ if Case == 0:
     operating_point = cascades_data["operation_points"][0]
     solver = ml.compute_operating_point(operating_point, cascades_data)
     solver.plot_convergence_history()
-    # plt.show()
 
 elif Case == 1:
     # Solve using optimization algorithm
@@ -123,13 +112,44 @@ elif Case == 3:
 
 elif Case == 4:
     # Compute performance map according to config file
-    # TODO add option to give operation points as list of lists to define several speed lines
-    # TODO add option to define range of values for all the parameters of the operating point, including T0_in, p0_in and alpha_in
-    # TODO all variables should be ranged to create a nested list of lists
-    # TODO the variables should work if they are scalars as well
+    operation_points = cascades_data["performance_map"]
+    ml.compute_performance(operation_points, cascades_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+elif Case == 5:
+    # Compute performance map according to config file
+    operation_points = cascades_data["performance_map"]
+    omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    operation_points["omega"] = operation_points["omega"]*omega_frac
+    ml.compute_performance(operation_points, cascades_data)
+
+
+
+# Show plots
+# plt.show()
+
+    # DONE add option to give operation points as list of lists to define several speed lines
+    # DONE add option to define range of values for all the parameters of the operating point, including T0_in, p0_in and alpha_in
+    # DONE all variables should be ranged to create a nested list of lists
+    # DONE the variables should work if they are scalars as well
+    # DONE implemented closest-point strategy for initial guess of performance map
+    # DONE implement two norm of relative deviation as metric
+
     # TODO update plotting so the different lines are plotted separately
-    # TODO update initial guess strategy so each nested list uses the first element of the parent list as initial guess
-    # TODO for example, when computing a new speed line, the first initial guess should be the final solution of the first point of the previous speed line
+    # TODO seggregate solver from initial guess in the single point evaluation
     
-    operation_points = ml.generate_operation_points(cascades_data["performance_map"])
-    ml.performance_map(operation_points, cascades_data)

@@ -3,6 +3,8 @@ import yaml
 import logging
 from datetime import datetime
 
+from collections.abc import Iterable
+
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
@@ -86,29 +88,55 @@ def postprocess_config(config):
     return convert_to_numbers(config)
 
 
-def convert_numpy_to_python(data):
-    """Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts."""
+def convert_numpy_to_python(data, precision=10):
+    """
+    Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
+    and rounds numerical values to the specified precision.
+
+    Parameters:
+    - data: The numpy data to convert.
+    - precision: The decimal precision to which float values should be rounded.
+
+    Returns:
+    - The converted data with all numpy types replaced by native Python types and float values rounded.
+    """
 
     if isinstance(data, dict):
-        return {k: convert_numpy_to_python(v) for k, v in data.items()}
+        return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
 
     elif isinstance(data, list):
-        return [convert_numpy_to_python(item) for item in data]
+        return [convert_numpy_to_python(item, precision) for item in data]
 
     elif isinstance(data, np.ndarray):
-        return data.tolist()
+        # If the numpy array has more than one element, it is iterable.
+        if data.ndim > 0:
+            return [convert_numpy_to_python(item, precision) for item in data.tolist()]
+        else:
+            # This handles the case of a numpy array with a single scalar value.
+            return convert_numpy_to_python(data.item(), precision)
 
-    elif isinstance(data, (np.int_, np.float_, np.complex_)):
-        return data.item()
+    elif isinstance(data, (np.integer, np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64)):
+        return int(data.item())
+
+    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+        return round(float(data.item()), precision)
 
     elif isinstance(data, np.bool_):
-        return bool(data)
+        return bool(data.item())
 
-    elif isinstance(data, np.str_):
-        return str(data)
+    elif isinstance(data, (np.str_, np.unicode_)):
+        return str(data.item())
+
+    # This will handle Python built-in types and other types that are not numpy.
+    elif isinstance(data, (float, int, str, bool)):
+        if isinstance(data, float):
+            return round(data, precision)
+        return data
+
+    else:
+        raise TypeError(f"Unsupported data type: {type(data)}")
 
     return data
-
 
 def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -193,6 +221,86 @@ def print_boundary_conditions(BC):
     print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
     print("-" * 80)
     print()
+
+
+def print_operation_points(operation_points):
+    """
+    Prints a summary table of operation points scheduled for simulation.
+    
+    This function takes a list of operation point dictionaries, formats them
+    according to predefined specifications, applies unit conversions where 
+    necessary, and prints them in a neatly aligned table with headers and units.
+
+    Parameters:
+    - operation_points (list of dict): A list where each dictionary contains 
+      key-value pairs representing operation parameters and their corresponding 
+      values.
+
+    Notes:
+    - This function assumes that all necessary keys exist within each operation 
+      point dictionary.
+    - The function directly prints the output; it does not return any value.
+    - Unit conversions are hardcoded and specific to known parameters.
+    - If the units of the parameters change or if different parameters are added,
+      the unit conversion logic and `field_specs` need to be updated accordingly.
+    """
+    length = 80
+    index_width = 8
+    output_lines = ["-" * length, " Summary of operation points scheduled for simulation", "-" * length]
+
+    # Configuration for each field with specified width and decimal places
+    field_specs = {
+        'fluid_name': {'name': 'Fluid', 'unit': '', 'width': 8},
+        'alpha_in': {'name': 'angle_in', 'unit': '[deg]', 'width': 10, 'decimals': 1},
+        'T0_in': {'name': 'T0_in', 'unit': '[degC]', 'width': 12, 'decimals': 2},
+        'p0_in': {'name': 'p0_in', 'unit': '[kPa]', 'width': 12, 'decimals': 2},
+        'p_out': {'name': 'p_out', 'unit': '[kPa]', 'width': 12, 'decimals': 2},
+        'omega': {'name': 'omega', 'unit': '[RPM]', 'width': 12, 'decimals': 0}
+    }
+
+    # Create formatted header and unit strings using f-strings and field widths
+    header_str = f"{'Index':>{index_width}}"  # Start with "Index" header
+    unit_str = f"{'':>{index_width}}"   # Start with empty string for unit alignment
+
+    for spec in field_specs.values():
+        header_str += f" {spec['name']:>{spec['width']}}"
+        unit_str += f" {spec['unit']:>{spec['width']}}"
+
+    # Append formatted strings to the output lines
+    output_lines.append(header_str)
+    output_lines.append(unit_str)
+
+    # Unit conversion functions
+    def convert_units(key, value):
+        if key == 'T0_in':  # Convert Kelvin to Celsius
+            return value - 273.15
+        elif key == 'omega':  # Convert rad/s to RPM
+            return (value * 60) / (2 * np.pi)
+        elif key == 'alpha_in':  # Convert radians to degrees
+            return np.degrees(value)
+        elif key in ["p0_in", "p_out"]:  # Pa to kPa
+            return value / 1e3
+        return value
+
+    # Process and format each operation point
+    for index, op_point in enumerate(operation_points, start=1):
+        row = [f"{index:>{index_width}}"]
+        for key, spec in field_specs.items():
+            value = convert_units(key, op_point[key])
+            if isinstance(value, float):
+                # Format floats with the specified width and number of decimal places
+                row.append(f"{value:>{spec['width']}.{spec['decimals']}f}")
+            else:
+                # Format strings to the specified width without decimals
+                row.append(f"{value:>{spec['width']}}")
+        output_lines.append(" ".join(row))  # Ensure spaces between columns
+
+    output_lines.append("-" * length)  # Add a closing separator line
+
+    # Join the lines and print the output
+    formatted_output = "\n".join(output_lines)
+    print(formatted_output)
+    return formatted_output
 
 
 def create_logger(name, path=None, use_datetime=True):
@@ -452,3 +560,35 @@ def find_latest_results_file(results_path, prefix="performance_analysis_"):
         raise FileNotFoundError(
             f"No Excel files found in directory '{results_path}' with prefix '{prefix}'"
         )
+
+
+def ensure_iterable(obj):
+    """
+    Ensure that an object is iterable. If the object is already an iterable
+    (except for strings, which are not treated as iterables in this context),
+    it will be returned as is. If the object is not an iterable, or if it is
+    a string, it will be placed into a list to make it iterable.
+
+    Parameters:
+    obj : any type
+        The object to be checked and possibly converted into an iterable.
+
+    Returns:
+    Iterable
+        The original object if it is an iterable (and not a string), or a new
+        list containing the object if it was not iterable or was a string.
+
+    Examples:
+    >>> ensure_iterable([1, 2, 3])
+    [1, 2, 3]
+    >>> ensure_iterable('abc')
+    ['abc']
+    >>> ensure_iterable(42)
+    [42]
+    >>> ensure_iterable(np.array([1, 2, 3]))
+    array([1, 2, 3])
+    """
+    if isinstance(obj, Iterable) and not isinstance(obj, str):
+        return obj
+    else:
+        return [obj]
