@@ -7,6 +7,7 @@ Created on Tue Oct  3 08:40:52 2023
 
 import os
 import yaml
+import itertools
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +24,9 @@ from ..utilities import (
     print_dict,
     print_boundary_conditions,
     flatten_dataframe,
-    numpy_to_python,
+    convert_numpy_to_python,
+    ensure_iterable,
+    print_operation_points,
 )
 from datetime import datetime
 
@@ -32,6 +35,191 @@ set_plot_options()
 
 
 name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
+
+
+
+
+def compute_performance(
+    operation_points,
+    case_data,
+    filename=None,
+    output_dir="output",
+):
+    """
+    Compute and export the performance of each specified operation point to an Excel file.
+
+    This function handles two types of input for operation points:
+    1. An explicit list of dictionaries, each detailing a specific operation point.
+    2. A dictionary where each key has a range of values, representing the cross-product
+       of all possible operation points. It generates the Cartesian product of these ranges
+       internally.
+
+    For each operation point, it computes performance based on the provided case data and compiles
+    the results into an Excel workbook with multiple sheets for various data sections.
+
+    Parameters
+    ----------
+    operation_points : list of dict or dict
+        A list of operation points where each is a dictionary of parameters, or a dictionary of parameter
+        ranges from which operation points will be generated.
+    case_data : dict
+        A dictionary containing necessary data structures and parameters for computing performance at each operation point.
+    filename : str, optional
+        The name for the output Excel file. If not provided, a default name with a timestamp is generated.
+    output_dir : str, optional
+        The directory where the Excel file will be saved. Defaults to 'output'.
+
+    Returns
+    -------
+    str
+        The absolute path to the created Excel file.
+
+    Raises
+    ------
+    TypeError
+        If `operation_points` is neither a list of dictionaries nor a dictionary with ranges.
+
+    Notes
+    -----
+    - The function validates the input operation points, and if they are given as ranges, it generates
+    all possible combinations. Performance is computed for each operation point, and the results are
+    then stored in a structured Excel file with separate sheets for each aspect of the data (e.g.,
+    overall, plane, cascade, stage, solver, and solution data).
+    - The initial guess for the first operation point is set to a default value. For subsequent operation
+    points, the function employs a strategy to use the closest previously computed operation point's solution
+    as the initial guess. This approach is based on the heuristic that similar operation points have similar
+    performance characteristics, which can improve convergence speed and robustness of the solution process.
+
+    See Also
+    --------
+    generate_operation_points : For generation of operation points from ranges.
+    validate_operation_point : For validation of individual operation points.
+    compute_operation_point : For computing the performance of a single operation point.
+    """
+
+    # Check the type of operation_points argument
+    if isinstance(operation_points, dict):
+        # Convert ranges to a list of operation points
+        operation_points = generate_operation_points(operation_points)
+    elif not isinstance(operation_points, list):
+        msg = "operation_points must be either list of dicts or a dict with ranges."
+        raise TypeError(msg)
+
+    # Validate each operation point
+    for operation_point in operation_points:
+        validate_operation_point(operation_point)
+
+    # Create a directory to save simulation results
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Define filename with unique date-time identifier
+    if filename == None:
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"performance_analysis_{current_time}"
+
+    # Export simulation settings as YAML file
+    config_data = {k: v for k, v in case_data.items() if v}  # Filter empty entries and
+    config_data = convert_numpy_to_python(config_data, precision=12)
+    config_file = os.path.join(output_dir, f"{filename}.yaml")
+    with open(config_file, "w") as file:
+        yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+    # Initialize lists to hold dataframes for each operation point
+    operation_point_data = []
+    overall_data = []
+    plane_data = []
+    cascade_data = []
+    stage_data = []
+    solver_data = []
+    solution_data = []
+
+    # Loop through all operation points
+    print_operation_points(operation_points)
+    for i, operation_point in enumerate(operation_points):
+        print()
+        print(f"Computing operation point {i+1} of {len(operation_points)}")
+        print_boundary_conditions(operation_point)
+
+        try:
+            # Define initial guess
+            if i == 0:
+                # Use default initial guess for the first operation point
+                x0 = None
+                print(f"Using default initial guess")
+            else:
+                closest_x, closest_index = find_closest_operation_point(
+                    operation_point,
+                    operation_points[:i],  # Use up to the previous point
+                    solution_data[:i],  # Use solutions up to the previous point
+                )
+                print(f"Using solution from point {closest_index+1} as initial guess")
+                x0 = closest_x
+
+            # Compute performance
+            solver = compute_single_operation_point(
+                operation_point, case_data, initial_guess=x0
+            )
+
+            # Retrieve solver data
+            solver_status = {
+                "completed": True,
+                "success": solver.solution.success,
+                "message": solver.solution.message,
+                "grad_count": solver.convergence_history["grad_count"][-1],
+                "func_count": solver.convergence_history["func_count"][-1],
+                "func_count_total": solver.convergence_history["func_count_total"][-1],
+                "norm_residual_last": solver.convergence_history["norm_residual"][-1],
+                "norm_step_last": solver.convergence_history["norm_step"][-1],
+            }
+
+            # Collect data
+            operation_point_data.append(pd.DataFrame([operation_point]))
+            overall_data.append(pd.DataFrame([case_data["overall"]]))
+            plane_data.append(flatten_dataframe(case_data["plane"]))
+            cascade_data.append(flatten_dataframe(case_data["cascade"]))
+            stage_data.append(flatten_dataframe(case_data["stage"]))
+            solver_data.append(pd.DataFrame([solver_status]))
+            solution_data.append(cs.scale_to_real_values(solver.solution.x, case_data))
+
+        except Exception as e:
+            print(
+                f"An error occurred while computing the operation point {i+1}/{len(operation_points)}:\n\t{e}"
+            )
+
+            # Retrieve solver data
+            solver_status = {"completed": False}
+
+            # Collect data
+            operation_point_data.append(pd.DataFrame([operation_point]))
+            overall_data.append(pd.DataFrame([{}]))
+            plane_data.append(pd.DataFrame([{}]))
+            cascade_data.append(pd.DataFrame([{}]))
+            stage_data.append(pd.DataFrame([{}]))
+            solver_data.append(pd.DataFrame([solver_status]))
+            solution_data.append([])
+
+    # Dictionary to hold concatenated dataframes
+    dfs = {
+        "operation point": pd.concat(operation_point_data, ignore_index=True),
+        "overall": pd.concat(overall_data, ignore_index=True),
+        "plane": pd.concat(plane_data, ignore_index=True),
+        "cascade": pd.concat(cascade_data, ignore_index=True),
+        "stage": pd.concat(stage_data, ignore_index=True),
+        "solver": pd.concat(solver_data, ignore_index=True),
+    }
+
+    # Add 'operation_point' column to each dataframe
+    for sheet_name, df in dfs.items():
+        df.insert(0, "operation_point", range(1, 1 + len(df)))
+
+    # Write dataframes to excel
+    filepath = os.path.join(output_dir, f"{filename}.xlsx")
+    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+        for sheet_name, df in dfs.items():
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    print(f"Performance data successfully written to {filepath}")
 
 
 def initialize_solver(cascades_data, method, initial_guess=None):
@@ -118,7 +306,7 @@ def initialize_solver(cascades_data, method, initial_guess=None):
     return solver
 
 
-def compute_operation_point(
+def compute_single_operation_point(
     boundary_conditions,
     cascades_data,
     initial_guess=None,
@@ -161,9 +349,6 @@ def compute_operation_point(
     - If all attempts fail to converge, a warning message is printed.
 
     """
-
-    # Print boundary conditions of current operation point
-    print_boundary_conditions(boundary_conditions)
 
     # Calculate performance at given boundary conditions with given geometry
     cascades_data["BC"] = boundary_conditions
@@ -241,140 +426,138 @@ def compute_operation_point(
     return solver
 
 
-def performance_map(
-    operation_points,
-    case_data,
-    filename=None,
-    output_dir="output",
-    use_previous=True,
-):
+def find_closest_operation_point(current_op_point, operation_points, solution_data):
     """
-    Evaluates the performance at the specified operation points and exports the results to an Excel file.
-    This function computes the performance of each operation point, collects and compiles them into
-    a single Excel file with separate sheets for each aspect of the data.
+    Find the solution vector and index of the closest operation point in the historical data.
+
+    Parameters
+    ----------
+    current_op_point : dict
+        The current operation point we want to compare.
+    operation_points : list of dict
+        A list of historical operation points to search through.
+    solution_data : list
+        A list of solution vectors corresponding to each operation point.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the closest solution vector and the one-based index of the closest operation point.
+
+    """
+    min_distance = float("inf")
+    closest_point_x = None
+    closest_index = None
+
+    for i, op_point in enumerate(operation_points):
+        distance = get_operation_point_distance(current_op_point, op_point)
+        if distance < min_distance:
+            min_distance = distance
+            closest_point_x = solution_data[i]
+            closest_index = i
+
+    return closest_point_x, closest_index
+
+
+def get_operation_point_distance(point_1, point_2, delta=1e-8):
+    """
+    Calculate the normalized distance between two operation points, with special consideration
+    for angle measurements and prevention of division by zero for very small values.
+
+    Parameters
+    ----------
+    point_1 : dict
+        First operation point with numeric values.
+    point_2 : dict
+        Second operation point with numeric values.
+    delta : float, optional
+        A small constant to prevent division by zero. Default is 1e-8.
+
+    Returns
+    -------
+    float
+        The calculated normalized distance.
+    """
+    deviation_array = []
+    for key in point_1:
+        if isinstance(point_1[key], (int, float)) and key in point_2:
+            value_1 = point_1[key]
+            value_2 = point_2[key]
+
+            if key == "alpha_in":
+                # Handle angle measurements with absolute scale normalization
+                deviation = np.abs(value_1 - value_2) / (np.pi / 2)
+            else:
+                # Compute the relative difference with protection against division by zero
+                max_val = max(abs(value_1), abs(value_2), delta)
+                deviation = abs(value_1 - value_2) / max_val
+
+            deviation_array.append(deviation)
+
+    # Calculate the two-norm of the deviations
+    return np.linalg.norm(deviation_array)
+
+
+def generate_operation_points(performance_map):
+    """
+    Generates a list of dictionaries representing all possible combinations of
+    operation points from a given performance map. The performance map is a
+    dictionary where keys represent parameter names and values are the ranges
+    of values for those parameters. The function ensures that the combinations
+    are generated such that the parameters related to pressure ('p0_in' and
+    'p_out') are the last ones to vary, effectively making them the first
+    parameters to sweep through in the operation points.
 
     Parameters:
-    - operation_points: List of dicts representing operation points to evaluate.
-    - case_data: Dict with necessary data structures for computing operation points.
-    - filename: Optional; if provided, specifies the output Excel filename.
-                If None, a default unique filename will be created with a timestamp.
-    - output_dir: Optional; directory to save the Excel file. Defaults to 'output'.
-    - use_previous: Optional; a boolean flag to determine whether to use the
-                    solution from the previous operation point as an initial guess
-                    for the current point.
+    - performance_map (dict): A dictionary with parameter names as keys and
+      lists of parameter values as values.
 
     Returns:
-    - The absolute path to the generated Excel file containing the results.
+    - operation_points (list of dict): A list of dictionaries, each representing
+      a unique combination of parameters from the performance_map.
     """
+    # Make sure all values in the performance_map are iterables
+    performance_map = {k: ensure_iterable(v) for k, v in performance_map.items()}
 
-    if not operation_points:
-        raise ValueError("operation_points list is empty or not provided.")
+    # # Reorder performance map keys to first sweep is always through pressure
+    # priority_keys = ["p0_in", "p_out"]
+    # other_keys = [k for k in performance_map.keys() if k not in priority_keys]
+    # keys_order = other_keys + priority_keys
+    # performance_map = {
+    #     k: performance_map[k] for k in keys_order if k in performance_map
+    # }
 
-    # Create a directory to save simulation results
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # Create all combinations of operation points
+    keys, values = zip(*performance_map.items())
+    operation_points = [
+        dict(zip(keys, combination)) for combination in itertools.product(*values)
+    ]
 
-    # Define filename with unique date-time identifier
-    if filename == None:
-        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"performance_analysis_{current_time}"
+    return operation_points
 
-    # Filter out 'operation_points' and any empty entries
-    config_data = {k: v for k, v in case_data.items() if v and k != "operation_points"}
-    config_data = {**config_data, "operation_points": operation_points}
-    config_data = numpy_to_python(config_data)
 
-    print(config_data)
+def validate_operation_point(op_point):
+    """
+    Validates that an operation point has exactly the required fields:
+    'fluid_name', 'p0_in', 'T0_in', 'p_out', 'alpha_in', 'omega'.
 
-    # Export input arguments as YAML file
-    config_file = os.path.join(output_dir, f"{filename}.yaml")
-    with open(config_file, "w") as file:
-        yaml.dump(config_data, file, default_flow_style=None)
+    Parameters:
+    - op_point: dict
+        A dictionary representing an operation point.
 
-    # Initialize lists to hold dataframes for each operation point
-    operation_point_data = []
-    overall_data = []
-    plane_data = []
-    cascade_data = []
-    stage_data = []
-    solver_data = []
-    
-
-    # Use default initial guess for the first operation point
-    x0 = None
-
-    for i, operation_point in enumerate(operation_points):
-        print(
-            f"Computing performance for operation point {i + 1} of {len(operation_points)}"
+    Raises:
+    - ValueError: If the dictionary does not contain the required fields or contains extra fields.
+    """
+    REQUIRED_FIELDS = {"fluid_name", "p0_in", "T0_in", "p_out", "alpha_in", "omega"}
+    fields = set(op_point.keys())
+    if fields != REQUIRED_FIELDS:
+        missing = REQUIRED_FIELDS - fields
+        extra = fields - REQUIRED_FIELDS
+        raise ValueError(
+            f"Operation point validation error: "
+            f"Missing fields: {missing}, Extra fields: {extra}"
         )
 
-        try:
-            # Compute performance
-            solver = compute_operation_point(
-                operation_point, case_data, initial_guess=x0
-            )
-
-            # Use converged solution as initial guess for the next operation point
-            if use_previous == True:
-                x0 = cs.scale_to_real_values(solver.solution.x, case_data)
-
-            # Retrieve solver data
-            solver_status = {
-                "completed": True,
-                "success": solver.solution.success,
-                "message": solver.solution.message,
-                "grad_count": solver.convergence_history["grad_count"][-1],
-                "func_count": solver.convergence_history["func_count"][-1],
-                "func_count_total": solver.convergence_history["func_count_total"][-1],
-                "norm_residual_last": solver.convergence_history["norm_residual"][-1],
-                "norm_step_last": solver.convergence_history["norm_step"][-1],
-            }
-
-            # Collect data
-            operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(pd.DataFrame([case_data["overall"]]))
-            plane_data.append(flatten_dataframe(case_data["plane"]))
-            cascade_data.append(flatten_dataframe(case_data["cascade"]))
-            stage_data.append(flatten_dataframe(case_data["stage"]))
-            solver_data.append(pd.DataFrame([solver_status]))
-
-        except Exception as e:
-            print(
-                f"An error occurred while computing the operation point {i}/{len(operation_points)}:\n\t{e}"
-            )
-
-            # Retrieve solver data
-            solver_status = {"completed": False}
-
-            # Collect data
-            operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(pd.DataFrame([{}]))
-            plane_data.append(pd.DataFrame([{}]))
-            cascade_data.append(pd.DataFrame([{}]))
-            stage_data.append(pd.DataFrame([{}]))
-            solver_data.append(pd.DataFrame([solver_status]))
-
-    # Dictionary to hold concatenated dataframes
-    dfs = {
-        "operation point": pd.concat(operation_point_data, ignore_index=True),
-        "overall": pd.concat(overall_data, ignore_index=True),
-        "plane": pd.concat(plane_data, ignore_index=True),
-        "cascade": pd.concat(cascade_data, ignore_index=True),
-        "stage": pd.concat(stage_data, ignore_index=True),
-        "solver": pd.concat(solver_data, ignore_index=True),
-    }
-
-    # Add 'operation_point' column to each dataframe
-    for sheet_name, df in dfs.items():
-        df.insert(0, "operation_point", range(1, 1 + len(df)))
-
-    # Write dataframes to excel
-    filepath = os.path.join(output_dir, f"{filename}.xlsx")
-    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-        for sheet_name, df in dfs.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-    print(f"Performance data successfully written to {filepath}")
 
 
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
@@ -382,38 +565,36 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
-<<<<<<< HEAD
-=======
-        
+
         # Define reference mass flow rate
         v0 = cascades_data["fixed_params"]["v0"]
         d_in = cascades_data["fixed_params"]["d0_in"]
         A_in = cascades_data["geometry"]["A_in"][0]
-        m_ref = A_in*v0*d_in # Reference mass flow rate
+        m_ref = A_in * v0 * d_in  # Reference mass flow rate
         cascades_data["fixed_params"]["m_ref"] = m_ref
-    
->>>>>>> a8389831e481eacd8b6f69e8770a80ee09953b02
+
         self.cascades_data = cascades_data
 
-    def get_values(self, vars):
-        residuals = cs.evaluate_cascade_series(vars, self.cascades_data)
+    def get_values(self, x):
+        residuals = cs.evaluate_cascade_series(x, self.cascades_data)
 
         return residuals
 
+<<<<<<< HEAD
 
 class CascadesOptimizationProblem(OptimizationProblem):
     def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
         cs.calculate_number_of_stages(cascades_data)
         cs.update_fixed_params(cascades_data)
         cs.check_geometry(cascades_data)
-        
+
         # Define reference mass flow rate
         v0 = cascades_data["fixed_params"]["v0"]
         d_in = cascades_data["fixed_params"]["d0_in"]
         A_in = cascades_data["geometry"]["A_in"][0]
-        m_ref = A_in*v0*d_in # Reference mass flow rate
+        m_ref = A_in * v0 * d_in  # Reference mass flow rate
         cascades_data["fixed_params"]["m_ref"] = m_ref
-        
+
         if x0 == None:
             x0 = cs.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
         self.x0 = cs.scale_to_normalized_values(x0, cascades_data)
@@ -441,3 +622,28 @@ class CascadesOptimizationProblem(OptimizationProblem):
 
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
+=======
+def generate_operation_points(performance_map):
+    # Extract base parameters
+    fluid_name = performance_map['fluid_name']
+    T0_in = performance_map['T0_in']
+    alpha_in = performance_map['alpha_in']
+    p0_in = performance_map['p0_in']
+    p_out_values = performance_map['p_out']
+    omega_values = performance_map['omega']
+    
+    # Generate all combinations of operation points
+    operation_points = []
+    for p_out in p_out_values:
+        for omega in omega_values:
+            operation_points.append({
+                'fluid_name': fluid_name,
+                'p0_in': p0_in,
+                'T0_in': T0_in,
+                'p_out': p_out,
+                'alpha_in': alpha_in,
+                'omega': omega
+            })
+    
+    return operation_points
+>>>>>>> 419b7fbebacbe737187cffef127ddd2b768910eb

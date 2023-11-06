@@ -5,20 +5,11 @@ BC:
   p_out: 1.585e6           # Exit static pressure
   alpha_in: 0              # Flow angle at first stator
   omega: 3458              # Rotational speed
-
+  m : 10.92453438652732   # mass flow rate
 
 loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
 displacement_thickness : 0
-deviation_model : aungier
-
-solver:
-  method: lm
-  tolerance: 1e-9
-  max_iterations: 50
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
-
+deviation_model : metal_angle
 
 geometry:
   n_cascades: 2

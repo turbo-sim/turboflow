@@ -1,0 +1,39 @@
+BC:
+  fluid_name: air          # Fluid
+  p0_in: 13.8e4            # Inlet total pressure
+  T0_in: 295.6             # Inlet total temperature
+  p_out: 13.8e4/2.298      # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega : 1627
+
+model_options:
+  loss_model: benner  
+  displacement_thickness : 0
+  deviation_model : metal_angle
+  choking_condition : mach_unity
+
+optimization:
+  method : slsqp
+  obj_func : eta_ts
+  design_variables:
+    w_s : 0.7
+    d_s : 1.8
+    r_ht : [0.6, 0.6, 0.6]
+    ar : [1.5, 1.5]
+    bs : [1.4, 1.4]
+    theta_in : [0, 0.51661746]
+    theta_out : [1.13448684, -1.07508649]
+  constraints_eq : 
+    mass_flow_rate : 2.772360055461131
+
+
+geometry:
+  n_cascades: 2
+  ar : [1.28555046, 1.40368381]                  # Aspect ratio (Blade height/chord)
+  bs : [1.42997704, 1.70997375]                 # Blade solidity (chord/pitch)
+  theta_in : [0, 0.51661746]       # Inlet metal angle
+  theta_out : [1.13448684, -1.07508649] # Exit metal angle
+  te_o : [0.06467469, 0.06897503]             # Trailing edge to opening ratio
+  le_c : [0.0485474 , 0.03108212]             # Leading edge to pitch ratio
+  We : [0.87266463, 0.87266463] # Leading edge wedge angle
+  t_cl : [0, 0.030e-2]
