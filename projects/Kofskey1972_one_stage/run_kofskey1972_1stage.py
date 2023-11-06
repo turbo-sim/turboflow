@@ -32,33 +32,6 @@ elif Case == 1:
     )
     solver = solver.solve(method="trust-constr")
 
-elif Case == 2:
-    # Calculate a dataset corresponding to a dataset
-    p_min = 1.6
-    p_max = 4.5
-    speed_min = 0.3
-    speed_max = 1.1
-
-    N_pressure = int((p_max - p_min) * 10) + 1
-    N_speed = int((speed_max - speed_min) * 10) + 1
-    N = N_pressure * N_speed
-    pressure_ratio = np.linspace(p_min, p_max, N_pressure)
-    speed = np.linspace(speed_min, speed_max, N_speed)
-    p_out = cascades_data["BC"]["p0_in"] / pressure_ratio
-    p_out = result = np.concatenate(
-        [p_out if i % 2 == 0 else np.flip(p_out) for i in range(N_speed)]
-    )
-    angular_speed = np.sort(np.repeat(speed * cascades_data["BC"]["omega"], N_pressure))
-    boundary_conditions = {
-        key: val * np.ones(N)
-        for key, val in cascades_data["BC"].items()
-        if key != "fluid_name"
-    }
-    boundary_conditions["fluid_name"] = N * [cascades_data["BC"]["fluid_name"]]
-    boundary_conditions["p_out"] = p_out
-    boundary_conditions["omega"] = angular_speed
-
-    ml.calculate.performance_map(boundary_conditions, cascades_data)
 
 elif Case == 3:
     filename = "Full_Dataset_Kofskey1972_1stage.xlsx"
@@ -113,23 +86,8 @@ elif Case == 3:
 
 elif Case == 4:
     # Compute performance map according to config file
-    operation_points = cascades_data["performance_map"]
+    operation_points = cascades_data["operation_points"]
     ml.compute_performance(operation_points, cascades_data)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 elif Case == 5:

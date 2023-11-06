@@ -48,6 +48,7 @@ def read_configuration_file(filename):
         }
         cascades_data["fixed_params"] = {}
         cascades_data["overall"] = {}
+
     return cascades_data
 
 
