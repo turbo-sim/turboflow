@@ -20,6 +20,7 @@ Case = 4
 
 if Case == 0:
     # Solve using nonlinear equation solver
+    print(cascades_data)
     operating_point = cascades_data["operation_points"][0]
     solver = ml.compute_operating_point(operating_point, cascades_data)
     solver.plot_convergence_history()
