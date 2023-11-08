@@ -178,7 +178,7 @@ Axial turbines
 
 
 
-
+.. Sweep angle, lean angle, dihedral. Relation to the axis of blade stacking in axial turbines
 
 
 
