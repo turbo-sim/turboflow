@@ -300,7 +300,9 @@ def print_operation_points(operation_points):
 
     # Join the lines and print the output
     formatted_output = "\n".join(output_lines)
-    print(formatted_output)
+
+    for line in output_lines:
+        print(line)
     return formatted_output
 
 

@@ -804,13 +804,13 @@ def generate_operation_points(performance_map):
     # Make sure all values in the performance_map are iterables
     performance_map = {k: ensure_iterable(v) for k, v in performance_map.items()}
 
-    # # Reorder performance map keys to first sweep is always through pressure
-    # priority_keys = ["p0_in", "p_out"]
-    # other_keys = [k for k in performance_map.keys() if k not in priority_keys]
-    # keys_order = other_keys + priority_keys
-    # performance_map = {
-    #     k: performance_map[k] for k in keys_order if k in performance_map
-    # }
+    # Reorder performance map keys so first sweep is always through pressure
+    priority_keys = ["p0_in", "p_out"]
+    other_keys = [k for k in performance_map.keys() if k not in priority_keys]
+    keys_order = other_keys + priority_keys
+    performance_map = {
+        k: performance_map[k] for k in keys_order if k in performance_map
+    }
 
     # Create all combinations of operation points
     keys, values = zip(*performance_map.items())
