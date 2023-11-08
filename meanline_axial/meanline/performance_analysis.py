@@ -867,7 +867,6 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         residuals = cs.evaluate_cascade_series(x, self.BC, self.geometry, self.fluid, self.model_options, self.reference_values, self.results)
         return residuals
 
-
 class CascadesOptimizationProblem(OptimizationProblem):
     def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
         cs.calculate_number_of_stages(cascades_data)
