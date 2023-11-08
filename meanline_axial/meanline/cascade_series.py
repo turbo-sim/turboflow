@@ -387,6 +387,7 @@ def evaluate_cascade(
 
 
 def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_ref):
+    
     # Load cascade inlet input
     h0 = cascade_inlet_input["h0"]
     s = cascade_inlet_input["s"]

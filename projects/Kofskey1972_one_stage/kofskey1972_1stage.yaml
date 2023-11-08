@@ -59,7 +59,6 @@ geometry:
   theta_in: [0, 29.6*np.pi/180]              # Inlet metal angle
   theta_out: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]  # Exit metal angle
   t_cl: [0, 0.030e-2]                        # Tip clearance
-  radius : [10.16e-2, 10.16e-2]
   r_in: [10.16e-2, 10.16e-2]               # Radius (should be constant)
   # r_out: [10.16e-2, 10.16e-2]               # Radius (should be constant)
   r_ht_in: [0.7160, 0.7160]                  # Hub to tip ratio
