@@ -7,20 +7,6 @@ operation_points:
   omega: 1627
   alpha_in: 0
 
-  # - fluid_name: air
-  #   T0_in: 295.6
-  #   p0_in: 13.8e4
-  #   p_out: 13.8e4/2.5
-  #   omega: 1627
-  #   alpha_in: 0
-
-  # - fluid_name: air
-  #   T0_in: 295.6
-  #   p0_in: 13.8e4
-  #   p_out: 13.8e4/3.0
-  #   omega: 1627
-  #   alpha_in: 0
-
 performance_map:
   fluid_name: air
   T0_in: 295.6
@@ -68,19 +54,40 @@ geometry:
 
 
 geometry_new:
-  radius_reference: mean
-  radius: [10.16e-2, 10.16e-2]
-  hub_tip_ratio: []
+  number_of_cascades: 2
+  radius_hub: [0.084785, 0.084785, 0.084785, 0.084785]
+  radius_tip: [0.118415, 0.118415, 0.118415, 0.118415]
   pitch: [1.8294e-2, 1.524e-2]
   chord: [2.616e-2, 2.606e-2]
   stagger_angle: [43.03*np.pi/180, 31.05*np.pi/180]
   opening: [0.7731e-2, 0.7249e-2]
-  radius_te: [2*0.025e-2, 2*0.025e-2]
-  radius_le: [0.127e-2, 0.081e-2]
-  wedge_angle_le: [50*np.pi/180, 50*np.pi/180]
-  metal_angle_le: [0, 29.6*np.pi/180]
-  tip_clearance: [0, 0.030e-2]
+  radius_leading: [0.127e-2, 0.081e-2]
+  radius_trailing: [2*0.025e-2, 0.01*2*0.025e-2]
+  metal_angle_leading: [0, 29.6*np.pi/180]
+  metal_angle_trailing: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]
+  wedge_angle_leading: [50*np.pi/180, 50*np.pi/180]
+  tip_clearance: [0.00, 0.030e-2]
+  thickness_max: [0.505e-2, 0.447e-2]
 
+geometry_optimization:
+  radius_specification: constant_mean
+  hub_tip_ratio: [0.9, 0.9, 0.9, 0.9]
+  metal_angle_leading: []
+  metal_angle_trailing: []
+  aspect_ratio: []
+  pitch_to_chord_ratio: []
+  thickness_max_to_chord_ratio: []
+  trailing_edge_to_opening_ratio:  []
+  throat_to_exit_opening_ratio: []
+
+
+
+# Computed variables
+# Number of blades
+# Radius mean
+# Flow areas
+# Axial chord/stagger
+# 
 
   # Add option to give chord/stagger or axialChord/stagger or chord/axialChord
   # Add option to give single value for radius for constant radius

@@ -42,14 +42,14 @@ def read_configuration_file(filename):
     """
 
     with open(filename, "r") as file:
-        cascades_data = postprocess_config(yaml.safe_load(file))
-        cascades_data["geometry"] = {
-            key: np.asarray(value) for key, value in cascades_data["geometry"].items()
-        }
-        cascades_data["fixed_params"] = {}
-        cascades_data["overall"] = {}
+        config = yaml.safe_load(file)
+        config = postprocess_config(config)
+        config["geometry"] = {k: np.asarray(v) for k, v in config["geometry"].items()}
+        config["geometry_new"] = {k: np.asarray(v) for k, v in config["geometry_new"].items()}
+        config["fixed_params"] = {}
+        config["overall"] = {}
 
-    return cascades_data
+    return config
 
 
 def postprocess_config(config):
@@ -116,7 +116,10 @@ def convert_numpy_to_python(data, precision=10):
             # This handles the case of a numpy array with a single scalar value.
             return convert_numpy_to_python(data.item(), precision)
 
-    elif isinstance(data, (np.integer, np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64)):
+    elif isinstance(
+        data,
+        (np.integer, np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64),
+    ):
         return int(data.item())
 
     elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
@@ -137,7 +140,6 @@ def convert_numpy_to_python(data, precision=10):
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
 
-    return data
 
 def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -227,18 +229,18 @@ def print_boundary_conditions(BC):
 def print_operation_points(operation_points):
     """
     Prints a summary table of operation points scheduled for simulation.
-    
+
     This function takes a list of operation point dictionaries, formats them
-    according to predefined specifications, applies unit conversions where 
+    according to predefined specifications, applies unit conversions where
     necessary, and prints them in a neatly aligned table with headers and units.
 
     Parameters:
-    - operation_points (list of dict): A list where each dictionary contains 
-      key-value pairs representing operation parameters and their corresponding 
+    - operation_points (list of dict): A list where each dictionary contains
+      key-value pairs representing operation parameters and their corresponding
       values.
 
     Notes:
-    - This function assumes that all necessary keys exist within each operation 
+    - This function assumes that all necessary keys exist within each operation
       point dictionary.
     - The function directly prints the output; it does not return any value.
     - Unit conversions are hardcoded and specific to known parameters.
@@ -247,21 +249,25 @@ def print_operation_points(operation_points):
     """
     length = 80
     index_width = 8
-    output_lines = ["-" * length, " Summary of operation points scheduled for simulation", "-" * length]
+    output_lines = [
+        "-" * length,
+        " Summary of operation points scheduled for simulation",
+        "-" * length,
+    ]
 
     # Configuration for each field with specified width and decimal places
     field_specs = {
-        'fluid_name': {'name': 'Fluid', 'unit': '', 'width': 8},
-        'alpha_in': {'name': 'angle_in', 'unit': '[deg]', 'width': 10, 'decimals': 1},
-        'T0_in': {'name': 'T0_in', 'unit': '[degC]', 'width': 12, 'decimals': 2},
-        'p0_in': {'name': 'p0_in', 'unit': '[kPa]', 'width': 12, 'decimals': 2},
-        'p_out': {'name': 'p_out', 'unit': '[kPa]', 'width': 12, 'decimals': 2},
-        'omega': {'name': 'omega', 'unit': '[RPM]', 'width': 12, 'decimals': 0}
+        "fluid_name": {"name": "Fluid", "unit": "", "width": 8},
+        "alpha_in": {"name": "angle_in", "unit": "[deg]", "width": 10, "decimals": 1},
+        "T0_in": {"name": "T0_in", "unit": "[degC]", "width": 12, "decimals": 2},
+        "p0_in": {"name": "p0_in", "unit": "[kPa]", "width": 12, "decimals": 2},
+        "p_out": {"name": "p_out", "unit": "[kPa]", "width": 12, "decimals": 2},
+        "omega": {"name": "omega", "unit": "[RPM]", "width": 12, "decimals": 0},
     }
 
     # Create formatted header and unit strings using f-strings and field widths
     header_str = f"{'Index':>{index_width}}"  # Start with "Index" header
-    unit_str = f"{'':>{index_width}}"   # Start with empty string for unit alignment
+    unit_str = f"{'':>{index_width}}"  # Start with empty string for unit alignment
 
     for spec in field_specs.values():
         header_str += f" {spec['name']:>{spec['width']}}"
@@ -273,11 +279,11 @@ def print_operation_points(operation_points):
 
     # Unit conversion functions
     def convert_units(key, value):
-        if key == 'T0_in':  # Convert Kelvin to Celsius
+        if key == "T0_in":  # Convert Kelvin to Celsius
             return value - 273.15
-        elif key == 'omega':  # Convert rad/s to RPM
+        elif key == "omega":  # Convert rad/s to RPM
             return (value * 60) / (2 * np.pi)
-        elif key == 'alpha_in':  # Convert radians to degrees
+        elif key == "alpha_in":  # Convert radians to degrees
             return np.degrees(value)
         elif key in ["p0_in", "p_out"]:  # Pa to kPa
             return value / 1e3
