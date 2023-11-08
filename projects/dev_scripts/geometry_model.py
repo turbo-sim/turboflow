@@ -1,12 +1,21 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov  8 11:24:20 2023
-
-@author: laboan
-"""
-
+import os
+import sys
+import copy
 import numpy as np
-radius_reference = 'mean'
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+desired_path = os.path.abspath("../..")
+
+if desired_path not in sys.path:
+    sys.path.append(desired_path)
+
+import meanline_axial as ml
+
+
+
+
 
 
 def caluclate_geometry(geometry):
@@ -57,3 +66,46 @@ def caluclate_geometry(geometry):
     geometry["r_m_in"] = r_m_in
     geometry["r_m_out"] = r_m_out
         
+
+
+
+
+
+def validate_geometry_config(geometry_config):
+    required_keys = {
+        'n_cascades', 's', 'c', 'b', 'H', 't_max', 'o', 'We', 'le', 'te',
+        'xi', 'theta_in', 'theta_out', 't_cl', 'radius', 'r_in', 'r_out',
+        'r_ht_in', 'A_in', 'A_out'
+    }
+        # Check for required fields
+    missing_keys = required_keys - geometry_config.keys()
+    if missing_keys:
+        return f"Missing geometry configuration keys: {missing_keys}", False
+    
+    # Check for extra fields
+    extra_keys = geometry_config.keys() - required_keys
+    if extra_keys:
+        return f"Extra geometry configuration keys: {extra_keys}", False
+
+    # If all checks pass
+    return "Geometry configuration is valid.", True
+
+
+
+
+
+
+CONFIG_FILE = "config_one_stage.yaml"
+case_data = ml.read_configuration_file(CONFIG_FILE)
+
+
+radius_reference = 'mean'
+
+
+# Example usage:
+# Assuming 'config' is your dictionary containing the YAML data
+geometry_validation_result, is_valid = validate_geometry_config(case_data["geometry"])
+if is_valid:
+    print(geometry_validation_result)
+else:
+    print(geometry_validation_result)

@@ -49,10 +49,10 @@ geometry:
   c: [2.616e-2, 2.606e-2]                    # Chord
   b: [1.9123e-2, 2.2326e-2]                  # Axial chord
   H: [3.363e-2, 3.658e-2]                    # Blade hight
-  # t_max: [0.505e-2, 0.447e-2]                # Maximum blade thickness
+  t_max: [0.505e-2, 0.447e-2]                # Maximum blade thickness
   o: [0.7731e-2, 0.7249e-2]                  # Throat opening
- # We: [43.03*np.pi/180, 31.05*np.pi/180]     # Wedge angle (45 degrees in radians)
-  W: [50*np.pi/180, 50*np.pi/180]     # Wedge angle (45 degrees in radians)
+#  We: [43.03*np.pi/180, 31.05*np.pi/180]     # Wedge angle (45 degrees in radians)
+  We: [50*np.pi/180, 50*np.pi/180]        # Wedge angle (45 degrees in radians)
   le: [0.127e-2, 0.081e-2]                   # Leading edge radius
   te: [2*0.025e-2, 2*0.025e-2]               # Trialing edge thickness
   xi: [43.03*np.pi/180, 31.05*np.pi/180]     # Stagger angle
@@ -60,7 +60,7 @@ geometry:
   theta_out: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]  # Exit metal angle
   t_cl: [0, 0.030e-2]                        # Tip clearance
   r_in: [10.16e-2, 10.16e-2]               # Radius (should be constant)
-  # r_out: [10.16e-2, 10.16e-2]               # Radius (should be constant)
+  r_out: [10.16e-2, 10.16e-2]               # Radius (should be constant)
   r_ht_in: [0.7160, 0.7160]                  # Hub to tip ratio
   A_in: [0.021468, 0.021468]                 # Inlet area
   A_out: [0.021468, 0.025197]                # Exit area
