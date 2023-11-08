@@ -39,13 +39,13 @@ def validate_axial_turbine_geometry(geom):
 
     This function is intended as a preliminary check before in-depth geometry analysis.
 
-    Parameters
-    ----------
+    Parameters:
+    -----------
     geom : dict
         The geometry configuration parameters for the turbine as a dictionary.
 
-    Returns
-    -------
+    Returns:
+    --------
     bool
         True if all validations pass, indicating a correctly structured geometry configuration.
     """
@@ -115,18 +115,20 @@ def validate_axial_turbine_geometry(geom):
     return True
 
 
-def calculate_throat_radii(radius_in, radius_out):
+def calculate_throat_radius(radius_in, radius_out):
     """
     Calculate the throat radius using the given rule by Ainley and Mathieson,
     which is (1/6)*radius_in + (5/6)*radius_out.
 
     Parameters:
+    -----------
     radius_in: np.array
         The radius values at the inlet sections.
     radius_out: np.array
         The radius values at the outlet sections.
 
     Returns:
+    --------
     np.array
         The calculated throat radius values.
     """
@@ -138,9 +140,11 @@ def calculate_full_geometry(geometry):
     Computes the complete geometry of an axial turbine based on input geometric parameters.
 
     Parameters:
+    -----------
     geometry (dict): A dictionary containing the input geometry parameters
 
     Returns:
+    --------
     dict: A new dictionary with both the original and newly computed geometry parameters.
     """
 
@@ -161,24 +165,24 @@ def calculate_full_geometry(geometry):
     # Calculate the inner and outer radii for the mean section
     radius_mean_in = radius_mean[::2]  # Even indices: in
     radius_mean_out = radius_mean[1::2]  # Odd indices: out
-    radius_mean_throat = calculate_throat_radii(
+    radius_mean_throat = calculate_throat_radius(
         radius_mean_in, radius_mean_out
     )  # Calculate throat radii for mean section
 
     # Repeat calculations for hub
     radius_hub_in = radius_hub[::2]
     radius_hub_out = radius_hub[1::2]
-    radius_hub_throat = calculate_throat_radii(radius_hub_in, radius_hub_out)
+    radius_hub_throat = calculate_throat_radius(radius_hub_in, radius_hub_out)
 
     # Repeat calculations for tip
     radius_tip_in = radius_tip[::2]
     radius_tip_out = radius_tip[1::2]
-    radius_tip_throat = calculate_throat_radii(radius_tip_in, radius_tip_out)
+    radius_tip_throat = calculate_throat_radius(radius_tip_in, radius_tip_out)
 
     # Repeat calculations for shroud
     radius_shroud_in = radius_shroud[::2]
     radius_shroud_out = radius_shroud[1::2]
-    radius_shroud_throat = calculate_throat_radii(radius_shroud_in, radius_shroud_out)
+    radius_shroud_throat = calculate_throat_radius(radius_shroud_in, radius_shroud_out)
 
     # Compute hub to tip radius ratio
     hub_tip_ratio = radius_hub / radius_tip
@@ -247,13 +251,13 @@ def calculate_full_geometry(geometry):
 
 def check_axial_turbine_geometry(geometry):
     """
-    Checks if the geometry parameters are within the predefined good practice values.
+    Checks if the geometry parameters are within the predefined recommended ranges.
 
     Parameters:
     geometry (dict): A dictionary containing the computed geometry of the turbine.
 
     Returns:
-    list: A list of messages with the checks that failed, empty if all checks passed.
+    list: A list of messages with a summary of the checks.
     """
 
     # TODO: Check that this function behaves as intended
@@ -293,7 +297,6 @@ def check_axial_turbine_geometry(geometry):
 # Load configuration file
 CONFIG_FILE = "config_one_stage.yaml"
 case_data = ml.read_configuration_file(CONFIG_FILE)
-
 
 
 validate_axial_turbine_geometry(case_data["geometry_new"])
