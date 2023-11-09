@@ -5,68 +5,71 @@ Created on Wed Sep 20 13:05:13 2023
 @author: laboan
 """
 
-import numpy as np
-import pandas as pd
-
 import os
 import sys
+import copy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-desired_path = os.path.abspath('../..')
+desired_path = os.path.abspath("../..")
 
 if desired_path not in sys.path:
     sys.path.append(desired_path)
-    
+
 import meanline_axial as ml
 
+# Define running option
+CASE = 3
 
-filename = "Kofskey1974.yaml"
-cascades_data = ml.read_configuration_file(filename)
+# Load configuration file
+CONFIG_FILE = "kofskey1974.yaml"
+cascades_data = ml.read_configuration_file(CONFIG_FILE)
 
+# Run calculations
+if CASE == 1:
+    # Compute performance map according to config file
+    operation_points = cascades_data["operation_points"]
+    ml.compute_performance(operation_points, cascades_data)
 
-Case = 4
+elif CASE == 2:
+    # Compute performance map according to config file
+    operation_points = cascades_data["performance_map"]
+    omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    operation_points["omega"] = operation_points["omega"]*omega_frac
+    ml.compute_performance(operation_points, cascades_data)
 
-if Case == 0:
-
-    # Solve using nonlinear equation solver
-    BC = cascades_data["BC"]
-    sol = ml.calculate.compute_operating_point(BC,cascades_data, R = 0.3, eta_ts = 0.8, eta_tt = 0.9, Ma_crit = 0.95)
+elif CASE == 3:
     
-elif Case == 1:   
-    # Solve using optimization algorithm
-    cascade_problem = ml.CascadesOptimizationProblem(cascades_data)
-    solver = ml.solver.OptimizationSolver(cascade_problem, cascade_problem.x0, display=True, plot=False)
-    sol = solver.solve(method="trust-constr")
+    # Load experimental dataset
+    data = pd.read_excel("./experimental_data_kofskey1972_1stage_interpolated.xlsx")
+    pressure_ratio_exp = data["pressure_ratio_ts"].values
+    speed_frac_exp = data["speed_percent"].values/100
 
-elif Case == 2:
-    # Calculate a dataset corresponding to a dataset
-    p_min = 1.5
-    p_max = 3.8
-    speed_min = 0.5
-    speed_max = 1.1
-    
-    N_pressure = int((p_max-p_min)*10)+1
-    N_speed = int((speed_max-speed_min)*10)+1
-    N = N_pressure*N_speed
-    pressure_ratio = np.linspace(p_min,p_max, N_pressure)
-    speed = np.linspace(speed_min,speed_max,N_speed)
-    p_out = cascades_data["BC"]["p0_in"]/pressure_ratio
-    p_out = result = np.concatenate([p_out if i % 2 == 0 else np.flip(p_out) for i in range(N_speed)])
-    angular_speed = np.sort(np.repeat(speed*cascades_data["BC"]["omega"], N_pressure))
-    boundary_conditions = {key : val*np.ones(N) for key, val in cascades_data["BC"].items() if key != 'fluid_name'}
-    boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
-    boundary_conditions["p_out"] = p_out
-    boundary_conditions["omega"] = angular_speed
-    
-    ml.calculate.performance_map(boundary_conditions, cascades_data)
-    
-elif Case == 4:
-    p_min = 1.5
-    p_max = 3.8
-    N = int((p_max-p_min)*10)+1
-    pressure_ratio = np.linspace(p_min,p_max, N)
-    p_out = cascades_data["BC"]["p0_in"]/pressure_ratio
-    boundary_conditions = {key : val*np.ones(N) for key, val in cascades_data["BC"].items() if key != 'fluid_name'}
-    boundary_conditions["fluid_name"] = N*[cascades_data["BC"]["fluid_name"]]
-    boundary_conditions["p_out"] = p_out
-    ml.calculate.performance_map(boundary_conditions, cascades_data)
+    # Generate operating points with same conditions as dataset
+    operation_points = []
+    design_point = cascades_data["operation_points"]
+    for PR, speed_frac in zip(pressure_ratio_exp, speed_frac_exp):
+        current_point = copy.deepcopy(design_point)
+        current_point['p_out'] = design_point["p0_in"]/PR
+        current_point['omega'] = design_point["omega"]*speed_frac
+        operation_points.append(current_point)
+
+    # Compute performance at experimental operating points   
+    ml.compute_performance(operation_points, cascades_data)
+
+
+
+# Show plots
+# plt.show()
+
+    # DONE add option to give operation points as list of lists to define several speed lines
+    # DONE add option to define range of values for all the parameters of the operating point, including T0_in, p0_in and alpha_in
+    # DONE all variables should be ranged to create a nested list of lists
+    # DONE the variables should work if they are scalars as well
+    # DONE implemented closest-point strategy for initial guess of performance map
+    # DONE implement two norm of relative deviation as metric
+
+    # TODO update plotting so the different lines are plotted separately
+    # TODO seggregate solver from initial guess in the single point evaluation
 
