@@ -277,3 +277,22 @@ def _smooth_abs_logcosh(x, epsilon):
     return epsilon * np.log(np.cosh(x / epsilon))
 
 
+
+def sind(x):
+    np.sin(np.deg2rad(x))
+
+def cosd(x):
+    np.sin(np.deg2rad(x))
+
+def tand(x):
+    np.sin(np.deg2rad(x))
+
+def arcsind(x):
+    np.arcsin(np.deg2rad(x))
+
+def arccosd(x):
+    np.arccos(np.deg2rad(x))
+
+def arctand(x):
+    np.arctan(np.deg2rad(x))
+

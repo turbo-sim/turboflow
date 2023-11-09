@@ -146,7 +146,7 @@ def evaluate_cascade_series(
         w_out = variables_actual_cascade[1] * v0
         s_throat = variables_actual_cascade[2] * s_range + s_min
         s_out = variables_actual_cascade[3] * s_range + s_min
-        beta_out = variables_actual_cascade[4] * angle_range + angle_min
+        beta_out = variables_actual_cascade[4] * angle_range + angle_min  # TODO convert to radians
         v_crit_in = variables_critical_cascade[0]
         w_crit_out = variables_critical_cascade[1]
         s_crit_out = variables_critical_cascade[2]

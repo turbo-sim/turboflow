@@ -1,5 +1,4 @@
 operation_points:
-
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
@@ -52,22 +51,49 @@ geometry:
   A_out: [0.021468, 0.025197]                # Exit area
 
 
-
 geometry_new:
-  number_of_cascades: 2
+  cascade_type: ["stator", "rotor"]
   radius_hub: [0.084785, 0.084785, 0.084785, 0.084785]
   radius_tip: [0.118415, 0.118415, 0.118415, 0.118415]
   pitch: [1.8294e-2, 1.524e-2]
   chord: [2.616e-2, 2.606e-2]
   stagger_angle: [43.03*np.pi/180, 31.05*np.pi/180]
   opening: [0.7731e-2, 0.7249e-2]
-  radius_leading: [0.127e-2, 0.081e-2]
-  radius_trailing: [2*0.025e-2, 0.01*2*0.025e-2]
-  metal_angle_leading: [0, 29.6*np.pi/180]
-  metal_angle_trailing: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]
-  wedge_angle_leading: [50*np.pi/180, 50*np.pi/180]
-  tip_clearance: [0.00, 0.030e-2]
+  radius_le: [0.127e-2, 0.081e-2]
+  wedge_angle_le: [50*np.pi/180, 50*np.pi/180]
+  metal_angle_le: [0, 29.6*np.pi/180]
+  metal_angle_te: [np.arccos(0.7731e-2/1.8294e-2),-np.arccos(0.7249e-2/1.524e-2)]
+  thickness_te: [2*0.025e-2, 2*0.025e-2]
   thickness_max: [0.505e-2, 0.447e-2]
+  tip_clearance: [0.00, 0.030e-2]
+
+
+  
+optimization:
+  fixed_parameters:
+    - wedge_angle
+    - thickness_max
+
+  design_variables:
+    pitch_to_chord:
+      lower_bound: 
+      upper_bound: 
+      initial_guess:
+
+  constraints:
+    flaring_angle:
+      lower_bound: [-15*np.pi/180, -12*np.pi/180]
+      upper_bound: +15*np.pi/180
+
+    flaring_angle: [-15*np.pi/180, +15*np.pi/180]
+    flaring_angle: +15*np.pi/180
+
+    hub_to_tip_ratio:
+      upper_bound: 0.95
+      lower_bound: [0.9, 0.85, 0.8, 0.7]
+
+    degree_of_reaction: 0.5
+      # target: 0.5
 
 geometry_optimization:
   radius_specification: constant_mean

@@ -849,6 +849,9 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         n_stages = cs.get_number_of_stages(case_data["geometry"]["n_cascades"])
         self.fluid = FluidCoolProp_2Phase(case_data["BC"]["fluid_name"])
 
+        #  Convert to radians
+        # convert_input_rad_to_degree()
+        
         self.results = {}
         self.BC = case_data["BC"]
         self.geometry = case_data["geometry"]
@@ -865,6 +868,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
 
     def get_values(self, x):
         residuals = cs.evaluate_cascade_series(x, self.BC, self.geometry, self.fluid, self.model_options, self.reference_values, self.results)
+        # convert_results_rad_to_degree()
         return residuals
 
 class CascadesOptimizationProblem(OptimizationProblem):
