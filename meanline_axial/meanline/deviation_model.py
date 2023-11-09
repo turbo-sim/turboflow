@@ -24,4 +24,4 @@ def deviation(deviation_model, theta_out, opening, pitch, Ma_exit, Ma_crit):
             
         return beta
     else:
-        raise ValueError(f"Invalid deviation model. Available options: {', '.join(available_deviation_models)}")
+        raise ValueError(f"Invalid deviation model: '{deviation_model}'. Available options: {', '.join(available_deviation_models)}")
