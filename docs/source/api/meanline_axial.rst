@@ -8,11 +8,9 @@ Submodules
 .. toctree::
    :maxdepth: 2
 
-   meanline_axial.calculate
-   meanline_axial.non_linear_problem
-   meanline_axial.plot_functions
    meanline_axial.math
    meanline_axial.utilities
+   meanline_axial.plot_functions
 
 
 Subpackages
