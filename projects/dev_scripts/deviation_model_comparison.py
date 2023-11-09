@@ -1,32 +1,32 @@
-
-import numpy as np
-import matplotlib.pyplot as plt
-import CoolProp.CoolProp as cp
-from scipy.optimize._numdiff import approx_derivative
-
 import os
 import sys
+import numpy as np
+import matplotlib.pyplot as plt
 
-desired_path = os.path.abspath('../..')
+desired_path = os.path.abspath("../..")
 
 if desired_path not in sys.path:
     sys.path.append(desired_path)
-    
-import meanline_axial as ml
-    
 
+import meanline_axial as ml
 
 # Define case parameters
 radius_curvature = np.inf
 pitch = 1.00
-opening = 0.4
-Ma_crit = 1
-Ma_exit = np.linspace(0.0, 1.0, 200)
+opening = 0.40
+Ma_crit = 1.00
+Ma_exit = np.linspace(0.00, 1.00, 200)
 
 # Compute exit flow angles
-beta_metal = ml.meanline.get_subsonic_deviation(Ma_exit, Ma_crit, opening/pitch, deviation_model="metal_angle")
-beta_aungier = ml.meanline.get_subsonic_deviation(Ma_exit, Ma_crit, opening/pitch, deviation_model="aungier")
-beta_ainley = ml.meanline.get_subsonic_deviation(Ma_exit, Ma_crit, opening/pitch, deviation_model="ainley_mathieson")
+beta_metal = ml.meanline.get_subsonic_deviation(
+    Ma_exit, Ma_crit, opening / pitch, deviation_model="metal_angle"
+)
+beta_aungier = ml.meanline.get_subsonic_deviation(
+    Ma_exit, Ma_crit, opening / pitch, deviation_model="aungier"
+)
+beta_ainley = ml.meanline.get_subsonic_deviation(
+    Ma_exit, Ma_crit, opening / pitch, deviation_model="ainley_mathieson"
+)
 
 # Plot results
 fig = plt.figure(figsize=(6.4, 4.8))
