@@ -20,7 +20,7 @@ def read_configuration_file(filename):
     This function reads a YAML configuration file to obtain cascades data, then converts
     the geometry values to numpy arrays. It also initializes `fixed_params` and `overall`
     dictionaries within the cascades data. String expressions in the YAML file representing
-    numerical values (e.g., "np.pi/180*45") are evaluated to actual numerical values.
+    numerical values are evaluated to actual numerical values when possible.
 
     Parameters
     ----------
@@ -58,8 +58,7 @@ def postprocess_config(config):
     numerical expressions to actual numerical values.
 
     This function helps ensure that configuration parameters, which may be specified as
-    strings in the YAML file (e.g., "np.pi/180*45"), are correctly evaluated to numerical
-    values.
+    strings in the YAML file are correctly evaluated to numerical values.
 
     Parameters
     ----------
@@ -217,7 +216,7 @@ def print_boundary_conditions(BC):
     print(" Operating point: ")
     print("-" * 80)
     print(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
-    print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']*180/np.pi:<.2f} deg")
+    print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
     print(f" {'Total temperature in: ':<{column_width}} {BC['T0_in']-273.15:<.2f} degC")
     print(f" {'Total pressure in: ':<{column_width}} {BC['p0_in']/1e5:<.3f} bar")
     print(f" {'Static pressure out: ':<{column_width}} {BC['p_out']/1e5:<.3f} bar")

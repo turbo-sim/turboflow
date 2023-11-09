@@ -6,13 +6,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+
 desired_path = os.path.abspath("../..")
 
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
 import meanline_axial as ml
-
+from meanline_axial import math
 
 # Function to check if all items in the array are numeric (floats or ints)
 def all_numeric(arr):
@@ -176,7 +177,7 @@ def calculate_full_geometry(geometry):
     #  if odd() then (n_cascades-1)/2
 
     # Compute axial chord
-    axial_chord = geom["chord"] * np.cos(geom["stagger_angle"])
+    axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
 
     # Extract initial radii and compute mean radius
     radius_hub = geom["radius_hub"]
@@ -284,10 +285,55 @@ def check_axial_turbine_geometry(geometry):
     """
     Checks if the geometry parameters are within the predefined recommended ranges.
 
+    
+    .. table:: Recommended Parameter Ranges and References
+
+        +------------------------+------------+------------+-------------------------+
+        | Variable               | LowerLimit | UpperLimit | Reference(s)            |
+        +========================+============+============+=========================+
+        | chord                  | 5e-3       | inf        | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | height                 | 5e-3       | inf        | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | thickness_max          | 1e-3       | inf        | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | thickness_te           | 5e-4       | inf        | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | tip_clearance          | 2e-4       | inf        | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | hub_tip_ratio          | 0.50       | 0.95       | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | aspect_ratio           | 0.8        | 5.0        | :cite:`saravanamuttoo_gas_2008`,    |
+        |                        |            |            | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | pitch_to_chord_ratio   | 0.3        | 1.1        | :cite:`ainley_method_1951`|
+        +------------------------+------------+------------+-------------------------+
+        | stagger_angle          | -10        | 70         | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | metal_angle_le         | -60        | 25         | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | metal_angle_te         | 40         | 80         | :cite:`ainley_method_1951`|
+        +------------------------+------------+------------+-------------------------+
+        | wedge_angle_le         | 10         | 60         | :cite:`benner_influence_1997`,    |
+        |                        |            |            | :cite:`pritchard_eleven_1985`|
+        +------------------------+------------+------------+-------------------------+
+        | radius_le_to_chord_ratio| 0.015     | 0.15       | :cite:`moustapha_improved_1990`|
+        +------------------------+------------+------------+-------------------------+
+        | thickness_max_to_chord_ratio | 0.05  | 0.30       | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | thickness_te_to_opening_ratio| 0.00   | 0.40       | :cite:`kacker_mean_1982`|
+        +------------------------+------------+------------+-------------------------+
+        | tip_clearance_to_height_ratio | 0.0  | 0.05       | :cite:`dunham_improvements_1970`|
+        +------------------------+------------+------------+-------------------------+
+
+        
+
     Parameters:
+    -----------
     geometry (dict): A dictionary containing the computed geometry of the turbine.
 
     Returns:
+    --------
     list: A list of messages with a summary of the checks.
     """
 
@@ -307,6 +353,11 @@ def check_axial_turbine_geometry(geometry):
     # % 2D flow assumption hub-tip-ratio p.~204
 
     msgs = []
+    cascade_types = geometry['cascade_type']  # Assuming 'cascade_type' is directly within 'geometry'
+    warnings = []  # List to store parameters with "WARNING" status
+    # Initialize a list to store variables outside the recommended range
+    outside_range_variables = []
+
 
     # Define good practice ranges for each parameter
     recommended_ranges = {
@@ -361,18 +412,102 @@ def check_axial_turbine_geometry(geometry):
         },  # Figure 7 of :cite:`dunham_improvements_1970`
     }
 
+    special_angles = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
+
+    # # Iterate over each good practice parameter and perform checks
+    # for parameter, limits in recommended_ranges.items():
+    #     if parameter == "cascade_type":
+    #         continue  # Skip the cascade_type entry
+
+    #     lb, ub = limits["min"], limits["max"]
+    #     value_array = geometry[parameter]
+
+    #     for index, value in enumerate(np.atleast_1d(value_array)):
+
+    #         if parameter in special_angles:
+    #             blade_type = cascade_types[index]
+    #             if blade_type == "rotor":
+    #                 lb, ub = -ub, -lb  # Reverse limits for rotor blades
+
+    #         if parameter == "tip_clearance":
+    #             blade_type = cascade_types[index]
+    #             if blade_type == "stator":
+    #                     lb = 0
+
+
+    #         if not lb <= value <= ub:
+    #             msgs.append(
+    #                 f"{parameter}[{index}]={value:0.4f} is out of recommended range ({lb}, {ub}) for {blade_type}."
+    #             )
+
+
+    # if not msgs:
+    #     msgs.append("All parameters are within recommended ranges")
+
+    # Header for the geometry report
+
+    report_width = 80
+
+    msgs.append("-" * report_width)  # Horizontal line
+
+    msgs.append("Axial turbine geometry Report".center(report_width))
+    msgs.append("-" * report_width)  # Horizontal line
+
+
+    # Table header with four columns
+    table_header = f" {'Parameter':<34}{'Value':>8}{'Range':>20}{'In range?':>14}"
+    msgs.append(table_header)
+    msgs.append("-" * report_width)  # Horizontal line
+
     # Iterate over each good practice parameter and perform checks
     for parameter, limits in recommended_ranges.items():
+        if parameter == "cascade_type":
+            continue  # Skip the cascade_type entry
+
         lb, ub = limits["min"], limits["max"]
         value_array = geometry[parameter]
-        for index, value in enumerate(np.atleast_1d(value_array)):
-            if not lb <= value <= ub:
-                msgs.append(
-                    f"{parameter}[{index}]={value:0.4f} is out of recommended range ({lb}, {ub})."
-                )
 
-    if not msgs:
-        msgs.append("All parameters are within recommended ranges")
+        for index, value in enumerate(np.atleast_1d(value_array)):
+
+            # Determine cascade type for special cases
+            blade_type = cascade_types[index % len(cascade_types)]
+
+            if parameter in special_angles and blade_type == "rotor":
+                lb, ub = -ub, -lb  # Reverse limits for rotor blades
+
+            if parameter == "tip_clearance":
+                if blade_type == "stator":
+                    lb = 0.0
+                elif blade_type == "rotor":
+                    lb = limits["min"]
+
+            # Check if the value is within the recommended range
+            in_range = lb <= value <= ub
+
+            # Create a formatted message in table format using f-strings
+            bounds = f"({lb:+0.2f}, {ub:+0.2f})"
+            formatted_message = f" {parameter+'_'+str(index):<34}{value:>+8.4f}{bounds:>20}{str(in_range):>14}"
+            msgs.append(formatted_message)
+
+            # Append variables outside the recommended range to the list
+            if not in_range:
+                outside_range_variables.append(f"{parameter}_{index}")
+
+
+    # Footer for the geometry report
+    msgs.append("-" * report_width)  # Horizontal line
+
+
+    if not outside_range_variables:
+        msgs.append(" Report summary: All parameters are within recommended ranges.")
+    else:
+        msgs.append(" Report Summary: Some parameters are outside recommended ranges.")
+        for warning in outside_range_variables:
+            msgs.append(f"     - {warning}")
+
+    # Footer for the geometry report
+    msgs.append("-" * report_width)  # Horizontal line
+
 
     return msgs
 

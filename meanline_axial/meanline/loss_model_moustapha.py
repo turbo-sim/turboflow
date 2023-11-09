@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct  5 15:37:19 2023
-
-@author: laboan
-"""
-
 import numpy as np
+from .. import math
 
 def calculate_loss_coefficient(cascade_data, is_throat):
     
@@ -174,7 +168,7 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     # If the optimization algorithm has upper and lower bounds for the outlet 
     # angle there is no need to worry about this problem
     # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
-    angle_out_bis = max(abs(beta_out),40*np.pi/180)
+    angle_out_bis = max(abs(beta_out))
     Yp_reaction = nozzle_blades(s/c,angle_out_bis)
     Yp_impulse = impulse_blades(s/c,angle_out_bis)
     
@@ -257,10 +251,10 @@ def get_secondary_loss(flow_parameters, geometry):
     K3 = (b/H)**2
     Ks = 1-K3*(1-Kp)
     Ks = max(0.1,Ks)
-    angle_m = np.arctan((np.tan(beta_in)+np.tan(beta_out))/2)
-    Z = 4*(np.tan(beta_in)-np.tan(beta_out))**2*np.cos(beta_out)**2/np.cos(angle_m)
+    angle_m = math.arctand((math.tand(beta_in)+math.tand(beta_out))/2)
+    Z = 4*(math.tand(beta_in)-math.tand(beta_out))**2*math.cosd(beta_out)**2/math.cosd(angle_m)
     far = (1-0.25*np.sqrt(abs(2-H/c)))/(H/c)*(H/c < 2)+1/(H/c)*(H/c >= 2)
-    Y_s = 1.2*Ks*0.0334*far*Z*np.cos(beta_out)/np.cos(theta_in)
+    Y_s = 1.2*Ks*0.0334*far*Z*math.cosd(beta_out)/math.cosd(theta_in)
     
     return Y_s
 
@@ -390,8 +384,8 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
     t_cl = geometry["t_cl"]
     
     # Calculate blade loading parameter Z 
-    angle_m = np.arctan((np.tan(beta_in)+np.tan(beta_out))/2)
-    Z = 4*(np.tan(beta_in)-np.tan(beta_out))**2*np.cos(beta_out)**2/np.cos(angle_m)
+    angle_m = math.arctand((math.tand(beta_in)+math.tand(beta_out))/2)
+    Z = 4*(math.tand(beta_in)-math.tand(beta_out))**2*math.cosd(beta_out)**2/math.cosd(angle_m)
     
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
     if cascade_type == 'stator':
@@ -563,7 +557,7 @@ def nozzle_blades(r_sc,angle_out):
     # This correlation is a formula that reproduces the figures from the Ainley
     # and Mathieson original figures
     
-    phi = 90-angle_out*180/np.pi
+    phi = 90-angle_out
     r_sc_min = (0.46+phi/77)*(phi < 30) + (0.614+phi/130)*(phi >= 30)
     X = r_sc-r_sc_min
     A = (0.025+(27-phi)/530)*(phi < 27) + (0.025+(27-phi)/3085)*(phi >= 27)
@@ -580,7 +574,7 @@ def impulse_blades(r_sc,angle_out):
     # This correlation is a formula that reproduces the figures from the Ainley
     # and Mathieson original figures
     
-    phi = 90-angle_out*180/np.pi
+    phi = 90-angle_out
     r_sc_min = 0.224+1.575*(phi/90)-(phi/90)**2
     X = r_sc-r_sc_min
     A = 0.242-phi/151+(phi/127)**2
@@ -652,7 +646,7 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
     # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
 
-    chi = (le/s)**(-1.6)*(np.cos(theta_in)/np.cos(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))*180/np.pi
+    chi = (le/s)**(-1.6)*(math.cosd(theta_in)/math.cosd(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))
     return chi
     
 def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
@@ -674,4 +668,4 @@ def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
 
 def get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in):
     
-    return (abs(beta_in)-abs(theta_in))*180/np.pi/(180-(theta_in+theta_out)*180/np.pi)*(np.cos(theta_in)/np.cos(theta_out))**-1.5*(le/c)**-0.3
+    return (abs(beta_in)-abs(theta_in))/(180-(theta_in+theta_out))*(math.cosd(theta_in)/math.cosd(theta_out))**-1.5*(le/c)**-0.3

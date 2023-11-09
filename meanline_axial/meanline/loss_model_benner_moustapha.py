@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct  6 11:20:34 2023
-
-@author: laboan
-"""
-
 import numpy as np
 from ..math import smooth_min, smooth_max
+from .. import math
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 # TODO: we can create generic smooth versions of these functions and call them when necessary
@@ -164,7 +158,7 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     # If the optimization algorithm has upper and lower bounds for the outlet 
     # angle there is no need to worry about this problem
     # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
-    angle_out_bis = max(abs(beta_out),40*np.pi/180)
+    angle_out_bis = max(abs(beta_out),40)
     Yp_reaction = nozzle_blades(s/c,angle_out_bis)
     Yp_impulse = impulse_blades(s/c,angle_out_bis)
     
@@ -276,13 +270,13 @@ def get_secondary_loss(flow_parameters, geometry):
     # TODO: explain smoothing/blending tricks
         
     AR = h/c # Aspect ratio
-    CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
+    CR = math.cosd(beta_in)/math.cosd(beta_out) # Convergence ratio from Benner et al.[2006]
     
     if AR <= 2:  # TODO: sigmoid blending to convert to smooth piecewise function
-        denom = np.sqrt(np.cos(xi))*CR*AR**0.55*(np.cos(beta_out)/(np.cos(xi)))**0.55
+        denom = np.sqrt(math.cosd(xi))*CR*AR**0.55*(math.cosd(beta_out)/(math.cosd(xi)))**0.55
         Y_sec = (0.038+0.41*np.tanh(1.2*BL_rel))/denom
     else:
-        denom = np.sqrt(np.cos(xi))*CR*AR*(np.cos(beta_out)/(np.cos(xi)))**0.55
+        denom = np.sqrt(math.cosd(xi))*CR*AR*(math.cosd(beta_out)/(math.cosd(xi)))**0.55
         Y_sec = (0.052+0.56*np.tanh(1.2*BL_rel))/denom
         
     return Y_sec
@@ -339,8 +333,8 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
     t_cl = geometry["t_cl"]
     
     # Calculate blade loading parameter Z 
-    angle_m = np.arctan((np.tan(beta_in)+np.tan(beta_out))/2)
-    Z = 4*(np.tan(beta_in)-np.tan(beta_out))**2*np.cos(beta_out)**2/np.cos(angle_m)
+    angle_m = math.arctand((math.tand(beta_in)+math.tand(beta_out))/2)
+    Z = 4*(math.tand(beta_in)-math.tand(beta_out))**2*math.cosd(beta_out)**2/math.cosd(angle_m)
     
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
     if cascade_type == 'stator':
@@ -494,7 +488,7 @@ def nozzle_blades(r_sc,angle_out):
     # This correlation is a formula that reproduces the figures from the Ainley
     # and Mathieson original figures
     
-    phi=90-angle_out*180/np.pi
+    phi=90-angle_out
     r_sc_min=(0.46+phi/77)*(phi < 30) + (0.614+phi/130)*(phi >= 30) # TODO: sigmoid blending to convert to smooth piecewise function
     X=r_sc-r_sc_min
     A=(0.025+(27-phi)/530)*(phi < 27) + (0.025+(27-phi)/3085)*(phi >= 27) # TODO: sigmoid blending to convert to smooth piecewise function
@@ -510,7 +504,7 @@ def impulse_blades(r_sc,angle_out):
     # This correlation is a formula that reproduces the figures from the Ainley
     # and Mathieson original figures
     
-    phi=90-angle_out*180/np.pi
+    phi=90-angle_out
     r_sc_min=0.224+1.575*(phi/90)-(phi/90)**2
     X=r_sc-r_sc_min
     A=0.242-phi/151+(phi/127)**2
@@ -537,7 +531,7 @@ def get_penetration_depth(flow_parameters, geometry):
     h = geometry["H"]
 
     
-    CR = np.cos(beta_in)/np.cos(beta_out) # Convergence ratio from Benner et al.[2006]
+    CR = math.cosd(beta_in)/math.cosd(beta_out) # Convergence ratio from Benner et al.[2006]
     
     BSx = b/s # Axial blade solidity
     BL_rel = delta # Boundary layer displacement thickness relative to blade height
@@ -573,7 +567,7 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
     # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
 
-    chi = (le/s)**(-1.6)*(np.cos(theta_in)/np.cos(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))*180/np.pi
+    chi = (le/s)**(-1.6)*(math.cosd(theta_in)/math.cosd(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))
     return chi
     
 def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
@@ -600,21 +594,21 @@ def F_t(BSx,beta_in,beta_out):
     # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
     
-    a_m = np.arctan(0.5*(np.tan(beta_in)+np.tan(beta_out)))
+    a_m = math.arctand(0.5*(math.tand(beta_in)+math.tand(beta_out)))
         
-    F_t = 2*1/BSx*np.cos(a_m)**2*(abs(np.tan(beta_in))+abs(np.tan(beta_out)))
+    F_t = 2*1/BSx*math.cosd(a_m)**2*(abs(math.tand(beta_in))+abs(math.tand(beta_out)))
     
     return F_t
 
 
 if __name__ == '__main__':
     
-    We = 31.05*np.pi/180
+    We = 31.05
     le = 0.081e-2 
     s = 1.524e-2 
-    theta_in = 29.6*np.pi/180
-    theta_out = -61.6*np.pi/180
-    beta_in = 50*np.pi/180
+    theta_in = 29.6
+    theta_out = -61.6
+    beta_in = 50
     beta_des = theta_in
     chi = get_incidence_parameter(le,s,We,theta_in,theta_out,beta_in,beta_des)
     print(chi)

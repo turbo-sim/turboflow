@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 desired_path = os.path.abspath("../..")
 
 if desired_path not in sys.path:
@@ -14,7 +15,7 @@ import meanline_axial as ml
 
 
 # Define running option
-CASE = 3
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
@@ -24,7 +25,8 @@ cascades_data = ml.read_configuration_file(CONFIG_FILE)
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = cascades_data["operation_points"]
-    ml.compute_performance(operation_points, cascades_data)
+    solvers = ml.compute_performance(operation_points, cascades_data)
+    solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
@@ -51,6 +53,7 @@ elif CASE == 3:
 
     # Compute performance at experimental operating points   
     ml.compute_performance(operation_points, cascades_data)
+
 
 
 

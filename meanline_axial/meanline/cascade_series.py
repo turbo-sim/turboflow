@@ -1,19 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  3 16:31:16 2023
-
-@author: laboan
-"""
-
 import numpy as np
 import pandas as pd
 from scipy import optimize
 import CoolProp as CP
 from ..properties import FluidCoolProp_2Phase
-from ..math import smooth_max
+from ..math import smooth_max, sind, cosd, tand
 from . import loss_model as lm
 from . import deviation_model as dm
 from scipy.optimize._numdiff import approx_derivative
+
+from .. import math
 
 # Keys of the information that should be stored in results
 keys_plane = [
@@ -93,6 +88,10 @@ keys_cascade = [
 def evaluate_cascade_series(
     variables_values, BC, geometry, fluid, model_options, reference_values, results
 ):
+    
+    # TODO
+    # Convert all angles from radians to
+
     # Load variables
     n_cascades = geometry["n_cascades"]
     h0_in = BC["h0_in"]
@@ -242,7 +241,7 @@ def evaluate_cascade_series(
         )
         results["stage"] = pd.DataFrame(stage_results)
 
-    return residuals_values
+    return residuals_values, residuals_keys
 
 
 def evaluate_cascade(
@@ -586,32 +585,23 @@ def evaluate_lagrange_gradient(
     """
     Evaluate the gradient of the Lagrange function of the critical mass flow rate function.
 
-    Args:
-        x (numpy.ndarray): Array containing [v_in*, V_throat*, s_throat*].
-        critical_cascade_data (dict): Dictionary containing critical cascade data.
-
-    Returns:
-        numpy.ndarray: Residuals of the Lagrange function.
+    The function assumes specific structures in the critical_cascade_data dictionary.
+    Please ensure the required keys are present for accurate evaluation.
 
     This function evaluates the gradient of the Lagrange function of the critical mass flow rate function.
     It calculates the Lagrange multipliers explicitly and returns the residuals of the Lagrange gradient.
 
-    Note:
-        The function assumes specific structures in the critical_cascade_data dictionary.
-        Please ensure the required keys are present for accurate evaluation.
+    
+    Parameters
+    ----------
+        x (numpy.ndarray): Array containing [v_in*, V_throat*, s_throat*].
+        critical_cascade_data (dict): Dictionary containing critical cascade data.
 
-    Example:
-        # Define critical_cascade_data with required parameters
-        critical_cascade_data = {
-            "fixed_params": {"m_ref": 1.0},
-            ...
-        }
+    Returns
+    -------
+    numpy.ndarray:
+        Residuals of the Lagrange function.
 
-        # Define initial degrees of freedom in x
-        x = np.array([...])
-
-        # Evaluate the Lagrange gradient
-        lagrange_grad = evaluate_lagrange_gradient(x, critical_cascade_data)
     """
 
     # Load reference values
@@ -802,8 +792,8 @@ def evaluate_velocity_triangle_in(u, v, alpha):
     """
 
     # Absolute velocities
-    v_t = v * np.sin(alpha)
-    v_m = v * np.cos(alpha)
+    v_t = v * math.sind(alpha)
+    v_m = v * math.cosd(alpha)
 
     # Relative velocities
     w_t = v_t - u
@@ -811,7 +801,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
     w = np.sqrt(w_t**2 + w_m**2)
 
     # Relative flow angle
-    beta = np.arctan(w_t / w_m)
+    beta = math.arctand(w_t / w_m)
 
     # Store in dict
     vel_in = {
@@ -850,8 +840,8 @@ def evaluate_velocity_triangle_out(u, w, beta):
     """
 
     # Relative velocities
-    w_t = w * np.sin(beta)
-    w_m = w * np.cos(beta)
+    w_t = w * math.sind(beta)
+    w_m = w * math.cosd(beta)
 
     # Absolute velocities
     v_t = w_t + u
@@ -859,7 +849,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
     v = np.sqrt(v_t**2 + v_m**2)
 
     # Absolute flow angle
-    alpha = np.arctan(v_t / v_m)
+    alpha = math.arctand(v_t / v_m)
 
     # Store in dict
     vel_out = {
@@ -916,7 +906,7 @@ def evaluate_inter_cascade_space(
     v_t_in = v_t_exit * r_out / r_in
     v_m_in = v_m_exit * a_out / a_in
     v_in = np.sqrt(v_t_in**2 + v_m_in**2)
-    alpha_in = np.arctan(v_t_in / v_m_in)
+    alpha_in = math.arctand(v_t_in / v_m_in)
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
     stagnation_properties = fluid.compute_properties_meanline(
@@ -958,13 +948,12 @@ def calculate_deviation_equation(
     blockage = exit_plane["blockage"]
 
     if Ma < Ma_crit:
-        beta_model = dm.deviation(deviation_model, theta, opening, pitch, Ma, Ma_crit)
+        beta_model = dm.get_subsonic_deviation(Ma, Ma_crit, opening/pitch, deviation_model)
     else:
-        beta_model = np.arccos(m_crit / rho / w / area / blockage * density_correction)
-        beta_model *= 180 / np.pi
+        beta_model = math.arccosd(m_crit / rho / w / area / blockage * density_correction)
 
     # Compute error of guessed beta and deviation model
-    res = np.cos(beta_model * np.pi / 180) - np.cos(beta)
+    res = math.cosd(beta_model) - math.cosd(beta)
 
     return res
 
@@ -1047,8 +1036,8 @@ def get_reference_values(BC, fluid):
         "v0": v0,
         "h_out_s": h_is,
         "d_out_s": d_is,
-        "angle_range": np.pi,
-        "angle_min": -90 * np.pi / 180,
+        "angle_range": 180,
+        "angle_min": -90,
         "delta_ref": 0.011 / 3e5 ** (-1 / 7),
     }
 

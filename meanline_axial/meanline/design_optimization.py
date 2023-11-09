@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Oct 23 09:32:24 2023
-
-@author: laboan
-"""
-
 import numpy as np
 from ..solver import OptimizationProblem, OptimizationSolver
 from . import cascade_series as cs
@@ -184,11 +177,11 @@ def get_default_bounds(cascades_data, keys_design_variables):
     default_bounds_stator = {
                       "ar" : (1, 2),
                       "bs" : (1, 2),
-                      "theta_in" : (-15*np.pi/180, 15*np.pi/180),
-                      "theta_out" : (40*np.pi/180, 80*np.pi/180),
+                      "theta_in" : (-15, 15),
+                      "theta_out" : (40, 80),
                       "v_in" : (0.01, 0.5),
                       "v_out" : (0.1, 0.99),
-                      "beta_out" : (30*np.pi/180, 80*np.pi/180),
+                      "beta_out" : (30, 80),
                       "s_out" : (1, 1.2),
                       "v_in_crit" : (0.01, 0.7),
                       "v_out_crit" : (0.1, 0.99)}
@@ -196,11 +189,11 @@ def get_default_bounds(cascades_data, keys_design_variables):
     default_bounds_rotor = {
                       "ar" : (1, 2),
                       "bs" : (1, 2),
-                      "theta_in" : (-15*np.pi/180, 80*np.pi/180),
-                      "theta_out" : (-80*np.pi/180, -40*np.pi/180),
+                      "theta_in" : (-15, 80),
+                      "theta_out" : (-80, -40),
                       "v_in" : (0.1, 0.99),
                       "v_out" : (0.1, 0.99),
-                      "beta_out" : (-80*np.pi/180, -30*np.pi/180),
+                      "beta_out" : (-80, -30),
                       "s_out" : (1, 1.2),
                       "v_in_crit" : (0.1, 0.99),
                       "v_out_crit" : (0.1, 0.99)}

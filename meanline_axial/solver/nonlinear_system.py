@@ -432,7 +432,7 @@ class NonlinearSystemSolver:
         plt.draw()
         plt.pause(0.01)  # small pause to allow for update
 
-    def print_convergence_history(self):
+    def print_convergence_history(self, savefile=False, filename=None, output_dir="output"):
         """
         Print the convergence history of the problem.
 
@@ -451,8 +451,29 @@ class NonlinearSystemSolver:
 
         """
         if self.solution:
-            for line in self.solution_report:
-                print(line)
+
+            if savefile:
+
+                # Create figures directory if it does not exist
+                if not os.path.exists(output_dir):
+                    os.makedirs(output_dir)
+
+                # Give a name to the file if it is not specified
+                if filename is None:
+                    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    filename = os.path.join(output_dir, f"convergence_history_{current_time}.txt")
+                else:
+                    filename = os.path.join(output_dir, f"{filename}.txt")
+
+                # Save plots
+                with open(filename, "w") as f:
+                    f.write("\n".join(self.solution_report))
+
+            else:
+                for line in self.solution_report:
+                    print(line)
+
+
         else:
             warnings.warn(
                 "This method should be used after invoking the 'solve()' method."

@@ -17,12 +17,12 @@ geometry:
   H: [3.363e-2, 3.658e-2, 4.214e-2, 4.801e-2]                                 # Blade hight
   t_max: [0.505e-2, 0.447e-2, 0.328e-2, 0.280e-2]                             # Maximum blade thickness
   o: [0.7731e-2, 0.7249e-2, 0.8469e-2, 0.9538e-2]                             # Throat opening
-  We: [43.03*np.pi/180, 31.05*np.pi/180, 28.72*np.pi/180, 21.75*np.pi/180]    # Wedge angle (45 degrees in radians)
+  We: [43.03, 31.05, 28.72, 21.75]                                 # Wedge angle (45 degrees in radians)
   le: [0.127e-2, 0.081e-2, 0.097e-2, 0.081e-2]                                # Leading edge radius
-  te: [2*0.025e-2, 2*0.025e-2, 2*0.025e-2, 2*0.025e-2]                        # Trialing edge thickness
-  xi: [43.03*np.pi/180, 31.05*np.pi/180, 28.72*np.pi/180, 21.75*np.pi/180]    # Stagger angle
-  theta_in: [0, 29.6*np.pi/180, -26.1*np.pi/180, 13.9*np.pi/180]              # Inlet metal angle
-  theta_out: [65*np.pi/180,-61.6*np.pi/180, 55.2*np.pi/180, -48.9*np.pi/180]  # Exit metal angle
+  te: [0.050e-2, 0.050e-2, 0.050e-2, 0.050e-2]                               # Trialing edge thickness
+  xi: [43.03, 31.05, 28.72, 21.75]    # Stagger angle
+  theta_in: [0, 29.6, -26.1, 13.9]              # Inlet metal angle
+  theta_out: [65,-61.6, 55.2, -48.9]  # Exit metal angle
   A_in: [0.021468, 0.021468, 0.025197, 0.028618]                              # Inlet area
   A_out: [0.021468, 0.025197, 0.028618, 0.032678]                             # Exit area
   t_cl: [0, 0.030e-2,0,0.038e-2]                                              # Tip clearance

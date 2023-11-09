@@ -277,22 +277,74 @@ def _smooth_abs_logcosh(x, epsilon):
     return epsilon * np.log(np.cosh(x / epsilon))
 
 
-
 def sind(x):
-    np.sin(np.deg2rad(x))
+    """
+    Compute the sine of an angle given in degrees.
+
+    Parameters:
+    x (float or array-like): Angle in degrees.
+
+    Returns:
+    float or ndarray: Sine of the input angle.
+    """
+    return np.sin(x * np.pi / 180)
 
 def cosd(x):
-    np.sin(np.deg2rad(x))
+    """
+    Compute the cosine of an angle given in degrees.
+
+    Parameters:
+    x (float or array-like): Angle in degrees.
+
+    Returns:
+    float or ndarray: Cosine of the input angle.
+    """
+    return np.cos(x * np.pi / 180)
 
 def tand(x):
-    np.sin(np.deg2rad(x))
+    """
+    Compute the tangent of an angle given in degrees.
+
+    Parameters:
+    x (float or array-like): Angle in degrees.
+
+    Returns:
+    float or ndarray: Tangent of the input angle.
+    """
+    return np.tan(x * np.pi / 180)
 
 def arcsind(x):
-    np.arcsin(np.deg2rad(x))
+    """
+    Compute the arcsine of a value and return the result in degrees.
+
+    Parameters:
+    x (float or array-like): Value in the range [-1, 1].
+
+    Returns:
+    float or ndarray: Arcsine of the input value in degrees.
+    """
+    return np.arcsin(x) * 180 / np.pi
 
 def arccosd(x):
-    np.arccos(np.deg2rad(x))
+    """
+    Compute the arccosine of a value and return the result in degrees.
+
+    Parameters:
+    x (float or array-like): Value in the range [-1, 1].
+
+    Returns:
+    float or ndarray: Arccosine of the input value in degrees.
+    """
+    return np.arccos(x) * 180 / np.pi
 
 def arctand(x):
-    np.arctan(np.deg2rad(x))
+    """
+    Compute the arctangent of a value and return the result in degrees.
 
+    Parameters:
+    x (float or array-like): Value.
+
+    Returns:
+    float or ndarray: Arctangent of the input value in degrees.
+    """
+    return np.arctan(x) * 180 / np.pi
