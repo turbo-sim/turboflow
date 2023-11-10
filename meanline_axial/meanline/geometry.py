@@ -465,12 +465,12 @@ def check_axial_turbine_geometry(geometry):
 
             # Create a formatted message in table format using f-strings
             bounds = f"({lb:+0.2f}, {ub:+0.2f})"
-            formatted_message = f" {parameter+'_'+str(index):<34}{value:>+8.4f}{bounds:>20}{str(in_range):>14}"
+            formatted_message = f" {parameter+'_'+str(index+1):<34}{value:>+8.4f}{bounds:>20}{str(in_range):>14}"
             msgs.append(formatted_message)
 
             # Append variables outside the recommended range to the list
             if not in_range:
-                outside_range_variables.append(f"{parameter}_{index}")
+                outside_range_variables.append(f"{parameter}_{index+1}")
 
 
     # Footer for the geometry report
