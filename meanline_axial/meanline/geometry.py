@@ -488,7 +488,9 @@ def check_axial_turbine_geometry(geometry):
     msgs.append("-" * report_width)  # Horizontal line
 
 
-    return msgs
+    msg = "\n".join(msgs)
+
+    return msg
 
 
 
