@@ -314,29 +314,31 @@ def compute_single_operation_point(
             success = False
 
     # Attempt solving using different initial guesses
-    if not success:
-        N = 11
-        x0_arrays = {
-            "R": np.linspace(0.0, 0.95, N),
-            "eta_ts": np.linspace(0.6, 0.9, N),
-            "eta_tt": np.linspace(0.7, 1.0, N),
-            "Ma_crit": np.linspace(0.9, 0.9, N),
-        }
+    # TODO: To be improved with random generation of initial guess within ranges
+    # TODO: use sampling techniques like latin hypercube/ montecarlo sampling (fancy word for random sampling) / orthogonal sampling
+    # if not success:
+    #     N = 11
+    #     x0_arrays = {
+    #         "R": np.linspace(0.0, 0.95, N),
+    #         "eta_ts": np.linspace(0.6, 0.9, N),
+    #         "eta_tt": np.linspace(0.7, 1.0, N),
+    #         "Ma_crit": np.linspace(0.9, 0.9, N),
+    #     }
 
-        for i in range(N):
-            x0 = {key: values[i] for key, values in x0_arrays.items()}
-            print(f"Trying to solve the problem with a new initial guess")
-            print_dict(x0)
-            initial_guess = get_initial_guess(problem, x0)
-            solver = initialize_solver(problem, initial_guess, solver_options)
-            try:
-                solution = solver.solve()
-                success = solution.success
-            except Exception as e:
-                print(f"Error during solving: {e}")
-                success = False
-            if not success:
-                print(f"Solution failed for method '{solver_options['method']}'")
+    #     for i in range(N):
+    #         x0 = {key: values[i] for key, values in x0_arrays.items()}
+    #         print(f"Trying to solve the problem with a new initial guess")
+    #         print_dict(x0)
+    #         initial_guess = problem.get_initial_guess(x0)
+    #         solver = initialize_solver(problem, initial_guess, solver_options)
+    #         try:
+    #             solution = solver.solve()
+    #             success = solution.success
+    #         except Exception as e:
+    #             print(f"Error during solving: {e}")
+    #             success = False
+    #         if not success:
+    #             print(f"Solution failed for method '{solver_options['method']}'")
 
         if not success:
             print("WARNING: All attempts failed to converge")
