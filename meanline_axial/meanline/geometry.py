@@ -223,11 +223,11 @@ def calculate_full_geometry(geometry):
 
     # Compute geometric ratios
     aspect_ratio = height / axial_chord
-    pitch_to_chord_ratio = geom["pitch"] / geom["chord"]
-    thickness_max_to_chord_ratio = geom["thickness_max"] / geom["chord"]
-    thickness_te_to_opening_ratio = geom["thickness_te"] / geom["opening"]
-    tip_clearance_to_height = geom["tip_clearance"] / height
-    diameter_le_to_chord_ratio = geom["diameter_le"] / geom["chord"]
+    pitch_chord_ratio = geom["pitch"] / geom["chord"]
+    thickness_max_chord_ratio = geom["thickness_max"] / geom["chord"]
+    thickness_te_opening_ratio = geom["thickness_te"] / geom["opening"]
+    tip_clearance_height = geom["tip_clearance"] / height
+    diameter_le_chord_ratio = geom["diameter_le"] / geom["chord"]
     # throat_to_exit_opening_ratio =
 
     # Create a dictionary with the newly computed parameters
@@ -262,11 +262,11 @@ def calculate_full_geometry(geometry):
         "height_out": height_out,
         "flaring_angle": flaring_angle,
         "aspect_ratio": aspect_ratio,
-        "pitch_to_chord_ratio": pitch_to_chord_ratio,
-        "thickness_max_to_chord_ratio": thickness_max_to_chord_ratio,
-        "thickness_te_to_opening_ratio": thickness_te_to_opening_ratio,
-        "tip_clearance_to_height_ratio": tip_clearance_to_height,
-        "diameter_le_to_chord_ratio": diameter_le_to_chord_ratio,
+        "pitch_chord_ratio": pitch_chord_ratio,
+        "thickness_max_chord_ratio": thickness_max_chord_ratio,
+        "thickness_te_opening_ratio": thickness_te_opening_ratio,
+        "tip_clearance_height_ratio": tip_clearance_height,
+        "diameter_le_chord_ratio": diameter_le_chord_ratio,
     }
 
     return {**geometry, **new_parameters}
@@ -353,7 +353,7 @@ def check_axial_turbine_geometry(geometry):
             "min": 0.8,
             "max": 5.0,
         },  # Section 7.3 of :cite:`saravanamuttoo_gas_2008` and Figure 13 of :cite:`kacker_mean_1982`
-        "pitch_to_chord_ratio": {
+        "pitch_chord_ratio": {
             "min": 0.3,
             "max": 1.1,
         },  # Figure 4 of :cite:`ainley_method_1951`
@@ -373,19 +373,19 @@ def check_axial_turbine_geometry(geometry):
             "min": 10,
             "max": 60,
         },  # Figure 2 from :cite:`benner_influence_1997` and Figure 10 from :cite:`pritchard_eleven_1985`
-        "diameter_le_to_chord_ratio": {
+        "diameter_le_chord_ratio": {
             "min": 0.03,
             "max": 0.30,
         },  # Table 1 :cite:`moustapha_improved_1990`
-        "thickness_max_to_chord_ratio": {
+        "thickness_max_chord_ratio": {
             "min": 0.05,
             "max": 0.30,
         },  # Figure 4 of :cite:`kacker_mean_1982`
-        "thickness_te_to_opening_ratio": {
+        "thickness_te_opening_ratio": {
             "min": 0.00,
             "max": 0.40,
         },  # Figure 14 of :cite:`kacker_mean_1982`
-        "tip_clearance_to_height_ratio": {
+        "tip_clearance_height_ratio": {
             "min": 0.0,
             "max": 0.05,
         },  # Figure 7 of :cite:`dunham_improvements_1970`

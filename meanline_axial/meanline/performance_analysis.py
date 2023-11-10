@@ -742,7 +742,8 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             x, self.BC, self.geometry, self.fluid, self.model_options, self.reference_values
         )
         
-        return residuals.values()
+        
+        return np.array(list(residuals.values()))
     
     def compute_initial_guess(self, R, eta_tt, eta_ts, Ma_crit):
         #FIXME
@@ -825,7 +826,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 # 3 stations: 1: stator inlet 2: stator exit/rotor inlet, 3: rotor exit
                 # Rename parameters
                 A1 = geometry["A_in"][index_stator]
-                A2 = geometry["A_throat"][index_stator]
+                A2 = geometry["A_out"][index_stator]
                 A3 = geometry["A_out"][index_rotor]
 
                 alpha1 = geometry["metal_angle_le"][index_stator]

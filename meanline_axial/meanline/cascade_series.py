@@ -59,7 +59,7 @@ keys_plane = [
     "Ma",
     "Ma_rel",
     "Re",
-    "m",
+    "mass_flow",
     "delta",
     "rothalpy",
     "Y_err",
@@ -88,7 +88,6 @@ keys_cascade = [
 def evaluate_cascade_series(
     variables_values, BC, geometry, fluid, model_options, reference_values
 ):
-    
     # Create dictionary of independent variables
     # variables = dict(zip(keys, values))
     
@@ -128,6 +127,7 @@ def evaluate_cascade_series(
     v_in = variables_actual[0] * v0
     variables_actual = np.delete(variables_actual, 0)
     
+        
     # Rename turbine inlet velocity
     # v_in = variables["v_in"] * v0
 
@@ -216,9 +216,9 @@ def evaluate_cascade_series(
                 results["plane"]["v_t"].values[-1],
                 results["plane"]["d"].values[-1],
                 fluid,
-                geometry_cascade["r_out"],
+                geometry_cascade["radius_mean_out"],
                 geometry_cascade["A_out"],
-                geometry["r_in"][i + 1],
+                geometry["radius_mean_in"][i + 1],
                 geometry["A_in"][i + 1],
             )
 
@@ -228,10 +228,10 @@ def evaluate_cascade_series(
     residuals["p_out"] = p_error
     # residuals_values = np.append(residuals_values, p_error)
     # residuals_keys = np.append(residuals_keys, "p_out")
-
+    
     # Store global variables
     v_out = results["plane"]["v"].values[-1]
-    m = results["plane"]["m"].values[-1]
+    m = results["plane"]["mass_flow"].values[-1]
     h0_in = results["plane"]["h0"].values[0]
     h0_out = results["plane"]["h0"].values[-1]
 
@@ -298,7 +298,7 @@ def evaluate_cascade(
 
     # Evaluate throat plane
     cascade_throat_input["rothalpy"] = inlet_plane["rothalpy"]
-    cascade_throat_input["beta"] = geometry["theta_out"]
+    cascade_throat_input["beta"] = geometry["metal_angle_te"]
     throat_plane, Y_info = evaluate_exit(
         cascade_throat_input,
         fluid,
@@ -333,8 +333,8 @@ def evaluate_cascade(
 
 
     # Add mass flow rate error
-    m_error_throat = inlet_plane["m"] - throat_plane["m"]
-    m_error_exit = inlet_plane["m"] - exit_plane["m"]
+    m_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
+    m_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
     # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
     # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
     # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
@@ -404,8 +404,8 @@ def evaluate_cascade(
         "Y_cl": Y_info["Clearance"],
         "dh_s": dhs,
         "Ma_crit": critical_state["Ma_rel"],
-        "m_crit": critical_state["m"],
-        "incidence": inlet_plane["beta"] - geometry["theta_in"],
+        "m_crit": critical_state["mass_flow"],
+        "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
         "density_correction": density_correction,
     }
     results["cascade"].loc[len(results["cascade"])] = cascade_data
@@ -422,8 +422,8 @@ def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_re
     alpha = cascade_inlet_input["alpha"]
 
     # Load geometry
-    radius = geometry["r_in"]
-    chord = geometry["c"]
+    radius = geometry["radius_mean_in"]
+    chord = geometry["chord"]
     area = geometry["A_in"]
 
     # Calculate velocity triangles
@@ -474,7 +474,7 @@ def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_re
     plane["Ma"] = Ma
     plane["Ma_rel"] = Ma_rel
     plane["Re"] = Re
-    plane["m"] = m
+    plane["mass_flow"] = m
     plane["delta"] = delta
     plane["rothalpy"] = rothalpy
     plane["Y_err"] = np.nan
@@ -505,10 +505,10 @@ def evaluate_exit(
     rothalpy = cascade_exit_input["rothalpy"]
 
     # Load geometry
-    radius = geometry["r_out"]
+    radius = geometry["radius_mean_out"]
     area = geometry["A_out"]
-    chord = geometry["c"]
-    opening = geometry["o"]
+    chord = geometry["chord"]
+    opening = geometry["opening"]
 
     # Calculate velocity triangles
     blade_speed = angular_speed * radius
@@ -556,9 +556,7 @@ def evaluate_exit(
     loss_model_input = {
         "geometry": geometry,
         "flow": {},
-        "loss_model": loss_model,
-        "type": "stator" * (blade_speed == 0) + "rotor" * (blade_speed != 0),
-    }
+        "loss_model": loss_model}
 
     loss_model_input["flow"]["p0_rel_in"] = inlet_plane["p0_rel"]
     loss_model_input["flow"]["p0_rel_out"] = relative_stagnation_properties["p0_rel"]
@@ -586,7 +584,7 @@ def evaluate_exit(
     plane["Ma"] = Ma
     plane["Ma_rel"] = Ma_rel
     plane["Re"] = Re
-    plane["m"] = m
+    plane["mass_flow"] = m
     plane["delta"] = np.nan  # Not relevant for exit/throat plane
     plane["rothalpy"] = rothalpy
     plane["Y_err"] = Y_err
@@ -685,7 +683,7 @@ def evaluate_lagrange_gradient(
     g = f0[1:]  # The two constraints
     residual_values = np.insert(g, 0, grad)
     residual_keys = ["L*", "m*", "Y*"]
-    residuals_critical = dict(zip(residual_values, residual_keys))
+    residuals_critical = dict(zip(residual_keys, residual_values))
 
     return residuals_critical, critical_state
 
@@ -708,7 +706,7 @@ def evaluate_critical_cascade(
     delta_ref = reference_values["delta_ref"]
 
     # Load geometry
-    theta_out = geometry["theta_out"]
+    theta_out = geometry["metal_angle_te"]
 
     # Load cinput for critical cascade
     s_in = critical_cascade_input["s_in"]
@@ -755,14 +753,14 @@ def evaluate_critical_cascade(
 
     # Add residuals
     residuals = np.array(
-        [(inlet_plane["m"] - throat_plane["m"]) / m_ref, throat_plane["Y_err"]]
+        [(inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / m_ref, throat_plane["Y_err"]]
     )
 
-    critical_state["m"] = throat_plane["m"]
+    critical_state["mass_flow"] = throat_plane["mass_flow"]
     critical_state["Ma_rel"] = throat_plane["Ma_rel"]
     critical_state["d"] = throat_plane["d"]
 
-    output = np.insert(residuals, 0, throat_plane["m"])
+    output = np.insert(residuals, 0, throat_plane["mass_flow"])
 
     return output
 
@@ -960,13 +958,12 @@ def calculate_deviation_equation(
     geometry, critical_state, exit_plane, density_correction, deviation_model
 ):
     # Load cascade geometry
-    theta = geometry["theta_out"]
     area = geometry["A_out"]
-    opening = geometry["o"]
-    pitch = geometry["s"]
+    opening = geometry["opening"]
+    pitch = geometry["pitch"]
 
     # Load calculated critical condition
-    m_crit = critical_state["m"]
+    m_crit = critical_state["mass_flow"]
     Ma_crit = critical_state["Ma_rel"]
 
     # Load exit plane

@@ -24,11 +24,10 @@ def calculate_loss_coefficient(cascade_data, is_throat):
     
     flow_parameters = cascade_data["flow"]
     geometry = cascade_data["geometry"]
-    cascade_type=cascade_data["type"]
-    beta_des = geometry["theta_in"]
+    beta_des = geometry["metal_angle_le"]
     
     # Profile loss coefficient
-    Y_p = get_profile_loss(flow_parameters, geometry, cascade_type)
+    Y_p = get_profile_loss(flow_parameters, geometry)
     
     # Trailing edge coefficient
     Y_te = get_trailing_edge_loss(flow_parameters, geometry)   
@@ -37,7 +36,7 @@ def calculate_loss_coefficient(cascade_data, is_throat):
     Y_s = get_secondary_loss(flow_parameters, geometry)
     
     # Tip clearance loss coefficient
-    Y_cl = get_tip_clearance_loss(flow_parameters, geometry, cascade_type)
+    Y_cl = get_tip_clearance_loss(flow_parameters, geometry)
     
     # Incidence loss coefficient
     Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des)
@@ -69,7 +68,7 @@ def calculate_loss_coefficient(cascade_data, is_throat):
     return Y, loss_dict
     
 
-def get_profile_loss(flow_parameters, geometry, cascade_type):
+def get_profile_loss(flow_parameters, geometry):
     
     r"""
     Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
@@ -131,11 +130,12 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     p_out = flow_parameters["p_out"]
     beta_out = flow_parameters["beta_out"]
 
-    r_ht_in = geometry["r_ht_in"]
-    s = geometry["s"]
-    c = geometry["c"]
-    theta_in = geometry["theta_in"]
-    t_max = geometry["t_max"]
+    r_ht_in = geometry["hub_tip_ratio_in"]
+    s = geometry["pitch"]
+    c = geometry["chord"]
+    theta_in = geometry["metal_angle_le"]
+    t_max = geometry["thickness_max"]
+    cascade_type = geometry["cascade_type"]
     
     # Reynolds number correction factor
     f_Re=(Re/2e5)**(-0.4)*(Re<2e5)+1*(Re >= 2e5 and Re <= 1e6) + (Re/1e6)**(-0.2)*(Re>1e6)
@@ -225,9 +225,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     """
     
-    t_te = geometry["te"]
-    o = geometry["o"]
-    angle_in = geometry["theta_in"]
+    t_te = geometry["thickness_te"]
+    o = geometry["opening"]
+    angle_in = geometry["metal_angle_le"]
     angle_out = flow_parameters["beta_out"]
     
     # Range of trailing edge to throat opening ratio
@@ -261,9 +261,9 @@ def get_secondary_loss(flow_parameters, geometry):
     beta_in = flow_parameters["beta_in"]
     beta_out = flow_parameters["beta_out"]
 
-    h = geometry["H"]
-    c = geometry["c"]
-    xi = geometry ["xi"]
+    h = geometry["height"]
+    c = geometry["chord"]
+    xi = geometry ["stagger_angle"]
 
     # TODO: add docstring explaning the equations and the original paper
     # TODO: possibly include the equation number (or figure number) of the original paper
@@ -281,7 +281,7 @@ def get_secondary_loss(flow_parameters, geometry):
         
     return Y_sec
 
-def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
+def get_tip_clearance_loss(flow_parameters, geometry):
     
     r"""
     Calculate the tip clearance loss coefficient for the current cascade using the Kacker and Okapuu loss model.
@@ -328,9 +328,10 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
     beta_out = flow_parameters["beta_out"]
     beta_in = flow_parameters["beta_in"]
     
-    H = geometry["H"]
-    c = geometry["c"]
-    t_cl = geometry["t_cl"]
+    H = geometry["height"]
+    c = geometry["chord"]
+    t_cl = geometry["tip_clearance"]
+    cascade_type = geometry["cascade_type"]
     
     # Calculate blade loading parameter Z 
     angle_m = math.arctand((math.tand(beta_in)+math.tand(beta_out))/2)
@@ -359,11 +360,11 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     gamma = flow_parameters["gamma_out"]
     Ma_rel_out = flow_parameters["Ma_rel_out"]
     
-    le = geometry["le"]
-    s = geometry["s"]
-    We = geometry["We"]
-    theta_in = geometry["theta_in"]
-    theta_out = geometry["theta_out"]
+    le = geometry["diameter_le"]
+    s = geometry["pitch"]
+    We = geometry["wedge_angle_le"]
+    theta_in = geometry["metal_angle_le"]
+    theta_out = geometry["metal_angle_te"]
 
     
     chi = get_incidence_parameter(le,s,We,theta_in,theta_out,beta_in,beta_des)
@@ -463,10 +464,10 @@ def get_penetration_depth(flow_parameters, geometry):
     beta_out = flow_parameters["beta_out"]
     delta = flow_parameters["delta"]
     
-    b = geometry["b"]
-    s = geometry["s"]
-    c = geometry["c"]
-    h = geometry["H"]
+    b = geometry["axial_chord"]
+    s = geometry["pitch"]
+    c = geometry["chord"]
+    h = geometry["height"]
 
     
     CR = math.cosd(beta_in)/math.cosd(beta_out) # Convergence ratio from Benner et al.[2006]
