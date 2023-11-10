@@ -19,21 +19,21 @@ CASE = 1
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
-cascades_data = ml.read_configuration_file(CONFIG_FILE)
+config = ml.read_configuration_file(CONFIG_FILE)
 
 # Run calculations
 if CASE == 1:
     # Compute performance map according to config file
-    operation_points = cascades_data["operation_points"]
-    solvers = ml.compute_performance(operation_points, cascades_data)
-    solvers[0].print_convergence_history(savefile=True)
+    operation_points = config["operation_points"]
+    solvers = ml.compute_performance(operation_points, config)
+    # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
-    operation_points = cascades_data["performance_map"]
+    operation_points = config["performance_map"]
     omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    ml.compute_performance(operation_points, cascades_data)
+    ml.compute_performance(operation_points, config)
 
 elif CASE == 3:
     
@@ -44,7 +44,7 @@ elif CASE == 3:
 
     # Generate operating points with same conditions as dataset
     operation_points = []
-    design_point = cascades_data["operation_points"]
+    design_point = config["operation_points"]
     for PR, speed_frac in zip(pressure_ratio_exp, speed_frac_exp):
         current_point = copy.deepcopy(design_point)
         current_point['p_out'] = design_point["p0_in"]/PR
@@ -52,7 +52,7 @@ elif CASE == 3:
         operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
-    ml.compute_performance(operation_points, cascades_data)
+    ml.compute_performance(operation_points, config)
 
 
 

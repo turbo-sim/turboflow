@@ -197,7 +197,7 @@ class FluidCoolProp_2Phase:
             raise ValueError(f"The requested property '{propname}' is not available. The valid options are:\n\t{valid_options}")
 
      
-    def compute_properties_meanline(self, input_type, prop_1, prop_2):
+    def get_props(self, input_type, prop_1, prop_2):
         """Extract fluid properties for meanline model"""
 
         # Compute properties in the normal way
