@@ -45,7 +45,6 @@ def read_configuration_file(filename):
         config = yaml.safe_load(file)
         config = postprocess_config(config)
         config["geometry"] = {k: np.asarray(v) for k, v in config["geometry"].items()}
-        config["geometry_new"] = {k: np.asarray(v) for k, v in config["geometry_new"].items()}
         config["fixed_params"] = {}
         config["overall"] = {}
 

@@ -348,3 +348,9 @@ def arctand(x):
     float or ndarray: Arctangent of the input value in degrees.
     """
     return np.arctan(x) * 180 / np.pi
+
+def is_odd(number):
+    return number % 2 != 0
+
+def is_even(number):
+    return number % 2 == 0

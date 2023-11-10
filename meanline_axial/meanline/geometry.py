@@ -46,7 +46,7 @@ def validate_axial_turbine_geometry(geom):
         "chord",
         "stagger_angle",
         "opening",
-        "radius_le",
+        "diameter_le",
         "wedge_angle_le",
         "metal_angle_le",
         "metal_angle_te",
@@ -158,9 +158,13 @@ def calculate_full_geometry(geometry):
     number_of_cascades = len(geom["cascade_type"])
 
     # Get number of stages
-    # if n_cascades > 1
-    #  if even() then n_cascades/2
-    #  if odd() then (n_cascades-1)/2
+    if number_of_cascades > 1:
+      if math.is_even(number_of_cascades):
+          number_of_stages = int(number_of_cascades/2)
+      else:
+          number_of_stages = int((number_of_cascades-1)/2)
+    else:
+        number_of_stages = 0
 
     # Compute axial chord
     axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
@@ -223,12 +227,13 @@ def calculate_full_geometry(geometry):
     thickness_max_to_chord_ratio = geom["thickness_max"] / geom["chord"]
     thickness_te_to_opening_ratio = geom["thickness_te"] / geom["opening"]
     tip_clearance_to_height = geom["tip_clearance"] / height
-    radius_le_to_chord_ratio = geom["radius_le"] / geom["chord"]
+    diameter_le_to_chord_ratio = geom["diameter_le"] / geom["chord"]
     # throat_to_exit_opening_ratio =
 
     # Create a dictionary with the newly computed parameters
     new_parameters = {
-        "n_cascades": number_of_cascades,
+        "number_of_stages" : number_of_stages,
+        "number_of_cascades": number_of_cascades,
         "axial_chord": axial_chord,
         "radius_mean": radius_mean,
         "radius_shroud": radius_shroud,
@@ -261,7 +266,7 @@ def calculate_full_geometry(geometry):
         "thickness_max_to_chord_ratio": thickness_max_to_chord_ratio,
         "thickness_te_to_opening_ratio": thickness_te_to_opening_ratio,
         "tip_clearance_to_height_ratio": tip_clearance_to_height,
-        "radius_le_to_chord_ratio": radius_le_to_chord_ratio,
+        "diameter_le_to_chord_ratio": diameter_le_to_chord_ratio,
     }
 
     return {**geometry, **new_parameters}
@@ -356,9 +361,9 @@ def check_axial_turbine_geometry(geometry):
             "min": 10,
             "max": 60,
         },  # Figure 2 from :cite:`benner_influence_1997` and Figure 10 from :cite:`pritchard_eleven_1985`
-        "radius_le_to_chord_ratio": {
-            "min": 0.015,
-            "max": 0.15,
+        "diameter_le_to_chord_ratio": {
+            "min": 0.03,
+            "max": 0.30,
         },  # Table 1 :cite:`moustapha_improved_1990`
         "thickness_max_to_chord_ratio": {
             "min": 0.05,

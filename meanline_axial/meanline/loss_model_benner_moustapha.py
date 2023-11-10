@@ -412,7 +412,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     gamma = flow_parameters["gamma_out"] # Specific heat ratio
 
     s=geometry["s"] # Pitch
-    le=geometry["le"]*2 # Leading edge diameter
+    le=geometry["le"] # Leading edge diameter
     theta_in=geometry["theta_in"] # Inlet metal angle
     theta_out = geometry["theta_out"] # Exit metal angle
     

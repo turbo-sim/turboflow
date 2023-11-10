@@ -359,7 +359,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     gamma = flow_parameters["gamma_out"]
     Ma_rel_out = flow_parameters["Ma_rel_out"]
     
-    le = geometry["le"]*2
+    le = geometry["le"]
     s = geometry["s"]
     We = geometry["We"]
     theta_in = geometry["theta_in"]
