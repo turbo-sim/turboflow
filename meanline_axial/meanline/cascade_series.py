@@ -338,9 +338,8 @@ def evaluate_cascade(
     # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
     # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
     # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
-    
-    residuals["m_err_throat"] = m_error_throat
-    residuals["m_err_exit"] = m_error_exit
+    residuals["m_err_throat"] = m_error_throat / m_ref
+    residuals["m_err_exit"] = m_error_exit / m_ref
 
     # Calculate critical state
     critical_cascade_input["h0_in"] = cascade_inlet_input["h0"]

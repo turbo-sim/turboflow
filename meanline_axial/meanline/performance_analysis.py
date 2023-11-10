@@ -442,7 +442,6 @@ def compute_single_operation_point(
     # Attempt solving with the specified method
     method = cascades_data["solver"]["method"]
     print(f"Trying to solve the problem using {name_map[method]} method")
-    # x0 = np.array(list(initial_guess.values()))
     solver = initialize_solver(cascades_data, problem, method, initial_guess)
     try:
         solution = solver.solve()
@@ -705,9 +704,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         geom.validate_axial_turbine_geometry(case_data["geometry"])
         self.geometry = geom.calculate_full_geometry(case_data["geometry"])
         geom_info = geom.check_axial_turbine_geometry(self.geometry)
+        print()
         print(geom_info)
-        print_dict(self.geometry)
-        
+        print()
+
         # Initalize fluid
         self.fluid = FluidCoolProp_2Phase(case_data["BC"]["fluid_name"])
 
@@ -723,6 +723,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         A_out = self.geometry["A_out"][-1]
         m_ref = A_out * v0 * d_is
         self.reference_values["m_ref"] = m_ref
+
 
     def get_values(self, x):
         """
@@ -741,7 +742,6 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         residuals, self.results = cs.evaluate_cascade_series(
             x, self.BC, self.geometry, self.fluid, self.model_options, self.reference_values
         )
-        
         
         return np.array(list(residuals.values()))
     
@@ -970,6 +970,11 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # Merge initial guess for critical state and actual point
         x0 = np.concatenate((x0, x0_crit))
 
+        print()
+        # print_dict(geometry)
+        # print("initial_guess", x0)
+        # print(v_in, m_out)
+        print()
         return x0
 
 

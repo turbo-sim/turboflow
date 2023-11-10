@@ -91,7 +91,6 @@ def validate_axial_turbine_geometry(geom):
             raise TypeError(f"Parameter '{key}' must be a NumPy array.")
 
         # Check the size of the arrays
-        print(key, value)
         if key in ["radius_hub", "radius_tip"]:
             if value.size != 2 * number_of_cascades:
                 raise ValueError(
