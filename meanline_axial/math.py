@@ -278,79 +278,34 @@ def _smooth_abs_logcosh(x, epsilon):
 
 
 def sind(x):
-    """
-    Compute the sine of an angle given in degrees.
-
-    Parameters:
-    x (float or array-like): Angle in degrees.
-
-    Returns:
-    float or ndarray: Sine of the input angle.
-    """
+    """Compute the sine of an angle given in degrees."""
     return np.sin(x * np.pi / 180)
 
 def cosd(x):
-    """
-    Compute the cosine of an angle given in degrees.
+    """Compute the cosine of an angle given in degrees."""
 
-    Parameters:
-    x (float or array-like): Angle in degrees.
-
-    Returns:
-    float or ndarray: Cosine of the input angle.
-    """
     return np.cos(x * np.pi / 180)
 
 def tand(x):
-    """
-    Compute the tangent of an angle given in degrees.
-
-    Parameters:
-    x (float or array-like): Angle in degrees.
-
-    Returns:
-    float or ndarray: Tangent of the input angle.
-    """
+    """Compute the tangent of an angle given in degrees."""
     return np.tan(x * np.pi / 180)
 
 def arcsind(x):
-    """
-    Compute the arcsine of a value and return the result in degrees.
-
-    Parameters:
-    x (float or array-like): Value in the range [-1, 1].
-
-    Returns:
-    float or ndarray: Arcsine of the input value in degrees.
-    """
+    """Compute the arcsine of a value and return the result in degrees."""
     return np.arcsin(x) * 180 / np.pi
 
 def arccosd(x):
-    """
-    Compute the arccosine of a value and return the result in degrees.
-
-    Parameters:
-    x (float or array-like): Value in the range [-1, 1].
-
-    Returns:
-    float or ndarray: Arccosine of the input value in degrees.
-    """
+    """Compute the arccosine of a value and return the result in degrees."""
     return np.arccos(x) * 180 / np.pi
 
 def arctand(x):
-    """
-    Compute the arctangent of a value and return the result in degrees.
-
-    Parameters:
-    x (float or array-like): Value.
-
-    Returns:
-    float or ndarray: Arctangent of the input value in degrees.
-    """
+    """Compute the arctangent of a value and return the result in degrees."""
     return np.arctan(x) * 180 / np.pi
 
 def is_odd(number):
+    """Check if a number is odd. Returns True if the provided number is odd, and False otherwise."""
     return number % 2 != 0
 
 def is_even(number):
+    """Check if a number is even. Returns True if the provided number is even, and False otherwise."""
     return number % 2 == 0
