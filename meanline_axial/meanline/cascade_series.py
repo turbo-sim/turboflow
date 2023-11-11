@@ -335,9 +335,6 @@ def evaluate_cascade(
     # Add mass flow rate error
     m_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
     m_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
-    # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
-    # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
-    # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
     
     residuals["m_err_throat"] = m_error_throat
     residuals["m_err_exit"] = m_error_exit
