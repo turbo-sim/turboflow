@@ -333,8 +333,23 @@ def evaluate_cascade(
     props_is = fluid.get_props(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
     dh_is = exit_plane["h"] - props_is["h"]
 
+<<<<<<< HEAD
     # Evaluate critical state
     # TODO: Pass x_crit as dicitonary to evaluate_lagrangian_gradient?
+=======
+
+    # Add mass flow rate error
+    m_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
+    m_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
+
+    # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
+    # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
+    # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
+    residuals["m_err_throat"] = m_error_throat / m_ref
+    residuals["m_err_exit"] = m_error_exit / m_ref
+
+    # Calculate critical state
+>>>>>>> 8e6327362f3ca5678cd140b8edaa0934884c11c8
     critical_cascade_input["h0_in"] = cascade_inlet_input["h0"]
     critical_cascade_input["s_in"] = cascade_inlet_input["s"]
     critical_cascade_input["alpha_in"] = cascade_inlet_input["alpha"]
@@ -873,35 +888,6 @@ def evaluate_velocity_triangle_out(u, w, beta):
     }
 
     return vel_out
-
-
-def evaluate_loss_model(loss_model_input, is_throat=False):
-    """
-    Evaluate the loss according to both loss correlation and definition.
-    Return the loss coefficient, error, and breakdown of losses.
-
-    Args:
-        cascade_data (dict): Data for the cascade.
-
-    Returns:
-        tuple: A tuple containing the loss coefficient, error, and additional information.
-    """
-    # Load necessary parameters
-    lossmodel = loss_model_input["loss_model"]
-    p0rel_in = loss_model_input["flow"]["p0_rel_in"]
-    p0rel_out = loss_model_input["flow"]["p0_rel_out"]
-    p_out = loss_model_input["flow"]["p_out"]
-
-    # Compute the loss coefficient from its definition
-    Y_def = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
-
-    # Compute the loss coefficient from the correlations
-    Y, Y_info = lm.loss(loss_model_input, lossmodel, is_throat)
-
-    # Compute loss coefficient error
-    Y_err = Y_def - Y
-
-    return Y, Y_err, Y_info
 
 
 def evaluate_inter_cascade_space(
