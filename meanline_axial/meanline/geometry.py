@@ -11,7 +11,7 @@ def all_non_negative(arr):
     return np.all(arr >= 0)
 
 
-def validate_axial_turbine_geometry(geom):
+def validate_axial_turbine_geometry(geom, display=False):
     """
     Performs validation of an axial turbine's geometry configuration.
 
@@ -91,7 +91,6 @@ def validate_axial_turbine_geometry(geom):
             raise TypeError(f"Parameter '{key}' must be a NumPy array.")
 
         # Check the size of the arrays
-        print(key, value)
         if key in ["radius_hub", "radius_tip"]:
             if value.size != 2 * number_of_cascades:
                 raise ValueError(
@@ -114,8 +113,12 @@ def validate_axial_turbine_geometry(geom):
             raise ValueError(
                 f"Parameter '{key}' must be an array of non-negative numbers. Current value: {value}"
             )
+    
+    msg = "The structure of the turbine geometry parameters is valid"
+    if display:
+        print(msg)
 
-    return True
+    return msg
 
 
 def calculate_throat_radius(radius_in, radius_out):
@@ -272,7 +275,7 @@ def calculate_full_geometry(geometry):
     return {**geometry, **new_parameters}
 
 
-def check_axial_turbine_geometry(geometry):
+def check_axial_turbine_geometry(geometry, display=True):
     """
     Checks if the geometry parameters are within the predefined recommended ranges.
 
@@ -489,6 +492,9 @@ def check_axial_turbine_geometry(geometry):
 
 
     msg = "\n".join(msgs)
+
+    if display:
+        print(msg)
 
     return msg
 

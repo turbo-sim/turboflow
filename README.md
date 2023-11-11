@@ -113,6 +113,31 @@
   - TurboCore
   - Meanpy
   - Others?
+  - TurboFlow?
+
+
+## To-do list 10.11.2023
+- [ ] Residuals and independent variables should be dictionaries
+- [ ] Improve initial guess functionality (Lasse)
+  - [x] Move initial guess generation into the CascadesNonlinearSystemProblem() class
+  - [x] Move the solution scaling into the CascadesNonlinearSystemProblem() class [how to re-use scaling for optimization?]
+  - [ ] Generation within CascadesNonlinearSystemProblem() class
+  - [ ] Initial guess should be a dictionary with keys
+  - [ ] Initial guess specification in YAML file (this will be used for the first operation point)
+  - [ ] Improve initial guess calculation and extend to multistage
+  - [ ] 1D correlation for Ma_crit as a function of the loss coefficient of the cascade
+- [ ] Geometry processing (Roberto)
+  - [ ] Clean up code
+  - [ ] Improve docstrings
+  - [ ] Discuss and improve the throat area calculation (Roberto/Lasse)
+- [ ] Update PySolverView to solve root finding problems with the optimization solver.
+- [ ] Add computation time in solver report
+- [ ] Improve robustness with random generation of initial guesses
+  - [ ] Specify the number of initial guesses that will be tried, e.g., 50
+  - [ ] Specify the ranges of variables to be sampled from (enthalpy frac distribution, efficiency ts and tt)
+  - [ ] Use a sampling techniques like latin hypercube, montecarlo, or orthogonal sampling'
+  - [ ] https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.qmc.LatinHypercube.html
+  - [ ] 
 
 
 

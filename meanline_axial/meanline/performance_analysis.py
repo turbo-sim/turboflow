@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from . import cascade_series as cs
 from . import geometry as geom
-from .design_optimization import CascadesOptimizationProblem
 from .. import math
 from ..solver import (
     NonlinearSystemSolver,
@@ -25,8 +24,6 @@ from ..utilities import (
 )
 from datetime import datetime
 
-
-
 from ..properties import FluidCoolProp_2Phase
 import CoolProp as CP
 
@@ -37,9 +34,10 @@ name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
 def compute_performance(
     operation_points,
-    case_data,
-    filename=None,
-    output_dir="output",
+    config,
+    out_filename=None,
+    out_dir="output",
+    stop_on_failure=True,
 ):
     """
     Compute and export the performance of each specified operation point to an Excel file.
@@ -70,24 +68,27 @@ def compute_performance(
     operation_points : list of dict or dict
         A list of operation points where each is a dictionary of parameters, or a dictionary of parameter
         ranges from which operation points will be generated.
-    case_data : dict
-        A dictionary containing necessary data structures and parameters for computing performance at each operation point.
-    filename : str, optional
+    config : dict
+        A dictionary containing necessary configuration options for computing performance at each operation point.
+    out_file : str, optional
         The name for the output Excel file. If not provided, a default name with a timestamp is generated.
-    output_dir : str, optional
+    out_dir : str, optional
         The directory where the Excel file will be saved. Defaults to 'output'.
 
     Returns
     -------
     str
         The absolute path to the created Excel file.
-    
+
     See Also
     --------
+    compute_operation_point : For computing the performance of a single operation point.
     generate_operation_points : For generation of operation points from ranges.
     validate_operation_point : For validation of individual operation points.
-    compute_operation_point : For computing the performance of a single operation point.
     """
+
+    # Initialize problem object
+    problem = CascadesNonlinearSystemProblem(config)
 
     # Check the type of operation_points argument
     if isinstance(operation_points, dict):
@@ -97,23 +98,23 @@ def compute_performance(
         msg = "operation_points must be either list of dicts or a dict with ranges."
         raise TypeError(msg)
 
-    # Validate each operation point
+    # Validate all operation points
     for operation_point in operation_points:
         validate_operation_point(operation_point)
 
     # Create a directory to save simulation results
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
 
     # Define filename with unique date-time identifier
-    if filename == None:
+    if out_filename == None:
         current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"performance_analysis_{current_time}"
+        out_filename = f"performance_analysis_{current_time}"
 
-    # Export simulation settings as YAML file
-    config_data = {k: v for k, v in case_data.items() if v}  # Filter empty entries and
+    # Export simulation configuration as YAML file
+    config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
     config_data = convert_numpy_to_python(config_data, precision=12)
-    config_file = os.path.join(output_dir, f"{filename}.yaml")
+    config_file = os.path.join(out_dir, f"{out_filename}.yaml")
     with open(config_file, "w") as file:
         yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
 
@@ -125,7 +126,7 @@ def compute_performance(
     stage_data = []
     solver_data = []
     solution_data = []
-    solver_handles = []
+    solver_container = []
 
     # Loop through all operation points
     print_operation_points(operation_points)
@@ -138,7 +139,7 @@ def compute_performance(
             # Define initial guess
             if i == 0:
                 # Use default initial guess for the first operation point
-                x0 = None
+                initial_guess = None
                 print(f"Using default initial guess")
             else:
                 closest_x, closest_index = find_closest_operation_point(
@@ -147,11 +148,11 @@ def compute_performance(
                     solution_data[:i],  # Use solutions up to the previous point
                 )
                 print(f"Using solution from point {closest_index+1} as initial guess")
-                x0 = closest_x
+                initial_guess = closest_x
 
             # Compute performance
             solver, results = compute_single_operation_point(
-                operation_point, case_data, initial_guess=x0
+                operation_point, problem, initial_guess, config["solver_options"]
             )
 
             # Retrieve solver data
@@ -173,17 +174,18 @@ def compute_performance(
             cascade_data.append(flatten_dataframe(results["cascade"]))
             stage_data.append(flatten_dataframe(results["stage"]))
             solver_data.append(pd.DataFrame([solver_status]))
-            solution_data.append(scale_to_real_values(solver.solution.x, solver.problem))
-            solver_handles.append(solver)
+            solution_data.append(solver.problem.scale_to_real_values(solver.solution.x))
+            solver_container.append(solver)
 
         except Exception as e:
-            print(
-                f"An error occurred while computing the operation point {i+1}/{len(operation_points)}:\n\t{e}"
-            )
-            
-            # raise Exception(e)
+            if stop_on_failure:
+                raise Exception(e)
+            else:
+                print(f"Computation of point {i+1}/{len(operation_points)} failed")
+                print(f"Error: {e}")
 
             # Retrieve solver data
+            solver = None
             solver_status = {"completed": False}
 
             # Collect data
@@ -194,7 +196,7 @@ def compute_performance(
             stage_data.append(pd.DataFrame([{}]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append([])
-            solver_handles.append(solver)
+            solver_container.append(solver)
 
     # Dictionary to hold concatenated dataframes
     dfs = {
@@ -211,187 +213,21 @@ def compute_performance(
         df.insert(0, "operation_point", range(1, 1 + len(df)))
 
     # Write dataframes to excel
-    filepath = os.path.join(output_dir, f"{filename}.xlsx")
+    filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
     with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
         for sheet_name, df in dfs.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
     print(f"Performance data successfully written to {filepath}")
 
-    return solver_handles
-
-
-def initialize_solver(cascades_data, problem, method, initial_guess):
-    """
-    Initialize a nonlinear system solver for solving a given problem.
-
-    Parameters
-    ----------
-    cascades_data : dict
-        A dictionary containing data related to the problem.
-
-    method : str
-        The solver method to use.
-
-    initial_guess : array-like or dict, optional
-        The initial guess for the solver. If None, a default initial guess is generated.
-        If a dictionary is provided, it should contain the following keys:
-        - 'R': Initial guess for parameter R (float)
-        - 'eta_tt': Initial guess for parameter eta_tt (float)
-        - 'eta_ts': Initial guess for parameter eta_ts (float)
-        - 'Ma_crit': Initial guess for parameter Mach_crit (float)
-
-    Returns
-    -------
-    solver : NonlinearSystemSolver
-        A solver object configured to solve the nonlinear system problem.
-
-    Notes
-    -----
-    - If an initial guess is provided as an array, it will be used as is.
-    - If no initial guess is provided, default values for R, eta_tt, eta_ts, and Ma_crit
-      are used to generate an initial guess.
-    - If an initial guess is provided as a dictionary, it should include the necessary
-      parameters for the problem.
-
-    """
-    
-    # Initialize solver object
-    solver = NonlinearSystemSolver(
-        problem,
-        initial_guess,
-        method=method,
-        tol=cascades_data["solver"]["tolerance"],
-        max_iter=cascades_data["solver"]["max_iterations"],
-        derivative_method=cascades_data["solver"]["derivative_method"],
-        derivative_rel_step=cascades_data["solver"]["derivative_rel_step"],
-        display=cascades_data["solver"]["display_progress"],
-    )
-
-    return solver
-
-def get_initial_guess(problem, initial_guess = None):
-    
-    # Define initial guess
-    if isinstance(initial_guess, np.ndarray):
-        pass  # Keep the initial guess as it is
-    else:
-        if initial_guess is None:
-            print("No initial guess provided.")
-            print("Generating initial guess from default parameters...")
-            R = 0.5
-            eta_tt = 0.9
-            eta_ts = 0.8
-            Ma_crit = 0.95
-        elif isinstance(initial_guess, dict):
-            R = initial_guess["R"]
-            eta_tt = initial_guess["eta_tt"]
-            eta_ts = initial_guess["eta_ts"]
-            Ma_crit = initial_guess["Ma_crit"]
-        else:
-            raise ValueError("Initial guess must be an array or dictionary.")
-
-        initial_guess = problem.compute_initial_guess(R, eta_tt, eta_ts, Ma_crit)
-
-    # Always normalize initial guess
-    initial_guess = scale_to_normalized_values(initial_guess, problem)
-    
-    # Store keys as an attribute in problem
-    # problem.keys = initial_guess.keys()
-    
-    return initial_guess
-
-def scale_to_real_values(x, problem):
-    """
-    Convert a normalized solution vector back to real-world values.
-
-    Parameters
-    ----------
-    x: The normalized solution vector from the solver.
-    cascades_data: Dictionary containing reference values and number of cascades.
-
-    Returns
-    -------
-    An array of values converted back to their real-world scale.
-    """
-    v0 = problem.reference_values["v0"]
-    s_range = problem.reference_values["s_range"]
-    s_min = problem.reference_values["s_min"]
-    angle_range = problem.reference_values["angle_range"]
-    angle_min = problem.reference_values["angle_min"]
-    number_of_cascades = problem.geometry["number_of_cascades"]
-
-    # Slice x into actual and critical values
-    x_real = x.copy()[0 : 5 * number_of_cascades + 1]
-    xcrit_real = x.copy()[5 * number_of_cascades + 1 :]
-
-    # Convert x to real values
-    x_real[0] *= v0
-    xcrit_real *= v0  # Scale all critical values with v0
-    for i in range(number_of_cascades):
-        x_real[5 * i + 1] *= v0
-        x_real[5 * i + 2] *= v0
-        x_real[5 * i + 3] = x_real[5 * i + 3] * s_range + s_min
-        x_real[5 * i + 4] = x_real[5 * i + 4] * s_range + s_min
-        x_real[5 * i + 5] = x_real[5 * i + 5] * angle_range + angle_min
-        xcrit_real[3 * i + 2] = (
-            xcrit_real[3 * i + 2] / v0 * s_range + s_min
-        )  # Scale the entropy values of the critical variables
-
-    x_real = np.concatenate((x_real, xcrit_real))
-
-    return x_real
-    
-
-def scale_to_normalized_values(x, problem):
-    """
-    Scale a solution vector from actual values to a normalized scale.
-
-    Parameters
-    ----------
-    x: The solution vector with actual values to be normalized.
-    cascades_data: Dictionary containing reference values and number of cascades.
-
-    Returns
-    -------
-    An array of values scaled to a normalized range for solver computations.
-    """
-    # Load parameters
-    v0 = problem.reference_values["v0"]
-    s_range = problem.reference_values["s_range"]
-    s_min = problem.reference_values["s_min"]
-    angle_range = problem.reference_values["angle_range"]
-    angle_min = problem.reference_values["angle_min"]
-    number_of_cascades = problem.geometry["number_of_cascades"]
-
-    # Slice x into actual and critical values
-    x_scaled = x.copy()[: 5 * number_of_cascades + 1]
-    xcrit_scaled = x.copy()[5 * number_of_cascades + 1 :]
-
-    # Scale x0
-    x_scaled[0] /= v0
-    xcrit_scaled /= v0  # Scale all critical values with v0
-
-    for i in range(number_of_cascades):
-        x_scaled[5 * i + 1] /= v0
-        x_scaled[5 * i + 2] /= v0
-        x_scaled[5 * i + 3] = (x_scaled[5 * i + 3] - s_min) / s_range
-        x_scaled[5 * i + 4] = (x_scaled[5 * i + 4] - s_min) / s_range
-        x_scaled[5 * i + 5] = (x_scaled[5 * i + 5] - angle_min) / angle_range
-
-        xcrit_scaled[3 * i + 2] = (
-            xcrit_scaled[3 * i + 2] * v0 - s_min
-        ) / s_range  # Scale the entropy values of the critical variables
-
-    x_scaled = np.concatenate((x_scaled, xcrit_scaled))
-
-    return x_scaled
+    return solver_container
 
 
 def compute_single_operation_point(
-    boundary_conditions,
-    cascades_data,
-    initial_guess=None,
+    operating_point,
+    problem,
+    initial_guess,
+    solver_options,
 ):
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
@@ -432,18 +268,14 @@ def compute_single_operation_point(
 
     """
 
-    # Calculate performance at given boundary conditions with given geometry
-    cascades_data["BC"] = boundary_conditions
-    
     # Initialize problem object
-    problem = CascadesNonlinearSystemProblem(cascades_data)
-    initial_guess = get_initial_guess(problem, initial_guess)
+    problem.update_boundary_conditions(operating_point)
+    initial_guess = problem.get_initial_guess(initial_guess)
 
     # Attempt solving with the specified method
-    method = cascades_data["solver"]["method"]
+    method = solver_options["method"]
     print(f"Trying to solve the problem using {name_map[method]} method")
-    # x0 = np.array(list(initial_guess.values()))
-    solver = initialize_solver(cascades_data, problem, method, initial_guess)
+    solver = initialize_solver(problem, initial_guess, solver_options)
     try:
         solution = solver.solve()
         success = solution.success
@@ -451,13 +283,13 @@ def compute_single_operation_point(
         print(f"Error during solving: {e}")
         success = False
     if not success:
-        print(f"Solution failed with {name_map[method]} method")
+        print(f"Solution failed for method '{solver_options['method']}'")
 
     # Attempt solving with Lavenberg-Marquardt method
-    if method != "lm" and not success:
-        method = "lm"
+    if solver_options["method"] != "lm" and not success:
+        solver_options["method"] = "lm"
         print(f"Trying to solve the problem using {name_map[method]} method")
-        solver = initialize_solver(cascades_data, problem, method, initial_guess)
+        solver = initialize_solver(problem, initial_guess, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
@@ -465,15 +297,15 @@ def compute_single_operation_point(
             print(f"Error during solving: {e}")
             success = False
         if not success:
-            print(f"Solution failed with {name_map[method]} method")
+            print(f"Solution failed for method '{solver_options['method']}'")
 
     # TODO: Attempt solving with optimization algorithms?
 
     # Attempt solving with a heuristic initial guess
     if isinstance(initial_guess, np.ndarray) and not success:
-        method = "lm"
+        solver_options["method"] = "lm"
         print("Trying to solve the problem with a new initial guess")
-        solver = initialize_solver(cascades_data, problem, method, initial_guess = None)
+        solver = initialize_solver(problem, initial_guess, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
@@ -482,29 +314,31 @@ def compute_single_operation_point(
             success = False
 
     # Attempt solving using different initial guesses
-    if not success:
-        N = 11
-        x0_arrays = {
-            "R": np.linspace(0.0, 0.95, N),
-            "eta_ts": np.linspace(0.6, 0.9, N),
-            "eta_tt": np.linspace(0.7, 1.0, N),
-            "Ma_crit": np.linspace(0.9, 0.9, N),
-        }
+    # TODO: To be improved with random generation of initial guess within ranges
+    # TODO: use sampling techniques like latin hypercube/ montecarlo sampling (fancy word for random sampling) / orthogonal sampling
+    # if not success:
+    #     N = 11
+    #     x0_arrays = {
+    #         "R": np.linspace(0.0, 0.95, N),
+    #         "eta_ts": np.linspace(0.6, 0.9, N),
+    #         "eta_tt": np.linspace(0.7, 1.0, N),
+    #         "Ma_crit": np.linspace(0.9, 0.9, N),
+    #     }
 
-        for i in range(N):
-            x0 = {key: values[i] for key, values in x0_arrays.items()}
-            print(f"Trying to solve the problem with a new initial guess")
-            print_dict(x0)
-            initial_guess = get_initial_guess(problem, x0)
-            solver = initialize_solver(cascades_data, problem, method, initial_guess)
-            try:
-                solution = solver.solve()
-                success = solution.success
-            except Exception as e:
-                print(f"Error during solving: {e}")
-                success = False
-            if not success:
-                print(f"Solution failed with {name_map[method]} method")
+    #     for i in range(N):
+    #         x0 = {key: values[i] for key, values in x0_arrays.items()}
+    #         print(f"Trying to solve the problem with a new initial guess")
+    #         print_dict(x0)
+    #         initial_guess = problem.get_initial_guess(x0)
+    #         solver = initialize_solver(problem, initial_guess, solver_options)
+    #         try:
+    #             solution = solver.solve()
+    #             success = solution.success
+    #         except Exception as e:
+    #             print(f"Error during solving: {e}")
+    #             success = False
+    #         if not success:
+    #             print(f"Solution failed for method '{solver_options['method']}'")
 
         if not success:
             print("WARNING: All attempts failed to converge")
@@ -512,6 +346,61 @@ def compute_single_operation_point(
             # TODO: Add messages to Log file
 
     return solver, problem.results
+
+
+def initialize_solver(problem, initial_guess, solver_options):
+    """
+    Compute a solution for an operating point of a problem using various solver methods and initial guesses.
+
+    This function aims to find a solution for a specified operating point. If the initial attempt fails, the function
+    will try to solve the problem using different algorithms and initial guesses
+
+    - The function first updates the problem's boundary conditions using the operating point.
+    - It attempts to solve the problem with the specified solver method. If it fails, it tries the Levenberg-Marquardt method.
+    - If the provided initial guess is an array, the function will attempt to solve the problem with a heuristic initial guess.
+    - The function also explores different initial guesses based on parameter arrays for parameters like 'R', 'eta_ts', 'eta_tt', and 'Ma_crit'.
+    - If all attempts fail, a warning message is printed.
+    - The function returns the solver object and the computed results, which can be further analyzed or used in subsequent calculations.
+
+    Parameters
+    ----------
+    operating_point : dict
+        A dictionary containing the operating point's parameters and values.
+
+    problem : object
+        An object representing the performance analysis problem
+
+    initial_guess : array-like or dict
+        The initial guess for the solver. If provided, it should not be scaled (scaling is handled internally).
+
+    solver_options : dict
+        A dictionary containing options for the solver
+        - If an initial guess is provided as an array, it will be used as is.
+        - If no initial guess is provided, default values for R, eta_tt, eta_ts, and Ma_crit
+            are used to generate an initial guess.
+        - If an initial guess is provided as a dictionary, it should include the necessary
+            parameters for the problem.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the solver object and the problem's results after computation.
+
+    """
+
+    # Initialize solver object
+    solver = NonlinearSystemSolver(
+        problem,
+        initial_guess,
+        method=solver_options["method"],
+        tol=solver_options["tolerance"],
+        max_iter=solver_options["max_iterations"],
+        derivative_method=solver_options["derivative_method"],
+        derivative_rel_step=solver_options["derivative_rel_step"],
+        display=solver_options["display_progress"],
+    )
+
+    return solver
 
 
 def find_closest_operation_point(current_op_point, operation_points, solution_data):
@@ -651,6 +540,11 @@ def validate_operation_point(op_point):
         )
 
 
+# ------------------------------------------------------------------------------------------ #
+# ------------------------------------------------------------------------------------------ #
+# ------------------------------------------------------------------------------------------ #
+
+
 class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
     """
     A class representing a nonlinear system problem for cascade analysis.
@@ -691,7 +585,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 pass
     """
 
-    def __init__(self, case_data):
+    def __init__(self, config):
         """
         Initialize a CascadesNonlinearSystemProblem.
 
@@ -700,29 +594,15 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         case_data : dict
             A dictionary containing case-specific data.
         """
-        
-        # Check and generate full geometry
-        geom.validate_axial_turbine_geometry(case_data["geometry"])
-        self.geometry = geom.calculate_full_geometry(case_data["geometry"])
-        geom_info = geom.check_axial_turbine_geometry(self.geometry)
-        print(geom_info)
-        print_dict(self.geometry)
-        
-        # Initalize fluid
-        self.fluid = FluidCoolProp_2Phase(case_data["BC"]["fluid_name"])
+
+        # Process turbine geometry
+        geom.validate_axial_turbine_geometry(config["geometry"])
+        self.geometry = geom.calculate_full_geometry(config["geometry"])
+        self.geom_info = geom.check_axial_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
-        self.BC = case_data["BC"]
-        self.model_options = case_data["model_options"]
-        self.reference_values = cs.get_reference_values(case_data["BC"], self.fluid)
+        self.model_options = config["model_options"]
         self.keys = []
-
-        # Define reference mass flow rate
-        v0 = self.reference_values["v0"]
-        d_is = self.reference_values["d_out_s"]
-        A_out = self.geometry["A_out"][-1]
-        m_ref = A_out * v0 * d_is
-        self.reference_values["m_ref"] = m_ref
 
     def get_values(self, x):
         """
@@ -739,14 +619,237 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             A tuple containing residuals and a list of keys for the residuals.
         """
         residuals, self.results = cs.evaluate_cascade_series(
-            x, self.BC, self.geometry, self.fluid, self.model_options, self.reference_values
+            x,
+            self.boundary_conditions,
+            self.geometry,
+            self.fluid,
+            self.model_options,
+            self.reference_values,
         )
-        
-        
+
         return np.array(list(residuals.values()))
-    
-    def compute_initial_guess(self, R, eta_tt, eta_ts, Ma_crit):
-        #FIXME
+
+    def update_boundary_conditions(self, operation_point):
+        """
+        Update the boundary conditions of the problem with the provided operation point.
+
+        This method updates the internal state of the object by setting new boundary conditions
+        as defined in the 'operation_point' dictionary. It also initializes a Fluid object
+        using the 'fluid_name' specified in the operation point.
+
+        The method computes additional properties and reference values like stagnation properties at
+        the inlet, exit static properties, spouting velocity, and reference mass flow rate.
+        These are stored in the object's internal state for further use in calculations.
+
+        Parameters
+        ----------
+        operation_point : dict
+            A dictionary containing the boundary conditions defining the operation point.
+            It must include the following keys:
+            - fluid_name: str, the name of the fluid to be used in the Fluid object.
+            - T0_in: float, the inlet temperature (in Kelvin).
+            - p0_in: float, the inlet pressure (in Pascals).
+            - p_out: float, the outlet pressure (in Pascals).
+            - omega: float, the rotational speed (in rad/s).
+            - alpha_in: float, the inlet flow angle (in degrees).
+
+        Returns
+        -------
+        None
+            This method does not return a value but updates the internal state of the object.
+
+        """
+
+        # Define current operating point
+        validate_operation_point(operation_point)
+        self.boundary_conditions = operation_point
+
+        # Initialize fluid object
+        self.fluid = FluidCoolProp_2Phase(operation_point["fluid_name"])
+
+        # Rename variables
+        p0_in = operation_point["p0_in"]
+        T0_in = operation_point["T0_in"]
+        p_out = operation_point["p_out"]
+
+        # Compute stagnation properties at inlet
+        state_in_stag = self.fluid.get_props(CP.PT_INPUTS, p0_in, T0_in)
+        h0_in = state_in_stag["h"]
+        s_in = state_in_stag["s"]
+
+        # Store the inlet stagnation (h,s) for the first stage
+        # TODO: Improve logic of implementation?
+        self.boundary_conditions["h0_in"] = h0_in
+        self.boundary_conditions["s_in"] = s_in
+
+        # Calculate exit static properties for a isentropic expansion
+        state_out_s = self.fluid.get_props(CP.PSmass_INPUTS, p_out, s_in)
+        h_isentropic = state_out_s["h"]
+        d_isenthalpic = state_out_s["d"]
+
+        # Calculate exit static properties for a isenthalpic expansion
+        state_out_h = self.fluid.get_props(CP.HmassP_INPUTS, h0_in, p_out)
+        s_isenthalpic = state_out_h["s"]
+
+        # Calculate spouting velocity
+        v0 = np.sqrt(2 * (h0_in - h_isentropic))
+
+        # Define a reference mass flow rate
+        A_out = self.geometry["A_out"][-1]
+        m_ref = A_out * v0 * d_isenthalpic
+
+        # Define reference_values
+        self.reference_values = {
+            "s_range": s_isenthalpic - s_in,
+            "s_min": s_in,
+            "v0": v0,
+            "h_out_s": h_isentropic,
+            "d_out_s": d_isenthalpic,
+            "m_ref": m_ref,
+            "angle_range": 180,
+            "angle_min": -90,
+            "delta_ref": 0.011 / 3e5 ** (-1 / 7),
+        }
+
+        return
+
+    def scale_to_real_values(self, x):
+        """
+        Convert a normalized solution vector back to real-world values.
+
+        Parameters
+        ----------
+        x: The normalized solution vector from the solver.
+        cascades_data: Dictionary containing reference values and number of cascades.
+
+        Returns
+        -------
+        An array of values converted back to their real-world scale.
+        """
+
+        # TODO Lasse: improve logic using dictionary with keys instead of array
+        # TODO Lasse/Roberto: Does it make sense to have a single function for scaling and unscaling if most of the code is the same?
+
+        v0 = self.reference_values["v0"]
+        s_range = self.reference_values["s_range"]
+        s_min = self.reference_values["s_min"]
+        angle_range = self.reference_values["angle_range"]
+        angle_min = self.reference_values["angle_min"]
+        number_of_cascades = self.geometry["number_of_cascades"]
+
+        # Slice x into actual and critical values
+        x_real = x.copy()[0 : 5 * number_of_cascades + 1]
+        xcrit_real = x.copy()[5 * number_of_cascades + 1 :]
+
+        # Convert x to real values
+        x_real[0] *= v0
+        xcrit_real *= v0  # Scale all critical values with v0
+        for i in range(number_of_cascades):
+            x_real[5 * i + 1] *= v0
+            x_real[5 * i + 2] *= v0
+            x_real[5 * i + 3] = x_real[5 * i + 3] * s_range + s_min
+            x_real[5 * i + 4] = x_real[5 * i + 4] * s_range + s_min
+            x_real[5 * i + 5] = x_real[5 * i + 5] * angle_range + angle_min
+            xcrit_real[3 * i + 2] = (
+                xcrit_real[3 * i + 2] / v0 * s_range + s_min
+            )  # Scale the entropy values of the critical variables
+
+        x_real = np.concatenate((x_real, xcrit_real))
+
+        return x_real
+
+    def scale_to_normalized_values(self, x):
+        """
+        Scale a solution vector from actual values to a normalized scale.
+
+        Parameters
+        ----------
+        x: The solution vector with actual values to be normalized.
+        cascades_data: Dictionary containing reference values and number of cascades.
+
+        Returns
+        -------
+        An array of values scaled to a normalized range for solver computations.
+        """
+        # TODO Lasse: improve logic using dictionary with keys instead of array
+
+        # Load parameters
+        v0 = self.reference_values["v0"]
+        s_range = self.reference_values["s_range"]
+        s_min = self.reference_values["s_min"]
+        angle_range = self.reference_values["angle_range"]
+        angle_min = self.reference_values["angle_min"]
+        number_of_cascades = self.geometry["number_of_cascades"]
+
+        # Slice x into actual and critical values
+        x_scaled = x.copy()[: 5 * number_of_cascades + 1]
+        xcrit_scaled = x.copy()[5 * number_of_cascades + 1 :]
+
+        # Scale x0
+        x_scaled[0] /= v0
+        xcrit_scaled /= v0  # Scale all critical values with v0
+
+        for i in range(number_of_cascades):
+            x_scaled[5 * i + 1] /= v0
+            x_scaled[5 * i + 2] /= v0
+            x_scaled[5 * i + 3] = (x_scaled[5 * i + 3] - s_min) / s_range
+            x_scaled[5 * i + 4] = (x_scaled[5 * i + 4] - s_min) / s_range
+            x_scaled[5 * i + 5] = (x_scaled[5 * i + 5] - angle_min) / angle_range
+
+            xcrit_scaled[3 * i + 2] = (
+                xcrit_scaled[3 * i + 2] * v0 - s_min
+            ) / s_range  # Scale the entropy values of the critical variables
+
+        x_scaled = np.concatenate((x_scaled, xcrit_scaled))
+
+        return x_scaled
+
+    def get_initial_guess(self, initial_guess=None):
+        # TODO Lasse: Improve the logic of this function based on the new configuration file
+        # TODO Lasse: It should be possible to provide a dictionary of unscaled independent variables, or a dictionary with enthalpy-split fractions and efficiencies
+        # TODO Lasse/Roberto: Should this function be moved within the problem object.
+        # TODO It's logical that the problem object has all the methods related to initial guess generation for the specific problem
+        #
+        # ATTENTION! Using an np.ndarray as initial guess will not generate an initial guess.
+        # This is used when using a previous converged solution as initial guess
+        # This behavior should be changed only after the code has been updated to store the solution vector as a dictionary
+        #
+
+        # Define initial guess
+        if isinstance(initial_guess, np.ndarray):
+            pass  # Keep the initial guess as it is
+        else:
+            if initial_guess is None:
+                print("Generating heuristic initial guess with default parameters")
+                R = 0.5
+                eta_tt = 0.9
+                eta_ts = 0.8
+                Ma_crit = 0.95
+            elif isinstance(initial_guess, dict):
+                print(
+                    "Generating heuristic initial guess with the specific parameters."
+                )
+                R = initial_guess["R"]
+                eta_tt = initial_guess["eta_tt"]
+                eta_ts = initial_guess["eta_ts"]
+                Ma_crit = initial_guess["Ma_crit"]
+            else:
+                raise ValueError("Initial guess must be a dictionary.")
+
+            # Compute initial guess using several approximations
+            initial_guess = self.compute_heuristic_initial_guess(
+                R, eta_tt, eta_ts, Ma_crit
+            )
+
+        # Always normalize initial guess
+        initial_guess = self.scale_to_normalized_values(initial_guess)
+
+        # Store keys as an attribute in problem
+        # problem.keys = initial_guess.keys()
+
+        return initial_guess
+
+    def compute_heuristic_initial_guess(self, R, eta_tt, eta_ts, Ma_crit):
         """
         Generate an initial guess for the root-finder and design optimization.
 
@@ -762,21 +865,23 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             numpy.ndarray: Initial guess for the root-finder.
         """
 
+        # TODO Lasse - Extend logic to multi-stage turbines
+        # TODO Lasse - Use dictionary keys instead of array indices
+        # TODO Lasse - Update docstring
+
         # Load necessary parameters
-        p0_in = self.BC["p0_in"]
-        T0_in = self.BC["T0_in"]
-        p_out = self.BC["p_out"]
-        angular_speed = self.BC["omega"]
         fluid = self.fluid
+        p0_in = self.boundary_conditions["p0_in"]
+        T0_in = self.boundary_conditions["T0_in"]
+        p_out = self.boundary_conditions["p_out"]
+        angular_speed = self.boundary_conditions["omega"]
         number_of_cascades = self.geometry["number_of_cascades"]
         number_of_stages = self.geometry["number_of_stages"]
         h_out_s = self.reference_values["h_out_s"]
         geometry = self.geometry
 
         # Inlet stagnation state
-        stagnation_properties_in = fluid.compute_properties_meanline(
-            CP.PT_INPUTS, p0_in, T0_in
-        )
+        stagnation_properties_in = fluid.get_props(CP.PT_INPUTS, p0_in, T0_in)
         h0_in = stagnation_properties_in["h"]
         d0_in = stagnation_properties_in["d"]
         s_in = stagnation_properties_in["s"]
@@ -785,9 +890,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         h_out = h0_out - 0.5 * v_out**2
 
         # Exit static state for expansion with guessed efficiency
-        static_properties_exit = fluid.compute_properties_meanline(
-            CP.HmassP_INPUTS, h_out, p_out
-        )
+        static_properties_exit = fluid.get_props(CP.HmassP_INPUTS, h_out, p_out)
         s_out = static_properties_exit["s"]
         d_out = static_properties_exit["d"]
 
@@ -814,14 +917,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             h01 = h0_in
 
             for i in range(number_of_stages):
-                
-                
                 # Iterate through each stage to calculate guess for velocity
                 index_stator = i * 2
                 index_rotor = i * 2 + 1
-                
+
                 # Define cascade for labelling
-                cascade = '_' + str(index_stator+1)
+                cascade = "_" + str(index_stator + 1)
 
                 # 3 stations: 1: stator inlet 2: stator exit/rotor inlet, 3: rotor exit
                 # Rename parameters
@@ -852,20 +953,20 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 w2 = vel2_data["w"]
                 h0rel2 = h2 + 0.5 * w2**2
                 x0 = np.append(x0, np.array([v2, v2, s2, s2, alpha2]))
-                labels += ["w_throat"+cascade, 
-                           "w_out"+cascade,
-                           "s_throat"+cascade,
-                           "s_out"+cascade,
-                           "beta_out"+cascade]
+                labels += [
+                    "w_throat" + cascade,
+                    "w_out" + cascade,
+                    "s_throat" + cascade,
+                    "s_out" + cascade,
+                    "beta_out" + cascade,
+                ]
 
                 # Critical condition at stator exit
-                static_properties_2 = fluid.compute_properties_meanline(
-                    CP.HmassSmass_INPUTS, h2, s2
-                )
+                static_properties_2 = fluid.get_props(CP.HmassSmass_INPUTS, h2, s2)
                 a2 = static_properties_2["a"]
                 d2 = static_properties_2["d"]
                 h2_crit = h01 - 0.5 * a2**2
-                static_properties_2_crit = fluid.compute_properties_meanline(
+                static_properties_2_crit = fluid.get_props(
                     CP.HmassSmass_INPUTS, h2_crit, s2
                 )
                 d2_crit = static_properties_2_crit["d"]
@@ -875,12 +976,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 v1_crit = vm1_crit / math.cosd(alpha1)
                 x0_crit = np.append(x0_crit, np.array([v1_crit, v2_crit, s2]))
                 # x0 = np.append(x0, np.array([v1_crit, v2_crit, s2]))
-                labels += ["v*_in"+cascade,
-                           "w*_out"+cascade,
-                           "s*_out"+cascade]
-                
+                labels += ["v*_in" + cascade, "w*_out" + cascade, "s*_out" + cascade]
+
                 # Update casacde for labelling
-                cascade = '_'+str(index_rotor+1)
+                cascade = "_" + str(index_rotor + 1)
 
                 # Condition at rotor exit
                 w3 = np.sqrt(2 * (h0rel2 - h3))
@@ -890,19 +989,19 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 vm3 = vel3_data["v_m"]
                 h03 = h3 + 0.5 * v3**2
                 x0 = np.append(x0, np.array([w3, w3, s3, s3, beta3]))
-                labels += ["w_throat"+cascade, 
-                           "w_out"+cascade,
-                           "s_throat"+cascade,
-                           "s_out"+cascade,
-                           "beta_out"+cascade]
+                labels += [
+                    "w_throat" + cascade,
+                    "w_out" + cascade,
+                    "s_throat" + cascade,
+                    "s_out" + cascade,
+                    "beta_out" + cascade,
+                ]
 
                 # Critical condition at rotor exit
-                static_properties_3 = fluid.compute_properties_meanline(
-                    CP.HmassSmass_INPUTS, h3, s3
-                )
+                static_properties_3 = fluid.get_props(CP.HmassSmass_INPUTS, h3, s3)
                 a3 = static_properties_3["a"]
                 h3_crit = h0rel2 - 0.5 * a3**2
-                static_properties_3_crit = fluid.compute_properties_meanline(
+                static_properties_3_crit = fluid.get_props(
                     CP.HmassSmass_INPUTS, h3_crit, s3
                 )
                 d3_crit = static_properties_3_crit["d"]
@@ -914,9 +1013,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 vm1_crit = m2_crit / (d1 * A1)
                 v1_crit = vm1_crit / math.cosd(alpha1)
                 # x0 = np.append(x0, np.array([v1_crit, v2_crit, s2]))
-                labels += ["v*_in"+cascade,
-                           "w*_out"+cascade,
-                           "s*_out"+cascade]
+                labels += ["v*_in" + cascade, "w*_out" + cascade, "s*_out" + cascade]
 
                 # Inlet stagnation state for next cascade equal stagnation state for current cascade
                 h01 = h03
@@ -947,12 +1044,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             x0 = np.append(x0, np.array([v3, v3, s3, s3, alpha3]))
 
             # Critical conditions
-            static_properties_3 = fluid.compute_properties_meanline(
-                CP.PSmass_INPUTS, h3, s3
-            )
+            static_properties_3 = fluid.get_props(CP.PSmass_INPUTS, h3, s3)
             a3 = static_properties_3["a"]
             h3_crit = h01 - 0.5 * a3**2
-            static_properties_3_crit = fluid.compute_properties_meanline(
+            static_properties_3_crit = fluid.get_props(
                 CP.HmassSmass_INPUTS, h3_crit, s3
             )
             d3_crit = static_properties_3_crit["d"]
@@ -973,13 +1068,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         return x0
 
 
-
 # class CascadesOptimizationProblem(OptimizationProblem):
 #     def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
 #         cs.calculate_number_of_stages(cascades_data)
 #         cs.update_fixed_params(cascades_data)
 #         cs.check_geometry(cascades_data)
-        
+
 #         # Define reference mass flow rate
 #         v0 = cascades_data["fixed_params"]["v0"]
 #         d_in = cascades_data["fixed_params"]["d0_in"]

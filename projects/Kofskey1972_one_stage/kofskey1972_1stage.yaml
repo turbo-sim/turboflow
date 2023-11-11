@@ -2,7 +2,7 @@ operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/2.298
+  p_out: [13.8e4/2.298, 13.8e4/2.5]
   omega: 1627
   alpha_in: 0
 
@@ -15,40 +15,18 @@ performance_map:
   alpha_in: 0
 
 model_options:
-  loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
+  loss_model: benner
   displacement_thickness : 0
   deviation_model : aungier
   choking_condition : deviation
 
-solver:
+solver_options:
   method: hybr
   tolerance: 1e-9
   max_iterations: 50
   derivative_method: "2-point"
   derivative_rel_step: 1e-4
   display_progress: True
-
-
-#geometry:
-#  n_cascades: 2
-#  s:         [1.8294e-2, 1.524e-2]         # Pitch
-#  c:         [2.616e-2, 2.606e-2]          # Chord
-#  b:         [1.9123e-2, 2.2326e-2]        # Axial chord
-#  H:         [3.363e-2, 3.658e-2]          # Blade height
-#  t_max:     [0.505e-2, 0.447e-2]          # Maximum blade thickness
-#  o:         [0.7731e-2, 0.7249e-2]        # Throat opening
-#  We:        [50, 50]                      # Wedge angle
-#  le:        [0.127e-2, 0.081e-2]          # Leading edge radius
-#  te:        [0.050e-2, 0.050e-2]          # Trailing edge thickness
-#  xi:        [43.03, 31.0]                 # Stagger angle
-#  theta_in:  [0, 29.6]                     # Inlet metal angle
-#  theta_out: [65.00, -61.60]               # Exit metal angle
-#  t_cl:      [0, 0.030e-2]                 # Tip clearance
-#  r_in:      [10.16e-2, 10.16e-2]          # Radius at cascade inlet
-#  r_out:     [10.16e-2, 10.16e-2]          # Radius at cascade outlet
-#  r_ht_in:   [0.7160, 0.7160]              # Hub to tip ratio
-#  A_in:      [0.021468, 0.021468]          # Inlet area
-#  A_out:     [0.021468, 0.025197]          # Exit area
 
 geometry:
   cascade_type: ["stator", "rotor"]

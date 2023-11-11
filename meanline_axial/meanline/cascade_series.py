@@ -335,9 +335,12 @@ def evaluate_cascade(
     # Add mass flow rate error
     m_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
     m_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
-    
-    residuals["m_err_throat"] = m_error_throat
-    residuals["m_err_exit"] = m_error_exit
+
+    # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
+    # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
+    # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
+    residuals["m_err_throat"] = m_error_throat / m_ref
+    residuals["m_err_exit"] = m_error_exit / m_ref
 
     # Calculate critical state
     critical_cascade_input["h0_in"] = cascade_inlet_input["h0"]
@@ -390,7 +393,7 @@ def evaluate_cascade(
     residuals[choking_condition] = residual
 
     # Add cascade results to results structure
-    static_properties_isentropic_expansion = fluid.compute_properties_meanline(
+    static_properties_isentropic_expansion = fluid.get_props(
         CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"]
     )
     dhs = exit_plane["h"] - static_properties_isentropic_expansion["h"]
@@ -431,20 +434,20 @@ def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_re
 
     # Calculate static properties
     h = h0 - 0.5 * v**2
-    static_properties = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
-    stagnation_properties = fluid.compute_properties_meanline(
+    stagnation_properties = fluid.get_props(
         CP.HmassSmass_INPUTS, h0, s
     )
     stagnation_properties = add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relatove stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.compute_properties_meanline(
+    relative_stagnation_properties = fluid.get_props(
         CP.HmassSmass_INPUTS, h0_rel, s
     )
     relative_stagnation_properties = add_string_to_keys(
@@ -515,21 +518,21 @@ def evaluate_exit(
 
     # Calculate static properties
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
-    static_properties = fluid.compute_properties_meanline(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.compute_properties_meanline(
+    stagnation_properties = fluid.get_props(
         CP.HmassSmass_INPUTS, h0, s
     )
     stagnation_properties = add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relatove stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.compute_properties_meanline(
+    relative_stagnation_properties = fluid.get_props(
         CP.HmassSmass_INPUTS, h0_rel, s
     )
     relative_stagnation_properties = add_string_to_keys(
@@ -933,7 +936,7 @@ def evaluate_inter_cascade_space(
     alpha_in = math.arctand(v_t_in / v_m_in)
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
-    stagnation_properties = fluid.compute_properties_meanline(
+    stagnation_properties = fluid.get_props(
         CP.DmassHmass_INPUTS, rho_in, h_in
     )
     s_in = stagnation_properties["s"]
@@ -1019,52 +1022,7 @@ def calculate_eta_drop_fractions(results, number_of_cascades, reference_values):
     return loss_fractions
 
 
-def get_reference_values(BC, fluid):
-    # Renamme variables
-    p0_in = BC["p0_in"]
-    T0_in = BC["T0_in"]
-    p_out = BC["p_out"]
 
-    # Compute stagnation properties at inlet
-    stagnation_properties = fluid.compute_properties_meanline(
-        CP.PT_INPUTS, p0_in, T0_in
-    )
-    h0_in = stagnation_properties["h"]
-    s_in = stagnation_properties["s"]
-
-    # Calculate exit static properties for a isentropic expansion
-    isentropic_expansion_properties = fluid.compute_properties_meanline(
-        CP.PSmass_INPUTS, p_out, s_in
-    )
-    h_is = isentropic_expansion_properties["h"]
-    d_is = isentropic_expansion_properties["d"]
-
-    # Calculate exit static properties for a isenthalpic process to the given exit pressure
-    isenhalpic_process_properties = fluid.compute_properties_meanline(
-        CP.HmassP_INPUTS, h0_in, p_out
-    )
-    s_isenthalpic = isenhalpic_process_properties["s"]
-
-    # Calculate spouting velocity
-    v0 = np.sqrt(2 * (h0_in - h_is))
-
-    # Add values to BC
-    BC["h0_in"] = h0_in
-    BC["s_in"] = s_in
-
-    # Define reference_values
-    reference_values = {
-        "s_range": s_isenthalpic - s_in,
-        "s_min": s_in,
-        "v0": v0,
-        "h_out_s": h_is,
-        "d_out_s": d_is,
-        "angle_range": 180,
-        "angle_min": -90,
-        "delta_ref": 0.011 / 3e5 ** (-1 / 7),
-    }
-
-    return reference_values
 
 
 def calculate_stage_parameters(number_of_stages, planes):
