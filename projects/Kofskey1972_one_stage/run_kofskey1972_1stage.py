@@ -21,6 +21,8 @@ CASE = 1
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 config = ml.read_configuration_file(CONFIG_FILE)
 
+ml.print_dict(config)
+
 # Run calculations
 if CASE == 1:
     # Compute performance map according to config file
@@ -31,7 +33,8 @@ if CASE == 1:
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_map"]
-    omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    # omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
     ml.compute_performance(operation_points, config)
 

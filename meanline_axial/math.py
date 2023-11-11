@@ -204,7 +204,7 @@ def _smooth_max_pnorm(x, alpha, axis=None, keepdims=False):
 def smooth_abs(x, method="quadratic", epsilon=1e-5):
     r"""
     Compute a smooth approximation of the absolute value function according to the specified method.
- 
+
     1. The quadratic approximation is given by :cite:p:`ramirez_x_2013`:
 
     .. math::
@@ -268,9 +268,11 @@ def _smooth_abs_quadratic(x, epsilon):
     """Quadratic approximation of the absolute value function."""
     return np.sqrt(x**2 + epsilon)
 
+
 def _smooth_abs_tanh(x, epsilon):
     """Hyperbolic tangent approximation of the absolute value function."""
     return x * np.tanh(x / epsilon)
+
 
 def _smooth_abs_logcosh(x, epsilon):
     """Log-cosh approximation of the absolute value function."""
@@ -281,31 +283,48 @@ def sind(x):
     """Compute the sine of an angle given in degrees."""
     return np.sin(x * np.pi / 180)
 
+
 def cosd(x):
     """Compute the cosine of an angle given in degrees."""
 
     return np.cos(x * np.pi / 180)
 
+
 def tand(x):
     """Compute the tangent of an angle given in degrees."""
     return np.tan(x * np.pi / 180)
+
 
 def arcsind(x):
     """Compute the arcsine of a value and return the result in degrees."""
     return np.arcsin(x) * 180 / np.pi
 
+
 def arccosd(x):
     """Compute the arccosine of a value and return the result in degrees."""
     return np.arccos(x) * 180 / np.pi
+
 
 def arctand(x):
     """Compute the arctangent of a value and return the result in degrees."""
     return np.arctan(x) * 180 / np.pi
 
+
 def is_odd(number):
     """Check if a number is odd. Returns True if the provided number is odd, and False otherwise."""
     return number % 2 != 0
 
+
 def is_even(number):
     """Check if a number is even. Returns True if the provided number is even, and False otherwise."""
     return number % 2 == 0
+
+
+def all_numeric(array):
+    """Check if all items in Numpy array are numeric (floats or ints)"""
+    return np.issubdtype(array.dtype, np.number)
+
+
+def all_non_negative(array):
+    "Check if all items in Numpy array are non-negative"
+    return np.all(array >= 0)

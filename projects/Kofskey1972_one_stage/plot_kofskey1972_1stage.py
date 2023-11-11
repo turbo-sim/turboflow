@@ -26,7 +26,11 @@ CONFIG_FILE = "kofskey1972_1stage.yaml"
 
 
 cascades_data = ml.read_configuration_file(CONFIG_FILE)
-design_point = cascades_data["operation_points"][0]
+
+if isinstance(cascades_data["operation_points"], list):
+    design_point = cascades_data["operation_points"][0]
+else:
+    design_point = cascades_data["operation_points"]
 
 Case = 1
 
@@ -245,7 +249,7 @@ elif Case == 1:
     # Load prefromance data
     performance_data = ml.plot_functions.load_data(filename)
 
-    lines = ["m_crit_1", "m_crit_2", "m_2"]
+    lines = ["m_crit_1", "m_crit_2", "mass_flow_rate"]
     fig1, ax1 = ml.plot_functions.plot_lines(
         performance_data,
         "pr_ts",
@@ -275,7 +279,7 @@ elif Case == 1:
         "pr_ts",
         lines,
         xlabel="Total-to-static pressure ratio",
-        ylabel="Beta [rad]",
+        ylabel="Beta [deg]",
         close_fig=False,
     )
 
@@ -295,26 +299,26 @@ elif Case == 1:
     # lines = ["alpha_4", "alpha_crit_2"]
     # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Alpha [rad]", close_fig = False)
 
-    lines = ["w_crit_2", "w_5", "w_6"]
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Velocity [m/s]",
-        close_fig=False,
-    )
-    # ax1.set_xlim([3,3.5])
+    # lines = ["w_crit_2", "w_5", "w_6"]
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     performance_data,
+    #     "pr_ts",
+    #     lines,
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Velocity [m/s]",
+    #     close_fig=False,
+    # )
+    # # ax1.set_xlim([3,3.5])
 
-    lines = ["d_crit_2", "d_5", "d_6"]
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Density [kg/m^3]",
-        close_fig=False,
-    )
+    # lines = ["d_crit_2", "d_5", "d_6"]
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     performance_data,
+    #     "pr_ts",
+    #     lines,
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Density [kg/m^3]",
+    #     close_fig=False,
+    # )
     # ax1.set_xlim([3,3.5])
 
     # Show figures

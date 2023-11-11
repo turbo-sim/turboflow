@@ -1,15 +1,6 @@
 import numpy as np
 from .. import math
 
-# Function to check if all items in the array are numeric (floats or ints)
-def all_numeric(arr):
-    return np.issubdtype(arr.dtype, np.number)
-
-
-# Function to check if all items in the array are non-negative
-def all_non_negative(arr):
-    return np.all(arr >= 0)
-
 
 def validate_axial_turbine_geometry(geom, display=False):
     """
@@ -53,6 +44,7 @@ def validate_axial_turbine_geometry(geom, display=False):
         "thickness_te",
         "tip_clearance",
         "thickness_max",
+        "throat_location_fraction",
     }
 
     # Angular variables need not be non-negative
@@ -103,17 +95,17 @@ def validate_axial_turbine_geometry(geom, display=False):
                 )
 
         # Check that values of parameters are numeric
-        if not all_numeric(value):
+        if not math.all_numeric(value):
             raise ValueError(
                 f"Parameter '{key}' must be an array of numeric types. Current value: {value}"
             )
 
         # Check that non-angle variables are not negative
-        if key not in angle_keys and not np.all(value >= 0):
+        if key not in angle_keys and not math.all_non_negative(value):
             raise ValueError(
                 f"Parameter '{key}' must be an array of non-negative numbers. Current value: {value}"
             )
-    
+
     msg = "The structure of the turbine geometry parameters is valid"
     if display:
         print(msg)
@@ -121,24 +113,33 @@ def validate_axial_turbine_geometry(geom, display=False):
     return msg
 
 
-def calculate_throat_radius(radius_in, radius_out):
+def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     """
-    Calculate the throat radius using the given rule by Ainley and Mathieson,
-    which is (1/6)*radius_in + (5/6)*radius_out.
+    Calculate the throat radius as a weighted average of the inlet and outlet radii.
+
+    This approach to estimate the area at the throat is inspired by the method
+    described in Eq. (3) of :cite:`ainley_method_1951`. The throat radius is computed
+    as a linear combination of the inlet and outlet radii, weighted by the location of
+    the throat expressed as a fraction of the axial length of the cascade.
+    For instance, a 'throat_location_fraction' of 5/6 would return the throat radius as:
+    (1/6)*radius_in + (5/6)*radius out.
 
     Parameters:
     -----------
-    radius_in: np.array
+    radius_in : np.array
         The radius values at the inlet sections.
-    radius_out: np.array
+    radius_out : np.array
         The radius values at the outlet sections.
+    throat_location_fraction : float
+        The fraction used to weight the inlet and outlet radii in the calculation.
 
     Returns:
     --------
     np.array
-        The calculated throat radius values.
+        The calculated throat radius values, representing the weighted average of the
+        inlet and outlet radii based on the specified throat location.
     """
-    return (1 / 6) * radius_in + (5 / 6) * radius_out
+    return throat_location_fraction * radius_in + throat_location_fraction * radius_out
 
 
 def calculate_full_geometry(geometry):
@@ -162,15 +163,18 @@ def calculate_full_geometry(geometry):
 
     # Get number of stages
     if number_of_cascades > 1:
-      if math.is_even(number_of_cascades):
-          number_of_stages = int(number_of_cascades/2)
-      else:
-          number_of_stages = int((number_of_cascades-1)/2)
+        if math.is_even(number_of_cascades):
+            number_of_stages = int(number_of_cascades / 2)
+        else:
+            number_of_stages = int((number_of_cascades - 1) / 2)
     else:
         number_of_stages = 0
 
     # Compute axial chord
     axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
+
+    # Get the location of the throat as a fraction of meridional length
+    throat_frac = geom["throat_location_fraction"]
 
     # Extract initial radii and compute mean radius
     radius_hub = geom["radius_hub"]
@@ -184,24 +188,29 @@ def calculate_full_geometry(geometry):
     radius_mean_in = radius_mean[::2]  # Even indices: in
     radius_mean_out = radius_mean[1::2]  # Odd indices: out
     radius_mean_throat = calculate_throat_radius(
-        radius_mean_in, radius_mean_out
-    )  # Calculate throat radii for mean section
-    # TODO throat area calculation correct
+        radius_mean_in, radius_mean_out, throat_frac
+    )
 
     # Repeat calculations for hub
     radius_hub_in = radius_hub[::2]
     radius_hub_out = radius_hub[1::2]
-    radius_hub_throat = calculate_throat_radius(radius_hub_in, radius_hub_out)
+    radius_hub_throat = calculate_throat_radius(
+        radius_hub_in, radius_hub_out, throat_frac
+    )
 
     # Repeat calculations for tip
     radius_tip_in = radius_tip[::2]
     radius_tip_out = radius_tip[1::2]
-    radius_tip_throat = calculate_throat_radius(radius_tip_in, radius_tip_out)
+    radius_tip_throat = calculate_throat_radius(
+        radius_tip_in, radius_tip_out, throat_frac
+    )
 
     # Repeat calculations for shroud
     radius_shroud_in = radius_shroud[::2]
     radius_shroud_out = radius_shroud[1::2]
-    radius_shroud_throat = calculate_throat_radius(radius_shroud_in, radius_shroud_out)
+    radius_shroud_throat = calculate_throat_radius(
+        radius_shroud_in, radius_shroud_out, throat_frac
+    )
 
     # Compute hub to tip radius ratio
     hub_tip_ratio = radius_hub / radius_tip
@@ -222,7 +231,7 @@ def calculate_full_geometry(geometry):
     height = (height_in + height_out) / 2
 
     # Compute flaring angle
-    flaring_angle = np.arctan((height_out-height_in)/(2*axial_chord))
+    flaring_angle = np.arctan((height_out - height_in) / (2 * axial_chord))
 
     # Compute geometric ratios
     aspect_ratio = height / axial_chord
@@ -235,7 +244,7 @@ def calculate_full_geometry(geometry):
 
     # Create a dictionary with the newly computed parameters
     new_parameters = {
-        "number_of_stages" : number_of_stages,
+        "number_of_stages": number_of_stages,
         "number_of_cascades": number_of_cascades,
         "axial_chord": axial_chord,
         "radius_mean": radius_mean,
@@ -282,33 +291,52 @@ def check_axial_turbine_geometry(geometry, display=True):
 
     .. table:: Recommended Parameter Ranges and References
 
-        +------------------------+------------+------------+--------------------------------+
-        | Variable               | LowerLimit | UpperLimit | Reference(s)                   |
-        +========================+============+============+================================+
-        | chord                  | 5e-3       | inf        | Manufacturing                  |
-        +------------------------+------------+------------+--------------------------------+
-        | height                 | 5e-3       | inf        | Manufacturing                  |
-        +------------------------+------------+------------+--------------------------------+
-        | thickness_max          | 1e-3       | inf        | Manufacturing                  |
-        +------------------------+------------+------------+--------------------------------+
-        | thickness_te           | 5e-4       | inf        | Manufacturing                  |
-        +------------------------+------------+------------+--------------------------------+
-        | tip_clearance          | 2e-4       | inf        | Manufacturing                  |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
-        |                        |            |            |                                |
-        +------------------------+------------+------------+--------------------------------+
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Variable                 | Lower Limit  | Upper Limit  | Reference(s)                                     |
+        +==========================+==============+==============+==================================================+
+        | Blade chord              | 5.0 mm       | inf          | Manufacturing                                    |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Blade height             | 5.0 mm       | inf          | Manufacturing                                    |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Blade maximum thickness  | 1.0 mm       | inf          | Manufacturing                                    |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Blade trailing edge      | 0.5 mm       | inf          | Manufacturing                                    |
+        | thickness                |              |              |                                                  |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Tip clearance            | 0.2 mm       | inf          | Manufacturing                                    |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Hub to tip radius ratio  | 0.50         | 0.95         | Figure (6) of :cite:`kacker_mean_1982`           |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Aspect ratio             | 0.80         | 5.00         | Section (7.3) of :cite:`saravanamuttoo_gas_2008` |
+        |                          |              |              | Figure (13) of :cite:`kacker_mean_1982`          |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Pitch to chord ratio     | 0.30         | 1.10         | Figure (4) of :cite:`ainley_method_1951`         |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Stagger angle            | -10 deg      | +70 deg      | Figure (5) of :cite:`kacker_mean_1982`           |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Leading edge metal angle | -60 deg      | +25 deg      | Figure (5) of :cite:`kacker_mean_1982`           |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Trailing edge metal angle| +40 deg      | +80 deg      | Figure (4) of :cite:`ainley_method_1951`         |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Leading wedge angle      | +10 deg      | +60 deg      | Figure (2) from :cite:`benner_influence_1997`    |
+        |                          |              |              | Figure (10) from :cite:`pritchard_eleven_1985`   |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Leading edge diameter to | 0.03         | 0.30         | Table (1) :cite:`moustapha_improved_1990`        |
+        | chord ratio              |              |              |                                                  |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Maximum thickness to     | 0.05         | 0.30         | Figure (4) of :cite:`kacker_mean_1982`           |
+        | chord ratio              |              |              |                                                  |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Trailing edge thickness  | 0.00         | 0.40         | Figure (14) of :cite:`kacker_mean_1982`          |
+        | to opening ratio         |              |              |                                                  |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Tip clearance to height  | 0.00         | 0.05         | Figure (7) of :cite:`dunham_improvements_1970`   |
+        | ratio                    |              |              |                                                  |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Throat location fraction | 0.50         | 1.00         | Equation (3) of :cite:`ainley_method_1951`       |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+
+    The ranges of metal angles and stagger angles are reversed for rotor cascades
 
     Parameters:
     -----------
@@ -319,127 +347,48 @@ def check_axial_turbine_geometry(geometry, display=True):
     list: A list of messages with a summary of the checks.
     """
 
-    # TODO: Check that this function behaves as intended
-    # Make table of correct values and give reference to motivation
-    # TODO angles are correct for rotor/statos
-    # Tip clearance can be zero for rotor
-    # TODO angles in degree
-    # TODO flaring angle calculation
-    # - The tip clearance can be zero for stator blades
-    # Saravanamutttoo
-    # % Flow angle  opening to pitch rule {343--344}
-    # % Flaring angles p.~332
-    # % Angle convention steam-gas 316
-    # % Aspect ratio values p.~345
-    # % Axial spacing values p.~333
-    # % 2D flow assumption hub-tip-ratio p.~204
-
-    msgs = []
-    cascade_types = geometry['cascade_type']  # Assuming 'cascade_type' is directly within 'geometry'
-    warnings = []  # List to store parameters with "WARNING" status
-    # Initialize a list to store variables outside the recommended range
-    outside_range_variables = []
-
-
     # Define good practice ranges for each parameter
     recommended_ranges = {
-        "chord": {"min": 5e-3, "max": np.inf},  # Manufacturing
-        "height": {"min": 5e-3, "max": np.inf},  # Manufacturing
-        "thickness_max": {"min": 1e-3, "max": np.inf},  # Manufacturing
-        "thickness_te": {"min": 5e-4, "max": np.inf},  # Manufacturing
-        "tip_clearance": {"min": 2e-4, "max": np.inf},  # Manufacturing
-        "hub_tip_ratio": {
-            "min": 0.50,
-            "max": 0.95,
-        },  # Figure 6 of :cite:`kacker_mean_1982`
-        "aspect_ratio": {
-            "min": 0.8,
-            "max": 5.0,
-        },  # Section 7.3 of :cite:`saravanamuttoo_gas_2008` and Figure 13 of :cite:`kacker_mean_1982`
-        "pitch_chord_ratio": {
-            "min": 0.3,
-            "max": 1.1,
-        },  # Figure 4 of :cite:`ainley_method_1951`
-        "stagger_angle": {
-            "min": -10,
-            "max": +70,
-        },  # Figure 5 of :cite:`kacker_mean_1982`
-        "metal_angle_le": {
-            "min": -60,
-            "max": +25,
-        },  # Figure 5 of :cite:`kacker_mean_1982`
-        "metal_angle_te": {
-            "min": +40,
-            "max": +80,
-        },  # Figure 4 of :cite:`ainley_method_1951`
-        "wedge_angle_le": {
-            "min": 10,
-            "max": 60,
-        },  # Figure 2 from :cite:`benner_influence_1997` and Figure 10 from :cite:`pritchard_eleven_1985`
-        "diameter_le_chord_ratio": {
-            "min": 0.03,
-            "max": 0.30,
-        },  # Table 1 :cite:`moustapha_improved_1990`
-        "thickness_max_chord_ratio": {
-            "min": 0.05,
-            "max": 0.30,
-        },  # Figure 4 of :cite:`kacker_mean_1982`
-        "thickness_te_opening_ratio": {
-            "min": 0.00,
-            "max": 0.40,
-        },  # Figure 14 of :cite:`kacker_mean_1982`
-        "tip_clearance_height_ratio": {
-            "min": 0.0,
-            "max": 0.05,
-        },  # Figure 7 of :cite:`dunham_improvements_1970`
+        "chord": {"min": 5e-3, "max": np.inf},
+        "height": {"min": 5e-3, "max": np.inf},
+        "thickness_max": {"min": 1e-3, "max": np.inf},
+        "thickness_te": {"min": 5e-4, "max": np.inf},
+        "tip_clearance": {"min": 2e-4, "max": np.inf},
+        "hub_tip_ratio": {"min": 0.50, "max": 0.95},
+        "aspect_ratio": {"min": 0.8, "max": 5.0},
+        "pitch_chord_ratio": {"min": 0.3, "max": 1.1},
+        "stagger_angle": {"min": -10, "max": +70},
+        "metal_angle_le": {"min": -60, "max": +25},
+        "metal_angle_te": {"min": +40, "max": +80},
+        "wedge_angle_le": {"min": 10, "max": 60},
+        "diameter_le_chord_ratio": {"min": 0.03, "max": 0.30},
+        "thickness_max_chord_ratio": {"min": 0.05, "max": 0.30},
+        "thickness_te_opening_ratio": {"min": 0.00, "max": 0.40},
+        "tip_clearance_height_ratio": {"min": 0.0, "max": 0.05},
+        "throat_location_fraction": {"min": 0.5, "max": 1.0},
     }
 
     special_angles = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
 
-    # # Iterate over each good practice parameter and perform checks
-    # for parameter, limits in recommended_ranges.items():
-    #     if parameter == "cascade_type":
-    #         continue  # Skip the cascade_type entry
+    # Get the the type of cascade
+    cascade_types = geometry["cascade_type"]
 
-    #     lb, ub = limits["min"], limits["max"]
-    #     value_array = geometry[parameter]
-
-    #     for index, value in enumerate(np.atleast_1d(value_array)):
-
-    #         if parameter in special_angles:
-    #             blade_type = cascade_types[index]
-    #             if blade_type == "rotor":
-    #                 lb, ub = -ub, -lb  # Reverse limits for rotor blades
-
-    #         if parameter == "tip_clearance":
-    #             blade_type = cascade_types[index]
-    #             if blade_type == "stator":
-    #                     lb = 0
-
-
-    #         if not lb <= value <= ub:
-    #             msgs.append(
-    #                 f"{parameter}[{index}]={value:0.4f} is out of recommended range ({lb}, {ub}) for {blade_type}."
-    #             )
-
-
-    # if not msgs:
-    #     msgs.append("All parameters are within recommended ranges")
-
-    # Header for the geometry report
-
+    # Define report width
     report_width = 80
 
+    # Define report title
+    msgs = []
     msgs.append("-" * report_width)  # Horizontal line
-
     msgs.append("Axial turbine geometry Report".center(report_width))
     msgs.append("-" * report_width)  # Horizontal line
 
-
-    # Table header with four columns
+    # Define table header with four columns
     table_header = f" {'Parameter':<34}{'Value':>8}{'Range':>20}{'In range?':>14}"
     msgs.append(table_header)
     msgs.append("-" * report_width)  # Horizontal line
+
+    # Initialize a list to store variables outside the recommended range
+    vars_outside_range = []
 
     # Iterate over each good practice parameter and perform checks
     for parameter, limits in recommended_ranges.items():
@@ -450,7 +399,6 @@ def check_axial_turbine_geometry(geometry, display=True):
         value_array = geometry[parameter]
 
         for index, value in enumerate(np.atleast_1d(value_array)):
-
             # Determine cascade type for special cases
             blade_type = cascade_types[index % len(cascade_types)]
 
@@ -473,33 +421,29 @@ def check_axial_turbine_geometry(geometry, display=True):
 
             # Append variables outside the recommended range to the list
             if not in_range:
-                outside_range_variables.append(f"{parameter}_{index+1}")
-
+                vars_outside_range.append(f"{parameter}_{index+1}")
 
     # Footer for the geometry report
     msgs.append("-" * report_width)  # Horizontal line
 
-
-    if not outside_range_variables:
+    if not vars_outside_range:
         msgs.append(" Report summary: All parameters are within recommended ranges.")
     else:
         msgs.append(" Report Summary: Some parameters are outside recommended ranges.")
-        for warning in outside_range_variables:
+        for warning in vars_outside_range:
             msgs.append(f"     - {warning}")
 
     # Footer for the geometry report
     msgs.append("-" * report_width)  # Horizontal line
 
-
+    # Concatenate lines into single string
     msg = "\n".join(msgs)
 
+    # Display the report
     if display:
         print(msg)
 
     return msg
-
-
-
 
 
 # def create_partial_geometry_from_optimization_variables(x_opt, cascade_data):
@@ -526,15 +470,21 @@ def check_axial_turbine_geometry(geometry, display=True):
 
 #     else:
 
-
-
 #  Two scenatios for optimization
 #  1. design from scratch
 #  2. design from existing geometry
-    # Calculate the x_opt from "geometry" entry of configuration file
-    # Getting the x_opt_0 is not a problem
-    # We still need to define the fixed parameters / DOF and also the ub/lb and the constraint values 
+# Calculate the x_opt from "geometry" entry of configuration file
+# Getting the x_opt_0 is not a problem
+# We still need to define the fixed parameters / DOF and also the ub/lb and the constraint values
 
-    # If config optimization defines initial guess for variable it uses it. If it does not define it, it tries to get it from geometyr. If geometry is not defined, then raises and error
-    # Something similar for the bounds of the optimization
+# If config optimization defines initial guess for variable it uses it. If it does not define it, it tries to get it from geometyr. If geometry is not defined, then raises and error
+# Something similar for the bounds of the optimization
 
+
+# TODO: Check that this function behaves as intended
+# Make table of correct values and give reference to motivation
+# TODO angles are correct for rotor/statos
+# Tip clearance can be zero for rotor
+# TODO angles in degree
+# TODO flaring angle calculation
+# TODO throat area calculation correct in cascade_series

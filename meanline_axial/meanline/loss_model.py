@@ -1,49 +1,127 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri May 20 10:49:45 2022
-
-@author: lasseba
-"""
-
 from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
 from . import loss_model_benner_moustapha as bm
 
+# Keys that the output loss dictionary must have
+KEYS_LOSSES = [
+    "loss_definition",
+    "loss_error",
+    "loss_total",
+    "loss_profile",
+    "loss_clearance",
+    "loss_secondary",
+    "loss_trailing",
+    "loss_incidence",
+]
 
-# Define a list of available loss models
-available_loss_models = ['ko', 'benner', 'moustapha','benner_moustapha', 'isentropic']
-
-def loss(cascade_data, lossmodel, is_throat = False):
+def evaluate_loss_model(loss_model_options, input_parameters):
     """
     Calculate loss coefficient based on the selected loss model.
 
     Args:
-        cascade_data (dict): Data for the cascade.
-        lossmodel (str): The selected loss model.
+        loss_model_options (dict): Options for the loss model.
+        input_parameters (dict): Input parameters required for loss model calculation.
 
     Returns:
-        list: [Y, loss_dict], where Y is the loss coefficient and loss_dict is a dictionary of loss components.
+        tuple: (Y, loss_dict), where Y is the loss coefficient and loss_dict is a dictionary of loss components.
     """
-    if lossmodel in available_loss_models:
-        if lossmodel == 'ko':
-            Y, loss_dict = ko.calculate_loss_coefficient(cascade_data)
-        elif lossmodel == 'benner':
-            Y, loss_dict = br.calculate_loss_coefficient(cascade_data, is_throat)
-        elif lossmodel == 'moustapha':
-            Y, loss_dict = mo.calculate_loss_coefficient(cascade_data, is_throat)
-        elif lossmodel == 'benner_moustapha':
-            Y, loss_dict = bm.calculate_loss_coefficient(cascade_data, is_throat)
-        elif lossmodel == 'isentropic':
-            loss_dict = {"Profile" : 0,
-                         "Incidence": 0,
-                         "Trailing": 0,
-                         "Secondary" : 0,
-                         "Clearance" : 0,
-                         "Total" : 0}
-            Y = 0
-            
-        return Y, loss_dict
-    else:
-        raise ValueError(f"Invalid loss model. Available options: {', '.join(available_loss_models)}")
+    # TODO improve docstring and add citations to the papers of each loss model
 
+    # Function mappings for each loss model
+    loss_model_functions = {
+        "kacker_okapuu": ko.compute_losses,
+        "moustapha": mo.compute_losses,
+        "benner": br.compute_losses,
+        "benner_moustapha": bm.compute_losses,
+        "isentropic": lambda _: {
+            "loss_profile": 0.0,
+            "loss_incidence": 0.0,
+            "loss_trailing": 0.0,
+            "loss_secondary": 0.0,
+            "loss_clearance": 0.0,
+            "loss_total": 0.0,
+        },
+    }
+
+    # Evaluate loss model
+    model = loss_model_options["model"]
+    if model in loss_model_functions:
+        loss_dict = loss_model_functions[model](input_parameters)
+    else:
+        options = ", ".join(f"'{k}'" for k in loss_model_functions.keys())
+        raise ValueError(f"Invalid loss model '{model}'. Available options: {options}")
+
+    # Apply tuning factors
+    tuning_factors = loss_model_options.get("tuning_factors", {})
+    tuning_factors = {f"loss_{key}": value for key, value in tuning_factors.items()}
+    apply_tuning_factors(loss_dict, tuning_factors)
+
+    # Optionally, recompute the total loss if needed
+    loss_dict["loss_total"] = sum(
+        value for key, value in loss_dict.items() if key != "loss_total"
+    )
+
+    if loss_model_options["loss_coefficient"] == "stagnation_pressure":
+        # TODO add other loss coefficient definitions
+        p0rel_in = input_parameters["flow"]["p0_rel_in"]
+        p0rel_out = input_parameters["flow"]["p0_rel_out"]
+        p_out = input_parameters["flow"]["p_out"]
+        Y_definition = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
+
+    else:
+        raise Exception("Invalid loss coefficient definition")
+
+    # Compute loss coefficient error
+    loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
+
+    # Save the definition of the loss coefficient
+    loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
+
+    return validate_loss_dictionary(loss_dict)
+
+
+def apply_tuning_factors(loss_dict, tuning_factors):
+    """
+    Applies tuning factors to the loss model
+
+    Args:
+        loss_dict (dict): Dictionary containing loss components.
+        tuning_factors (dict): Dictionary containing the multiplicative tuning factors.
+
+    Raises:
+        KeyError: If a key from tuning_factors is not found in loss_dict.
+    """
+
+    for key, factor in tuning_factors.items():
+        if key not in loss_dict:
+            raise KeyError(f"Tuning factor key '{key}' not found in loss dictionary.")
+        loss_dict[key] *= factor
+
+    return loss_dict
+
+def validate_loss_dictionary(loss_dict):
+    """
+    Validates that the loss dictionary contains exactly the expected keys
+
+    Parameters:
+    - loss_dict (dict): The dictionary to validate.
+
+    Raises:
+    - ValueError: If the dictionary does not contain the required keys or contains extra keys.
+    """
+
+    missing_keys = set(KEYS_LOSSES) - loss_dict.keys()
+    extra_keys = loss_dict.keys() - set(KEYS_LOSSES)
+
+    if missing_keys:
+        raise ValueError(
+            f"Missing required keys in loss dictionary: {', '.join(missing_keys)}"
+        )
+
+    if extra_keys:
+        raise ValueError(
+            f"Extra keys found in loss dictionary: {', '.join(extra_keys)}"
+        )
+
+    return loss_dict

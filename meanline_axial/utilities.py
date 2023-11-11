@@ -43,35 +43,71 @@ def read_configuration_file(filename):
 
     with open(filename, "r") as file:
         config = yaml.safe_load(file)
-        config = postprocess_config(config)
-        config["geometry"] = {k: np.asarray(v) for k, v in config["geometry"].items()}
-        config["fixed_params"] = {}
-        config["overall"] = {}
+
+    # Validate required and allowed sections
+    validate_config_sections(config)
+
+    # Convert configuration options
+    config = postprocess_config(config)
 
     return config
 
 
-def postprocess_config(config):
+def validate_config_sections(config):
     """
-    Postprocesses the YAML configuration data by converting string values that represent
-    numerical expressions to actual numerical values.
+    Validate the presence of required configuration sections and check for any unexpected sections.
 
-    This function helps ensure that configuration parameters, which may be specified as
-    strings in the YAML file are correctly evaluated to numerical values.
+    This function ensures that all required sections are present in the configuration and
+    that there are no sections other than the allowed ones. It raises a ValueError if
+    either required sections are missing or unexpected sections are found.
 
     Parameters
     ----------
-        config : dict
-            The configuration data loaded from a YAML file.
-
-    Returns
-    ----------
-        data : dict
-            The postprocessed configuration data with numerical values.
+    config : dict
+        The configuration dictionary loaded from a YAML file. The keys of this dictionary
+        represent the different configuration sections.
 
     """
 
+    required_sections = {"operation_points", "solver_options", "model_options"}
+
+    allowed_sections = required_sections.union(
+        {"performance_map", "geometry", "optimization"}
+    )
+
+    extra = config.keys() - allowed_sections
+    if extra:
+        raise ConfigurationError(f"Found unexpected configuration options: {extra}")
+
+    missing = required_sections - config.keys()
+    if missing:
+        raise ConfigurationError(f"Missing required configuration options: {missing}")
+
+
+def postprocess_config(config):
+    """
+    Postprocesses the YAML configuration data by converting string values
+    to numbers and lists to numpy arrays. Numerical expressions like "1+2" or
+    "2*np.pi" are evaluated into the corresponding numerical values
+
+    Parameters
+    ----------
+    config : dict
+        The configuration data loaded from a YAML file.
+
+    Returns
+    -------
+    config : dict
+        The postprocessed configuration data.
+
+    Raises
+    ------
+    ConfigurationError
+        If a list contains elements of different types after conversion.
+    """
+
     def convert_to_numbers(data):
+        """Recursively convert string expressions in the configuration to numbers."""
         if isinstance(data, dict):
             return {key: convert_to_numbers(value) for key, value in data.items()}
         elif isinstance(data, list):
@@ -84,7 +120,46 @@ def postprocess_config(config):
         else:
             return data
 
-    return convert_to_numbers(config)
+    def convert_to_arrays(data, parent_key=""):
+        """
+        Convert lists to numpy arrays if all elements are numeric and of the same type.
+        Raises ConfigurationError if a list contains elements of different types.
+        """
+        if isinstance(data, dict):
+            return {k: convert_to_arrays(v, parent_key=k) for k, v in data.items()}
+        elif isinstance(data, list):
+            if not data:  # Empty list
+                return data
+            first_type = type(data[0])
+            if not all(isinstance(item, first_type) for item in data):
+                raise ConfigurationError(
+                    "Option contains elements of different types.",
+                    key=parent_key,
+                    value=data,
+                )
+            return np.array(data)
+        else:
+            return data
+
+    config = convert_to_numbers(config)
+    config = convert_to_arrays(config)
+
+    return config
+
+
+class ConfigurationError(Exception):
+    """Exception raised for errors in the configuration options."""
+
+    def __init__(self, message, key=None, value=None):
+        self.message = message
+        self.key = key
+        self.value = value
+        super().__init__(self._format_message())
+
+    def _format_message(self):
+        if self.key is not None and self.value is not None:
+            return f"{self.message} Key: '{self.key}', Value: {self.value}"
+        return self.message
 
 
 def convert_numpy_to_python(data, precision=10):
@@ -100,6 +175,9 @@ def convert_numpy_to_python(data, precision=10):
     - The converted data with all numpy types replaced by native Python types and float values rounded.
     """
 
+    if data is None:
+        return None
+    
     if isinstance(data, dict):
         return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
 
@@ -599,3 +677,22 @@ def ensure_iterable(obj):
         return obj
     else:
         return [obj]
+
+
+def add_string_to_keys(input_dict, suffix):
+    """
+    Add a suffix to each key in the input dictionary.
+
+    Args:
+        input_dict (dict): The input dictionary.
+        suffix (str): The string to add to each key.
+
+    Returns:
+        dict: A new dictionary with modified keys.
+
+    Example:
+        >>> input_dict = {'a': 1, 'b': 2, 'c': 3}
+        >>> add_string_to_keys(input_dict, '_new')
+        {'a_new': 1, 'b_new': 2, 'c_new': 3}
+    """
+    return {f"{key}{suffix}": value for key, value in input_dict.items()}

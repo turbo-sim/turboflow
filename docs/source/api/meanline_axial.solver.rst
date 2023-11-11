@@ -1,4 +1,4 @@
-Solver
+Numerical solvers
 ==============================
 
 Submodules

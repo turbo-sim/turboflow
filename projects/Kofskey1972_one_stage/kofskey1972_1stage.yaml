@@ -2,7 +2,7 @@ operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: [13.8e4/2.298, 13.8e4/2.5]
+  p_out: [13.8e4/2.298] #, 13.8e4/2.5]
   omega: 1627
   alpha_in: 0
 
@@ -15,14 +15,23 @@ performance_map:
   alpha_in: 0
 
 model_options:
-  loss_model: benner
-  displacement_thickness : 0
-  deviation_model : aungier
   choking_condition : deviation
+  deviation_model : aungier
+  throat_blockage : 0.00 #flat_plate_turbulent
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
 
 solver_options:
   method: hybr
-  tolerance: 1e-9
+  tolerance: 1e-8
   max_iterations: 50
   derivative_method: "2-point"
   derivative_rel_step: 1e-4
@@ -43,9 +52,5 @@ geometry:
   thickness_te: [0.050e-2, 0.050e-2]
   thickness_max: [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
+  throat_location_fraction: [1.00, 1.00]
 
-
-
-  # Add option to give chord/stagger or axialChord/stagger or chord/axialChord
-  # Add option to give single value for radius for constant radius
-  # Add option to give single value for hub_tip_ratio for cylindrical turbine
