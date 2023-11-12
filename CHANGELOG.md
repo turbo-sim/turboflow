@@ -1,5 +1,6 @@
 # Changelog
 
+> WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
 ## 12.11.2023
 - Regression testing
@@ -9,6 +10,17 @@
 - Add functionality to save geometry to 'results' dictionary.
 - Added functionality to export geometry to Excel file.
 - Converted the results["overall"] from dictionary into pandas dataframe.
+- Added more critical variables to the "cascade" dataframe (d_crit, w_crit, p_crit, beta_crit)
+- Added 'area' and 'radius' arguments to the `evaluate_exit()` function. The area and radius can be different for the exit and for the throat sections if the annulus shape is not constant. The position of the throat (and therefore its area and radius) are specified by the geometric parameter 'throat_location_fraction'.
+- WARNING! The option above is giving convergence problems when 'throat_location_fraction'=/=1 (that is, when the throat geometry is not exactly equal to the exit geometry). We have to investigate and solve this problem.
+- Fix error in `geometry.calculate_throat_radius()` function.
+- Add option to not export results to Excel on `performance_analysis()` function
+- Improve fnctionality in `plot_functions.py`
+  - Clean up code
+  - Add function to save in multiple formats
+- Add `utilities.extract_timestamp(filename)` function to extract the time stamp from exported files
+- Improve `plot_kofskey1972_1stage.py`
+- Fix spelling mistake in `run_tests.py`
 
 ## 11.11.2023
 
