@@ -10,7 +10,7 @@ performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.5, 4.5, 50)
+  p_out: 13.8e4/np.linspace(1.5, 4.5, 40)
   omega: [1627]
   alpha_in: 0
 
@@ -52,5 +52,6 @@ geometry:
   thickness_te: [0.050e-2, 0.050e-2]
   thickness_max: [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
-  throat_location_fraction: [1.00, 1.00]
+  throat_location_fraction: [1, 1]
+  # throat_location_fraction: [5/6, 5/6]
 

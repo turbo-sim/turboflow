@@ -38,14 +38,14 @@ if Case == 0:
     folder = "Case 8/"
     filename = "results/" + folder + "Performance_data.xlsx"
 
-    performance_data = ml.plot_functions.load_data(filename)
+    data = ml.plot_functions.load_data(filename)
 
     # Plot mass flow rate at different angular speed
     subset = ["omega"] + list(
         np.array([0.3, 0.5, 0.7, 0.9, 1, 1.1]) * design_point["omega"]
     )
     fig1, ax1 = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "pr_ts",
         "m",
         subset,
@@ -56,7 +56,7 @@ if Case == 0:
 
     # Plot total-to-static efficiency at different angular speeds
     fig2, ax2 = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "pr_ts",
         "eta_ts",
         subset,
@@ -67,7 +67,7 @@ if Case == 0:
 
     # Plot torque as different angular speed
     fig3, ax3 = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "pr_ts",
         "torque",
         subset,
@@ -78,7 +78,7 @@ if Case == 0:
 
     # Plot torque as different angular speed
     fig4, ax4 = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "pr_ts",
         "alpha_6",
         subset,
@@ -89,7 +89,7 @@ if Case == 0:
 
     # Plot torque as different angular speed
     fig5, ax5 = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "pr_ts",
         "beta_6",
         subset,
@@ -104,7 +104,7 @@ if Case == 0:
     # Plot mass flow rate at different pressure ratios
     subset = ["pr_ts", 3.5]
     fig, ax = ml.plot_functions.plot_subsets(
-        performance_data,
+        data,
         "omega",
         "m",
         subset,
@@ -117,7 +117,7 @@ if Case == 0:
     subset = ["omega", design_point["omega"]]
     column_names = ["Marel_1", "Marel_2", "Marel_3", "Marel_4", "Marel_5", "Marel_6"]
     fig, ax = ml.plot_functions.plot_lines_on_subset(
-        performance_data,
+        data,
         "pr_ts",
         column_names,
         subset,
@@ -246,80 +246,187 @@ elif Case == 1:
     filename = ml.find_latest_results_file(RESULTS_PATH)
     # filename = "output/performance_analysis_2023-11-03_16-09-24.xlsx"
 
-    # Load prefromance data
-    performance_data = ml.plot_functions.load_data(filename)
+    # Load performance data
+    timestamp = ml.extract_timestamp(filename)
+    data = ml.plot_functions.load_data(filename)
 
-    lines = ["m_crit_1", "m_crit_2", "mass_flow_rate"]
+    # Define plot settings
+    save_figs = False
+    show_figures = True
+    color_map = "magma"
+    outdir = "figures"
+
+    # Plot mass flow rate
+    title = "Mass flow rate"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
+        data,
+        x_key="PR_ts",
+        y_keys=["mass_flow_crit_1", "mass_flow_crit_2", "mass_flow_rate"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Mass flow rate [kg/s]",
-        close_fig=False,
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
     )
 
-    lines = ["w_5", "w_6"]
+    # Plot velocities
+    title = "Stator velocity"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
+        data,
+        x_key="PR_ts",
+        y_keys=["w_crit_1", "w_1", "w_2", "w_3"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Velocity [m/s]",
-        close_fig=True,
+        title=title,
+        filename="stator_velocity"+'_'+timestamp,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
     )
 
-    # Plot total-to-static efficiency at different angular speeds
-    # lines = ['Ma_crit_2', "Marel_5", "Marel_6"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Mach [-]", close_fig = False)
-
-    lines = ["beta_5", "beta_6"]
+    title = "Rotor velocity"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
+        data,
+        x_key="PR_ts",
+        y_keys=["w_crit_2", "w_4", "w_5", "w_6"],
         xlabel="Total-to-static pressure ratio",
-        ylabel="Beta [deg]",
-        close_fig=False,
+        ylabel="Velocity [m/s]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
     )
 
-    lines = ["p_5", "p_6"]
+    # Plot Mach numbers
+    title = "Stator Mach number"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
-        performance_data,
-        "pr_ts",
-        lines,
+        data,
+        x_key="PR_ts",
+        y_keys=["Ma_crit_1", "Ma_1", "Ma_2", "Ma_3"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Mach number",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+
+    title = "Rotor Mach number"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["Ma_crit_2", "Ma_rel_4", "Ma_rel_5", "Ma_rel_6"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Mach number",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+
+    # Plot pressures
+    title = "Stator pressure"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["p_crit_1", "p_1", "p_2", "p_3"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Pressure [Pa]",
-        close_fig=False,
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
     )
 
-    # lines = ["h_5", "h_6"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Enthalpy [J/kgK]", close_fig = False)
+    title = "Rotor pressure"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["p_crit_2", "p_4", "p_5", "p_6"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Pressure [Pa]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
-    # lines = ["alpha_4", "alpha_crit_2"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(performance_data, 'pr_ts', lines, xlabel = "Total-to-static pressure ratio", ylabel = "Alpha [rad]", close_fig = False)
+    # Plot flow angles
+    title = "Stator relative flow angles"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["beta_crit_1", "beta_2", "beta_3"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Flow angles [deg]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
-    # lines = ["w_crit_2", "w_5", "w_6"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     performance_data,
-    #     "pr_ts",
-    #     lines,
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Velocity [m/s]",
-    #     close_fig=False,
-    # )
-    # # ax1.set_xlim([3,3.5])
+    title = "Rotor relative flow angles"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["beta_crit_2", "beta_5", "beta_6"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Flow angles [deg]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
-    # lines = ["d_crit_2", "d_5", "d_6"]
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     performance_data,
-    #     "pr_ts",
-    #     lines,
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Density [kg/m^3]",
-    #     close_fig=False,
-    # )
-    # ax1.set_xlim([3,3.5])
+    # Group up the losses
+    df = data["cascade"]
+    losses = [col for col in df.columns if col.startswith("efficiency_drop_")]
+    stator_losses = [col for col in losses if col.endswith("_1")]
+    rotor_losses = [col for col in losses if col.endswith("_2")]
+    data["cascade"]["efficiency_ts_drop_stator"] = df[stator_losses].sum(axis=1)
+    data["cascade"]["efficiency_ts_drop_rotor"] = df[rotor_losses].sum(axis=1)
+
+    # Plot the total-to-static efficiency distribution
+    title = "Total-to-static efficiency distribution"
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=[
+            "efficiency_ts",
+            "efficiency_ts_drop_kinetic",
+            "efficiency_ts_drop_stator",
+            "efficiency_ts_drop_rotor",
+        ],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Total-to-static efficiency",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+        stack=True,
+        legend_loc="lower left",
+    )
 
     # Show figures
-    plt.show()
+    if show_figures:
+        plt.show()

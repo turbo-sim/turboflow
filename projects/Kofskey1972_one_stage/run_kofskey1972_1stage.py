@@ -15,7 +15,7 @@ import meanline_axial as ml
 
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
@@ -27,7 +27,7 @@ ml.print_dict(config)
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config)
+    solvers = ml.compute_performance(operation_points, config, export_results=False)
     # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:

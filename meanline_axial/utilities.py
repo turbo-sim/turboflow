@@ -696,3 +696,25 @@ def add_string_to_keys(input_dict, suffix):
         {'a_new': 1, 'b_new': 2, 'c_new': 3}
     """
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
+
+
+import re
+def extract_timestamp(filename):
+    """
+    Extract the timestamp from the filename.
+
+    Parameters
+    ----------
+    filename : str
+        The filename containing the timestamp.
+
+    Returns
+    -------
+    str
+        The extracted timestamp.
+    """
+    # Regular expression to match the timestamp pattern in the filename
+    match = re.search(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", filename)
+    if match:
+        return match.group(0)
+    return ""

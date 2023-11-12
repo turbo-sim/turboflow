@@ -57,7 +57,11 @@ KEYS_CASCADE = [
     "loss_incidence",
     "dh_s",
     "Ma_crit",
-    "m_crit",
+    "mass_flow_crit",
+    "d_crit",
+    "w_crit",
+    "p_crit",
+    "beta_crit",
     "incidence",
     "density_correction",
 ]
@@ -90,16 +94,19 @@ def evaluate_cascade_series(
     angle_min = reference_values["angle_min"]
 
     # Filtered geometry
-    geom_cascades = {key: value for key, value in geometry.items() if len(ensure_iterable(value)) == number_of_cascades}
-
+    geom_cascades = {
+        key: value
+        for key, value in geometry.items()
+        if len(ensure_iterable(value)) == number_of_cascades
+    }
 
     # Initialize results structure
     results = {
-    "plane": pd.DataFrame(columns=KEYS_PLANE),
-    "cascade": pd.DataFrame(columns=KEYS_CASCADE),
-    "stage": None,
-    "overall": None,
-    "geometry": pd.DataFrame(geom_cascades),
+        "plane": pd.DataFrame(columns=KEYS_PLANE),
+        "cascade": pd.DataFrame(columns=KEYS_CASCADE),
+        "stage": None,
+        "overall": None,
+        "geometry": pd.DataFrame(geom_cascades),
     }
 
     # results = {}
@@ -247,26 +254,30 @@ def evaluate_cascade_series(
     torque = power / angular_speed
 
     # Creating the 'overall' dictionary using a dictionary comprehension
-    results["overall"] = pd.DataFrame([{
-        "PR_tt": PR_tt,
-        "PR_ts": PR_ts,
-        "mass_flow_rate": mass_flow,
-        "efficiency_tt": efficiency_tt,
-        "efficiency_ts": efficiency_ts,
-        "efficiency_ts_drop_kinetic": efficiency_ts_drop_kinetic,
-        "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
-        "power": power,
-        "torque": torque,
-        "angular_speed": angular_speed,
-        "exit_flow_angle": exit_flow_angle,
-        "exit_velocity": v_out,
-        "spouting_velocity": v0,
-        "last_blade_velocity": u_out,
-        "blade_jet_ratio": u_out / v0,
-        "h0_in": h0_in,
-        "h0_out": h0_out,
-        "h_out_s": h_out_s,
-    }])
+    results["overall"] = pd.DataFrame(
+        [
+            {
+                "PR_tt": PR_tt,
+                "PR_ts": PR_ts,
+                "mass_flow_rate": mass_flow,
+                "efficiency_tt": efficiency_tt,
+                "efficiency_ts": efficiency_ts,
+                "efficiency_ts_drop_kinetic": efficiency_ts_drop_kinetic,
+                "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
+                "power": power,
+                "torque": torque,
+                "angular_speed": angular_speed,
+                "exit_flow_angle": exit_flow_angle,
+                "exit_velocity": v_out,
+                "spouting_velocity": v0,
+                "last_blade_velocity": u_out,
+                "blade_jet_ratio": u_out / v0,
+                "h0_in": h0_in,
+                "h0_out": h0_out,
+                "h_out_s": h_out_s,
+            }
+        ]
+    )
 
     # Additional calculations
     loss_fractions = calculate_efficiency_drop_fractions(
@@ -329,6 +340,8 @@ def evaluate_cascade(
         angular_speed,
         model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_throat"],
+        geometry["A_throat"],
     )
 
     # Evaluate exit plane
@@ -341,6 +354,8 @@ def evaluate_cascade(
         angular_speed,
         model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_out"],
+        geometry["A_out"],
     )
 
     # Evaluate isentropic enthalpy change
@@ -415,7 +430,11 @@ def evaluate_cascade(
         **loss_dict,
         "dh_s": dh_is,
         "Ma_crit": critical_state["Ma_rel"],
-        "m_crit": critical_state["mass_flow"],
+        "mass_flow_crit": critical_state["mass_flow"],
+        "w_crit": critical_state["w"],
+        "d_crit": critical_state["d"],
+        "p_crit": critical_state["p"],
+        "beta_crit": critical_state["beta"],
         "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
         "density_correction": density_correction,
     }
@@ -493,6 +512,8 @@ def evaluate_exit(
     angular_speed,
     blockage,
     loss_model,
+    radius,
+    area,
 ):
     # Load cascade exit variables
     w = cascade_exit_input["w"]
@@ -501,12 +522,20 @@ def evaluate_exit(
     rothalpy = cascade_exit_input["rothalpy"]
 
     # Load geometry
-    radius = geometry["radius_mean_out"]
-    area = geometry[
-        "A_out"
-    ]  # TODO: we should have flexibility to specify the throat area
+    # radius = geometry["radius_mean_out"]
+    # area = geometry["A_out"]
+    # print("radius", geometry["radius_mean_out"], geometry["radius_mean_throat"])
+    # print("area", geometry["A_out"], geometry["A_throat"])
     chord = geometry["chord"]
     opening = geometry["opening"]
+    # TODO: we should have flexibility to specify the throat area
+    # TODO: Roberto: I did some tests on with the throat area calculations
+    # TODO:   1. The code does not converge well if blockage factor at the throat at and the exit is not the same. Why? The code converges for some small differences, but 1-2% is already too much
+    # TODO:   2. The code does not converge well if the new geometry input "throat_location_fraction" is not one (meaning that the throat radius is the same as the exit radius)
+    # TODO: It seems that both limitations are related to changes in the effective throat area with respect to the exit area
+    # TODO: In some cases these factors are not a problem when using the choking condition "mach_critical"
+    # TODO: This makes me suspect that the way in which we are handling the deviation model residual is giving problems.
+    # TODO: The code should work for cases when the throat are is not exactly given by the cosine rule
 
     # Calculate velocity triangles
     blade_speed = angular_speed * radius
@@ -537,9 +566,8 @@ def evaluate_exit(
     Ma = v / a
     Ma_rel = w / a
     Re = rho * w * chord / mu
-    rothalpy = (
-        h0_rel - 0.5 * blade_speed**2
-    )  # TODO: is it necessary? See calculations above
+    rothalpy = h0_rel - 0.5 * blade_speed**2
+    # TODO: is rothalpy necessary? See calculations above
 
     # Compute mass flow rate
     blockage_factor = calculate_throat_blockage(blockage, Re, chord, opening)
@@ -663,7 +691,7 @@ def get_critical_residuals(
     )  # For isentropic
 
     # Calculate the Lagrange multipliers explicitly
-    eps = 1e-9
+    eps = 1e-9  # TODO Division by zero sometimes?
     l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21 + eps)
     l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21 + eps)
 
@@ -739,6 +767,8 @@ def evaluate_critical_cascade(
         angular_speed,
         model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_throat"],
+        geometry["A_throat"],
     )
 
     # Add residuals
@@ -749,9 +779,13 @@ def evaluate_critical_cascade(
         ]
     )
 
+    # TODO: why not pass the entire throat_plane as critical state?
     critical_state["mass_flow"] = throat_plane["mass_flow"]
     critical_state["Ma_rel"] = throat_plane["Ma_rel"]
     critical_state["d"] = throat_plane["d"]
+    critical_state["w"] = throat_plane["w"]
+    critical_state["p"] = throat_plane["p"]
+    critical_state["beta"] = throat_plane["beta"]
 
     output = np.insert(residuals, 0, throat_plane["mass_flow"])
 
@@ -978,7 +1012,7 @@ def calculate_deviation_equation(
     blockage = exit_plane["blockage"]
 
     # Compute exit flow angle
-    # TODO: discuss if it should be Ma_throat or Ma_exit -> Ma_throat fails
+    # TODO: discuss if it should be Ma_throat or Ma_exit || Ma_throat in inequelity fails
     if Ma <= Ma_crit:
         density_correction = np.nan
         beta_model = dm.get_subsonic_deviation(
@@ -986,9 +1020,9 @@ def calculate_deviation_equation(
         )
     else:
         density_correction = throat_plane["d"] / critical_state["d"]
-        beta_model = math.arccosd(
-            m_crit / rho / w / area / blockage * density_correction
-        )  # Density correction needed above critical condition to fix numerical error caused by nested finite differences
+        cos_beta = m_crit / rho / w / area / (1 - blockage) * density_correction
+        beta_model = math.arccosd(cos_beta)
+        # Density correction needed above critical condition to fix numerical error caused by nested finite differences
 
     # Compute error of guessed beta and deviation model
     residual = math.cosd(beta_model) - math.cosd(beta)

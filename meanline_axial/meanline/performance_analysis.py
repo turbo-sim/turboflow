@@ -39,6 +39,7 @@ def compute_performance(
     out_filename=None,
     out_dir="output",
     stop_on_failure=True,
+    export_results=True,
 ):
     """
     Compute and export the performance of each specified operation point to an Excel file.
@@ -218,12 +219,13 @@ def compute_performance(
         df.insert(0, "operation_point", range(1, 1 + len(df)))
 
     # Write dataframes to excel
-    filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-        for sheet_name, df in dfs.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    if export_results:
+        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for sheet_name, df in dfs.items():
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    print(f"Performance data successfully written to {filepath}")
+        print(f"Performance data successfully written to {filepath}")
 
     return solver_container
 
@@ -309,20 +311,21 @@ def compute_single_operation_point(
 
     # TODO: Attempt solving with optimization algorithms?
 
-    # # Attempt solving with a heuristic initial guess
+    # Attempt solving with a heuristic initial guess
     # TODO: To be improved with random generation of initial guess within ranges
-    # if isinstance(initial_guess, np.ndarray) and not success:
-    #     solver_options["method"] = "lm"
-    #     name = name_map[solver_options['method']]
-    #     print("Trying to solve the problem with a new initial guess")
-    #     print(f"Using robust solver: {name}")
-    #     solver = initialize_solver(problem, initial_guess, solver_options)
-    #     try:
-    #         solution = solver.solve()
-    #         success = solution.success
-    #     except Exception as e:
-    #         print(f"Error during solving: {e}")
-    #         success = False
+    if isinstance(initial_guess, np.ndarray) and not success:
+        solver_options["method"] = "lm"
+        name = name_map[solver_options['method']]
+        print("Trying to solve the problem with a new initial guess")
+        print(f"Using robust solver: {name}")
+        initial_guess = problem.get_initial_guess(None)
+        solver = initialize_solver(problem, initial_guess, solver_options)
+        try:
+            solution = solver.solve()
+            success = solution.success
+        except Exception as e:
+            print(f"Error during solving: {e}")
+            success = False
 
     # Attempt solving using different initial guesses
     # TODO: To be improved with random generation of initial guess within ranges
@@ -605,6 +608,11 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         case_data : dict
             A dictionary containing case-specific data.
         """
+        # TODO conversion between dictionary of independent variables and np.array should happen
+        # TODO only within the CascadesNonlinearSystemProblem() class. This makes sense because this class
+        # TODO is the interface between optimization algorithm and turbine model
+        # TODO the turbine model should only use input variables in dictionary format
+        # TODO the conversion from dictionary to array can be done within the "get_values()" function using a "self." variable or function
 
         # Process turbine geometry
         geom.validate_axial_turbine_geometry(config["geometry"])

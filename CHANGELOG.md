@@ -1,5 +1,15 @@
 # Changelog
 
+
+## 12.11.2023
+- Regression testing
+    - Added script to generate regression datasets from several configuration files.
+    - Added test functions to verify that the code gives the same outcome as the regression files.
+    - Added one regression case for each loss model.
+- Add functionality to save geometry to 'results' dictionary.
+- Added functionality to export geometry to Excel file.
+- Converted the results["overall"] from dictionary into pandas dataframe.
+
 ## 11.11.2023
 
 ### Performance Analysis
