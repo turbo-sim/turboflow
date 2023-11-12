@@ -10,7 +10,7 @@ from scipy.optimize._numdiff import approx_derivative
 
 from .. import math
 
-from ..utilities import add_string_to_keys
+from ..utilities import add_string_to_keys, ensure_iterable
 
 
 # Keys of the information that should be stored in results
@@ -28,7 +28,7 @@ KEYS_KINEMATIC = [
 
 KEYS_PROPS_STATIC = ["p", "T", "h", "s", "d", "Z", "a", "mu", "k", "cp", "cv", "gamma"]
 KEYS_PROPS_STAG_ABS = [f"{key}0" for key in KEYS_PROPS_STATIC]
-KEYS_PROPS_STAG_REL = [f"{key}0rel" for key in KEYS_PROPS_STATIC]
+KEYS_PROPS_STAG_REL = [f"{key}0_rel" for key in KEYS_PROPS_STATIC]
 KEYS_LOSSES = lm.KEYS_LOSSES
 
 KEYS_PLANE = (
@@ -89,12 +89,26 @@ def evaluate_cascade_series(
     angle_range = reference_values["angle_range"]
     angle_min = reference_values["angle_min"]
 
+    # Filtered geometry
+    geom_cascades = {key: value for key, value in geometry.items() if len(ensure_iterable(value)) == number_of_cascades}
+
+
     # Initialize results structure
-    results = {}
-    df = pd.DataFrame(columns=KEYS_PLANE)
-    results["plane"] = df
-    df = pd.DataFrame(columns=KEYS_CASCADE)
-    results["cascade"] = df
+    results = {
+    "plane": pd.DataFrame(columns=KEYS_PLANE),
+    "cascade": pd.DataFrame(columns=KEYS_CASCADE),
+    "stage": None,
+    "overall": None,
+    "geometry": pd.DataFrame(geom_cascades),
+    }
+
+    # results = {}
+    # df_plane = pd.DataFrame(columns=KEYS_PLANE)
+    # df_cascade = pd.DataFrame(columns=KEYS_CASCADE)
+    # df_geometry = pd.DataFrame(geom_cascades)
+    # results["plane"] = df_plane
+    # results["cascade"] = df_cascade
+    # results["geometry"] = df_geometry
 
     # initialize residual arrays
     # residuals_values = np.array([])
@@ -233,7 +247,7 @@ def evaluate_cascade_series(
     torque = power / angular_speed
 
     # Creating the 'overall' dictionary using a dictionary comprehension
-    results["overall"] = {
+    results["overall"] = pd.DataFrame([{
         "PR_tt": PR_tt,
         "PR_ts": PR_ts,
         "mass_flow_rate": mass_flow,
@@ -252,7 +266,7 @@ def evaluate_cascade_series(
         "h0_in": h0_in,
         "h0_out": h0_out,
         "h_out_s": h_out_s,
-    }
+    }])
 
     # Additional calculations
     loss_fractions = calculate_efficiency_drop_fractions(
@@ -649,8 +663,9 @@ def get_critical_residuals(
     )  # For isentropic
 
     # Calculate the Lagrange multipliers explicitly
-    l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
-    l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21)
+    eps = 1e-9
+    l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21 + eps)
+    l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21 + eps)
 
     # Evaluate the last equation
     df, dg1, dg2 = J[0, 2 - 1], J[1, 2 - 1], J[2, 2 - 1]  # for isentropic

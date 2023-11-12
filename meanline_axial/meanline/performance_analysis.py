@@ -127,6 +127,7 @@ def compute_performance(
     stage_data = []
     solver_data = []
     solution_data = []
+    geometry_data = []
     solver_container = []
 
     # Loop through all operation points
@@ -170,10 +171,11 @@ def compute_performance(
 
             # Collect results
             operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(pd.DataFrame([results["overall"]]))
+            overall_data.append(results["overall"])
             plane_data.append(flatten_dataframe(results["plane"]))
             cascade_data.append(flatten_dataframe(results["cascade"]))
             stage_data.append(flatten_dataframe(results["stage"]))
+            geometry_data.append(flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.scale_to_real_values(solver.solution.x))
             solver_container.append(solver)
@@ -195,6 +197,7 @@ def compute_performance(
             plane_data.append(pd.DataFrame([{}]))
             cascade_data.append(pd.DataFrame([{}]))
             stage_data.append(pd.DataFrame([{}]))
+            geometry_data.append(pd.DataFrame([{}]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append([])
             solver_container.append(solver)
@@ -206,6 +209,7 @@ def compute_performance(
         "plane": pd.concat(plane_data, ignore_index=True),
         "cascade": pd.concat(cascade_data, ignore_index=True),
         "stage": pd.concat(stage_data, ignore_index=True),
+        "geometry": pd.concat(geometry_data, ignore_index=True),
         "solver": pd.concat(solver_data, ignore_index=True),
     }
 
@@ -270,6 +274,7 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
+    problem = copy.deepcopy(problem)
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
     solver_options = copy.deepcopy(solver_options)

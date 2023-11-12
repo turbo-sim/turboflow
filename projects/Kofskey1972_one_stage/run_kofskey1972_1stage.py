@@ -60,6 +60,10 @@ elif CASE == 3:
 
 
 
+
+
+
+
 # Show plots
 # plt.show()
 
