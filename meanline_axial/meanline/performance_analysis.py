@@ -847,7 +847,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 # Check that eta_tt, eta_ts and Ma_crit is in reasonable range 
                 for label, variable in zip(['eta_tt', 'eta_ts', 'Ma_crit'],[eta_tt, eta_ts, Ma_crit]):
                     if not 0 <= variable <= 1:
-                        raise ValueError(f"Invalid value for {label}. It should be between {0} and {1}.")
+                        raise ValueError(f"{label} should be between {0} and {1}.")
                         
                 # Check if enthalpy_loss_fractions is a list or a NumPy array
                 if not isinstance(enthalpy_loss_fractions, (list, np.ndarray)):
@@ -868,8 +868,8 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
                 )
             
-            # Check if initial guess is given with arrays 
-            elif all(key in valid_keys_2 for key in initial_guess.keys()) and all(key in list(initial_guess.keys()) for key in valid_keys_2):
+            # Check if initial guess is given with arrays: {"v_throat" : [215, 260]}
+            elif sorted(valid_keys_2) == sorted(list(initial_guess.keys())):
                 
                 # Check that all dict values are either a number or a list/array
                 if not all(isinstance(val, (int, float, list, np.ndarray)) for val in initial_guess.values()):
@@ -889,16 +889,22 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                         initial_guess_index[key] = val
                 initial_guess = initial_guess_index
                                         
-            # Check if initial guess is given with indices
+            # Check if initial guess is given with indices: {"v_throat_1" : 215, "v_throat_2" : 260}
             elif all(any(key.startswith(prefix) for prefix in valid_keys_2) for key in initial_guess.keys()):
                 
-                pass
-                #FIXME
-                # for i in range(number_of_cascades):
-                #     index = f"_{i+1}"
-                #     valid_keys = [valid_key+index for valid_key in valid_keys_2]
-                #     if not all(key in valid_keys for key in initial_guess.keys() if not key == "v_in"):
-                #         raise ValueError("Error")
+                # Check that initial guess contains all required elements
+                required_elements = []
+                for i in range(number_of_cascades):
+                    index = f"_{i+1}"
+                    valid_keys_index = [key+index for key in valid_keys_2]
+                    required_elements += valid_keys_index
+                
+                if not sorted(required_elements) == sorted(list(initial_guess.keys())):
+                    raise ValueError(f"Initial guess not given as dictionary with the required elements: {required_elements}")
+                    
+                # Check that all values are a number
+                if not all(isinstance(val, (int, float))):
+                    raise ValueError("All dictionary values must be a float or int")
                         
             # TODO: Check that all values are within reasonable range
         
@@ -914,7 +920,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
             )
         else:
-            raise ValueError("Initial guess must be a dictionary.")
+            raise ValueError("Initial guess must be either None or a dictionary.")
 
         # Always normalize initial guess
         initial_guess_scaled = self.scale_to_normalized_values(initial_guess)
