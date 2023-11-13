@@ -2,7 +2,7 @@ import numpy as np
 from .. import math
 
 
-def validate_axial_turbine_geometry(geom, display=False):
+def validate_turbine_geometry(geom, display=False):
     """
     Performs validation of an axial turbine's geometry configuration.
 
@@ -50,15 +50,20 @@ def validate_axial_turbine_geometry(geom, display=False):
     # Angular variables need not be non-negative
     angle_keys = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
 
-    # Check for extra fields
-    extra_keys = geom.keys() - required_keys
-    if extra_keys:
-        raise KeyError(f"Unexpected geometry parameters: {extra_keys}")
-
-    # Check for required fields
+    # Initialize lists for missing and extra fields
     missing_keys = required_keys - geom.keys()
+    extra_keys = geom.keys() - required_keys
+
+    # Prepare error messages
+    error_messages = []
     if missing_keys:
-        raise KeyError(f"Missing geometry parameters: {missing_keys}")
+        error_messages.append(f"Missing geometry parameters: {missing_keys}")
+    if extra_keys:
+        error_messages.append(f"Unexpected geometry parameters: {extra_keys}")
+
+    # Raise combined error if there are any issues
+    if error_messages:
+        raise KeyError("; ".join(error_messages))
 
     # Get the number of cascades
     number_of_cascades = len(geom["cascade_type"])
@@ -231,7 +236,7 @@ def calculate_full_geometry(geometry):
     height = (height_in + height_out) / 2
 
     # Compute flaring angle
-    flaring_angle = np.arctan((height_out - height_in) / (2 * axial_chord))
+    flaring_angle = np.arctan((height_out - height_in) / axial_chord)
 
     # Compute geometric ratios
     aspect_ratio = height / axial_chord
@@ -284,7 +289,7 @@ def calculate_full_geometry(geometry):
     return {**geometry, **new_parameters}
 
 
-def check_axial_turbine_geometry(geometry, display=True):
+def check_turbine_geometry(geometry, display=True):
     """
     Checks if the geometry parameters are within the predefined recommended ranges.
 
@@ -306,6 +311,8 @@ def check_axial_turbine_geometry(geometry, display=True):
         | Tip clearance            | 0.2 mm       | inf          | Manufacturing                                    |
         +--------------------------+--------------+--------------+--------------------------------------------------+
         | Hub to tip radius ratio  | 0.50         | 0.95         | Figure (6) of :cite:`kacker_mean_1982`           |
+        +--------------------------+--------------+--------------+--------------------------------------------------+
+        | Flaring angle            | -25 deg      | +25 deg      | Section (7) of :cite:`ainley_examination_1951`   |
         +--------------------------+--------------+--------------+--------------------------------------------------+
         | Aspect ratio             | 0.80         | 5.00         | Section (7.3) of :cite:`saravanamuttoo_gas_2008` |
         |                          |              |              | Figure (13) of :cite:`kacker_mean_1982`          |

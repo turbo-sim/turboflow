@@ -230,7 +230,6 @@ def compute_performance(
 def compute_single_operation_point(
     operating_point,
     initial_guess,
-    # solver_options,
     config,
 ):
     """
@@ -276,7 +275,6 @@ def compute_single_operation_point(
     problem = CascadesNonlinearSystemProblem(config)
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
-    # solver_options = copy.deepcopy(solver_options)
     solver_options = copy.deepcopy(config["solver_options"])
 
     # Attempt solving with the specified method
@@ -361,7 +359,6 @@ def compute_single_operation_point(
 
 
 def initialize_solver(problem, initial_guess, solver_options):
-
     """
     Compute a solution for an operating point of a problem using various solver methods and initial guesses.
 
@@ -400,8 +397,6 @@ def initialize_solver(problem, initial_guess, solver_options):
         A tuple containing the solver object and the problem's results after computation.
 
     """
-    
-    
 
     # Initialize solver object
     solver = NonlinearSystemSolver(
@@ -616,9 +611,9 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # TODO the conversion from dictionary to array can be done within the "get_values()" function using a "self." variable or function
 
         # Process turbine geometry
-        geom.validate_axial_turbine_geometry(config["geometry"])
+        geom.validate_turbine_geometry(config["geometry"])
         self.geometry = geom.calculate_full_geometry(config["geometry"])
-        self.geom_info = geom.check_axial_turbine_geometry(self.geometry, display=True)
+        self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
         self.model_options = config["model_options"]
@@ -654,12 +649,6 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             self.model_options,
             self.reference_values,
         )
-
-
-        # import pdb
-        # print(x)
-        # print(residuals)
-        # pdb.set_trace()
 
         return np.array(list(self.results["residuals"].values()))
 
@@ -760,6 +749,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         An array of values converted back to their real-world scale.
         """
 
+        # TODO Lasse: improve logic using dictionary with keys instead of array
         # TODO Lasse/Roberto: Does it make sense to have a single function for scaling and unscaling if most of the code is the same?
 
         v0 = self.reference_values["v0"]
@@ -930,7 +920,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         self.x0 = np.array(list(initial_guess_scaled.values()))
 
 
-        return 
+        return initial_guess_scaled
     
     def compute_heuristic_initial_guess(self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit):
         
@@ -1049,7 +1039,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             
             # Calculate critical state
             w_out_crit = a_out*Ma_crit
-            m_crit = w_out_crit*math.cosd(theta_out)*rho_out*A_out
+            h_out_crit = h0_in-0.5*w_out_crit**2
+            static_state_out_crit = fluid.get_props(CP.HmassSmass_INPUTS, h_out_crit, s_out)
+            rho_out_crit = static_state_out_crit["d"]
+            m_crit = w_out_crit*math.cosd(theta_out)*rho_out_crit*A_out
             v_m_in_crit = m_crit/rho_in/A_in
             v_in_crit = v_m_in_crit/math.cosd(theta_in) #XXX Works better with metal angle than inlet flow angle?
             
