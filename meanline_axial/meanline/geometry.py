@@ -386,7 +386,7 @@ def check_turbine_geometry(geometry, display=True):
     # Define report title
     msgs = []
     msgs.append("-" * report_width)  # Horizontal line
-    msgs.append("Axial turbine geometry Report".center(report_width))
+    msgs.append("Axial turbine geometry report".center(report_width))
     msgs.append("-" * report_width)  # Horizontal line
 
     # Define table header with four columns
@@ -434,9 +434,9 @@ def check_turbine_geometry(geometry, display=True):
     msgs.append("-" * report_width)  # Horizontal line
 
     if not vars_outside_range:
-        msgs.append(" Report summary: All parameters are within recommended ranges.")
+        msgs.append(" Geometry report summary: All parameters are within recommended ranges.")
     else:
-        msgs.append(" Report Summary: Some parameters are outside recommended ranges.")
+        msgs.append(" Geometry report summary: Some parameters are outside recommended ranges.")
         for warning in vars_outside_range:
             msgs.append(f"     - {warning}")
 

@@ -14,13 +14,13 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 config = ml.read_configuration_file(CONFIG_FILE)
 
-ml.print_dict(config)
+# ml.print_dict(config)
 
 # Run calculations
 if CASE == 1:

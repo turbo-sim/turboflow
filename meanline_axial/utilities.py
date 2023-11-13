@@ -1,4 +1,5 @@
 import os
+import re
 import yaml
 import logging
 from datetime import datetime
@@ -703,7 +704,7 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-import re
+
 def extract_timestamp(filename):
     """
     Extract the timestamp from the filename.
@@ -723,3 +724,77 @@ def extract_timestamp(filename):
     if match:
         return match.group(0)
     return ""
+
+
+
+def print_simulation_summary(solvers):
+    """
+    Print a formatted footer summarizing the performance of all operation points.
+
+    This function processes a list of solver objects to provide a summary of the performance
+    analysis calculations. It calculates and displays the number of successful points and a summary of
+    simulation tme statistics. Additionally, it lists the indices of failed operation points, if any.
+    
+    The function is robust against solvers that failed and lack certain attributes like 'elapsed_time'.
+    In such cases, these solvers are included in the count of failed operation points, but not in the 
+    calculation time statistics. 
+
+    Parameters
+    ----------
+    solvers : list
+        A list of solver objects. Each solver object should contain attributes related to the 
+        calculation of an operation point, such as 'elapsed_time' and the 'solution' status.
+
+    """
+    
+    # Initialize times list and track failed points
+    times = []
+    failed_points = []
+
+    for i, solver in enumerate(solvers):
+        # Check if the solver is not None and has the required attribute
+        if solver and hasattr(solver, 'elapsed_time'):
+            times.append(solver.elapsed_time)
+            if not solver.solution.success:
+                failed_points.append(i)
+        else:
+            # Handle failed solver or missing attributes
+            failed_points.append(i)
+
+    # Convert times to a numpy array for calculations
+    times = np.asarray(times)
+    total_points = len(solvers)
+
+    # Define footer content
+    width = 80
+    separator = "-" * width
+    lines_to_output = [
+        "",
+        separator,
+        "Final summary of performance analysis calculations".center(width),
+        separator,
+        f" Simulation successful for {total_points - len(failed_points)} out of {total_points} points",
+    ]
+
+    # Add failed points message only if there are failed points
+    if failed_points:
+        lines_to_output.append(f"Failed operation points: {', '.join(map(str, failed_points))}")
+
+   # Add time statistics only if there are valid times
+    if times.size > 0:
+        lines_to_output.extend([
+            f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+            f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+            f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+            f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
+        ])
+    else:
+        lines_to_output.append(" No valid calculation times available.")
+
+    lines_to_output.append(separator)
+    lines_to_output.append("")
+    
+    # Display to stdout
+    for line in lines_to_output:
+        print(line)
+

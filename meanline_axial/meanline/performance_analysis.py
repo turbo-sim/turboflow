@@ -1,6 +1,7 @@
 import os
 import yaml
 import copy
+import time
 import itertools
 import pandas as pd
 import numpy as np
@@ -22,6 +23,7 @@ from ..utilities import (
     convert_numpy_to_python,
     ensure_iterable,
     print_operation_points,
+    print_simulation_summary,
 )
 from datetime import datetime
 
@@ -38,7 +40,7 @@ def compute_performance(
     config,
     out_filename=None,
     out_dir="output",
-    stop_on_failure=True,
+    stop_on_failure=False,
     export_results=True,
 ):
     """
@@ -132,7 +134,7 @@ def compute_performance(
     print_operation_points(operation_points)
     for i, operation_point in enumerate(operation_points):
         print()
-        print(f"Computing operation point {i+1} of {len(operation_points)}")
+        print(f" Computing operation point {i+1} of {len(operation_points)}")
         print_boundary_conditions(operation_point)
 
         try:
@@ -140,14 +142,14 @@ def compute_performance(
             if i == 0:
                 # Use default initial guess for the first operation point
                 initial_guess = None
-                print(f"Using default initial guess")
+                print(f" Using default initial guess")
             else:
                 closest_x, closest_index = find_closest_operation_point(
                     operation_point,
                     operation_points[:i],  # Use up to the previous point
                     solution_data[:i],  # Use solutions up to the previous point
                 )
-                print(f"Using solution from point {closest_index+1} as initial guess")
+                print(f" Using solution from point {closest_index+1} as initial guess")
                 initial_guess = closest_x
 
             # Compute performance
@@ -182,8 +184,8 @@ def compute_performance(
             if stop_on_failure:
                 raise Exception(e)
             else:
-                print(f"Computation of point {i+1}/{len(operation_points)} failed")
-                print(f"Error: {e}")
+                print(f" Computation of point {i+1}/{len(operation_points)} failed")
+                print(f" Error: {e}")
 
             # Retrieve solver data
             solver = None
@@ -222,9 +224,13 @@ def compute_performance(
             for sheet_name, df in dfs.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        print(f"Performance data successfully written to {filepath}")
+        print(f" Performance data successfully written to {filepath}")
+
+    # Print final report
+    print_simulation_summary(solver_container)
 
     return solver_container
+
 
 
 def compute_single_operation_point(
@@ -273,37 +279,40 @@ def compute_single_operation_point(
 
     # Initialize problem object
     problem = CascadesNonlinearSystemProblem(config)
+    # TODO: A limitation of defining a new problem for each operation point is that the geometry generated and checked once for every point
+    # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
+    # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
     solver_options = copy.deepcopy(config["solver_options"])
 
     # Attempt solving with the specified method
     name = name_map[solver_options['method']]
-    print(f"Trying to solve the problem using {name} method")
+    print(f" Trying to solve the problem using {name} method")
     solver = initialize_solver(problem, problem.x0, solver_options)
     try:
         solution = solver.solve()
         success = solution.success
     except Exception as e:
-        print(f"Error during solving: {e}")
+        print(f" Error during solving: {e}")
         success = False
     if not success:
-        print(f"Solution failed for the {name} method")
+        print(f" Solution failed for the {name} method")
 
     # Attempt solving with Lavenberg-Marquardt method
     if solver_options["method"] != "lm" and not success:
         solver_options["method"] = "lm"
         name = name_map[solver_options['method']]
-        print(f"Trying to solve the problem using {name} method")
+        print(f" Trying to solve the problem using {name} method")
         solver = initialize_solver(problem, problem.x0, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
         except Exception as e:
-            print(f"Error during solving: {e}")
+            print(f" Error during solving: {e}")
             success = False
         if not success:
-            print(f"Solution failed for the {name} method")
+            print(f" Solution failed for the {name} method")
 
     # TODO: Attempt solving with optimization algorithms?
 
@@ -312,15 +321,15 @@ def compute_single_operation_point(
     if isinstance(initial_guess, np.ndarray) and not success:
         solver_options["method"] = "lm"
         name = name_map[solver_options['method']]
-        print("Trying to solve the problem with a new initial guess")
-        print(f"Using robust solver: {name}")
+        print(f" Trying to solve the problem with a new initial guess")
+        print(f" Using robust solver: {name}")
         initial_guess = problem.get_initial_guess(None)
         solver = initialize_solver(problem, problem.x0, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
         except Exception as e:
-            print(f"Error during solving: {e}")
+            print(f" Error during solving: {e}")
             success = False
 
     # Attempt solving using different initial guesses
@@ -337,7 +346,7 @@ def compute_single_operation_point(
 
     #     for i in range(N):
     #         x0 = {key: values[i] for key, values in x0_arrays.items()}
-    #         print(f"Trying to solve the problem with a new initial guess")
+    #         print(f" Trying to solve the problem with a new initial guess")
     #         print_dict(x0)
     #         initial_guess = problem.get_initial_guess(x0)
     #         solver = initialize_solver(problem, initial_guess, solver_options)
@@ -345,13 +354,13 @@ def compute_single_operation_point(
     #             solution = solver.solve()
     #             success = solution.success
     #         except Exception as e:
-    #             print(f"Error during solving: {e}")
+    #             print(f" Error during solving: {e}")
     #             success = False
     #         if not success:
-    #             print(f"Solution failed for method '{solver_options['method']}'")
+    #             print(f" Solution failed for method '{solver_options['method']}'")
 
         if not success:
-            print("WARNING: All attempts failed to converge")
+            print(" WARNING: All attempts failed to converge")
             solution = False
             # TODO: Add messages to Log file
 
@@ -633,7 +642,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         tuple
             A tuple containing residuals and a list of keys for the residuals.
         """
-        
+            
         # Create dictionary of scaled variables
         self.vars_scaled = dict(zip(self.keys, x))
         
@@ -853,7 +862,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 if not np.isclose(sum_fractions, 1, atol=epsilon):
                     raise ValueError(f"Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions}).")
                     
-                print("Generating heuristic initial guess with given parameters")
+                print(" Generating heuristic initial guess with given parameters")
                 initial_guess = self.compute_heuristic_initial_guess(
                     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
                 )
@@ -899,7 +908,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             # TODO: Check that all values are within reasonable range
         
         elif initial_guess is None:
-            print("Generating heuristic initial guess with default parameters")
+            print(" Generating heuristic initial guess with default parameters")
             enthalpy_loss_fractions = np.full(number_of_cascades, 1 / number_of_cascades)
             eta_tt = 0.9
             eta_ts = 0.8

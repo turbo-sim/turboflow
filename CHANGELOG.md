@@ -2,6 +2,11 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 13.11.2023
+- Add additional problem evaluation after root finding completion (this ensures the solver.problem object has the converged solution)
+- Add elapsed time to root finding solution report
+- Add function `print_simulation_summary()` to print report after running performance analysis.
+
 ## 12.11.2023
 - Regression testing
     - Added script to generate regression datasets from several configuration files.
