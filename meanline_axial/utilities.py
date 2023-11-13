@@ -58,7 +58,7 @@ def validate_config_sections(config):
     Validate the presence of required configuration sections and check for any unexpected sections.
 
     This function ensures that all required sections are present in the configuration and
-    that there are no sections other than the allowed ones. It raises a ValueError if
+    that there are no sections other than the allowed ones. It raises a ConfigurationError if
     either required sections are missing or unexpected sections are found.
 
     Parameters
@@ -69,20 +69,25 @@ def validate_config_sections(config):
 
     """
 
+    # Configuration file sections
     required_sections = {"operation_points", "solver_options", "model_options"}
+    allowed_sections = required_sections.union({"performance_map", "geometry", "optimization"})
 
-    allowed_sections = required_sections.union(
-        {"performance_map", "geometry", "optimization"}
-    )
+    # Check for extra and missing sections
+    extra_sections = config.keys() - allowed_sections
+    missing_sections = required_sections - config.keys()
 
-    extra = config.keys() - allowed_sections
-    if extra:
-        raise ConfigurationError(f"Found unexpected configuration options: {extra}")
+    # Prepare error messages
+    error_messages = []
+    if extra_sections:
+        error_messages.append(f"Found unexpected configuration sections: {extra_sections}")
+    if missing_sections:
+        error_messages.append(f"Missing required configuration sections: {missing_sections}")
 
-    missing = required_sections - config.keys()
-    if missing:
-        raise ConfigurationError(f"Missing required configuration options: {missing}")
-
+    # Raise combined error if there are any issues
+    if error_messages:
+        raise ConfigurationError("; ".join(error_messages))
+    
 
 def postprocess_config(config):
     """

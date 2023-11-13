@@ -89,8 +89,8 @@ def compute_performance(
     validate_operation_point : For validation of individual operation points.
     """
 
-    # Initialize problem object
-    problem = CascadesNonlinearSystemProblem(config)
+    # # Initialize problem object
+    # problem = CascadesNonlinearSystemProblem(config)
 
     # Check the type of operation_points argument
     if isinstance(operation_points, dict):
@@ -155,7 +155,8 @@ def compute_performance(
 
             # Compute performance
             solver, results = compute_single_operation_point(
-                operation_point, problem, initial_guess, config["solver_options"]
+                operation_point, initial_guess, config
+                # operation_point, problem, initial_guess, config["solver_options"]
             )
 
             # Retrieve solver data
@@ -232,9 +233,10 @@ def compute_performance(
 
 def compute_single_operation_point(
     operating_point,
-    problem,
+    # problem,
     initial_guess,
-    solver_options,
+    # solver_options,
+    config,
 ):
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
@@ -276,10 +278,12 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
-    problem = copy.deepcopy(problem)
+    problem = CascadesNonlinearSystemProblem(config) # Each solver has its own problem
+
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
-    solver_options = copy.deepcopy(solver_options)
+    # solver_options = copy.deepcopy(solver_options)
+    solver_options = copy.deepcopy(config["solver_options"])
 
     # Attempt solving with the specified method
     name = name_map[solver_options['method']]
@@ -615,7 +619,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # TODO the conversion from dictionary to array can be done within the "get_values()" function using a "self." variable or function
 
         # Process turbine geometry
-        geom.validate_axial_turbine_geometry(config["geometry"])
+        geom.validate_turbine_geometry(config["geometry"])
         self.geometry = geom.calculate_full_geometry(config["geometry"])
         self.geom_info = geom.check_axial_turbine_geometry(self.geometry, display=True)
 
@@ -637,6 +641,26 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         tuple
             A tuple containing residuals and a list of keys for the residuals.
         """
+        # 1. Create dicitonary of scaled variables
+        # self.vars_scaled
+
+        # 2. Create dictionary of real variables
+        # self.vars_real
+
+        # 3. Evaluate the model
+        # self.results = cs.evaluate_cascade_series(
+        #     self.vars_real,
+        #     self.boundary_conditions,
+        #     self.geometry,
+        #     self.fluid,
+        #     self.model_options,
+        #     self.reference_values,
+        # )
+
+        # 4. Return the residuals from the results dictionary and convert to array
+        # return np.array(list(self.results["residuals"].values()))
+
+        
         residuals, self.results = cs.evaluate_cascade_series(
             x,
             self.boundary_conditions,
@@ -645,14 +669,8 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             self.model_options,
             self.reference_values,
         )
-
-
-        # import pdb
-        # print(x)
-        # print(residuals)
-        # pdb.set_trace()
-
         return np.array(list(residuals.values()))
+    
 
     def update_boundary_conditions(self, operation_point):
         """
