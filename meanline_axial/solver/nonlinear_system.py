@@ -1,4 +1,5 @@
 import os
+import time
 import copy
 import logging
 import warnings
@@ -10,7 +11,7 @@ from scipy.optimize._numdiff import approx_derivative
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-available_solvers = ['hybr', 'lm']
+SOLVER_OPTIONS = ['hybr', 'lm']
 
 class NonlinearSystemSolver:
     r"""
@@ -111,7 +112,7 @@ class NonlinearSystemSolver:
         elif method == "lm":
             self.options["maxiter"] = self.maxiter
         else:
-            raise ValueError(f"Invalid solver. Available options: {', '.join(available_solvers)}")
+            raise ValueError(f"Invalid solver. Available options: {', '.join(SOLVER_OPTIONS)}")
 
         # Check for logger validity
         if self.logger is not None:
@@ -143,6 +144,7 @@ class NonlinearSystemSolver:
         self.func_count_tot = 0
         self.solution = None
         self.solution_report = []
+        self.elapsed_time = None
         self.include_solution_in_footer = False
         self.convergence_history = {
             "grad_count": [],
@@ -173,6 +175,9 @@ class NonlinearSystemSolver:
 
         """
 
+        # Start timing with high-resolution timer
+        start_time = time.perf_counter()
+
         # Print report header
         self._write_header()
 
@@ -186,6 +191,12 @@ class NonlinearSystemSolver:
             tol=self.tol,
             options=self.options,
         )
+
+        # Evaluate performance again for the converged solution
+        self.get_values(self.solution.x)
+
+        # Calculate elapsed time
+        self.elapsed_time =time.perf_counter() - start_time  
 
         # Print report footer
         self._write_footer()
@@ -370,9 +381,10 @@ class NonlinearSystemSolver:
         separator = "-" * len(self.header)
         exit_message = f"Exit message: {self.solution.message}"
         success_status = f"Success: {self.solution.success}"
+        time_message = f"Solution time: {self.elapsed_time:.3f} seconds"
         solution_header = "Solution:"
         solution_vars = [f"   x{i} = {x:+6e}" for i, x in enumerate(self.solution.x)]
-        lines_to_output = [separator, success_status, exit_message]
+        lines_to_output = [separator, success_status, exit_message, time_message]
         if self.include_solution_in_footer:
             lines_to_output += [solution_header]
             lines_to_output += solution_vars
