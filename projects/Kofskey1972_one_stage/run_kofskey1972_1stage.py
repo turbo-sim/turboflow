@@ -13,7 +13,6 @@ if desired_path not in sys.path:
 
 import meanline_axial as ml
 
-
 # Define running option
 CASE = 2
 

@@ -67,9 +67,6 @@ geometry_new:
   thickness_max: [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.0130e-2]
 
-
-
-
 # geometry_optimization:
 #   radius_specification: constant_mean
 #   hub_tip_ratio: [0.9, 0.9, 0.9, 0.9]
