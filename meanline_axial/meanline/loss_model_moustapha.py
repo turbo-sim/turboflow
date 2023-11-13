@@ -1,54 +1,23 @@
 import numpy as np
 from .. import math
 
-def calculate_loss_coefficient(cascade_data, is_throat):
+def compute_losses(input_parameters):
     
-    r"""
-    Calculate the total loss coefficient for a cascade row using the Kacker-Okapuu loss model.
-    
-    The total loss coefficient (Y) is calculated as the sum of individual loss coefficients:
-
-    .. math::
-
-        Y = Y_p + Y_s + Y_{cl} + Y_{te}
-
-    Parameters
-    ----------
-    cascade_data (dict): Dictionary containing cascade information.
-        - "flow" (dict): Dictionary with flow-related parameters.
-        - "geometry" (dict): Dictionary with geometric parameters.
-        - "type" (str): Type of cascade ('stator' or 'rotor').
-
-    Returns
-    -------
-    list: A list containing:
-        - Total pressure loss coefficient (Y).
-        - Dictionary of individual loss coefficients:
-            - "Profile" (float): Profile loss coefficient.
-            - "Incidence" (float): Incidence loss coefficient (always 0).
-            - "Trailing" (float): Trailing edge loss coefficient.
-            - "Secondary" (float): Secondary loss coefficient.
-            - "Clearance" (float): Tip clearance loss coefficient.
-            - "Total" (float): Total loss coefficient.
-
-
-    """
-    
+    r"""Evaluate loss coefficient according to Moustapha (1997) model"""
     
     # Load data
-    flow_parameters = cascade_data["flow"]
-    geometry = cascade_data["geometry"]
-    cascade_type=cascade_data["type"]
-    beta_des = geometry["theta_in"]
+    flow_parameters = input_parameters["flow"]
+    geometry = input_parameters["geometry"]
+    beta_des = geometry["metal_angle_le"]
     
     # Profile loss coefficient
-    Y_p = get_profile_loss(flow_parameters, geometry, cascade_type)
+    Y_p = get_profile_loss(flow_parameters, geometry)
 
     # Secondary loss coefficient
     Y_s = get_secondary_loss(flow_parameters, geometry)
 
     # Tip clearance loss coefficient
-    Y_cl = get_tip_clearance_loss(flow_parameters, geometry, cascade_type)
+    Y_cl = get_tip_clearance_loss(flow_parameters, geometry)
     
     # Trailing edge loss coefficienct
     Y_te=get_trailing_edge_loss(flow_parameters, geometry)
@@ -64,24 +33,19 @@ def calculate_loss_coefficient(cascade_data, is_throat):
     # Calculate total pressure loss coefficient
     Y=Y_p+Y_s+Y_cl+Y_te
     
-    if is_throat:
-        Y_p = Y_p
-        Y_inc = Y_inc
-        Y_te = 0
-        Y_s = Y_s
-        Y_cl = Y_cl
-        Y = Y_p + Y_te + Y_inc + Y_s + Y_cl   
-    
-    loss_dict = {"Profile" : Y_p,
-                 "Incidence": Y_inc,
-                 "Trailing": Y_te,
-                 "Secondary" : Y_s,
-                 "Clearance" : Y_cl,
-                 "Total" : Y}
-    
-    return Y, loss_dict
+    # Return a dictionary of loss components
+    losses = {
+        "loss_profile": Y_p,
+        "loss_incidence": Y_inc,
+        "loss_trailing": Y_te,
+        "loss_secondary": Y_s,
+        "loss_clearance": Y_cl,
+        "loss_total": Y_p + Y_te + Y_inc + Y_s + Y_cl,
+    }
 
-def get_profile_loss(flow_parameters, geometry, cascade_type):
+    return losses
+
+def get_profile_loss(flow_parameters, geometry):
     
     r"""
     Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
@@ -115,11 +79,11 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "r_ht_in" (float) : Hub to tip radius ratio at inlet.
-            - "s" (float) : Pitch.
-            - "c" (float) : Chord length.
-            - "theta_in" (float) : Inlet metal angle.
-            - "t_max" (float) : Maximum thickness.
+            - "hub_tip_ratio_in" (float) : Hub to tip radius ratio at inlet.
+            - "pitch" (float) : Pitch.
+            - "chord" (float) : Chord length.
+            - "metal_angle_le" (float) : Inlet metal angle.
+            - "thickness_max" (float) : Maximum thickness.
 
     cascade_type : str
         Type of cascade ('stator' or 'rotor').
@@ -141,11 +105,12 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     p_out = flow_parameters["p_out"]
     beta_out = flow_parameters["beta_out"]
 
-    r_ht_in = geometry["r_ht_in"]
-    s = geometry["s"]
-    c = geometry["c"]
-    theta_in = geometry["theta_in"]
-    t_max = geometry["t_max"]
+    r_ht_in = geometry["hub_tip_ratio_in"]
+    s = geometry["pitch"]
+    c = geometry["chord"]
+    theta_in = geometry["metal_angle_le"]
+    t_max = geometry["thickness_max"]
+    cascade_type= geometry["cascade_type"]
     
     # Reynolds number correction factor
     f_Re=(Re/2e5)**(-0.4)*(Re<2e5)+1*(Re >= 2e5 and Re <= 1e6) + (Re/1e6)**(-0.2)*(Re>1e6)
@@ -168,7 +133,7 @@ def get_profile_loss(flow_parameters, geometry, cascade_type):
     # If the optimization algorithm has upper and lower bounds for the outlet 
     # angle there is no need to worry about this problem
     # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
-    angle_out_bis = max(abs(beta_out))
+    angle_out_bis = max(abs(beta_out), 40)
     Yp_reaction = nozzle_blades(s/c,angle_out_bis)
     Yp_impulse = impulse_blades(s/c,angle_out_bis)
     
@@ -221,10 +186,10 @@ def get_secondary_loss(flow_parameters, geometry):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "b" (float) : Blade span.
-            - "H" (float) : Blade height.
-            - "c" (float) : Chord length.
-            - "theta_in" (float) : Inlet metal angle.
+            - "axial_chord" (float) : Blade span.
+            - "height" (float) : Blade height.
+            - "chord" (float) : Chord length.
+            - "metal_angle_le" (float) : Inlet metal angle.
 
     Returns
     -------
@@ -239,10 +204,10 @@ def get_secondary_loss(flow_parameters, geometry):
     beta_out=flow_parameters["beta_out"]
     beta_in=flow_parameters["beta_in"]
     
-    b=geometry["b"]
-    H=geometry["H"]
-    c=geometry["c"]
-    theta_in=geometry["theta_in"]
+    b=geometry["axial_chord"]
+    H=geometry["height"]
+    c=geometry["chord"]
+    theta_in=geometry["metal_angle_le"]
     
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
@@ -290,9 +255,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "te" (float) : Trailing edge thickness.
-            - "o" (float) : Throat width.
-            - "theta_in" (float) : Inlet metal angle.
+            - "thickness_te" (float) : Trailing edge thickness.
+            - "opening" (float) : Throat width.
+            - "metal_angle_le" (float) : Inlet metal angle.
 
     Returns
     -------
@@ -302,9 +267,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     """
     
-    t_te = geometry["te"]
-    o = geometry["o"]
-    angle_in = geometry["theta_in"]
+    t_te = geometry["thickness_te"]
+    o = geometry["opening"]
+    angle_in = geometry["metal_angle_le"]
     angle_out = flow_parameters["beta_out"]
     
     # Range of trailing edge to throat opening ratio
@@ -332,7 +297,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     
     return Y_te
 
-def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
+def get_tip_clearance_loss(flow_parameters, geometry):
     
     r"""
     Calculate the tip clearance loss coefficient for the current cascade using the Kacker and Okapuu loss model.
@@ -361,9 +326,9 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "H" (float) : Blade height.
-            - "c" (float) : Chord length.
-            - "t_cl" (float) : Tip clearance.
+            - "height" (float) : Blade height.
+            - "chord" (float) : Chord length.
+            - "tip_clearance" (float) : Tip clearance.
 
     cascade_type : str
         Type of cascade ('stator' or 'rotor').
@@ -379,9 +344,10 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type):
     beta_out = flow_parameters["beta_out"]
     beta_in = flow_parameters["beta_in"]
     
-    H = geometry["H"]
-    c = geometry["c"]
-    t_cl = geometry["t_cl"]
+    H = geometry["height"]
+    c = geometry["chord"]
+    t_cl = geometry["tip_clearance"]
+    cascade_type= geometry["cascade_type"]
     
     # Calculate blade loading parameter Z 
     angle_m = math.arctand((math.tand(beta_in)+math.tand(beta_out))/2)
@@ -437,10 +403,10 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
 
     geometry : dict
         Dictionary with the geometrical parameters describing the current cascade.
-            - "s" (float) : Pitch.
-            - "le" (float) : Leading edge diameter.
-            - "theta_in" (float) : Inlet metal angle.
-            - "theta_out" (float) : Exit metal angle.
+            - "pitch" (float) : Pitch.
+            - "diameter_le" (float) : Leading edge diameter.
+            - "metal_angle_le" (float) : Inlet metal angle.
+            - "metal_angle_te" (float) : Exit metal angle.
 
     beta_des : float
         Desired beta value.
@@ -462,10 +428,10 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     beta_in=flow_parameters["beta_in"] # Inlet relativ flow angle
     gamma = flow_parameters["gamma_out"] # Specific heat ratio
 
-    s=geometry["s"] # Pitch
-    le=geometry["le"] # Leading edge diameter
-    theta_in=geometry["theta_in"] # Inlet metal angle
-    theta_out = geometry["theta_out"] # Exit metal angle
+    s=geometry["pitch"] # Pitch
+    le=geometry["diameter_le"] # Leading edge diameter
+    theta_in=geometry["metal_angle_le"] # Inlet metal angle
+    theta_out = geometry["metal_angle_te"] # Exit metal angle
     
     # Compute incidence parameter
     chi = get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des)
@@ -519,10 +485,10 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "c" (float) : Chord length.
-            - "le" (float) : Leading edge diameter.
-            - "theta_in" (float) : Inlet metal angle.
-            - "theta_out" (float) : Exit metal angle.
+            - "chord" (float) : Chord length.
+            - "diameter_le" (float) : Leading edge diameter.
+            - "metal_angle_le" (float) : Inlet metal angle.
+            - "metal_angle_te" (float) : Exit metal angle.
 
     Returns
     -------
@@ -534,10 +500,10 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     
     beta_in=flow_parameters["beta_in"]
 
-    c=geometry["c"]
-    le=geometry["le"]
-    theta_in=geometry["theta_in"]
-    theta_out = geometry["theta_out"]
+    c=geometry["chord"]
+    le=geometry["diameter_le"]
+    theta_in=geometry["metal_angle_le"]
+    theta_out = geometry["metal_angle_te"]
     
     chi = get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in)
     

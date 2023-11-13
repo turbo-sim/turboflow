@@ -24,4 +24,5 @@ dependencies:
     - numpydoc
     - sphinxcontrib-bibtex
     - pyzotero
+    - pytest
 

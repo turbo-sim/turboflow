@@ -1,17 +1,13 @@
 import numpy as np
 from .. import math
 
-available_deviation_models = ["aungier", "ainley_mathieson", "metal_angle"]
 
-
-def get_subsonic_deviation(
-    Ma_exit, Ma_crit, opening_to_pitch, deviation_model="aungier"
-):
+def get_subsonic_deviation(Ma_exit, Ma_crit, opening_to_pitch, model="aungier"):
     """
     Calculate subsonic relative exit flow angle based on the selected deviation model.
 
     Available deviation models:
-    
+
     - "aungier": Calculate deviation using the method proposed by :cite:`aungier_turbine_2006`.
     - "ainley_mathieson": Calculate deviation using the model proposed by :cite:`ainley_method_1951`.
     - "metal_angle": Assume the exit flow angle is given by the gauge angle (zero deviation).
@@ -19,7 +15,7 @@ def get_subsonic_deviation(
     Parameters
     ----------
     deviation_model : str
-        The deviation model to use (e.g., 'aungier', 'ainley_mathieson', 'metal_angle').
+        The deviation model to use (e.g., 'aungier', 'ainley_mathieson', 'zero_deviation').
     Ma_exit : float or numpy.array
         The exit Mach number.
     Ma_crit : float
@@ -37,27 +33,28 @@ def get_subsonic_deviation(
     ValueError
         If an invalid deviation model is provided.
     """
-    if deviation_model in available_deviation_models:
-        if deviation_model == "aungier":
-            beta = deviation_model_aungier(Ma_exit, Ma_crit, opening_to_pitch)
-        elif deviation_model == "ainley_mathieson":
-            beta = deviation_model_ainley_mathieson(
-                Ma_exit, Ma_crit, opening_to_pitch
-            )
-        elif deviation_model == "metal_angle":
-            beta = np.full_like(Ma_exit, math.arccosd(opening_to_pitch))
 
-        return beta
+    # Function mappings for each deviation model
+    deviation_model_functions = {
+        "aungier": get_exit_flow_angle_aungier,
+        "ainley_mathieson": get_exit_flow_angle_ainley_mathieson,
+        "zero_deviation": get_exit_flow_angle_zero_deviation,
+    }
+
+    # Evaluate deviation model
+    if model in deviation_model_functions:
+        return deviation_model_functions[model](Ma_exit, Ma_crit, opening_to_pitch)
     else:
+        options = ", ".join(f"'{k}'" for k in deviation_model_functions)
         raise ValueError(
-            f"Invalid deviation model: '{deviation_model}'. Available options: {', '.join(available_deviation_models)}"
+            f"Invalid deviation model: '{model}'. Available options: {options}"
         )
-
-
-def deviation_model_aungier(Ma_exit, Ma_crit, opening_to_pitch):
+    
+def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, opening_to_pitch):
     """
     Calculate deviation angle using the method proposed by :cite:`aungier_turbine_2006`.
     """
+    # TODO add equations of Aungier model to docstring
 
     # Compute deviation for  Ma<0.5 (low-speed)
     o_to_s = opening_to_pitch
@@ -86,11 +83,12 @@ def deviation_model_aungier(Ma_exit, Ma_crit, opening_to_pitch):
     return beta
 
 
-def deviation_model_ainley_mathieson(Ma_exit, Ma_crit, opening_to_pitch):
+def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, opening_to_pitch):
     """
     Calculate deviation angle using the model proposed by :cite:`ainley_method_1951`.
     Equation digitized from Figure 5 of :cite:`ainley_method_1951`.
     """
+    # TODO add equations of Ainley-Mathieson to docstring
 
     # Compute deviation for  Ma<0.5 (low-speed)
     beta_g = math.arccosd(opening_to_pitch)
@@ -106,7 +104,7 @@ def deviation_model_ainley_mathieson(Ma_exit, Ma_crit, opening_to_pitch):
     # Compute deviation for 0.50 <= Ma_exit < 1.00
     medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < 1.00)
     X = (2 * Ma_exit[medium_speed_mask] - 1) / (2 * Ma_crit - 1)
-    delta[medium_speed_mask] = delta_0 * (1 - X)
+    delta[medium_speed_mask] = delta_0 * (1 - 10 * X**3 + 15 * X**4 - 6 * X**5)
 
     # Extrapolate to zero deviation for supersonic flow
     supersonic_mask = Ma_exit >= 1.00
@@ -116,3 +114,14 @@ def deviation_model_ainley_mathieson(Ma_exit, Ma_crit, opening_to_pitch):
     beta = beta_g - delta
 
     return beta
+
+
+def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, opening_to_pitch):
+    """
+    The exit flow angle is given by the gauge angle at subsonic conditions
+    """
+    # TODO add equation of zero-deviation to docstring
+    return np.full_like(Ma_exit, math.arccosd(opening_to_pitch))
+
+
+

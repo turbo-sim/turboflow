@@ -1,4 +1,4 @@
-meanline\_axial.plot\_functions module
+Plotting functions
 ======================================
 
 .. automodule:: meanline_axial.plot_functions

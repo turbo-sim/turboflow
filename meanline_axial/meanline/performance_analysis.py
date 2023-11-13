@@ -1,5 +1,6 @@
 import os
 import yaml
+import copy
 import itertools
 import pandas as pd
 import numpy as np
@@ -38,6 +39,7 @@ def compute_performance(
     out_filename=None,
     out_dir="output",
     stop_on_failure=True,
+    export_results=True,
 ):
     """
     Compute and export the performance of each specified operation point to an Excel file.
@@ -126,6 +128,7 @@ def compute_performance(
     stage_data = []
     solver_data = []
     solution_data = []
+    geometry_data = []
     solver_container = []
 
     # Loop through all operation points
@@ -169,10 +172,11 @@ def compute_performance(
 
             # Collect results
             operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(pd.DataFrame([results["overall"]]))
+            overall_data.append(results["overall"])
             plane_data.append(flatten_dataframe(results["plane"]))
             cascade_data.append(flatten_dataframe(results["cascade"]))
             stage_data.append(flatten_dataframe(results["stage"]))
+            geometry_data.append(flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.scale_to_real_values(solver.solution.x))
             solver_container.append(solver)
@@ -194,6 +198,7 @@ def compute_performance(
             plane_data.append(pd.DataFrame([{}]))
             cascade_data.append(pd.DataFrame([{}]))
             stage_data.append(pd.DataFrame([{}]))
+            geometry_data.append(pd.DataFrame([{}]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append([])
             solver_container.append(solver)
@@ -205,6 +210,7 @@ def compute_performance(
         "plane": pd.concat(plane_data, ignore_index=True),
         "cascade": pd.concat(cascade_data, ignore_index=True),
         "stage": pd.concat(stage_data, ignore_index=True),
+        "geometry": pd.concat(geometry_data, ignore_index=True),
         "solver": pd.concat(solver_data, ignore_index=True),
     }
 
@@ -213,12 +219,13 @@ def compute_performance(
         df.insert(0, "operation_point", range(1, 1 + len(df)))
 
     # Write dataframes to excel
-    filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-        for sheet_name, df in dfs.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+    if export_results:
+        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for sheet_name, df in dfs.items():
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    print(f"Performance data successfully written to {filepath}")
+        print(f"Performance data successfully written to {filepath}")
 
     return solver_container
 
@@ -269,12 +276,14 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
+    problem = copy.deepcopy(problem)
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
+    solver_options = copy.deepcopy(solver_options)
 
     # Attempt solving with the specified method
-    method = solver_options["method"]
-    print(f"Trying to solve the problem using {name_map[method]} method")
+    name = name_map[solver_options['method']]
+    print(f"Trying to solve the problem using {name} method")
     solver = initialize_solver(problem, initial_guess, solver_options)
     try:
         solution = solver.solve()
@@ -283,12 +292,13 @@ def compute_single_operation_point(
         print(f"Error during solving: {e}")
         success = False
     if not success:
-        print(f"Solution failed for method '{solver_options['method']}'")
+        print(f"Solution failed for the {name} method")
 
     # Attempt solving with Lavenberg-Marquardt method
     if solver_options["method"] != "lm" and not success:
         solver_options["method"] = "lm"
-        print(f"Trying to solve the problem using {name_map[method]} method")
+        name = name_map[solver_options['method']]
+        print(f"Trying to solve the problem using {name} method")
         solver = initialize_solver(problem, initial_guess, solver_options)
         try:
             solution = solver.solve()
@@ -297,14 +307,18 @@ def compute_single_operation_point(
             print(f"Error during solving: {e}")
             success = False
         if not success:
-            print(f"Solution failed for method '{solver_options['method']}'")
+            print(f"Solution failed for the {name} method")
 
     # TODO: Attempt solving with optimization algorithms?
 
     # Attempt solving with a heuristic initial guess
+    # TODO: To be improved with random generation of initial guess within ranges
     if isinstance(initial_guess, np.ndarray) and not success:
         solver_options["method"] = "lm"
+        name = name_map[solver_options['method']]
         print("Trying to solve the problem with a new initial guess")
+        print(f"Using robust solver: {name}")
+        initial_guess = problem.get_initial_guess(None)
         solver = initialize_solver(problem, initial_guess, solver_options)
         try:
             solution = solver.solve()
@@ -594,6 +608,11 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         case_data : dict
             A dictionary containing case-specific data.
         """
+        # TODO conversion between dictionary of independent variables and np.array should happen
+        # TODO only within the CascadesNonlinearSystemProblem() class. This makes sense because this class
+        # TODO is the interface between optimization algorithm and turbine model
+        # TODO the turbine model should only use input variables in dictionary format
+        # TODO the conversion from dictionary to array can be done within the "get_values()" function using a "self." variable or function
 
         # Process turbine geometry
         geom.validate_axial_turbine_geometry(config["geometry"])
@@ -626,6 +645,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             self.model_options,
             self.reference_values,
         )
+
+
+        # import pdb
+        # print(x)
+        # print(residuals)
+        # pdb.set_trace()
 
         return np.array(list(residuals.values()))
 
@@ -696,7 +721,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
 
         # Define a reference mass flow rate
         A_out = self.geometry["A_out"][-1]
-        m_ref = A_out * v0 * d_isenthalpic
+        mass_flow_ref = A_out * v0 * d_isenthalpic
 
         # Define reference_values
         self.reference_values = {
@@ -705,10 +730,9 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             "v0": v0,
             "h_out_s": h_isentropic,
             "d_out_s": d_isenthalpic,
-            "m_ref": m_ref,
+            "mass_flow_ref": mass_flow_ref,
             "angle_range": 180,
             "angle_min": -90,
-            "delta_ref": 0.011 / 3e5 ** (-1 / 7),
         }
 
         return

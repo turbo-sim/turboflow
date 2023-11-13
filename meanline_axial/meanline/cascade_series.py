@@ -10,8 +10,12 @@ from scipy.optimize._numdiff import approx_derivative
 
 from .. import math
 
+from ..utilities import add_string_to_keys, ensure_iterable
+
+
 # Keys of the information that should be stored in results
-keys_plane = [
+KEYS_KINEMATIC = [
+    "u",
     "v",
     "v_m",
     "v_t",
@@ -20,83 +24,66 @@ keys_plane = [
     "w_m",
     "w_t",
     "beta",
-    "p",
-    "T",
-    "h",
-    "s",
-    "d",
-    "Z",
-    "a",
-    "mu",
-    "k",
-    "cp",
-    "cv",
-    "gamma",
-    "p0",
-    "T0",
-    "h0",
-    "s0",
-    "d0",
-    "Z0",
-    "a0",
-    "mu0",
-    "k0",
-    "cp0",
-    "cv0",
-    "gamma0",
-    "p0rel",
-    "T0rel",
-    "h0rel",
-    "s0rel",
-    "d0rel",
-    "Z0rel",
-    "a0rel",
-    "mu0rel",
-    "k0rel",
-    "cp0rel",
-    "cv0rel",
-    "gamma0rel",
-    "Ma",
-    "Ma_rel",
-    "Re",
-    "mass_flow",
-    "delta",
-    "rothalpy",
-    "Y_err",
-    "Y",
-    "Y_p",
-    "Y_cl",
-    "Y_s",
-    "Y_te",
-    "Y_inc",
-    "blockage",
 ]
 
-keys_cascade = [
-    "Y_tot",
-    "Y_p",
-    "Y_s",
-    "Y_cl",
+KEYS_PROPS_STATIC = ["p", "T", "h", "s", "d", "Z", "a", "mu", "k", "cp", "cv", "gamma"]
+KEYS_PROPS_STAG_ABS = [f"{key}0" for key in KEYS_PROPS_STATIC]
+KEYS_PROPS_STAG_REL = [f"{key}0_rel" for key in KEYS_PROPS_STATIC]
+KEYS_LOSSES = lm.KEYS_LOSSES
+
+KEYS_PLANE = (
+    KEYS_KINEMATIC
+    + KEYS_PROPS_STATIC
+    + KEYS_PROPS_STAG_ABS
+    + KEYS_PROPS_STAG_REL
+    + KEYS_LOSSES
+    + [
+        "Ma",
+        "Ma_rel",
+        "Re",
+        "mass_flow",
+        "rothalpy",
+        "blockage",
+    ]
+)
+
+
+KEYS_CASCADE = [
+    "loss_total",
+    "loss_profile",
+    "loss_clearance",
+    "loss_secondary",
+    "loss_trailing",
+    "loss_incidence",
     "dh_s",
     "Ma_crit",
-    "m_crit",
+    "mass_flow_crit",
+    "d_crit",
+    "w_crit",
+    "p_crit",
+    "beta_crit",
     "incidence",
     "density_correction",
 ]
 
 
 def evaluate_cascade_series(
-    variables_values, BC, geometry, fluid, model_options, reference_values
+    variables_values,
+    boundary_conditions,
+    geometry,
+    fluid,
+    model_options,
+    reference_values,
 ):
-    # Create dictionary of independent variables
+    # TODO: Create dictionary of independent variables
     # variables = dict(zip(keys, values))
-    
+
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
-    h0_in = BC["h0_in"]
-    s_in = BC["s_in"]
-    alpha_in = BC["alpha_in"]
-    angular_speed = BC["omega"]
+    h0_in = boundary_conditions["h0_in"]
+    s_in = boundary_conditions["s_in"]
+    alpha_in = boundary_conditions["alpha_in"]
+    angular_speed = boundary_conditions["omega"]
 
     # Load reference_values
     h_out_s = reference_values["h_out_s"]  # FIXME: bad plaement of h_out_s variable?
@@ -106,13 +93,29 @@ def evaluate_cascade_series(
     angle_range = reference_values["angle_range"]
     angle_min = reference_values["angle_min"]
 
-    # Initialize results structure
-    results = {}
-    df = pd.DataFrame(columns=keys_plane)
-    results["plane"] = df
-    df = pd.DataFrame(columns=keys_cascade)
-    results["cascade"] = df
+    # Filtered geometry
+    geom_cascades = {
+        key: value
+        for key, value in geometry.items()
+        if len(ensure_iterable(value)) == number_of_cascades
+    }
 
+    # Initialize results structure
+    results = {
+        "plane": pd.DataFrame(columns=KEYS_PLANE),
+        "cascade": pd.DataFrame(columns=KEYS_CASCADE),
+        "stage": None,
+        "overall": None,
+        "geometry": pd.DataFrame(geom_cascades),
+    }
+
+    # results = {}
+    # df_plane = pd.DataFrame(columns=KEYS_PLANE)
+    # df_cascade = pd.DataFrame(columns=KEYS_CASCADE)
+    # df_geometry = pd.DataFrame(geom_cascades)
+    # results["plane"] = df_plane
+    # results["cascade"] = df_cascade
+    # results["geometry"] = df_geometry
 
     # initialize residual arrays
     # residuals_values = np.array([])
@@ -120,14 +123,14 @@ def evaluate_cascade_series(
     residuals = {}
 
     # Define degrees of freedom #FIXME: independant variables could be handled differently
+    # TODO: Use dictionary for input variables
     n_dof = 5
     n_dof_crit = 3
     variables_actual = variables_values[0 : n_dof * number_of_cascades + 1]
     variables_critical = variables_values[n_dof * number_of_cascades + 1 :]
     v_in = variables_actual[0] * v0
     variables_actual = np.delete(variables_actual, 0)
-    
-        
+
     # Rename turbine inlet velocity
     # v_in = variables["v_in"] * v0
 
@@ -151,17 +154,17 @@ def evaluate_cascade_series(
         w_out = variables_actual_cascade[1] * v0
         s_throat = variables_actual_cascade[2] * s_range + s_min
         s_out = variables_actual_cascade[3] * s_range + s_min
-        beta_out = variables_actual_cascade[4] * angle_range + angle_min  
+        beta_out = variables_actual_cascade[4] * angle_range + angle_min
         v_crit_in = variables_critical_cascade[0]
         w_crit_out = variables_critical_cascade[1]
         s_crit_out = variables_critical_cascade[2]
-        
+
         # cascade = '_'+str(i+1)
         # w_throat = variables["w_throat"+cascade] * v0
         # w_out = variables["w_out"+cascade] * v0
         # s_throat = variables["s_throat"+cascade] * s_range + s_min
         # s_out = variables["s_out"+cascade] * s_range + s_min
-        # beta_out = variables["beta_out"+cascade] * angle_range + angle_min  
+        # beta_out = variables["beta_out"+cascade] * angle_range + angle_min
         # v_crit_in = variables["v*_in"+cascade]
         # w_crit_out = variables["w*_out"+cascade]
         # s_crit_out = variables["s*_out"+cascade]
@@ -200,7 +203,9 @@ def evaluate_cascade_series(
         # Add cascade residuals to residual arrays
         # residuals_values = np.concatenate((residuals_values, cascade_residual_values))
         # residuals_keys = np.concatenate((residuals_keys, cascade_residual_keys))
-        cascade_residuals = {f"{key}_{i+1}" : val for key, val in cascade_residuals.items()}
+        cascade_residuals = {
+            f"{key}_{i+1}": val for key, val in cascade_residuals.items()
+        }
         residuals.update(cascade_residuals)
 
         # Calculate input of next cascade (Assume no change in density)
@@ -224,37 +229,65 @@ def evaluate_cascade_series(
 
     # Add exit pressure error to residuals
     p_calc = results["plane"]["p"].values[-1]
-    p_error = (p_calc - BC["p_out"]) / BC["p0_in"]
+    p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
     # residuals_values = np.append(residuals_values, p_error)
     # residuals_keys = np.append(residuals_keys, "p_out")
-    
-    # Store global variables
-    v_out = results["plane"]["v"].values[-1]
-    m = results["plane"]["mass_flow"].values[-1]
-    h0_in = results["plane"]["h0"].values[0]
-    h0_out = results["plane"]["h0"].values[-1]
 
-    results["overall"] = {}
-    results["overall"]["mass_flow_rate"] = m
-
+    # Calculation of overall performance
+    p = results["plane"]["p"].values
+    p0 = results["plane"]["p0"].values
     h0 = results["plane"]["h0"].values
-    eta_ts = (h0[0] - h0[-1]) / (h0[0] - h_out_s) * 100
-    eta_tt = (h0[0] - h0[-1]) / (h0[0] - h_out_s - 0.5 * v_out**2) * 100
-    results["overall"]["eta_ts"] = eta_ts
-    results["overall"]["eta_tt"] = eta_tt
-    results["overall"]["power"] = m * (h0_in - h0_out)
-    results["overall"]["torque"] = m * (h0_in - h0_out) / angular_speed
-    results["overall"]["pr_tt"] = BC["p0_in"] / results["plane"]["p0"].values[-1]
-    results["overall"]["pr_ts"] = BC["p0_in"] / results["plane"]["p"].values[-1]
+    v_out = results["plane"]["v"].values[-1]
+    u_out = results["plane"]["u"].values[-1]
+    mass_flow = results["plane"]["mass_flow"].values[-1]
+    exit_flow_angle = results["plane"]["alpha"].values[-1]
+    PR_tt = p0[0] / p[-1]
+    PR_ts = p0[0] / p0[-1]
+    h0_in = h0[0]
+    h0_out = h0[-1]
+    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)
+    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)
+    efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
+    efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
+    power = mass_flow * (h0_in - h0_out)
+    torque = power / angular_speed
 
-    loss_fracs = calculate_eta_drop_fractions(results, number_of_cascades, reference_values)
-    results["loss_fracs"] = loss_fracs
-    results["cascade"] = pd.concat([results["cascade"], loss_fracs], axis=1)
+    # Creating the 'overall' dictionary using a dictionary comprehension
+    results["overall"] = pd.DataFrame(
+        [
+            {
+                "PR_tt": PR_tt,
+                "PR_ts": PR_ts,
+                "mass_flow_rate": mass_flow,
+                "efficiency_tt": efficiency_tt,
+                "efficiency_ts": efficiency_ts,
+                "efficiency_ts_drop_kinetic": efficiency_ts_drop_kinetic,
+                "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
+                "power": power,
+                "torque": torque,
+                "angular_speed": angular_speed,
+                "exit_flow_angle": exit_flow_angle,
+                "exit_velocity": v_out,
+                "spouting_velocity": v0,
+                "last_blade_velocity": u_out,
+                "blade_jet_ratio": u_out / v0,
+                "h0_in": h0_in,
+                "h0_out": h0_out,
+                "h_out_s": h_out_s,
+            }
+        ]
+    )
+
+    # Additional calculations
+    loss_fractions = calculate_efficiency_drop_fractions(
+        results, number_of_cascades, reference_values
+    )
+    results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
+    # results["loss_fractions"] = loss_fractions
 
     # Add stage results to the results tructure
     if geometry["number_of_stages"] != 0:
-        # Calculate stage variables
         stage_results = calculate_stage_parameters(
             geometry["number_of_stages"], results["plane"]
         )
@@ -276,73 +309,61 @@ def evaluate_cascade(
     reference_values,
 ):
     # Define model options
-    displacement_thickness = model_options.get("displacement_thickness", 0)
-    loss_model = model_options.get("loss_model", "benner")
-    choking_condition = model_options.get("choking_condition", "deviation")
-    deviation_model = model_options.get("deviation_model", "aungier")
+    # TODO Add warnings that some settings have been assumed. This is a dangerous silent behavior as it is now
+    # TODO It would make sense to define default values for these options at a higher level, for instance after processing the configuration file
+    # TODO an advantage of the approach above is that it is possible to print a warning that will not be shown for each iteration of the solvers
+    # loss_model = model_options.get("loss_model", "benner")
+    # choking_condition = model_options.get("choking_condition", "deviation")
+    # deviation_model = model_options.get("deviation_model", "aungier")
+    loss_model = model_options["loss_model"]
+    choking_condition = model_options["choking_condition"]
+    deviation_model = model_options["deviation_model"]
 
     # Load reference values
-    m_ref = reference_values["m_ref"]
-    delta_ref = reference_values["delta_ref"]
-
-    # Define residual array and residual keys array
-    # residuals_cascade = np.array([])
-    # keys_cascade = np.array([])
-    residuals = {}
+    mass_flow_reference = reference_values["mass_flow_ref"]
 
     # Evaluate inlet plane
-    inlet_plane = evaluate_inlet(
-        cascade_inlet_input, fluid, geometry, angular_speed, delta_ref
-    )
-    results["plane"].loc[len(results["plane"])] = inlet_plane
+    inlet_plane = evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed)
 
     # Evaluate throat plane
+    # TODO discuss how to model the effect of "displacement_thickness" correctly
+    # TODO only at the throat, at the throat and the exit plane?
+    # TODO involve Simone
+    # TODO model does not converge if zero blade blockage at the exit plane. Why? Discontinuity?
     cascade_throat_input["rothalpy"] = inlet_plane["rothalpy"]
     cascade_throat_input["beta"] = geometry["metal_angle_te"]
-    throat_plane, Y_info = evaluate_exit(
+    throat_plane, _ = evaluate_exit(
         cascade_throat_input,
         fluid,
         geometry,
         inlet_plane,
         angular_speed,
-        displacement_thickness,
+        model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_throat"],
+        geometry["A_throat"],
     )
-    results["plane"].loc[len(results["plane"])] = throat_plane
 
     # Evaluate exit plane
     cascade_exit_input["rothalpy"] = inlet_plane["rothalpy"]
-    exit_plane, Y_info = evaluate_exit(
+    exit_plane, loss_dict = evaluate_exit(
         cascade_exit_input,
         fluid,
         geometry,
         inlet_plane,
         angular_speed,
-        displacement_thickness,
+        model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_out"],
+        geometry["A_out"],
     )
-    results["plane"].loc[len(results["plane"])] = exit_plane
 
-    # Add loss coefficient error to residual array
-    # residuals_cascade = np.concatenate(
-    #     (residuals_cascade, [throat_plane["Y_err"], exit_plane["Y_err"]])
-    # )
-    # keys_cascade = np.concatenate((keys_cascade, ["Y_err_throat", "Y_err_exit"]))
-    residuals["Y_err_throat"] = throat_plane["Y_err"]
-    residuals["Y_err_exit"] = exit_plane["Y_err"]
+    # Evaluate isentropic enthalpy change
+    props_is = fluid.get_props(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+    dh_is = exit_plane["h"] - props_is["h"]
 
-
-    # Add mass flow rate error
-    m_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
-    m_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
-
-    # residuals_m = np.array([m_error_throat, m_error_exit]) / m_ref
-    # residuals_cascade = np.concatenate((residuals_cascade, residuals_m))
-    # keys_cascade = np.concatenate((keys_cascade, ["m_err_throat", "m_err_exit"]))
-    residuals["m_err_throat"] = m_error_throat / m_ref
-    residuals["m_err_exit"] = m_error_exit / m_ref
-
-    # Calculate critical state
+    # Evaluate critical state
+    # TODO: Pass x_crit as dicitonary to evaluate_lagrangian_gradient?
     critical_cascade_input["h0_in"] = cascade_inlet_input["h0"]
     critical_cascade_input["s_in"] = cascade_inlet_input["s"]
     critical_cascade_input["alpha_in"] = cascade_inlet_input["alpha"]
@@ -353,7 +374,7 @@ def evaluate_cascade(
             critical_cascade_input["s*_out"],
         ]
     )
-    residuals_critical, critical_state = evaluate_lagrange_gradient(
+    residuals_critical, critical_state = get_critical_residuals(
         x_crit,
         critical_cascade_input,
         fluid,
@@ -363,48 +384,57 @@ def evaluate_cascade(
         reference_values,
     )
 
-    # Add residuals of calculation of critical state
-    # residuals_cascade = np.concatenate((residuals_cascade, res_critical))
-    # keys_cascade = np.concatenate((keys_cascade, res_keys))
-    residuals.update(residuals_critical)
-
-    # Add final closing equation (deviaton model or mach error)
-    if choking_condition == "deviation":
-        density_correction = (
-            throat_plane["d"] / critical_state["d"]
-        )  # density correction due to nested finite differences
-        residual = calculate_deviation_equation(
-            geometry, critical_state, exit_plane, density_correction, deviation_model
-        )
-
-    elif choking_condition == "mach_critical" or choking_condition == "mach_unity":
-        if choking_condition == "mach_unity":
-            critical_state["Ma_rel"] = 1
-        residual = calculate_mach_equation(
+    # Function mappings for each choking condition
+    choking_functions = {
+        "deviation": lambda: calculate_deviation_equation(
+            geometry, critical_state, throat_plane, exit_plane, deviation_model
+        ),
+        "mach_critical": lambda: calculate_mach_equation(
             critical_state["Ma_rel"], exit_plane["Ma_rel"], throat_plane["Ma_rel"]
-        )
-        density_correction = np.nan
-    else:
-        raise Exception(
-            "choking_condition must be 'deviation', 'mach_critical' or 'mach_unity'"
-        )
-    # residuals_cascade = np.append(residuals_cascade, residual)
-    # keys_cascade = np.append(keys_cascade, choking_condition)
-    residuals[choking_condition] = residual
+        ),
+        "mach_unity": lambda: calculate_mach_equation(
+            1.00, exit_plane["Ma_rel"], throat_plane["Ma_rel"]
+        ),
+    }
 
-    # Add cascade results to results structure
-    static_properties_isentropic_expansion = fluid.get_props(
-        CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"]
-    )
-    dhs = exit_plane["h"] - static_properties_isentropic_expansion["h"]
+    # Evaluate the choking condition equation
+    if choking_condition in choking_functions:
+        choking_residual, density_correction = choking_functions[choking_condition]()
+    else:
+        options = ", ".join(f"'{k}'" for k in choking_functions.keys())
+        raise ValueError(
+            f"Invalid choking_condition: '{choking_condition}'. Available options: {options}"
+        )
+
+    # Create dictionary with equation residuals
+    mass_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
+    mass_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
+    residuals = {
+        "loss_error_throat": throat_plane["loss_error"],
+        "loss_error_exit": exit_plane["loss_error"],
+        "mass_error_throat": mass_error_throat / mass_flow_reference,
+        "mass_error_exit": mass_error_exit / mass_flow_reference,
+        **residuals_critical,
+        choking_condition: choking_residual,
+    }
+
+    # Return plane data in dataframe
+    # TODO: add critical state as another plane?
+    planes = [inlet_plane, throat_plane, exit_plane]
+    for plane in planes:
+        results["plane"].loc[len(results["plane"])] = plane
+
+    # Return cascade data in dataframe
+    # TODO: how much critical point data do we want to retrieve?
     cascade_data = {
-        "Y_tot": Y_info["Total"],
-        "Y_p": Y_info["Profile"],
-        "Y_s": Y_info["Secondary"],
-        "Y_cl": Y_info["Clearance"],
-        "dh_s": dhs,
+        **loss_dict,
+        "dh_s": dh_is,
         "Ma_crit": critical_state["Ma_rel"],
-        "m_crit": critical_state["mass_flow"],
+        "mass_flow_crit": critical_state["mass_flow"],
+        "w_crit": critical_state["w"],
+        "d_crit": critical_state["d"],
+        "p_crit": critical_state["p"],
+        "beta_crit": critical_state["beta"],
         "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
         "density_correction": density_correction,
     }
@@ -413,8 +443,7 @@ def evaluate_cascade(
     return residuals
 
 
-def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_ref):
-    
+def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     # Load cascade inlet input
     h0 = cascade_inlet_input["h0"]
     s = cascade_inlet_input["s"]
@@ -440,16 +469,12 @@ def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_re
     a = static_properties["a"]
 
     # Calculate stagnation properties
-    stagnation_properties = fluid.get_props(
-        CP.HmassSmass_INPUTS, h0, s
-    )
+    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
     stagnation_properties = add_string_to_keys(stagnation_properties, "0")
 
-    # Calculate relatove stagnation properties
+    # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(
-        CP.HmassSmass_INPUTS, h0_rel, s
-    )
+    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
     relative_stagnation_properties = add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -461,30 +486,20 @@ def evaluate_inlet(cascade_inlet_input, fluid, geometry, angular_speed, delta_re
     m = rho * w_m * area
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
-    # Calculate inlet displacement thickness to blade height ratio based on reference vale
-    delta = delta_ref * Re ** (-1 / 7)
-
-    # Store result
+    # Store results in dictionary
     plane = {
         **velocity_triangle,
         **static_properties,
         **stagnation_properties,
         **relative_stagnation_properties,
+        **{key: np.nan for key in KEYS_LOSSES},
+        "Ma": Ma,
+        "Ma_rel": Ma_rel,
+        "Re": Re,
+        "mass_flow": m,
+        "rothalpy": rothalpy,
+        "blockage": np.nan,
     }
-    plane["Ma"] = Ma
-    plane["Ma_rel"] = Ma_rel
-    plane["Re"] = Re
-    plane["mass_flow"] = m
-    plane["delta"] = delta
-    plane["rothalpy"] = rothalpy
-    plane["Y_err"] = np.nan
-    plane["Y"] = np.nan
-    plane["Y_p"] = np.nan
-    plane["Y_cl"] = np.nan
-    plane["Y_s"] = np.nan
-    plane["Y_te"] = np.nan
-    plane["Y_inc"] = np.nan
-    plane["blockage"] = np.nan
 
     return plane
 
@@ -495,8 +510,10 @@ def evaluate_exit(
     geometry,
     inlet_plane,
     angular_speed,
-    displacement_thickness,
+    blockage,
     loss_model,
+    radius,
+    area,
 ):
     # Load cascade exit variables
     w = cascade_exit_input["w"]
@@ -505,10 +522,20 @@ def evaluate_exit(
     rothalpy = cascade_exit_input["rothalpy"]
 
     # Load geometry
-    radius = geometry["radius_mean_out"]
-    area = geometry["A_out"]
+    # radius = geometry["radius_mean_out"]
+    # area = geometry["A_out"]
+    # print("radius", geometry["radius_mean_out"], geometry["radius_mean_throat"])
+    # print("area", geometry["A_out"], geometry["A_throat"])
     chord = geometry["chord"]
     opening = geometry["opening"]
+    # TODO: we should have flexibility to specify the throat area
+    # TODO: Roberto: I did some tests on with the throat area calculations
+    # TODO:   1. The code does not converge well if blockage factor at the throat at and the exit is not the same. Why? The code converges for some small differences, but 1-2% is already too much
+    # TODO:   2. The code does not converge well if the new geometry input "throat_location_fraction" is not one (meaning that the throat radius is the same as the exit radius)
+    # TODO: It seems that both limitations are related to changes in the effective throat area with respect to the exit area
+    # TODO: In some cases these factors are not a problem when using the choking condition "mach_critical"
+    # TODO: This makes me suspect that the way in which we are handling the deviation model residual is giving problems.
+    # TODO: The code should work for cases when the throat are is not exactly given by the cosine rule
 
     # Calculate velocity triangles
     blade_speed = angular_speed * radius
@@ -525,16 +552,12 @@ def evaluate_exit(
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.get_props(
-        CP.HmassSmass_INPUTS, h0, s
-    )
+    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
     stagnation_properties = add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relatove stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(
-        CP.HmassSmass_INPUTS, h0_rel, s
-    )
+    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
     relative_stagnation_properties = add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -543,63 +566,59 @@ def evaluate_exit(
     Ma = v / a
     Ma_rel = w / a
     Re = rho * w * chord / mu
-    m = rho * w_m * area
     rothalpy = h0_rel - 0.5 * blade_speed**2
+    # TODO: is rothalpy necessary? See calculations above
 
-    # Account for blockage effect due to boundary layer displacement thickness
-    if displacement_thickness == None:
-        displacement_thickness = 0.048 / Re ** (1 / 5) * 0.9 * chord
-    correction = 1 - 2 * displacement_thickness / opening
-    m *= correction
+    # Compute mass flow rate
+    blockage_factor = calculate_throat_blockage(blockage, Re, chord, opening)
+    mass_flow = rho * w_m * area * (1 - blockage_factor)
 
     # Evaluate loss coefficient
+    # TODO: why not give all variables to the loss model?
+    # Introduce safeguard to prevent negative values for Re and Ma
+    # Useful to avoid invalid operations during convergence
+    min_val = 1e-3
     loss_model_input = {
         "geometry": geometry,
-        "flow": {},
-        "loss_model": loss_model}
+        "loss_model": loss_model,
+        "flow": {
+            "p0_rel_in": inlet_plane["p0_rel"],
+            "p0_rel_out": relative_stagnation_properties["p0_rel"],
+            "p_in": inlet_plane["p"],
+            "p_out": static_properties["p"],
+            "beta_out": beta,
+            "beta_in": inlet_plane["beta"],
+            "Ma_rel_in": max(min_val, inlet_plane["Ma_rel"]),
+            "Ma_rel_out": max(min_val, Ma_rel),
+            "Re_in": max(min_val, inlet_plane["Re"]),
+            "Re_out": max(min_val, Re),
+            "gamma_out": static_properties["gamma"],
+        },
+    }
 
-    loss_model_input["flow"]["p0_rel_in"] = inlet_plane["p0_rel"]
-    loss_model_input["flow"]["p0_rel_out"] = relative_stagnation_properties["p0_rel"]
-    loss_model_input["flow"]["p_in"] = inlet_plane["p"]
-    loss_model_input["flow"]["p_out"] = static_properties["p"]
-    loss_model_input["flow"]["beta_out"] = beta
-    loss_model_input["flow"]["beta_in"] = inlet_plane["beta"]
-    loss_model_input["flow"]["Ma_rel_in"] = inlet_plane["Ma_rel"]
-    loss_model_input["flow"]["Ma_rel_out"] = Ma_rel
-    loss_model_input["flow"]["Re_in"] = inlet_plane["Re"]
-    loss_model_input["flow"]["Re_out"] = Re
-    loss_model_input["flow"]["delta"] = inlet_plane["delta"]
-    loss_model_input["flow"]["gamma_out"] = static_properties["gamma"]
+    # Compute loss coefficient from loss model
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_model_input)
 
-    Y, Y_err, Y_info = evaluate_loss_model(loss_model_input)
-
-    # Store result
+    # Store results in dictionary
     plane = {
         **velocity_triangle,
         **static_properties,
         **stagnation_properties,
         **relative_stagnation_properties,
+        **loss_dict,
+        "Ma": Ma,
+        "Ma_rel": Ma_rel,
+        "Re": Re,
+        "mass_flow": mass_flow,
+        "displacement_thickness": np.nan,  # Not relevant for exit/throat plane
+        "rothalpy": rothalpy,
+        "blockage": blockage_factor,
     }
 
-    plane["Ma"] = Ma
-    plane["Ma_rel"] = Ma_rel
-    plane["Re"] = Re
-    plane["mass_flow"] = m
-    plane["delta"] = np.nan  # Not relevant for exit/throat plane
-    plane["rothalpy"] = rothalpy
-    plane["Y_err"] = Y_err
-    plane["Y"] = Y
-    plane["Y_p"] = Y_info["Profile"]
-    plane["Y_cl"] = Y_info["Clearance"]
-    plane["Y_s"] = Y_info["Secondary"]
-    plane["Y_te"] = Y_info["Trailing"]
-    plane["Y_inc"] = Y_info["Incidence"]
-    plane["blockage"] = correction
-
-    return plane, Y_info
+    return plane, loss_dict
 
 
-def evaluate_lagrange_gradient(
+def get_critical_residuals(
     x_crit,
     critical_cascade_input,
     fluid,
@@ -617,7 +636,7 @@ def evaluate_lagrange_gradient(
     This function evaluates the gradient of the Lagrange function of the critical mass flow rate function.
     It calculates the Lagrange multipliers explicitly and returns the residuals of the Lagrange gradient.
 
-    
+
     Parameters
     ----------
         x (numpy.ndarray): Array containing [v_in*, V_throat*, s_throat*].
@@ -631,7 +650,7 @@ def evaluate_lagrange_gradient(
     """
 
     # Load reference values
-    m_ref = reference_values["m_ref"]
+    mass_flow_ref = reference_values["mass_flow_ref"]
 
     # Define critical state dictionary to store information
     critical_state = {}
@@ -672,12 +691,13 @@ def evaluate_lagrange_gradient(
     )  # For isentropic
 
     # Calculate the Lagrange multipliers explicitly
-    l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21)
-    l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21)
+    eps = 1e-9  # TODO Division by zero sometimes?
+    l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21 + eps)
+    l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21 + eps)
 
     # Evaluate the last equation
     df, dg1, dg2 = J[0, 2 - 1], J[1, 2 - 1], J[2, 2 - 1]  # for isentropic
-    grad = (df + l1 * dg1 + l2 * dg2) / m_ref
+    grad = (df + l1 * dg1 + l2 * dg2) / mass_flow_ref
 
     # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
     g = f0[1:]  # The two constraints
@@ -698,30 +718,29 @@ def evaluate_critical_cascade(
     model_options,
     reference_values,
 ):
+    # Define model options
+    loss_model = model_options["loss_model"]
+
     # Load reference values
-    m_ref = reference_values["m_ref"]
+    mass_flow_ref = reference_values["mass_flow_ref"]
     v0 = reference_values["v0"]
     s_range = reference_values["s_range"]
     s_min = reference_values["s_min"]
-    delta_ref = reference_values["delta_ref"]
 
     # Load geometry
     theta_out = geometry["metal_angle_te"]
 
-    # Load cinput for critical cascade
+    # Load input for critical cascade
+    # TODO: use dictionary for input variables, not array indices
+    # TODO: variables passed should already scaled as in evaluate_cascade()?
     s_in = critical_cascade_input["s_in"]
     h0_in = critical_cascade_input["h0_in"]
     alpha_in = critical_cascade_input["alpha_in"]
-
     v_in, w_throat, s_throat = (
         x_crit[0] * v0,
         x_crit[1] * v0,
         x_crit[2] * s_range + s_min,
     )
-
-    # Define model options
-    displacement_thickness = model_options.get("displacement_thickness", 0)
-    loss_model = model_options.get("loss_model", "benner")
 
     # Evaluate inlet plane
     critical_inlet_input = {
@@ -730,9 +749,7 @@ def evaluate_critical_cascade(
         "h0": h0_in,
         "alpha": alpha_in,
     }
-    inlet_plane = evaluate_inlet(
-        critical_inlet_input, fluid, geometry, angular_speed, delta_ref
-    )
+    inlet_plane = evaluate_inlet(critical_inlet_input, fluid, geometry, angular_speed)
 
     # Evaluate throat plane
     critical_exit_input = {
@@ -741,24 +758,34 @@ def evaluate_critical_cascade(
         "beta": theta_out,
         "rothalpy": inlet_plane["rothalpy"],
     }
-    throat_plane, Y_info = evaluate_exit(
+
+    throat_plane, loss_dict = evaluate_exit(
         critical_exit_input,
         fluid,
         geometry,
         inlet_plane,
         angular_speed,
-        displacement_thickness,
+        model_options["throat_blockage"],
         loss_model,
+        geometry["radius_mean_throat"],
+        geometry["A_throat"],
     )
 
     # Add residuals
     residuals = np.array(
-        [(inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / m_ref, throat_plane["Y_err"]]
+        [
+            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
+            throat_plane["loss_error"],
+        ]
     )
 
+    # TODO: why not pass the entire throat_plane as critical state?
     critical_state["mass_flow"] = throat_plane["mass_flow"]
     critical_state["Ma_rel"] = throat_plane["Ma_rel"]
     critical_state["d"] = throat_plane["d"]
+    critical_state["w"] = throat_plane["w"]
+    critical_state["p"] = throat_plane["p"]
+    critical_state["beta"] = throat_plane["beta"]
 
     output = np.insert(residuals, 0, throat_plane["mass_flow"])
 
@@ -808,6 +835,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
 
     Returns:
         dict: Dictionary containing the following properties:
+            u (float): Blade velocity.
             v (float): Absolute velocity.
             v_m (float): Meridional component of absolute velocity.
             v_t (float): Tangential component of absolute velocity.
@@ -832,6 +860,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
 
     # Store in dict
     vel_in = {
+        "u": u,
         "v": v,
         "v_m": v_m,
         "v_t": v_t,
@@ -856,6 +885,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
 
     Returns:
         dict: Dictionary containing the following properties:
+            u (float): Blade velocity.
             v (float): Absolute velocity.
             v_m (float): Meridional component of absolute velocity.
             v_t (float): Tangential component of absolute velocity.
@@ -880,6 +910,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
 
     # Store in dict
     vel_out = {
+        "u": u,
         "v": v,
         "v_m": v_m,
         "v_t": v_t,
@@ -936,26 +967,29 @@ def evaluate_inter_cascade_space(
     alpha_in = math.arctand(v_t_in / v_m_in)
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
-    stagnation_properties = fluid.get_props(
-        CP.DmassHmass_INPUTS, rho_in, h_in
-    )
+    stagnation_properties = fluid.get_props(CP.DmassHmass_INPUTS, rho_in, h_in)
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in
 
 
 def calculate_mach_equation(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
-    xi = np.array([Ma_crit, Ma_exit])
+    # Mach number at the throat cannot be higher than Ma_crit
+    # Smooth maximum prevents slop discontinuity at the switch
+    Ma_array = np.array([Ma_crit, Ma_exit])
+    Ma_target = smooth_max(Ma_array, method="boltzmann", alpha=alpha)
 
-    actual_mach = smooth_max(xi, method="boltzmann", alpha=alpha)
+    # Retrieve residual for current solution
+    res = Ma_throat - Ma_target
 
-    res = Ma_throat - actual_mach
+    # No density correction required in this model
+    density_correction = np.nan
 
-    return res
+    return res, density_correction
 
 
 def calculate_deviation_equation(
-    geometry, critical_state, exit_plane, density_correction, deviation_model
+    geometry, critical_state, throat_plane, exit_plane, deviation_model
 ):
     # Load cascade geometry
     area = geometry["A_out"]
@@ -966,6 +1000,10 @@ def calculate_deviation_equation(
     m_crit = critical_state["mass_flow"]
     Ma_crit = critical_state["Ma_rel"]
 
+    # Load throat plane data
+    # Ma_throat = throat_plane["Ma_rel"]
+    # blockage = exit_plane["blockage"] # Should blockage be at the throat?
+
     # Load exit plane
     Ma = exit_plane["Ma_rel"]
     rho = exit_plane["d"]
@@ -973,18 +1011,63 @@ def calculate_deviation_equation(
     beta = exit_plane["beta"]
     blockage = exit_plane["blockage"]
 
-    if Ma < Ma_crit:
-        beta_model = dm.get_subsonic_deviation(Ma, Ma_crit, opening/pitch, deviation_model)
+    # Compute exit flow angle
+    # TODO: discuss if it should be Ma_throat or Ma_exit || Ma_throat in inequelity fails
+    if Ma <= Ma_crit:
+        density_correction = np.nan
+        beta_model = dm.get_subsonic_deviation(
+            Ma, Ma_crit, opening / pitch, deviation_model
+        )
     else:
-        beta_model = math.arccosd(m_crit / rho / w / area / blockage * density_correction)
+        density_correction = throat_plane["d"] / critical_state["d"]
+        cos_beta = m_crit / rho / w / area / (1 - blockage) * density_correction
+        beta_model = math.arccosd(cos_beta)
+        # Density correction needed above critical condition to fix numerical error caused by nested finite differences
 
     # Compute error of guessed beta and deviation model
-    res = math.cosd(beta_model) - math.cosd(beta)
+    residual = math.cosd(beta_model) - math.cosd(beta)
 
-    return res
+    return residual, density_correction
 
 
-def calculate_eta_drop_fractions(results, number_of_cascades, reference_values):
+def calculate_throat_blockage(throat_blockage, Re, chord, opening):
+    """
+    Calculate the blockage factor at the throat based on specified method
+
+    Parameters:
+    - throat_blockage: Can be a string for a model name ('flat_plate_turbulent'),
+                       a numeric value between 0 and 1, or None.
+    - Re: Reynolds number, used if throat_blockage is 'flat_plate_turbulent'.
+    - chord: Chord length, used if throat_blockage is 'flat_plate_turbulent'.
+    - opening: Throat opening size, used to calculate the blockage factor.
+
+    Returns:
+    - blockage_factor: The calculated blockage factor.
+
+    Raises:
+    - ValueError: If throat_blockage is an invalid option.
+    """
+
+    if throat_blockage == "flat_plate_turbulent":
+        displacement_thickness = 0.048 / Re ** (1 / 5) * 0.9 * chord
+        blockage_factor = 2 * displacement_thickness / opening
+
+    elif isinstance(throat_blockage, (float, int)) and 0 <= throat_blockage <= 1:
+        blockage_factor = throat_blockage
+
+    elif throat_blockage is None:
+        blockage_factor = 0.00
+
+    else:
+        raise ValueError(
+            f"Invalid throat blockage option: '{throat_blockage}'. "
+            "Valid options are 'flat_plate_turbulent', a numeric value between 0 and 1, or None."
+        )
+
+    return blockage_factor
+
+
+def calculate_efficiency_drop_fractions(results, number_of_cascades, reference_values):
     """
     Calculate efficiency penalty for each loss component.
 
@@ -1001,28 +1084,29 @@ def calculate_eta_drop_fractions(results, number_of_cascades, reference_values):
     v_out = results["plane"]["v"].values[-1]
     cascade = results["cascade"]
 
+    # Compute a correction factor due to re-heating effect
+    dhs_total = h_out - h_out_s
     dhs_sum = cascade["dh_s"].sum()
-    dhss = h_out - h_out_s
-    a = dhss / dhs_sum
+    correction = dhs_total / dhs_sum
 
     # Initialize DataFrame
-    loss_fractions = pd.DataFrame(columns=["eta_drop_p", "eta_drop_s", "eta_drop_cl"])
+    loss_types = ["profile", "incidence", "secondary", "clearance", "trailing"]
+    breakdown = pd.DataFrame(columns=[f"efficiency_drop_{type}" for type in loss_types])
 
+    # Loss breakdown in each cascade
     for i in range(number_of_cascades):
-        fractions_temp = cascade.loc[i, "Y_p":"Y_cl"] / cascade.loc[i, "Y_tot"]
+        # Construct column names dynamically based on loss_types
+        col_names = [f"loss_{type}" for type in loss_types]
 
-        dhs = cascade["dh_s"][i]
-        eta_drop = a * dhs / (h0_in - h_out_s)
-        loss_fractions_temp = fractions_temp * eta_drop
-        loss_fractions.loc[len(loss_fractions)] = loss_fractions_temp.values
+        # Retrieve values for each specified column and compute the fractions
+        fracs = cascade.loc[i, col_names] / cascade.loc[i, "loss_total"]
+        dh_s = cascade["dh_s"][i]
+        efficiency_drop = correction * dh_s / (h0_in - h_out_s)
 
-    eta_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
-    results["overall"]["eta_drop_kinetic"] = eta_drop_kinetic
+        # Append efficiency drop breakdown
+        breakdown.loc[len(breakdown)] = (fracs * efficiency_drop).values
 
-    return loss_fractions
-
-
-
+    return breakdown
 
 
 def calculate_stage_parameters(number_of_stages, planes):
@@ -1050,22 +1134,3 @@ def calculate_stage_parameters(number_of_stages, planes):
     stages = {"R": R}
 
     return stages
-
-
-def add_string_to_keys(input_dict, suffix):
-    """
-    Add a suffix to each key in the input dictionary.
-
-    Args:
-        input_dict (dict): The input dictionary.
-        suffix (str): The string to add to each key.
-
-    Returns:
-        dict: A new dictionary with modified keys.
-
-    Example:
-        >>> input_dict = {'a': 1, 'b': 2, 'c': 3}
-        >>> add_string_to_keys(input_dict, '_new')
-        {'a_new': 1, 'b_new': 2, 'c_new': 3}
-    """
-    return {f"{key}{suffix}": value for key, value in input_dict.items()}

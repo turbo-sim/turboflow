@@ -126,9 +126,9 @@
   - [ ] Initial guess specification in YAML file (this will be used for the first operation point)
   - [ ] Improve initial guess calculation and extend to multistage
   - [ ] 1D correlation for Ma_crit as a function of the loss coefficient of the cascade
-- [ ] Geometry processing (Roberto)
-  - [ ] Clean up code
-  - [ ] Improve docstrings
+- [x] Geometry processing (Roberto)
+  - [x] Clean up code
+  - [x] Improve docstrings
   - [ ] Discuss and improve the throat area calculation (Roberto/Lasse)
 - [ ] Update PySolverView to solve root finding problems with the optimization solver.
 - [ ] Add computation time in solver report
@@ -137,7 +137,8 @@
   - [ ] Specify the ranges of variables to be sampled from (enthalpy frac distribution, efficiency ts and tt)
   - [ ] Use a sampling techniques like latin hypercube, montecarlo, or orthogonal sampling'
   - [ ] https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.qmc.LatinHypercube.html
-  - [ ] 
+- [x] Add regression tests
+- [ ] 
 
 
 

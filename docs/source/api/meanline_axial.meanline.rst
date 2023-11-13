@@ -1,4 +1,4 @@
-meanline\_axial.meanline package
+Meanline model
 ================================
 
 Submodules

@@ -2,7 +2,7 @@ operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: [13.8e4/2.298] #, 13.8e4/2.5]
+  p_out: [13.8e4/2.298, 13.8e4/2.5]
   omega: 1627
   alpha_in: 0
 
@@ -10,7 +10,7 @@ performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.5, 4.5, 40)
+  p_out: 13.8e4/np.linspace(1.5, 4.5, 50)
   omega: [1627]
   alpha_in: 0
 
@@ -19,7 +19,7 @@ model_options:
   deviation_model : aungier
   throat_blockage : 0.00 #flat_plate_turbulent
   loss_model:
-    model: benner
+    model: moustapha
     loss_coefficient: stagnation_pressure
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
@@ -52,6 +52,5 @@ geometry:
   thickness_te: [0.050e-2, 0.050e-2]
   thickness_max: [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
-  throat_location_fraction: [1, 1]
-  # throat_location_fraction: [5/6, 5/6]
+  throat_location_fraction: [1.00, 1.00]
 
