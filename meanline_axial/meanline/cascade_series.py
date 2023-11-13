@@ -68,16 +68,14 @@ KEYS_CASCADE = [
 
 
 def evaluate_cascade_series(
-    variables_values,
+    variables,
     boundary_conditions,
     geometry,
     fluid,
     model_options,
     reference_values,
 ):
-    # TODO: Create dictionary of independent variables
-    # variables = dict(zip(keys, values))
-
+    
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
     h0_in = boundary_conditions["h0_in"]
@@ -109,30 +107,11 @@ def evaluate_cascade_series(
         "geometry": pd.DataFrame(geom_cascades),
     }
 
-    # results = {}
-    # df_plane = pd.DataFrame(columns=KEYS_PLANE)
-    # df_cascade = pd.DataFrame(columns=KEYS_CASCADE)
-    # df_geometry = pd.DataFrame(geom_cascades)
-    # results["plane"] = df_plane
-    # results["cascade"] = df_cascade
-    # results["geometry"] = df_geometry
-
     # initialize residual arrays
-    # residuals_values = np.array([])
-    # residuals_keys = np.array([])
     residuals = {}
 
-    # Define degrees of freedom #FIXME: independant variables could be handled differently
-    # TODO: Use dictionary for input variables
-    n_dof = 5
-    n_dof_crit = 3
-    variables_actual = variables_values[0 : n_dof * number_of_cascades + 1]
-    variables_critical = variables_values[n_dof * number_of_cascades + 1 :]
-    v_in = variables_actual[0] * v0
-    variables_actual = np.delete(variables_actual, 0)
-
     # Rename turbine inlet velocity
-    # v_in = variables["v_in"] * v0
+    v_in = variables["v_in"]*v0
 
     for i in range(number_of_cascades):
         # Update angular speed
@@ -144,30 +123,18 @@ def evaluate_cascade_series(
             for key, values in geometry.items()
             if key not in ["number_of_cascades", "number_of_stages"]
         }
-
-        # Rename independant variables #FIXME: independant variables could be handled differently
-        variables_actual_cascade = variables_actual[i * n_dof : (i + 1) * n_dof]
-        variables_critical_cascade = variables_critical[
-            i * n_dof_crit : (i + 1) * n_dof_crit
-        ]
-        w_throat = variables_actual_cascade[0] * v0
-        w_out = variables_actual_cascade[1] * v0
-        s_throat = variables_actual_cascade[2] * s_range + s_min
-        s_out = variables_actual_cascade[3] * s_range + s_min
-        beta_out = variables_actual_cascade[4] * angle_range + angle_min
-        v_crit_in = variables_critical_cascade[0]
-        w_crit_out = variables_critical_cascade[1]
-        s_crit_out = variables_critical_cascade[2]
-
-        # cascade = '_'+str(i+1)
-        # w_throat = variables["w_throat"+cascade] * v0
-        # w_out = variables["w_out"+cascade] * v0
-        # s_throat = variables["s_throat"+cascade] * s_range + s_min
-        # s_out = variables["s_out"+cascade] * s_range + s_min
-        # beta_out = variables["beta_out"+cascade] * angle_range + angle_min
-        # v_crit_in = variables["v*_in"+cascade]
-        # w_crit_out = variables["w*_out"+cascade]
-        # s_crit_out = variables["s*_out"+cascade]
+        
+        # Rename vairables
+        cascade = '_'+str(i+1)
+        w_throat = variables["w_throat"+cascade] * v0
+        w_out = variables["w_out"+cascade] * v0
+        s_throat = variables["s_throat"+cascade] * s_range + s_min
+        s_out = variables["s_out"+cascade] * s_range + s_min
+        beta_out = variables["beta_out"+cascade] * angle_range + angle_min
+        v_crit_in = variables["v*_in"+cascade] 
+        w_crit_out = variables["w*_out"+cascade] 
+        s_crit_out = variables["s*_out"+cascade] 
+        
 
         # Evaluate current cascade
         cascade_inlet_input = {
@@ -201,8 +168,6 @@ def evaluate_cascade_series(
         )
 
         # Add cascade residuals to residual arrays
-        # residuals_values = np.concatenate((residuals_values, cascade_residual_values))
-        # residuals_keys = np.concatenate((residuals_keys, cascade_residual_keys))
         cascade_residuals = {
             f"{key}_{i+1}": val for key, val in cascade_residuals.items()
         }
@@ -231,8 +196,6 @@ def evaluate_cascade_series(
     p_calc = results["plane"]["p"].values[-1]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
-    # residuals_values = np.append(residuals_values, p_error)
-    # residuals_keys = np.append(residuals_keys, "p_out")
 
     # Calculation of overall performance
     p = results["plane"]["p"].values
@@ -284,7 +247,6 @@ def evaluate_cascade_series(
         results, number_of_cascades, reference_values
     )
     results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
-    # results["loss_fractions"] = loss_fractions
 
     # Add stage results to the results tructure
     if geometry["number_of_stages"] != 0:
@@ -292,8 +254,11 @@ def evaluate_cascade_series(
             geometry["number_of_stages"], results["plane"]
         )
         results["stage"] = pd.DataFrame(stage_results)
+        
+    # Add residuals to results structure
+    results["residuals"] = residuals
 
-    return residuals, results
+    return results
 
 
 def evaluate_cascade(
@@ -741,7 +706,7 @@ def evaluate_critical_cascade(
         x_crit[1] * v0,
         x_crit[2] * s_range + s_min,
     )
-
+    
     # Evaluate inlet plane
     critical_inlet_input = {
         "v": v_in,
@@ -803,7 +768,7 @@ def compute_critical_cascade_jacobian(
     reference_values,
     f0,
 ):
-    eps = 1e-3 * x
+    eps = 1e-3* x
     J = approx_derivative(
         evaluate_critical_cascade,
         x,
