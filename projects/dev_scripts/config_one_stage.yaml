@@ -49,9 +49,6 @@ geometry:
   # throat_location_fraction: [5/6, 5/6]
 
 
-
-
-
 # geometry_optimization:
 #   radius_specification: constant_mean
 #   hub_tip_ratio: [0.9, 0.9, 0.9, 0.9]

@@ -74,6 +74,7 @@ def evaluate_cascade_series(
     model_options,
     reference_values,
 ):
+<<<<<<< HEAD
     """
     Compute the performance of an axial turbine by evaluating a series of cascades.
 
@@ -109,6 +110,12 @@ def evaluate_cascade_series(
 
     
     """
+    # TODO: Create dictionary of independent variables
+    # variables = dict(zip(keys, values))
+
+=======
+    
+>>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
     h0_in = boundary_conditions["h0_in"]
@@ -423,8 +430,6 @@ def evaluate_cascade(
             1.00, exit_plane["Ma_rel"], throat_plane["Ma_rel"]
         ),
     }
-
-    # Evaluate the choking condition equation
     if choking_condition in choking_functions:
         choking_residual, density_correction = choking_functions[choking_condition]()
     else:
@@ -1006,7 +1011,7 @@ def compute_critical_values(
         x_crit[1] * v0,
         x_crit[2] * s_range + s_min,
     )
-
+    
     # Evaluate inlet plane
     critical_inlet_input = {
         "v": v_in,
@@ -1070,6 +1075,7 @@ def compute_critical_jacobian(
     reference_values,
     f0,
 ):
+<<<<<<< HEAD
     """
     Compute the Jacobian matrix of the critical cascade evaluation using finite differences.
 
@@ -1112,6 +1118,11 @@ def compute_critical_jacobian(
     # Approximate problem Jacobian by finite differences
     jacobian = approx_derivative(
         compute_critical_values,
+=======
+    eps = 1e-3* x
+    J = approx_derivative(
+        evaluate_critical_cascade,
+>>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
         x,
         method="2-point",
         f0=f0,
