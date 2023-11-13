@@ -848,8 +848,109 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # problem.keys = initial_guess.keys()
 
         return initial_guess
+    
+    def compute_heuristic_initial_guess(self, enthalpy_distribution, eta_tt, eta_ts, Ma_crit):
+        
+        # Load object attributes
+        geometry = self.geometry
+        operation_point = self.operation_point
+        fluid = self.fluid
+        
+        # Rename variables
+        number_of_cascades = geometry["number_of_cascades"]
+        p0_in = operation_point["p0_in"]
+        T0_in = operation_point["T0_in"]
+        alpha_in = operation_point["alpha_in"]
+        angular_speed = self.angular_speed
+        p_out = operation_point["p_out"]
+        h_out_s = self.reference_values["h_out_s"]
+        
+        # Calculate inlet stagnation state
+        stagnation_properties_in = fluid.get_props(CP.PT_INPUTS, p0_in, T0_in)
+        h0_in = stagnation_properties_in["h"]
+        s_in = stagnation_properties_in["s"]
+        
+        # Calculate exit enthalpy
+        h0_out = h0_in - eta_ts * (h0_in - h_out_s)
+        v_out = np.sqrt(2 * (h0_in - h_out_s - (h0_in - h0_out) / eta_tt))
+        h_out = h0_out - 0.5 * v_out**2
 
-    def compute_heuristic_initial_guess(self, R, eta_tt, eta_ts, Ma_crit):
+        # Calculate exit static state for expansion with guessed efficiency
+        static_properties_exit = fluid.get_props(CP.HmassP_INPUTS, h_out, p_out)
+        s_out = static_properties_exit["s"]
+
+        # Define entropy distribution
+        entropy_distribution= np.linspace(s_in, s_out, number_of_cascades + 1)
+        
+        # Define relative stagnation state
+        h0_rel_in = h0_in
+        
+        # Define initial guess dictionary
+        initial_guess = {}
+        
+        for i in range(number_of_cascades):
+            
+            geometry_cascade = {key: values[i] for key, values in geometry.items()
+                if key not in ["number_of_cascades", "number_of_stages"]
+            }
+            
+            # Load enthalpy from initial guess
+            h_in = enthalpy_distribution[i]
+            h_throat = enthalpy_distribution[i+1]
+            h_out = enthalpy_distribution[i+2]
+            
+            # Load entropy from assumed entropy distribution
+            s_in = enthalpy_distribution[i]
+            s_throat = entropy_distribution[i+1]
+            s_out = entropy_distribution[i+1]
+            
+            # Rename necessary geometry
+            theta_out = geometry_cascade["metal_angle_te"]
+            A_out = geometry_cascade["A_out"]
+            A_in = geometry_cascade["A_in"]
+            radius_mean_in = geometry_cascade["radius_mean_in"]
+            radius_mean_throat = geometry_cascade["radius_mean_throat"]
+            radius_mean_out = geometry_cascade["radius_mean_out"]
+            
+            # Calculate rothalpy stgnation enthalpy
+            blade_speed_in = angular_speed*(i%2)*radius_mean_in
+            rothalpy = h0_rel_in - 0.5 * blade_speed_in**2
+            
+            # Calculate throat velocity from rothalpy and enthalpy distirbution
+            blade_speed_throat = angular_speed*(i%2)*radius_mean_throat
+            h0_rel_throat = rothalpy+0.5*blade_speed_throat**2
+            w_throat = np.sqrt(2*(h0_rel_throat-h_throat)) 
+            
+            # Calculate throat velocity from rothalpy and enthalpy distirbution
+            blade_speed_out = angular_speed*(i%2)*radius_mean_out
+            h0_rel_out = rothalpy+0.5*blade_speed_out**2
+            w_out = np.sqrt(2*(h0_rel_out-h_out)) 
+            
+            # Calculate static state at cascade inlet
+            static_state_in = fluid.get_props(CP.HmassSmass_INPUTS, h_in, s_in)
+            rho_in = static_state_in["d"]
+            
+            # Calculate static state at cascade exit
+            static_state_out = fluid.get_props(CP.HmassSmass_INPUTS, h_out, s_out)
+            a_out = static_state_out["a"]
+            rho_out = static_state_out["d"]
+            m_crit = a_out*np.cosd(theta_out)*rho_out*A_out
+            
+            v_m_in_crit = m_crit/rho_in/A_in
+            v_in_crit = v_m_in_crit/np.cosd(alpha_in)
+            
+            # Store initial guess
+            initial_guess.update({"w_throat" : w_throat,
+                                  "w_out" : w_out,
+                                  "s_throat" : s_throat,
+                                  "s_out" : s_out,
+                                  "v*_in" : v_in_crit,
+                                  "w*_out" : a_out*Ma_crit,
+                                  "s*_out" : s_out})
+            
+            # update variables for next cascade
+
+    def compute_heuristic_initial_guess(self, enthalpy_distribution, eta_tt, eta_ts, Ma_crit):
         """
         Generate an initial guess for the root-finder and design optimization.
 
@@ -880,22 +981,24 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         h_out_s = self.reference_values["h_out_s"]
         geometry = self.geometry
 
-        # Inlet stagnation state
+        # Calculate inlet stagnation state
         stagnation_properties_in = fluid.get_props(CP.PT_INPUTS, p0_in, T0_in)
         h0_in = stagnation_properties_in["h"]
         d0_in = stagnation_properties_in["d"]
         s_in = stagnation_properties_in["s"]
+        
+        # Calculate exit enthalpy
         h0_out = h0_in - eta_ts * (h0_in - h_out_s)
         v_out = np.sqrt(2 * (h0_in - h_out_s - (h0_in - h0_out) / eta_tt))
         h_out = h0_out - 0.5 * v_out**2
 
-        # Exit static state for expansion with guessed efficiency
+        # Calculate exit static state for expansion with guessed efficiency
         static_properties_exit = fluid.get_props(CP.HmassP_INPUTS, h_out, p_out)
         s_out = static_properties_exit["s"]
         d_out = static_properties_exit["d"]
 
-        # Same entropy production in each cascade
-        s_cascades = np.linspace(s_in, s_out, number_of_cascades + 1)
+        # Assume same entropy production in each cascade
+        entropy_distribution= np.linspace(s_in, s_out, number_of_cascades + 1)
 
         # Initialize x0
         x0 = np.array([])
