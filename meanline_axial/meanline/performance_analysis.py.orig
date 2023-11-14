@@ -1,6 +1,7 @@
 import os
 import yaml
 import copy
+import time
 import itertools
 import pandas as pd
 import numpy as np
@@ -22,6 +23,11 @@ from ..utilities import (
     convert_numpy_to_python,
     ensure_iterable,
     print_operation_points,
+<<<<<<< HEAD
+    check_lists_match
+=======
+    print_simulation_summary,
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
 )
 from datetime import datetime
 
@@ -36,9 +42,10 @@ name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 def compute_performance(
     operation_points,
     config,
+    initial_guess = None,
     out_filename=None,
     out_dir="output",
-    stop_on_failure=True,
+    stop_on_failure=False,
     export_results=True,
 ):
     """
@@ -89,12 +96,6 @@ def compute_performance(
     validate_operation_point : For validation of individual operation points.
     """
 
-<<<<<<< HEAD
-    # # Initialize problem object
-    # problem = CascadesNonlinearSystemProblem(config)
-
-=======
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
     # Check the type of operation_points argument
     if isinstance(operation_points, dict):
         # Convert ranges to a list of operation points
@@ -138,31 +139,34 @@ def compute_performance(
     print_operation_points(operation_points)
     for i, operation_point in enumerate(operation_points):
         print()
-        print(f"Computing operation point {i+1} of {len(operation_points)}")
+        print(f" Computing operation point {i+1} of {len(operation_points)}")
         print_boundary_conditions(operation_point)
 
         try:
             # Define initial guess
             if i == 0:
                 # Use default initial guess for the first operation point
+<<<<<<< HEAD
+                if initial_guess == None:
+                    print("Using default initial guess")
+                else:
+                    print("Using user defined initial guess")
+=======
                 initial_guess = None
-                print(f"Using default initial guess")
+                print(f" Using default initial guess")
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
             else:
                 closest_x, closest_index = find_closest_operation_point(
                     operation_point,
                     operation_points[:i],  # Use up to the previous point
                     solution_data[:i],  # Use solutions up to the previous point
                 )
-                print(f"Using solution from point {closest_index+1} as initial guess")
+                print(f" Using solution from point {closest_index+1} as initial guess")
                 initial_guess = closest_x
-
+                
             # Compute performance
             solver, results = compute_single_operation_point(
                 operation_point, initial_guess, config
-<<<<<<< HEAD
-                # operation_point, problem, initial_guess, config["solver_options"]
-=======
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
             )
 
             # Retrieve solver data
@@ -192,8 +196,8 @@ def compute_performance(
             if stop_on_failure:
                 raise Exception(e)
             else:
-                print(f"Computation of point {i+1}/{len(operation_points)} failed")
-                print(f"Error: {e}")
+                print(f" Computation of point {i+1}/{len(operation_points)} failed")
+                print(f" Error: {e}")
 
             # Retrieve solver data
             solver = None
@@ -232,19 +236,18 @@ def compute_performance(
             for sheet_name, df in dfs.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        print(f"Performance data successfully written to {filepath}")
+        print(f" Performance data successfully written to {filepath}")
+
+    # Print final report
+    print_simulation_summary(solver_container)
 
     return solver_container
 
 
+
 def compute_single_operation_point(
     operating_point,
-<<<<<<< HEAD
-    # problem,
-=======
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
     initial_guess,
-    # solver_options,
     config,
 ):
     """
@@ -287,44 +290,41 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
-<<<<<<< HEAD
-    problem = CascadesNonlinearSystemProblem(config) # Each solver has its own problem
-
-=======
     problem = CascadesNonlinearSystemProblem(config)
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
+    # TODO: A limitation of defining a new problem for each operation point is that the geometry generated and checked once for every point
+    # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
+    # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
-    # solver_options = copy.deepcopy(solver_options)
     solver_options = copy.deepcopy(config["solver_options"])
 
     # Attempt solving with the specified method
     name = name_map[solver_options['method']]
-    print(f"Trying to solve the problem using {name} method")
+    print(f" Trying to solve the problem using {name} method")
     solver = initialize_solver(problem, problem.x0, solver_options)
     try:
         solution = solver.solve()
         success = solution.success
     except Exception as e:
-        print(f"Error during solving: {e}")
+        print(f" Error during solving: {e}")
         success = False
     if not success:
-        print(f"Solution failed for the {name} method")
+        print(f" Solution failed for the {name} method")
 
     # Attempt solving with Lavenberg-Marquardt method
     if solver_options["method"] != "lm" and not success:
         solver_options["method"] = "lm"
         name = name_map[solver_options['method']]
-        print(f"Trying to solve the problem using {name} method")
+        print(f" Trying to solve the problem using {name} method")
         solver = initialize_solver(problem, problem.x0, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
         except Exception as e:
-            print(f"Error during solving: {e}")
+            print(f" Error during solving: {e}")
             success = False
         if not success:
-            print(f"Solution failed for the {name} method")
+            print(f" Solution failed for the {name} method")
 
     # TODO: Attempt solving with optimization algorithms?
 
@@ -333,15 +333,15 @@ def compute_single_operation_point(
     if isinstance(initial_guess, np.ndarray) and not success:
         solver_options["method"] = "lm"
         name = name_map[solver_options['method']]
-        print("Trying to solve the problem with a new initial guess")
-        print(f"Using robust solver: {name}")
+        print(f" Trying to solve the problem with a new initial guess")
+        print(f" Using robust solver: {name}")
         initial_guess = problem.get_initial_guess(None)
         solver = initialize_solver(problem, problem.x0, solver_options)
         try:
             solution = solver.solve()
             success = solution.success
         except Exception as e:
-            print(f"Error during solving: {e}")
+            print(f" Error during solving: {e}")
             success = False
 
     # Attempt solving using different initial guesses
@@ -358,7 +358,7 @@ def compute_single_operation_point(
 
     #     for i in range(N):
     #         x0 = {key: values[i] for key, values in x0_arrays.items()}
-    #         print(f"Trying to solve the problem with a new initial guess")
+    #         print(f" Trying to solve the problem with a new initial guess")
     #         print_dict(x0)
     #         initial_guess = problem.get_initial_guess(x0)
     #         solver = initialize_solver(problem, initial_guess, solver_options)
@@ -366,13 +366,13 @@ def compute_single_operation_point(
     #             solution = solver.solve()
     #             success = solution.success
     #         except Exception as e:
-    #             print(f"Error during solving: {e}")
+    #             print(f" Error during solving: {e}")
     #             success = False
     #         if not success:
-    #             print(f"Solution failed for method '{solver_options['method']}'")
+    #             print(f" Solution failed for method '{solver_options['method']}'")
 
         if not success:
-            print("WARNING: All attempts failed to converge")
+            print(" WARNING: All attempts failed to converge")
             solution = False
             # TODO: Add messages to Log file
 
@@ -380,7 +380,6 @@ def compute_single_operation_point(
 
 
 def initialize_solver(problem, initial_guess, solver_options):
-
     """
     Compute a solution for an operating point of a problem using various solver methods and initial guesses.
 
@@ -419,8 +418,6 @@ def initialize_solver(problem, initial_guess, solver_options):
         A tuple containing the solver object and the problem's results after computation.
 
     """
-    
-    
 
     # Initialize solver object
     solver = NonlinearSystemSolver(
@@ -637,7 +634,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # Process turbine geometry
         geom.validate_turbine_geometry(config["geometry"])
         self.geometry = geom.calculate_full_geometry(config["geometry"])
-        self.geom_info = geom.check_axial_turbine_geometry(self.geometry, display=True)
+        self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
         self.model_options = config["model_options"]
@@ -657,31 +654,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         tuple
             A tuple containing residuals and a list of keys for the residuals.
         """
-<<<<<<< HEAD
-        # 1. Create dicitonary of scaled variables
-        # self.vars_scaled
-
-        # 2. Create dictionary of real variables
-        # self.vars_real
-
-        # 3. Evaluate the model
-        # self.results = cs.evaluate_cascade_series(
-        #     self.vars_real,
-        #     self.boundary_conditions,
-        #     self.geometry,
-        #     self.fluid,
-        #     self.model_options,
-        #     self.reference_values,
-        # )
-
-        # 4. Return the residuals from the results dictionary and convert to array
-        # return np.array(list(self.results["residuals"].values()))
-
-        
-        residuals, self.results = cs.evaluate_cascade_series(
-            x,
-=======
-        
+            
         # Create dictionary of scaled variables
         self.vars_scaled = dict(zip(self.keys, x))
         
@@ -691,26 +664,14 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # Evaluate cascade series
         self.results = cs.evaluate_cascade_series(
             self.vars_scaled,
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
             self.boundary_conditions,
             self.geometry,
             self.fluid,
             self.model_options,
             self.reference_values,
         )
-<<<<<<< HEAD
-        return np.array(list(residuals.values()))
-    
-=======
-
-
-        # import pdb
-        # print(x)
-        # print(residuals)
-        # pdb.set_trace()
 
         return np.array(list(self.results["residuals"].values()))
->>>>>>> f8ac62d5ff6a34d999a8bcfcabaa97831c02c29c
 
     def update_boundary_conditions(self, operation_point):
         """
@@ -809,6 +770,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         An array of values converted back to their real-world scale.
         """
 
+        # TODO Lasse: improve logic using dictionary with keys instead of array
         # TODO Lasse/Roberto: Does it make sense to have a single function for scaling and unscaling if most of the code is the same?
 
         v0 = self.reference_values["v0"]
@@ -866,28 +828,29 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
 
 
     def get_initial_guess(self, initial_guess=None):
-        # TODO Lasse: Improve the logic of this function based on the new configuration file
-        # TODO Lasse: It should be possible to provide a dictionary of unscaled independent variables, or a dictionary with enthalpy-split fractions and efficiencies
-        # TODO Lasse/Roberto: Should this function be moved within the problem object.
         # TODO It's logical that the problem object has all the methods related to initial guess generation for the specific problem
         
-        
         number_of_cascades = self.geometry["number_of_cascades"]
-        # v0 = self.reference_values["v0"]
-        # s_min = self.reference_values["s_min"]
-        # s_range = self.reference_values["s_range"]
-        # angle_min = self.reference_values["angle_min"]
-        # angle_range = self.reference_values["angle_range"]
 
         # Define initial guess
         if isinstance(initial_guess, dict):
-            
+                        
             valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
             valid_keys_2 = ["v_in", "w_throat", "w_out", "s_throat", "s_out", "beta_out",
-                          "v*_in", "w*_in", "s*_in"]
+                          "v*_in", "w*_out", "s*_out"]
+            valid_keys_3 = ["v_in"]
             
-            # Check if initial guess must be calculated with given parameters
-            if all(key in valid_keys_1 for key in initial_guess):
+            for i in range(number_of_cascades):
+                index = f"_{i+1}"
+                valid_keys_index = [key+index for key in valid_keys_2 if key != "v_in"]
+                valid_keys_3 += valid_keys_index
+            
+            check = []
+            check.append(check_lists_match(valid_keys_1, list(initial_guess.keys())))
+            check.append(check_lists_match(valid_keys_2, list(initial_guess.keys())))
+            check.append(check_lists_match(valid_keys_3, list(initial_guess.keys())))
+                        
+            if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
                 eta_tt = initial_guess["eta_tt"]
                 eta_ts = initial_guess["eta_ts"]
@@ -896,7 +859,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 # Check that eta_tt, eta_ts and Ma_crit is in reasonable range 
                 for label, variable in zip(['eta_tt', 'eta_ts', 'Ma_crit'],[eta_tt, eta_ts, Ma_crit]):
                     if not 0 <= variable <= 1:
-                        raise ValueError(f"Invalid value for {label}. It should be between {0} and {1}.")
+                        raise ValueError(f"{label} should be between {0} and {1}.")
                         
                 # Check if enthalpy_loss_fractions is a list or a NumPy array
                 if not isinstance(enthalpy_loss_fractions, (list, np.ndarray)):
@@ -912,13 +875,16 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 if not np.isclose(sum_fractions, 1, atol=epsilon):
                     raise ValueError(f"Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions}).")
                     
-                print("Generating heuristic initial guess with given parameters")
+<<<<<<< HEAD
+=======
+                print(" Generating heuristic initial guess with given parameters")
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
                 initial_guess = self.compute_heuristic_initial_guess(
                     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
                 )
             
-            # Check if initial guess is given with arrays 
-            elif all(key in valid_keys_2 for key in initial_guess.keys()) and all(key in list(initial_guess.keys()) for key in valid_keys_2):
+            # Check if initial guess is given with arrays: {"v_throat" : [215, 260]}
+            elif check[1]:
                 
                 # Check that all dict values are either a number or a list/array
                 if not all(isinstance(val, (int, float, list, np.ndarray)) for val in initial_guess.values()):
@@ -926,7 +892,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 
                 # Check that array are of correct length
                 if not all(len(val) == number_of_cascades for key, val in initial_guess.items() if not key == "v_in"):
-                    raise ValueError(f"All array must be of length {number_of_cascades}")
+                    raise ValueError(f"All arrays must be of length {number_of_cascades}")
                     
                 # Create dictionary with index
                 initial_guess_index = {}
@@ -936,23 +902,29 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                             initial_guess_index[f"{key}_{i+1}"] = val[i]    
                     else:
                         initial_guess_index[key] = val
+                        
                 initial_guess = initial_guess_index
                                         
-            # Check if initial guess is given with indices
-            elif all(any(key.startswith(prefix) for prefix in valid_keys_2) for key in initial_guess.keys()):
+            # Check if initial guess is given with indices: {"v_throat_1" : 215, "v_throat_2" : 260}
+            elif check[2]:
+            
+                # Check that all values are a number
+                if not all(isinstance(val, (int, float)) for val in initial_guess.values()):
+                    raise ValueError("All dictionary values must be a float or int")
                 
-                pass
-                #FIXME
-                # for i in range(number_of_cascades):
-                #     index = f"_{i+1}"
-                #     valid_keys = [valid_key+index for valid_key in valid_keys_2]
-                #     if not all(key in valid_keys for key in initial_guess.keys() if not key == "v_in"):
-                #         raise ValueError("Error")
-                        
-            # TODO: Check that all values are within reasonable range
+            else:
+                raise ValueError(f"Invalid keys provided for initial_guess. "
+                            f"Valid keys include either:"
+                                f"{valid_keys_1} \n" 
+                                f"{valid_keys_2} \n" 
+                                f"{valid_keys_3} \n")
         
+<<<<<<< HEAD
+        elif initial_guess == None:
+=======
         elif initial_guess is None:
-            print("Generating heuristic initial guess with default parameters")
+            print(" Generating heuristic initial guess with default parameters")
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
             enthalpy_loss_fractions = np.full(number_of_cascades, 1 / number_of_cascades)
             eta_tt = 0.9
             eta_ts = 0.8
@@ -963,7 +935,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
             )
         else:
-            raise ValueError("Initial guess must be a dictionary.")
+            raise ValueError("Initial guess must be either None or a dictionary.")
 
         # Always normalize initial guess
         initial_guess_scaled = self.scale_to_normalized_values(initial_guess)
@@ -971,9 +943,9 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # Store labels
         self.keys = initial_guess_scaled.keys()
         self.x0 = np.array(list(initial_guess_scaled.values()))
+        
 
-
-        return 
+        return initial_guess_scaled
     
     def compute_heuristic_initial_guess(self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit):
         
@@ -1092,7 +1064,10 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             
             # Calculate critical state
             w_out_crit = a_out*Ma_crit
-            m_crit = w_out_crit*math.cosd(theta_out)*rho_out*A_out
+            h_out_crit = h0_in-0.5*w_out_crit**2
+            static_state_out_crit = fluid.get_props(CP.HmassSmass_INPUTS, h_out_crit, s_out)
+            rho_out_crit = static_state_out_crit["d"]
+            m_crit = w_out_crit*math.cosd(theta_out)*rho_out_crit*A_out
             v_m_in_crit = m_crit/rho_in/A_in
             v_in_crit = v_m_in_crit/math.cosd(theta_in) #XXX Works better with metal angle than inlet flow angle?
             

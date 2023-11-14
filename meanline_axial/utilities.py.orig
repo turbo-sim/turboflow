@@ -704,21 +704,47 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
+<<<<<<< HEAD
+import re
+
+def check_lists_match(list1, list2):
+=======
 
 def extract_timestamp(filename):
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
     """
-    Extract the timestamp from the filename.
+    Check if two lists contain the exact same elements, regardless of their order.
 
     Parameters
     ----------
-    filename : str
-        The filename containing the timestamp.
+    list1 : list
+        The first list for comparison.
+    list2 : list
+        The second list for comparison.
 
     Returns
     -------
-    str
-        The extracted timestamp.
+    bool
+        Returns True if the lists contain the exact same elements, regardless of their order.
+        Returns False otherwise.
+
+    Examples
+    --------
+    >>> check_lists_match([1, 2, 3], [3, 2, 1])
+    True
+
+    >>> check_lists_match([1, 2, 3], [4, 5, 6])
+    False
+
     """
+<<<<<<< HEAD
+    # Convert the lists to sets to ignore order
+    list1_set = set(list1)
+    list2_set = set(list2)
+
+    # Check if the sets are equal (contain the same elements)
+    return list1_set == list2_set
+=======
     # Regular expression to match the timestamp pattern in the filename
     match = re.search(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", filename)
     if match:
@@ -797,36 +823,5 @@ def print_simulation_summary(solvers):
     # Display to stdout
     for line in lines_to_output:
         print(line)
+>>>>>>> 3560f5d3e40262a5bce63c77db9d0e7c6d2e740a
 
-def check_lists_match(list1, list2):
-    """
-    Check if two lists contain the exact same elements, regardless of their order.
-
-    Parameters
-    ----------
-    list1 : list
-        The first list for comparison.
-    list2 : list
-        The second list for comparison.
-
-    Returns
-    -------
-    bool
-        Returns True if the lists contain the exact same elements, regardless of their order.
-        Returns False otherwise.
-
-    Examples
-    --------
-    >>> check_lists_match([1, 2, 3], [3, 2, 1])
-    True
-
-    >>> check_lists_match([1, 2, 3], [4, 5, 6])
-    False
-
-    """
-    # Convert the lists to sets to ignore order
-    list1_set = set(list1)
-    list2_set = set(list2)
-
-    # Check if the sets are equal (contain the same elements)
-    return list1_set == list2_set
