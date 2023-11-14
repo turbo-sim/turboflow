@@ -1,8 +1,8 @@
 import numpy as np
-from ..solver import OptimizationProblem, OptimizationSolver
-from . import cascade_series as cs
-from ..utilities import print_boundary_conditions
 
+from .. import solver as psv
+from .. import utilities as util
+from . import flow_model as flow
 
 def compute_optimal_turbine(design_point, cascades_data, x0):
     
@@ -35,14 +35,14 @@ def compute_optimal_turbine(design_point, cascades_data, x0):
     x = np.concatenate((design_variables_values, x0))
         
     # Initialize solver object    
-    solver = OptimizationSolver(problem, x, display = True)#, update_on="function")
+    solver = psv.OptimizationSolver(problem, x, display = True)#, update_on="function")
 
     sol = solver.solve(method = method, options = {"maxiter" : 200})
     solver.plot_convergence_history(savefig = False)
     
     return solver
 
-class CascadesOptimizationProblem(OptimizationProblem):
+class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
     A class representing a turbine design optimization problem
 
@@ -55,8 +55,8 @@ class CascadesOptimizationProblem(OptimizationProblem):
 
     def __init__(self, cascades_data, design_variables = {}, obj_func = 0, constraints_eq = {}, constraints_ineq = {}, bounds = []):
         
-        cs.calculate_number_of_stages(cascades_data)
-        cs.update_fixed_params(cascades_data)
+        flow.calculate_number_of_stages(cascades_data)
+        flow.update_fixed_params(cascades_data)
         
         # Define reference mass flow rate
         v0 = cascades_data["fixed_params"]["v0"]
@@ -116,7 +116,7 @@ class CascadesOptimizationProblem(OptimizationProblem):
         i = 0 # Index to assign design variables from vars
         if "w_s" in self.design_variables.keys():
             w_s = x[0] # Specific speed
-            w = cs.convert_specific_speed(w_s, m, d_out_s, h0_in, h_out_s)
+            w = flow.convert_specific_speed(w_s, m, d_out_s, h0_in, h_out_s)
             self.cascades_data["BC"]["omega"] = w
             i += 1
             
@@ -135,10 +135,10 @@ class CascadesOptimizationProblem(OptimizationProblem):
             self.cascades_data["geometry"][key] = [val for val in x[i:i+n_cascades]] 
             i += n_cascades
 
-        cs.get_geometry(self.cascades_data["geometry"], m, h0_in, d_out_s, h_out_s)
+        flow.get_geometry(self.cascades_data["geometry"], m, h0_in, d_out_s, h_out_s)
 
         x0 = x[i:]
-        residuals = cs.evaluate_cascade_series(x0, self.cascades_data)
+        residuals = flow.evaluate_cascade_series(x0, self.cascades_data)
         
         if self.obj_func == 0:
             self.f = 0 
@@ -261,8 +261,8 @@ def get_initial_guess_array(cascades_data, keys_design_variables, x = None):
         initial_guess += [val[i] for key, val in ["ar", "bs", "theta_in", "theta_out"] if key in keys_design_variables]
         
     if not isinstance(x, np.ndarray):
-        x = cs.generate_initial_guess(cascades_data, R = 0.5, eta_tt = 0.95, eta_ts = 0.9, Ma_crit = 0.95)
-        x = cs.scale_x0(x, cascades_data)
+        x = flow.generate_initial_guess(cascades_data, R = 0.5, eta_tt = 0.95, eta_ts = 0.9, Ma_crit = 0.95)
+        x = flow.scale_x0(x, cascades_data)
         
     initial_guess += list(x)
     

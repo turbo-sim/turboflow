@@ -2,15 +2,13 @@ import os
 import re
 import yaml
 import logging
-from datetime import datetime
-
-from collections.abc import Iterable
-
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from datetime import datetime
+from collections.abc import Iterable
 from cycler import cycler
 
 
@@ -46,7 +44,7 @@ def read_configuration_file(filename):
         config = yaml.safe_load(file)
 
     # Validate required and allowed sections
-    validate_config_sections(config)
+    validate_configuration_file(config)
 
     # Convert configuration options
     config = postprocess_config(config)
@@ -54,13 +52,13 @@ def read_configuration_file(filename):
     return config
 
 
-def validate_config_sections(config):
+def validate_configuration_file(config):
     """
-    Validate the presence of required configuration sections and check for any unexpected sections.
+    Validate the presence of required configuration fields and check for any unexpected fields.
 
-    This function ensures that all required sections are present in the configuration and
-    that there are no sections other than the allowed ones. It raises a ConfigurationError if
-    either required sections are missing or unexpected sections are found.
+    This function ensures that all required fields are present in the configuration and
+    that there are no fields other than the allowed ones. It raises a ConfigurationError if
+    either required fields are missing or unexpected sections are found.
 
     Parameters
     ----------
@@ -70,7 +68,9 @@ def validate_config_sections(config):
 
     """
     required_sections = {"operation_points", "solver_options", "model_options"}
-    allowed_sections = required_sections.union({"performance_map", "geometry", "optimization"})
+    allowed_sections = required_sections.union(
+        {"performance_map", "geometry", "optimization"}
+    )
     validate_keys(config, required_sections, allowed_sections)
 
 
@@ -180,7 +180,7 @@ def validate_keys(checked_dict, required_keys, allowed_keys=None):
     # Raise combined error if there are any issues
     if error_messages:
         raise ConfigurationError("; ".join(error_messages))
-    
+
 
 class ConfigurationError(Exception):
     """Exception raised for errors in the configuration options."""
@@ -212,7 +212,7 @@ def convert_numpy_to_python(data, precision=10):
 
     if data is None:
         return None
-    
+
     if isinstance(data, dict):
         return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
 
@@ -738,7 +738,6 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-
 def extract_timestamp(filename):
     """
     Extract the timestamp from the filename.
@@ -760,7 +759,6 @@ def extract_timestamp(filename):
     return ""
 
 
-
 def print_simulation_summary(solvers):
     """
     Print a formatted footer summarizing the performance of all operation points.
@@ -768,26 +766,26 @@ def print_simulation_summary(solvers):
     This function processes a list of solver objects to provide a summary of the performance
     analysis calculations. It calculates and displays the number of successful points and a summary of
     simulation tme statistics. Additionally, it lists the indices of failed operation points, if any.
-    
+
     The function is robust against solvers that failed and lack certain attributes like 'elapsed_time'.
-    In such cases, these solvers are included in the count of failed operation points, but not in the 
-    calculation time statistics. 
+    In such cases, these solvers are included in the count of failed operation points, but not in the
+    calculation time statistics.
 
     Parameters
     ----------
     solvers : list
-        A list of solver objects. Each solver object should contain attributes related to the 
+        A list of solver objects. Each solver object should contain attributes related to the
         calculation of an operation point, such as 'elapsed_time' and the 'solution' status.
 
     """
-    
+
     # Initialize times list and track failed points
     times = []
     failed_points = []
 
     for i, solver in enumerate(solvers):
         # Check if the solver is not None and has the required attribute
-        if solver and hasattr(solver, 'elapsed_time'):
+        if solver and hasattr(solver, "elapsed_time"):
             times.append(solver.elapsed_time)
             if not solver.solution.success:
                 failed_points.append(i)
@@ -812,25 +810,30 @@ def print_simulation_summary(solvers):
 
     # Add failed points message only if there are failed points
     if failed_points:
-        lines_to_output.append(f"Failed operation points: {', '.join(map(str, failed_points))}")
+        lines_to_output.append(
+            f"Failed operation points: {', '.join(map(str, failed_points))}"
+        )
 
-   # Add time statistics only if there are valid times
+    # Add time statistics only if there are valid times
     if times.size > 0:
-        lines_to_output.extend([
-            f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
-            f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
-            f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
-            f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
-        ])
+        lines_to_output.extend(
+            [
+                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+                f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
+            ]
+        )
     else:
         lines_to_output.append(" No valid calculation times available.")
 
     lines_to_output.append(separator)
     lines_to_output.append("")
-    
+
     # Display to stdout
     for line in lines_to_output:
         print(line)
+
 
 def check_lists_match(list1, list2):
     """

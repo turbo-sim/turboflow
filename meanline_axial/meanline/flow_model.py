@@ -1,14 +1,12 @@
 import numpy as np
 import pandas as pd
-from scipy import optimize
-import CoolProp as CP
-from ..properties import FluidCoolProp_2Phase
-from . import loss_model as lm
-from . import deviation_model as dm
+import CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
 
 from .. import math
 from .. import utilities as util
+from . import loss_model as lm
+from . import deviation_model as dm
 
 
 # Keys of the information that should be stored in results
@@ -98,7 +96,7 @@ KEYS_STAGE = [
 This list is used to ensure the structure of the 'stage' dictionary in various functions."""
 
 
-def evaluate_cascade_series(
+def evaluate_axial_turbine(
     variables,
     boundary_conditions,
     geometry,
@@ -369,7 +367,7 @@ def evaluate_cascade(
     )
 
     # Evaluate isentropic enthalpy change
-    props_is = fluid.get_props(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+    props_is = fluid.get_props(cp.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
     dh_is = exit_plane["h"] - props_is["h"]
 
     # Evaluate critical state
@@ -501,18 +499,18 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # Calculate static properties
     h = h0 - 0.5 * v**2
-    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
-    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
     stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
     relative_stagnation_properties = util.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -642,19 +640,19 @@ def evaluate_cascade_exit(
 
     # Calculate static properties
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
-    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
     stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relatove stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
     relative_stagnation_properties = util.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -797,7 +795,7 @@ def evaluate_cascade_interspace(
     # Compute thermodynamic state
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
-    stagnation_properties = fluid.get_props(CP.DmassHmass_INPUTS, rho_in, h_in)
+    stagnation_properties = fluid.get_props(cp.DmassHmass_INPUTS, rho_in, h_in)
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in

@@ -1,6 +1,5 @@
 import numpy as np
 from .. import math
-from ..math import smooth_min, smooth_max
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 # TODO: we can create generic smooth versions of these functions and call them when necessary
