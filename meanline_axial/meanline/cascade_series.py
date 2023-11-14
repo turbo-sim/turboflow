@@ -399,8 +399,6 @@ def evaluate_cascade(
         ]
     )
 
-    # TODO: Wouldnt it make more sense to rename the function "compute_residuals_critical" as "evaluate_cascade_critical"?
-    # TODO: then we would have a sequence of calls to: evaluate_cascade_inlet, evaluate_cascade_exit, evaluate_cascade_critical
     residuals_critical, critical_state = evaluate_cascade_critical(
         x_crit,
         critical_cascade_input,
@@ -681,13 +679,16 @@ def evaluate_cascade_exit(
     Re = rho * w * chord / mu
     rothalpy = h0_rel - 0.5 * blade_speed**2
     # TODO: is rothalpy necessary? See calculations above
+    # TODO: not really. But it needs to be assigned either way
+    # TODO: Could be assignes as nan, but might as well calculate it
+    # TODO: Can also easiliy check that rothalpy is conserved in this way
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w_m * area * (1 - blockage_factor)
 
     # Evaluate loss coefficient
-    # TODO: why not give all variables to the loss model?
+    # TODO: why not give all variables to the loss model? 
     # Introduce safeguard to prevent negative values for Re and Ma
     # Useful to avoid invalid operations during convergence
     min_val = 1e-3
@@ -998,7 +999,11 @@ def compute_critical_values(
 
     # Load input for critical cascade
     # TODO: use dictionary for input variables, not array indices
+    # TODO: In that case we need a wrapper around compute_critical_values
+    # TODO: to approximate the gradients
+    
     # TODO: variables passed should already scaled as in evaluate_cascade()?
+    # TODO: problem with finite difference approximation?
     s_in = critical_cascade_input["s_in"]
     h0_in = critical_cascade_input["h0_in"]
     alpha_in = critical_cascade_input["alpha_in"]
@@ -1048,12 +1053,13 @@ def compute_critical_values(
     )
 
     # TODO: why not pass the entire throat_plane as critical state?
-    critical_state["mass_flow"] = throat_plane["mass_flow"]
-    critical_state["Ma_rel"] = throat_plane["Ma_rel"]
-    critical_state["d"] = throat_plane["d"]
-    critical_state["w"] = throat_plane["w"]
-    critical_state["p"] = throat_plane["p"]
-    critical_state["beta"] = throat_plane["beta"]
+    critical_state.update(throat_plane)
+    # critical_state["mass_flow"] = throat_plane["mass_flow"]
+    # critical_state["Ma_rel"] = throat_plane["Ma_rel"]
+    # critical_state["d"] = throat_plane["d"]
+    # critical_state["w"] = throat_plane["w"]
+    # critical_state["p"] = throat_plane["p"]
+    # critical_state["beta"] = throat_plane["beta"]
 
     output = np.insert(residuals, 0, throat_plane["mass_flow"])
 
@@ -1107,8 +1113,7 @@ def compute_critical_jacobian(
     """
 
     # Define finite difference relative step size
-    # TODO specify in configuration file
-    eps = 1e-3 * x
+    eps = model_options["rel_step_fd"]*x
 
     # Approximate problem Jacobian by finite differences
     jacobian = approx_derivative(
@@ -1392,6 +1397,15 @@ def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
         1. Calculation based on a correlation for the displacement thickness of turbulent boundary layer over a flat plate with zero pressure gradient.
         2. Using a numerical value specified directly by the user.
 
+    The correlation for turbulent boundary layer displacement thickness over a flat plate is given by :cite:`cengel_fluid_2014`:
+    
+    .. math::
+        \delta^* = \\frac{0.048}{Re^{1/5}} \\times 0.9 \\times \\text{chord}
+        
+    From this the blockage factor is calculated as
+    
+    .. math::
+        \\text{blockage_factor} = 2 \\times \\frac{\\delta^*}{\\text{opening}}
 
     Parameters
     ----------
