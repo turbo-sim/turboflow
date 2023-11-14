@@ -18,6 +18,7 @@ model_options:
   choking_condition : deviation
   deviation_model : aungier
   throat_blockage : 0.00 #flat_plate_turbulent
+  rel_step_fd: 1e-3
   loss_model:
     model: benner
     loss_coefficient: stagnation_pressure
@@ -55,3 +56,31 @@ geometry:
   throat_location_fraction: [1, 1]
   # throat_location_fraction: [5/6, 5/6]
 
+
+
+
+# optimization:
+#   fixed_parameters:
+#     - wedge_angle
+#     - thickness_max
+
+#   design_variables:
+#     pitch_to_chord:
+#       lower_bound: 
+#       upper_bound: 
+#       initial_guess:
+
+#   constraints:
+#     flaring_angle:
+#       lower_bound: [-15, -12]
+#       upper_bound: +15
+
+#     flaring_angle: [-15, +15]
+#     flaring_angle: +15
+
+#     hub_to_tip_ratio:
+#       upper_bound: 0.95
+#       lower_bound: [0.9, 0.85, 0.8, 0.7]
+
+#     degree_of_reaction: 0.5
+#       # target: 0.5
