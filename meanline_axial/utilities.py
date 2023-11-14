@@ -704,22 +704,37 @@ def add_string_to_keys(input_dict, suffix):
 
 
 import re
-def extract_timestamp(filename):
+
+def check_lists_match(list1, list2):
     """
-    Extract the timestamp from the filename.
+    Check if two lists contain the exact same elements, regardless of their order.
 
     Parameters
     ----------
-    filename : str
-        The filename containing the timestamp.
+    list1 : list
+        The first list for comparison.
+    list2 : list
+        The second list for comparison.
 
     Returns
     -------
-    str
-        The extracted timestamp.
+    bool
+        Returns True if the lists contain the exact same elements, regardless of their order.
+        Returns False otherwise.
+
+    Examples
+    --------
+    >>> check_lists_match([1, 2, 3], [3, 2, 1])
+    True
+
+    >>> check_lists_match([1, 2, 3], [4, 5, 6])
+    False
+
     """
-    # Regular expression to match the timestamp pattern in the filename
-    match = re.search(r"\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}", filename)
-    if match:
-        return match.group(0)
-    return ""
+    # Convert the lists to sets to ignore order
+    list1_set = set(list1)
+    list2_set = set(list2)
+
+    # Check if the sets are equal (contain the same elements)
+    return list1_set == list2_set
+

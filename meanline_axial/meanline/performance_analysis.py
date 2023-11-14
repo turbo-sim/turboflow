@@ -22,6 +22,7 @@ from ..utilities import (
     convert_numpy_to_python,
     ensure_iterable,
     print_operation_points,
+    check_lists_match
 )
 from datetime import datetime
 
@@ -36,6 +37,7 @@ name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 def compute_performance(
     operation_points,
     config,
+    initial_guess = None,
     out_filename=None,
     out_dir="output",
     stop_on_failure=True,
@@ -139,8 +141,10 @@ def compute_performance(
             # Define initial guess
             if i == 0:
                 # Use default initial guess for the first operation point
-                initial_guess = None
-                print(f"Using default initial guess")
+                if initial_guess == None:
+                    print("Using default initial guess")
+                else:
+                    print("Using user defined initial guess")
             else:
                 closest_x, closest_index = find_closest_operation_point(
                     operation_point,
@@ -149,7 +153,7 @@ def compute_performance(
                 )
                 print(f"Using solution from point {closest_index+1} as initial guess")
                 initial_guess = closest_x
-
+                
             # Compute performance
             solver, results = compute_single_operation_point(
                 operation_point, initial_guess, config
@@ -807,28 +811,29 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
 
 
     def get_initial_guess(self, initial_guess=None):
-        # TODO Lasse: Improve the logic of this function based on the new configuration file
-        # TODO Lasse: It should be possible to provide a dictionary of unscaled independent variables, or a dictionary with enthalpy-split fractions and efficiencies
-        # TODO Lasse/Roberto: Should this function be moved within the problem object.
         # TODO It's logical that the problem object has all the methods related to initial guess generation for the specific problem
         
-        
         number_of_cascades = self.geometry["number_of_cascades"]
-        # v0 = self.reference_values["v0"]
-        # s_min = self.reference_values["s_min"]
-        # s_range = self.reference_values["s_range"]
-        # angle_min = self.reference_values["angle_min"]
-        # angle_range = self.reference_values["angle_range"]
 
         # Define initial guess
         if isinstance(initial_guess, dict):
-            
+                        
             valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
             valid_keys_2 = ["v_in", "w_throat", "w_out", "s_throat", "s_out", "beta_out",
-                          "v*_in", "w*_in", "s*_in"]
+                          "v*_in", "w*_out", "s*_out"]
+            valid_keys_3 = ["v_in"]
             
-            # Check if initial guess must be calculated with given parameters
-            if all(key in valid_keys_1 for key in initial_guess):
+            for i in range(number_of_cascades):
+                index = f"_{i+1}"
+                valid_keys_index = [key+index for key in valid_keys_2 if key != "v_in"]
+                valid_keys_3 += valid_keys_index
+            
+            check = []
+            check.append(check_lists_match(valid_keys_1, list(initial_guess.keys())))
+            check.append(check_lists_match(valid_keys_2, list(initial_guess.keys())))
+            check.append(check_lists_match(valid_keys_3, list(initial_guess.keys())))
+                        
+            if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
                 eta_tt = initial_guess["eta_tt"]
                 eta_ts = initial_guess["eta_ts"]
@@ -853,13 +858,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 if not np.isclose(sum_fractions, 1, atol=epsilon):
                     raise ValueError(f"Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions}).")
                     
-                print("Generating heuristic initial guess with given parameters")
                 initial_guess = self.compute_heuristic_initial_guess(
                     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
                 )
             
             # Check if initial guess is given with arrays: {"v_throat" : [215, 260]}
-            elif sorted(valid_keys_2) == sorted(list(initial_guess.keys())):
+            elif check[1]:
                 
                 # Check that all dict values are either a number or a list/array
                 if not all(isinstance(val, (int, float, list, np.ndarray)) for val in initial_guess.values()):
@@ -867,7 +871,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 
                 # Check that array are of correct length
                 if not all(len(val) == number_of_cascades for key, val in initial_guess.items() if not key == "v_in"):
-                    raise ValueError(f"All array must be of length {number_of_cascades}")
+                    raise ValueError(f"All arrays must be of length {number_of_cascades}")
                     
                 # Create dictionary with index
                 initial_guess_index = {}
@@ -877,29 +881,24 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                             initial_guess_index[f"{key}_{i+1}"] = val[i]    
                     else:
                         initial_guess_index[key] = val
+                        
                 initial_guess = initial_guess_index
                                         
             # Check if initial guess is given with indices: {"v_throat_1" : 215, "v_throat_2" : 260}
-            elif all(any(key.startswith(prefix) for prefix in valid_keys_2) for key in initial_guess.keys()):
-                
-                # Check that initial guess contains all required elements
-                required_elements = []
-                for i in range(number_of_cascades):
-                    index = f"_{i+1}"
-                    valid_keys_index = [key+index for key in valid_keys_2]
-                    required_elements += valid_keys_index
-                
-                if not sorted(required_elements) == sorted(list(initial_guess.keys())):
-                    raise ValueError(f"Initial guess not given as dictionary with the required elements: {required_elements}")
-                    
+            elif check[2]:
+            
                 # Check that all values are a number
-                if not all(isinstance(val, (int, float))):
+                if not all(isinstance(val, (int, float)) for val in initial_guess.values()):
                     raise ValueError("All dictionary values must be a float or int")
-                        
-            # TODO: Check that all values are within reasonable range
+                
+            else:
+                raise ValueError(f"Invalid keys provided for initial_guess. "
+                            f"Valid keys include either:"
+                                f"{valid_keys_1} \n" 
+                                f"{valid_keys_2} \n" 
+                                f"{valid_keys_3} \n")
         
-        elif initial_guess is None:
-            print("Generating heuristic initial guess with default parameters")
+        elif initial_guess == None:
             enthalpy_loss_fractions = np.full(number_of_cascades, 1 / number_of_cascades)
             eta_tt = 0.9
             eta_ts = 0.8
@@ -918,7 +917,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         # Store labels
         self.keys = initial_guess_scaled.keys()
         self.x0 = np.array(list(initial_guess_scaled.values()))
-
+        
 
         return initial_guess_scaled
     

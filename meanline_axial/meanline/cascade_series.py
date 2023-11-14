@@ -201,9 +201,10 @@ def evaluate_cascade_series(
         )
 
         # Add cascade residuals to residual arrays
-        cascade_residuals = {
-            f"{key}_{i+1}": val for key, val in cascade_residuals.items()
-        }
+        # cascade_residuals = {
+        #     f"{key}_{i+1}": val for key, val in cascade_residuals.items()
+        # }
+        cascade_residuals = add_string_to_keys(cascade_residuals, f'_{i+1}')
         residuals.update(cascade_residuals)
 
         # Calculate input of next cascade (Assume no change in density)
