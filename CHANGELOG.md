@@ -2,6 +2,15 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 14.11.2023
+- Refractor the "utilities" import in `cascade_series.py` and `performance_analsys.py`
+- Add documentation and validation for the keys expected in the results dictionary
+- Moved `compute_overall_performance()` calculations to a dedicated function
+- Refractored and renamed `compute_stage_parameters()` to  `compute_stage_performance()`.
+- Added a new generic function: `validate_keys()` that should be used for all validations of dictionary keys.
+- Added the new `validate_keys()` generic function to `geometry.py`
+- Simplified the argument list of `compute_efficiency_breakdown()`
+
 ## 13.11.2023
 - Add additional problem evaluation after root finding completion (this ensures the solver.problem object has the converged solution)
 - Add elapsed time to root finding solution report

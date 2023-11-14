@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    meanline_axial.meanline.performance_analysis
+   meanline_axial.meanline.design_optimization
    meanline_axial.meanline.cascade_series
    meanline_axial.meanline.geometry
    meanline_axial.meanline.deviation_model

@@ -15,23 +15,25 @@ from ..solver import (
     NonlinearSystemProblem,
     OptimizationProblem,
 )
-from ..utilities import (
-    set_plot_options,
-    print_dict,
-    print_boundary_conditions,
-    flatten_dataframe,
-    convert_numpy_to_python,
-    ensure_iterable,
-    print_operation_points,
-    print_simulation_summary,
-	check_lists_match,
-)
+
+from .. import utilities as util
+# from ..utilities import (
+#     set_plot_options,
+#     print_dict,
+#     print_boundary_conditions,
+#     flatten_dataframe,
+#     convert_numpy_to_python,
+#     ensure_iterable,
+#     print_operation_points,
+#     print_simulation_summary,
+# 	check_lists_match,
+# )
 from datetime import datetime
 
 from ..properties import FluidCoolProp_2Phase
 import CoolProp as CP
 
-set_plot_options()
+util.set_plot_options()
 
 name_map = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
@@ -116,7 +118,7 @@ def compute_performance(
 
     # Export simulation configuration as YAML file
     config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-    config_data = convert_numpy_to_python(config_data, precision=12)
+    config_data = util.convert_numpy_to_python(config_data, precision=12)
     config_file = os.path.join(out_dir, f"{out_filename}.yaml")
     with open(config_file, "w") as file:
         yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
@@ -133,11 +135,11 @@ def compute_performance(
     solver_container = []
 
     # Loop through all operation points
-    print_operation_points(operation_points)
+    util.print_operation_points(operation_points)
     for i, operation_point in enumerate(operation_points):
         print()
         print(f" Computing operation point {i+1} of {len(operation_points)}")
-        print_boundary_conditions(operation_point)
+        util.print_boundary_conditions(operation_point)
 
         try:
             # Define initial guess
@@ -176,10 +178,10 @@ def compute_performance(
             # Collect results
             operation_point_data.append(pd.DataFrame([operation_point]))
             overall_data.append(results["overall"])
-            plane_data.append(flatten_dataframe(results["plane"]))
-            cascade_data.append(flatten_dataframe(results["cascade"]))
-            stage_data.append(flatten_dataframe(results["stage"]))
-            geometry_data.append(flatten_dataframe(results["geometry"]))
+            plane_data.append(util.flatten_dataframe(results["plane"]))
+            cascade_data.append(util.flatten_dataframe(results["cascade"]))
+            stage_data.append(util.flatten_dataframe(results["stage"]))
+            geometry_data.append(util.flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.vars_real)
             solver_container.append(solver)
@@ -231,7 +233,7 @@ def compute_performance(
         print(f" Performance data successfully written to {filepath}")
 
     # Print final report
-    print_simulation_summary(solver_container)
+    util.print_simulation_summary(solver_container)
 
     return solver_container
 
@@ -398,6 +400,7 @@ def initialize_solver(problem, initial_guess, solver_options):
 
     solver_options : dict
         A dictionary containing options for the solver
+        
         - If an initial guess is provided as an array, it will be used as is.
         - If no initial guess is provided, default values for R, eta_tt, eta_ts, and Ma_crit
             are used to generate an initial guess.
@@ -519,7 +522,7 @@ def generate_operation_points(performance_map):
       a unique combination of parameters from the performance_map.
     """
     # Make sure all values in the performance_map are iterables
-    performance_map = {k: ensure_iterable(v) for k, v in performance_map.items()}
+    performance_map = {k: util.ensure_iterable(v) for k, v in performance_map.items()}
 
     # Reorder performance map keys so first sweep is always through pressure
     priority_keys = ["p0_in", "p_out"]
@@ -838,9 +841,9 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
                 valid_keys_3 += valid_keys_index
             
             check = []
-            check.append(check_lists_match(valid_keys_1, list(initial_guess.keys())))
-            check.append(check_lists_match(valid_keys_2, list(initial_guess.keys())))
-            check.append(check_lists_match(valid_keys_3, list(initial_guess.keys())))
+            check.append(util.check_lists_match(valid_keys_1, list(initial_guess.keys())))
+            check.append(util.check_lists_match(valid_keys_2, list(initial_guess.keys())))
+            check.append(util.check_lists_match(valid_keys_3, list(initial_guess.keys())))
                         
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]

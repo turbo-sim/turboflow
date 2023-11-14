@@ -69,26 +69,10 @@ def validate_config_sections(config):
         represent the different configuration sections.
 
     """
-
-    # Configuration file sections
     required_sections = {"operation_points", "solver_options", "model_options"}
     allowed_sections = required_sections.union({"performance_map", "geometry", "optimization"})
+    validate_keys(config, required_sections, allowed_sections)
 
-    # Check for extra and missing sections
-    extra_sections = config.keys() - allowed_sections
-    missing_sections = required_sections - config.keys()
-
-    # Prepare error messages
-    error_messages = []
-    if extra_sections:
-        error_messages.append(f"Found unexpected configuration sections: {extra_sections}")
-    if missing_sections:
-        error_messages.append(f"Missing required configuration sections: {missing_sections}")
-
-    # Raise combined error if there are any issues
-    if error_messages:
-        raise ConfigurationError("; ".join(error_messages))
-    
 
 def postprocess_config(config):
     """
@@ -152,6 +136,51 @@ def postprocess_config(config):
 
     return config
 
+
+def validate_keys(checked_dict, required_keys, allowed_keys=None):
+    """
+    Validate the presence of required keys and check for any unexpected keys in a dictionary.
+
+    Parameters
+    ----------
+    checked_dict : dict
+        The dictionary to be checked.
+    required_keys : set
+        A set of keys that are required in the dictionary.
+    allowed_keys : set
+        A set of keys that are allowed in the dictionary.
+
+    Raises
+    ------
+    ConfigurationError
+        If either required keys are missing or unexpected keys are found.
+    """
+
+    # Convert input lists to sets for set operations
+    checked_keys = set(checked_dict.keys())
+    required_keys = set(required_keys)
+
+    # Set allowed_keys to all present keys if not provided
+    if allowed_keys is None:
+        allowed_keys = checked_keys
+    else:
+        allowed_keys = set(allowed_keys)
+
+    # Check for extra and missing keys
+    missing_keys = required_keys - checked_keys
+    extra_keys = checked_keys - allowed_keys
+
+    # Prepare error messages
+    error_messages = []
+    if missing_keys:
+        error_messages.append(f"Missing required keys: {missing_keys}")
+    if extra_keys:
+        error_messages.append(f"Found unexpected keys: {extra_keys}")
+
+    # Raise combined error if there are any issues
+    if error_messages:
+        raise ConfigurationError("; ".join(error_messages))
+    
 
 class ConfigurationError(Exception):
     """Exception raised for errors in the configuration options."""
@@ -316,12 +345,14 @@ def print_operation_points(operation_points):
     according to predefined specifications, applies unit conversions where
     necessary, and prints them in a neatly aligned table with headers and units.
 
-    Parameters:
+    Parameters
+    ----------
     - operation_points (list of dict): A list where each dictionary contains
       key-value pairs representing operation parameters and their corresponding
       values.
 
-    Notes:
+    Notes
+    -----
     - This function assumes that all necessary keys exist within each operation
       point dictionary.
     - The function directly prints the output; it does not return any value.
@@ -660,16 +691,19 @@ def ensure_iterable(obj):
     it will be returned as is. If the object is not an iterable, or if it is
     a string, it will be placed into a list to make it iterable.
 
-    Parameters:
+    Parameters
+    ----------
     obj : any type
         The object to be checked and possibly converted into an iterable.
 
-    Returns:
+    Returns
+    -------
     Iterable
         The original object if it is an iterable (and not a string), or a new
         list containing the object if it was not iterable or was a string.
 
-    Examples:
+    Examples
+    --------
     >>> ensure_iterable([1, 2, 3])
     [1, 2, 3]
     >>> ensure_iterable('abc')

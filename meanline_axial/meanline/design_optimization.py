@@ -43,6 +43,15 @@ def compute_optimal_turbine(design_point, cascades_data, x0):
     return solver
 
 class CascadesOptimizationProblem(OptimizationProblem):
+    """
+    A class representing a turbine design optimization problem
+
+    Methods
+    -------
+    get_values(x)
+        Evaluate the system of equations for a given set of decision variables.
+
+    """
 
     def __init__(self, cascades_data, design_variables = {}, obj_func = 0, constraints_eq = {}, constraints_ineq = {}, bounds = []):
         
@@ -166,7 +175,6 @@ class CascadesOptimizationProblem(OptimizationProblem):
     
     
 def get_default_bounds(cascades_data, keys_design_variables):
-    
     """
     Gives default bounds to each design variable.
     """
@@ -236,13 +244,11 @@ def get_default_bounds(cascades_data, keys_design_variables):
 
 
 def get_initial_guess_array(cascades_data, keys_design_variables, x = None):
-    
     """
     Gives design variables given by keys_design_variables from cascades data to 
     form initial guess for design optimization. 
     At maximum it includes specific speed and complete geometry in addition to 
-    variables needed to evaluate each cascade (v_in, v_trhoat, v_out, s_throat,
-                                               s_out, beta_out)
+    variables needed to evaluate each cascade 
     """
     
     n_cascades = cascades_data["geometry"]["n_cascades"]
