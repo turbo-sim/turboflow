@@ -620,11 +620,6 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         case_data : dict
             A dictionary containing case-specific data.
         """
-        # TODO conversion between dictionary of independent variables and np.array should happen
-        # TODO only within the CascadesNonlinearSystemProblem() class. This makes sense because this class
-        # TODO is the interface between optimization algorithm and turbine model
-        # TODO the turbine model should only use input variables in dictionary format
-        # TODO the conversion from dictionary to array can be done within the "get_values()" function using a "self." variable or function
 
         # Process turbine geometry
         geom.validate_turbine_geometry(config["geometry"])
@@ -654,7 +649,7 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         self.vars_scaled = dict(zip(self.keys, x))
         
         # Create dictionary of real variables
-        self.vars_real = self.scale_to_real_values(self.vars_scaled)
+        self.vars_real = self.scale_values(self.vars_scaled, to_normalized=False)
                 
         # Evaluate cascade series
         self.results = cs.evaluate_cascade_series(
@@ -750,77 +745,40 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
         }
 
         return
-
-    def scale_to_real_values(self, variables_scaled):
+    
+    def scale_values(self, variables, to_normalized=True):
         """
-        Convert a normalized solution vector back to real-world values.
-
+        Convert values between normalized and real values.
+    
         Parameters
         ----------
-        x: The normalized solution vector from the solver.
-        cascades_data: Dictionary containing reference values and number of cascades.
-
+        variables: Dictionary containing values to be scaled.
+        to_real: If True, scale to real values; if False, scale to normalized values.
+    
         Returns
         -------
-        An array of values converted back to their real-world scale.
+        An array of values converted between scales.
         """
-
-        # TODO Lasse: improve logic using dictionary with keys instead of array
-        # TODO Lasse/Roberto: Does it make sense to have a single function for scaling and unscaling if most of the code is the same?
-
-        v0 = self.reference_values["v0"]
-        s_range = self.reference_values["s_range"]
-        s_min = self.reference_values["s_min"]
-        angle_range = self.reference_values["angle_range"]
-        angle_min = self.reference_values["angle_min"]
-        
-        # Define dictionary of real values
-        variables_real = {}
-        
-        for key, val in variables_scaled.items():
-            
-            if key.startswith("v"):
-                variables_real[key] = variables_scaled[key] * v0
-                
-            elif key.startswith("w"):
-                variables_real[key] = variables_scaled[key] * v0
-
-            elif key.startswith("s"):
-                variables_real[key] = variables_scaled[key]*s_range + s_min
-                
-            elif key.startswith("b"):
-                variables_real[key] = variables_scaled[key]*angle_range + angle_min
-                
-        return variables_real
     
-    def scale_to_normalized_values(self, variables_real):
-        
         # Load parameters
         v0 = self.reference_values["v0"]
         s_range = self.reference_values["s_range"]
         s_min = self.reference_values["s_min"]
         angle_range = self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
-        
+    
         # Define dictionary of scaled values
-        variables_scaled = {}
-                    
-        for key, val in variables_real.items():
-            
-            if key.startswith("v"):
-                variables_scaled[key] = variables_real[key]/v0
-                
-            elif key.startswith("w"):
-                variables_scaled[key] = variables_real[key]/v0
-
+        scaled_variables = {}
+    
+        for key, val in variables.items():
+            if key.startswith("v") or key.startswith("w"):
+                scaled_variables[key] = val / v0 if to_normalized else val * v0
             elif key.startswith("s"):
-                variables_scaled[key] = (variables_real[key] - s_min) / s_range
-                
+                scaled_variables[key] = (val - s_min) / s_range if to_normalized else val * s_range + s_min
             elif key.startswith("b"):
-                variables_scaled[key] = (variables_real[key] - angle_min) / angle_range
-                
-        return variables_scaled
-
+                scaled_variables[key] = (val - angle_min) / angle_range if to_normalized else val * angle_range + angle_min
+    
+        return scaled_variables
 
     def get_initial_guess(self, initial_guess=None):
         # TODO It's logical that the problem object has all the methods related to initial guess generation for the specific problem
@@ -925,13 +883,12 @@ class CascadesNonlinearSystemProblem(NonlinearSystemProblem):
             raise ValueError("Initial guess must be either None or a dictionary.")
 
         # Always normalize initial guess
-        initial_guess_scaled = self.scale_to_normalized_values(initial_guess)
+        initial_guess_scaled = self.scale_values(initial_guess)
         
         # Store labels
         self.keys = initial_guess_scaled.keys()
         self.x0 = np.array(list(initial_guess_scaled.values()))
         
-
         return initial_guess_scaled
     
     def compute_heuristic_initial_guess(self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit):
