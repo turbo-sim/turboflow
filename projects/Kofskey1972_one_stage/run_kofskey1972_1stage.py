@@ -14,7 +14,7 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 # Define running option
-CASE = 2
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
@@ -26,7 +26,7 @@ config = ml.read_configuration_file(CONFIG_FILE)
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = initial_guess, export_results=False)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False)
     # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
