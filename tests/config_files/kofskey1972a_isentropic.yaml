@@ -18,6 +18,7 @@ model_options:
   choking_condition : deviation
   deviation_model : aungier
   throat_blockage : 0.00 #flat_plate_turbulent
+  rel_step_fd: 1e-3
   loss_model:
     model: isentropic
     loss_coefficient: stagnation_pressure

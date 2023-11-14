@@ -46,7 +46,7 @@ def save_regression_data(solvers, config_name, outdir):
         with pd.ExcelWriter(filename, engine="openpyxl") as writer:
             # Export simulation results
             for key, df in solver.problem.results.items():
-                if key != "residuals":
+                if isinstance(df, pd.DataFrame):
                     df = copy.deepcopy(df)
                     df.index += 1
                     df.to_excel(writer, sheet_name=key, index=True)
