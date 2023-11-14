@@ -26,7 +26,7 @@ ml.print_dict(config)
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, export_results=False)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = initial_guess, export_results=False)
     # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
