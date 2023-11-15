@@ -1,5 +1,5 @@
-Math functions
-===========================
+Math 
+============
 
 .. automodule:: meanline_axial.math
    :members:

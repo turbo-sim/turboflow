@@ -1,5 +1,5 @@
 Utilities
-================================
+===============
 
 .. automodule:: meanline_axial.utilities
    :members:

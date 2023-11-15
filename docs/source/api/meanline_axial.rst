@@ -9,9 +9,9 @@ Submodules
    :maxdepth: 2
 
    meanline_axial.math
-   meanline_axial.utilities
    meanline_axial.plot_functions
-
+   meanline_axial.utilities
+   meanline_axial.configuration
 
 Subpackages
 -----------
@@ -22,4 +22,5 @@ Subpackages
    meanline_axial.meanline
    meanline_axial.properties
    meanline_axial.solver
+
 

@@ -1,7 +1,7 @@
-meanline\_axial.meanline.cascade\_series module
+meanline\_axial.meanline.geometry\_model module
 ===============================================
 
-.. automodule:: meanline_axial.meanline.cascade_series
+.. automodule:: meanline_axial.meanline.geometry_model
    :members:
    :undoc-members:
    :show-inheritance:

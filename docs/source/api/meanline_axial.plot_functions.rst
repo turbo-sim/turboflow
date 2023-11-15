@@ -1,5 +1,5 @@
-Plotting functions
-======================================
+Plotting
+==========
 
 .. automodule:: meanline_axial.plot_functions
    :members:
