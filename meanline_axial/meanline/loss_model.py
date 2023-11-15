@@ -2,6 +2,19 @@ from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
 from . import loss_model_benner_moustapha as bm
+from .. import utilities as util
+
+# List of valid options
+LOSS_MODELS = [
+    "kacker_okapuu",
+    "moustapha",
+    "benner",
+    "benner_moustapha",
+    "isentropic",
+]
+LOSS_COEFFICIENTS = [
+    "stagnation_pressure",
+]
 
 # Keys that the output loss dictionary must have
 KEYS_LOSSES = [
@@ -31,11 +44,11 @@ def evaluate_loss_model(loss_model_options, input_parameters):
 
     # Function mappings for each loss model
     loss_model_functions = {
-        "kacker_okapuu": ko.compute_losses,
-        "moustapha": mo.compute_losses,
-        "benner": br.compute_losses,
-        "benner_moustapha": bm.compute_losses,
-        "isentropic": lambda _: {
+        LOSS_MODELS[0]: ko.compute_losses,
+        LOSS_MODELS[1]: mo.compute_losses,
+        LOSS_MODELS[2]: br.compute_losses,
+        LOSS_MODELS[3]: bm.compute_losses,
+        LOSS_MODELS[4]: lambda _: {
             "loss_profile": 0.0,
             "loss_incidence": 0.0,
             "loss_trailing": 0.0,
@@ -50,7 +63,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     if model in loss_model_functions:
         loss_dict = loss_model_functions[model](input_parameters)
     else:
-        options = ", ".join(f"'{k}'" for k in loss_model_functions.keys())
+        options = ", ".join(f"'{k}'" for k in LOSS_MODELS)
         raise ValueError(f"Invalid loss model '{model}'. Available options: {options}")
 
     # Apply tuning factors (empty dict if not provided)
@@ -63,7 +76,9 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         value for key, value in loss_dict.items() if key != "loss_total"
     )
 
-    if loss_model_options["loss_coefficient"] == "stagnation_pressure":
+    # Compute the loss coefficient according to definition
+    loss_coeff = loss_model_options["loss_coefficient"]
+    if  loss_coeff == "stagnation_pressure":
         # TODO add other loss coefficient definitions
         p0rel_in = input_parameters["flow"]["p0_rel_in"]
         p0rel_out = input_parameters["flow"]["p0_rel_out"]
@@ -71,7 +86,8 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         Y_definition = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
 
     else:
-        raise Exception("Invalid loss coefficient definition")
+        options = ", ".join(f"'{k}'" for k in LOSS_COEFFICIENTS)
+        raise ValueError(f"Invalid loss coefficient '{loss_coeff}'. Available options: {options}")
 
     # Compute loss coefficient error
     loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
@@ -79,7 +95,10 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Save the definition of the loss coefficient
     loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
 
-    return validate_loss_dictionary(loss_dict)
+    # Validate the output losses dictionary
+    util.validate_keys(loss_dict, KEYS_LOSSES, KEYS_LOSSES)
+
+    return loss_dict
 
 
 def apply_tuning_factors(loss_dict, tuning_factors):

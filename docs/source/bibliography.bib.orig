@@ -217,6 +217,8 @@
  year = {2021}
 }
 
+<<<<<<< HEAD
+=======
 @article{blanchard_accurately_2021-1,
  author = {Blanchard, Pierre and Higham, Desmond J and Higham, Nicholas J},
  doi = {10.1093/imanum/draa038},
@@ -228,10 +230,13 @@
  year = {2021}
 }
 
+>>>>>>> 294a64c8d6c1df83ab29c59d73b62cb8b9bf1cb6
 @misc{cengel_fluid_2014,
  author = {Çengel, Yunus A},
  keywords = {fluidmekanikk, pensum, tep4100},
  language = {eng},
+<<<<<<< HEAD
+=======
  publisher = {McGraw-Hill},
  title = {Fluid mechanics : fundamentals and applications},
  year = {2014}
@@ -241,6 +246,7 @@
  author = {Çengel, Yunus A},
  keywords = {fluidmekanikk, pensum, tep4100},
  language = {eng},
+>>>>>>> 294a64c8d6c1df83ab29c59d73b62cb8b9bf1cb6
  note = {Edition: 3rd ed. in SI units.
 ISBN: 9781259011221
 Place: Boston},

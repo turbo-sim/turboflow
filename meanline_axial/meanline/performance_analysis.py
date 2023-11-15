@@ -19,6 +19,11 @@ from . import flow_model as flow
 
 util.set_plot_options()
 
+SOLVERS_AVAILABLE = [
+    "lm",
+    "hybr",
+]
+
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
 

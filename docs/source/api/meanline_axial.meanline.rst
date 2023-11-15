@@ -9,8 +9,8 @@ Submodules
 
    meanline_axial.meanline.performance_analysis
    meanline_axial.meanline.design_optimization
-   meanline_axial.meanline.cascade_series
-   meanline_axial.meanline.geometry
+   meanline_axial.meanline.geometry_model
+   meanline_axial.meanline.flow_model
    meanline_axial.meanline.deviation_model
    meanline_axial.meanline.loss_model
    meanline_axial.meanline.loss_model_benner

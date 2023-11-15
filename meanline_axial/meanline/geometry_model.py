@@ -229,6 +229,7 @@ def calculate_full_geometry(geometry):
     # Compute geometric ratios
     aspect_ratio = height / axial_chord
     pitch_chord_ratio = geom["pitch"] / geom["chord"]
+    solidity = 1.0 / pitch_chord_ratio
     thickness_max_chord_ratio = geom["thickness_max"] / geom["chord"]
     thickness_te_opening_ratio = geom["thickness_te"] / geom["opening"]
     tip_clearance_height = geom["tip_clearance"] / height
@@ -268,6 +269,7 @@ def calculate_full_geometry(geometry):
         "flaring_angle": flaring_angle,
         "aspect_ratio": aspect_ratio,
         "pitch_chord_ratio": pitch_chord_ratio,
+        "solidity": solidity,
         "thickness_max_chord_ratio": thickness_max_chord_ratio,
         "thickness_te_opening_ratio": thickness_te_opening_ratio,
         "tip_clearance_height_ratio": tip_clearance_height,

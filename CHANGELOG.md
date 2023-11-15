@@ -2,6 +2,12 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 15.11.2023
+- Added configuration file validation functionality
+- Added validation schema to documentation (updates automatically)
+- Updated documentation for configuration validation
+- Updated the regression tests YAML file with the new configuration options
+
 ## 14.11.2023
 - Refractor the "utilities" import in `cascade_series.py` and `performance_analsys.py`
 - Add documentation and validation for the keys expected in the results dictionary
@@ -10,7 +16,7 @@
 - Added a new generic function: `validate_keys()` that should be used for all validations of dictionary keys.
 - Added the new `validate_keys()` generic function to `geometry.py`
 - Simplified the argument list of `compute_efficiency_breakdown()`
-
+- Renamed `cascade_series.py` to `flow_model.py` and replace the abbreviation "cs" by "flow"
 ## 13.11.2023
 - Add additional problem evaluation after root finding completion (this ensures the solver.problem object has the converged solution)
 - Add elapsed time to root finding solution report

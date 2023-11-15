@@ -8,6 +8,9 @@ from .. import utilities as util
 from . import loss_model as lm
 from . import deviation_model as dm
 
+# List of valid options
+BLOCKAGE_MODELS = ["flat_plate_turbulent"]
+CHOKING_CONDITIONS = ["deviation", "mach_critical", "mach_unity"]
 
 # Keys of the information that should be stored in results
 KEYS_KINEMATIC = [
@@ -377,7 +380,7 @@ def evaluate_cascade(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["throat_blockage"],
+        model_options["blockage_model"],
         loss_model,
         geometry["radius_mean_throat"],
         geometry["A_throat"],
@@ -391,7 +394,7 @@ def evaluate_cascade(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["throat_blockage"],
+        model_options["blockage_model"],
         loss_model,
         geometry["radius_mean_out"],
         geometry["A_out"],
@@ -427,13 +430,13 @@ def evaluate_cascade(
     # Evaluate the choking condition equation
     # TODO move to its own function
     choking_functions = {
-        "deviation": lambda: compute_residual_flow_angle(
+        CHOKING_CONDITIONS[0]: lambda: compute_residual_flow_angle(
             geometry, critical_state, throat_plane, exit_plane, deviation_model
         ),
-        "mach_critical": lambda: compute_residual_mach_throat(
+        CHOKING_CONDITIONS[1]: lambda: compute_residual_mach_throat(
             critical_state["Ma_rel"], exit_plane["Ma_rel"], throat_plane["Ma_rel"]
         ),
-        "mach_unity": lambda: compute_residual_mach_throat(
+        CHOKING_CONDITIONS[2]: lambda: compute_residual_mach_throat(
             1.00, exit_plane["Ma_rel"], throat_plane["Ma_rel"]
         ),
     }
@@ -1074,7 +1077,7 @@ def compute_critical_values(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["throat_blockage"],
+        model_options["blockage_model"],
         loss_model,
         geometry["radius_mean_throat"],
         geometry["A_throat"],
@@ -1421,7 +1424,7 @@ def compute_residual_flow_angle(
     return residual, density_correction
 
 
-def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
+def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     """
     Calculate the blockage factor due to boundary layer displacement thickness.
 
@@ -1446,18 +1449,18 @@ def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
 
     Parameters
     ----------
-    throat_blockage : str or float or None
-        The method or value for determining the throat blockage. It can be
+    blockage_model : str or float or None
+        The method or value for determining the blockage factor. It can be
         a string specifying a model name ('flat_plate_turbulent'), a numeric
         value between 0 and 1 representing the blockage factor directly, or
         None to use a default calculation method.
     Re : float, optional
-        Reynolds number, used if `throat_blockage` is 'flat_plate_turbulent'.
+        Reynolds number, used if `blockage_model` is 'flat_plate_turbulent'.
     chord : float, optional
-        Chord length, used if `throat_blockage` is 'flat_plate_turbulent'.
+        Chord length, used if `blockage_model` is 'flat_plate_turbulent'.
     opening : float, optional
         Throat opening size, used to calculate the blockage factor when
-        `throat_blockage` is None or a numeric value.
+        `blockage_model` is None or a numeric value.
 
     Returns
     -------
@@ -1468,23 +1471,23 @@ def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
     Raises
     ------
     ValueError
-        If `throat_blockage` is an invalid option, or required parameters
+        If `blockage_model` is an invalid option, or required parameters
         for the chosen method are missing.
     """
 
-    if throat_blockage == "flat_plate_turbulent":
+    if blockage_model == BLOCKAGE_MODELS[0]:
         displacement_thickness = 0.048 / Re ** (1 / 5) * 0.9 * chord
         blockage_factor = 2 * displacement_thickness / opening
 
-    elif isinstance(throat_blockage, (float, int)) and 0 <= throat_blockage <= 1:
-        blockage_factor = throat_blockage
+    elif isinstance(blockage_model, (float, int)) and 0 <= blockage_model <= 1:
+        blockage_factor = blockage_model
 
-    elif throat_blockage is None:
+    elif blockage_model is None:
         blockage_factor = 0.00
 
     else:
         raise ValueError(
-            f"Invalid throat blockage option: '{throat_blockage}'. "
+            f"Invalid throat blockage option: '{blockage_model}'. "
             "Valid options are 'flat_plate_turbulent', a numeric value between 0 and 1, or None."
         )
 

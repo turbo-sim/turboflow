@@ -17,7 +17,7 @@ performance_map:
 model_options:
   choking_condition : deviation
   deviation_model : aungier
-  throat_blockage : 0.00 #flat_plate_turbulent
+  blockage_model : 0.00 #flat_plate_turbulent
   rel_step_fd: 1e-3
   loss_model:
     model: isentropic
