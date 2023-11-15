@@ -129,6 +129,7 @@ def evaluate_axial_turbine(
         The output of this function can only be regarded as a physically meaningful solution when the equations are fully closed (i.e., all residuals are close to zero).
         Therefore, this function is intended to be used within a root-finding or optimization algorithm that systematically adjusts the input variables to drive the residuals to zero and close the system of equations.
 
+
     Parameters
     ----------
     variables : dict
@@ -160,6 +161,7 @@ def evaluate_axial_turbine(
     angular_speed = boundary_conditions["omega"]
 
     # Load reference_values
+    h_out_s = reference_values["h_out_s"]  # FIXME: bad plaement of h_out_s variable?
     v0 = reference_values["v0"]
     s_range = reference_values["s_range"]
     s_min = reference_values["s_min"]
@@ -305,11 +307,24 @@ def evaluate_cascade(
 ):
     
     """
+<<<<<<< HEAD:meanline_axial/meanline/cascade_series.py
     Evaluate the performance of a cascade configuration.
     
     This function evaluates the cascade performance by considering inlet, throat, and exit planes.
     It also evaluates the cascade at point of choking. The results are stored in a dictionary. The function 
-    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+    returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+=======
+    Evaluate the performance of a single cascade within an axial turbine.
+
+    This function evaluates the performance of a single turbine cascade. The process involves several key steps, each utilizing different sub-functions:
+
+    1. `evaluate_cascade_inlet`: Assesses the inlet conditions of the cascade.
+    2. `evaluate_cascade_exit`: Evaluates the exit conditions at both the throat and exit stations.
+    3. `evaluate_cascade_critical`: Determines the critical conditions within the cascade.
+    4. `compute_choking_residual`: Determines whether the turbine is choked or not depending on the operating conditions and the choking condition specified by the user.
+
+    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors,
+>>>>>>> 4e707af50e0782bf9262253812140790cb880608:meanline_axial/meanline/flow_model.py
     and the residuals related to the critical state and choking condition.
     
     This function relies on auxiliary functions like evaluate_cascade_inlet, evaluate_cascade_exit,
@@ -844,7 +859,7 @@ def evaluate_cascade_critical(
     model_options,
     reference_values,
 ):
-    r"""
+    """
     Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
     conservation and loss computation equations at the throat.
 
@@ -856,22 +871,22 @@ def evaluate_cascade_critical(
         
     .. math::
 
-        \nabla L = \begin{bmatrix}
-        \frac{\partial f}{\partial x_1} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_1} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_1} \\
-        \frac{\partial f}{\partial x_2} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_2} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_2} \\
-        \frac{\partial f}{\partial x_3} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_3} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_3} \\
-        g_1(x_1, x_2, x_3) \\
-        g_2(x_1, x_2, x_3) \\
-        \end{bmatrix} = 0
+        \\nabla L = \\begin{bmatrix}
+        \\frac{\\partial f}{\\partial x_1} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_1} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_1} \\\\
+        \\frac{\\partial f}{\\partial x_2} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_2} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_2} \\\\
+        \\frac{\\partial f}{\\partial x_3} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_3} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_3} \\\\
+        g_1(x_1, x_2, x_3) \\\\
+        g_2(x_1, x_2, x_3) \\\\
+        \\end{bmatrix} = 0
         
     This function returns the value of the three last equations in the set above, while the two first equations are used to 
     explicitly calculate the lagrange multipliers.
     
     .. math::
-        \lambda_1 = \frac{\frac{\partial g_2}{\partial x_2}\cdot\frac{-\partial f}{\partial x_1} - \frac{\partial g_2}{\partial x_1}\cdot-\frac{\partial f}{\partial x_2}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \\                     
-        \lambda_2 = \frac{\frac{\partial g_1}{\partial x_1}\cdot\frac{-\partial f}{\partial x_2} - \frac{\partial g_1}{\partial x_2}\cdot-\frac{\partial f}{\partial x_1}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} 
+        \lambda_1 = \\frac{\\frac{\\partial g_2}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1} - \\frac{\\partial g_2}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} \\\\                     
+        \lambda_2 = \\frac{\\frac{\\partial g_1}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2} - \\frac{\\partial g_1}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} 
 
     By transforming the problem into a system of equations, this approach allows the evaluation of the critical
     point without directly solving an optimization problem. One significant advantage of this
