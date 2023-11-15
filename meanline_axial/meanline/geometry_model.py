@@ -1,6 +1,6 @@
 import numpy as np
 from .. import math
-
+from .. import utilities    
 
 def validate_turbine_geometry(geom, display=False):
     """
@@ -50,20 +50,8 @@ def validate_turbine_geometry(geom, display=False):
     # Angular variables need not be non-negative
     angle_keys = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
 
-    # Initialize lists for missing and extra fields
-    missing_keys = required_keys - geom.keys()
-    extra_keys = geom.keys() - required_keys
-
-    # Prepare error messages
-    error_messages = []
-    if missing_keys:
-        error_messages.append(f"Missing geometry parameters: {missing_keys}")
-    if extra_keys:
-        error_messages.append(f"Unexpected geometry parameters: {extra_keys}")
-
-    # Raise combined error if there are any issues
-    if error_messages:
-        raise KeyError("; ".join(error_messages))
+    # Check that there are no missing or extra variables
+    utilities.validate_keys(geom, required_keys, required_keys)
 
     # Get the number of cascades
     number_of_cascades = len(geom["cascade_type"])

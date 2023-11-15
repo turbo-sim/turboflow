@@ -2,7 +2,7 @@ operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/2.298
+  p_out: [13.8e4/2.298] #, 13.8e4/2.5]
   omega: 1627
   alpha_in: 0
 
@@ -10,25 +10,33 @@ performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.5, 4.5, 50)
+  p_out: 13.8e4/np.linspace(1.5, 4.5, 10)
   omega: [1627]
   alpha_in: 0
 
 model_options:
-  loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
-  displacement_thickness : 0
-  deviation_model : aungier
   choking_condition : deviation
+  deviation_model : aungier
+  throat_blockage : 0.0 #flat_plate_turbulent
+  # rel_step_fd: 1e-3
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      # clearance: 1.00
 
 solver_options:
   method: hybr
-  tolerance: 1e-9
+  tolerance: 1e-8
   max_iterations: 50
   derivative_method: "2-point"
   derivative_rel_step: 1e-4
   display_progress: True
-
-
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -49,56 +57,5 @@ geometry:
   # throat_location_fraction: [5/6, 5/6]
 
 
-# geometry_optimization:
-#   radius_specification: constant_mean
-#   hub_tip_ratio: [0.9, 0.9, 0.9, 0.9]
-#   metal_angle_leading: []
-#   metal_angle_trailing: []
-#   aspect_ratio: []
-#   pitch_to_chord_ratio: []
-#   thickness_max_to_chord_ratio: []
-#   trailing_edge_to_opening_ratio:  []
-#   throat_to_exit_opening_ratio: []
 
 
-# optimization:
-#   fixed_parameters:
-#     - wedge_angle
-#     - thickness_max
-
-#   design_variables:
-#     pitch_to_chord:
-#       lower_bound: 
-#       upper_bound: 
-#       initial_guess:
-
-#   constraints:
-#     flaring_angle:
-#       lower_bound: [-15, -12]
-#       upper_bound: +15
-
-#     flaring_angle: [-15, +15]
-#     flaring_angle: +15
-
-#     hub_to_tip_ratio:
-#       upper_bound: 0.95
-#       lower_bound: [0.9, 0.85, 0.8, 0.7]
-
-#     degree_of_reaction: 0.5
-#       # target: 0.5
-
-
-
-
-
-
-# Computed variables
-# Number of blades
-# Radius mean
-# Flow areas
-# Axial chord/stagger
-# 
-
-  # Add option to give chord/stagger or axialChord/stagger or chord/axialChord
-  # Add option to give single value for radius for constant radius
-  # Add option to give single value for hub_tip_ratio for cylindrical turbine

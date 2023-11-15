@@ -15,6 +15,7 @@ KEYS_LOSSES = [
     "loss_incidence",
 ]
 
+
 def evaluate_loss_model(loss_model_options, input_parameters):
     """
     Calculate loss coefficient based on the selected loss model.
@@ -52,7 +53,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         options = ", ".join(f"'{k}'" for k in loss_model_functions.keys())
         raise ValueError(f"Invalid loss model '{model}'. Available options: {options}")
 
-    # Apply tuning factors
+    # Apply tuning factors (empty dict if not provided)
     tuning_factors = loss_model_options.get("tuning_factors", {})
     tuning_factors = {f"loss_{key}": value for key, value in tuning_factors.items()}
     apply_tuning_factors(loss_dict, tuning_factors)
@@ -99,6 +100,7 @@ def apply_tuning_factors(loss_dict, tuning_factors):
         loss_dict[key] *= factor
 
     return loss_dict
+
 
 def validate_loss_dictionary(loss_dict):
     """

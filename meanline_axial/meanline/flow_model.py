@@ -1,15 +1,12 @@
 import numpy as np
 import pandas as pd
-from scipy import optimize
-import CoolProp as CP
-from ..properties import FluidCoolProp_2Phase
-from . import loss_model as lm
-from . import deviation_model as dm
+import CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
 
 from .. import math
-
-from ..utilities import add_string_to_keys, ensure_iterable
+from .. import utilities as util
+from . import loss_model as lm
+from . import deviation_model as dm
 
 
 # Keys of the information that should be stored in results
@@ -45,6 +42,8 @@ KEYS_PLANE = (
         "blockage",
     ]
 )
+"""List of keys for the plane performance metrics of the turbine. 
+This list is used to ensure the structure of the 'plane' dictionary in various functions."""
 
 
 KEYS_CASCADE = [
@@ -64,9 +63,40 @@ KEYS_CASCADE = [
     "incidence",
     "density_correction",
 ]
+"""List of keys for the cascade performance metrics of the turbine. 
+This list is used to ensure the structure of the 'cascade' dictionary in various functions."""
+
+KEYS_OVERALL = [
+    "PR_tt",
+    "PR_ts",
+    "mass_flow_rate",
+    "efficiency_tt",
+    "efficiency_ts",
+    "efficiency_ts_drop_kinetic",
+    "efficiency_ts_drop_losses",
+    "power",
+    "torque",
+    "angular_speed",
+    "exit_flow_angle",
+    "exit_velocity",
+    "spouting_velocity",
+    "last_blade_velocity",
+    "blade_jet_ratio",
+    "h0_in",
+    "h0_out",
+    "h_out_s",
+]
+"""List of keys for the overall performance metrics of the turbine. 
+This list is used to ensure the structure of the 'overall' dictionary in various functions."""
+
+KEYS_STAGE = [
+    "reaction",
+]
+"""List of keys for the stage performance metrics of the turbine. 
+This list is used to ensure the structure of the 'stage' dictionary in various functions."""
 
 
-def evaluate_cascade_series(
+def evaluate_axial_turbine(
     variables,
     boundary_conditions,
     geometry,
@@ -82,7 +112,7 @@ def evaluate_cascade_series(
 
     The evaluation proceeds cascade by cascade, employing two key functions in a structured sequence:
 
-    1. `evaluate_cascade`: Compute flow at the inlet station, throat, and exit planes of each cascade. In addition, this function evaluates 
+    1. `evaluate_cascade`: Compute flow at the inlet station, throat, and exit planes of each cascade. In addition, this function evaluates
     the turbine performance at the critical point, which is essential to model the correct behavior under choking conditions.
     2. `evaluate_cascade_interspace`: Calculate the flow conditions after the interspace between consecutive cascades to obtain conditions at the inlet of the next cascade.
 
@@ -95,10 +125,9 @@ def evaluate_cascade_series(
     - 'residuals': Summarizes the mismatch in the nonlinear system of equations used to model the turbine.
 
     .. note::
-        
+
         The output of this function can only be regarded as a physically meaningful solution when the equations are fully closed (i.e., all residuals are close to zero).
         Therefore, this function is intended to be used within a root-finding or optimization algorithm that systematically adjusts the input variables to drive the residuals to zero and close the system of equations.
-
 
     Parameters
     ----------
@@ -121,7 +150,7 @@ def evaluate_cascade_series(
         Dictionary containing the evaluated results, including planes, cascades, stage, overall,
         and geometry information.
 
-    
+
     """
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
@@ -138,27 +167,22 @@ def evaluate_cascade_series(
     angle_range = reference_values["angle_range"]
     angle_min = reference_values["angle_min"]
 
-    # Filtered geometry
-    geom_cascades = {
-        key: value
-        for key, value in geometry.items()
-        if len(ensure_iterable(value)) == number_of_cascades
-    }
-
     # Initialize results structure
     results = {
         "plane": pd.DataFrame(columns=KEYS_PLANE),
         "cascade": pd.DataFrame(columns=KEYS_CASCADE),
-        "stage": None,
-        "overall": None,
-        "geometry": pd.DataFrame(geom_cascades),
+        "stage": {},
+        "overall": {},
+        "geometry": geometry,
+        "reference_values": reference_values,
+        "boundary_conditions": boundary_conditions,
     }
 
     # initialize residual arrays
     residuals = {}
 
     # Rename turbine inlet velocity
-    v_in = variables["v_in"]*v0
+    v_in = variables["v_in"] * v0
 
     for i in range(number_of_cascades):
         # Update angular speed
@@ -170,18 +194,17 @@ def evaluate_cascade_series(
             for key, values in geometry.items()
             if key not in ["number_of_cascades", "number_of_stages"]
         }
-        
+
         # Rename vairables
-        cascade = '_'+str(i+1)
-        w_throat = variables["w_throat"+cascade] * v0
-        w_out = variables["w_out"+cascade] * v0
-        s_throat = variables["s_throat"+cascade] * s_range + s_min
-        s_out = variables["s_out"+cascade] * s_range + s_min
-        beta_out = variables["beta_out"+cascade] * angle_range + angle_min
-        v_crit_in = variables["v*_in"+cascade] 
-        w_crit_out = variables["w*_out"+cascade] 
-        s_crit_out = variables["s*_out"+cascade] 
-        
+        cascade = "_" + str(i + 1)
+        w_throat = variables["w_throat" + cascade] * v0
+        w_out = variables["w_out" + cascade] * v0
+        s_throat = variables["s_throat" + cascade] * s_range + s_min
+        s_out = variables["s_out" + cascade] * s_range + s_min
+        beta_out = variables["beta_out" + cascade] * angle_range + angle_min
+        v_crit_in = variables["v*_in" + cascade]
+        w_crit_out = variables["w*_out" + cascade]
+        s_crit_out = variables["s*_out" + cascade]
 
         # Evaluate current cascade
         cascade_inlet_input = {
@@ -215,10 +238,7 @@ def evaluate_cascade_series(
         )
 
         # Add cascade residuals to residual arrays
-        # cascade_residuals = {
-        #     f"{key}_{i+1}": val for key, val in cascade_residuals.items()
-        # }
-        cascade_residuals = add_string_to_keys(cascade_residuals, f'_{i+1}')
+        cascade_residuals = util.add_string_to_keys(cascade_residuals, f"_{i+1}")
         residuals.update(cascade_residuals)
 
         # Calculate input of next cascade (Assume no change in density)
@@ -245,66 +265,29 @@ def evaluate_cascade_series(
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
 
-    # Calculation of overall performance
-    p = results["plane"]["p"].values
-    p0 = results["plane"]["p0"].values
-    h0 = results["plane"]["h0"].values
-    v_out = results["plane"]["v"].values[-1]
-    u_out = results["plane"]["u"].values[-1]
-    mass_flow = results["plane"]["mass_flow"].values[-1]
-    exit_flow_angle = results["plane"]["alpha"].values[-1]
-    PR_tt = p0[0] / p[-1]
-    PR_ts = p0[0] / p0[-1]
-    h0_in = h0[0]
-    h0_out = h0[-1]
-    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)
-    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)
-    efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
-    efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
-    power = mass_flow * (h0_in - h0_out)
-    torque = power / angular_speed
-
-    # Creating the 'overall' dictionary using a dictionary comprehension
-    results["overall"] = pd.DataFrame(
-        [
-            {
-                "PR_tt": PR_tt,
-                "PR_ts": PR_ts,
-                "mass_flow_rate": mass_flow,
-                "efficiency_tt": efficiency_tt,
-                "efficiency_ts": efficiency_ts,
-                "efficiency_ts_drop_kinetic": efficiency_ts_drop_kinetic,
-                "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
-                "power": power,
-                "torque": torque,
-                "angular_speed": angular_speed,
-                "exit_flow_angle": exit_flow_angle,
-                "exit_velocity": v_out,
-                "spouting_velocity": v0,
-                "last_blade_velocity": u_out,
-                "blade_jet_ratio": u_out / v0,
-                "h0_in": h0_in,
-                "h0_out": h0_out,
-                "h_out_s": h_out_s,
-            }
-        ]
-    )
-
     # Additional calculations
-    loss_fractions = compute_efficiency_breakdown(
-        results, number_of_cascades, reference_values
-    )
+    loss_fractions = compute_efficiency_breakdown(results)
     results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
 
-    # Add stage results to the results tructure
-    if geometry["number_of_stages"] != 0:
-        stage_results = compute_stage_parameters(
-            geometry["number_of_stages"], results["plane"]
-        )
-        results["stage"] = pd.DataFrame(stage_results)
-        
-    # Add residuals to results structure
+    # Compute stage performance
+    results["stage"] = pd.DataFrame([compute_stage_performance(results)])
+
+    # Compute overall perfrormance
+    results["overall"] = pd.DataFrame([compute_overall_performance(results)])
+
+    # Store all residuals for export
     results["residuals"] = residuals
+
+    # Store the input variables
+    results["independent_variables"] = variables
+
+    # Retain only variables defined per cascade
+    geom_cascades = {
+        key: value
+        for key, value in geometry.items()
+        if len(util.ensure_iterable(value)) == number_of_cascades
+    }
+    results["geometry"] = pd.DataFrame([geom_cascades])
 
     return results
 
@@ -327,7 +310,7 @@ def evaluate_cascade(
     
     This function evaluates the cascade performance by considering inlet, throat, and exit planes.
     It also evaluates the cascade at point of choking. The results are stored in a dictionary. The function 
-    returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
     and the residuals related to the critical state and choking condition.
     
     This function relies on auxiliary functions like evaluate_cascade_inlet, evaluate_cascade_exit,
@@ -416,7 +399,7 @@ def evaluate_cascade(
     )
 
     # Evaluate isentropic enthalpy change
-    props_is = fluid.get_props(CP.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+    props_is = fluid.get_props(cp.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
     dh_is = exit_plane["h"] - props_is["h"]
 
     # Evaluate critical state
@@ -548,19 +531,19 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # Calculate static properties
     h = h0 - 0.5 * v**2
-    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
-    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
-    stagnation_properties = add_string_to_keys(stagnation_properties, "0")
+    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
-    relative_stagnation_properties = add_string_to_keys(
+    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = util.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
 
@@ -692,20 +675,20 @@ def evaluate_cascade_exit(
 
     # Calculate static properties
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
-    static_properties = fluid.get_props(CP.HmassSmass_INPUTS, h, s)
+    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0, s)
-    stagnation_properties = add_string_to_keys(stagnation_properties, "0")
+    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relatove stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(CP.HmassSmass_INPUTS, h0_rel, s)
-    relative_stagnation_properties = add_string_to_keys(
+    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = util.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
 
@@ -847,7 +830,7 @@ def evaluate_cascade_interspace(
     # Compute thermodynamic state
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
-    stagnation_properties = fluid.get_props(CP.DmassHmass_INPUTS, rho_in, h_in)
+    stagnation_properties = fluid.get_props(cp.DmassHmass_INPUTS, rho_in, h_in)
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in
@@ -1509,7 +1492,7 @@ def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
     return blockage_factor
 
 
-def compute_efficiency_breakdown(results, number_of_cascades, reference_values):
+def compute_efficiency_breakdown(results):
     """
     Compute the loss of total-to-static efficiency due to each various loss component in cascades.
 
@@ -1522,11 +1505,6 @@ def compute_efficiency_breakdown(results, number_of_cascades, reference_values):
     ----------
     results : dict
         The data for the cascades, including plane and cascade specific parameters.
-    number_of_cascades : int
-        The number of cascades in the system.
-    reference_values : dict
-        Reference values used in the efficiency calculation, including the isentropic outlet
-        enthalpy ('h_out_s') and other required parameters.
 
     Returns
     -------
@@ -1542,10 +1520,11 @@ def compute_efficiency_breakdown(results, number_of_cascades, reference_values):
 
     """
     # Load parameters
-    h_out_s = reference_values["h_out_s"]
+    h_out_s = results["reference_values"]["h_out_s"]
     h0_in = results["plane"]["h0"].values[0]
     h_out = results["plane"]["h"].values[-1]
     cascade = results["cascade"]
+    number_of_cascades = results["geometry"]["number_of_cascades"]
 
     # Compute a correction factor due to re-heating effect
     dhs_total = h_out - h_out_s
@@ -1572,9 +1551,9 @@ def compute_efficiency_breakdown(results, number_of_cascades, reference_values):
     return breakdown
 
 
-def compute_stage_parameters(number_of_stages, planes):
+def compute_stage_performance(results):
     """
-    Compute the parameters associated with each turbine stage.
+    Calculate the stage performance metrics of the turbine
 
     Parameters
     ----------
@@ -1598,17 +1577,101 @@ def compute_stage_parameters(number_of_stages, planes):
 
     """
 
-    h_vec = planes["h"].values
+    # Only proceed if there are stages
+    number_of_stages = results["geometry"]["number_of_stages"]
+    if number_of_stages == 0:
+        return {}
 
-    # Degree of reaction
-    R = np.zeros(number_of_stages)
+    # Calculate the degree of reaction for each stage using list comprehension
+    h = results["plane"]["h"].values
+    R = np.array(
+        [
+            (h[i * 6 + 2] - h[i * 6 + 5]) / (h[i * 6] - h[i * 6 + 5])
+            for i in range(number_of_stages)
+        ]
+    )
 
-    for i in range(number_of_stages):
-        h1 = h_vec[i * 6]
-        h2 = h_vec[i * 6 + 2]
-        h3 = h_vec[i * 6 + 5]
-        R[i] = (h2 - h3) / (h1 - h3)
+    # Store all variables in dictionary
+    stages = {"reaction": R}
 
-    stages = {"R": R}
+    # Check the dictionary has the expected keys
+    util.validate_keys(stages, KEYS_STAGE, KEYS_STAGE)
 
     return stages
+
+
+def compute_overall_performance(results):
+    """
+    Calculate the overall performance metrics of the turbine
+
+    This function extracts necessary values from the 'results' dictionary, performs calculations to determine
+    overall performance metrics, and stores these metrics in the "overall" dictionary. The function also checks
+    that the overall dictionary has all the expected keys and does not contain any unexpected keys.
+
+    The keys for the 'overall' dictionary are defined in the :obj:`KEYS_OVERALL` list. Refer to its documentation
+    for the complete list of keys.
+
+    Parameters
+    ----------
+    results : dict
+        A dictionary containing various operational parameters at each flow station
+
+    Returns
+    -------
+    dict
+        An updated dictionary with a new key 'overall' containing the calculated performance metrics.
+        The keys for these metrics are defined in :obj:`KEYS_OVERALL`.
+    """
+
+    # TODO: Refactor so results is the only required argument
+    # TODO: recalculate h_out_s and v0 from results data might be a simple solution
+    # TODO: angular speed could be saved at each cascade. This would be needed anyways if we want to extend the code to machines with multiple angular speeds in the future (e.g., a multi-shaft gas turbine)
+    angular_speed = results["boundary_conditions"]["omega"]
+    v0 = results["reference_values"]["v0"]
+    h_out_s = results["reference_values"]["h_out_s"]  # FIXME: bad plaement of h_out_s variable?
+
+    # Calculation of overall performance
+    p = results["plane"]["p"].values
+    p0 = results["plane"]["p0"].values
+    h0 = results["plane"]["h0"].values
+    v_out = results["plane"]["v"].values[-1]
+    u_out = results["plane"]["u"].values[-1]
+    mass_flow = results["plane"]["mass_flow"].values[-1]
+    exit_flow_angle = results["plane"]["alpha"].values[-1]
+    PR_tt = p0[0] / p0[-1]
+    PR_ts = p0[0] / p[-1]
+    h0_in = h0[0]
+    h0_out = h0[-1]
+    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)
+    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)
+    efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
+    efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
+    power = mass_flow * (h0_in - h0_out)
+    torque = power / angular_speed
+
+    # Store all variables in dictionary
+    overall = {
+        "PR_tt": PR_tt,
+        "PR_ts": PR_ts,
+        "mass_flow_rate": mass_flow,
+        "efficiency_tt": efficiency_tt,
+        "efficiency_ts": efficiency_ts,
+        "efficiency_ts_drop_kinetic": efficiency_ts_drop_kinetic,
+        "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
+        "power": power,
+        "torque": torque,
+        "angular_speed": angular_speed,
+        "exit_flow_angle": exit_flow_angle,
+        "exit_velocity": v_out,
+        "spouting_velocity": v0,
+        "last_blade_velocity": u_out,
+        "blade_jet_ratio": u_out / v0,
+        "h0_in": h0_in,
+        "h0_out": h0_out,
+        "h_out_s": h_out_s,
+    }
+
+    # Check the dictionary has the expected keys
+    util.validate_keys(overall, KEYS_OVERALL, KEYS_OVERALL)
+
+    return overall

@@ -1,6 +1,5 @@
 import numpy as np
 from .. import math
-from ..math import smooth_min, smooth_max
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 # TODO: we can create generic smooth versions of these functions and call them when necessary
@@ -669,7 +668,7 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
         loss_increment = np.asarray(
             [loss_increment, np.full_like(loss_increment, loss_limit)]
         )
-        loss_increment = smooth_min(
+        loss_increment = math.smooth_min(
             loss_increment, method="logsumexp", alpha=25, axis=0
         )
 

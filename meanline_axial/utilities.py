@@ -2,15 +2,13 @@ import os
 import re
 import yaml
 import logging
-from datetime import datetime
-
-from collections.abc import Iterable
-
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+from datetime import datetime
+from collections.abc import Iterable
 from cycler import cycler
 
 
@@ -46,7 +44,7 @@ def read_configuration_file(filename):
         config = yaml.safe_load(file)
 
     # Validate required and allowed sections
-    validate_config_sections(config)
+    validate_configuration_file(config)
 
     # Convert configuration options
     config = postprocess_config(config)
@@ -54,13 +52,13 @@ def read_configuration_file(filename):
     return config
 
 
-def validate_config_sections(config):
+def validate_configuration_file(config):
     """
-    Validate the presence of required configuration sections and check for any unexpected sections.
+    Validate the presence of required configuration fields and check for any unexpected fields.
 
-    This function ensures that all required sections are present in the configuration and
-    that there are no sections other than the allowed ones. It raises a ConfigurationError if
-    either required sections are missing or unexpected sections are found.
+    This function ensures that all required fields are present in the configuration and
+    that there are no fields other than the allowed ones. It raises a ConfigurationError if
+    either required fields are missing or unexpected sections are found.
 
     Parameters
     ----------
@@ -69,26 +67,12 @@ def validate_config_sections(config):
         represent the different configuration sections.
 
     """
-
-    # Configuration file sections
     required_sections = {"operation_points", "solver_options", "model_options"}
-    allowed_sections = required_sections.union({"performance_map", "geometry", "optimization"})
+    allowed_sections = required_sections.union(
+        {"performance_map", "geometry", "optimization"}
+    )
+    validate_keys(config, required_sections, allowed_sections)
 
-    # Check for extra and missing sections
-    extra_sections = config.keys() - allowed_sections
-    missing_sections = required_sections - config.keys()
-
-    # Prepare error messages
-    error_messages = []
-    if extra_sections:
-        error_messages.append(f"Found unexpected configuration sections: {extra_sections}")
-    if missing_sections:
-        error_messages.append(f"Missing required configuration sections: {missing_sections}")
-
-    # Raise combined error if there are any issues
-    if error_messages:
-        raise ConfigurationError("; ".join(error_messages))
-    
 
 def postprocess_config(config):
     """
@@ -153,6 +137,51 @@ def postprocess_config(config):
     return config
 
 
+def validate_keys(checked_dict, required_keys, allowed_keys=None):
+    """
+    Validate the presence of required keys and check for any unexpected keys in a dictionary.
+
+    Parameters
+    ----------
+    checked_dict : dict
+        The dictionary to be checked.
+    required_keys : set
+        A set of keys that are required in the dictionary.
+    allowed_keys : set
+        A set of keys that are allowed in the dictionary.
+
+    Raises
+    ------
+    ConfigurationError
+        If either required keys are missing or unexpected keys are found.
+    """
+
+    # Convert input lists to sets for set operations
+    checked_keys = set(checked_dict.keys())
+    required_keys = set(required_keys)
+
+    # Set allowed_keys to all present keys if not provided
+    if allowed_keys is None:
+        allowed_keys = checked_keys
+    else:
+        allowed_keys = set(allowed_keys)
+
+    # Check for extra and missing keys
+    missing_keys = required_keys - checked_keys
+    extra_keys = checked_keys - allowed_keys
+
+    # Prepare error messages
+    error_messages = []
+    if missing_keys:
+        error_messages.append(f"Missing required keys: {missing_keys}")
+    if extra_keys:
+        error_messages.append(f"Found unexpected keys: {extra_keys}")
+
+    # Raise combined error if there are any issues
+    if error_messages:
+        raise ConfigurationError("; ".join(error_messages))
+
+
 class ConfigurationError(Exception):
     """Exception raised for errors in the configuration options."""
 
@@ -183,7 +212,7 @@ def convert_numpy_to_python(data, precision=10):
 
     if data is None:
         return None
-    
+
     if isinstance(data, dict):
         return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
 
@@ -316,12 +345,14 @@ def print_operation_points(operation_points):
     according to predefined specifications, applies unit conversions where
     necessary, and prints them in a neatly aligned table with headers and units.
 
-    Parameters:
+    Parameters
+    ----------
     - operation_points (list of dict): A list where each dictionary contains
       key-value pairs representing operation parameters and their corresponding
       values.
 
-    Notes:
+    Notes
+    -----
     - This function assumes that all necessary keys exist within each operation
       point dictionary.
     - The function directly prints the output; it does not return any value.
@@ -660,16 +691,19 @@ def ensure_iterable(obj):
     it will be returned as is. If the object is not an iterable, or if it is
     a string, it will be placed into a list to make it iterable.
 
-    Parameters:
+    Parameters
+    ----------
     obj : any type
         The object to be checked and possibly converted into an iterable.
 
-    Returns:
+    Returns
+    -------
     Iterable
         The original object if it is an iterable (and not a string), or a new
         list containing the object if it was not iterable or was a string.
 
-    Examples:
+    Examples
+    --------
     >>> ensure_iterable([1, 2, 3])
     [1, 2, 3]
     >>> ensure_iterable('abc')
@@ -704,7 +738,6 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-
 def extract_timestamp(filename):
     """
     Extract the timestamp from the filename.
@@ -726,7 +759,6 @@ def extract_timestamp(filename):
     return ""
 
 
-
 def print_simulation_summary(solvers):
     """
     Print a formatted footer summarizing the performance of all operation points.
@@ -734,26 +766,26 @@ def print_simulation_summary(solvers):
     This function processes a list of solver objects to provide a summary of the performance
     analysis calculations. It calculates and displays the number of successful points and a summary of
     simulation tme statistics. Additionally, it lists the indices of failed operation points, if any.
-    
+
     The function is robust against solvers that failed and lack certain attributes like 'elapsed_time'.
-    In such cases, these solvers are included in the count of failed operation points, but not in the 
-    calculation time statistics. 
+    In such cases, these solvers are included in the count of failed operation points, but not in the
+    calculation time statistics.
 
     Parameters
     ----------
     solvers : list
-        A list of solver objects. Each solver object should contain attributes related to the 
+        A list of solver objects. Each solver object should contain attributes related to the
         calculation of an operation point, such as 'elapsed_time' and the 'solution' status.
 
     """
-    
+
     # Initialize times list and track failed points
     times = []
     failed_points = []
 
     for i, solver in enumerate(solvers):
         # Check if the solver is not None and has the required attribute
-        if solver and hasattr(solver, 'elapsed_time'):
+        if solver and hasattr(solver, "elapsed_time"):
             times.append(solver.elapsed_time)
             if not solver.solution.success:
                 failed_points.append(i)
@@ -778,25 +810,30 @@ def print_simulation_summary(solvers):
 
     # Add failed points message only if there are failed points
     if failed_points:
-        lines_to_output.append(f"Failed operation points: {', '.join(map(str, failed_points))}")
+        lines_to_output.append(
+            f"Failed operation points: {', '.join(map(str, failed_points))}"
+        )
 
-   # Add time statistics only if there are valid times
+    # Add time statistics only if there are valid times
     if times.size > 0:
-        lines_to_output.extend([
-            f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
-            f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
-            f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
-            f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
-        ])
+        lines_to_output.extend(
+            [
+                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+                f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
+            ]
+        )
     else:
         lines_to_output.append(" No valid calculation times available.")
 
     lines_to_output.append(separator)
     lines_to_output.append("")
-    
+
     # Display to stdout
     for line in lines_to_output:
         print(line)
+
 
 def check_lists_match(list1, list2):
     """
