@@ -15,7 +15,7 @@ performance_map:
   alpha_in: 0
 
 model_options:
-  choking_condition : deviation
+  choking_condition : mach_critical
   deviation_model : aungier
   blockage_model : 0.00 #flat_plate_turbulent
   # rel_step_fd: 1e-3

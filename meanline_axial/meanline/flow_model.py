@@ -110,7 +110,7 @@ def evaluate_axial_turbine(
     """
     Compute the performance of an axial turbine by evaluating a series of cascades.
 
-    This function evaluates the each evaluating each cascade in the series.
+    This function evaluates each cascade in the series.
     It begins by loading essential inputs such as geometry, boundary conditions, and reference values, which are integral to the assessment process.
 
     The evaluation proceeds cascade by cascade, employing two key functions in a structured sequence:
@@ -134,11 +134,24 @@ def evaluate_axial_turbine(
 
     Parameters
     ----------
-    Parameters description here
+    variables : dict
+        Dictionary containing variable for the cascades.
+    boundary_conditions : dict
+        Dictionary containing boundary conditions for the series of cascades.
+    geometry : dict
+        Dictionary containing geometric parameters of the series of cascades.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    model_options : dict
+        Dictionary containing various model options.
+    reference_values : dict
+        Dictionary containing reference values for normalization.
 
     Returns
     -------
-    Returns description here
+    results : dict
+        Dictionary containing the evaluated results, including planes, cascades, stage, overall,
+        and geometry information.
 
 
     """
@@ -294,27 +307,46 @@ def evaluate_cascade(
     model_options,
     reference_values,
 ):
+    
     """
-    Evaluate the performance of a single cascade within an axial turbine.
-
-    This function evaluates the performance of a single turbine cascade. The process involves several key steps, each utilizing different sub-functions:
-
-    1. `evaluate_cascade_inlet`: Assesses the inlet conditions of the cascade.
-    2. `evaluate_cascade_exit`: Evaluates the exit conditions at both the throat and exit stations.
-    3. `evaluate_cascade_critical`: Determines the critical conditions within the cascade.
-    4. `compute_choking_residual`: Determines whether the turbine is choked or not depending on the operating conditions and the choking condition specified by the user.
-
-    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors,
+    Evaluate the performance of a cascade configuration.
+    
+    This function evaluates the cascade performance by considering inlet, throat, and exit planes.
+    It also evaluates the cascade at point of choking. The results are stored in a dictionary. The function 
+    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
     and the residuals related to the critical state and choking condition.
-
+    
+    This function relies on auxiliary functions like evaluate_cascade_inlet, evaluate_cascade_exit,
+    evaluate_cascade_critical, compute_residual_flow_angle, and compute_residual_mach_throat.
+    
     Parameters
     ----------
-    # Parameters description here
-
+    cascade_inlet_input : dict
+        Input conditions at the cascade inlet.
+    cascade_throat_input : dict
+        Input conditions at the cascade throat.
+    cascade_exit_input : dict
+        Input conditions at the cascade exit.
+    critical_cascade_input : dict
+        Input conditions for critical state evaluation.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    geometry : dict
+        Dictionary containing geometric parameters of the cascade.
+    angular_speed : float
+        Angular speed of the cascade.
+    results : dict
+        Dictionary to store the evaluation results.
+    model_options : dict
+        Dictionary containing various model options.
+    reference_values : dict
+        Dictionary containing reference values for normalization.
+    
     Returns
     -------
-    dict
+    residuals : dict
         A dictionary containing the residuals of the evaluation, which are key indicators of the model's accuracy and physical realism.
+
     """
 
     # Define model options
@@ -461,8 +493,8 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     Evaluate the inlet plane parameters of a cascade including velocity triangles,
     thermodynamic properties, and flow characteristics.
 
-    This function calculates various parameters at the inlet of a cascade based on the input geometry,
-    fluid properties, and flow conditions. It computes velocity triangles, static and stagnation properties,
+    This function calculates performance data at the inlet of a cascade based on the cascade geometry,
+    fluid, and flow conditions. It computes velocity triangles, static and stagnation properties,
     Reynolds and Mach numbers, and the mass flow rate at the inlet.
 
     Parameters
@@ -558,8 +590,8 @@ def evaluate_cascade_exit(
     Evaluate the parameters at the exit (or throat) of a cascade including velocity triangles,
     thermodynamic properties, and loss coefficients.
 
-    This function calculates various parameters at the exit of a cascade based on the input geometry,
-    fluid properties, and flow conditions. It computes velocity triangles, static and stagnation
+    This function calculates the performance data at the exit of a cascade based on the cascade geometry,
+    fluid, and flow conditions. It computes velocity triangles, static and stagnation
     properties, Reynolds and Mach numbers, mass flow rate, and loss coefficients. The calculations
     of the mass flow rate considers the blockage induced by the boundary layer displacement thickness.
 
@@ -567,19 +599,22 @@ def evaluate_cascade_exit(
     ----------
     cascade_exit_input : dict
         Input parameters specific to the cascade exit, including relative velocity ('w'),
-        flow angle ('beta'), entropy ('s'), and rothalpy.
+        relative flow angle ('beta'), entropy ('s'), and rothalpy.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
         Geometric parameters of the cascade such as chord length, opening, and area.
     inlet_plane : dict
-        Parameters at the inlet plane of the cascade (needed for loss model calculations).
+        performance data at the inlet plane of the cascade (needed for loss model calculations).
     angular_speed : float
         Angular speed of the cascade.
-    blockage : float
-        Blockage factor at the cascade exit.
+    blockage : str or float or None
+        The method or value for determining the throat blockage. It can be
+        a string specifying a model name ('flat_plate_turbulent'), a numeric
+        value between 0 and 1 representing the blockage factor directly, or
+        None to use a default calculation method.
     loss_model : str
-        A the loss model used for calculating loss coefficients.
+        The loss model used for calculating loss coefficients.
     radius : float
         Mean radius at the cascade exit.
     area : float
@@ -590,10 +625,10 @@ def evaluate_cascade_exit(
     tuple
         A tuple containing:
 
-        - plane (dict): A dictionary of calculated parameters at the cascade exit including
+        - plane (dict): A dictionary of calculated performance data at the cascade exit including
           velocity triangles, thermodynamic properties, Mach and Reynolds numbers, mass flow rate,
           and loss coefficients.
-        - loss_dict (dict): A dictionary of loss coefficients as calculated by the loss model.
+        - loss_dict (dict): A dictionary of loss breakdwon as calculated by the loss model.
 
     Warnings
     --------
@@ -733,7 +768,7 @@ def evaluate_cascade_interspace(
     """
     Calculate the inlet conditions for the next cascade based on the exit conditions of the previous cascade.
 
-    This function computes the inlet thermodynamic and velocity conditions the next cascade using the exti conditions
+    This function computes the inlet thermodynamic and velocity conditions the next cascade using the exit conditions
     from the previous cascade and the flow equations for the interspace between cascades.
 
     Assumptions:
@@ -821,8 +856,26 @@ def evaluate_cascade_critical(
     point of maximum mass flow rate for a given set of inlet conditions. Traditional approaches usually
     treat this as an optimization problem, seeking to maximize the flow rate directly. However, this
     function adopts an alternative strategy by converting the optimality condition into a set of equations.
-    These equations involve the gradient of the Lagrangian associated with the critical mass flow rate
-    and include equality constraints necessary to close the problem.
+    The solution to the following set of equations is the same as the solution  of the corresponding optimization problem. 
+        
+    .. math::
+
+        \\nabla L = \\begin{bmatrix}
+        \\frac{\\partial f}{\\partial x_1} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_1} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_1} \\\\
+        \\frac{\\partial f}{\\partial x_2} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_2} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_2} \\\\
+        \\frac{\\partial f}{\\partial x_3} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_3} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_3} \\\\
+        g_1(x_1, x_2, x_3) \\\\
+        g_2(x_1, x_2, x_3) \\\\
+        \\end{bmatrix} = 0
+        
+    This function returns the value of the three last equations in the set above, while the two first equations are used to 
+    explicitly calculate the lagrange multipliers.
+    
+    .. math::
+        \lambda_1 = \\frac{\\frac{\\partial g_2}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1} - \\frac{\\partial g_2}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} \\\\                     
+        \lambda_2 = \\frac{\\frac{\\partial g_1}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2} - \\frac{\\partial g_1}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} 
 
     By transforming the problem into a system of equations, this approach allows the evaluation of the critical
     point without directly solving an optimization problem. One significant advantage of this
@@ -837,9 +890,9 @@ def evaluate_cascade_critical(
     Parameters
     ----------
     x_crit : numpy.ndarray
-        Array containing [v_in*, v_throat*, s_throat*].
+        Array containing independent variables for the function compute_critical_values ([v_in*, v_throat*, s_throat*](.
     critical_cascade_input : dict
-        Dictionary containing critical cascade data.
+        Dictionary containing additional input parameters required for compute_critical_values.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -937,9 +990,9 @@ def compute_critical_values(
     """
     Compute cascade performance at the critical conditions
 
-    This function is evaluates the performance of a cascade at its critical operating point defined by:
+    This function evaluates the performance of a cascade at its critical operating point defined by:
 
-        1. Critical inlet relative velocity,
+        1. Critical inlet absolute velocity,
         2. Critical throat relative velocity,
         3. Critical throat entropy.
 
@@ -948,9 +1001,9 @@ def compute_critical_values(
     Parameters
     ----------
     x_crit : numpy.ndarray
-        Array containing scaled critical variables [v_in*, v_throat*, s_throat*].
+        Array containing scaled critical variables [v_in*, w_throat*, s_throat*].
     critical_cascade_input : dict
-        Dictionary containing critical cascade input parameters, including inlet conditions and geometry.
+        Dictionary containing additional input parameters, including inlet conditions and geometry.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -1065,18 +1118,18 @@ def compute_critical_jacobian(
     f0,
 ):
     """
-    Compute the Jacobian matrix of the critical cascade evaluation using finite differences.
+    Compute the Jacobian matrix of the compute_critical_values function using finite differences.
 
     This function approximates the Jacobian of a combined function that includes the mass flow rate value,
     mass balance residual, and loss model evaluation residual at the critical point. It uses forward finite
-    difference approximate the partial derivatives of the Jacobian matrix.
+    difference to approximate the partial derivatives of the Jacobian matrix.
 
     Parameters
     ----------
     x : numpy.ndarray
-        Array of input variables for the critical cascade function.
+        Array of input variables for the compute_critical_values function.
     critical_cascade_input : dict
-        Dictionary containing critical cascade input parameters.
+        Dictionary containing additional input parameters for the compute_critical_values function.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -1088,14 +1141,14 @@ def compute_critical_jacobian(
     model_options : dict
         Options for the model used in the critical condition evaluation.
     reference_values : dict
-        Reference values used in the calculation.
+        Reference values used in the calculations, including mass flow reference and other parameters.
     f0 : numpy.ndarray
         The function value at x, used for finite difference approximation.
 
     Returns
     -------
     numpy.ndarray
-        The approximated Jacobian matrix of the critical cascade function.
+        The approximated Jacobian matrix of the compute_critical_values function.
 
     """
 
@@ -1253,8 +1306,8 @@ def compute_residual_mach_throat(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
     """
     Calculate the residual between the actual Mach number at the throat and the target value.
 
-    This function computes the target Mach number using a smooth maximum approximation of the
-    critical Mach number and the exit Mach number. The smooth maximum function is used to avoid
+    This function computes the target Mach number as the minimum of the critical Mach number and 
+    the exit Mach number. The minimum is calculted using a smooth minimum approximation to avoid
     a discontinuity in slope at the critical Mach. The residual is computed as the difference
     between the target Mach number and the actual Mach number at the throat.
 
@@ -1275,14 +1328,14 @@ def compute_residual_mach_throat(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
     tuple
         A tuple containing:
 
-        - ressidual (float): The residual between the target and throat Mach numbers.
+        - residual (float): The residual between the target and throat Mach numbers.
         - density_correction (float): No density correction required in this model (returns NaN).
 
     """
     # Mach number at the throat cannot be higher than Ma_crit
     # Smooth maximum prevents slope discontinuity at the switch
     Ma_array = np.array([Ma_crit, Ma_exit])
-    Ma_target = math.smooth_max(Ma_array, method="boltzmann", alpha=alpha)
+    Ma_target = math.smooth_min(Ma_array, method="boltzmann", alpha=alpha)
 
     # Retrieve residual for current solution
     residual = Ma_throat - Ma_target
@@ -1298,10 +1351,11 @@ def compute_residual_flow_angle(
 ):
     """
     Compute the residual between actual and target flow angles at the exit plane of a cascade.
-
-    This function calculates the deviation angle of the flow at the exit plane based on the provided geometry,
-    critical state, throat plane, and exit plane data. It considers both subsonic and supersonic conditions,
-    applying different models accordingly.
+    
+    This function calculates the deviation angle of the flow at the exit plane. At subsonic conditions the deviation angle
+    is calculated by using a deviation model, while at supersonic conditions the deviation is calculated from the critical mass flow rate
+    of the system. The function returns the resdiual between the target angle given by the calculated deviation angle, and
+    the actual flow angle at the exit plane. 
 
     Parameters
     ----------
@@ -1443,7 +1497,7 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
 
 def compute_efficiency_breakdown(results):
     """
-    Compute the breakdown of total-to-static efficiency drops due to various loss components in cascades.
+    Compute the loss of total-to-static efficiency due to each various loss component in cascades.
 
     This function calculates the fraction of total-to-static efficiency drop attributed to each loss component
     in a turbine cascade. A correction factor for the re-heating effect is applied to align the sum of individual
@@ -1509,7 +1563,7 @@ def compute_stage_performance(results):
     number_of_stages : int
         The number of stages in the cascading system.
     planes : dict
-        A dictionary containing performance data at each station.
+        A dictionary containing performance data at each plane in the cascading system.
 
     Returns
     -------
