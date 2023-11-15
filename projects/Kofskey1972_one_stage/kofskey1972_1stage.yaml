@@ -15,9 +15,10 @@ performance_map:
   alpha_in: 0
 
 model_options:
-  choking_condition : deviation
+  choking_condition : mach_critical
   deviation_model : aungier
   throat_blockage : 0.00 #flat_plate_turbulent
+  rel_step_fd: 1e-3
   loss_model:
     model: benner
     loss_coefficient: stagnation_pressure
