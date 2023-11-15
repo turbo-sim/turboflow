@@ -10,12 +10,12 @@ performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.5, 4.5, 10)
+  p_out: 13.8e4/np.linspace(1.5, 4.5, 30)
   omega: [1627]
   alpha_in: 0
 
 model_options:
-  choking_condition : mach_critical
+  choking_condition : deviation
   deviation_model : aungier
   throat_blockage : 0.00 #flat_plate_turbulent
   rel_step_fd: 1e-3

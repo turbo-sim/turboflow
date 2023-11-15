@@ -117,14 +117,14 @@
 
 
 ## To-do list 10.11.2023
-- [ ] Residuals and independent variables should be dictionaries
-- [ ] Improve initial guess functionality (Lasse)
+- [x] Residuals and independent variables should be dictionaries
+- [x] Improve initial guess functionality (Lasse)
   - [x] Move initial guess generation into the CascadesNonlinearSystemProblem() class
   - [x] Move the solution scaling into the CascadesNonlinearSystemProblem() class [how to re-use scaling for optimization?]
-  - [ ] Generation within CascadesNonlinearSystemProblem() class
-  - [ ] Initial guess should be a dictionary with keys
-  - [ ] Initial guess specification in YAML file (this will be used for the first operation point)
-  - [ ] Improve initial guess calculation and extend to multistage
+  - [x] Generation within CascadesNonlinearSystemProblem() class
+  - [x] Initial guess should be a dictionary with keys
+  - [x] Initial guess specification in YAML file (this will be used for the first operation point)
+  - [x] Improve initial guess calculation and extend to multistage
   - [ ] 1D correlation for Ma_crit as a function of the loss coefficient of the cascade
 - [x] Geometry processing (Roberto)
   - [x] Clean up code

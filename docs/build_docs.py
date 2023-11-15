@@ -19,5 +19,5 @@ def run_script(script_path):
 if __name__ == "__main__":
     # run_script("build_nomenclature.py")
     # run_script("build_bibliography.py")
-    # run_sphinx_apidoc(output_dir="source/api/", src_dir="../meanline_axial")
+    run_sphinx_apidoc(output_dir="source/api/", src_dir="../meanline_axial")
     run_sphinx_build(docs_dir=".", build_dir="_build", builder="html")
