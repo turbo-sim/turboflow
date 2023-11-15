@@ -2,7 +2,9 @@ import numpy as np
 from .. import math
 
 
-def get_subsonic_deviation(Ma_exit, Ma_crit, opening_to_pitch, model="aungier"):
+DEVIATION_MODELS = ["aungier", "ainley_mathieson", "zero_deviation"]
+
+def get_subsonic_deviation(Ma_exit, Ma_crit, opening_to_pitch, model):
     """
     Calculate subsonic relative exit flow angle based on the selected deviation model.
 
@@ -36,9 +38,9 @@ def get_subsonic_deviation(Ma_exit, Ma_crit, opening_to_pitch, model="aungier"):
 
     # Function mappings for each deviation model
     deviation_model_functions = {
-        "aungier": get_exit_flow_angle_aungier,
-        "ainley_mathieson": get_exit_flow_angle_ainley_mathieson,
-        "zero_deviation": get_exit_flow_angle_zero_deviation,
+        DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
+        DEVIATION_MODELS[1]: get_exit_flow_angle_ainley_mathieson,
+        DEVIATION_MODELS[2]: get_exit_flow_angle_zero_deviation,
     }
 
     # Evaluate deviation model

@@ -12,134 +12,18 @@ from collections.abc import Iterable
 from cycler import cycler
 
 
-def read_configuration_file(filename):
-    """
-    Retrieve cascades data from a YAML configuration file and process the geometry data.
-
-    This function reads a YAML configuration file to obtain cascades data, then converts
-    the geometry values to numpy arrays. It also initializes `fixed_params` and `overall`
-    dictionaries within the cascades data. String expressions in the YAML file representing
-    numerical values are evaluated to actual numerical values when possible.
-
-    Parameters
-    ----------
-    filename : str
-        Path to the YAML configuration file to be read.
-
-    Returns
-    -------
-    cascades_data : dictionary with fields:
-        - "geometry": A dictionary where each key corresponds to a geometry parameter and its associated value is a numpy array.
-        - "fixed_params": An empty dictionary, initialized for future usage.
-        - "overall": An empty dictionary, initialized for future usage.
-
-    Notes
-    -----
-    The function uses `postprocess_config` to evaluate string expressions found in the
-    YAML data. For example, a YAML entry like "value: "np.pi/2"" will be converted to
-    its numerical equivalent.
-    """
-
-    with open(filename, "r") as file:
-        config = yaml.safe_load(file)
-
-    # Validate required and allowed sections
-    validate_configuration_file(config)
-
-    # Convert configuration options
-    config = postprocess_config(config)
-
-    return config
 
 
-def validate_configuration_file(config):
-    """
-    Validate the presence of required configuration fields and check for any unexpected fields.
 
-    This function ensures that all required fields are present in the configuration and
-    that there are no fields other than the allowed ones. It raises a ConfigurationError if
-    either required fields are missing or unexpected sections are found.
-
-    Parameters
-    ----------
-    config : dict
-        The configuration dictionary loaded from a YAML file. The keys of this dictionary
-        represent the different configuration sections.
-
-    """
-    required_sections = {"operation_points", "solver_options", "model_options"}
-    allowed_sections = required_sections.union(
-        {"performance_map", "geometry", "optimization"}
-    )
-    validate_keys(config, required_sections, allowed_sections)
-
-
-def postprocess_config(config):
-    """
-    Postprocesses the YAML configuration data by converting string values
-    to numbers and lists to numpy arrays. Numerical expressions like "1+2" or
-    "2*np.pi" are evaluated into the corresponding numerical values
-
-    Parameters
-    ----------
-    config : dict
-        The configuration data loaded from a YAML file.
-
-    Returns
-    -------
-    config : dict
-        The postprocessed configuration data.
-
-    Raises
-    ------
-    ConfigurationError
-        If a list contains elements of different types after conversion.
-    """
-
-    def convert_to_numbers(data):
-        """Recursively convert string expressions in the configuration to numbers."""
-        if isinstance(data, dict):
-            return {key: convert_to_numbers(value) for key, value in data.items()}
-        elif isinstance(data, list):
-            return [convert_to_numbers(item) for item in data]
-        elif isinstance(data, str):
-            try:
-                return eval(data)
-            except (NameError, SyntaxError):
-                return data
-        else:
-            return data
-
-    def convert_to_arrays(data, parent_key=""):
-        """
-        Convert lists to numpy arrays if all elements are numeric and of the same type.
-        Raises ConfigurationError if a list contains elements of different types.
-        """
-        if isinstance(data, dict):
-            return {k: convert_to_arrays(v, parent_key=k) for k, v in data.items()}
-        elif isinstance(data, list):
-            if not data:  # Empty list
-                return data
-            first_type = type(data[0])
-            if not all(isinstance(item, first_type) for item in data):
-                raise ConfigurationError(
-                    "Option contains elements of different types.",
-                    key=parent_key,
-                    value=data,
-                )
-            return np.array(data)
-        else:
-            return data
-
-    config = convert_to_numbers(config)
-    config = convert_to_arrays(config)
-
-    return config
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):
     """
     Validate the presence of required keys and check for any unexpected keys in a dictionary.
+
+    Give required keys and allowed keys to have complete control
+    Give required keys twice to check that the list of keys is necessary and sufficient
+    Give only required keys to allow all extra additional key
 
     Parameters
     ----------
@@ -179,10 +63,10 @@ def validate_keys(checked_dict, required_keys, allowed_keys=None):
 
     # Raise combined error if there are any issues
     if error_messages:
-        raise ConfigurationError("; ".join(error_messages))
+        raise DictionaryValidationError("; ".join(error_messages))
 
 
-class ConfigurationError(Exception):
+class DictionaryValidationError(Exception):
     """Exception raised for errors in the configuration options."""
 
     def __init__(self, message, key=None, value=None):
@@ -723,14 +607,17 @@ def add_string_to_keys(input_dict, suffix):
     """
     Add a suffix to each key in the input dictionary.
 
-    Args:
+    Parameters
+    ----------
         input_dict (dict): The input dictionary.
         suffix (str): The string to add to each key.
 
-    Returns:
+    Returns
+    -------
         dict: A new dictionary with modified keys.
 
-    Example:
+    Examples
+    --------
         >>> input_dict = {'a': 1, 'b': 2, 'c': 3}
         >>> add_string_to_keys(input_dict, '_new')
         {'a_new': 1, 'b_new': 2, 'c_new': 3}
