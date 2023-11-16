@@ -8,9 +8,6 @@ from .. import utilities as util
 from . import loss_model as lm
 from . import deviation_model as dm
 
-# List of valid options
-BLOCKAGE_MODELS = ["flat_plate_turbulent"]
-CHOKING_CONDITIONS = ["deviation", "mach_critical", "mach_unity"]
 
 # Keys of the information that should be stored in results
 KEYS_KINEMATIC = [
@@ -132,6 +129,7 @@ def evaluate_axial_turbine(
         The output of this function can only be regarded as a physically meaningful solution when the equations are fully closed (i.e., all residuals are close to zero).
         Therefore, this function is intended to be used within a root-finding or optimization algorithm that systematically adjusts the input variables to drive the residuals to zero and close the system of equations.
 
+
     Parameters
     ----------
     variables : dict
@@ -163,6 +161,7 @@ def evaluate_axial_turbine(
     angular_speed = boundary_conditions["omega"]
 
     # Load reference_values
+    h_out_s = reference_values["h_out_s"]  # FIXME: bad plaement of h_out_s variable?
     v0 = reference_values["v0"]
     s_range = reference_values["s_range"]
     s_min = reference_values["s_min"]
@@ -308,11 +307,24 @@ def evaluate_cascade(
 ):
     
     """
+<<<<<<< HEAD:meanline_axial/meanline/cascade_series.py
     Evaluate the performance of a cascade configuration.
     
     This function evaluates the cascade performance by considering inlet, throat, and exit planes.
     It also evaluates the cascade at point of choking. The results are stored in a dictionary. The function 
-    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+    returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+=======
+    Evaluate the performance of a single cascade within an axial turbine.
+
+    This function evaluates the performance of a single turbine cascade. The process involves several key steps, each utilizing different sub-functions:
+
+    1. `evaluate_cascade_inlet`: Assesses the inlet conditions of the cascade.
+    2. `evaluate_cascade_exit`: Evaluates the exit conditions at both the throat and exit stations.
+    3. `evaluate_cascade_critical`: Determines the critical conditions within the cascade.
+    4. `compute_choking_residual`: Determines whether the turbine is choked or not depending on the operating conditions and the choking condition specified by the user.
+
+    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors,
+>>>>>>> 4e707af50e0782bf9262253812140790cb880608:meanline_axial/meanline/flow_model.py
     and the residuals related to the critical state and choking condition.
     
     This function relies on auxiliary functions like evaluate_cascade_inlet, evaluate_cascade_exit,
@@ -380,7 +392,7 @@ def evaluate_cascade(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["blockage_model"],
+        model_options["throat_blockage"],
         loss_model,
         geometry["radius_mean_throat"],
         geometry["A_throat"],
@@ -394,7 +406,7 @@ def evaluate_cascade(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["blockage_model"],
+        model_options["throat_blockage"],
         loss_model,
         geometry["radius_mean_out"],
         geometry["A_out"],
@@ -430,13 +442,13 @@ def evaluate_cascade(
     # Evaluate the choking condition equation
     # TODO move to its own function
     choking_functions = {
-        CHOKING_CONDITIONS[0]: lambda: compute_residual_flow_angle(
+        "deviation": lambda: compute_residual_flow_angle(
             geometry, critical_state, throat_plane, exit_plane, deviation_model
         ),
-        CHOKING_CONDITIONS[1]: lambda: compute_residual_mach_throat(
+        "mach_critical": lambda: compute_residual_mach_throat(
             critical_state["Ma_rel"], exit_plane["Ma_rel"], throat_plane["Ma_rel"]
         ),
-        CHOKING_CONDITIONS[2]: lambda: compute_residual_mach_throat(
+        "mach_unity": lambda: compute_residual_mach_throat(
             1.00, exit_plane["Ma_rel"], throat_plane["Ma_rel"]
         ),
     }
@@ -847,7 +859,7 @@ def evaluate_cascade_critical(
     model_options,
     reference_values,
 ):
-    r"""
+    """
     Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
     conservation and loss computation equations at the throat.
 
@@ -859,22 +871,22 @@ def evaluate_cascade_critical(
         
     .. math::
 
-        \nabla L = \begin{bmatrix}
-        \frac{\partial f}{\partial x_1} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_1} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_1} \\
-        \frac{\partial f}{\partial x_2} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_2} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_2} \\
-        \frac{\partial f}{\partial x_3} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_3} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_3} \\
-        g_1(x_1, x_2, x_3) \\
-        g_2(x_1, x_2, x_3) \\
-        \end{bmatrix} = 0
+        \\nabla L = \\begin{bmatrix}
+        \\frac{\\partial f}{\\partial x_1} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_1} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_1} \\\\
+        \\frac{\\partial f}{\\partial x_2} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_2} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_2} \\\\
+        \\frac{\\partial f}{\\partial x_3} + \\lambda_1 \\cdot \\frac{\\partial g_1}{\\partial x_3} + \\lambda_2 \\cdot \\frac{\\partial g_2}{\\partial x_3} \\\\
+        g_1(x_1, x_2, x_3) \\\\
+        g_2(x_1, x_2, x_3) \\\\
+        \\end{bmatrix} = 0
         
     This function returns the value of the three last equations in the set above, while the two first equations are used to 
     explicitly calculate the lagrange multipliers.
     
     .. math::
-        \lambda_1 = \frac{\frac{\partial g_2}{\partial x_2}\cdot\frac{-\partial f}{\partial x_1} - \frac{\partial g_2}{\partial x_1}\cdot-\frac{\partial f}{\partial x_2}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \\                     
-        \lambda_2 = \frac{\frac{\partial g_1}{\partial x_1}\cdot\frac{-\partial f}{\partial x_2} - \frac{\partial g_1}{\partial x_2}\cdot-\frac{\partial f}{\partial x_1}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} 
+        \lambda_1 = \\frac{\\frac{\\partial g_2}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1} - \\frac{\\partial g_2}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} \\\\                     
+        \lambda_2 = \\frac{\\frac{\\partial g_1}{\\partial x_1}\\cdot-\\frac{\\partial f}{\\partial x_2} - \\frac{\\partial g_1}{\\partial x_2}\\cdot-\\frac{\\partial f}{\\partial x_1}} 
+                     {\\frac{\\partial g_1}{\\partial x_1}\\cdot\\frac{\\partial g_2}{\\partial x_2} - \\frac{\\partial g_2}{\\partial x_1}\\cdot\\frac{\\partial g_1}{\\partial x_2}} 
 
     By transforming the problem into a system of equations, this approach allows the evaluation of the critical
     point without directly solving an optimization problem. One significant advantage of this
@@ -1077,7 +1089,7 @@ def compute_critical_values(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["blockage_model"],
+        model_options["throat_blockage"],
         loss_model,
         geometry["radius_mean_throat"],
         geometry["A_throat"],
@@ -1424,8 +1436,8 @@ def compute_residual_flow_angle(
     return residual, density_correction
 
 
-def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
-    r"""
+def compute_blockage_boundary_layer(throat_blockage, Re, chord, opening):
+    """
     Calculate the blockage factor due to boundary layer displacement thickness.
 
     This function computes the blockage factor caused by the boundary layer
@@ -1440,27 +1452,27 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     The correlation for turbulent boundary layer displacement thickness over a flat plate is given by :cite:`cengel_fluid_2014`:
     
     .. math::
-        \delta^* = \frac{0.048}{Re^{1/5}} \times 0.9 \times \text{chord}
+        \delta^* = \\frac{0.048}{Re^{1/5}} \\times 0.9 \\times \\text{chord}
         
     From this the blockage factor is calculated as
     
     .. math::
-        \text{blockage_factor} = 2 \times \frac{\delta^*}{\text{opening}}
+        \\text{blockage_factor} = 2 \\times \\frac{\\delta^*}{\\text{opening}}
 
     Parameters
     ----------
-    blockage_model : str or float or None
-        The method or value for determining the blockage factor. It can be
+    throat_blockage : str or float or None
+        The method or value for determining the throat blockage. It can be
         a string specifying a model name ('flat_plate_turbulent'), a numeric
         value between 0 and 1 representing the blockage factor directly, or
         None to use a default calculation method.
     Re : float, optional
-        Reynolds number, used if `blockage_model` is 'flat_plate_turbulent'.
+        Reynolds number, used if `throat_blockage` is 'flat_plate_turbulent'.
     chord : float, optional
-        Chord length, used if `blockage_model` is 'flat_plate_turbulent'.
+        Chord length, used if `throat_blockage` is 'flat_plate_turbulent'.
     opening : float, optional
         Throat opening size, used to calculate the blockage factor when
-        `blockage_model` is None or a numeric value.
+        `throat_blockage` is None or a numeric value.
 
     Returns
     -------
@@ -1471,23 +1483,23 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     Raises
     ------
     ValueError
-        If `blockage_model` is an invalid option, or required parameters
+        If `throat_blockage` is an invalid option, or required parameters
         for the chosen method are missing.
     """
 
-    if blockage_model == BLOCKAGE_MODELS[0]:
+    if throat_blockage == "flat_plate_turbulent":
         displacement_thickness = 0.048 / Re ** (1 / 5) * 0.9 * chord
         blockage_factor = 2 * displacement_thickness / opening
 
-    elif isinstance(blockage_model, (float, int)) and 0 <= blockage_model <= 1:
-        blockage_factor = blockage_model
+    elif isinstance(throat_blockage, (float, int)) and 0 <= throat_blockage <= 1:
+        blockage_factor = throat_blockage
 
-    elif blockage_model is None:
+    elif throat_blockage is None:
         blockage_factor = 0.00
 
     else:
         raise ValueError(
-            f"Invalid throat blockage option: '{blockage_model}'. "
+            f"Invalid throat blockage option: '{throat_blockage}'. "
             "Valid options are 'flat_plate_turbulent', a numeric value between 0 and 1, or None."
         )
 
