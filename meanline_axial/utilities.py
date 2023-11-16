@@ -12,11 +12,6 @@ from collections.abc import Iterable
 from cycler import cycler
 
 
-
-
-
-
-
 def validate_keys(checked_dict, required_keys, allowed_keys=None):
     """
     Validate the presence of required keys and check for any unexpected keys in a dictionary.
@@ -754,3 +749,25 @@ def check_lists_match(list1, list2):
 
     # Check if the sets are equal (contain the same elements)
     return list1_set == list2_set
+
+
+def isclose_significant_digits(a, b, significant_digits):
+    """
+    Check if two floating-point numbers are close based on a specified number of significant digits.
+
+    Parameters
+    ----------
+    a : float
+        The first number to compare.
+    b : float
+        The second number to compare.
+    sig_digits : int
+        The number of significant digits to use for the comparison.
+
+    Returns
+    -------
+    bool
+        True if numbers are close up to the specified significant digits, False otherwise.
+    """
+    format_spec = f".{significant_digits - 1}e"
+    return format(a, format_spec) == format(b, format_spec)

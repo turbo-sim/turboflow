@@ -2,6 +2,18 @@ import numpy as np
 import CoolProp.CoolProp as CP
 
 class FluidCoolProp_2Phase:
+    r"""
+
+    Parameters
+    ----------
+    fluid_name : Name of the fluid
+
+    Methods
+    -------
+    compute_critical_properties()
+        retrieve properties at the critical point
+
+    """
     
     def __init__(self, fluid_name, backend="HEOS", throw_exceptions=True):
         self.fluid_name = fluid_name
