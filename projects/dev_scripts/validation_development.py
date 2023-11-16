@@ -22,9 +22,11 @@ case_data = ml.read_configuration_file(CONFIG_FILE)
 # print(case_data)
 
 # ml.print_dict(case_data["model_options"])
-config = ml.validate_configuration_file(config=case_data, schema=ml.configuration_options)
+config, _, _ = ml.validate_configuration_options(config=case_data, schema=ml.CONFIGURATION_OPTIONS)
 
+ml.print_dict(config)
 
 # ml.print_dict(config)
+
 
 

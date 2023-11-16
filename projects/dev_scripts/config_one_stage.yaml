@@ -1,5 +1,4 @@
 
-
 geometry:
   cascade_type: ["stator", "rotor"]
   radius_hub: [0.084785, 0.084785, 0.084785, 0.08185]
@@ -15,36 +14,8 @@ geometry:
   thickness_te: [0.050e-2, 0.050e-2]
   thickness_max: [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
-  throat_location_fraction: [1, 1]
+  throat_location_fraction: [1.0, 1]
   # throat_location_fraction: [5/6, 5/6]
-
-
-model_options:
-  _slip_model: glassman
-  choking_condition : deviation
-  deviation_model : aungier
-  blockage_model : 0.0 #flat_plate_turbulent
-  # rel_step_fd: 1e-3
-  loss_model:
-    model: benner
-    loss_coefficient: stagnation_pressure
-    inlet_displacement_thickness_height_ratio: 0.011
-    tuning_factors:
-      profile: 1.00
-      incidence: 1.00
-      secondary: 1.00
-      trailing: 1.00
-      clearance: 1.00
-
-
-solver_options:
-  method: hybr
-  tolerance: 1e-8
-  # max_iterations: 100
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-4
-  display_progress: True
-
 
 operation_points:
   - fluid_name: air
@@ -68,4 +39,30 @@ performance_map:
   p_out: 13.8e4/np.linspace(1.5, 4.5, 10)
   omega: [1627]
   alpha_in: 0
+
+model_options:
+  _slip_model: glassman
+  choking_condition : deviation
+  deviation_model : aungier
+  blockage_model : 0.0 #flat_plate_turbulent
+  # rel_step_fd: 1e-3
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
+
+solver_options:
+  method: hybr
+  tolerance: 1e-8
+  # max_iterations: 100
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-4
+  display_progress: True
+
 
