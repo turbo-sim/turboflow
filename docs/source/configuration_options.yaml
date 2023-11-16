@@ -118,6 +118,121 @@ geometry:
       - list
       - ndarray
       valid_options: None
+operation_points:
+  description: 'Defines operating conditions for turbine performance analysis. This
+    can be provided in two formats: (1) as a list of dictionaries, where each dictionary
+    defines a single operation point, or (2) as a single dictionary where each key
+    has a single value or an array of values. In the latter case, the function internally
+    generates all possible combinations of operation points, similar to creating a
+    performance map, by taking the Cartesian product of these ranges.'
+  is_mandatory: false
+  expected_type:
+  - dict
+  - list
+  - ndarray
+  valid_options: None
+  _nested:
+    fluid_name:
+      description: Name of the working fluid.
+      is_mandatory: true
+      expected_type: str
+      valid_options: None
+    T0_in:
+      description: Stagnation temperature at the inlet. Unit [K].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    p0_in:
+      description: Stagnation pressure at the inlet. Unit [Pa].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    p_out:
+      description: Static pressure at the exit. Unit [Pa].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    omega:
+      description: Angular speed. Unit [rad/s].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    alpha_in:
+      description: Flow angle at the inlet. Unit [deg].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+performance_map:
+  description: Specifies a range of operating conditions for creating the turbine's
+    performance map. This option is expected to be a dictionary where each key corresponds
+    to a parameter (like inlet pressure, angular speed, etc.) and its value is a scalar
+    or an array of possible values for that parameter. The code generates the complete
+    set of operation points internally by calculating all possible combinations of
+    operating conditions (i.e., taking the cartesian product of the ranges).
+  is_mandatory: false
+  expected_type: dict
+  valid_options: None
+  _nested:
+    fluid_name:
+      description: Name of the working fluid.
+      is_mandatory: true
+      expected_type: str
+      valid_options: None
+    T0_in:
+      description: Stagnation temperature at the inlet. Unit [K].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    p0_in:
+      description: Stagnation pressure at the inlet. Unit [Pa].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    p_out:
+      description: Static pressure at the exit. Unit [Pa].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    omega:
+      description: Angular speed. Unit [rad/s].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
+    alpha_in:
+      description: Flow angle at the inlet. Unit [deg].
+      is_mandatory: true
+      expected_type:
+      - number
+      - ndarray
+      - list
+      valid_options: None
 model_options:
   description: Specifies the options related to the physical modeling of the problem
   is_mandatory: true
@@ -144,7 +259,7 @@ model_options:
     blockage_model:
       description: Model used to predict the blockage factor due to boundary layer
         displacement thickness.
-      is_mandatory: false
+      is_mandatory: true
       default_value: 0.0
       expected_type:
       - float
@@ -292,119 +407,4 @@ solver_options:
       is_mandatory: false
       default_value: true
       expected_type: bool
-      valid_options: None
-operation_points:
-  description: 'Defines operating conditions for turbine performance analysis. This
-    can be provided in two formats: (1) as a list of dictionaries, where each dictionary
-    defines a single operation point, or (2) as a single dictionary where each key
-    has a single value or an array of values. In the latter case, the function internally
-    generates all possible combinations of operation points, similar to creating a
-    performance map, by taking the Cartesian product of these ranges.'
-  is_mandatory: false
-  expected_type:
-  - dict
-  - list
-  - ndarray
-  valid_options: None
-  _nested:
-    fluid_name:
-      description: Name of the working fluid.
-      is_mandatory: true
-      expected_type: str
-      valid_options: None
-    T0_in:
-      description: Stagnation temperature at the inlet. Unit [K].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    p0_in:
-      description: Stagnation pressure at the inlet. Unit [Pa].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    p_out:
-      description: Static pressure at the exit. Unit [Pa].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    omega:
-      description: Angular speed. Unit [rad/s].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    alpha_in:
-      description: Flow angle at the inlet. Unit [deg].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-performance_map:
-  description: Specifies a range of operating conditions for creating the turbine's
-    performance map. This option is expected to be a dictionary where each key corresponds
-    to a parameter (like inlet pressure, angular speed, etc.) and its value is a scalar
-    or an array of possible values for that parameter. The code generates the complete
-    set of operation points internally by calculating all possible combinations of
-    operating conditions (i.e., taking the cartesian product of the ranges).
-  is_mandatory: false
-  expected_type: dict
-  valid_options: None
-  _nested:
-    fluid_name:
-      description: Name of the working fluid.
-      is_mandatory: true
-      expected_type: str
-      valid_options: None
-    T0_in:
-      description: Stagnation temperature at the inlet. Unit [K].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    p0_in:
-      description: Stagnation pressure at the inlet. Unit [Pa].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    p_out:
-      description: Static pressure at the exit. Unit [Pa].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    omega:
-      description: Angular speed. Unit [rad/s].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
-      valid_options: None
-    alpha_in:
-      description: Flow angle at the inlet. Unit [deg].
-      is_mandatory: true
-      expected_type:
-      - number
-      - ndarray
-      - list
       valid_options: None

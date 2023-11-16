@@ -21,6 +21,7 @@ extensions = [
     "sphinxcontrib.bibtex",
     "numpydoc",
     'sphinx.ext.todo',
+    'sphinx_tabs.tabs',
 ]
 
 todo_include_todos = True

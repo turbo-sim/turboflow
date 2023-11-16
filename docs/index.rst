@@ -56,6 +56,8 @@ Contents:
    source/glossary
    source/bibliography
    source/configuration
+   source/configuration_options
+   source/configuration_options_2
    source/api/modules
 
 
