@@ -105,7 +105,7 @@ OPTIONS_GEOMETRY = {
 
 
 OPTIONS_OPERATION_POINTS = {
-    "description": "Defines operating conditions for turbine performance analysis. This can be provided in two formats: (1) as a list of dictionaries, where each dictionary defines a single operation point, or (2) as a single dictionary where each key has a single value or an array of values. In the latter case, the function internally generates all possible combinations of operation points, similar to creating a performance map, by taking the Cartesian product of these ranges.",
+    "description": "Defines operating conditions for turbine performance analysis. This can be provided in two formats. The first format is as a list of dictionaries, where each dictionary defines a single operation point. The second format is as a single dictionary where each key has a single value or an array of values. In this case, the function internally generates all possible combinations of operation points, similar to creating a performance map, by taking the Cartesian product of these ranges.",
     "is_mandatory": True,
     "expected_type": (dict, list, np.ndarray),
     "valid_options": None,

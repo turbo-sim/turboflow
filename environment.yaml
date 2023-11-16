@@ -26,4 +26,6 @@ dependencies:
     - sphinxcontrib-bibtex
     - pyzotero
     - pytest
+    - sphinxawesome-theme
+    - sphinx-design
 
