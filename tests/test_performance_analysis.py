@@ -1,6 +1,7 @@
 import os
 import sys
 import copy
+import datetime
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,9 +14,7 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 
-# Define run settings
-SOLVER_ITER = 8  # Number of values to compare
-DIGIT_TOLERANCE = 4  # 0.01%
+# Define regression settings
 DATA_DIR = "regression_data"
 CONFIG_DIR = "config_files"
 CONFIG_FILES = [
@@ -25,27 +24,15 @@ CONFIG_FILES = [
     "kofskey1972a_moustapha.yaml",
 ]
 
+# Define test settings
+SOLVER_ITER = 8  # Number of values to compare
+DIGIT_TOLERANCE = 4  # 0.01%
 
-def isclose_significant_digits(a, b, sig_digits):
-    """
-    Check if two floating-point numbers are close based on a specified number of significant digits.
+# Create a directory to save regression test data
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
-    Parameters
-    ----------
-    a : float
-        The first number to compare.
-    b : float
-        The second number to compare.
-    sig_digits : int
-        The number of significant digits to use for the comparison.
 
-    Returns
-    -------
-    bool
-        True if numbers are close up to the specified significant digits, False otherwise.
-    """
-    format_spec = f".{sig_digits - 1}e"
-    return format(a, format_spec) == format(b, format_spec)
 
 
 # Helper function to check values
@@ -74,7 +61,7 @@ def check_values(old_values, new_values, column, config_name, idx, discrepancies
             discrepancies.append(
                 f"Mismatch in '{config_name}' at operation point {idx+1}, index {i+1} of '{column}': expected '{saved}', got '{current}'"
             )
-        elif not isinstance(saved, str) and not isclose_significant_digits(
+        elif not isinstance(saved, str) and not ml.isclose_significant_digits(
             saved, current, DIGIT_TOLERANCE
         ):
             discrepancies.append(
@@ -192,8 +179,52 @@ def test_overall_performance(compute_performance_from_config):
     assert test_passed, "Discrepancies found:\n" + "\n".join(mismatch)
 
 
+def create_simulation_regression_data(config_file, outdir):
+    """Save performance analysis data to Excel files for regression tests"""
+
+    # Run simulations
+    filepath = os.path.join(CONFIG_DIR, config_file)
+    config = ml.read_configuration_file(filepath)
+    operation_points = config["operation_points"]
+    solvers = ml.compute_performance(operation_points, config)
+
+    # Get configuration file name without extension
+    config_name, _ = os.path.splitext(config_file)
+
+    # Loop over computed operation points
+    for idx, solver in enumerate(solvers):
+        base_filename = f"{config_name}_{idx+1}"
+        filename = os.path.join(outdir, f"{base_filename}.xlsx")
+
+        # If file exists, append a timestamp to the new file name
+        if os.path.exists(filename):
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            filename = os.path.join(outdir, f"{base_filename}_{timestamp}.xlsx")
+
+        # Write dataframes to excel
+        with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+            # Export simulation results
+            for key, df in solver.problem.results.items():
+                if isinstance(df, pd.DataFrame):
+                    df = copy.deepcopy(df)
+                    df.index += 1
+                    df.to_excel(writer, sheet_name=key, index=True)
+
+            # Export convergence history
+            df = pd.DataFrame(solver.convergence_history)
+            df.to_excel(writer, sheet_name="convergence", index=False)
+
+        print(f"Regression data set saved: {filename}")
+
+
 
 # Run the tests
 if __name__ == "__main__":
-    pytest.main()
+
+    # # Run simulatins and save regression data
+    # for config_file in CONFIG_FILES:
+    #     create_simulation_regression_data(config_file, DATA_DIR)
+
+    # Running pytest from Python
+    pytest.main([__file__, "-vv"])
 
