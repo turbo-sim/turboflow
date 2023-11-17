@@ -812,7 +812,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             check.append(
                 util.check_lists_match(valid_keys_3, list(initial_guess.keys()))
             )
-
+            
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
                 eta_tt = initial_guess["eta_tt"]
@@ -884,7 +884,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 initial_guess = initial_guess_index
 
             # Check if initial guess is given with indices: {"v_throat_1" : 215, "v_throat_2" : 260}
-            elif check[2]:
+            elif check[2]: # FIXME
                 # Check that all values are a number
                 if not all(
                     isinstance(val, (int, float)) for val in initial_guess.values()

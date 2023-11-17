@@ -197,7 +197,7 @@ def evaluate_axial_turbine(
             if key not in ["number_of_cascades", "number_of_stages"]
         }
 
-        # Rename vairables
+        # Rename variables
         cascade = "_" + str(i + 1)
         w_throat = variables["w_throat" + cascade] * v0
         w_out = variables["w_out" + cascade] * v0
@@ -207,6 +207,10 @@ def evaluate_axial_turbine(
         v_crit_in = variables["v*_in" + cascade]
         w_crit_out = variables["w*_out" + cascade]
         s_crit_out = variables["s*_out" + cascade]
+        v_crit_in = variables["v_in"]
+        w_crit_out = variables["w_out" + cascade]
+        s_crit_out = variables["s_out" + cascade]
+
 
         # Evaluate current cascade
         cascade_inlet_input = {
@@ -373,7 +377,8 @@ def evaluate_cascade(
     # TODO involve Simone
     # TODO model does not converge if zero blade blockage at the exit plane. Why? Discontinuity?
     cascade_throat_input["rothalpy"] = inlet_plane["rothalpy"]
-    cascade_throat_input["beta"] = geometry["metal_angle_te"]
+    cascade_throat_input["beta"] = geometry["metal_angle_te"] # FIXME
+    # cascade_throat_input["beta"] = math.arccosd(math.cosd(cascade_exit_input["beta"])*geometry["A_out"]/geometry["A_throat"])
     throat_plane, _ = evaluate_cascade_exit(
         cascade_throat_input,
         fluid,
@@ -394,7 +399,7 @@ def evaluate_cascade(
         geometry,
         inlet_plane,
         angular_speed,
-        model_options["blockage_model"],
+        model_options["blockage_model"]*0,
         loss_model,
         geometry["radius_mean_out"],
         geometry["A_out"],
@@ -1389,6 +1394,7 @@ def compute_residual_flow_angle(
     area = geometry["A_out"]
     opening = geometry["opening"]
     pitch = geometry["pitch"]
+    area_throat = geometry["A_throat"]
 
     # Load calculated critical condition
     m_crit = critical_state["mass_flow"]
@@ -1420,6 +1426,8 @@ def compute_residual_flow_angle(
 
     # Compute error of guessed beta and deviation model
     residual = math.cosd(beta_model) - math.cosd(beta)
+    # residual = math.cosd(beta_model)*area_throat/area - math.cosd(beta)
+    # print(area_throat/area)
 
     return residual, density_correction
 
@@ -1479,7 +1487,7 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
         displacement_thickness = 0.048 / Re ** (1 / 5) * 0.9 * chord
         blockage_factor = 2 * displacement_thickness / opening
 
-    elif isinstance(blockage_model, (float, int)) and 0 <= blockage_model <= 1:
+    elif isinstance(blockage_model, (float, int)) and -1 <= blockage_model <= 1:
         blockage_factor = blockage_model
 
     elif blockage_model is None:
