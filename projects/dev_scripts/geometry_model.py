@@ -16,18 +16,18 @@ from meanline_axial import math
 CONFIG_FILE = "config_one_stage.yaml"
 case_data = ml.read_configuration_file(CONFIG_FILE)
 
+# ml.print_dict(case_data)
 
-ml.meanline.validate_turbine_geometry(case_data["geometry"])
-geom = ml.meanline.calculate_full_geometry(case_data["geometry"])
-ml.print_dict(geom)
-geom_info = ml.meanline.check_turbine_geometry(geom)
+# # Create partial geometry from optimization variables
+
+# # Create full geometry
+# ml.meanline.validate_turbine_geometry(case_data["geometry"])
+# geom = ml.meanline.calculate_full_geometry(case_data["geometry"])
+# ml.print_dict(geom)
+# geom_info = ml.meanline.check_turbine_geometry(geom)
 
 
-print(geom_info)
-
-
-# DONE: improve logic for angle conventions of rotor/stator
-# DONE: improve logic so tip clearance can be zero for stator
+# print(geom_info)
 
 
 

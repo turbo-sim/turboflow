@@ -4,7 +4,7 @@
 Configuration options
 ======================
 
-This section provides a complete guide to all configuration options available within the ``meanline_axial``.
+This section provides a complete guide to all configuration options available within ``meanline_axial``.
 Each configuration option is listed with a description and information regarding:
 
  * Whether the option is mandatory or optional.

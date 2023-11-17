@@ -89,17 +89,17 @@
 - [ ] Verify the displacement thickness value for kofskey1974
 - [ ] Try to extract the shock loss at the inlet fromm the profile loss to have a more clear split of the losses
 - [x] Add better smoother for Mach number constraint
-- [ ] Add generic smoothing functions for min/max/abs/piecewise
+- [x] Add generic smoothing functions for min/max/abs/piecewise
 - [ ] Replace all non-differentiable functions of the code (specially in the loss models)
-- [ ] Improve initial guess computation for supersonic case (call the function `initialize()`)
+- [x] Improve initial guess computation for supersonic case (call the function `initialize()`)
 - [ ] Validate model with experimental data
-- [ ] Add automatic testing (pytest) to ensure that new code pushes do not introduce breaking changes
+- [x] Add automatic testing (pytest) to ensure that new code pushes do not introduce breaking changes
 - [x] Make function to plot performance maps more general
-- [ ] Add functionality to export/import all the parameters corresponding to a calculated operating point
+- [x] Add functionality to export/import all the parameters corresponding to a calculated operating point
 - [x] Make the plotting of performance maps more general and add functionality to save figures
 - [x] Add environment.yaml file to install all dependencies at once
 - [x] Add Sphinx documentation structure
-- [ ] Add pygmo solvers to the pysolverview interface
+
 - [ ] Implement design optimization
   - [ ] Single-point
   - [ ] Multi-point
@@ -131,7 +131,7 @@
   - [x] Improve docstrings
   - [ ] Discuss and improve the throat area calculation (Roberto/Lasse)
 - [ ] Update PySolverView to solve root finding problems with the optimization solver.
-- [ ] Add computation time in solver report
+- [x] Add computation time in solver report
 - [ ] Improve robustness with random generation of initial guesses
   - [ ] Specify the number of initial guesses that will be tried, e.g., 50
   - [ ] Specify the ranges of variables to be sampled from (enthalpy frac distribution, efficiency ts and tt)
@@ -139,6 +139,28 @@
   - [ ] https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.qmc.LatinHypercube.html
 - [x] Add regression tests
 - [ ] 
+
+## TODO 17.11.2023
+- [x] Add validation of configuration file
+- [x] Add configuration file options to documentation (automated process)
+- [ ] Add logger object to the performance analysis and optimization functions
+- [ ] Log errors and warnings during model evaluation (print after convergence history?)
+- [ ] Improve geometry generation functionality to create full geometry from design optimization variables
+- [ ] Improve printing/logging with imporve control over verbosity
+- [ ] Solver improvements
+  - [ ] Unify optimization problem so that it can be solver with root finding and optimization methods
+  - [ ] Add pygmo solvers to the pysolverview interface (IPOPT/SNOPT)
+- [ ] Improve deviation modeling to cover cases when:
+  - [ ] Area changes from throat to exit
+  - [ ] Radius changes from throat to exit
+  - [ ] There is an additional blockage factor at the throat
+- [ ] Add plotting functionality
+  - [ ] Plot velocity triangles
+  - [ ] Plot blade to plade plane
+  - [ ] Plot meridional view
+  - [ ] Plot h-s or T-s diagrams of the expansion
+  - [ ] Nice validation plotting against experimental data
+  - [ ] 
 
 
 

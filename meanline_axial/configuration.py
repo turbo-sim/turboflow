@@ -184,7 +184,7 @@ def convert_configuration_options(config):
             if not all(isinstance(item, first_type) for item in data):
                 element_types = [type(item) for item in data]
                 raise ValueError(
-                    f"List contains elements of different types: {data}, "
+                    f"Option '{parent_key}' contains elements of different types: {data}, "
                     f"types: {element_types}"
                 )
             return np.array(data)
@@ -253,10 +253,12 @@ def validate_configuration_options(config, schema):
         # Check for unexpected keys
         # Bypass validation for keys starting with '_' to skip options during development
         # Use sorted to preserve order (required for regression tests)
-        keys_to_validate = set(k for k in sorted(schema.keys()) if not k.startswith("_"))
-        unexpected_keys = keys_to_validate - set(schema.keys())
+        keys_to_validate_against = set(sorted(schema.keys()))
+        keys_to_validate = set(k for k in sorted(config.keys()) if not k.startswith("_"))
+        unexpected_keys = keys_to_validate - keys_to_validate_against
         if unexpected_keys:
-            errors.append(f"Unexpected keys in '{parent}': {unexpected_keys}")
+            name = parent if parent else "root"
+            errors.append(f"Unexpected keys in '{name}': {unexpected_keys}")
 
         # Loop through all the possible configuration options
         # Use sorted to preserve order (required for regression tests)
