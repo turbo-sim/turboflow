@@ -11,7 +11,7 @@
          * - **Mandatory**
            - True
          * - **Valid types**
-           - dict
+           - ``dict``
 
 
       .. tab-set::
@@ -27,9 +27,9 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
                * - **Valid options**
-                 - ['stator', 'rotor']
+                 - ``stator``, ``rotor``
 
          .. tab-item:: radius_hub
 
@@ -42,7 +42,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: radius_tip
 
@@ -55,7 +55,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: pitch
 
@@ -68,7 +68,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: chord
 
@@ -81,7 +81,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: stagger_angle
 
@@ -94,7 +94,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: opening
 
@@ -107,7 +107,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: diameter_le
 
@@ -120,7 +120,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: wedge_angle_le
 
@@ -133,7 +133,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: metal_angle_le
 
@@ -146,7 +146,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: metal_angle_te
 
@@ -159,7 +159,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: thickness_te
 
@@ -172,7 +172,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: thickness_max
 
@@ -185,7 +185,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: tip_clearance
 
@@ -198,7 +198,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
 
          .. tab-item:: throat_location_fraction
 
@@ -211,7 +211,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - list, ndarray
+                 - ``list``, ``ndarray``
    .. tab-item:: operation_points
 
       Defines operating conditions for turbine performance analysis. This can be provided in two formats. The first format is as a list of dictionaries, where each dictionary defines a single operation point. The second format is as a single dictionary where each key has a single value or an array of values. In this case, the function internally generates all possible combinations of operation points, similar to creating a performance map, by taking the Cartesian product of these ranges.
@@ -223,7 +223,7 @@
          * - **Mandatory**
            - True
          * - **Valid types**
-           - dict, list, ndarray
+           - ``dict``, ``list``, ``ndarray``
 
 
       .. tab-set::
@@ -239,7 +239,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - str
+                 - ``str``
 
          .. tab-item:: T0_in
 
@@ -252,7 +252,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: p0_in
 
@@ -265,7 +265,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: p_out
 
@@ -278,7 +278,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: omega
 
@@ -291,7 +291,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: alpha_in
 
@@ -304,7 +304,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
    .. tab-item:: performance_map
 
       Specifies a range of operating conditions for creating the turbine's performance map. This option is expected to be a dictionary where each key corresponds to a parameter (like inlet pressure, angular speed, etc.) and its value is a scalar or an array of possible values for that parameter. The code generates the complete set of operation points internally by calculating all possible combinations of operating conditions (i.e., taking the cartesian product of the ranges).
@@ -316,7 +316,7 @@
          * - **Mandatory**
            - False
          * - **Valid types**
-           - dict
+           - ``dict``
 
 
       .. tab-set::
@@ -332,7 +332,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - str
+                 - ``str``
 
          .. tab-item:: T0_in
 
@@ -345,7 +345,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: p0_in
 
@@ -358,7 +358,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: p_out
 
@@ -371,7 +371,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: omega
 
@@ -384,7 +384,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
 
          .. tab-item:: alpha_in
 
@@ -397,7 +397,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - number, ndarray, list
+                 - ``number``, ``ndarray``, ``list``
    .. tab-item:: model_options
 
       Specifies the options related to the physical modeling of the problem
@@ -409,7 +409,7 @@
          * - **Mandatory**
            - True
          * - **Valid types**
-           - dict
+           - ``dict``
 
 
       .. tab-set::
@@ -425,9 +425,9 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - str
+                 - ``str``
                * - **Valid options**
-                 - ['deviation', 'mach_critical', 'mach_unity']
+                 - ``deviation``, ``mach_critical``, ``mach_unity``
 
          .. tab-item:: deviation_model
 
@@ -440,9 +440,9 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - str
+                 - ``str``
                * - **Valid options**
-                 - ['aungier', 'ainley_mathieson', 'zero_deviation']
+                 - ``aungier``, ``ainley_mathieson``, ``zero_deviation``
 
          .. tab-item:: blockage_model
 
@@ -457,9 +457,9 @@
                * - **Default value**
                  - 0.0
                * - **Valid types**
-                 - float, str
+                 - ``float``, ``str``
                * - **Valid options**
-                 - ['flat_plate_turbulent', '<numeric value>']
+                 - ``flat_plate_turbulent``, ``<numeric value>``
 
          .. tab-item:: rel_step_fd
 
@@ -474,7 +474,7 @@
                * - **Default value**
                  - 0.001
                * - **Valid types**
-                 - float
+                 - ``float``
 
          .. tab-item:: loss_model
 
@@ -487,7 +487,7 @@
                * - **Mandatory**
                  - True
                * - **Valid types**
-                 - dict
+                 - ``dict``
 
 
             .. tab-set::
@@ -503,9 +503,9 @@
                      * - **Mandatory**
                        - True
                      * - **Valid types**
-                       - str
+                       - ``str``
                      * - **Valid options**
-                       - ['kacker_okapuu', 'moustapha', 'benner', 'benner_moustapha', 'isentropic']
+                       - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``
 
                .. tab-item:: loss_coefficient
 
@@ -518,9 +518,9 @@
                      * - **Mandatory**
                        - True
                      * - **Valid types**
-                       - str
+                       - ``str``
                      * - **Valid options**
-                       - ['stagnation_pressure']
+                       - ``stagnation_pressure``
 
                .. tab-item:: inlet_displacement_thickness_height_ratio
 
@@ -535,7 +535,7 @@
                      * - **Default value**
                        - 0.011
                      * - **Valid types**
-                       - float
+                       - ``float``
 
                .. tab-item:: tuning_factors
 
@@ -548,7 +548,7 @@
                      * - **Mandatory**
                        - False
                      * - **Valid types**
-                       - dict
+                       - ``dict``
 
 
                   .. tab-set::
@@ -566,7 +566,7 @@
                            * - **Default value**
                              - 1.0
                            * - **Valid types**
-                             - float
+                             - ``float``
 
                      .. tab-item:: incidence
 
@@ -581,7 +581,7 @@
                            * - **Default value**
                              - 1.0
                            * - **Valid types**
-                             - float
+                             - ``float``
 
                      .. tab-item:: secondary
 
@@ -596,7 +596,7 @@
                            * - **Default value**
                              - 1.0
                            * - **Valid types**
-                             - float
+                             - ``float``
 
                      .. tab-item:: trailing
 
@@ -611,7 +611,7 @@
                            * - **Default value**
                              - 1.0
                            * - **Valid types**
-                             - float
+                             - ``float``
 
                      .. tab-item:: clearance
 
@@ -626,7 +626,7 @@
                            * - **Default value**
                              - 1.0
                            * - **Valid types**
-                             - float
+                             - ``float``
    .. tab-item:: solver_options
 
       Specifies options related to the numerical methods used to solve the problem
@@ -640,7 +640,7 @@
          * - **Default value**
            - {}
          * - **Valid types**
-           - dict
+           - ``dict``
 
 
       .. tab-set::
@@ -658,9 +658,9 @@
                * - **Default value**
                  - lm
                * - **Valid types**
-                 - str
+                 - ``str``
                * - **Valid options**
-                 - ['lm', 'hybr']
+                 - ``lm``, ``hybr``
 
          .. tab-item:: tolerance
 
@@ -675,7 +675,7 @@
                * - **Default value**
                  - 1e-08
                * - **Valid types**
-                 - float, float64
+                 - ``float``, ``float64``
 
          .. tab-item:: max_iterations
 
@@ -690,7 +690,7 @@
                * - **Default value**
                  - 100
                * - **Valid types**
-                 - int, int64
+                 - ``int``, ``int64``
 
          .. tab-item:: derivative_method
 
@@ -705,9 +705,9 @@
                * - **Default value**
                  - 2-point
                * - **Valid types**
-                 - str
+                 - ``str``
                * - **Valid options**
-                 - ['2-point', '3-point']
+                 - ``2-point``, ``3-point``
 
          .. tab-item:: derivative_rel_step
 
@@ -722,7 +722,7 @@
                * - **Default value**
                  - 0.0001
                * - **Valid types**
-                 - float
+                 - ``float``
 
          .. tab-item:: display_progress
 
@@ -737,5 +737,5 @@
                * - **Default value**
                  - True
                * - **Valid types**
-                 - bool
+                 - ``bool``
 
