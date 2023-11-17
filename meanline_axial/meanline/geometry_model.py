@@ -17,13 +17,13 @@ def validate_turbine_geometry(geom, display=False):
 
     This function is intended as a preliminary check before in-depth geometry analysis.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     geom : dict
         The geometry configuration parameters for the turbine as a dictionary.
 
-    Returns:
-    --------
+    Returns
+    -------
     bool
         True if all validations pass, indicating a correctly structured geometry configuration.
     """
@@ -117,8 +117,8 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     For instance, a 'throat_location_fraction' of 5/6 would return the throat radius as:
     (1/6)*radius_in + (5/6)*radius out.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     radius_in : np.array
         The radius values at the inlet sections.
     radius_out : np.array
@@ -126,8 +126,8 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     throat_location_fraction : float
         The fraction used to weight the inlet and outlet radii in the calculation.
 
-    Returns:
-    --------
+    Returns
+    -------
     np.array
         The calculated throat radius values, representing the weighted average of the
         inlet and outlet radii based on the specified throat location.
@@ -139,12 +139,12 @@ def calculate_full_geometry(geometry):
     """
     Computes the complete geometry of an axial turbine based on input geometric parameters.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     geometry (dict): A dictionary containing the input geometry parameters
 
-    Returns:
-    --------
+    Returns
+    -------
     dict: A new dictionary with both the original and newly computed geometry parameters.
     """
 
@@ -335,12 +335,12 @@ def check_turbine_geometry(geometry, display=True):
 
     The ranges of metal angles and stagger angles are reversed for rotor cascades
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     geometry (dict): A dictionary containing the computed geometry of the turbine.
 
-    Returns:
-    --------
+    Returns
+    -------
     list: A list of messages with a summary of the checks.
     """
 

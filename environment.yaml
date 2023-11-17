@@ -18,6 +18,7 @@ dependencies:
     - pexpect
     - cycler
     - sphinx
+    - sphinx-tabs
     - sphinx-book-theme
     - sphinx-rtd-theme
     - pydata-sphinx-theme
@@ -25,4 +26,6 @@ dependencies:
     - sphinxcontrib-bibtex
     - pyzotero
     - pytest
+    - sphinxawesome-theme
+    - sphinx-design
 

@@ -1433,7 +1433,7 @@ def compute_residual_flow_angle(
 
 
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
-    """
+    r"""
     Calculate the blockage factor due to boundary layer displacement thickness.
 
     This function computes the blockage factor caused by the boundary layer
@@ -1448,12 +1448,12 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     The correlation for turbulent boundary layer displacement thickness over a flat plate is given by :cite:`cengel_fluid_2014`:
     
     .. math::
-        \delta^* = \\frac{0.048}{Re^{1/5}} \\times 0.9 \\times \\text{chord}
+        \delta^* = \frac{0.048}{Re^{1/5}} \times 0.9 \times \text{chord}
         
     From this the blockage factor is calculated as
     
     .. math::
-        \\text{blockage_factor} = 2 \\times \\frac{\\delta^*}{\\text{opening}}
+        \text{blockage_factor} = 2 \times \frac{\delta^*}{\text{opening}}
 
     Parameters
     ----------

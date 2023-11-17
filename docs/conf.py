@@ -21,6 +21,9 @@ extensions = [
     "sphinxcontrib.bibtex",
     "numpydoc",
     'sphinx.ext.todo',
+    # 'sphinx_tabs.tabs',
+    'sphinx_togglebutton',
+    'sphinx_design',
 ]
 
 todo_include_todos = True
@@ -39,7 +42,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme
 # html_theme = 'pydata_sphinx_theme'
 html_theme = 'sphinx_rtd_theme'
-
+# html_theme = 'sphinxawesome_theme'
+# 
 # Manual formatting override
 html_static_path = ['_static']
 html_css_files = ['custom.css']

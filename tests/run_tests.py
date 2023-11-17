@@ -2,7 +2,8 @@
 import pytest
 
 # Define the list of tests
-tests_list = ["test_performance_analysis.py"]
+tests_list = ["test_performance_analysis.py",
+              "test_configuration_validation.py"]
 
 # Run pytest when the python script is executed
 pytest.main(tests_list)
