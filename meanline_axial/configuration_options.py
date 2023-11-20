@@ -3,6 +3,28 @@ from . import meanline
 
 NUMERIC = "<numeric value>"
 
+SETTINGS = {
+    "description": "Defines general settings controlling the behavior of the program.",
+    "is_mandatory": False,  # The code always sets a default value of {} if not provided
+    "expected_type": dict,
+    "valid_options": None,
+    "_nested": {
+        "skip_validation": {
+            "description": "Whether to skip the configuration validation or not.",
+            "is_mandatory": False,
+            "default_value": False,
+            "expected_type": bool,
+            "valid_options": None,
+        },
+        # "logger": {
+        #     "description": "To be completed",
+        #     "is_mandatory": False,
+        #     "default_value": False,
+        #     "expected_type": bool,
+        #     "valid_options": None,
+        # }
+    },
+}
 
 OPTIONS_GEOMETRY = {
     "description": "Defines the turbine's geometric parameters.",
@@ -361,6 +383,7 @@ CONFIGURATION_OPTIONS = {
     "performance_map": OPTIONS_PERFORMANCE_MAP,
     "model_options": OPTIONS_MODEL,
     "solver_options": OPTIONS_SOLVER,
+    "general_settings": SETTINGS,
 }
 
 

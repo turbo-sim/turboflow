@@ -14,13 +14,13 @@ operation_points:
     omega: 1627
     alpha_in: 0
 
-performance_map:
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.5, 4.5, 10)
-  omega: [1627]
-  alpha_in: 0
+# performance_map:
+#   fluid_name: air
+#   T0_in: 295.6
+#   p0_in: 13.8e4
+#   p_out: 13.8e4/np.linspace(1.5, 4.5, 10)
+#   omega: [1627]
+#   alpha_in: 0
 
 model_options:
   _slip_model: glassman
@@ -38,6 +38,7 @@ model_options:
       secondary: 1.00
       trailing: 1.00
       clearance: 1.00
+
 
 solver_options:
   method: hybr
@@ -70,7 +71,7 @@ geometry:
 
 
 _geometry_optimization:
-  radius_type: constant_mean_radius
+  radius_type: constant_mean
   cascade_type: ["stator", "rotor"]
   camberline_type: ['circular_arc', 'circular_arc']
   hub_tip_ratio: [0.80, 0.80, 0.80, 0.80]
@@ -84,3 +85,27 @@ _geometry_optimization:
   tip_clearance_height_ratio: [0.01, 0.01]
   diameter_le_chord_ratio: [0.15, 0.15]
   throat_location_fraction: [1.00, 1.00]
+
+# general_settings:
+#   skip_validation: False
+
+
+# design_optimization:
+#   design_point:
+#   off_desing_points:
+#   fixed_parameters:
+#     parameter: value
+#   design_variables:
+#     parameter: initial_guess, bounds
+#   constraints:
+#     parameter: ("=", target_value)
+#     parameter: ("<", target_value)
+#   solver_options:
+
+# Add a check that the sum of fixed parameters and design variables matches the expected specification (problem is fully defined)
+
+# performance_analysis:
+#   operation_points:
+#   geometry:
+#   solver_options:
+

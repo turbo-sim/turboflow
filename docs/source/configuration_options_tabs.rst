@@ -738,4 +738,34 @@
                  - True
                * - **Valid types**
                  - ``bool``
+   .. tab-item:: general_settings
+
+      Defines general settings controlling the behavior of the program.
+
+      .. list-table::
+         :widths: 20 80
+         :header-rows: 0
+
+         * - **Mandatory**
+           - False
+         * - **Valid types**
+           - ``dict``
+
+
+      .. tab-set::
+
+         .. tab-item:: skip_validation
+
+            Whether to skip the configuration validation or not.
+
+            .. list-table::
+               :widths: 20 80
+               :header-rows: 0
+
+               * - **Mandatory**
+                 - False
+               * - **Default value**
+                 - False
+               * - **Valid types**
+                 - ``bool``
 

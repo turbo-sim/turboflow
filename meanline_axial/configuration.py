@@ -264,6 +264,7 @@ def validate_configuration_options(config, schema):
         # Use sorted to preserve order (required for regression tests)
         for key in sorted(schema.keys()):
             specs = schema[key]
+
             # Define option path recursively
             current_path = f"{parent}/{key}" if parent else key
 
@@ -348,6 +349,15 @@ def validate_configuration_options(config, schema):
 
     # Initialize lists to save errors and messages
     errors, info = [], []
+
+    # Ensure 'settings' exists in config and validate it
+    config.setdefault("general_settings", {})
+    settings_config = {"general_settings": config["general_settings"]}
+    settings_schema = {"general_settings": schema["general_settings"]}
+    settings_config = validate_field(settings_config, settings_schema, None, errors, info)
+    if settings_config["general_settings"]["skip_validation"]:
+        info = "Configuration validation was skipped."
+        return config, info, None
 
     # Validate the configuration files
     validated_configuration = validate_field(config, schema, None, errors, info)

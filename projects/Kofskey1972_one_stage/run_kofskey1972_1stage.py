@@ -14,7 +14,7 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 # Define running option
-CASE = 2
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = "kofskey1972_1stage.yaml"
