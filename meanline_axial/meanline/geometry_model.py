@@ -1,6 +1,7 @@
 import numpy as np
 from .. import math
-from .. import utilities    
+from .. import utilities
+
 
 def validate_turbine_geometry(geom, display=False):
     """
@@ -132,7 +133,9 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
         The calculated throat radius values, representing the weighted average of the
         inlet and outlet radii based on the specified throat location.
     """
-    return (1 - throat_location_fraction) * radius_in + throat_location_fraction * radius_out
+    return (
+        1 - throat_location_fraction
+    ) * radius_in + throat_location_fraction * radius_out
 
 
 def calculate_full_geometry(geometry):
@@ -424,9 +427,13 @@ def check_turbine_geometry(geometry, display=True):
     msgs.append("-" * report_width)  # Horizontal line
 
     if not vars_outside_range:
-        msgs.append(" Geometry report summary: All parameters are within recommended ranges.")
+        msgs.append(
+            " Geometry report summary: All parameters are within recommended ranges."
+        )
     else:
-        msgs.append(" Geometry report summary: Some parameters are outside recommended ranges.")
+        msgs.append(
+            " Geometry report summary: Some parameters are outside recommended ranges."
+        )
         for warning in vars_outside_range:
             msgs.append(f"     - {warning}")
 
@@ -443,29 +450,112 @@ def check_turbine_geometry(geometry, display=True):
     return msg
 
 
-# def create_partial_geometry_from_optimization_variables(x_opt, cascade_data):
+def create_partial_geometry_from_optimization_variables(design_variables, cascade_data):
+    cascade_type = design_variables["cascade_type"]
+    radius_type = design_variables["radius_type"]
+    pitch_chord_ratio = design_variables["pitch_chord_ratio"]
+    aspect_ratio = design_variables["aspect_ratio"]
+    hub_tip_ratio = design_variables["hub_tip_ratio"]
 
-#     pitch_to_chord_ratio = x_opt[0]
-#     aspect_ratio = x_opt[1]
-#     hub_to_tip_ratio = x_opt[2]
+    metal_angle_le = design_variables["metal_angle_le"]
+    metal_angle_te = design_variables["metal_angle_te"]
+    thickness_te_opening_ratio = design_variables["thickness_te_opening_ratio"]
 
-#     specific_speed = x_opt[3]
-#     blade_jet_ratio = x_opt[4]
+    diameter_le_chord_ratio = design_variables["diameter_le_chord_ratio"]
+    wedge_angle_le = design_variables["wedge_angle_le"]
+    thickness_max_chord_ratio = design_variables["thickness_max_chord_ratio"]
+    tip_clearance_height_ratio = design_variables["tip_clearance_height_ratio"]
+    throat_location_fraction = design_variables["throat_location_fraction"]
 
-#     omega = specific_speed * (...)
-#     spouting_velocity = cascade_data["spouting_velocity"]
+    specific_speed = 0.9
+    blade_jet_ratio = 0.7
 
-#     # Compute exit radius from speed
-#     blade_speed = blade_jet_ratio * spouting_velocity
-#     radius_mean_out = blade_speed / omega
+    rho_out_is = 50
+    dh_is = 100e3
+    mass_flow = 50.00
 
-#     radius_type = ... # constant_mean, constant_hub, constant_tip
+    v0 = np.sqrt(2 * dh_is)
 
-#     if radius_type == "constant_mean":
-#         radius_hub = radius_mean_out* (...)
-#         radius_tip = radius_mean_out* (...)
+    omega = dh_is ** (0.75) / (mass_flow / rho_out_is) ** 0.50
+    blade_speed = blade_jet_ratio * v0
 
-#     else:
+    radius_mean_out = blade_speed / omega
+
+    # radius_type = ... # constant_mean, constant_hub, constant_tip
+
+    if radius_type == "constant_mean":
+        radius_mean = np.full_like(hub_tip_ratio, radius_mean_out)
+        radius_hub = (2.0 * hub_tip_ratio) / (1.0 + hub_tip_ratio) * radius_mean_out
+        radius_tip = 2.0 / (1.0 + hub_tip_ratio) * radius_mean_out
+
+    elif radius_type == "constant_hub":
+        radius_hub_out = (
+            (2.0 * hub_tip_ratio[-1]) / (1.0 + hub_tip_ratio[-1]) * radius_mean_out
+        )
+        radius_hub = np.full_like(hub_tip_ratio, radius_hub_out)
+        radius_tip = radius_hub / hub_tip_ratio
+        radius_mean = 0.5 * (radius_hub + radius_mean)
+
+    elif radius_type == "constant_tip":
+        radius_tip_out = 2.0 / (1.0 + hub_tip_ratio[-1]) * radius_mean_out
+        radius_tip = np.full_like(hub_tip_ratio, radius_tip_out)
+        radius_hub = radius_hub * hub_tip_ratio
+        radius_mean = 0.5 * (radius_hub + radius_mean)
+    else:
+        raise ValueError(f"Invalid radius type: '{radius_type}'")
+
+    _height = radius_tip - radius_hub
+    height = 0.5 * (_height[::2] + _height[1::2])
+
+    axial_chord = height / aspect_ratio
+
+    stagger = 0.5 * (metal_angle_le + metal_angle_te)
+
+    chord = axial_chord / math.cosd(stagger)
+
+    pitch = chord * pitch_chord_ratio
+
+    opening = pitch * math.cosd(metal_angle_te)
+
+    thickness_te = opening * thickness_te_opening_ratio
+
+    diameter_le = diameter_le_chord_ratio * chord
+
+    thickness_max = thickness_max_chord_ratio * chord
+
+    tip_clearance = tip_clearance_height_ratio * height
+
+    # Give o_min different than o_exit?
+
+    # omega = specific_speed * (...)
+    # spouting_velocity = cascade_data["spouting_velocity"]
+
+    # # Compute exit radius from speed
+    # blade_speed = blade_jet_ratio * spouting_velocity
+    # radius_mean_out = blade_speed / omega
+
+    # # else:
+
+    geom = {
+        "cascade_type": cascade_type,
+        "radius_hub": radius_hub,
+        "radius_tip": radius_tip,
+        "pitch": pitch,
+        "chord": chord,
+        "stagger_angle": stagger,
+        "opening": opening,
+        "diameter_le": diameter_le,
+        "wedge_angle_le": wedge_angle_le,
+        "metal_angle_le": metal_angle_le,
+        "metal_angle_te": metal_angle_te,
+        "thickness_te": thickness_te,
+        "thickness_max": thickness_max,
+        "tip_clearance": tip_clearance,
+        "throat_location_fraction": throat_location_fraction,
+    }
+
+    return geom
+
 
 #  Two scenatios for optimization
 #  1. design from scratch

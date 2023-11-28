@@ -819,4 +819,35 @@
            - True
          * - **Valid types**
            - ``bool``
+.. dropdown:: General Settings
+   :color: primary
+
+   Defines general settings controlling the behavior of the program.
+
+
+   .. list-table::
+      :widths: 20 80
+      :header-rows: 0
+
+      * - **Mandatory**
+        - False
+      * - **Valid types**
+        - ``dict``
+
+   .. dropdown:: general_settings.skip_validation
+      :color: secondary
+
+      Whether to skip the configuration validation or not.
+
+
+      .. list-table::
+         :widths: 20 80
+         :header-rows: 0
+
+         * - **Mandatory**
+           - False
+         * - **Default value**
+           - False
+         * - **Valid types**
+           - ``bool``
 

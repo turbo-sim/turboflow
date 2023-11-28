@@ -409,3 +409,15 @@ solver_options:
       default_value: true
       expected_type: bool
       valid_options: None
+general_settings:
+  description: Defines general settings controlling the behavior of the program.
+  is_mandatory: false
+  expected_type: dict
+  valid_options: None
+  _nested:
+    skip_validation:
+      description: Whether to skip the configuration validation or not.
+      is_mandatory: false
+      default_value: false
+      expected_type: bool
+      valid_options: None

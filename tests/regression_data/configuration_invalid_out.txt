@@ -6,18 +6,17 @@ Field 'solver_options/derivative_rel_step' not specified; using default value: 0
 
 Error messages:
 Configuration errors detected.
+Unexpected keys in 'geometry': {'thickness_trailing'};
 Invalid value 'rotro' for field 'geometry/cascade_type'. Valid options are: ['stator', 'rotor'];
 Missing required field: 'geometry/stagger_angle';
 Missing required field: 'geometry/thickness_te';
 Missing required field: 'model_options/choking_condition';
 Invalid value 'aungiers' for field 'model_options/deviation_model'. Valid options are: ['aungier', 'ainley_mathieson', 'zero_deviation'];
+Unexpected keys in 'model_options/loss_model': {'loss_coefficient_def'};
 Missing required field: 'model_options/loss_model/loss_coefficient';
-Missing required field: 'operation_points';
-Missing required field: 'operation_points/T0_in';
-Missing required field: 'operation_points/alpha_in';
-Missing required field: 'operation_points/fluid_name';
-Missing required field: 'operation_points/omega';
 Missing required field: 'operation_points/p0_in';
-Missing required field: 'operation_points/p_out';
+Unexpected keys in 'operation_points': {'RPM'};
+Incorrect type for field 'operation_points/alpha_in': 'str'. Expected number, ndarray, list;
+Missing required field: 'operation_points/omega';
 Incorrect type for field 'performance_map/T0_in': 'str'. Expected number, ndarray, list;
 Incorrect type for field 'solver_options/max_iterations': 'float64'. Expected int, int64
