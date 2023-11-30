@@ -56,7 +56,8 @@ KEYS_CASCADE = [
     "loss_trailing",
     "loss_incidence",
     "dh_s",
-    "Ma_crit",
+    "Ma_crit_throat",
+    "Ma_crit_out",
     "mass_flow_crit",
     "d_crit",
     "w_crit",
@@ -65,6 +66,7 @@ KEYS_CASCADE = [
     "incidence",
     "density_correction",
 ]
+
 """List of keys for the cascade performance metrics of the turbine. 
 This list is used to ensure the structure of the 'cascade' dictionary in various functions."""
 
@@ -264,6 +266,7 @@ def evaluate_axial_turbine(
                 fluid,
             )
 
+            
     # Add exit pressure error to residuals
     p_calc = results["plane"]["p"].values[-1]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
@@ -292,7 +295,7 @@ def evaluate_axial_turbine(
         if len(util.ensure_iterable(value)) == number_of_cascades
     }
     results["geometry"] = pd.DataFrame([geom_cascades])
-
+    
     return results
 
 def evaluate_cascade(
@@ -474,7 +477,8 @@ def evaluate_cascade(
     cascade_data = {
         **loss_dict,
         "dh_s": dh_is,
-        "Ma_crit": critical_state["throat_plane"]["Ma_rel"],
+        "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
+        "Ma_crit_out": critical_state["exit_plane"]["Ma_rel"],
         "mass_flow_crit": critical_state["throat_plane"]["mass_flow"],
         # "w_crit": critical_state["w"],
         "d_crit": critical_state["throat_plane"]["d"],
@@ -952,7 +956,7 @@ def evaluate_cascade_critical(
         J[2, 1 + 1],
         -1 * J[0, 0],
         -1 * J[0, 1 + 1],
-    )  # For isentropic
+    )  
 
     # Calculate the Lagrange multipliers explicitly
     eps = 1e-9  # TODO Division by zero sometimes?
@@ -1396,6 +1400,7 @@ def compute_residual_flow_angle(
     opening = geometry["opening"]
     pitch = geometry["pitch"]
 
+
     # Load calculated critical condition
     m_crit = critical_state["exit_plane"]["mass_flow"]
     Ma_crit = critical_state["exit_plane"]["Ma_rel"]
@@ -1412,7 +1417,6 @@ def compute_residual_flow_angle(
     blockage = exit_plane["blockage"]
 
     # Compute exit flow angle
-    # TODO: discuss if it should be Ma_throat or Ma_exit || Ma_throat in inequelity fails
     if Ma <= Ma_crit:
         density_correction = np.nan
         beta_model = dm.get_subsonic_deviation(
@@ -1420,15 +1424,13 @@ def compute_residual_flow_angle(
         )
     else:
         density_correction = throat_plane["d"] / critical_state["throat_plane"]["d"]
-        density_correction = 1
+        # density_correction = 1
         cos_beta = m_crit / rho / w / area / (1 - blockage) * density_correction
         beta_model = math.arccosd(cos_beta)
         # Density correction needed above critical condition to fix numerical error caused by nested finite differences
-
+        
     # Compute error of guessed beta and deviation model
     residual = math.cosd(beta_model) - math.cosd(beta)
-    # residual = math.cosd(beta_model)*area_throat/area - math.cosd(beta)
-    # print(area_throat/area)
 
     return residual, density_correction
 
