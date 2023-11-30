@@ -36,6 +36,7 @@ def get_subsonic_deviation(Ma_exit, Ma_crit, opening_to_pitch, model):
         If an invalid deviation model is provided.
     """
 
+
     # Function mappings for each deviation model
     deviation_model_functions = {
         DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
