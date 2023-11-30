@@ -91,7 +91,7 @@ class NonlinearSystemSolver:
         plot=False,
         logger=None,
         update_on="function",
-
+        callback_func=None,
     ):
         
         # Initialize class variables
@@ -105,6 +105,7 @@ class NonlinearSystemSolver:
         self.options = copy.deepcopy(options) if options else {}
         self.derivative_method = derivative_method
         self.derivative_rel_step = derivative_rel_step
+        self.callback_func = callback_func
 
         # Define the maximun number of iterations
         if method == "hybr":
@@ -364,6 +365,9 @@ class NonlinearSystemSolver:
         # Refresh the plot with current values
         if self.plot:
             self._plot_callback()
+
+        if self.callback_func:
+            self.callback_func()
 
     def _write_footer(self):
         """

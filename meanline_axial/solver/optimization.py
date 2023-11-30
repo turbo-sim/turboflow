@@ -1,4 +1,6 @@
 import os
+import time
+import copy
 import logging
 import warnings
 import numpy as np
@@ -8,6 +10,8 @@ from scipy.optimize import minimize
 from scipy.optimize._numdiff import approx_derivative
 from abc import ABC, abstractmethod
 from datetime import datetime
+
+SOLVER_OPTIONS = ["slsqp", "trust-constr"]
 
 
 class OptimizationSolver:
@@ -73,13 +77,42 @@ class OptimizationSolver:
     """
 
     def __init__(
-        self, problem, x0, display=True, plot=False, logger=None, update_on="gradient"
+        self,
+        problem,
+        x0,
+        method="slsqp",
+        tol=1e-9,
+        max_iter=100,
+        options={},
+        derivative_method="2-point",
+        derivative_rel_step=1e-6,
+        display=True,
+        plot=False,
+        logger=None,
+        update_on="gradient",
+        callback_func=None,
     ):
         # Initialize class variables
         self.problem = problem
         self.display = display
         self.plot = plot
         self.logger = logger
+        self.method = method
+        self.tol = tol
+        self.maxiter = max_iter
+        self.options = copy.deepcopy(options) if options else {}
+        self.derivative_method = derivative_method
+        self.derivative_rel_step = derivative_rel_step
+        self.callback_func = callback_func
+
+        # Define the maximun number of iterations
+        if method == "slsqp":
+            self.options['maxiter'] = self.maxiter
+        elif method == "trust-constr":
+            self.options["maxiter"] = self.maxiter
+        else:
+            raise ValueError(f"Invalid solver. Available options: {', '.join(SOLVER_OPTIONS)}")
+
 
         # Check for logger validity
         if self.logger is not None:
@@ -114,6 +147,8 @@ class OptimizationSolver:
         self.func_count_tot = 0
         self.solution = None
         self.solution_report = []
+        self.elapsed_time = None
+        self.include_solution_in_footer = False
         self.convergence_history = {
             "grad_count": [],
             "func_count": [],
@@ -166,7 +201,7 @@ class OptimizationSolver:
         # Initialize problem bounds
         self.bounds = self.problem.get_bounds()
 
-    def solve(self, x0=None, method="slsqp", tol=1e-9, options=None):
+    def solve(self, x0=None):
         """
         Solve the optimization problem using scipy's minimize.
 
@@ -200,6 +235,9 @@ class OptimizationSolver:
         methods to determine which one is more suitable for a particular problem.
         """
 
+        # Start timing with high-resolution timer
+        start_time = time.perf_counter()
+
         # Print report header
         self._write_header()
 
@@ -211,11 +249,17 @@ class OptimizationSolver:
             jac=self.f_jac,
             constraints=self.constraints,
             bounds=self.bounds,
-            method=method,
-            tol=tol,
-            options=options,
+            method=self.method,
+            tol=self.tol,
+            options=self.options,
             # hess=lambda x: np.zeros((self.x0.size,)),  # TODO: Is it necessary?
         )
+
+        # Evaluate performance again for the converged solution
+        self.get_values(self.solution.x)
+
+        # Calculate elapsed time
+        self.elapsed_time =time.perf_counter() - start_time  
 
         # Print report footer
         self._print_convergence_progress(self.solution.x)
@@ -356,7 +400,7 @@ class OptimizationSolver:
             )
             eps = 1e-4 * np.abs(x)
             jac = approx_derivative(
-                fun_constr, x, method="2-point", f0=fun_constr_0, abs_step = eps
+                fun_constr, x, method="2-point", f0=fun_constr_0, abs_step=eps
             )
             jac = np.atleast_2d(jac)  # Reshape for unconstrained problems
 
@@ -478,38 +522,11 @@ class OptimizationSolver:
         # Refresh the plot with current values
         if self.plot:
             self._plot_callback()
-        
-        # # Print design variables with bounds
-        # print("\n")
-        # print("Design variables:")
-        # lb = [bound[0] for bound in self.bounds]
-        # ub = [bound[1] for bound in self.bounds]
-        # # keys_design_variables = ["w_s"]+["d_s","r_ht_in", "r_ht_out"]*2
-        # keys_design_variables = ["w_s"]+["d_s"]
 
-        # keys_independant_variables = ["v_in"] + ["v_throat","v_out", "s_throat", "s_out", "beta_out"]*2 + ["v*_in", "v*_out", "s*_out"]*2
-        # keys_all = keys_design_variables + keys_independant_variables
-        # for key, lower, value, upper in zip(keys_all, lb, x, ub):
-        #         bounds_satisfied = (lower <= value) and (value <= upper)
-        #         bounds_active = (np.abs(lower - value) < 1e-3) or (np.abs(upper - value) < 1e-3)
-        #         print(f"{key:10}:"
-        #               f"[{lower:>8.4f}   {value:>8.4f}   {upper:>8.4f}]"
-        #               f"\tBounds satisfied: {bounds_satisfied}"
-        #               f"\tBounds reached: {bounds_active}")
-                
-        # keys_residuals = ["L*_stator", "m*_stator", "Y*_stator", "Y_stator", "Y_stator", "Beta_stator", "m_stator", "m_stator",
-        #                   "L*_rotor", "m*_rotor", "Y*_rotor", "Y_rotor", "Y_rotor", "Beta_rotor", "m_rotor", "m_rotor", "dp",
-        #                     "m", "d_s"]
-        
-        # # Print residuals 
-        # print("\n")
-        # print("Error of equations:")
-        # # print(len(violation_all))
-        # # print(len(keys_residuals))
-        # for i in range(len(violation_all)):
-        #     print(f"{keys_residuals[i]:<22}: {violation_all[i]:+02f}")
-        
-            
+        if self.callback_func:
+            self.callback_func()
+
+
     def _write_footer(self):
         """
         Print a formatted footer for the optimization report.
@@ -526,20 +543,15 @@ class OptimizationSolver:
         separator = "-" * len(self.header)
         exit_message = f"Exit message: {self.solution.message}"
         success_status = f"Sucess: {self.solution.success}"
+        time_message = f"Solution time: {self.elapsed_time:.3f} seconds"
         solution_header = "Solution:"
         solution_objective = f"   f  = {self.solution.fun:+6e}"
         solution_vars = [f"   x{i} = {x:+6e}" for i, x in enumerate(self.solution.x)]
-        lines_to_output = (
-            [
-                separator,
-                exit_message,
-                success_status,
-                solution_header,
-                solution_objective,
-            ]
-            + solution_vars
-            + [separator]
-        )
+        lines_to_output = [separator, success_status, exit_message, time_message]
+        if self.include_solution_in_footer:
+            lines_to_output += [solution_header]
+            lines_to_output += solution_vars
+        lines_to_output += [separator, ""]
 
         # Display to stdout
         if self.display:
