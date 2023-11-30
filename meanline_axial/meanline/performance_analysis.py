@@ -29,6 +29,25 @@ SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 #INITIAL_GUESSES = [{"enthalpy_loss_fractions" : [0.5, 0.5], "eta_ts" : 0.8, "eta_tt" : 0.9, "Ma_crit" : 1},
 #                    {"enthalpy_loss_fractions" : [0.3, 0.7], "eta_ts" : 0.7, "eta_tt" : 0.8, "Ma_crit" : 1}]
 
+def get_heuristic_guess_input(n):
+    
+   eta_ts_vec = [0.8, 0.7, 0.6]
+    
+   array = util.fill_array_with_increment(n)
+   enthalpy_distributions = []
+   enthalpy_distributions.append(np.ones(n)*1/n)
+   enthalpy_distributions.append(array)    
+   enthalpy_distributions.append(np.flip(array))
+    
+   initial_guesses  = []
+   for eta_ts in eta_ts_vec:
+       for enthalpy_distribution in enthalpy_distributions:            
+           initial_guesses.append({"enthalpy_loss_fractions" : enthalpy_distribution,
+                                    "eta_ts" : eta_ts,
+                                    "eta_tt" : eta_ts+0.1,
+                                    "Ma_crit" : 0.95})
+           
+   return initial_guesses   
 
 def compute_performance(
     operation_points,
@@ -280,79 +299,79 @@ def compute_single_operation_point(
     # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
     # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
-    initial_guess = problem.get_initial_guess(initial_guess)
+    # initial_guess = problem.get_initial_guess(initial_guess)
     solver_options = copy.deepcopy(config["solver_options"])
-    
-    # initial_guesses = [initial_guess] + INITIAL_GUESSES
-    # methods_to_try = [solver_options["method"]] + [method for method in SOLVERS_AVAILABLE if method != solver_options["method"]]
 
-    # for method in methods_to_try:
-    #     for initial_guess in initial_guesses:
-    #         success = False
-    #         initial_guess = problem.get_initial_guess(initial_guess)
-    #         print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
-    #         solver = initialize_solver(problem, problem.x0, solver_options)
+    initial_guesses = [initial_guess] + get_heuristic_guess_input(problem.geometry["number_of_cascades"])
+    methods_to_try = [solver_options["method"]] + [method for method in SOLVERS_AVAILABLE if method != solver_options["method"]]
+
+    for initial_guess in initial_guesses:
+        for method in methods_to_try:
+            success = False
+            x0 = problem.get_initial_guess(initial_guess)
+            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
+            solver = initialize_solver(problem, problem.x0, solver_options)
     
-    #         try: 
-    #             solution = solver.solve()
-    #             success = solution.success
+            try: 
+                solution = solver.solve()
+                success = solution.success
                 
-    #         except Exception as e:
-    #             print(f" Error during solving: {e}")
-    #             success = False
+            except Exception as e:
+                print(f" Error during solving: {e}")
+                success = False
                     
-    #         if success:
-    #             break
-    #     if success:
-    #         break
+            if success:
+                break
+        if success:
+            break
     
-
+    
     # Attempt solving with the specified method
-    name = SOLVER_MAP[solver_options["method"]]
-    print(f" Trying to solve the problem using {name} method")
-    solver = initialize_solver(problem, problem.x0, solver_options)
-    try:
-        solution = solver.solve()
-        success = solution.success
-    except Exception as e:
-        print(f" Error during solving: {e}")
-        success = False
-    if not success:
-        print(f" Solution failed for the {name} method")
-
-    # Attempt solving with Lavenberg-Marquardt method
-    if solver_options["method"] != "lm" and not success:
-        solver_options["method"] = "lm"
-        name = SOLVER_MAP[solver_options["method"]]
-        print(f" Trying to solve the problem using {name} method")
-        solver = initialize_solver(problem, problem.x0, solver_options)
-        try:
-            solution = solver.solve()
-            success = solution.success
-        except Exception as e:
-            print(f" Error during solving: {e}")
-            success = False
-        if not success:
-            print(f" Solution failed for the {name} method")
-
-    # TODO: Attempt solving with optimization algorithms?
-
-    # Attempt solving with a heuristic initial guess
-    # TODO: To be improved with random generation of initial guess within ranges
-    if isinstance(initial_guess, np.ndarray) and not success:
-        solver_options["method"] = "lm"
-        name = SOLVER_MAP[solver_options["method"]]
-        print(f" Trying to solve the problem with a new initial guess")
-        print(f" Using robust solver: {name}")
-        initial_guess = problem.get_initial_guess(None)
-        solver = initialize_solver(problem, problem.x0, solver_options)
-        try:
-            solution = solver.solve()
-            success = solution.success
-        except Exception as e:
-            print(f" Error during solving: {e}")
-            success = False
-
+    # name = SOLVER_MAP[solver_options["method"]]
+    # print(f" Trying to solve the problem using {name} method")
+    # solver = initialize_solver(problem, problem.x0, solver_options)
+    # try:
+    #     solution = solver.solve()
+    #     success = solution.success
+    # except Exception as e:
+    #     print(f" Error during solving: {e}")
+    #     success = False
+    # if not success:
+    #     print(f" Solution failed for the {name} method")
+      
+    # # Attempt solving with Lavenberg-Marquardt method
+    # if solver_options["method"] != "lm" and not success:
+    #     solver_options["method"] = "lm"
+    #     name = SOLVER_MAP[solver_options["method"]]
+    #     print(f" Trying to solve the problem using {name} method")
+    #     solver = initialize_solver(problem, problem.x0, solver_options)
+    #     try:
+    #         solution = solver.solve()
+    #         success = solution.success
+    #     except Exception as e:
+    #         print(f" Error during solving: {e}")
+    #         success = False
+    #     if not success:
+    #         print(f" Solution failed for the {name} method")
+      
+    # # TODO: Attempt solving with optimization algorithms?
+      
+    # # Attempt solving with a heuristic initial guess
+    # # TODO: To be improved with random generation of initial guess within ranges
+    # if isinstance(initial_guess, np.ndarray) and not success:
+    #     solver_options["method"] = "lm"
+    #     name = SOLVER_MAP[solver_options["method"]]
+    #     print(f" Trying to solve the problem with a new initial guess")
+    #     print(f" Using robust solver: {name}")
+    #     initial_guess = problem.get_initial_guess(None)
+    #     solver = initialize_solver(problem, problem.x0, solver_options)
+    #     try:
+    #         solution = solver.solve()
+    #         success = solution.success
+    #     except Exception as e:
+    #         print(f" Error during solving: {e}")
+    #         success = False
+      
         # Attempt solving using different initial guesses
         # TODO: To be improved with random generation of initial guess within ranges
         # TODO: use sampling techniques like latin hypercube/ montecarlo sampling (fancy word for random sampling) / orthogonal sampling
@@ -380,10 +399,10 @@ def compute_single_operation_point(
         #         if not success:
         #             print(f" Solution failed for method '{solver_options['method']}'")
 
-        if not success:
-            print(" WARNING: All attempts failed to converge")
-            solution = False
-            # TODO: Add messages to Log file
+    if not success:
+        print(" WARNING: All attempts failed to converge")
+        solution = False
+        # TODO: Add messages to Log file
 
     return solver, problem.results
 
@@ -943,6 +962,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         else:
             raise ValueError("Initial guess must be either None or a dictionary.")
 
+
         # Always normalize initial guess
         initial_guess_scaled = self.scale_values(initial_guess)
 
@@ -1020,6 +1040,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             theta_in = geometry_cascade["metal_angle_le"]
             theta_out = geometry_cascade["metal_angle_te"]
             A_out = geometry_cascade["A_out"]
+            A_throat = geometry_cascade["A_throat"]
             A_in = geometry_cascade["A_in"]
             radius_mean_in = geometry_cascade["radius_mean_in"]
             radius_mean_throat = geometry_cascade["radius_mean_throat"]
@@ -1086,11 +1107,12 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 cp.HmassSmass_INPUTS, h_throat_crit, s_throat
             )
             rho_throat_crit = static_state_throat_crit["d"]
-            m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_out
-            v_m_in_crit = m_crit / rho_in / A_in
-            v_in_crit = v_m_in_crit / math.cosd(
-                theta_in
-            )  # XXX Works better with metal angle than inlet flow angle?
+            m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_throat
+            w_m_in_crit = m_crit / rho_in / A_in
+            w_in_crit = w_m_in_crit / math.cosd(theta_in)  # XXX Works better with metal angle than inlet flow angle?
+            velocity_triangle_crit_in = flow.evaluate_velocity_triangle_out(
+                blade_speed_in, w_in_crit, theta_in)
+            v_in_crit = velocity_triangle_crit_in["v"]
             
             rho_out_crit = rho_throat_crit
             w_out_crit = m_crit/(rho_out_crit*A_out*math.cosd(theta_out))
