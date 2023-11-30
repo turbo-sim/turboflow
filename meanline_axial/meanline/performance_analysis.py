@@ -26,6 +26,9 @@ SOLVERS_AVAILABLE = [
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
+#INITIAL_GUESSES = [{"enthalpy_loss_fractions" : [0.5, 0.5], "eta_ts" : 0.8, "eta_tt" : 0.9, "Ma_crit" : 1},
+#                    {"enthalpy_loss_fractions" : [0.3, 0.7], "eta_ts" : 0.7, "eta_tt" : 0.8, "Ma_crit" : 1}]
+
 
 def compute_performance(
     operation_points,
@@ -279,6 +282,30 @@ def compute_single_operation_point(
     problem.update_boundary_conditions(operating_point)
     initial_guess = problem.get_initial_guess(initial_guess)
     solver_options = copy.deepcopy(config["solver_options"])
+    
+    # initial_guesses = [initial_guess] + INITIAL_GUESSES
+    # methods_to_try = [solver_options["method"]] + [method for method in SOLVERS_AVAILABLE if method != solver_options["method"]]
+
+    # for method in methods_to_try:
+    #     for initial_guess in initial_guesses:
+    #         success = False
+    #         initial_guess = problem.get_initial_guess(initial_guess)
+    #         print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
+    #         solver = initialize_solver(problem, problem.x0, solver_options)
+    
+    #         try: 
+    #             solution = solver.solve()
+    #             success = solution.success
+                
+    #         except Exception as e:
+    #             print(f" Error during solving: {e}")
+    #             success = False
+                    
+    #         if success:
+    #             break
+    #     if success:
+    #         break
+    
 
     # Attempt solving with the specified method
     name = SOLVER_MAP[solver_options["method"]]
@@ -775,7 +802,6 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         return scaled_variables
 
     def get_initial_guess(self, initial_guess=None):
-        # TODO It's logical that the problem object has all the methods related to initial guess generation for the specific problem
 
         number_of_cascades = self.geometry["number_of_cascades"]
 
@@ -790,6 +816,8 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 "s_out",
                 "beta_out",
                 "v*_in",
+                "w*_throat",
+                "s*_throat",
                 "w*_out",
                 "s*_out",
             ]
@@ -812,7 +840,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             check.append(
                 util.check_lists_match(valid_keys_3, list(initial_guess.keys()))
             )
-
+            
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
                 eta_tt = initial_guess["eta_tt"]
@@ -1052,17 +1080,20 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 s_throat = static_state_throat["s"]
 
             # Calculate critical state
-            w_out_crit = a_out * Ma_crit
-            h_out_crit = h0_in - 0.5 * w_out_crit**2
-            static_state_out_crit = fluid.get_props(
-                cp.HmassSmass_INPUTS, h_out_crit, s_out
+            w_throat_crit = a_out * Ma_crit
+            h_throat_crit = h0_rel_in - 0.5 * w_throat_crit**2 # FIXME: h0_rel_in works less good?
+            static_state_throat_crit = fluid.get_props(
+                cp.HmassSmass_INPUTS, h_throat_crit, s_throat
             )
-            rho_out_crit = static_state_out_crit["d"]
-            m_crit = w_out_crit * math.cosd(theta_out) * rho_out_crit * A_out
+            rho_throat_crit = static_state_throat_crit["d"]
+            m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_out
             v_m_in_crit = m_crit / rho_in / A_in
             v_in_crit = v_m_in_crit / math.cosd(
                 theta_in
             )  # XXX Works better with metal angle than inlet flow angle?
+            
+            rho_out_crit = rho_throat_crit
+            w_out_crit = m_crit/(rho_out_crit*A_out*math.cosd(theta_out))
 
             # Store initial guess
             index = f"_{i+1}"
@@ -1074,7 +1105,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                     "s_out" + index: s_out,
                     "beta_out" + index: theta_out,
                     "v*_in" + index: v_in_crit,
-                    "w*_out" + index: a_out * Ma_crit,
+                    "w*_throat" + index: w_throat_crit,
+                    "s*_throat" + index: s_throat,
+                    "w*_out" + index: w_out_crit,
                     "s*_out" + index: s_out,
                 }
             )

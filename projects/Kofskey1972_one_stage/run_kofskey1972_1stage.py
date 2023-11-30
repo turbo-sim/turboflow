@@ -28,9 +28,24 @@ if CASE == 1:
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
 
+    # print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    # print(solvers[0].problem.results["overall"]["PR_ts"])
+    # print(solvers[0].problem.results["stage"]["reaction"])
+    print(solvers[0].problem.results["plane"]["beta"][3:])
+    print(solvers[0].problem.results["plane"]["s"][3:])    
+    print(solvers[0].problem.results["plane"]["h0"][3:])
+    print(solvers[0].problem.results["plane"]["d"][3:]) 
+    print(solvers[0].problem.results["plane"]["v"][3:])
+    print(solvers[0].problem.results["plane"]["h"][3:])    
+    print(solvers[0].problem.results["plane"]["w"][3:])
+    print(solvers[0].problem.results["plane"]["h0_rel"][3:])   
+    print(solvers[0].problem.results["plane"]["w_m"][3:])   
+    print(solvers[0].problem.results["plane"]["Ma_rel"][3:])   
+    print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
+    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    print(solvers[0].problem.results["overall"]["PR_ts"])
-    print(solvers[0].problem.results["stage"]["reaction"])
+    print(solvers[0].problem.results["cascade"]["mass_flow_crit"])
+                        
     # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
@@ -59,13 +74,6 @@ elif CASE == 3:
 
     # Compute performance at experimental operating points   
     ml.compute_performance(operation_points, config)
-
-
-
-
-
-
-
 
 # Show plots
 # plt.show()
