@@ -120,7 +120,7 @@ def create_blended_function(f1, f2, x0, alpha=10):
 
 # Define case parameters
 fluid_name = "air"
-Fluid = ml.FluidCoolProp_2Phase(fluid_name, "HEOS")
+Fluid = ml.Fluid(fluid_name, "HEOS")
 radius_curvature = np.inf
 pitch = 1.00
 opening = 0.5
