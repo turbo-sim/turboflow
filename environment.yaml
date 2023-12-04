@@ -28,4 +28,5 @@ dependencies:
     - pytest
     - sphinxawesome-theme
     - sphinx-design
+    - imageio
 
