@@ -11,7 +11,8 @@ from scipy.optimize._numdiff import approx_derivative
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-SOLVER_OPTIONS = ['hybr', 'lm']
+SOLVER_OPTIONS = ["hybr", "lm"]
+
 
 class NonlinearSystemSolver:
     r"""
@@ -66,9 +67,9 @@ class NonlinearSystemSolver:
     -------
     solve(x0=None)
         Solve the system of nonlinear equations.
-    get_values(x)
+    get_residual_values(x)
         Evaluate the given nonlinear system problem.
-    get_jacobian(x)
+    get_residual_jacobian(x)
         Evaluate the Jacobian of the system.
     print_convergence_history()
         Print the convergence history of the problem.
@@ -93,7 +94,6 @@ class NonlinearSystemSolver:
         update_on="function",
         callback_func=None,
     ):
-        
         # Initialize class variables
         self.problem = problem
         self.display = display
@@ -106,14 +106,17 @@ class NonlinearSystemSolver:
         self.derivative_method = derivative_method
         self.derivative_rel_step = derivative_rel_step
         self.callback_func = callback_func
+        self.callback_func_call_count = 0
 
         # Define the maximun number of iterations
         if method == "hybr":
-            self.options['maxfev'] = self.maxiter
+            self.options["maxfev"] = self.maxiter
         elif method == "lm":
             self.options["maxiter"] = self.maxiter
         else:
-            raise ValueError(f"Invalid solver. Available options: {', '.join(SOLVER_OPTIONS)}")
+            raise ValueError(
+                f"Invalid solver. Available options: {', '.join(SOLVER_OPTIONS)}"
+            )
 
         # Check for logger validity
         if self.logger is not None:
@@ -131,7 +134,7 @@ class NonlinearSystemSolver:
 
         # Initialize problem
         self.x0 = x0
-        eval = self.problem.get_values(self.x0)
+        eval = self.problem.get_residual_values(self.x0)
         if np.any([item is None for item in eval]):
             raise ValueError(
                 "Problem evaluation contains None values. There may be an issue with the problem object provided."
@@ -185,26 +188,26 @@ class NonlinearSystemSolver:
         # Solve the root finding problem
         self.x0 = self.x0 if x0 is None else x0
         self.solution = root(
-            self.get_values,
+            self.get_residual_values,
             self.x0,
-            jac=self.get_jacobian,
+            jac=self.get_residual_jacobian,
             method=self.method,
             tol=self.tol,
             options=self.options,
         )
 
         # Evaluate performance again for the converged solution
-        self.get_values(self.solution.x)
+        self.get_residual_values(self.solution.x)
 
         # Calculate elapsed time
-        self.elapsed_time =time.perf_counter() - start_time  
+        self.elapsed_time = time.perf_counter() - start_time
 
         # Print report footer
         self._write_footer()
 
         return self.solution
 
-    def get_values(self, x, called_from_jac=False):
+    def get_residual_values(self, x, called_from_jac=False):
         """
         Evaluate the nonlinear system residuals.
 
@@ -223,7 +226,7 @@ class NonlinearSystemSolver:
         self.func_count_tot += 1
 
         # Compute problem residuals
-        self.last_residuals = self.problem.get_values(x)
+        self.last_residuals = self.problem.get_residual_values(x)
 
         # Update progress report
         if not called_from_jac:
@@ -233,12 +236,12 @@ class NonlinearSystemSolver:
 
         return self.last_residuals
 
-    def get_jacobian(self, x):
+    def get_residual_jacobian(self, x):
         """
         Evaluates the Jacobian of the nonlinear system of equations at the specified point x.
 
-        This method will use the `get_jacobian` method of the NonlinearSystemProblem class if it exists.
-        If the `get_jacobian` method is not implemented the Jacobian is appoximated using forward finite differences.
+        This method will use the `get_residual_jacobian` method of the NonlinearSystemProblem class if it exists.
+        If the `get_residual_jacobian` method is not implemented the Jacobian is appoximated using forward finite differences.
 
         Parameters
         ----------
@@ -253,13 +256,13 @@ class NonlinearSystemSolver:
 
         # Evaluate the Jacobian of the residual vector
         self.grad_count += 1
-        if hasattr(self.problem, "get_jacobian"):
+        if hasattr(self.problem, "get_residual_jacobian"):
             # If the problem has its own Jacobian method, use it
-            jacobian = self.problem.get_jacobian(x)
+            jacobian = self.problem.get_residual_jacobian(x)
 
         else:
             # Fall back to finite differences
-            fun = lambda x: self.get_values(x, called_from_jac=True)
+            fun = lambda x: self.get_residual_values(x, called_from_jac=True)
             jacobian = approx_derivative(
                 fun,
                 x,
@@ -366,8 +369,10 @@ class NonlinearSystemSolver:
         if self.plot:
             self._plot_callback()
 
+        # Evaluate callback function
         if self.callback_func:
-            self.callback_func()
+            self.callback_func_call_count += 1
+            self.callback_func(x, self.callback_func_call_count)
 
     def _write_footer(self):
         """
@@ -448,7 +453,9 @@ class NonlinearSystemSolver:
         plt.draw()
         plt.pause(0.01)  # small pause to allow for update
 
-    def print_convergence_history(self, savefile=False, filename=None, output_dir="output"):
+    def print_convergence_history(
+        self, savefile=False, filename=None, output_dir="output"
+    ):
         """
         Print the convergence history of the problem.
 
@@ -467,9 +474,7 @@ class NonlinearSystemSolver:
 
         """
         if self.solution:
-
             if savefile:
-
                 # Create figures directory if it does not exist
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
@@ -477,7 +482,9 @@ class NonlinearSystemSolver:
                 # Give a name to the file if it is not specified
                 if filename is None:
                     current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                    filename = os.path.join(output_dir, f"convergence_history_{current_time}.txt")
+                    filename = os.path.join(
+                        output_dir, f"convergence_history_{current_time}.txt"
+                    )
                 else:
                     filename = os.path.join(output_dir, f"{filename}.txt")
 
@@ -488,7 +495,6 @@ class NonlinearSystemSolver:
             else:
                 for line in self.solution_report:
                     print(line)
-
 
         else:
             warnings.warn(
@@ -542,13 +548,13 @@ class NonlinearSystemProblem(ABC):
 
     Derived root-finding problem objects must implement the following method:
 
-    - `get_values`: Evaluate the system of equations for a given set of decision variables.
+    - `get_residual_values`: Evaluate the system of equations for a given set of decision variables.
 
-    Additionally, specific problem classes can define the `get_jacobian` method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
+    Additionally, specific problem classes can define the `get_residual_jacobian` method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
 
     Methods
     -------
-    get_values(x)
+    get_residual_values(x)
         Evaluate the system of equations for a given set of decision variables.
 
     Examples
@@ -556,13 +562,13 @@ class NonlinearSystemProblem(ABC):
     Here's an example of how to derive from `RootFindingProblem`::
 
         class MyRootFindingProblem(RootFindingProblem):
-            def get_values(self, x):
+            def get_residual_values(self, x):
                 # Implement evaluation logic here
                 pass
     """
 
     @abstractmethod
-    def get_values(self, x):
+    def get_residual_values(self, x):
         """
         Evaluate the system of equations for given decision variables.
 
