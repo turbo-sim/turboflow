@@ -1,15 +1,129 @@
 import os
 import re
 import yaml
+import time
 import logging
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numbers
 
 from datetime import datetime
+from numbers import Number
 from collections.abc import Iterable
 from cycler import cycler
+
+
+
+def is_float(element: any) -> bool:
+    """
+    Check if the given element can be converted to a float.
+
+    Parameters
+    ----------
+    element : any
+        The element to be checked.
+
+    Returns
+    -------
+    bool
+        True if the element can be converted to a float, False otherwise.
+    """
+    
+    if element is None: 
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
+
+def is_numeric(value):
+    """
+    Check if a value is a numeric type, including both Python and NumPy numeric types.
+
+    This function checks if the given value is a numeric type (int, float, complex) 
+    in the Python standard library or NumPy, while explicitly excluding boolean types.
+
+    Parameters
+    ----------
+    value : any type
+        The value to be checked for being a numeric type.
+
+    Returns
+    -------
+    bool
+        Returns True if the value is a numeric type (excluding booleans), 
+        otherwise False.
+    """
+    if isinstance(value, numbers.Number) and not isinstance(value, bool):
+        return True
+    if isinstance(value, (np.int_, np.float_, np.complex_)):
+        return True
+    if isinstance(value, np.ndarray):
+        return np.issubdtype(value.dtype, np.number) and not np.issubdtype(value.dtype, np.bool_)
+    return False
+
+
+
+def wait_for_file(file_path, timeout=None, poll_interval=0.1):
+    """
+    Wait until the specified file is created.
+
+    This function is used to wait until a Fluent transcript file is created.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the file to wait for.
+    timeout : float, optional
+        Maximum time to wait in seconds. If None, waits indefinitely.
+    poll_interval : int, optional
+        Time interval between checks in seconds.
+
+    Returns
+    -------
+    bool
+        True if the file was found, False otherwise (only if timeout is set).
+    """
+    start_time = time.time()
+    while True:
+        if os.path.exists(file_path):
+            return True
+        if timeout is not None and time.time() - start_time > timeout:
+            raise FileNotFoundError(f"Timeout waiting for file: {file_path}")
+        time.sleep(poll_interval)
+
+
+def savefig_in_formats(fig, path_without_extension, formats=['.png', '.svg', '.pdf']):
+    """
+    Save a given matplotlib figure in multiple file formats.
+
+    Parameters
+    ----------
+    fig : matplotlib.figure.Figure
+        The figure object to be saved.
+    path_without_extension : str
+        The full path to save the figure excluding the file extension.
+    formats : list of str, optional
+        A list of string file extensions to specify which formats the figure should be saved in. 
+        Default is ['.png', '.svg', '.pdf'].
+
+    Examples
+    --------
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots()
+    >>> ax.plot([0, 1], [0, 1])
+    >>> save_fig_in_formats(fig, "/path/to/figure/filename")
+
+    This will save the figure as "filename.png", "filename.svg", and "filename.pdf" in the "/path/to/figure/" directory.
+    """
+    for ext in formats:
+        fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
+
+
+
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):
@@ -129,6 +243,53 @@ def convert_numpy_to_python(data, precision=10):
 
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
+
+
+def compare_contents_or_files(file_or_content_1, file_or_content_2):
+    """
+    Compare the content of two inputs, which can be either file paths or strings.
+
+    This function accepts two arguments. Each argument can be:
+    1. A file path pointing to a file containing text content.
+    2. A string containing text content directly.
+
+    If the argument is a file path that exists, the function reads its content.
+    If the argument is a string, it's directly used for comparison.
+
+    Parameters
+    ----------
+    file_or_content1 : str
+        First input which can be a file path or string content.
+    file_or_content2 : str
+        Second input which can be a file path or string content.
+
+    Returns
+    -------
+    bool
+        True if the contents of the two inputs are identical, False otherwise.
+
+    Examples
+    --------
+    >>> content_same("path/to/file1.txt", "path/to/file2.txt")
+    True
+    >>> content_same("Hello, world!", "path/to/file_with_hello_world_content.txt")
+    True
+    >>> content_same("Hello, world!", "Goodbye, world!")
+    False
+    """
+    # If the first argument is a filepath and it exists, read its content
+    if os.path.exists(file_or_content_1):
+        with open(file_or_content_1, "r") as f1:
+            file_or_content_1 = f1.read()
+
+    # If the second argument is a filepath and it exists, read its content
+    if os.path.exists(file_or_content_2):
+        with open(file_or_content_2, "r") as f2:
+            file_or_content_2 = f2.read()
+
+    return file_or_content_1 == file_or_content_2
+
+
 
 
 def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -361,6 +522,31 @@ def create_logger(name, path=None, use_datetime=True):
     return logger
 
 
+
+COLORS_PYTHON = [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+]
+
+COLORS_MATLAB = [
+    "#0072BD",
+    "#D95319",
+    "#EDB120",
+    "#7E2F8E",
+    "#77AC30",
+    "#4DBEEE",
+    "#A2142F",
+]
+
+
 def set_plot_options(
     fontsize=13,
     grid=True,
@@ -369,55 +555,14 @@ def set_plot_options(
     margin=0.05,
     color_order="matlab",
 ):
-    """
-    Set plot options for creating publication-quality figures using Matplotlib.
-
-    Parameters
-    ----------
-    fontsize : int, optional
-        Font size for text elements in the plot. Default is 13.
-    grid : bool, optional
-        Whether to show grid lines on the plot. Default is True.
-    major_ticks : bool, optional
-        Whether to show major ticks. Default is True.
-    minor_ticks : bool, optional
-        Whether to show minor ticks. Default is True.
-    margin : float, optional
-        Margin size for axes. Default is 0.05.
-    color_order : str, optional
-        Color order to be used for plot lines. Options include "python" and "matlab". Default is "matlab".
-
-    Notes
-    -----
-    This function updates the internal Matplotlib settings to better align with standards for publication-quality figures.
-    Features include improved font selections, tick marks, grid appearance, and color selections.
-    """
+    """Set plot options for publication-quality figures"""
 
     if isinstance(color_order, str):
-        if color_order.lower() == "python":
-            color_order = [
-                "#1f77b4",
-                "#ff7f0e",
-                "#2ca02c",
-                "#d62728",
-                "#9467bd",
-                "#8c564b",
-                "#e377c2",
-                "#7f7f7f",
-                "#bcbd22",
-                "#17becf",
-            ]
+        if color_order.lower() == "default":
+            color_order = COLORS_PYTHON
 
         elif color_order.lower() == "matlab":
-            color_order = [
-                "#0072BD",
-                "#D95319",
-                "#EDB120",
-                "#7E2F8E",
-                "#77AC30",
-                "#4DBEEE",
-                "#A2142F",
-            ]
+            color_order = COLORS_MATLAB
 
     # Define dictionary of custom settings
     rcParams = {
@@ -437,7 +582,7 @@ def set_plot_options(
         "axes.labelpad": fontsize,
         "axes.xmargin": margin,
         "axes.ymargin": margin,
-        # "axes.zmargin": margin,
+        "axes.zmargin": margin,
         "axes.grid": grid,
         "axes.grid.axis": "both",
         "axes.grid.which": "major",
@@ -482,12 +627,11 @@ def set_plot_options(
         "ytick.minor.size": 3,
         "ytick.minor.width": 0.75,
         "ytick.minor.visible": minor_ticks,
-        "savefig.dpi": 500,
+        "savefig.dpi": 600,
     }
 
     # Update the internal Matplotlib settings dictionary
     mpl.rcParams.update(rcParams)
-
 
 def print_installed_fonts():
     """
@@ -771,3 +915,243 @@ def isclose_significant_digits(a, b, significant_digits):
     """
     format_spec = f".{significant_digits - 1}e"
     return format(a, format_spec) == format(b, format_spec)
+
+
+
+
+
+def render_and_evaluate(expression, data):
+    """
+    Render variables prefixed with '$' in an expression and evaluate the resulting expression.
+
+    This function processes an input string `expr`, identifying all occurrences of variables
+    indicated by a leading '$' symbol. Each such variable is resolved to its value from the
+    provided `context` dictionary. The expression with all variables resolved is then evaluated
+    and the result is returned.
+
+    This function is useful to render strings defined in a YAML configuration file to values 
+    that are calculated within the code and stored in a dicitonary.
+
+    Parameters
+    ----------
+    expr : str
+        The expression string containing variables to be rendered. Variables in the
+        expression are expected to be prefixed with a '$' symbol.
+    data : dict
+        A dictionary containing variables and their corresponding values. These variables
+        are used to render values in the expression.
+
+    Returns
+    -------
+    The result of evaluating the rendered expression. The type of the result depends on the
+    expression.
+
+    Notes
+    -----
+    - `pattern`: A regular expression pattern used to identify variables within the expression.
+      Variables are expected to be in the format `$variableName`, potentially with dot-separated
+      sub-properties (e.g., `$variable.property`).
+
+    - `replace_with_value`: An inner function that takes a regex match object and returns
+      the value of the variable from `context`. `match.group(1)` returns the first captured
+      group from the matched text, which in this case is the variable name excluding the
+      leading '$' symbol. For example, in `$variableName`, `match.group(1)` would return
+      `variableName`.
+
+    - The function uses Python's `eval` for evaluation, which should be used cautiously as
+      it can execute arbitrary code. Ensure that the context and expressions are from a trusted
+      source.
+    """
+    # Pattern to find $variable expressions
+    pattern = re.compile(r"\$(\w+(\.\w+)*)")
+
+   # Function to replace each match with its resolved value
+    def replace_with_value(match):
+        nested_key = match.group(1)
+        try:
+            return str(render_nested_value(nested_key, data))
+        except KeyError:
+            raise KeyError(f"Variable '{nested_key}' not found in the provided data context.")
+        
+    try:
+        # Replace all $variable with their actual values
+        resolved_expr = pattern.sub(replace_with_value, expression)
+
+        # Check if any unresolved variables remain
+        if '$' in resolved_expr:
+            raise ValueError(f"Unresolved variable in expression: '{resolved_expr}'")
+
+        # Now evaluate the expression
+        return eval(resolved_expr, data)
+    except SyntaxError:
+        raise SyntaxError(f"Syntax error in expression: '{expression}'")
+    except Exception as e:
+        raise TypeError(f"Error evaluating expression '{expression}': {e}")
+
+
+
+def render_nested_value(nested_key, data):
+    """
+    Retrieves a value from a nested structure (dictionaries or objects with attributes) using a dot-separated key.
+
+    This function is designed to navigate through a combination of dictionaries and objects. For an object to be
+    compatible with this function, it must implement a `keys()` method that returns its attribute names.
+
+    This function is intended as a subroutine of the more genera ``render_expression``
+
+    Parameters
+    ----------
+    nested_key : str
+        A dot-separated key string that specifies the path in the structure.
+        For example, 'level1.level2.key' will retrieve data['level1']['level2']['key'] if data is a dictionary,
+        or data.level1.level2.key if data is an object or a combination of dictionaries and objects.
+
+    data : dict or object
+        The starting dictionary or object from which to retrieve the value. This can be a nested structure
+        of dictionaries and objects.
+
+    Returns
+    -------
+    value
+        The value retrieved from the nested structure using the specified key. 
+        The type of the value depends on what is stored at the specified key in the structure.
+
+    Raises
+    ------
+    KeyError
+        If the specified nested key is not found in the data structure. The error message includes the part
+        of the path that was successfully traversed and the available keys or attributes at the last valid level.
+    """
+    keys = nested_key.split('.')
+    value = data
+    traversed_path = []
+
+    for key in keys:
+        if isinstance(value, dict):
+            # Handle dictionary-like objects
+            if key in value:
+                traversed_path.append(key)
+                value = value[key]
+            else:
+                valid_keys = ', '.join(value.keys())
+                traversed_path_str = '.'.join(traversed_path) if traversed_path else 'root'
+                raise KeyError(f"Nested key '{key}' not found at '{traversed_path_str}'. Available keys: {valid_keys}")
+        elif hasattr(value, key):
+            # Handle objects with attributes
+            traversed_path.append(key)
+            value = getattr(value, key)
+        else:
+            traversed_path_str = '.'.join(traversed_path)
+            available_keys = ', '.join(value.keys())
+            raise KeyError(f"Key '{key}' not found in object at '{traversed_path_str}'. Available keys: {available_keys}")
+
+    if not is_numeric(value):
+        raise ValueError(f"The key '{nested_key}' is not numeric. Key value is: {value}")
+
+    return value
+
+
+def evaluate_constraints(data, constraints):
+    """
+    Evaluates the constraints based on the provided data and constraint definitions.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing performance data against which the constraints will be evaluated.
+    constraints : list of dicts
+        A list of constraint definitions, where each constraint is defined as a dictionary.
+        Each dictionary must have 'variable' (str), 'type' (str, one of '=', '>', '<'), and 'value' (numeric).
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        Returns two numpy arrays: the first is an array of equality constraints, and the second is an array of 
+        inequality constraints. These arrays are flattened and concatenated from the evaluated constraint values.
+
+    Raises
+    ------
+    ValueError
+        If an unknown constraint type is specified in the constraints list.
+    """
+    # Initialize constraint lists
+    c_eq = []    # Equality constraints
+    c_ineq = []  # Inequality constraints
+
+    # Loop over all constraint from configuration file
+    for constraint in constraints:
+        name = constraint['variable']
+        type = constraint['type']
+        target = constraint['value']
+        normalize = constraint.get("normalize", False)
+
+        # Get the performance value for the given variable name
+        current = render_nested_value(name, data)
+
+        # Evaluate constraint
+        mismatch = current - target
+
+        # Normalize constraint according to specifications
+        normalize_factor = normalize if is_numeric(normalize) else target
+        if normalize is not False:
+            if normalize_factor == 0:
+                raise ValueError(f"Cannot normalize constraint '{name} {type} {target}' because the normalization factor is '{normalize_factor}' (division by zero).")
+            mismatch /= normalize_factor
+
+        # Add constraints to lists
+        if type == '=':
+            c_eq.append(mismatch)
+        elif type == '>':
+            c_ineq.append(mismatch)
+        elif type == '<':
+            # Change sign because optimizer handles c_ineq > 0
+            c_ineq.append(-mismatch)
+        else:
+            raise ValueError(f"Unknown constraint type: {type}")
+
+    # Flatten and concatenate constraints
+    c_eq = np.hstack([np.atleast_1d(item) for item in c_eq]) if c_eq else np.array([])
+    c_ineq = np.hstack([np.atleast_1d(item) for item in c_ineq]) if c_ineq else np.array([])
+
+    return c_eq, c_ineq
+
+
+def evaluate_objective_function(data, objective_function):
+    """
+    Evaluates the objective function based on the provided data and configuration.
+
+    Parameters
+    ----------
+    data : dict
+        A dictionary containing performance data against which the objective function will be evaluated.
+    objective_function : dict
+        A dictionary defining the objective function. It must have 'variable' (str) 
+        and 'type' (str, either 'minimize' or 'maximize').
+
+    Returns
+    -------
+    float
+        The value of the objective function, adjusted for optimization. Positive for minimization and 
+        negative for maximization.
+
+    Raises
+    ------
+    ValueError
+        If an unknown objective function type is specified in the configuration.
+    """
+
+    # Get the performance value for the given variable name
+    name = objective_function['variable']
+    type = objective_function['type']
+    value = render_nested_value(name, data)
+
+    if not np.isscalar(value):
+        raise ValueError(f"The objective function '{name}' must be an scalar, but the value is: {value}")
+
+    if type == 'minimize':
+        return value
+    elif type == 'maximize':
+        return -value
+    else:
+        raise ValueError(f"Unknown objective function type: {type}")
+

@@ -664,7 +664,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         self.model_options = config["model_options"]
         self.keys = []
 
-    def get_values(self, x):
+    def get_residual_values(self, x):
         """
         Evaluate the system of equations for a given set of decision variables.
 
@@ -733,7 +733,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions = operation_point
 
         # Initialize fluid object
-        self.fluid = props.FluidCoolProp_2Phase(operation_point["fluid_name"])
+        self.fluid = props.Fluid(operation_point["fluid_name"])
 
         # Rename variables
         p0_in = operation_point["p0_in"]

@@ -5,7 +5,7 @@ from . import utilities as util
 from . import configuration_options as cfg
 
 
-def read_configuration_file(filename):
+def read_configuration_file(filename, validate=True):
     """
     Reads and validates the specified YAML configuration file.
 
@@ -30,22 +30,28 @@ def read_configuration_file(filename):
     :obj:`validate_configuration_options`
     """
 
-    # Read configuration file
-    config, info, error = _read_configuration_file(filename)
+    if validate:
+        # Read and validate configuration file
+        config, info, error = _validate_configuration_file(filename)
+        
+        # Print info messages
+        if info:
+            print(info)
 
-    # Print info messages
-    if info:
-        print(info)
+        # Raise errors from validation
+        if error:
+            raise error
+        
+    else:
+        config = _read_configuration_file(filename)          
 
-    # Raise errors from validation
-    if error:
-        raise error
 
     return config
 
 
-def _read_configuration_file(filename):
-    """Reads and validates a YAML configuration file (return multiple outputs)"""
+def _validate_configuration_file(filename):
+    """Validates configuration fictionary (returns multiple outputs)"""
+
 
     # Read configuration file
     try:
@@ -61,7 +67,25 @@ def _read_configuration_file(filename):
     config, info, error = validate_configuration_options(config, cfg.CONFIGURATION_OPTIONS)
 
     return config, info, error
-    
+
+
+
+def _read_configuration_file(filename):
+    """Reads and a YAML configuration file"""
+    # Read configuration file
+    try:
+        with open(filename, "r") as file:
+            config = yaml.safe_load(file)
+    except Exception as e:
+        raise Exception(f"Error parsing configuration file: '{filename}'. Original error: {e}")
+
+    # Convert options to Numpy when possible
+    config = convert_configuration_options(config)
+
+    return config
+
+
+
 def convert_configuration_options(config):
     """
     Processes configuration data by evaluating string expressions as numerical values and converting lists to numpy arrays.
