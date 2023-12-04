@@ -771,3 +771,31 @@ def isclose_significant_digits(a, b, significant_digits):
     """
     format_spec = f".{significant_digits - 1}e"
     return format(a, format_spec) == format(b, format_spec)
+
+def fill_array_with_increment(n):
+    
+    """
+    Fill an array of length 'n' with values that sum to 1,
+    where each value is different but has the same increment
+    between neighboring values.
+    
+    Parameters
+    ----------
+    n : int
+        Length of the array.
+    
+    Returns
+    -------
+    array : ndarray
+        Array of length 'n' filled with values incrementing
+        by a constant factor, resulting in a sum of 1.
+    """
+    
+    if n <= 0:
+        return []
+
+    increment = 1.0 / (n+1)
+    array = [increment * (i+1) for i in range(n)]
+    array /= np.sum(array)
+
+    return array
