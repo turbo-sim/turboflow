@@ -3,8 +3,6 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
 desired_path = os.path.abspath('../..')
 
 if desired_path not in sys.path:
@@ -26,7 +24,6 @@ braytonCycle.to_excel(filename="initial_configuration.xlsx")
 braytonCycle.plot_cycle_diagram_realtime(CONFIG_FILE)
 
 # Optimize the thermodynamic cycle
-print(config["solver_options"])
 solver = ml.OptimizationSolver(
     braytonCycle,
     braytonCycle.x0,

@@ -8,8 +8,10 @@ from .meanline import *
 from .plot_functions import *
 from .configuration import *
 from .configuration_options import *
-from .power_cycles import *
-from .power_cycles.thermodynamic_cycles import *
+from .cycle_optimization import *
+from .cycle_optimization.cycle_optimization import *
+
+from .graphics import *
 
 from .meanline.performance_analysis import *
 from .meanline.design_optimization import *

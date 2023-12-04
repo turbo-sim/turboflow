@@ -82,6 +82,7 @@ DmolarUmolar_INPUTS = CP.DmolarUmolar_INPUTS
 # Define dictionary with dynamically generated fields
 PHASE_INDEX = {attr: getattr(CP, attr) for attr in dir(CP) if attr.startswith("iphase")}
 INPUT_PAIRS = {attr: getattr(CP, attr) for attr in dir(CP) if attr.endswith("_INPUTS")}
+PHASE_INDEX = sorted(PHASE_INDEX.items(), key=lambda x: x[1])
 INPUT_PAIRS = sorted(INPUT_PAIRS.items(), key=lambda x: x[1])
 
 
@@ -264,8 +265,6 @@ class Fluid:
         name,
         backend="HEOS",
         exceptions=True,
-        initialize_critical=False,
-        initialize_triple=False,
     ):
         self.name = name
         self.backend = backend
@@ -282,12 +281,9 @@ class Fluid:
         self.pseudo_critical_line = None
         self.quality_grid = None
 
-        # Assign critical point properties
-        if initialize_critical:
+        # Get critical and triple point properties
+        if self._AS.fluid_param_string("pure") == "true":
             self.critical_point = self._compute_critical_point()
-
-        # Assign triple point properties
-        if initialize_triple:
             self.triple_point_liquid = self._compute_triple_point_liquid()
             self.triple_point_vapor = self._compute_triple_point_vapor()
 
@@ -313,7 +309,7 @@ class Fluid:
         return FluidState(self.properties, self.name)
 
     def get_props(self, input_type, prop_1, prop_2, generalize_quality=True):
-         return self.set_state(input_type, prop_1, prop_2, generalize_quality=False)
+         return self.set_state(input_type, prop_1, prop_2, generalize_quality=generalize_quality)
 
     def set_state(self, input_type, prop_1, prop_2, generalize_quality=True):
         """
@@ -358,6 +354,9 @@ class Fluid:
         try:
             # Update Coolprop thermodynamic state
             self._AS.update(input_type, prop_1, prop_2)
+
+            if self._AS.fluid_param_string("pure") == "false":
+                generalize_quality = False
 
             # Retrieve single-phase properties
             if self._AS.phase() != CP.iphase_twophase:

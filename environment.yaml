@@ -29,4 +29,5 @@ dependencies:
     - sphinxawesome-theme
     - sphinx-design
     - imageio
+    - imageio[ffmpeg]
 
