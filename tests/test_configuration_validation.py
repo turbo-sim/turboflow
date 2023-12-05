@@ -16,8 +16,9 @@ if desired_path not in sys.path:
     sys.path.append(desired_path)
 
 
-from meanline_axial.configuration import _read_configuration_file
-
+# from meanline_axial.configuration import _validate_configuration_file
+from meanline_axial.utilities import validate_configuration_file
+from meanline_axial.config_validation import CONFIGURATION_OPTIONS
 
 # Define run settings
 DATA_DIR = "regression_data"
@@ -47,8 +48,6 @@ def test_configuration_validation(config_file):
     # Split the strings into lines and get the difference
     str1_lines = regression_output.splitlines(keepends=True)
     str2_lines = current_output.splitlines(keepends=True)
-
-
     diff = difflib.ndiff(str1_lines, str2_lines)
 
     # Filter out lines that don't start with '-' or '+'
@@ -103,7 +102,7 @@ def create_validation_message(config_file, out_dir=None):
 
     # Read configuration file
     filepath = os.path.join(CONFIG_DIR, config_file)
-    config, info, error = _read_configuration_file(filepath)
+    config, info, error = validate_configuration_file(filepath, CONFIGURATION_OPTIONS)
 
     # Prepare output string
     output_string = [

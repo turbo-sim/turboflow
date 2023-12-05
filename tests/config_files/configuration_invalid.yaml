@@ -62,3 +62,5 @@ solver_options:
   # derivative_rel_step: 1e-4  # Missing non-mandatory field
   display_progress: True
 
+general_settings:
+  skip_validation: False
