@@ -11,12 +11,10 @@ if desired_path not in sys.path:
 
 import meanline_axial as ml
 
-
 # Initialize Brayton cycle problem
 CONFIG_FILE = "case_sCO2.yaml"
-# CONFIG_FILE = "case_toluene.yaml"
-config = ml.read_configuration_file(CONFIG_FILE, validate=False)
-braytonCycle = ml.BraytonCycleProblem(config["problem_formulation"])
+config = ml.utils.read_configuration_file(CONFIG_FILE, validate=False)
+braytonCycle = ml.cycles.BraytonCycleProblem(config["problem_formulation"])
 braytonCycle.get_optimization_values(braytonCycle.x0)
 braytonCycle.to_excel(filename="initial_configuration.xlsx")
 
@@ -38,7 +36,7 @@ for key, value in solver.problem.variables.items():
 
 # Make an animation of the optimization history
 opt_dir = solver.problem.optimization_dir
-ml.create_mp4(
+ml.utils.create_mp4(
     opt_dir,
     os.path.join(os.path.dirname(opt_dir), "optimization_history.mp4"),
     fps=1,
