@@ -2,7 +2,7 @@ from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
 from . import loss_model_benner_moustapha as bm
-from .. import utilities as util
+from .. import utilities as utils
 
 # List of valid options
 LOSS_MODELS = [
@@ -96,7 +96,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
 
     # Validate the output losses dictionary
-    util.validate_keys(loss_dict, KEYS_LOSSES, KEYS_LOSSES)
+    utils.validate_keys(loss_dict, KEYS_LOSSES, KEYS_LOSSES)
 
     return loss_dict
 

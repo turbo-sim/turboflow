@@ -1,7 +1,7 @@
 import numpy as np
 
 from .. import solver as psv
-from .. import utilities as util
+from .. import utilities as utils
 from . import flow_model as flow
 
 def compute_optimal_turbine(design_point, cascades_data, x0):

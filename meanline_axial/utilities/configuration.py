@@ -1,89 +1,26 @@
+import re
 import yaml
+import numbers
 import numpy as np
-from numbers import Number
-from . import utilities as util
-from . import configuration_options as cfg
+
+from . import numeric as num
 
 
-def read_configuration_file(filename, validate=True):
-    """
-    Reads and validates the specified YAML configuration file.
-
-    This function reads the specified YAML configuration file and performens 2 post-processing operations:
-
-    1. Evaluates string expressions in the configuration file to actual numerical values and converts configuration options to Numpy types.
-    2. Validates the configuration file against a predefined schema, checking that the configuration options and data types are compliant. 
-
-    Parameters
-    ----------
-    filename : str
-        The file path of the YAML configuration file.
-
-    Returns
-    -------
-    dict
-        A dictionary containing the validated configuration options.
-
-    See Also
-    --------
-    :obj:`convert_configuration_options`
-    :obj:`validate_configuration_options`
-    """
-
-    if validate:
-        # Read and validate configuration file
-        config, info, error = _validate_configuration_file(filename)
-        
-        # Print info messages
-        if info:
-            print(info)
-
-        # Raise errors from validation
-        if error:
-            raise error
-        
-    else:
-        config = _read_configuration_file(filename)          
-
-
-    return config
-
-
-def _validate_configuration_file(filename):
-    """Validates configuration fictionary (returns multiple outputs)"""
-
-
-    # Read configuration file
-    try:
-        with open(filename, "r") as file:
-            config = yaml.safe_load(file)
-    except Exception as e:
-        raise Exception(f"Error parsing configuration file: '{filename}'. Original error: {e}")
-
-    # Convert options to Numpy when possible
-    config = convert_configuration_options(config)
-
-    # Validate the configuration dictionary
-    config, info, error = validate_configuration_options(config, cfg.CONFIGURATION_OPTIONS)
-
-    return config, info, error
-
-
-
-def _read_configuration_file(filename):
+def read_configuration_file(filename):
     """Reads and a YAML configuration file"""
     # Read configuration file
     try:
         with open(filename, "r") as file:
             config = yaml.safe_load(file)
     except Exception as e:
-        raise Exception(f"Error parsing configuration file: '{filename}'. Original error: {e}")
+        raise Exception(
+            f"Error parsing configuration file: '{filename}'. Original error: {e}"
+        )
 
     # Convert options to Numpy when possible
     config = convert_configuration_options(config)
 
     return config
-
 
 
 def convert_configuration_options(config):
@@ -144,7 +81,7 @@ def convert_configuration_options(config):
                 return convert_numbers_to_numpy(data)
             except (NameError, SyntaxError, TypeError):
                 return data
-        elif isinstance(data, Number):
+        elif isinstance(data, numbers.Number):
             # Convert Python number types to corresponding NumPy number types
             return convert_numbers_to_numpy(data)
         else:
@@ -197,7 +134,7 @@ def convert_configuration_options(config):
         ------
         ValueError
             If a list within `data` contains elements of different types. The error message includes the problematic list and the types of its elements.
-        
+
         """
         if isinstance(data, dict):
             return {k: convert_to_arrays(v, parent_key=k) for k, v in data.items()}
@@ -221,6 +158,21 @@ def convert_configuration_options(config):
 
     return config
 
+
+def validate_configuration_file(filename, configuration_schema):
+    """Validates configuration fictionary (returns multiple outputs)"""
+
+    # Read configuration file
+    config = read_configuration_file(filename)
+
+    # Validate the configuration dictionary
+    config, info, error = validate_configuration_options(
+        config, configuration_schema,
+    )
+
+    return config, info, error
+
+NUMERIC = "<numeric value>"
 
 def validate_configuration_options(config, schema):
     """
@@ -264,8 +216,8 @@ def validate_configuration_options(config, schema):
     ConfigurationError
         If there are any discrepancies between the configuration and the schema.
 
-    .. note:: 
-        
+    .. note::
+
         The function allows for rapid development and prototyping by bypassing validation for any configuration options
         prefixed with an underscore ``_``. This feature is particularly useful for testing new or experimental settings
         without having to update the entire validation schema.
@@ -278,7 +230,9 @@ def validate_configuration_options(config, schema):
         # Bypass validation for keys starting with '_' to skip options during development
         # Use sorted to preserve order (required for regression tests)
         keys_to_validate_against = set(sorted(schema.keys()))
-        keys_to_validate = set(k for k in sorted(config.keys()) if not k.startswith("_"))
+        keys_to_validate = set(
+            k for k in sorted(config.keys()) if not k.startswith("_")
+        )
         unexpected_keys = keys_to_validate - keys_to_validate_against
         if unexpected_keys:
             name = parent if parent else "root"
@@ -313,11 +267,11 @@ def validate_configuration_options(config, schema):
 
                 # Validate option from list if there are valid options defined
                 elif specs.get("valid_options") is not None:
-                    conf_values = util.ensure_iterable(config[key])
+                    conf_values = num.ensure_iterable(config[key])
                     for item in conf_values:
                         # Check single value or each item of the list/array
                         if item not in specs["valid_options"] and not (
-                            cfg.NUMERIC in specs["valid_options"]
+                            NUMERIC in specs["valid_options"]
                             and isinstance(item, (int, float))
                         ):
                             msg = f"Invalid value '{item}' for field '{current_path}'. Valid options are: {specs['valid_options']}"
@@ -334,7 +288,9 @@ def validate_configuration_options(config, schema):
                 info.append(msg)
 
             else:
-                errors.append(f"Unexpected configuration for field '{key}'. Revise manually")
+                errors.append(
+                    f"Unexpected configuration for field '{key}'. Revise manually"
+                )
 
             # Recursively validate nested fields
             if "_nested" in specs:
@@ -342,7 +298,7 @@ def validate_configuration_options(config, schema):
 
                 # Ensure that nested configurations are iterable (operation_points can be a list of dictionaries)
                 nested_conf = (
-                    util.ensure_iterable(nested_conf)
+                    num.ensure_iterable(nested_conf)
                     if specs["_nested"]
                     else nested_conf
                 )
@@ -378,7 +334,9 @@ def validate_configuration_options(config, schema):
     config.setdefault("general_settings", {})
     settings_config = {"general_settings": config["general_settings"]}
     settings_schema = {"general_settings": schema["general_settings"]}
-    settings_config = validate_field(settings_config, settings_schema, None, errors, info)
+    settings_config = validate_field(
+        settings_config, settings_schema, None, errors, info
+    )
     if settings_config["general_settings"]["skip_validation"]:
         info = "Configuration validation was skipped."
         return config, info, None
@@ -402,12 +360,12 @@ class ConfigurationError(Exception):
     """
     Exception class for handling errors in configuration options.
 
-    This exception is raised when discrepancies, inconsistencies, or other issues are detected 
-    in the configuration options of an application. It is primarily used during the validation 
+    This exception is raised when discrepancies, inconsistencies, or other issues are detected
+    in the configuration options of an application. It is primarily used during the validation
     process of configuration data, where it checks against a predefined schema or set of rules.
 
-    The `ConfigurationError` encapsulates one or more error messages that detail the specific 
-    problems found in the configuration. These messages provide insights into missing fields, 
+    The `ConfigurationError` encapsulates one or more error messages that detail the specific
+    problems found in the configuration. These messages provide insights into missing fields,
     data type mismatches, invalid values, and other violations of the configuration schema.
 
     Attributes
@@ -417,7 +375,7 @@ class ConfigurationError(Exception):
 
     Examples
     --------
-    >>> raise ConfigurationError(["Invalid value in field 'max_speed'", 
+    >>> raise ConfigurationError(["Invalid value in field 'max_speed'",
                                   "Missing required field: 'engine_type'"])
     ConfigurationError: Configuration errors detected.
     Invalid value in field 'max_speed';
@@ -431,3 +389,197 @@ class ConfigurationError(Exception):
     def _format_message(self):
         return "Configuration errors detected.\n" + ";\n".join(self.messages)
 
+
+def convert_numpy_to_python(data, precision=10):
+    """
+    Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
+    and rounds numerical values to the specified precision.
+
+    Parameters:
+    - data: The numpy data to convert.
+    - precision: The decimal precision to which float values should be rounded.
+
+    Returns:
+    - The converted data with all numpy types replaced by native Python types and float values rounded.
+    """
+
+    if data is None:
+        return None
+
+    if isinstance(data, dict):
+        return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
+
+    elif isinstance(data, list):
+        return [convert_numpy_to_python(item, precision) for item in data]
+
+    elif isinstance(data, np.ndarray):
+        # If the numpy array has more than one element, it is iterable.
+        if data.ndim > 0:
+            return [convert_numpy_to_python(item, precision) for item in data.tolist()]
+        else:
+            # This handles the case of a numpy array with a single scalar value.
+            return convert_numpy_to_python(data.item(), precision)
+
+    elif isinstance(
+        data,
+        (np.integer, np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64),
+    ):
+        return int(data.item())
+
+    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+        return round(float(data.item()), precision)
+
+    elif isinstance(data, np.bool_):
+        return bool(data.item())
+
+    elif isinstance(data, (np.str_, np.unicode_)):
+        return str(data.item())
+
+    # This will handle Python built-in types and other types that are not numpy.
+    elif isinstance(data, (float, int, str, bool)):
+        if isinstance(data, float):
+            return round(data, precision)
+        return data
+
+    else:
+        raise TypeError(f"Unsupported data type: {type(data)}")
+
+
+def render_and_evaluate(expression, data):
+    """
+    Render variables prefixed with '$' in an expression and evaluate the resulting expression.
+
+    This function processes an input string `expr`, identifying all occurrences of variables
+    indicated by a leading '$' symbol. Each such variable is resolved to its value from the
+    provided `context` dictionary. The expression with all variables resolved is then evaluated
+    and the result is returned.
+
+    This function is useful to render strings defined in a YAML configuration file to values
+    that are calculated within the code and stored in a dicitonary.
+
+    Parameters
+    ----------
+    expr : str
+        The expression string containing variables to be rendered. Variables in the
+        expression are expected to be prefixed with a '$' symbol.
+    data : dict
+        A dictionary containing variables and their corresponding values. These variables
+        are used to render values in the expression.
+
+    Returns
+    -------
+    The result of evaluating the rendered expression. The type of the result depends on the
+    expression.
+
+    Notes
+    -----
+    - `pattern`: A regular expression pattern used to identify variables within the expression.
+      Variables are expected to be in the format `$variableName`, potentially with dot-separated
+      sub-properties (e.g., `$variable.property`).
+
+    - `replace_with_value`: An inner function that takes a regex match object and returns
+      the value of the variable from `context`. `match.group(1)` returns the first captured
+      group from the matched text, which in this case is the variable name excluding the
+      leading '$' symbol. For example, in `$variableName`, `match.group(1)` would return
+      `variableName`.
+
+    - The function uses Python's `eval` for evaluation, which should be used cautiously as
+      it can execute arbitrary code. Ensure that the context and expressions are from a trusted
+      source.
+    """
+    # Pattern to find $variable expressions
+    pattern = re.compile(r"\$(\w+(\.\w+)*)")
+
+    # Function to replace each match with its resolved value
+    def replace_with_value(match):
+        nested_key = match.group(1)
+        try:
+            return str(render_nested_value(nested_key, data))
+        except KeyError:
+            raise KeyError(
+                f"Variable '{nested_key}' not found in the provided data context."
+            )
+
+    try:
+        # Replace all $variable with their actual values
+        resolved_expr = pattern.sub(replace_with_value, expression)
+
+        # Check if any unresolved variables remain
+        if "$" in resolved_expr:
+            raise ValueError(f"Unresolved variable in expression: '{resolved_expr}'")
+
+        # Now evaluate the expression
+        return eval(resolved_expr, data)
+    except SyntaxError:
+        raise SyntaxError(f"Syntax error in expression: '{expression}'")
+    except Exception as e:
+        raise TypeError(f"Error evaluating expression '{expression}': {e}")
+
+
+def render_nested_value(nested_key, data):
+    """
+    Retrieves a value from a nested structure (dictionaries or objects with attributes) using a dot-separated key.
+
+    This function is designed to navigate through a combination of dictionaries and objects. For an object to be
+    compatible with this function, it must implement a `keys()` method that returns its attribute names.
+
+    This function is intended as a subroutine of the more genera ``render_expression``
+
+    Parameters
+    ----------
+    nested_key : str
+        A dot-separated key string that specifies the path in the structure.
+        For example, 'level1.level2.key' will retrieve data['level1']['level2']['key'] if data is a dictionary,
+        or data.level1.level2.key if data is an object or a combination of dictionaries and objects.
+
+    data : dict or object
+        The starting dictionary or object from which to retrieve the value. This can be a nested structure
+        of dictionaries and objects.
+
+    Returns
+    -------
+    value
+        The value retrieved from the nested structure using the specified key.
+        The type of the value depends on what is stored at the specified key in the structure.
+
+    Raises
+    ------
+    KeyError
+        If the specified nested key is not found in the data structure. The error message includes the part
+        of the path that was successfully traversed and the available keys or attributes at the last valid level.
+    """
+    keys = nested_key.split(".")
+    value = data
+    traversed_path = []
+
+    for key in keys:
+        if isinstance(value, dict):
+            # Handle dictionary-like objects
+            if key in value:
+                traversed_path.append(key)
+                value = value[key]
+            else:
+                valid_keys = ", ".join(value.keys())
+                traversed_path_str = (
+                    ".".join(traversed_path) if traversed_path else "root"
+                )
+                raise KeyError(
+                    f"Nested key '{key}' not found at '{traversed_path_str}'. Available keys: {valid_keys}"
+                )
+        elif hasattr(value, key):
+            # Handle objects with attributes
+            traversed_path.append(key)
+            value = getattr(value, key)
+        else:
+            traversed_path_str = ".".join(traversed_path)
+            available_keys = ", ".join(value.keys())
+            raise KeyError(
+                f"Key '{key}' not found in object at '{traversed_path_str}'. Available keys: {available_keys}"
+            )
+
+    if not num.is_numeric(value):
+        raise ValueError(
+            f"The key '{nested_key}' is not numeric. Key value is: {value}"
+        )
+
+    return value

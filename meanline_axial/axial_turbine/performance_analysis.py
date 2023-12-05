@@ -11,13 +11,17 @@ import matplotlib.pyplot as plt
 
 from .. import math
 from .. import solver as psv
-from .. import utilities as util
+from .. import utilities as utils
 from .. import properties as props
 from . import geometry_model as geom
 from . import flow_model as flow
 
 
-util.set_plot_options()
+
+# from ..utilities import graphics
+
+
+# util.set_plot_options()
 
 SOLVERS_AVAILABLE = [
     "lm",
@@ -33,7 +37,7 @@ def get_heuristic_guess_input(n):
     
    eta_ts_vec = [0.8, 0.7, 0.6]
     
-   array = util.fill_array_with_increment(n)
+   array = utils.fill_array_with_increment(n)
    enthalpy_distributions = []
    enthalpy_distributions.append(np.ones(n)*1/n)
    enthalpy_distributions.append(array)    
@@ -129,7 +133,7 @@ def compute_performance(
 
     # Export simulation configuration as YAML file
     config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-    config_data = util.convert_numpy_to_python(config_data, precision=12)
+    config_data = utils.convert_numpy_to_python(config_data, precision=12)
     config_file = os.path.join(out_dir, f"{out_filename}.yaml")
     with open(config_file, "w") as file:
         yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
@@ -146,11 +150,11 @@ def compute_performance(
     solver_container = []
 
     # Loop through all operation points
-    util.print_operation_points(operation_points)
+    print_operation_points(operation_points)
     for i, operation_point in enumerate(operation_points):
         print()
         print(f" Computing operation point {i+1} of {len(operation_points)}")
-        util.print_boundary_conditions(operation_point)
+        print_boundary_conditions(operation_point)
 
         try:
             # Define initial guess
@@ -189,10 +193,10 @@ def compute_performance(
             # Collect results
             operation_point_data.append(pd.DataFrame([operation_point]))
             overall_data.append(results["overall"])
-            plane_data.append(util.flatten_dataframe(results["plane"]))
-            cascade_data.append(util.flatten_dataframe(results["cascade"]))
-            stage_data.append(util.flatten_dataframe(results["stage"]))
-            geometry_data.append(util.flatten_dataframe(results["geometry"]))
+            plane_data.append(utils.flatten_dataframe(results["plane"]))
+            cascade_data.append(utils.flatten_dataframe(results["cascade"]))
+            stage_data.append(utils.flatten_dataframe(results["stage"]))
+            geometry_data.append(utils.flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.vars_real)
             solver_container.append(solver)
@@ -244,7 +248,7 @@ def compute_performance(
         print(f" Performance data successfully written to {filepath}")
 
     # Print final report
-    util.print_simulation_summary(solver_container)
+    print_simulation_summary(solver_container)
 
     return solver_container
 
@@ -556,7 +560,7 @@ def generate_operation_points(performance_map):
       a unique combination of parameters from the performance_map.
     """
     # Make sure all values in the performance_map are iterables
-    performance_map = {k: util.ensure_iterable(v) for k, v in performance_map.items()}
+    performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
 
     # Reorder performance map keys so first sweep is always through pressure
     priority_keys = ["p0_in", "p_out"]
@@ -851,13 +855,13 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
             check = []
             check.append(
-                util.check_lists_match(valid_keys_1, list(initial_guess.keys()))
+                utils.check_lists_match(valid_keys_1, list(initial_guess.keys()))
             )
             check.append(
-                util.check_lists_match(valid_keys_2, list(initial_guess.keys()))
+                utils.check_lists_match(valid_keys_2, list(initial_guess.keys()))
             )
             check.append(
-                util.check_lists_match(valid_keys_3, list(initial_guess.keys()))
+                utils.check_lists_match(valid_keys_3, list(initial_guess.keys()))
             )
             
             if check[0]:
@@ -1192,3 +1196,185 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
 #     def get_n_ineq(self):
 #         return self.get_number_of_constraints(self.c_ineq)
+
+
+
+
+def print_simulation_summary(solvers):
+    """
+    Print a formatted footer summarizing the performance of all operation points.
+
+    This function processes a list of solver objects to provide a summary of the performance
+    analysis calculations. It calculates and displays the number of successful points and a summary of
+    simulation tme statistics. Additionally, it lists the indices of failed operation points, if any.
+
+    The function is robust against solvers that failed and lack certain attributes like 'elapsed_time'.
+    In such cases, these solvers are included in the count of failed operation points, but not in the
+    calculation time statistics.
+
+    Parameters
+    ----------
+    solvers : list
+        A list of solver objects. Each solver object should contain attributes related to the
+        calculation of an operation point, such as 'elapsed_time' and the 'solution' status.
+
+    """
+
+    # Initialize times list and track failed points
+    times = []
+    failed_points = []
+
+    for i, solver in enumerate(solvers):
+        # Check if the solver is not None and has the required attribute
+        if solver and hasattr(solver, "elapsed_time"):
+            times.append(solver.elapsed_time)
+            if not solver.solution.success:
+                failed_points.append(i)
+        else:
+            # Handle failed solver or missing attributes
+            failed_points.append(i)
+
+    # Convert times to a numpy array for calculations
+    times = np.asarray(times)
+    total_points = len(solvers)
+
+    # Define footer content
+    width = 80
+    separator = "-" * width
+    lines_to_output = [
+        "",
+        separator,
+        "Final summary of performance analysis calculations".center(width),
+        separator,
+        f" Simulation successful for {total_points - len(failed_points)} out of {total_points} points",
+    ]
+
+    # Add failed points message only if there are failed points
+    if failed_points:
+        lines_to_output.append(
+            f"Failed operation points: {', '.join(map(str, failed_points))}"
+        )
+
+    # Add time statistics only if there are valid times
+    if times.size > 0:
+        lines_to_output.extend(
+            [
+                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+                f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
+            ]
+        )
+    else:
+        lines_to_output.append(" No valid calculation times available.")
+
+    lines_to_output.append(separator)
+    lines_to_output.append("")
+
+    # Display to stdout
+    for line in lines_to_output:
+        print(line)
+
+
+
+def print_boundary_conditions(BC):
+    column_width = 25  # Adjust this to your desired width
+    print("-" * 80)
+    print(" Operating point: ")
+    print("-" * 80)
+    print(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
+    print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
+    print(f" {'Total temperature in: ':<{column_width}} {BC['T0_in']-273.15:<.2f} degC")
+    print(f" {'Total pressure in: ':<{column_width}} {BC['p0_in']/1e5:<.3f} bar")
+    print(f" {'Static pressure out: ':<{column_width}} {BC['p_out']/1e5:<.3f} bar")
+    print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
+    print("-" * 80)
+    print()
+
+
+def print_operation_points(operation_points):
+    """
+    Prints a summary table of operation points scheduled for simulation.
+
+    This function takes a list of operation point dictionaries, formats them
+    according to predefined specifications, applies unit conversions where
+    necessary, and prints them in a neatly aligned table with headers and units.
+
+    Parameters
+    ----------
+    - operation_points (list of dict): A list where each dictionary contains
+      key-value pairs representing operation parameters and their corresponding
+      values.
+
+    Notes
+    -----
+    - This function assumes that all necessary keys exist within each operation
+      point dictionary.
+    - The function directly prints the output; it does not return any value.
+    - Unit conversions are hardcoded and specific to known parameters.
+    - If the units of the parameters change or if different parameters are added,
+      the unit conversion logic and `field_specs` need to be updated accordingly.
+    """
+    length = 80
+    index_width = 8
+    output_lines = [
+        "-" * length,
+        " Summary of operation points scheduled for simulation",
+        "-" * length,
+    ]
+
+    # Configuration for each field with specified width and decimal places
+    field_specs = {
+        "fluid_name": {"name": "Fluid", "unit": "", "width": 8},
+        "alpha_in": {"name": "angle_in", "unit": "[deg]", "width": 10, "decimals": 1},
+        "T0_in": {"name": "T0_in", "unit": "[degC]", "width": 12, "decimals": 2},
+        "p0_in": {"name": "p0_in", "unit": "[kPa]", "width": 12, "decimals": 2},
+        "p_out": {"name": "p_out", "unit": "[kPa]", "width": 12, "decimals": 2},
+        "omega": {"name": "omega", "unit": "[RPM]", "width": 12, "decimals": 0},
+    }
+
+    # Create formatted header and unit strings using f-strings and field widths
+    header_str = f"{'Index':>{index_width}}"  # Start with "Index" header
+    unit_str = f"{'':>{index_width}}"  # Start with empty string for unit alignment
+
+    for spec in field_specs.values():
+        header_str += f" {spec['name']:>{spec['width']}}"
+        unit_str += f" {spec['unit']:>{spec['width']}}"
+
+    # Append formatted strings to the output lines
+    output_lines.append(header_str)
+    output_lines.append(unit_str)
+
+    # Unit conversion functions
+    def convert_units(key, value):
+        if key == "T0_in":  # Convert Kelvin to Celsius
+            return value - 273.15
+        elif key == "omega":  # Convert rad/s to RPM
+            return (value * 60) / (2 * np.pi)
+        elif key == "alpha_in":  # Convert radians to degrees
+            return np.degrees(value)
+        elif key in ["p0_in", "p_out"]:  # Pa to kPa
+            return value / 1e3
+        return value
+
+    # Process and format each operation point
+    for index, op_point in enumerate(operation_points, start=1):
+        row = [f"{index:>{index_width}}"]
+        for key, spec in field_specs.items():
+            value = convert_units(key, op_point[key])
+            if isinstance(value, float):
+                # Format floats with the specified width and number of decimal places
+                row.append(f"{value:>{spec['width']}.{spec['decimals']}f}")
+            else:
+                # Format strings to the specified width without decimals
+                row.append(f"{value:>{spec['width']}}")
+        output_lines.append(" ".join(row))  # Ensure spaces between columns
+
+    output_lines.append("-" * length)  # Add a closing separator line
+
+    # Join the lines and print the output
+    formatted_output = "\n".join(output_lines)
+
+    for line in output_lines:
+        print(line)
+    return formatted_output

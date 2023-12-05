@@ -4,7 +4,7 @@ import CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
 
 from .. import math
-from .. import utilities as util
+from .. import utilities as utils
 from . import loss_model as lm
 from . import deviation_model as dm
 
@@ -244,7 +244,7 @@ def evaluate_axial_turbine(
         )
 
         # Add cascade residuals to residual arrays
-        cascade_residuals = util.add_string_to_keys(cascade_residuals, f"_{i+1}")
+        cascade_residuals = utils.add_string_to_keys(cascade_residuals, f"_{i+1}")
         residuals.update(cascade_residuals)
 
         # Calculate input of next cascade (Assume no change in density)
@@ -292,7 +292,7 @@ def evaluate_axial_turbine(
     geom_cascades = {
         key: value
         for key, value in geometry.items()
-        if len(util.ensure_iterable(value)) == number_of_cascades
+        if len(utils.ensure_iterable(value)) == number_of_cascades
     }
     results["geometry"] = pd.DataFrame([geom_cascades])
     
@@ -544,12 +544,12 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # Calculate stagnation properties
     stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
-    stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
+    stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
     relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
-    relative_stagnation_properties = util.add_string_to_keys(
+    relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
 
@@ -688,12 +688,12 @@ def evaluate_cascade_exit(
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
     stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
-    stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
+    stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
     relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
-    relative_stagnation_properties = util.add_string_to_keys(
+    relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
 
@@ -1607,7 +1607,7 @@ def compute_stage_performance(results):
     stages = {"reaction": R}
 
     # Check the dictionary has the expected keys
-    util.validate_keys(stages, KEYS_STAGE, KEYS_STAGE)
+    utils.validate_keys(stages, KEYS_STAGE, KEYS_STAGE)
 
     return stages
 
@@ -1684,6 +1684,6 @@ def compute_overall_performance(results):
     }
 
     # Check the dictionary has the expected keys
-    util.validate_keys(overall, KEYS_OVERALL, KEYS_OVERALL)
+    utils.validate_keys(overall, KEYS_OVERALL, KEYS_OVERALL)
 
     return overall

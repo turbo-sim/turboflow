@@ -1,7 +1,7 @@
 import numpy as np
-from . import meanline
+from . import axial_turbine
+from . import utilities
 
-NUMERIC = "<numeric value>"
 
 SETTINGS = {
     "description": "Defines general settings controlling the behavior of the program.",
@@ -228,20 +228,20 @@ OPTIONS_MODEL = {
             "description": "Closure condition used to predict turbine choking.",
             "is_mandatory": True,
             "expected_type": str,
-            "valid_options": meanline.CHOKING_CONDITIONS,
+            "valid_options": axial_turbine.CHOKING_CONDITIONS,
         },
         "deviation_model": {
             "description": "Deviation model used to predict the exit flow angle at subsonic conditions.",
             "is_mandatory": True,
             "expected_type": str,
-            "valid_options": meanline.DEVIATION_MODELS,
+            "valid_options": axial_turbine.DEVIATION_MODELS,
         },
         "blockage_model": {
             "description": "Model used to predict the blockage factor due to boundary layer displacement thickness.",
             "is_mandatory": True,
             "default_value": 0.00,
             "expected_type": [float, str],  # Allowing float and specific string values
-            "valid_options": meanline.BLOCKAGE_MODELS + [NUMERIC],
+            "valid_options": axial_turbine.BLOCKAGE_MODELS + [utilities.NUMERIC],
         },
         "rel_step_fd": {
             "description": "Relative step size of the finite differences used to approximate the critical condition Jacobian.",
@@ -260,13 +260,13 @@ OPTIONS_MODEL = {
                     "description": "Name of the model used to calculate the losses.",
                     "is_mandatory": True,
                     "expected_type": str,
-                    "valid_options": meanline.LOSS_MODELS,
+                    "valid_options": axial_turbine.LOSS_MODELS,
                 },
                 "loss_coefficient": {
                     "description": "Definition of the loss coefficient used to characterize the losses.",
                     "is_mandatory": True,
                     "expected_type": str,
-                    "valid_options": meanline.LOSS_COEFFICIENTS,
+                    "valid_options": axial_turbine.LOSS_COEFFICIENTS,
                 },
                 "inlet_displacement_thickness_height_ratio": {
                     "description": "Ratio of the endwall boundary layer displacement thickness at the inlet of a cascade to the height of the blade. Used in the secondary loss calculations of the `benner` loss model.",
@@ -334,9 +334,9 @@ OPTIONS_SOLVER = {
         "method": {
             "description": "Name of the numerical method used to solve the problem. Different methods may offer various advantages in terms of accuracy, speed, or stability, depending on the problem being solved",
             "is_mandatory": False,
-            "default_value": meanline.SOLVERS_AVAILABLE[0],
+            "default_value": axial_turbine.SOLVERS_AVAILABLE[0],
             "expected_type": str,
-            "valid_options": meanline.SOLVERS_AVAILABLE,
+            "valid_options": axial_turbine.SOLVERS_AVAILABLE,
         },
         "tolerance": {
             "description": "Termination tolerance for the solver. This value determines the precision of the solution. Lower tolerance values increase the precision but may require more computational time.",
@@ -396,3 +396,49 @@ CONFIGURATION_OPTIONS = {
 # Keep a clear structure in your documentation by having separate sections or pages for each machine type.
 # Easily extend or modify schemas for specific machine types without affecting others.
 # Maintain a consistent naming convention across different types (e.g., geometry, loss_model) while allowing for type-specific validation.
+
+
+
+
+def read_configuration_file(filename, validate=True):
+    """
+    Reads and validates the specified YAML configuration file.
+
+    This function reads the specified YAML configuration file and performens 2 post-processing operations:
+
+    1. Evaluates string expressions in the configuration file to actual numerical values and converts configuration options to Numpy types.
+    2. Validates the configuration file against a predefined schema, checking that the configuration options and data types are compliant.
+
+    Parameters
+    ----------
+    filename : str
+        The file path of the YAML configuration file.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the validated configuration options.
+
+    See Also
+    --------
+    :obj:`convert_configuration_options`
+    :obj:`validate_configuration_options`
+    """
+
+    if validate:
+        # Read and validate configuration file
+        config, info, error = utilities.validate_configuration_file(filename, CONFIGURATION_OPTIONS)
+
+        # Print info messages
+        if info:
+            print(info)
+
+        # Raise errors from validation
+        if error:
+            raise error
+
+    else:
+        config = utilities.read_configuration_file(filename)
+
+    return config
+

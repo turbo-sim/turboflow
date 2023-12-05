@@ -1,6 +1,6 @@
 import numpy as np
 from .. import math
-from .. import utilities
+from .. import utilities as utils
 
 
 def validate_turbine_geometry(geom, display=False):
@@ -52,7 +52,7 @@ def validate_turbine_geometry(geom, display=False):
     angle_keys = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
 
     # Check that there are no missing or extra variables
-    utilities.validate_keys(geom, required_keys, required_keys)
+    utils.validate_keys(geom, required_keys, required_keys)
 
     # Get the number of cascades
     number_of_cascades = len(geom["cascade_type"])

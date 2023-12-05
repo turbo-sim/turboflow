@@ -917,3 +917,4 @@ class OptimizationProblem(ABC):
         # If constraint is array-like
         else:
             return len(var)
+

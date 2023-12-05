@@ -2,7 +2,7 @@ import numpy as np
 
 from scipy.integrate import solve_ivp
 
-from .. import utilities
+# from .. import utilities
 from .. import fluid_properties as props
 
 def heat_exchanger(

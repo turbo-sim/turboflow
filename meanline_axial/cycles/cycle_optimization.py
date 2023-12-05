@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 from .. import solver
 from .. import utilities
-from .. import configuration
 from .. import fluid_properties as props
 
 from . import cycle_models as cycles
@@ -188,7 +187,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         config_file : str
             Path to the configuration file.
         """
-        config = configuration.read_configuration_file(config_file, validate=False)
+        config = utilities.read_configuration_file(config_file, validate=False)
         self.update_configuration(config["problem_formulation"])
         self._calculate_special_points()
 
