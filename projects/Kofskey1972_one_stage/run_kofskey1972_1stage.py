@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 desired_path = os.path.abspath("../..")
 
 if desired_path not in sys.path:
