@@ -191,7 +191,7 @@ def compute_performance(
             overall_data.append(results["overall"])
             plane_data.append(util.flatten_dataframe(results["plane"]))
             cascade_data.append(util.flatten_dataframe(results["cascade"]))
-            stage_data.append(util.flatten_dataframe(results["stage"]))
+            # stage_data.append(util.flatten_dataframe(results["stage"]))
             geometry_data.append(util.flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.vars_real)
@@ -213,7 +213,7 @@ def compute_performance(
             overall_data.append(pd.DataFrame([{}]))
             plane_data.append(pd.DataFrame([{}]))
             cascade_data.append(pd.DataFrame([{}]))
-            stage_data.append(pd.DataFrame([{}]))
+            # stage_data.append(pd.DataFrame([{}]))
             geometry_data.append(pd.DataFrame([{}]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append([])
@@ -225,7 +225,7 @@ def compute_performance(
         "overall": pd.concat(overall_data, ignore_index=True),
         "plane": pd.concat(plane_data, ignore_index=True),
         "cascade": pd.concat(cascade_data, ignore_index=True),
-        "stage": pd.concat(stage_data, ignore_index=True),
+        # "stage": pd.concat(stage_data, ignore_index=True),
         "geometry": pd.concat(geometry_data, ignore_index=True),
         "solver": pd.concat(solver_data, ignore_index=True),
     }
@@ -829,9 +829,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
             valid_keys_2 = [
                 "v_in",
-                "w_throat",
+                # "w_throat",
                 "w_out",
-                "s_throat",
+                # "s_throat",
                 "s_out",
                 "beta_out",
                 "v*_in",
@@ -1121,9 +1121,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             index = f"_{i+1}"
             initial_guess.update(
                 {
-                    "w_throat" + index: w_throat,
+                    # "w_throat" + index: w_throat,
                     "w_out" + index: w_out,
-                    "s_throat" + index: s_throat,
+                    # "s_throat" + index: s_throat,
                     "s_out" + index: s_out,
                     "beta_out" + index: theta_out,
                     "v*_in" + index: v_in_crit,

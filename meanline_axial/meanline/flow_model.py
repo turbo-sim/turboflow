@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.linalg import solve
 import CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
 
@@ -10,7 +11,6 @@ from . import deviation_model as dm
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
-CHOKING_CONDITIONS = ["deviation", "mach_critical", "mach_unity"]
 
 # Keys of the information that should be stored in results
 KEYS_KINEMATIC = [
@@ -64,7 +64,8 @@ KEYS_CASCADE = [
     "p_crit",
     "beta_crit",
     "incidence",
-    "density_correction",
+    "beta_subsonic" ,
+    "beta_supersonic",
 ]
 
 """List of keys for the cascade performance metrics of the turbine. 
@@ -199,9 +200,9 @@ def evaluate_axial_turbine(
 
         # Rename variables
         cascade = "_" + str(i + 1)
-        w_throat = variables["w_throat" + cascade] * v0
+        # w_throat = variables["w_throat" + cascade] * v0
         w_out = variables["w_out" + cascade] * v0
-        s_throat = variables["s_throat" + cascade] * s_range + s_min
+        # s_throat = variables["s_throat" + cascade] * s_range + s_min
         s_out = variables["s_out" + cascade] * s_range + s_min
         beta_out = variables["beta_out" + cascade] * angle_range + angle_min
         v_crit_in = variables["v*_in" + cascade]
@@ -217,7 +218,7 @@ def evaluate_axial_turbine(
             "alpha": alpha_in,
             "v": v_in,
         }
-        cascade_throat_input = {"w": w_throat, "s": s_throat}
+        # cascade_throat_input = {"w": w_throat, "s": s_throat}
         cascade_exit_input = {
             "w": w_out,
             "beta": beta_out,
@@ -232,7 +233,7 @@ def evaluate_axial_turbine(
         }
         cascade_residuals = evaluate_cascade(
             cascade_inlet_input,
-            cascade_throat_input,
+            # cascade_throat_input,
             cascade_exit_input,
             critical_cascade_input,
             fluid,
@@ -277,7 +278,7 @@ def evaluate_axial_turbine(
     results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
 
     # Compute stage performance
-    results["stage"] = pd.DataFrame([compute_stage_performance(results)])
+    # results["stage"] = pd.DataFrame([compute_stage_performance(results)])
 
     # Compute overall perfrormance
     results["overall"] = pd.DataFrame([compute_overall_performance(results)])
@@ -300,7 +301,7 @@ def evaluate_axial_turbine(
 
 def evaluate_cascade(
     cascade_inlet_input,
-    cascade_throat_input,
+    # cascade_throat_input,
     cascade_exit_input,
     critical_cascade_input,
     fluid,
@@ -356,11 +357,7 @@ def evaluate_cascade(
     # TODO Add warnings that some settings have been assumed. This is a dangerous silent behavior as it is now
     # TODO It would make sense to define default values for these options at a higher level, for instance after processing the configuration file
     # TODO an advantage of the approach above is that it is possible to print a warning that will not be shown for each iteration of the solvers
-    # loss_model = model_options.get("loss_model", "benner")
-    # choking_condition = model_options.get("choking_condition", "deviation")
-    # deviation_model = model_options.get("deviation_model", "aungier")
     loss_model = model_options["loss_model"]
-    choking_condition = model_options["choking_condition"]
     deviation_model = model_options["deviation_model"]
 
     # Load reference values
@@ -369,25 +366,6 @@ def evaluate_cascade(
     # Evaluate inlet plane
     inlet_plane = evaluate_cascade_inlet(
         cascade_inlet_input, fluid, geometry, angular_speed
-    )
-
-    # Evaluate throat plane
-    # TODO discuss how to model the effect of "displacement_thickness" correctly
-    # TODO only at the throat, at the throat and the exit plane?
-    # TODO involve Simone
-    # TODO model does not converge if zero blade blockage at the exit plane. Why? Discontinuity?
-    cascade_throat_input["rothalpy"] = inlet_plane["rothalpy"]
-    cascade_throat_input["beta"] = geometry["metal_angle_te"] 
-    throat_plane, _ = evaluate_cascade_exit(
-        cascade_throat_input,
-        fluid,
-        geometry,
-        inlet_plane,
-        angular_speed,
-        model_options["blockage_model"],
-        loss_model,
-        geometry["radius_mean_throat"],
-        geometry["A_throat"],
     )
 
     # Evaluate exit plane
@@ -400,8 +378,6 @@ def evaluate_cascade(
         angular_speed,
         model_options["blockage_model"],
         loss_model,
-        geometry["radius_mean_out"],
-        geometry["A_out"],
     )
 
     # Evaluate isentropic enthalpy change
@@ -431,44 +407,21 @@ def evaluate_cascade(
         reference_values,
     )
 
-    # Evaluate the choking condition equation
-    # TODO move to its own function
-    choking_functions = {
-        CHOKING_CONDITIONS[0]: lambda: compute_residual_flow_angle(
-            geometry, critical_state, throat_plane, exit_plane, deviation_model
-        ),
-        CHOKING_CONDITIONS[1]: lambda: compute_residual_mach_throat(
-            critical_state["Ma_rel"], exit_plane["Ma_rel"], throat_plane["Ma_rel"]
-        ),
-        CHOKING_CONDITIONS[2]: lambda: compute_residual_mach_throat(
-            1.00, exit_plane["Ma_rel"], throat_plane["Ma_rel"]
-        ),
-    }
-
-    # Evaluate the choking condition equation
-    if choking_condition in choking_functions:
-        choking_residual, density_correction = choking_functions[choking_condition]()
-    else:
-        options = ", ".join(f"'{k}'" for k in choking_functions.keys())
-        raise ValueError(
-            f"Invalid choking_condition: '{choking_condition}'. Available options: {options}"
-        )
+    
+    choking_residual, beta_sub, beta_sup = compute_residual_flow_angle(geometry, critical_state, exit_plane, deviation_model)
 
     # Create dictionary with equation residuals
-    mass_error_throat = inlet_plane["mass_flow"] - throat_plane["mass_flow"]
     mass_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
     residuals = {
-        "loss_error_throat": throat_plane["loss_error"],
         "loss_error_exit": exit_plane["loss_error"],
-        "mass_error_throat": mass_error_throat / mass_flow_reference,
         "mass_error_exit": mass_error_exit / mass_flow_reference,
         **residuals_critical,
-        choking_condition: choking_residual,
+        "deviation": choking_residual,
     }
 
     # Return plane data in dataframe
     # TODO: add critical state as another plane?
-    planes = [inlet_plane, throat_plane, exit_plane]
+    planes = [inlet_plane, exit_plane]
     for plane in planes:
         results["plane"].loc[len(results["plane"])] = plane
 
@@ -480,12 +433,10 @@ def evaluate_cascade(
         "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
         "Ma_crit_out": critical_state["exit_plane"]["Ma_rel"],
         "mass_flow_crit": critical_state["throat_plane"]["mass_flow"],
-        # "w_crit": critical_state["w"],
         "d_crit": critical_state["throat_plane"]["d"],
-        # "p_crit": critical_state["p"],
-        # "beta_crit": critical_state["beta"],
         "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
-        "density_correction": density_correction,
+        "beta_subsonic" : beta_sub,
+        "beta_supersonic" : beta_sup,
     }
     results["cascade"].loc[len(results["cascade"])] = cascade_data
 
@@ -585,8 +536,6 @@ def evaluate_cascade_exit(
     angular_speed,
     blockage,
     loss_model,
-    radius,
-    area,
 ):
     """
     Evaluate the parameters at the exit (or throat) of a cascade including velocity triangles,
@@ -657,20 +606,10 @@ def evaluate_cascade_exit(
     rothalpy = cascade_exit_input["rothalpy"]
 
     # Load geometry
-    # radius = geometry["radius_mean_out"]
-    # area = geometry["A_out"]
-    # print("radius", geometry["radius_mean_out"], geometry["radius_mean_throat"])
-    # print("area", geometry["A_out"], geometry["A_throat"])
     chord = geometry["chord"]
     opening = geometry["opening"]
-    # TODO: we should have flexibility to specify the throat area
-    # TODO: Roberto: I did some tests on with the throat area calculations
-    # TODO:   1. The code does not converge well if blockage factor at the throat at and the exit is not the same. Why? The code converges for some small differences, but 1-2% is already too much
-    # TODO:   2. The code does not converge well if the new geometry input "throat_location_fraction" is not one (meaning that the throat radius is the same as the exit radius)
-    # TODO: It seems that both limitations are related to changes in the effective throat area with respect to the exit area
-    # TODO: In some cases these factors are not a problem when using the choking condition "mach_critical"
-    # TODO: This makes me suspect that the way in which we are handling the deviation model residual is giving problems.
-    # TODO: The code should work for cases when the throat are is not exactly given by the cosine rule
+    area = geometry["A_out"]
+    radius = geometry["radius_mean_out"]
 
     # Calculate velocity triangles
     blade_speed = angular_speed * radius
@@ -710,6 +649,171 @@ def evaluate_cascade_exit(
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w_m * area * (1 - blockage_factor)
+
+    # Evaluate loss coefficient
+    # TODO: why not give all variables to the loss model? 
+    # Introduce safeguard to prevent negative values for Re and Ma
+    # Useful to avoid invalid operations during convergence
+    min_val = 1e-3
+    loss_model_input = {
+        "geometry": geometry,
+        "loss_model": loss_model,
+        "flow": {
+            "p0_rel_in": inlet_plane["p0_rel"],
+            "p0_rel_out": relative_stagnation_properties["p0_rel"],
+            "p_in": inlet_plane["p"],
+            "p_out": static_properties["p"],
+            "beta_out": beta,
+            "beta_in": inlet_plane["beta"],
+            "Ma_rel_in": max(min_val, inlet_plane["Ma_rel"]),
+            "Ma_rel_out": max(min_val, Ma_rel),
+            "Re_in": max(min_val, inlet_plane["Re"]),
+            "Re_out": max(min_val, Re),
+            "gamma_out": static_properties["gamma"],
+        },
+    }
+
+    # Compute loss coefficient from loss model
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_model_input)
+
+    # Store results in dictionary
+    plane = {
+        **velocity_triangle,
+        **static_properties,
+        **stagnation_properties,
+        **relative_stagnation_properties,
+        **loss_dict,
+        "Ma": Ma,
+        "Ma_rel": Ma_rel,
+        "Re": Re,
+        "mass_flow": mass_flow,
+        "displacement_thickness": np.nan,  # Not relevant for exit/throat plane
+        "rothalpy": rothalpy,
+        "blockage": blockage_factor,
+    }
+    return plane, loss_dict
+
+def evaluate_cascade_throat(
+    cascade_throat_input,
+    fluid,
+    geometry,
+    inlet_plane,
+    angular_speed,
+    blockage,
+    loss_model,
+):
+    """
+    Evaluate the parameters at the exit (or throat) of a cascade including velocity triangles,
+    thermodynamic properties, and loss coefficients.
+
+    This function calculates the performance data at the exit of a cascade based on the cascade geometry,
+    fluid, and flow conditions. It computes velocity triangles, static and stagnation
+    properties, Reynolds and Mach numbers, mass flow rate, and loss coefficients. The calculations
+    of the mass flow rate considers the blockage induced by the boundary layer displacement thickness.
+
+    Parameters
+    ----------
+    cascade_exit_input : dict
+        Input parameters specific to the cascade exit, including relative velocity ('w'),
+        relative flow angle ('beta'), entropy ('s'), and rothalpy.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    geometry : dict
+        Geometric parameters of the cascade such as chord length, opening, and area.
+    inlet_plane : dict
+        performance data at the inlet plane of the cascade (needed for loss model calculations).
+    angular_speed : float
+        Angular speed of the cascade.
+    blockage : str or float or None
+        The method or value for determining the throat blockage. It can be
+        a string specifying a model name ('flat_plate_turbulent'), a numeric
+        value between 0 and 1 representing the blockage factor directly, or
+        None to use a default calculation method.
+    loss_model : str
+        The loss model used for calculating loss coefficients.
+    radius : float
+        Mean radius at the cascade exit.
+    area : float
+        Area of the cascade exit plane.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+
+        - plane (dict): A dictionary of calculated performance data at the cascade exit including
+          velocity triangles, thermodynamic properties, Mach and Reynolds numbers, mass flow rate,
+          and loss coefficients.
+        - loss_dict (dict): A dictionary of loss breakdwon as calculated by the loss model.
+
+    Warnings
+    --------
+    The current implementation of this calculation has limitations regarding the relationship between
+    the throat and exit areas. It does not function correctly unless these areas are related according
+    to the cosine rule. Specifically, issues arise when:
+
+    1. The blockage factor at the throat and the exit are not the same. The code may converge for minor
+       discrepancies (about <1%), but larger differences lead to convergence issues.
+    2. The "throat_location_fraction" parameter is less than one, implying a change in the throat radius
+       or height relative to the exit plane.
+
+    These limitations restrict the code's application to cases with constant blade radius or height, or
+    when blockage factors at the throat and exit planes are identical. Future versions aim to address
+    these issues, enhancing the code's generality for varied geometrical configurations and differing
+    blockage factors at the throat and exit planes.
+
+    """
+
+    # Load cascade exit variables
+    w = cascade_throat_input["w"]
+    beta = cascade_throat_input["beta"]
+    s = cascade_throat_input["s"]
+    rothalpy = cascade_throat_input["rothalpy"]
+
+    # Load geometry
+    chord = geometry["chord"]
+    opening = geometry["opening"]
+    area = geometry["A_throat"]
+    radius = geometry["radius_mean_throat"]
+
+
+    # Calculate velocity triangles
+    blade_speed = angular_speed * radius
+    velocity_triangle = evaluate_velocity_triangle_out(blade_speed, w, beta)
+    v = velocity_triangle["v"]
+
+    # Calculate static properties
+    h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
+    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    rho = static_properties["d"]
+    mu = static_properties["mu"]
+    a = static_properties["a"]
+
+    # Calculate stagnation properties
+    h0 = h + 0.5 * v**2
+    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = util.add_string_to_keys(stagnation_properties, "0")
+
+    # Calculate relative stagnation properties
+    h0_rel = h + 0.5 * w**2
+    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = util.add_string_to_keys(
+        relative_stagnation_properties, "0_rel"
+    )
+
+    # Calculate mach, reynolds and mass flow rate for cascade inlet
+    Ma = v / a
+    Ma_rel = w / a
+    Re = rho * w * chord / mu
+    rothalpy = h0_rel - 0.5 * blade_speed**2
+    # TODO: is rothalpy necessary? See calculations above
+    # TODO: not really. But it needs to be assigned either way
+    # TODO: Could be assignes as nan, but might as well calculate it
+    # TODO: Can also easiliy check that rothalpy is conserved in this way
+
+    # Compute mass flow rate
+    blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
+    mass_flow = rho * w * area * (1 - blockage_factor)
 
     # Evaluate loss coefficient
     # TODO: why not give all variables to the loss model? 
@@ -976,18 +1080,20 @@ def evaluate_cascade_critical(
     # Add residuals for the exit station
     loss_model = model_options["loss_model"]
     blockage = model_options["blockage_model"]
-    radius = geometry["radius_mean_out"]
-    area = geometry["A_out"]
     
-
     cascade_exit_input = {"w" : critical_cascade_input["w*_out"],
                           "s" : critical_cascade_input["s*_out"],
-                          "beta" : geometry["metal_angle_te"],
+                            "beta" : geometry["metal_angle_te"],
+                           # "beta" : math.arccosd(geometry["A_throat_2"]/geometry["A_out"]),
                           "rothalpy" : critical_state["inlet_plane"]["rothalpy"]}
     
-    exit_plane, loss_dict = evaluate_cascade_exit(cascade_exit_input, fluid, geometry, critical_state["inlet_plane"], angular_speed, blockage, loss_model, radius, area)
+    
+    exit_plane, loss_dict = evaluate_cascade_exit(cascade_exit_input, fluid, geometry, critical_state["inlet_plane"], angular_speed, blockage, loss_model)
     critical_state["exit_plane"] = exit_plane
-    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref
+    
+    # Quick trick to prevent convergence to supersonic exit for critical calculation
+    subsonic_solution = max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
+    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref + subsonic_solution
     residuals_critical["Y*_out"] = exit_plane["loss_error"]
     
     return residuals_critical, critical_state
@@ -1088,7 +1194,7 @@ def compute_critical_values(
         "rothalpy": inlet_plane["rothalpy"],
     }
 
-    throat_plane, loss_dict = evaluate_cascade_exit(
+    throat_plane, loss_dict = evaluate_cascade_throat(
         critical_throat_input,
         fluid,
         geometry,
@@ -1096,8 +1202,6 @@ def compute_critical_values(
         angular_speed,
         model_options["blockage_model"],
         loss_model,
-        geometry["radius_mean_throat"],
-        geometry["A_throat"],
     )
     
 
@@ -1355,7 +1459,9 @@ def compute_residual_mach_throat(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
     return residual, density_correction
 
 def compute_residual_flow_angle(
-    geometry, critical_state, throat_plane, exit_plane, subsonic_deviation_model
+    geometry, critical_state, 
+    # throat_plane, 
+    exit_plane, subsonic_deviation_model
 ):
     """
     Compute the residual between actual and target flow angles at the exit plane of a cascade.
@@ -1396,18 +1502,12 @@ def compute_residual_flow_angle(
     """
     
     # Load cascade geometry
-    area = geometry["A_out"]
-    opening = geometry["opening"]
-    pitch = geometry["pitch"]
-
+    area_out = geometry["A_out"]
 
     # Load calculated critical condition
     m_crit = critical_state["exit_plane"]["mass_flow"]
-    Ma_crit = critical_state["exit_plane"]["Ma_rel"]
-    
-    # Load throat plane data
-    # Ma_throat = throat_plane["Ma_rel"]
-    # blockage = exit_plane["blockage"] # Should blockage be at the throat?
+    Ma_crit_exit = critical_state["exit_plane"]["Ma_rel"]
+    Ma_crit_throat = critical_state["throat_plane"]["Ma_rel"]
 
     # Load exit plane
     Ma = exit_plane["Ma_rel"]
@@ -1415,24 +1515,28 @@ def compute_residual_flow_angle(
     w = exit_plane["w"]
     beta = exit_plane["beta"]
     blockage = exit_plane["blockage"]
-
-    # Compute exit flow angle
-    if Ma <= Ma_crit:
-        density_correction = np.nan
-        beta_model = dm.get_subsonic_deviation(
-            Ma, Ma_crit, opening / pitch, subsonic_deviation_model
-        )
+    
+    
+    def sigmoid_blending_asymmetric(f1, f2, x, n, m):
+        sigma = x**n/(x**n+(1-x)**m)
+        return (1-sigma)*f1 + sigma*f2
+    
+    beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_throat, Ma_crit_exit, geometry, subsonic_deviation_model)
+    beta_supersonic = np.sign(beta)*math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
+    if Ma <= Ma_crit_exit:
+        Ma_inc = 0.5
+        x = (Ma-Ma_inc)/(Ma_crit_exit-Ma_inc)
+        x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
+        # beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
+        beta_model = beta_subsonic
     else:
-        density_correction = throat_plane["d"] / critical_state["throat_plane"]["d"]
-        # density_correction = 1
-        cos_beta = m_crit / rho / w / area / (1 - blockage) * density_correction
-        beta_model = math.arccosd(cos_beta)
-        # Density correction needed above critical condition to fix numerical error caused by nested finite differences
+        beta_model = math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
         
     # Compute error of guessed beta and deviation model
     residual = math.cosd(beta_model) - math.cosd(beta)
 
-    return residual, density_correction
+    return residual, beta_subsonic, beta_supersonic
+
 
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     r"""
