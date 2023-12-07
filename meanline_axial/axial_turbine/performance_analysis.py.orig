@@ -18,6 +18,11 @@ from . import flow_model as flow
 
 
 
+# from ..utilities import graphics
+
+
+# util.set_plot_options()
+
 SOLVERS_AVAILABLE = [
     "lm",
     "hybr",
@@ -188,10 +193,17 @@ def compute_performance(
             # Collect results
             operation_point_data.append(pd.DataFrame([operation_point]))
             overall_data.append(results["overall"])
+<<<<<<< HEAD:meanline_axial/axial_turbine/performance_analysis.py
             plane_data.append(utils.flatten_dataframe(results["plane"]))
             cascade_data.append(utils.flatten_dataframe(results["cascade"]))
-            # stage_data.append(utils.flatten_dataframe(results["stage"]))
+            stage_data.append(utils.flatten_dataframe(results["stage"]))
             geometry_data.append(utils.flatten_dataframe(results["geometry"]))
+=======
+            plane_data.append(util.flatten_dataframe(results["plane"]))
+            cascade_data.append(util.flatten_dataframe(results["cascade"]))
+            # stage_data.append(util.flatten_dataframe(results["stage"]))
+            geometry_data.append(util.flatten_dataframe(results["geometry"]))
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be:meanline_axial/meanline/performance_analysis.py
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.vars_real)
             solver_container.append(solver)

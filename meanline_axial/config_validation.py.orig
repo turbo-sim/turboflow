@@ -224,6 +224,15 @@ OPTIONS_MODEL = {
     "expected_type": dict,
     "valid_options": None,
     "_nested": {
+<<<<<<< HEAD:meanline_axial/config_validation.py
+        "choking_condition": {
+            "description": "Closure condition used to predict turbine choking.",
+            "is_mandatory": True,
+            "expected_type": str,
+            "valid_options": axial_turbine.CHOKING_CONDITIONS,
+        },
+=======
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be:meanline_axial/configuration_options.py
         "deviation_model": {
             "description": "Deviation model used to predict the exit flow angle at subsonic conditions.",
             "is_mandatory": True,

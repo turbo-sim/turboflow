@@ -13,7 +13,7 @@ import meanline_axial as ml
 
 # Initialize Brayton cycle problem
 CONFIG_FILE = "case_sCO2.yaml"
-config = ml.utils.read_configuration_file(CONFIG_FILE, validate=False)
+config = ml.utils.read_configuration_file(CONFIG_FILE)
 braytonCycle = ml.cycles.BraytonCycleProblem(config["problem_formulation"])
 braytonCycle.get_optimization_values(braytonCycle.x0)
 braytonCycle.to_excel(filename="initial_configuration.xlsx")
@@ -32,7 +32,6 @@ solver.solve()
 solver.problem.to_excel(filename="optimal_solution.xlsx")
 for key, value in solver.problem.variables.items():
     print(f"{key:30}: {value:0.3f}")
-
 
 # Make an animation of the optimization history
 opt_dir = solver.problem.optimization_dir

@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Dec  6 10:01:14 2023
+
+@author: laboan
+"""
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be
+
 import os
 import sys
 import numpy as np
@@ -114,7 +124,44 @@ def sigmoid_smootherstep(x):
 
 
 
+<<<<<<< HEAD
+def sigmoid_smoothstep_asymmetric(x, x0=0.5):
+    """
+    Compute an asymmetric smooth step function.
 
+    This function calculates a smooth step function, which is a polynomial 
+    approximation to a sigmoid. The coefficients are determined by solving a 
+    linear system. When `x0=0.5`, it returns the classic smoothstep function.
+    More information available at: https://en.wikipedia.org/wiki/Smoothstep
+
+    Parameters
+    ----------
+    x : array_like
+        Input data.
+    x0 : float, optional
+        Control parameter for asymmetry. Default is 0.5.
+
+    Returns
+    -------
+    array_like
+        Output of the sigmoid smoothstep asymmetric function.
+
+    """
+    from scipy.linalg import solve
+    A = np.asarray([[1, 0, 0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 1, 1, 1],
+                    [1, x0, x0**2, x0**3, x0**4, x0**5, x0**6],
+                    [0, 1, 0, 0, 0, 0, 0],
+                    [0, 1, 2, 3, 4, 5, 6],
+                    [0, 0, 2, 0, 0, 0, 0],
+                    [0, 0, 2, 6, 12, 20, 30]])
+    b = [0, 1, 0.5, 0, 0, 0, 0]
+    sol = solve(A, b)
+    sigma = (sol[0] + sol[1]*x + sol[2]*x**2 + sol[3]*x**3 + sol[4]*x**4 + sol[5]*x**5 + sol[6]*x**6)
+    return sigma
+=======
+
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be
 
 
 # Define sampling vector
@@ -169,7 +216,11 @@ ax.set_ylabel(r"$y$ value")
 ax.set_xscale("linear")
 ax.set_yscale("linear")
 linestyles = ['-', '--', ':']
+<<<<<<< HEAD
 colors = ml.utils.COLORS_MATLAB
+=======
+colors = ["r", "b", "k"]
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be
 for i, n in enumerate([2, 3, 4]):
     for j, m in enumerate([2, 3, 4]):
         sigma = sigmoid_rational(x, n=n, m=m)
@@ -180,4 +231,8 @@ for i, n in enumerate([2, 3, 4]):
 leg = ax.legend(loc="best")
 fig.tight_layout(pad=1, w_pad=None, h_pad=None)
 
+<<<<<<< HEAD
 plt.show()
+=======
+plt.show()
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be

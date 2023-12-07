@@ -187,7 +187,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         config_file : str
             Path to the configuration file.
         """
-        config = utilities.read_configuration_file(config_file, validate=False)
+        config = utilities.read_configuration_file(config_file)
         self.update_configuration(config["problem_formulation"])
         self._calculate_special_points()
 

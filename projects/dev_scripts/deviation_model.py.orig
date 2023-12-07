@@ -72,7 +72,6 @@ def get_Aungier_beta(v_out, p0, T0, fluid, opening, pitch, radius_curvature, Ma_
         delta = 0
                         
     beta = np.arccos(opening/pitch)*180/np.pi-delta
-
     
     return beta
 
@@ -126,6 +125,20 @@ def polynomial_blending(f1, f2, x0, x, alpha):
     sigma = 0 + xx**2*(3-2*xx)*(xx > 0)*(xx < 1)+1*(xx > 1)
     return (1-sigma)*f1 + sigma*f2
 
+<<<<<<< HEAD
+# Define case parameters
+fluid_name = "air"
+Fluid = ml.Fluid(fluid_name, "HEOS")
+radius_curvature = np.inf
+pitch = 1.00
+opening = 0.5
+Ma_crit = 1
+p0 = 101325
+T0 = 300
+stagnation_props = Fluid.compute_properties(cp.PT_INPUTS, p0, T0)
+h0 = stagnation_props["h"]
+s0 = stagnation_props["s"]
+=======
 from scipy.linalg import solve
 
 def polynomial_blending_asymmetric(f1, f2, x0, x, a, alpha):
@@ -150,6 +163,7 @@ def sigmoid_blending_asymmetric(f1, f2, x, n, m):
     sigma = x**n/(x**n+(1-x)**m)
     # sigma = np.clip(sigma, 0, 1)  # Limit sigma between 0 and 1
     return (1-sigma)*f1 + sigma*f2
+>>>>>>> ff723955b3cd227b7ecf369d82bc4060c4be46be
 
 
 #########################################################################################

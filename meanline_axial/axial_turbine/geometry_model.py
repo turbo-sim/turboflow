@@ -213,18 +213,20 @@ def calculate_full_geometry(geometry):
     hub_tip_ratio_in = radius_hub_in / radius_tip_out
     hub_tip_ratio_out = radius_hub_out / radius_tip_out
     hub_tip_ratio_throat = radius_hub_throat / radius_tip_throat
+    
+    # Compute blade height at different sections
+    height = geom["radius_tip"] - geom["radius_hub"]
+    height_in = radius_tip_in - radius_hub_in
+    height_out = radius_tip_out - radius_hub_out
+    height_throat = radius_tip_throat - radius_hub_throat
+    height = (height_in + height_out) / 2
 
     # Compute areas for the full, in, out, and throat sections
     A = np.pi * (radius_tip**2 - radius_hub**2)
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
-    A_throat = np.pi * (radius_tip_throat**2 - radius_hub_throat**2)
-
-    # Compute blade height at different sections
-    height = geom["radius_tip"] - geom["radius_hub"]
-    height_in = radius_tip_in - radius_hub_in
-    height_out = radius_tip_out - radius_hub_out
-    height = (height_in + height_out) / 2
+    # A_throat = np.pi * (radius_tip_throat**2 - radius_hub_throat**2)
+    A_throat = 2*np.pi*radius_mean_throat*height_throat*geom["opening"]/geom["pitch"]
 
     # Compute flaring angle
     flaring_angle = np.arctan((height_out - height_in) / axial_chord)
@@ -268,6 +270,7 @@ def calculate_full_geometry(geometry):
         "A_throat": A_throat,
         "height": height,
         "height_in": height_in,
+        "height_throat" : height_throat,
         "height_out": height_out,
         "flaring_angle": flaring_angle,
         "aspect_ratio": aspect_ratio,

@@ -2,6 +2,20 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 07.12.2023
+- Removed throat calculation for actual cascade
+- Created a evalute_throat_plane function
+    - Different way to calculate mass flow rate
+    - Can you actual throat area and not annulus area
+- Correct deviation models to not use the cosine rule
+- Enable flexibility to have different A_throat and A_exit
+    - Can specify throat location
+    - Can specify blockage factor
+    - Can specify opening 
+- Implement blending function between subsonic and supersonic flow angle for a smooth transition
+- Developed new deviation model that should approximate the slope of the supersonic flow angle function at critical point, and interpolated between low speed flow angle, and supersonic flow angle more or less smoothly
+
+
 ## 15.11.2023
 - Added configuration file validation functionality
 - Added validation schema to documentation (updates automatically)

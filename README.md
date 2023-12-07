@@ -150,10 +150,10 @@
 - [ ] Solver improvements
   - [ ] Unify optimization problem so that it can be solver with root finding and optimization methods
   - [ ] Add pygmo solvers to the pysolverview interface (IPOPT/SNOPT)
-- [ ] Improve deviation modeling to cover cases when:
-  - [ ] Area changes from throat to exit
-  - [ ] Radius changes from throat to exit
-  - [ ] There is an additional blockage factor at the throat
+- [x] Improve deviation modeling to cover cases when:
+  - [x] Area changes from throat to exit
+  - [x] Radius changes from throat to exit
+  - [x] There is an additional blockage factor at the throat
 - [ ] Add plotting functionality
   - [ ] Plot velocity triangles
   - [ ] Plot blade to plade plane
@@ -161,6 +161,46 @@
   - [ ] Plot h-s or T-s diagrams of the expansion
   - [ ] Nice validation plotting against experimental data
   - [ ] 
+
+
+
+## TODO 06.12.2023
+- [x] Use gauge and and not opening-to-pitch in deviation model functions
+- [x] Make sure opening is only used for the critical mass flow rate calculation and blockage factor
+- [x] Do not use ordinary compute_cascade_exit function to determine the flow conditions at the throat
+- [ ] Have the option to calculate the state at the throat for the actual condition? Probably not
+- [x] Remove option of choking condition
+- [ ] Deviation model new structure:
+ - [ ] low_speed_limit: aungier | ainley-methieson | zero-deviation
+ - [ ] interpolation: aungier | ainley-methieson | borg
+ - [ ] blending_parmaters:
+	n: 
+	m: 
+	slope:
+- [ ] We improve slope so that it works when A_th=A_exit and in other cases (slope zero or one)
+- [ ] Improve initialization / initial guess generation
+- [x] Write down notes explaining the behavior of the deviation model when the area is the same and when it changes
+- [ ] Write down notes explaining the equations for the blending
+- [x] check the throat area calculation i nthe geometyr.py script and clean it
+- [ ] add option to calculate throat loasses without trailing edge losses 
+
+
+Guidelines/instructions for the deviation model
+
+Subsonic deviation according to ainley-mathieson or aungier, or zero-deviation
+critical mach number according to out calculation
+critical flow angle equal to metal_angle_out
+
+interpolation can be:
+- ainley-methieson (linear)
+- aungier (5th order polynomial for delta)
+- third order polynomial with controller end-point slope (parameter to have slope 1 or slope 0)
+
+slope should be zero for cases when Mach_crit_throat = Mach_crit_exit
+slope should be close to one for cases when Mach_crit_throat > Mach_crit_exit
+
+sigmoid blending between subsonic interpolated function and the supersonic solution (in the subsonic regime)
+we have to expend the supersonic branch into the subsonic to calculate the flow angle to ensure that we have a smooth flow angle transition
 
 
 
