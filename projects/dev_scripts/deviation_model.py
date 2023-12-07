@@ -16,7 +16,8 @@ import meanline_axial as ml
     
 from scipy import optimize
 
-fac = 1.02
+fac = 1.00
+
 
 def find_critical_mass_flux(Ma_crit, p0, T0, fluid):
 
@@ -63,12 +64,14 @@ def get_Aungier_beta(v_out, p0, T0, fluid, opening, pitch, radius_curvature, Ma_
     if Ma < 0.50:
         delta = delta_0
 
-    elif Ma > 0.50:
+    elif Ma > 0.50 and Ma < Ma_crit:
         X = (2*Ma-1) / (2*Ma_crit-1)
         delta = delta_0*(1-10*X**3+15*X**4-6*X**5)
+    
+    else:
+        delta = 0
                         
     beta = np.arccos(opening/pitch)*180/np.pi-delta
-
     
     return beta
 
@@ -117,23 +120,36 @@ def create_blended_function(f1, f2, x0, alpha=10):
     
     return blended_function
 
+def polynomial_blending(f1, f2, x0, x, alpha):
+    xx = (x-x0+alpha/2)/alpha
+    sigma = 0 + xx**2*(3-2*xx)*(xx > 0)*(xx < 1)+1*(xx > 1)
+    return (1-sigma)*f1 + sigma*f2
 
-# Define case parameters
-fluid_name = "air"
-Fluid = ml.FluidCoolProp_2Phase(fluid_name, "HEOS")
-radius_curvature = np.inf
-pitch = 1.00
-opening = 0.5
-Ma_crit = 1
-p0 = 101325
-T0 = 300
-stagnation_props = Fluid.compute_properties(cp.PT_INPUTS, p0, T0)
-h0 = stagnation_props["h"]
-s0 = stagnation_props["s"]
+from scipy.linalg import solve
 
-# Compute mass flux at the exit plane
-phi_crit, v_crit = find_critical_mass_flux(Ma_crit, p0, T0, Fluid)
-phi_crit *= opening/pitch
+def polynomial_blending_asymmetric(f1, f2, x0, x, a, alpha):
+    
+    # Coefficients of the equations
+    coefficients = np.array([[1, 1, 1],
+                             [2, 3, 4],
+                             [a**2, a**3, a**4]])
+
+    # Constants on the right-hand side
+    constants = np.array([1, 0, 0.5])
+
+    # Solve the system of equations
+    solution = solve(coefficients, constants)
+    
+    xx = (x-x0)/alpha+a
+    sigma = 0 + (solution[0]*xx**2+solution[1]*xx**3+ solution[2]*xx**4)*(xx > 0)*(xx < 1)+1*(xx > 1)
+    
+    return (1-sigma)*f1 + sigma*f2
+
+def sigmoid_blending_asymmetric(f1, f2, x, n, m):
+    sigma = x**n/(x**n+(1-x)**m)
+    # sigma = np.clip(sigma, 0, 1)  # Limit sigma between 0 and 1
+    return (1-sigma)*f1 + sigma*f2
+
 
 #########################################################################################
 
@@ -164,13 +180,57 @@ phi_crit *= opening/pitch
 
 ##########################################################################################
 
+
+
+# Define case parameters
+fluid_name = "air"
+Fluid = ml.FluidCoolProp_2Phase(fluid_name, "HEOS")
+radius_curvature = np.inf
+pitch = 1.00
+opening = 0.5
+Ma_crit = 1
+p0 = 101325
+T0 = 300
+stagnation_props = Fluid.compute_properties(cp.PT_INPUTS, p0, T0)
+h0 = stagnation_props["h"]
+s0 = stagnation_props["s"]
+
+k1 = 1
+k2 = 1
+Ma_inc = 0.5
+Ma_blend = (Ma_crit*k1+Ma_inc*k2)/2
+alpha = Ma_crit*k1-Ma_inc*k2
+
+# Compute mass flux at the exit plane
+phi_crit, v_crit = find_critical_mass_flux(Ma_crit, p0, T0, Fluid)
+phi_crit *= opening/pitch
+
+
 # Define function handles to compute exit angle
-f_subsonic = lambda v: get_Aungier_beta(v, p0, T0, Fluid, opening, pitch, radius_curvature, Ma_crit)
+# f_subsonic = lambda v: get_Aungier_beta(v, p0, T0, Fluid, opening, pitch, radius_curvature, Ma_crit)
+
+beta_crit = get_beta_supersonic(v_crit, p0, T0, Fluid, phi_crit)
+beta_inc = 58
+f_subsonic = lambda Ma: beta_inc + (beta_crit - beta_inc)* (Ma - Ma_inc) / (Ma_crit - Ma_inc)
+
+def f_subsonic2(Ma, Ma_inc, Ma_crit, beta_inc, beta_crit):
+    x = (Ma - Ma_inc) / (Ma_crit - Ma_inc)
+    y = x**2 * (2-x) * (x > 0)
+    beta = beta_inc + (beta_crit - beta_inc) * y
+    return beta
+
+def f_subsonic3(Ma, Ma_inc, Ma_crit, beta_inc, beta_crit):
+    x = (Ma - Ma_inc) / (Ma_crit - Ma_inc)
+    y = x**2 * (3-2*x) * (x > 0)
+    beta = beta_inc + (beta_crit - beta_inc) * y
+    return beta
+
 f_supersonic = lambda v: get_beta_supersonic(v, p0, T0, Fluid, phi_crit)
-f_blended = create_blended_function(f_subsonic, f_supersonic, v_crit, 1)
+f_blended = create_blended_function(f_subsonic, f_supersonic, v_crit*0.9, 10)
+
 
 # Compute the exit angle at different speeds
-v_out = np.linspace(200, 350, 500)
+v_out = np.linspace(100, 350, 100)
 Ma_exit = []
 beta_subsonic = []
 beta_supersonic = []
@@ -179,14 +239,41 @@ phi = []
 rho = []
 for v in v_out:
     Ma_exit.append(get_mach(v, p0, T0, Fluid))
-    beta_subsonic.append(f_subsonic(v))
+    # beta_subsonic.append(f_subsonic(Ma_exit[-1]))
+    
+    beta_subsonic.append(f_subsonic3(Ma_exit[-1], Ma_inc, Ma_crit, beta_inc, beta_crit))
+    # print(beta_subsonic)
+    
+    # beta_subsonic.append(58)
     beta_supersonic.append(f_supersonic(v))
-    beta_blended.append(f_blended(v))
+    # beta_blended.append(f_subsonic(Ma_exit[-1]))
+    # if Ma_exit[-1] < Ma_inc*k2:
+    #     beta_blended.append(beta_subsonic[-1])
+    if Ma_exit[-1] < Ma_crit*k1:
+        x = (Ma_exit[-1] - Ma_inc) / (Ma_crit - Ma_inc)
+        x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
+        beta_blended.append(sigmoid_blending_asymmetric(beta_subsonic[-1], beta_supersonic[-1],x, n=3, m=0.5))
+    else:
+        beta_blended.append(beta_supersonic[-1])
     h = h0-0.5*v**2
     static_props = Fluid.compute_properties(cp.HmassSmass_INPUTS, h, s0)
     d = static_props["d"]
     rho.append(d)
     phi.append(v*d)
+
+x = np.asarray([beta_subsonic, beta_supersonic])
+x0 = 0.8
+# x0 = (Ma_crit+0.5)/2
+beta_subsonic = np.asarray(beta_subsonic)
+beta_supersonic = np.asarray(beta_supersonic)
+Ma_exit = np.asarray(Ma_exit)
+
+# beta_blended = polynomial_blending(beta_subsonic, beta_supersonic, x0, Ma_exit, alpha = 0.2)
+# beta_blended = polynomial_blending_asymmetric(beta_subsonic, beta_supersonic, x0, Ma_exit, a = 0.5, alpha = 0.1)
+
+
+# beta_blended = np.max(x, axis = 0)
+
 
 # Create figure
 fig = plt.figure(figsize=(6.4, 4.8))
@@ -198,31 +285,31 @@ ax.set_xscale("linear")
 ax.set_yscale("linear")
 
 # Plot simulation data
-ax.plot(Ma_exit, beta_subsonic, linewidth=1.25, label="Subsonic")
-ax.plot(Ma_exit, beta_supersonic, linewidth=1.25, label="Supersonic")
-ax.plot(Ma_exit, beta_blended, linewidth=1.25, linestyle="--", color='black', label="Blended")
-ax.set_ylim([58,62])
+ax.plot(Ma_exit, np.asarray(beta_subsonic), linewidth=1.25, label="Subsonic")
+ax.plot(Ma_exit, np.asarray(beta_supersonic), linewidth=1.25, label="Supersonic")
+ax.plot(Ma_exit, np.asarray(beta_blended), linewidth=1.25, linestyle="--", color='black', label="Blended")
+ax.set_ylim([55,62])
 
 # Create legend
-leg = ax.legend(loc="upper left")
+leg = ax.legend(loc="best")
 
-fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))
-ax1.plot(Ma_exit, phi)
-ax1.set_ylabel('Mass flow flux')
-ax1.set_xlabel(r"$\mathrm{Ma}_{out}$ - Exit Mach number")
+# fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))
+# ax1.plot(Ma_exit, phi)
+# ax1.set_ylabel('Mass flow flux')
+# ax1.set_xlabel(r"$\mathrm{Ma}_{out}$ - Exit Mach number")
 
-fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
-ax2.plot(Ma_exit, rho)
+# fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
+# ax2.plot(Ma_exit, rho)
 
-fig3, ax3 = plt.subplots(figsize=(6.4, 4.8))
-ax3.plot(Ma_exit, np.cos(np.array(beta_blended)*np.pi/180))
-ax3.plot([Ma_exit[0],Ma_exit[-1]],opening/pitch*np.ones(2), 'k--')
+# fig3, ax3 = plt.subplots(figsize=(6.4, 4.8))
+# ax3.plot(Ma_exit, np.cos(np.array(beta_blended)*np.pi/180))
+# ax3.plot([Ma_exit[0],Ma_exit[-1]],opening/pitch*np.ones(2), 'k--')
 
 # Adjust PAD
 fig.tight_layout(pad=1, w_pad=None, h_pad=None)
-fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
-fig2.tight_layout(pad=1, w_pad=None, h_pad=None)
-fig3.tight_layout(pad=1, w_pad=None, h_pad=None)
+# fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
+# fig2.tight_layout(pad=1, w_pad=None, h_pad=None)
+# fig3.tight_layout(pad=1, w_pad=None, h_pad=None)
 
 # Show figure
 plt.show()

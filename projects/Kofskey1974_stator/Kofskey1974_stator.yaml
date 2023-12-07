@@ -1,0 +1,58 @@
+operation_points:
+  fluid_name: air          # Fluid
+  p0_in: 10.82e4           # Inlet total pressure
+  T0_in: 310.0             # Inlet total temperature
+  p_out: 10.82e4/1.7    # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 2036              # Rotational speed
+
+performance_map:
+  fluid_name: air          # Fluid
+  p0_in: 10.82e4           # Inlet total pressure
+  T0_in: 310.0             # Inlet total temperature
+  p_out: 10.82e4/np.linspace(1.5, 2.2, 20)    # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 2036              # Rotational speed
+
+
+model_options:
+  choking_condition : deviation
+  deviation_model : zero_deviation
+  blockage_model : 0.0 #flat_plate_turbulent
+  # rel_step_fd: 1e-3
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
+
+solver_options:
+  method: hybr
+  tolerance: 1e-8
+  max_iterations: 50
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-6
+  display_progress: True
+
+geometry:
+  cascade_type: ["stator"]
+  radius_hub: [8.36e-2, 8.36e-2]
+  radius_tip: [12.35e-2, 12.35e-2]
+  pitch: [1.8962e-2]         # Pitch
+  chord: [2.2655e-2]         # Chord
+  thickness_max: [0.3529e-2] # Maximum blade thickness
+  opening: [0.7505e-2]       # Throat opening
+  wedge_angle_le: [50]       # Wedge angle 
+  diameter_le: [2*0.081e-2]  # Leading edge radius
+  thickness_te: [0.05e-2]    # Trialing edge thickness
+  stagger_angle: [33]        # Stagger angle
+  metal_angle_le: [0]        # Inlet metal angle
+  metal_angle_te: [np.arccos(0.7505e-2/1.8962e-2)*180/np.pi]  # Exit metal angle
+  tip_clearance: [0]         # Tip clearance
+  throat_location_fraction: [1]
+
