@@ -10,7 +10,9 @@ def load_data(filename):
     # Import file that contains all performance parameteres
     # The resulting variable 'performance_data' will be a dictionary where keys are sheet names and values are DataFrames
     performance_data = pd.read_excel(
-        filename, sheet_name=["operation point", "plane", "cascade", "stage", "overall"]
+        filename, sheet_name=["operation point", "plane", "cascade", 
+                              #"stage",
+                              "overall"]
     )
     # Round off to ignore precision loss by loading data from excel
     for key, df in performance_data.items():
@@ -164,7 +166,8 @@ def plot_lines(
     ax.margins(x=0.01, y=0.01)
 
     # Add legend
-    ax.legend(loc=legend_loc, fontsize=9)
+    if len(y) > 1:
+        ax.legend(loc=legend_loc, fontsize=9)
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
 
     # Create output directory if it does not exist
