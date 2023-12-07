@@ -169,7 +169,7 @@
 - [x] Make sure opening is only used for the critical mass flow rate calculation and blockage factor
 - [x] Do not use ordinary compute_cascade_exit function to determine the flow conditions at the throat
 - [ ] Have the option to calculate the state at the throat for the actual condition? Probably not
-- [ ] Remove option of choking condition
+- [x] Remove option of choking condition
 - [ ] Deviation model new structure:
  - [ ] low_speed_limit: aungier | ainley-methieson | zero-deviation
  - [ ] interpolation: aungier | ainley-methieson | borg
@@ -181,7 +181,7 @@
 - [ ] Improve initialization / initial guess generation
 - [x] Write down notes explaining the behavior of the deviation model when the area is the same and when it changes
 - [ ] Write down notes explaining the equations for the blending
-- [ ] check the throat area calculation i nthe geometyr.py script and clean it
+- [x] check the throat area calculation i nthe geometyr.py script and clean it
 - [ ] add option to calculate throat loasses without trailing edge losses 
 
 
