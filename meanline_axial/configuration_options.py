@@ -224,12 +224,6 @@ OPTIONS_MODEL = {
     "expected_type": dict,
     "valid_options": None,
     "_nested": {
-        "choking_condition": {
-            "description": "Closure condition used to predict turbine choking.",
-            "is_mandatory": True,
-            "expected_type": str,
-            "valid_options": meanline.CHOKING_CONDITIONS,
-        },
         "deviation_model": {
             "description": "Deviation model used to predict the exit flow angle at subsonic conditions.",
             "is_mandatory": True,
