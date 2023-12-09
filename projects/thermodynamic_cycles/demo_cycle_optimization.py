@@ -12,12 +12,14 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 # Initialize Brayton cycle problem
-CONFIG_FILE = "case_sCO2.yaml"
 # CONFIG_FILE = "case_toluene.yaml"
+# CONFIG_FILE = "case_sCO2.yaml"
+CONFIG_FILE = "case_sCO2_recompression.yaml"
 config = ml.utils.read_configuration_file(CONFIG_FILE)
-braytonCycle = ml.cycles.BraytonCycleProblem(config["problem_formulation"])
+braytonCycle = ml.cycles.ThermodynamicCycleProblem(config["problem_formulation"])
 braytonCycle.get_optimization_values(braytonCycle.x0)
-# braytonCycle.to_excel(filename="initial_configuration.xlsx")
+braytonCycle.plot_cycle()
+braytonCycle.to_excel(filename="initial_configuration.xlsx")
 
 # Create interactive plot
 braytonCycle.plot_cycle_realtime(CONFIG_FILE)
@@ -34,13 +36,17 @@ solver.problem.to_excel(filename="optimal_solution.xlsx")
 for key, value in solver.problem.variables.items():
     print(f"{key:30}: {value:0.3f}")
 
-# # Make an animation of the optimization history
-# opt_dir = solver.problem.optimization_dir
-# ml.utils.create_mp4(
-#     opt_dir,
-#     os.path.join(os.path.dirname(opt_dir), "optimization_history.mp4"),
-#     fps=1,
-# )
+# print(solver.problem.cycle_data["components"]["turbine"]["pressure_ratio"])
+# print(solver.problem.cycle_data["components"]["main_compressor"]["pressure_ratio"])
+# print(solver.problem.cycle_data["components"]["split_compressor"]["pressure_ratio"])
+
+# Make an animation of the optimization history
+opt_dir = solver.problem.optimization_dir
+ml.utils.create_mp4(
+    opt_dir,
+    os.path.join(os.path.dirname(opt_dir), "optimization_history.mp4"),
+    fps=1,
+)
 
 # Keep figures open
 plt.show()

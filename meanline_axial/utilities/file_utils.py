@@ -206,14 +206,61 @@ def print_dict(data, indent=0):
         d:
             e: 3
     """
-
     for key, value in data.items():
         print("    " * indent + str(key) + ":", end=" ")
         if isinstance(value, dict):
-            print("")
-            print_dict(value, indent + 1)
+            if value:  # Only print if the sub-dictionary is not empty
+                print()
+                print_dict(value, indent + 1)
+            else:
+                print(" {}")  # Print empty dictionary
         else:
             print(value)
+    # for key, value in data.items():
+    #     print("    " * indent + str(key) + ":", end=" ")
+    #     if isinstance(value, dict):
+    #         print("")
+    #         print_dict(value, indent + 1)
+    #     else:
+    #         print(value)
+
+def check_for_unused_keys(dict_in):
+    """
+    Checks for unused parameters in the given dictionaries and sub-dictionaries.
+    If unused items are found, prints them in a tree-like structure.
+
+    Parameters
+    ----------
+    parameters : dict
+        The dictionary of parameters to check.
+
+    Returns
+    -------
+    None
+    """
+    unused_parameters = not is_dict_empty(dict_in)
+    if unused_parameters:
+        print("Warning: There are unused items in the configuration.")         
+        print_dict(dict_in, indent=1)
+
+
+def is_dict_empty(data):
+    """
+    Recursively checks if a dictionary and all its sub-dictionaries are empty.
+
+    Parameters
+    ----------
+    data : dict
+        The dictionary to check.
+
+    Returns
+    -------
+    bool
+        True if the dictionary and all sub-dictionaries are empty, False otherwise.
+    """
+    if isinstance(data, dict):
+        return all(is_dict_empty(v) for v in data.values()) if data else True
+    return False  # Not a dictionary
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):

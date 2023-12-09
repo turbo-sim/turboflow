@@ -28,13 +28,19 @@ LABEL_MAPPING = {
     "heat": "Heat flow rate [W]",
 }
 
+TOPOLOGY_MAPPING = {
+    "recuperated": cycles.evaluate_recuperated_cycle,
+    "recompression": cycles.evaluate_split_compression_cycle,
+    "split_compression": cycles.evaluate_split_compression_cycle,
+}
 
-class BraytonCycleProblem(solver.OptimizationProblem):
+
+class ThermodynamicCycleProblem(solver.OptimizationProblem):
     """
-    A class to represent a Brayton Cycle optimization problem.
+    A class to represent a thermodynamic cycle optimization problem.
 
     This class provides functionalities to load and update the configuration for
-    the Brayton Cycle, and to perform interactive plotting based on the current
+    the thermodynamic cycle, and to perform interactive plotting based on the current
     configuration.
 
     Attributes
@@ -68,12 +74,12 @@ class BraytonCycleProblem(solver.OptimizationProblem):
 
     def __init__(self, configuration, out_dir=None):
         """
-        Constructs all the necessary attributes for the BraytonCycleProblem object.
+        Constructs all the necessary attributes for the ThermodynamicCycleProblem object.
 
         Parameters
         ----------
         config : dict
-            Dictionary containing the configuration for the Brayton Cycle problem.
+            Dictionary containing the configuration for the thermodynamic cycle problem.
         """
         # Initialize variables
         self.figure = None
@@ -113,9 +119,10 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         Parameters
         ----------
         config : dict
-            Dictionary containing the new configuration for the Brayton Cycle problem.
+            Dictionary containing the new configuration for the thermodynamic cycle problem.
         """
         conf = configuration
+        self.cycle_function = TOPOLOGY_MAPPING[conf["cycle_topology"]]
         self.plot_settings = conf["plot_settings"]
         self.constraints = conf["constraints"]
         self.fixed_parameters = conf["fixed_parameters"]
@@ -125,6 +132,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         self.upper_bounds = {k: v["max"] for k, v in conf["design_variables"].items()}
         self.keys = list(self.variables.keys())
         self.x0 = np.asarray([var for var in self.variables.values()])
+
 
     def _calculate_special_points(self):
         """
@@ -176,7 +184,8 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         state_dilute = self.fluid.set_state(props.PT_INPUTS, p_triple, T_source)
 
         # Save states in the fixed parameters dictionary
-        self.fixed_parameters["cycle_fluid"] = {
+        self.fixed_parameters_bis = copy.deepcopy(self.fixed_parameters)
+        self.fixed_parameters_bis["cycle_fluid"] = {
             "critical_point": self.fluid.critical_point.to_dict(),
             "triple_point_liquid": self.fluid.triple_point_liquid.to_dict(),
             "triple_point_vapor": self.fluid.triple_point_vapor.to_dict(),
@@ -203,7 +212,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         vars_physical = self._scale_normalized_to_physical(self.variables)
 
         # Evaluate model
-        self.cycle_data = cycles.evaluate_recuperated_cycle(
+        self.cycle_data = self.cycle_function(
             vars_physical,
             self.fixed_parameters,
             self.constraints,
@@ -248,13 +257,13 @@ class BraytonCycleProblem(solver.OptimizationProblem):
                 # Try to evaluate bounds as expressions if they are strings
                 if isinstance(lower_expr, str):
                     lower = utilities.render_and_evaluate(
-                        lower_expr, self.fixed_parameters
+                        lower_expr, self.fixed_parameters_bis
                     )
                 else:
                     lower = lower_expr
                 if isinstance(upper_expr, str):
                     upper = utilities.render_and_evaluate(
-                        upper_expr, self.fixed_parameters
+                        upper_expr, self.fixed_parameters_bis
                     )
                 else:
                     upper = upper_expr
@@ -428,7 +437,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
 
         # Print instructions message
         print("-" * 80)
-        print(" Creating Brayton cycle interactive plot")
+        print(" Creating thermodynamic cycle interactive plot")
         print("-" * 80)
         print(f" The current configuration file is: '{configuration_file}'")
         print(" Modify the configuration file and save it to update the plot")
@@ -614,6 +623,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
                 markerfacecolor="w",
                 color=color,
                 label=name,
+                zorder=1,
             )
             (points,) = ax.plot(
                 [x_data[0], x_data[-1]],
@@ -625,6 +635,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
                 markeredgewidth=1.25,
                 markerfacecolor="w",
                 color=color,
+                zorder=2, 
             )
 
             # Store the new plot elements

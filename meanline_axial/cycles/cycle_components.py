@@ -188,6 +188,7 @@ def compression_process(
         "efficiency_type": efficiency_type,
         "specific_work": specific_work,
         "isentropic_work": isentropic_work,
+        "pressure_ratio": state_out.p/state_in.p,
         "mass_flow": np.nan,
         "color": "black",
     }
@@ -285,6 +286,7 @@ def expansion_process(
         "efficiency_type": efficiency_type,
         "specific_work": specific_work,
         "isentropic_work": isentropic_work,
+        "pressure_ratio": state_in.p/state_out.p,
         "mass_flow": np.nan,
         "color": "black",
     }
