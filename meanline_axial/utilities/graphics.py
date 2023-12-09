@@ -243,3 +243,5 @@ def create_mp4(image_folder, output_file, fps=10):
                 file_path = os.path.join(image_folder, filename)
                 image = imageio.imread(file_path)
                 writer.append_data(image)
+
+

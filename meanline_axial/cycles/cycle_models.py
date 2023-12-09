@@ -6,6 +6,7 @@ from .cycle_components import (compression_process,
                                expansion_process,
                                heat_exchanger)
 
+COLORS_MATLAB = utilities.COLORS_MATLAB
 
 def evaluate_recuperated_cycle(
     variables,
@@ -149,6 +150,27 @@ def evaluate_recuperated_cycle(
     system_efficiency = W_net / Q_in_max
     backwork_ratio = W_in / W_out
 
+    # Add the mass flow to the components
+    heater["hot_side"]["mass_flow"] = m_h
+    heater["cold_side"]["mass_flow"] = m_w
+    recuperator["hot_side"]["mass_flow"] = m_w
+    recuperator["cold_side"]["mass_flow"] = m_w
+    cooler["hot_side"]["mass_flow"] = m_w
+    cooler["cold_side"]["mass_flow"] = m_c
+    turbine["mass_flow"] = m_w
+    compressor["mass_flow"] = m_w
+
+    # Set colors for plotting
+    heater["hot_side"]["color"] = COLORS_MATLAB[6]
+    heater["cold_side"]["color"] = COLORS_MATLAB[1]
+    recuperator["hot_side"]["color"] = COLORS_MATLAB[1]
+    recuperator["cold_side"]["color"] = COLORS_MATLAB[1]
+    cooler["hot_side"]["color"] = COLORS_MATLAB[1]
+    cooler["cold_side"]["color"] = COLORS_MATLAB[0]
+    turbine["color"] = COLORS_MATLAB[1]
+    compressor["color"] = COLORS_MATLAB[1]
+
+    # Define dictionary with 1st Law analysis
     energy_analysis = {
         "heater_heat_flow": Q_in,
         "heater_heat_flow_max": Q_in_max,
@@ -165,17 +187,17 @@ def evaluate_recuperated_cycle(
         "backwork_ratio": backwork_ratio,
     }
 
-    # Summary of processes
-    processes = {
-        "turbine": turbine,
-        "compressor": compressor,
-        "recuperator_hot_side": recuperator["hot_side"],
-        "recuperator_cold_side": recuperator["cold_side"],
-        "heater_hot_side": heater["hot_side"],
-        "heater_cold_side": heater["cold_side"],
-        "cooler_hot_side": cooler["hot_side"],
-        "cooler_cool_side": cooler["cold_side"],
-    }
+    # # Summary of processes
+    # processes = {
+    #     "turbine": turbine,
+    #     "compressor": compressor,
+    #     "recuperator_hot_side": recuperator["hot_side"],
+    #     "recuperator_cold_side": recuperator["cold_side"],
+    #     "heater_hot_side": heater["hot_side"],
+    #     "heater_cold_side": heater["cold_side"],
+    #     "cooler_hot_side": cooler["hot_side"],
+    #     "cooler_cool_side": cooler["cold_side"],
+    # }
 
     # Summary of processes
     components = {
@@ -189,7 +211,7 @@ def evaluate_recuperated_cycle(
 
     output = {
         "components": components,
-        "processes": processes,
+        # "processes": processes,
         "energy_analysis": energy_analysis,
     }
 

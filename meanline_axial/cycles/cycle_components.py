@@ -55,6 +55,7 @@ def heat_exchanger(
 
     # Create result dictionary
     result = {
+        "type": "heat_exchanger",
         "hot_side": hot_side,
         "cold_side": cold_side,
         "q_hot_side": dh_hot,
@@ -85,8 +86,11 @@ def heat_transfer_process(fluid, h_1, p_1, h_2, p_2, num_steps=25):
     # Create result dictionary
     result = {
         "states": props.states_to_dict(states),
+        "fluid_name": fluid.name,
         "state_in": state_in,
         "state_out": state_out,
+        "mass_flow": np.nan,
+        "color": "black",
     }
 
     return result
@@ -175,6 +179,8 @@ def compression_process(
 
     # Create result dictionary
     result = {
+        "type": "compressor",
+        "fluid_name": fluid.name,
         "states": props.states_to_dict(states),
         "state_in": state_in,
         "state_out": state_out,
@@ -182,6 +188,8 @@ def compression_process(
         "efficiency_type": efficiency_type,
         "specific_work": specific_work,
         "isentropic_work": isentropic_work,
+        "mass_flow": np.nan,
+        "color": "black",
     }
 
     return result
@@ -268,6 +276,8 @@ def expansion_process(
 
     # Create result dictionary
     result = {
+        "type": "turbine",
+        "fluid_name": fluid.name,
         "states": props.states_to_dict(states),
         "state_in": state_in,
         "state_out": state_out,
@@ -275,6 +285,8 @@ def expansion_process(
         "efficiency_type": efficiency_type,
         "specific_work": specific_work,
         "isentropic_work": isentropic_work,
+        "mass_flow": np.nan,
+        "color": "black",
     }
 
     return result

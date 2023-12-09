@@ -492,13 +492,16 @@ def render_and_evaluate(expression, data):
 
     # Function to replace each match with its resolved value
     def replace_with_value(match):
-        nested_key = match.group(1)
-        try:
-            return str(render_nested_value(nested_key, data))
-        except KeyError:
-            raise KeyError(
-                f"Variable '{nested_key}' not found in the provided data context."
-            )
+            nested_key = match.group(1)
+            try:
+                value = render_nested_value(nested_key, data)
+                if isinstance(value, np.ndarray):
+                    return "np.array(" + repr(value.tolist()) + ")"
+                else:
+                    return repr(value)
+            except KeyError:
+                raise KeyError(f"Variable '{nested_key}' not found in the provided data context.")
+
 
     try:
         # Replace all $variable with their actual values
@@ -509,11 +512,16 @@ def render_and_evaluate(expression, data):
             raise ValueError(f"Unresolved variable in expression: '{resolved_expr}'")
 
         # Now evaluate the expression
-        return eval(resolved_expr, data)
-    except SyntaxError:
-        raise SyntaxError(f"Syntax error in expression: '{expression}'")
+        return eval(resolved_expr)
+    
+    except SyntaxError as e:
+        raise SyntaxError(f"Syntax error in '{expression}': {e}")
     except Exception as e:
-        raise TypeError(f"Error evaluating expression '{expression}': {e}")
+        # Enhanced error message
+        raise TypeError(f"Error evaluating expression '{expression}': {e}.\n"
+                        "If the expression is meant to use data from the configuration, "
+                        "ensure each variable is prefixed with '$'. For example, use '$variable_name' "
+                        "instead of 'variable_name'.")  
 
 
 def render_nested_value(nested_key, data):

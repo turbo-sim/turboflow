@@ -25,7 +25,9 @@ LABEL_MAPPING = {
     "d": "Density [kg/m$^3$]",
     "a": "Speed of sound [m/s]",
     "Z": "Compressibility factor [-]",
+    "heat": "Heat flow rate [W]",
 }
+
 
 class BraytonCycleProblem(solver.OptimizationProblem):
     """
@@ -78,6 +80,11 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         self.figure_TQ = None
         self.configuration = copy.deepcopy(configuration)
         self.update_configuration(self.configuration)
+        self.graphics = {
+            "process_lines": {},
+            "state_points": {},
+            "pinch_point_lines": {},
+        }
 
         # Create fluid object to calculate states used for the scaling of design variables
         self.fluid = props.Fluid(**self.fixed_parameters["working_fluid"])
@@ -98,7 +105,6 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         config_file = os.path.join(self.out_dir, "initial_configuration.yaml")
         with open(config_file, "w") as file:
             yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
-
 
     def update_configuration(self, configuration):
         """
@@ -132,7 +138,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
         the saturated liquid state is calculated at this temperature. If it is above
         the critical temperature, the state is calculated along the pseudocritical line.
 
-        The dilute gas state is calculated at the heat source inlet temperature and at 
+        The dilute gas state is calculated at the heat source inlet temperature and at
         very low pressure (slightly above the triple pressure)
 
         The calculated states, along with the fluid's critical and triple point properties,
@@ -241,11 +247,15 @@ class BraytonCycleProblem(solver.OptimizationProblem):
 
                 # Try to evaluate bounds as expressions if they are strings
                 if isinstance(lower_expr, str):
-                    lower = utilities.render_and_evaluate(lower_expr, self.fixed_parameters)
+                    lower = utilities.render_and_evaluate(
+                        lower_expr, self.fixed_parameters
+                    )
                 else:
                     lower = lower_expr
                 if isinstance(upper_expr, str):
-                    upper = utilities.render_and_evaluate(upper_expr, self.fixed_parameters)
+                    upper = utilities.render_and_evaluate(
+                        upper_expr, self.fixed_parameters
+                    )
                 else:
                     upper = upper_expr
 
@@ -256,90 +266,144 @@ class BraytonCycleProblem(solver.OptimizationProblem):
 
         return vars_physical
 
-
-    def plot_cycle_diagram(self):
+    def to_excel(self, filename="performance.xlsx"):
         """
-        Plots or updates the thermodynamic cycle diagram based on current settings.
-
-        This function is designed to create a new cycle diagram or update an existing one. It is
-        especially useful in scenarios where the cycle diagram needs to be dynamically refreshed.
-        For instance, during optimization steps, this function can be used as a callback to
-        continually update the plot with new optimization data. It is also utilized by the
-        `plot_cycle_diagram_realtime` method to refresh the plot based on the latest values
-        from the YAML configuration file.
-
-        The function checks if a cycle diagram already exists. If it does, the diagram is updated
-        with new data; otherwise, a new diagram is created. This approach ensures that the plot
-        reflects the most current state of the cycle, including any changes made during
-        optimization or adjustments to the configuration settings.
-
-        The plotting settings are read from `self.plot_settings`, which are updated with
-        default values for any unspecified settings.
+        Exports the cycle performance data to Excel file
         """
 
-        # Use default values for unspecified settings
-        self.plot_settings = self._get_plot_settings(self.plot_settings)
+        # Define variable map
+        variable_map = {
+            "fluid_name": {"name": "fluid_name", "unit": "-"},
+            "T": {"name": "temperature", "unit": "K"},
+            "p": {"name": "pressure", "unit": "Pa"},
+            "rho": {"name": "density", "unit": "kg/m3"},
+            "Q": {"name": "quality", "unit": "-"},
+            "Z": {"name": "compressibility_factor", "unit": "-"},
+            "u": {"name": "internal_energy", "unit": "J/kg"},
+            "h": {"name": "enthalpy", "unit": "J/kg"},
+            "s": {"name": "entropy", "unit": "J/kg/K"},
+            "cp": {"name": "isobaric_heat_capacity", "unit": "J/kg/K"},
+            "cv": {"name": "isochoric_heat_capacity", "unit": "J/kg/K"},
+            "gamma": {"name": "heat_capacity_ratio", "unit": "-"},
+            "a": {"name": "speed_of_sound", "unit": "m/s"},
+            "mu": {"name": "dynamic_viscosity", "unit": "Pa*s"},
+            "k": {"name": "thermal_conductivity", "unit": "W/m/K"},
+            "superheating": {"name": "superheating_degree", "unit": "K"},
+            "subcooling": {"name": "subcooling_degree", "unit": "K"},
+        }
 
-        # Create new figure or update data of existing figure
+        # Initialize a list to hold all rows of the DataFrame
+        data_rows = []
+
+        # Prepare the headers and units rows
+        headers = ["state"]
+        units_row = ["units"]
+
+        for key in variable_map:
+            headers.append(variable_map[key]["name"])
+            units_row.append(variable_map[key]["unit"])
+
+        # Iterate over each component in the dictionary
+        for component_name, component in self.cycle_data["components"].items():
+            if component["type"] == "heat_exchanger":
+                # Handle heat exchanger sides separately
+                for side in ["hot_side", "cold_side"]:
+                    # Append the data for state_in and state_out to the rows list
+                    state_in = component[side]["state_in"].to_dict()
+                    state_out = component[side]["state_out"].to_dict()
+                    data_rows.append(
+                        [f"{component_name}_{side}_in"]
+                        + [state_in.get(key, None) for key in variable_map]
+                    )
+                    data_rows.append(
+                        [f"{component_name}_{side}_out"]
+                        + [state_out.get(key, None) for key in variable_map]
+                    )
+            else:
+                # Handle non-heat exchanger components
+                # Append the data for state_in and state_out to the rows list
+                state_in = component["state_in"].to_dict()
+                state_out = component["state_out"].to_dict()
+                data_rows.append(
+                    [f"{component_name}_in"]
+                    + [state_in.get(key, None) for key in variable_map]
+                )
+                data_rows.append(
+                    [f"{component_name}_out"]
+                    + [state_out.get(key, None) for key in variable_map]
+                )
+
+        # Create a DataFrame with data rows
+        df = pd.DataFrame(data_rows, columns=headers)
+
+        # Insert the units row
+        df.loc[-1] = units_row  # Adding a row
+        df.index = df.index + 1  # Shifting index
+        df = df.sort_index()  # Sorting by index
+
+        # Export to Excel
+        df.to_excel(
+            os.path.join(self.out_dir, filename),
+            index=False,
+            header=True,
+            sheet_name="cycle_states",
+        )
+
+    def plot_cycle(self):
+        """
+        Plots or updates the thermodynamic cycle diagrams based on current settings,
+        including the option to include a pinch point diagram.
+
+        This function is capable of both creating new cycle diagrams and updating existing ones.
+        It's particularly useful in dynamic scenarios such as during optimization steps,
+        where the plot needs to be refreshed continually with new data.
+        The method also supports real-time updates based on the latest configuration settings.
+
+        The function first determines the number of subplots required based on the cycle diagrams
+        specified in the 'plot_settings' attribute and whether a pinch point diagram is included.
+        It then either initializes a new figure and axes or updates existing ones.
+        Each thermodynamic diagram (phase diagram and cycle components) and the optional pinch point
+        diagram are plotted or updated accordingly.
+
+        The method ensures that the plot reflects the current state of the cycle, including any
+        changes during optimization or adjustments to configuration settings.
+
+        The data of the plots can be updated interactively, but the subplot objects created can
+        only be specified upon class initialization. For example, it is not possible to switch
+        on and off the pinch point diagram or to add new thermodynamic diagrams. The class would
+        have to be re-initialized upon those scenarios. The reason for this choice is that re-creating
+        a figure would be too time consuming and not practical for the real-time updating of the plots
+
+        """
+
+        # Determine the number of subplots
+        include_pinch_diagram = self.plot_settings.get("pinch_point_diagram", False)
+        ncols = len(self.plot_settings["diagrams"]) + int(include_pinch_diagram)
+        nrows = 1
+
+        # Initialize the figure and axes
         if not (self.figure and plt.fignum_exists(self.figure.number)):
-            # Initialize figure
-            self.figure, self.ax = plt.subplots(figsize=(6.0, 4.8))
-            self.ax.set_xlabel(LABEL_MAPPING[self.plot_settings["x_variable"]])
-            self.ax.set_ylabel(LABEL_MAPPING[self.plot_settings["y_variable"]])
-            self.ax.set_xscale(self.plot_settings["x_scale"])
-            self.ax.set_yscale(self.plot_settings["y_scale"])
-            self.process_lines = {}
-            self.state_points = {}
+            self.figure, self.axes = plt.subplots(
+                nrows, ncols, figsize=(5.2 * ncols, 4.8)
+            )
+            self.axes = utilities.ensure_iterable(self.axes)
 
-            # Plot phase diagram
-            self.fluid.plot_phase_diagram(axes=self.ax, **self.plot_settings)
+        # Plot or update each thermodynamic_diagram
+        for i, ax in enumerate(self.axes[:-1] if include_pinch_diagram else self.axes):
+            plot_config = self.plot_settings["diagrams"][i]
+            plot_config = self._get_diagram_settings(plot_config)
+            self._plot_thermodynamic_diagram(ax, plot_config, i)
 
-            # Loop over all cycle processes
-            for name in self.cycle_data["processes"]:
-                self._plot_cycle_component(name)
+        # Plot or update the pinch point diagram
+        if include_pinch_diagram:
+            self._plot_pinch_point_diagram(self.axes[-1], ncols - 1)
 
-        else:  # The figure already exists
-            # Update axes
-            self.ax.set_xlabel(LABEL_MAPPING[self.plot_settings["x_variable"]])
-            self.ax.set_ylabel(LABEL_MAPPING[self.plot_settings["y_variable"]])
-            self.ax.set_xscale(self.plot_settings["x_scale"])
-            self.ax.set_yscale(self.plot_settings["y_scale"])
-
-            # Plot phase diagram
-            self.fluid.plot_phase_diagram(axes=self.ax, **self.plot_settings)
-
-            # Update all cycle processes
-            for name in self.cycle_data["processes"]:
-                self._update_cycle_component(name)
-
-            # Adjust the plot limits
-            self.ax.relim()
-            self.ax.autoscale_view()
-
-        # Give some time to update plot
-        self.figure.tight_layout(pad=1)
+        # Adjust layout and refresh plot
+        self.figure.tight_layout(pad=2)
         plt.draw()
         plt.pause(0.05)
 
-    def plot_optimization_history(self, x, iter):
-        """
-        Plot and save the thermodynamic cycle at different optimization iterations
-
-        This function is intended to be passed as callback argument to the optimization solver
-        """
-        # Update and plot the cycle diagram
-        self.ax.set_title(f"Optimization iteration: {iter:03d}")
-        self.plot_cycle_diagram()
-
-        # Create a 'results' directory if it doesn't exist
-        self.optimization_dir = os.path.join(self.out_dir, "optimization")
-        os.makedirs(self.optimization_dir, exist_ok=True)
-
-        # Use the solver's iteration number for the filename
-        filename = os.path.join(self.optimization_dir, f"iteration_{iter:03d}.png")
-        self.figure.savefig(filename)
-
-    def plot_cycle_diagram_realtime(self, configuration_file, update_interval=0.1):
+    def plot_cycle_realtime(self, configuration_file, update_interval=0.1):
         """
         Perform interactive plotting, updating the plot based on the configuration file.
 
@@ -378,7 +442,7 @@ class BraytonCycleProblem(solver.OptimizationProblem):
             # Read the configuration file
             self.load_configuration_file(configuration_file)
             self.get_optimization_values(self.x0)
-            self.plot_cycle_diagram()
+            self.plot_cycle()
 
             # Wait for the specified interval before updating again
             time.sleep(update_interval)
@@ -391,115 +455,27 @@ class BraytonCycleProblem(solver.OptimizationProblem):
             if self.enter_pressed:
                 break
 
-    def _get_component_data(self, name, prop_x, prop_y):
+    def plot_cycle_callback(self, x, iter):
         """
-        Retrieve thermodynamic data for a specified component of the cycle.
+        Plot and save the thermodynamic cycle at different optimization iterations
 
-        The x-property of the heating and cooling fluids is modified to match the working fluid values
-        This looks good for plots with temperature in the y-axis and entropy/enthalpy in the x-axis
-
-        Parameters
-        ----------
-        name : str
-            Name of the cycle component.
-        prop_x : str
-            Property name to plot on the x-axis.
-        prop_y : str
-            Property name to plot on the y-axis.
-
-        Returns
-        -------
-        tuple of (np.ndarray, np.ndarray, str)
-            x_data: Array of data points for the x-axis.
-            y_data: Array of data points for the y-axis.
-            color: Color code for the plot.
+        This function is intended to be passed as callback argument to the optimization solver
         """
-        data = self.cycle_data["processes"]
-        if name == "heater_hot_side":
-            x_data = data["heater_cold_side"]["states"][prop_x]
-            y_data = data[name]["states"][prop_y]
-            color = COLORS_MATLAB[6]
-        elif name == "cooler_cool_side":
-            x_data = data["cooler_hot_side"]["states"][prop_x]
-            y_data = data[name]["states"][prop_y]
-            color = COLORS_MATLAB[0]
-        else:
-            x_data = data[name]["states"][prop_x]
-            y_data = data[name]["states"][prop_y]
-            color = COLORS_MATLAB[1]
+        # Update and plot the cycle diagram
+        self.figure.suptitle(f"Optimization iteration: {iter:03d}", fontsize=14, y=0.90)
+        self.plot_cycle()
 
-        return x_data, y_data, color
+        # Create a 'results' directory if it doesn't exist
+        self.optimization_dir = os.path.join(self.out_dir, "optimization")
+        os.makedirs(self.optimization_dir, exist_ok=True)
 
-    def _plot_cycle_component(self, name, linewidth=1.00):
-        """
-        Plots a the states of a cycle component on the current axes.
+        # Use the solver's iteration number for the filename
+        filename = os.path.join(self.optimization_dir, f"iteration_{iter:03d}.png")
+        self.figure.savefig(filename)
 
-        Parameters
-        ----------
-        name : str
-            Name of the cycle component to plot.
-        linewidth : float, optional
-            Line width for the plot, by default 1.00.
-        """
-        x_data, y_data, color = self._get_component_data(
-            name,
-            self.plot_settings["x_variable"],
-            self.plot_settings["y_variable"],
-        )
-        x_points = [x_data[0], x_data[-1]]
-        y_points = [y_data[0], y_data[-1]]
-
-        (self.process_lines[name],) = self.ax.plot(
-            x_data,
-            y_data,
-            linestyle="-",
-            linewidth=linewidth,
-            marker="none",
-            markersize=4.5,
-            markeredgewidth=linewidth,
-            markerfacecolor="w",
-            color=color,
-            label=name,
-        )
-
-        (self.state_points[name],) = self.ax.plot(
-            x_points,
-            y_points,
-            linestyle="none",
-            linewidth=linewidth,
-            marker="o",
-            markersize=4.5,
-            markeredgewidth=linewidth,
-            markerfacecolor="w",
-            color=color,
-        )
-
-    def _update_cycle_component(self, name):
-        """
-        Updates the plot data for an existing cycle component.
-
-        Parameters
-        ----------
-        name : str
-            Name of the cycle component to update.
-        """
-        x_data, y_data, _ = self._get_component_data(
-            name,
-            self.plot_settings["x_variable"],
-            self.plot_settings["y_variable"],
-        )
-        x_points = [x_data[0], x_data[-1]]
-        y_points = [y_data[0], y_data[-1]]
-
-        self.process_lines[name].set_data(x_data, y_data)
-        self.state_points[name].set_data(x_points, y_points)
-
-    @staticmethod
-    def _get_plot_settings(user_settings):
+    def _get_diagram_settings(self, plot_config):
         """
         Merges user-provided plot settings with default settings.
-
-        Any setting not specified by the user will be set to a default value.
 
         Parameters
         ----------
@@ -525,67 +501,307 @@ class BraytonCycleProblem(solver.OptimizationProblem):
             "plot_spinodal_line": False,
             # Add other default settings here
         }
-        return {**default_settings, **user_settings}
 
-    def to_excel(self, filename="performance.xlsx"):
+        # Combine the global fluid settings with the "plots" settings
+        fluid_settings = self.plot_settings.get("fluid", {})
+        fluid_settings = {} if fluid_settings is None else fluid_settings
+        plot_config = plot_config | fluid_settings
+
+        # Merge with default values
+        return default_settings | plot_config
+
+    def _plot_thermodynamic_diagram(self, ax, plot_config, ax_index):
         """
-        Exports the cycle performance data to Excel file
+        Plots or updates the thermodynamic diagram on a specified axes.
+
+        This function sets up the axes properties according to the provided plot configuration and
+        plots the phase diagram for the specified fluid. It then iterates over all the components in
+        the cycle data. For heat exchangers, it plots or updates the processes for both the hot and cold sides.
+        For other types of components, it plots or updates the process based on the component's data.
+
+        The function also adjusts the plot limits if it's updating an existing plot,
+        ensuring that the axes are scaled correctly to fit the new data.
+
+        Parameters:
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes on which to plot or update the thermodynamic diagram.
+        plot_config : dict
+            A dictionary containing the plot settings, including variables to be plotted on the x and y axes, and scaling information.
+        ax_index : int
+            The index of the axes in the figure, used for identifying and updating existing plots.
+        """
+        # Set up axes properties
+        ax.set_xlabel(LABEL_MAPPING[plot_config["x_variable"]])
+        ax.set_ylabel(LABEL_MAPPING[plot_config["y_variable"]])
+        ax.set_xscale(plot_config["x_scale"])
+        ax.set_yscale(plot_config["y_scale"])
+
+        # Plot phase diagram
+        self.fluid.plot_phase_diagram(axes=ax, **plot_config)
+
+        # Plot thermodynamic components
+        for name, component in self.cycle_data["components"].items():
+            # Handle heat exchanger components in a special way
+            if component["type"] == "heat_exchanger":
+                for side in ["hot_side", "cold_side"]:
+                    self._plot_cycle_process(
+                        name + "_" + side, plot_config, ax, ax_index=ax_index
+                    )
+            else:
+                self._plot_cycle_process(name, plot_config, ax, ax_index=ax_index)
+
+        # Adjust plot limits if updating
+        ax.relim(visible_only=True)
+        ax.autoscale_view()
+
+    def _plot_cycle_process(self, name, plot_settings, ax, ax_index=None):
+        """
+        Creates or updates the plot elements for a specific cycle process on a given axes.
+
+        This method checks if the plot elements for the specified cycle process already exist on the given axes.
+        If they exist and an axis index is provided, it updates these elements with new data. Otherwise, it creates
+        new plot elements (lines and points) and stores them for future updates.
+
+        Parameters:
+        ----------
+        name : str
+            The name of the cycle process to plot or update.
+        plot_settings : dict
+            The plot settings dictionary containing settings such as x and y variables.
+        ax : matplotlib.axes.Axes
+            The axes on which to plot or update the cycle process.
+        ax_index : int, optional
+            The index of the axes in the figure, used for updating existing plots. If None, new plots are created.
         """
 
-        # Define variable map
-        variable_map = {
-            "fluid_name": {"name": "fluid_name", "unit": "-"},
-            "T": {"name": "temperature", "unit": "K"},
-            "p": {"name": "pressure", "unit": "Pa"},
-            "rho": {"name": "density", "unit": "kg/m3"},
-            "Q": {"name": "quality", "unit": "-"},
-            "Z": {"name": "compressibility_factor", "unit": "-"},
-            "u": {"name": "internal_energy", "unit": "J/kg"},
-            "h": {"name": "enthalpy", "unit": "J/kg"},
-            "s": {"name": "entropy", "unit": "J/kg/K"},
-            "cp": {"name": "isobaric_heat_capacity", "unit": "J/kg/K"},
-            "cv": {"name": "isochoric_heat_capacity", "unit": "J/kg/K"},
-            "gamma": {"name": "heat_capacity_ratio", "unit": "-"},
-            "a": {"name": "speed_of_sound", "unit": "m/s"},
-            "mu": {"name": "dynamic_viscosity", "unit": "Pa*s"},
-            "k": {"name": "thermal_conductivity", "unit": "W/m/K"},
-            "superheating": {"name": "superheating_degree", "unit": "K"},
-            "subcooling": {"name": "subcooling_degree", "unit": "K"},
-        }
+        # Retrieve component data
+        x_data, y_data, color = self._get_process_data(
+            name, plot_settings["x_variable"], plot_settings["y_variable"]
+        )
 
-        # Initialize a list to hold all rows of the DataFrame
-        data_rows = []
+        # Initialize the dictionary for this axis index if it does not exist
+        if ax_index is not None:
+            if ax_index not in self.graphics["process_lines"]:
+                self.graphics["process_lines"][ax_index] = {}
+            if ax_index not in self.graphics["state_points"]:
+                self.graphics["state_points"][ax_index] = {}
 
-        # Prepare the headers and units rows
-        headers = ["Process"]
-        units_row = ["Units"]
-
-        for key in variable_map:
-            headers.append(variable_map[key]["name"])
-            units_row.append(variable_map[key]["unit"])
-
-        # Iterate over each process in the dictionary
-        for process_name, process in self.cycle_data["processes"].items():
-            state_in = process["state_in"].to_dict()
-            state_out = process["state_out"].to_dict()
-
-            # Append the data for state_in and state_out to the rows list
-            data_rows.append(
-                [process_name + "_in"]
-                + [state_in.get(key, None) for key in variable_map]
+        # Handle existing plot elements
+        if ax_index is not None and name in self.graphics["process_lines"][ax_index]:
+            if x_data is None or y_data is None:
+                # Hide existing plot elements if data is None
+                self.graphics["process_lines"][ax_index][name].set_visible(False)
+                self.graphics["state_points"][ax_index][name].set_visible(False)
+            else:
+                # Update existing plot elements with new data
+                self.graphics["process_lines"][ax_index][name].set_data(x_data, y_data)
+                self.graphics["state_points"][ax_index][name].set_data(
+                    [x_data[0], x_data[-1]], [y_data[0], y_data[-1]]
+                )
+                self.graphics["process_lines"][ax_index][name].set_visible(True)
+                self.graphics["state_points"][ax_index][name].set_visible(True)
+        elif x_data is not None and y_data is not None:
+            # Create new plot elements if data is not None
+            (line,) = ax.plot(
+                x_data,
+                y_data,
+                linestyle="-",
+                linewidth=1.25,
+                marker="none",
+                markersize=4.0,
+                markeredgewidth=1.25,
+                markerfacecolor="w",
+                color=color,
+                label=name,
             )
-            data_rows.append(
-                [process_name + "_out"]
-                + [state_out.get(key, None) for key in variable_map]
+            (points,) = ax.plot(
+                [x_data[0], x_data[-1]],
+                [y_data[0], y_data[-1]],
+                linestyle="none",
+                linewidth=1.25,
+                marker="o",
+                markersize=4.0,
+                markeredgewidth=1.25,
+                markerfacecolor="w",
+                color=color,
             )
 
-        # Create a DataFrame with data rows
-        df = pd.DataFrame(data_rows, columns=headers)
+            # Store the new plot elements
+            if ax_index is not None:
+                self.graphics["process_lines"][ax_index][name] = line
+                self.graphics["state_points"][ax_index][name] = points
 
-        # Insert the units row
-        df.loc[-1] = units_row  # Adding a row
-        df.index = df.index + 1  # Shifting index
-        df = df.sort_index()  # Sorting by index
+    def _get_process_data(self, name, prop_x, prop_y):
+        """
+        Retrieve thermodynamic data for a specified process of the cycle.
 
-        # Export to Excel
-        df.to_excel(os.path.join(self.out_dir, filename), index=False, header=True)
+        Parameters:
+        ----------
+        name : str
+            Name of the cycle process.
+        prop_x : str
+            Property name to plot on the x-axis.
+        prop_y : str
+            Property name to plot on the y-axis.
+
+        Returns:
+        -------
+        tuple of (np.ndarray, np.ndarray, str)
+            x_data: Array of data points for the x-axis.
+            y_data: Array of data points for the y-axis.
+            color: Color code for the plot.
+        """
+        if "_hot_side" in name or "_cold_side" in name:
+            # Extract the component and side from the name
+            if "_hot_side" in name:
+                component_name, side_1 = name.replace("_hot_side", ""), "hot_side"
+                side_2 = "cold_side"
+            else:
+                component_name, side_1 = name.replace("_cold_side", ""), "cold_side"
+                side_2 = "hot_side"
+
+            # Retrieve data
+            data_1 = self.cycle_data["components"][component_name][side_1]
+            data_2 = self.cycle_data["components"][component_name][side_2]
+
+            # Check if the fluid name matches the heating or cooling fluids
+            fluid_heat = self.fixed_parameters["heating_fluid"]["name"]
+            fluid_cold = self.fixed_parameters["cooling_fluid"]["name"]
+            if data_1["fluid_name"] == fluid_heat or data_1["fluid_name"] == fluid_cold:
+                # Handle special case to include the heat source process only when the
+                # y-axis variable is the temperature and the x-axis variable is enthalpy or pressure
+                # This exception was implemented to be able to visualize the temperature difference
+                # between working fluid and heat source/sink in the T-s and T-h diagrams
+                if prop_y == "T" and (prop_x == "h" or prop_x == "s"):
+                    x_data = data_2["states"][prop_x]
+                    y_data = data_1["states"][prop_y]
+                else:
+                    # Returning None sets the visibility of the lines to False
+                    x_data = None
+                    y_data = None
+            else:
+                x_data = data_1["states"][prop_x]
+                y_data = data_1["states"][prop_y]
+
+            color = data_1["color"]
+        else:
+            # Handle non-heat exchanger components
+            component_data = self.cycle_data["components"][name]
+            x_data = component_data["states"][prop_x]
+            y_data = component_data["states"][prop_y]
+            color = component_data["color"]
+
+        return x_data, y_data, color
+
+    def _plot_pinch_point_diagram(self, ax, ax_index):
+        """
+        Plots or updates the pinch point diagram for the thermodynamic cycle's heat exchangers.
+
+        This method visualizes the temperature vs. heat flow rate for each heat exchanger in the cycle.
+        The function is capable of plotting the diagram for the first time or updating it with the latest data
+        if called subsequently. It uses a sorted approach, beginning with the heat exchanger that has the minimum
+        temperature on the cold side and proceeding in ascending order of temperature.
+
+        Parameters:
+        ----------
+        ax : matplotlib.axes.Axes
+            The axes on which to plot or update the pinch point diagram.
+        ax_index : int
+            The index of the axes in the figure, used to identify and access the specific axes
+            for updating the existing plot elements stored in the 'graphics' attribute.
+
+        Notes:
+        -----
+        The method relies on the 'graphics' attribute of the class to store and update plot elements.
+        It handles the creation of new plot elements (lines, endpoints, vertical lines) when first called
+        and updates these elements with new data from 'cycle_data' during subsequent calls.
+        """
+        ax.set_xlabel(LABEL_MAPPING["heat"])
+        ax.set_ylabel(LABEL_MAPPING["T"])
+
+        # Initialize the graphic object dict for this axis index if it does not exist
+        if ax_index not in self.graphics["pinch_point_lines"]:
+            self.graphics["pinch_point_lines"][ax_index] = {}
+
+        # Set the axes labels
+        ax.set_xlabel(LABEL_MAPPING["heat"])
+        ax.set_ylabel(LABEL_MAPPING["T"])
+
+        # Extract heat exchanger names and their minimum cold side temperatures
+        heat_exchangers = [
+            (name, min(component["cold_side"]["states"]["T"]))
+            for name, component in self.cycle_data["components"].items()
+            if component["type"] == "heat_exchanger"
+        ]
+
+        # Sort heat exchangers by minimum temperature on the cold side
+        sorted_heat_exchangers = sorted(heat_exchangers, key=lambda x: x[1])
+
+        # Loop over all heat exchangers
+        Q0 = 0.00
+        for HX_name, _ in sorted_heat_exchangers:
+            component = self.cycle_data["components"][HX_name]
+            # Hot side
+            c_hot = component["hot_side"]["color"]
+            props_hot = component["hot_side"]["states"]
+            mass_flow_hot = component["hot_side"]["mass_flow"]
+            Q_hot = (props_hot["h"] - props_hot["h"][0]) * mass_flow_hot
+            T_hot = props_hot["T"]
+
+            # Cold side
+            c_cold = component["cold_side"]["color"]
+            props_cold = component["cold_side"]["states"]
+            mass_flow_cold = component["cold_side"]["mass_flow"]
+            Q_cold = (props_cold["h"] - props_cold["h"][0]) * mass_flow_cold
+            T_cold = props_cold["T"]
+
+            # Check if the plot elements for this component already exist
+            if HX_name in self.graphics["pinch_point_lines"][ax_index]:
+                # Update existing plot elements
+                plot_elements = self.graphics["pinch_point_lines"][ax_index][HX_name]
+                plot_elements["hot_line"].set_data(Q0 + Q_hot, T_hot)
+                plot_elements["cold_line"].set_data(Q0 + Q_cold, T_cold)
+
+                # Update endpoints
+                plot_elements["hot_start"].set_data(Q0 + Q_hot[0], T_hot[0])
+                plot_elements["hot_end"].set_data(Q0 + Q_hot[-1], T_hot[-1])
+                plot_elements["cold_start"].set_data(Q0 + Q_cold[0], T_cold[0])
+                plot_elements["cold_end"].set_data(Q0 + Q_cold[-1], T_cold[-1])
+
+                # Update vertical lines
+                plot_elements["start_line"].set_xdata([Q0, Q0])
+                plot_elements["end_line"].set_xdata([Q0 + Q_hot[-1], Q0 + Q_hot[-1]])
+            else:
+                # Create new plot elements
+                (hot_line,) = ax.plot(Q0 + Q_hot, T_hot, color=c_hot)
+                (cold_line,) = ax.plot(Q0 + Q_cold, T_cold, color=c_cold)
+
+                # Create endpoints
+                param = {"marker": "o", "markersize": 4.0, "markerfacecolor": "white"}
+                (hot_1,) = ax.plot(Q0 + Q_hot[0], T_hot[0], color=c_hot, **param)
+                (hot_2,) = ax.plot(Q0 + Q_hot[-1], T_hot[-1], color=c_hot, **param)
+                (cold_1,) = ax.plot(Q0 + Q_cold[0], T_cold[0], color=c_cold, **param)
+                (cold_2,) = ax.plot(Q0 + Q_cold[-1], T_cold[-1], color=c_cold, **param)
+
+                # Create vertical lines
+                param = {"color": "black", "linestyle": "-", "linewidth": 0.75}
+                start_line = ax.axvline(x=Q0, zorder=1, **param)
+                end_line = ax.axvline(x=Q0 + Q_hot[-1], zorder=1, **param)
+
+                # Store new plot elements
+                self.graphics["pinch_point_lines"][ax_index][HX_name] = {
+                    "hot_line": hot_line,
+                    "cold_line": cold_line,
+                    "hot_start": hot_1,
+                    "hot_end": hot_2,
+                    "cold_start": cold_1,
+                    "cold_end": cold_2,
+                    "start_line": start_line,
+                    "end_line": end_line,
+                }
+
+            # Update abscissa for the next heat exchanger
+            Q0 += Q_hot[-1]
+
+        ax.set_xlim(left=0 - Q0 / 50, right=Q0 + Q0 / 50)

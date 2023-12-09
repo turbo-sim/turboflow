@@ -112,6 +112,7 @@ def states_to_dict(states):
         state_dict[field] = np.array([getattr(state, field) for state in states])
     return state_dict
 
+
 def states_to_dict_2d(states_grid):
     """
     Convert a 2D list (grid) of state objects into a dictionary.
@@ -132,10 +133,13 @@ def states_to_dict_2d(states_grid):
         for j, state in enumerate(row):
             for field in state.keys():
                 if field not in state_dict_2d:
-                    state_dict_2d[field] = np.empty((len(states_grid), len(row)), dtype=object)
+                    state_dict_2d[field] = np.empty(
+                        (len(states_grid), len(row)), dtype=object
+                    )
                 state_dict_2d[field][i, j] = getattr(state, field)
 
     return state_dict_2d
+
 
 class FluidState:
     """
@@ -155,6 +159,7 @@ class FluidState:
         Return the items (key-value pairs) of the FluidState properties.
 
     """
+
     def __init__(self, properties, fluid_name):
         # Use an internal dictionary to store properties
         self._properties = properties
@@ -202,7 +207,7 @@ class FluidState:
 
     def items(self):
         return self._properties.items()
-    
+
     def values(self):
         return self._properties.values()
 
@@ -279,7 +284,8 @@ class Fluid:
         self.spinodal_liq = None
         self.spinodal_vap = None
         self.pseudo_critical_line = None
-        self.quality_grid = None
+        self.q_mesh = None
+        self.graphic_elements = {}
 
         # Get critical and triple point properties
         if self._AS.fluid_param_string("pure") == "true":
@@ -309,7 +315,9 @@ class Fluid:
         return FluidState(self.properties, self.name)
 
     def get_props(self, input_type, prop_1, prop_2, generalize_quality=True):
-         return self.set_state(input_type, prop_1, prop_2, generalize_quality=generalize_quality)
+        return self.set_state(
+            input_type, prop_1, prop_2, generalize_quality=generalize_quality
+        )
 
     def set_state(self, input_type, prop_1, prop_2, generalize_quality=True):
         """
@@ -694,6 +702,54 @@ class Fluid:
 
         return FluidState(props)
 
+    # ------------------------------------------------------------------------------------ #
+    # ------------------------------------------------------------------------------------ #
+    # ------------------------------------------------------------------------------------ #
+
+    def _get_label(self, label, show_in_legend):
+        """Returns the appropriate label value based on whether it should be shown in the legend."""
+        return label if show_in_legend else "_no_legend_"
+
+    def _plot_or_update_line(self, axes, x_data, y_data, line_name, **plot_params):
+        # Ensure there is a dictionary for this axes
+        if axes not in self.graphic_elements:
+            self.graphic_elements[axes] = {}
+
+        # Check if the line exists for this axes
+        if line_name in self.graphic_elements[axes]:
+            line = self.graphic_elements[axes][line_name]
+            line.set_data(x_data, y_data)
+            # Update line properties
+            for param, value in plot_params.items():
+                setattr(line, param, value)
+            line.set_visible(True)
+        else:
+            # Create a new line with the provided plot parameters
+            (line,) = axes.plot(x_data, y_data, **plot_params)
+            self.graphic_elements[axes][line_name] = line
+        return line
+
+    def _plot_or_update_contours(
+        self, axes, x_data, y_data, z_data, contour_levels, line_name, **contour_params
+    ):
+        # Ensure there is a dictionary for this axes
+        if axes not in self.graphic_elements:
+            self.graphic_elements[axes] = {}
+
+        # Check if the contour exists for this axes
+        if line_name in self.graphic_elements[axes]:
+            for coll in self.graphic_elements[axes][line_name].collections:
+                coll.remove()  # Remove the old contour collections
+
+        # Create a new contour
+        contour = axes.contour(x_data, y_data, z_data, contour_levels, **contour_params)
+        self.graphic_elements[axes][line_name] = contour
+        return contour
+
+    def _set_visibility(self, axes, line_name, visible):
+        if axes in self.graphic_elements and line_name in self.graphic_elements[axes]:
+            self.graphic_elements[axes][line_name].set_visible(visible)
+
     def plot_phase_diagram(
         self,
         x_variable="s",
@@ -713,200 +769,105 @@ class Fluid:
         quality_levels=np.linspace(0.1, 1.0, 10),
         quality_labels=False,
         show_in_legend=False,
-        **kwargs
+        **kwargs,
     ):
         if axes is None:
             axes = plt.gca()
 
-        # Plot saturation line
+        # Saturation line
         if plot_saturation_line:
             if self.sat_liq is None or self.sat_vap is None:
-                self.sat_liq, self.sat_vap = compute_saturation_line(
-                    self, N_points=num_points
-                )
-
+                self.sat_liq, self.sat_vap = compute_saturation_line(self, num_points)
             x = self.sat_liq[x_variable] + self.sat_vap[x_variable]
             y = self.sat_liq[y_variable] + self.sat_vap[y_variable]
-            label_value = "Saturation line" if show_in_legend else "_no_legend_"
-            if hasattr(self, "_graphic_saturation_line") and self._graphic_saturation_line.axes == axes:
-                self._graphic_saturation_line.set_data(x, y)
-                self._graphic_saturation_line.set_visible(True)
-            else:
-                (self._graphic_saturation_line,) = axes.plot(
-                    x,
-                    y,
-                    "k",
-                    linewidth=1.25,
-                    label=label_value,
-                )
+            label = self._get_label("Saturation line", show_in_legend)
+            params = {"label": label, "color": "black"}
+            self._graphic_saturation_line = self._plot_or_update_line(
+                axes, x, y, "saturation_line", **params
+            )
         else:
-            if hasattr(self, "_graphic_saturation_line"):
-                self._graphic_saturation_line.set_visible(False)
+            self._set_visibility(axes, "saturation_line", False)
 
-        # Plot spinodal line
-        if plot_spinodal_line:
-            if self.spinodal_liq is None or self.spinodal_vap is None:
-                self.spinodal_liq, self.spinodal_vap = compute_spinodal_line(
-                    self,
-                    N_points=num_points,
-                    method=spinodal_line_method,
-                )
-
-            x = self.spinodal_liq[x_variable] + self.spinodal_vap[x_variable]
-            y = self.spinodal_liq[y_variable] + self.spinodal_vap[y_variable]
-            label_value = "Spinodal line" if show_in_legend else "_no_legend_"
-            if hasattr(self, "_graphic_spinodal_line") and self._graphic_spinodal_line.axes == axes:
-                self._graphic_spinodal_line.set_data(x, y)
-                self._graphic_spinodal_line.set_visible(True)
-            else:
-                (self._graphic_spinodal_line,) = axes.plot(
-                    x,
-                    y,
-                    color=spinodal_line_color,
-                    linewidth=spinodal_line_width,
-                    label=label_value,
-                )
-        else:
-            if hasattr(self, "_graphic_spinodal_line"):
-                self._graphic_spinodal_line.set_visible(False)
-                    
         # Plot pseudocritical line
         if plot_pseudocritical_line:
-            self.pseudo_critical_line = compute_pseudocritical_line(self)
+            if self.pseudo_critical_line is None:
+                self.pseudo_critical_line = compute_pseudocritical_line(self)
             x = self.pseudo_critical_line[x_variable]
             y = self.pseudo_critical_line[y_variable]
-            label_value = "Pseudocritical line" if show_in_legend else "_no_legend_"
-            if hasattr(self, "_graphic_pseudocritical_line") and self._graphic_pseudocritical_line.axes == axes:
-                self._graphic_pseudocritical_line.set_data(x, y)
-                self._graphic_pseudocritical_line.set_visible(True)
-            else:
-                (self._graphic_pseudocritical_line,) = axes.plot(
-                    x,
-                    y,
-                    color="black",
-                    linestyle="--",
-                    linewidth=0.75,
-                    label=label_value,
-                )
+            label = self._get_label("Pseudocritical line", show_in_legend)
+            params = {
+                "label": label,
+                "color": "black",
+                "linestyle": "--",
+                "linewidth": 0.75,
+            }
+            self._graphic_pseudocritical_line = self._plot_or_update_line(
+                axes, x, y, "pseudocritical_line", **params
+            )
         else:
-            if hasattr(self, "_graphic_pseudocritical_line"):
-                self._graphic_pseudocritical_line.set_visible(False)
+            self._set_visibility(axes, "pseudocritical_line", False)
+
+        # Plot quality isolines
+        if plot_quality_isolines:
+            if self.q_mesh is None:
+                self.q_mesh = compute_quality_grid(self, num_points, quality_levels)
+            x = self.q_mesh[x_variable]
+            y = self.q_mesh[y_variable]
+            _, m = np.shape(x)
+            z = np.tile(quality_levels, (m, 1)).T
+            params = {"colors": "black", "linestyles": ":", "linewidths": 0.75}
+            self._graphics_q_lines = self._plot_or_update_contours(
+                axes, x, y, z, quality_levels, "quality_isolines", **params
+            )
+
+            if quality_labels:
+                axes.clabel(self._graphics_q_lines, fontsize=9, rightside_up=True)
+
+        else:
+            # Remove existing contour lines if they exist
+            if "quality_isolines" in self.graphic_elements.get(axes, {}):
+                for coll in self.graphic_elements[axes]["quality_isolines"].collections:
+                    coll.remove()
+                del self.graphic_elements[axes]["quality_isolines"]
 
         # Plot critical point
+        params = {
+            "color": "black",
+            "marker": "o",
+            "markersize": 4.5,
+            "markerfacecolor": "w",
+        }
         if plot_critical_point:
             x = self.critical_point[x_variable]
             y = self.critical_point[y_variable]
-            label_value = "Critical point" if show_in_legend else "_no_legend_"
-            if hasattr(self, "_graphic_critical_point") and self._graphic_critical_point.axes == axes:
-                self._graphic_critical_point.set_data(x, y)
-                self._graphic_critical_point.set_visible(True)
-            else:
-                (self._graphic_critical_point,) = axes.plot(
-                    x,
-                    y,
-                    "ko",
-                    markersize=4.5,
-                    markerfacecolor="w",
-                    label=label_value,
-                )
+            label = self._get_label("Critical point", show_in_legend)
+            self._graphic_critical_point = self._plot_or_update_line(
+                axes, x, y, "critical_point", label=label, **params
+            )
         else:
-            if hasattr(self, "_graphic_critical_point"):
-                self._graphic_critical_point.set_visible(False)
+            self._set_visibility(axes, "critical_point", False)
 
         # Plot liquid triple point
         if plot_triple_point_liquid:
             x = self.triple_point_liquid[x_variable]
             y = self.triple_point_liquid[y_variable]
-            label_value = "Triple point liquid" if show_in_legend else "_no_legend_"
-            if hasattr(self, "_graphic_triple_point_liquid") and self._graphic_triple_point_liquid.axes == axes:
-                self._graphic_triple_point_liquid.set_data(x, y)
-                self._graphic_triple_point_liquid.set_visible(True)
-            else:
-                (self._graphic_triple_point_liquid,) = axes.plot(
-                    x,
-                    y,
-                    "ko",
-                    markersize=4.5,
-                    markerfacecolor="w",
-                    label=label_value,
-                )
+            label = self._get_label("Triple point liquid", show_in_legend)
+            self._graphic_triple_point_liquid = self._plot_or_update_line(
+                axes, x, y, "triple_point_liquid", label=label, **params
+            )
         else:
-            if hasattr(self, "_graphic_triple_point_liquid"):
-                self._graphic_triple_point_liquid.set_visible(False)
+            self._set_visibility(axes, "triple_point_liquid", False)
 
         # Plot vapor triple point
         if plot_triple_point_vapor:
             x = self.triple_point_vapor[x_variable]
             y = self.triple_point_vapor[y_variable]
-            label_value = "Triple point vapor" if show_in_legend else "_no_legend_"
-
-            if hasattr(self, "_graphic_triple_point_vapor") and self._graphic_triple_point_vapor.axes == axes:
-                self._graphic_triple_point_vapor.set_data(x, y)
-                self._graphic_triple_point_vapor.set_visible(True)
-            else:
-                (self._graphic_triple_point_vapor,) = axes.plot(
-                    x,
-                    y,
-                    "ko",
-                    markersize=4.5,
-                    markerfacecolor="w",
-                    label=label_value,
-                )
-        else:
-            if hasattr(self, "_graphic_triple_point_vapor"):
-                self._graphic_triple_point_vapor.set_visible(False)
-
-        # Compute vapor quality isocurves
-        if plot_quality_isolines:
-            if self.quality_grid is None:
-
-                # Define temperature levels
-                t1 = np.logspace(
-                    np.log10(1 - 0.9999), np.log10(0.1), int(num_points / 2)
-                )
-                t2 = np.logspace(
-                    np.log10(0.1),
-                    np.log10(1 - (self.triple_point_liquid.T) / self.critical_point.T),
-                    int(num_points / 2),
-                )
-                self.quality_levels = quality_levels
-                self.temperature_levels = (1 - np.hstack((t1, t2))) * self.critical_point.T
-
-                # Calculate property grid
-                self.quality_grid = []
-                for q in self.quality_levels:
-                    row = []
-                    for T in self.temperature_levels:
-                        row.append(self.set_state(CP.QT_INPUTS, q, T))
-                    self.quality_grid.append(row)
-
-                self.quality_grid = states_to_dict_2d(self.quality_grid)
-
-            # Retrieve property arrays
-            x = self.quality_grid[x_variable]
-            y = self.quality_grid[y_variable]
-            z = np.tile(self.quality_levels, (len(self.temperature_levels), 1)).T
-
-            if hasattr(self, "_graphics_quality_isolines"):
-                for coll in self._graphics_quality_isolines.collections:
-                    coll.remove()
-
-            self._graphics_quality_isolines = axes.contour(
-                x, y,
-                z,
-                quality_levels,
-                colors="black",
-                linestyles=":",
-                linewidths=0.75,
+            label = self._get_label("Triple point vapor", show_in_legend)
+            self._graphic_triple_point_vapor = self._plot_or_update_line(
+                axes, x, y, "triple_point_vapor", label=label, **params
             )
-
-            if quality_labels:
-                axes.clabel(self._graphics_quality_isolines, inline=True, fontsize=9, rightside_up=True)
-
         else:
-            if hasattr(self, "_graphics_quality_isolines"):
-                for coll in self._graphics_quality_isolines.collections:
-                    coll.set_visible(False)  # Hide the contours
+            self._set_visibility(axes, "triple_point_vapor", False)
 
         return axes
 
@@ -971,6 +932,27 @@ def compute_pseudocritical_line(fluid, N_points=100):
             pseudocritical_line[name].append(fluid.properties[name])
 
     return pseudocritical_line
+
+
+def compute_quality_grid(fluid, num_points, quality_levels):
+    # Define temperature levels
+    t1 = np.logspace(np.log10(1 - 0.9999), np.log10(0.1), int(num_points / 2))
+    t2 = np.logspace(
+        np.log10(0.1),
+        np.log10(1 - (fluid.triple_point_liquid.T) / fluid.critical_point.T),
+        int(num_points / 2),
+    )
+    temperature_levels = (1 - np.hstack((t1, t2))) * fluid.critical_point.T
+
+    # Calculate property grid
+    quality_grid = []
+    for q in quality_levels:
+        row = []
+        for T in temperature_levels:
+            row.append(fluid.set_state(CP.QT_INPUTS, q, T))
+        quality_grid.append(row)
+
+    return states_to_dict_2d(quality_grid)
 
 
 def compute_properties_meshgrid(fluid, input_pair, range_1, range_2):

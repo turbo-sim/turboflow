@@ -38,7 +38,7 @@ def evaluate_constraints(data, constraints):
         normalize = constraint.get("normalize", False)
 
         # Get the performance value for the given variable name
-        current = cfg.render_nested_value(name, data)
+        current = cfg.render_and_evaluate(name, data)
 
         # Evaluate constraint
         mismatch = current - target
@@ -95,7 +95,7 @@ def evaluate_objective_function(data, objective_function):
     # Get the performance value for the given variable name
     name = objective_function['variable']
     type = objective_function['type']
-    value = cfg.render_nested_value(name, data)
+    value = cfg.render_and_evaluate(name, data)
 
     if not np.isscalar(value):
         raise ValueError(f"The objective function '{name}' must be an scalar, but the value is: {value}")

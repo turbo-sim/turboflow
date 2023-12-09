@@ -2,6 +2,19 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+
+
+## 09.12.2023
+- Improved cycle optimization plotting
+- Improved cycle optimization configuration files with variable rendering using '$' as prefix
+
+## 07.12.2023
+- Restructure utilities.py module into a subpackage with differentiated modules for the different utilities.
+- Add the first version of the cycle optimization functionality (recuperated brayton/rankine cycles)
+
+
+
+
 ## 07.12.2023
 - Removed throat calculation for actual cascade
 - Created a evalute_throat_plane function
