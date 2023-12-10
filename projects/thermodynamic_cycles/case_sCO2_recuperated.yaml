@@ -28,7 +28,6 @@ problem_formulation:
         y_variable: T
         x_scale: linear
         y_scale: linear
-
       # - x_variable: h
       #   y_variable: p
       #   x_scale: linear
@@ -52,8 +51,10 @@ problem_formulation:
       exceptions: True
 
     net_power: 1e6
-    ambient_temperature: 300
-    ambient_pressure: 101325
+
+    # Second law analysis not implemented yet
+    # ambient_temperature: 300
+    # ambient_pressure: 101325
 
     heat_source:
       inlet_temperature: 550 + 273.15
@@ -70,7 +71,7 @@ problem_formulation:
       exit_pressure: 101325
 
     heater:
-      pressure_drop_hot_side: 0.01
+      pressure_drop_hot_side: 0.00
       pressure_drop_cold_side: 0.01
       num_elements: 25
 
@@ -81,7 +82,7 @@ problem_formulation:
 
     cooler:
       pressure_drop_hot_side: 0.01
-      pressure_drop_cold_side: 0.01
+      pressure_drop_cold_side: 0.00
       num_elements: 25
 
     turbine:

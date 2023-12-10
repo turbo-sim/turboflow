@@ -8,37 +8,38 @@ desired_path = os.path.abspath('../..')
 if desired_path not in sys.path:
     sys.path.append(desired_path)
     
-
 import meanline_axial as ml
 
+# Define configuration filename
+CONFIG_FILE = "case_toluene.yaml"
+# CONFIG_FILE = "case_sCO2_recuperated.yaml"
+# CONFIG_FILE = "case_sCO2_recompression.yaml"
+
 # Initialize Brayton cycle problem
-# CONFIG_FILE = "case_toluene.yaml"
-# CONFIG_FILE = "case_sCO2.yaml"
-CONFIG_FILE = "case_sCO2_recompression.yaml"
 config = ml.utils.read_configuration_file(CONFIG_FILE)
-braytonCycle = ml.cycles.ThermodynamicCycleProblem(config["problem_formulation"])
-braytonCycle.get_optimization_values(braytonCycle.x0)
-braytonCycle.plot_cycle()
-braytonCycle.to_excel(filename="initial_configuration.xlsx")
+thermoCycle = ml.cycles.ThermodynamicCycleProblem(config["problem_formulation"])
+thermoCycle.get_optimization_values(thermoCycle.x0)
+thermoCycle.plot_cycle()
+thermoCycle.to_excel(filename="initial_configuration.xlsx")
 
 # Create interactive plot
-braytonCycle.plot_cycle_realtime(CONFIG_FILE)
+thermoCycle.plot_cycle_realtime(CONFIG_FILE)
 
 # Optimize the thermodynamic cycle
 solver = ml.OptimizationSolver(
-    braytonCycle,
-    braytonCycle.x0,
+    thermoCycle,
+    thermoCycle.x0,
     **config["solver_options"],
-    callback_func=braytonCycle.plot_cycle_callback,
+    callback_func=thermoCycle.plot_cycle_callback,
 )
 solver.solve()
 solver.problem.to_excel(filename="optimal_solution.xlsx")
-for key, value in solver.problem.variables.items():
-    print(f"{key:30}: {value:0.3f}")
 
-# print(solver.problem.cycle_data["components"]["turbine"]["pressure_ratio"])
-# print(solver.problem.cycle_data["components"]["main_compressor"]["pressure_ratio"])
-# print(solver.problem.cycle_data["components"]["split_compressor"]["pressure_ratio"])
+# Print final solution values
+print()
+print("Optimal set of design variables (normalized)")
+for key, value in solver.problem.variables.items():
+    print(f"{key:40}: {value:0.3f}")
 
 # Make an animation of the optimization history
 opt_dir = solver.problem.optimization_dir

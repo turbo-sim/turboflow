@@ -12,6 +12,8 @@ solver_options:
 
 problem_formulation:
 
+  cycle_topology: recuperated
+
   plot_settings:
     pinch_point_diagram: True
     fluid: 
@@ -46,8 +48,10 @@ problem_formulation:
       exceptions: True
 
     net_power: 1e6
-    ambient_temperature: 300
-    ambient_pressure: 101325
+    
+    # Second law analysis not implemented yet
+    # ambient_temperature: 300
+    # ambient_pressure: 101325
 
     heat_source:
       inlet_temperature: 250 + 273.15

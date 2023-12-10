@@ -12,7 +12,8 @@ from .. import solver
 from .. import utilities
 from .. import fluid_properties as props
 
-from . import cycle_models as cycles
+from . import cycle_recuperated
+from . import cycle_split_compression
 
 
 utilities.set_plot_options()
@@ -28,10 +29,23 @@ LABEL_MAPPING = {
     "heat": "Heat flow rate [W]",
 }
 
+# Cycle configurations available
+CYCLE_CONFIGURATIONS = [
+    "recuperated",
+    "split_compression",
+    "recompression",
+]
+
 TOPOLOGY_MAPPING = {
-    "recuperated": cycles.evaluate_recuperated_cycle,
-    "recompression": cycles.evaluate_split_compression_cycle,
-    "split_compression": cycles.evaluate_split_compression_cycle,
+    CYCLE_CONFIGURATIONS[0]: cycle_recuperated.evaluate_cycle,
+    CYCLE_CONFIGURATIONS[1]: cycle_split_compression.evaluate_cycle,
+    CYCLE_CONFIGURATIONS[2]: cycle_split_compression.evaluate_cycle,
+}
+
+GRAPHICS_PLACEHOLDER = {
+    "process_lines": {},
+    "state_points": {},
+    "pinch_point_lines": {},
 }
 
 
@@ -86,11 +100,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         self.figure_TQ = None
         self.configuration = copy.deepcopy(configuration)
         self.update_configuration(self.configuration)
-        self.graphics = {
-            "process_lines": {},
-            "state_points": {},
-            "pinch_point_lines": {},
-        }
+        self.graphics = copy.deepcopy(GRAPHICS_PLACEHOLDER)
 
         # Create fluid object to calculate states used for the scaling of design variables
         self.fluid = props.Fluid(**self.fixed_parameters["working_fluid"])
@@ -122,7 +132,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
             Dictionary containing the new configuration for the thermodynamic cycle problem.
         """
         conf = configuration
-        self.cycle_function = TOPOLOGY_MAPPING[conf["cycle_topology"]]
+        self.cycle_topology = conf["cycle_topology"]
         self.plot_settings = conf["plot_settings"]
         self.constraints = conf["constraints"]
         self.fixed_parameters = conf["fixed_parameters"]
@@ -132,7 +142,6 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         self.upper_bounds = {k: v["max"] for k, v in conf["design_variables"].items()}
         self.keys = list(self.variables.keys())
         self.x0 = np.asarray([var for var in self.variables.values()])
-
 
     def _calculate_special_points(self):
         """
@@ -207,17 +216,26 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         self._calculate_special_points()
 
     def get_optimization_values(self, x):
+        """
+        Evaluate optimization problem
+        """
         # Create dictionary from array of normalized design variables
         self.variables = dict(zip(self.keys, x))
         vars_physical = self._scale_normalized_to_physical(self.variables)
 
-        # Evaluate model
-        self.cycle_data = self.cycle_function(
-            vars_physical,
-            self.fixed_parameters,
-            self.constraints,
-            self.objective_function,
-        )
+        # Evaluate thermodynamic cycle
+        if self.cycle_topology in CYCLE_CONFIGURATIONS:
+            self.cycle_data = TOPOLOGY_MAPPING[self.cycle_topology](
+                vars_physical,
+                self.fixed_parameters,
+                self.constraints,
+                self.objective_function,
+            )
+        else:
+            options = ", ".join(f"'{k}'" for k in CYCLE_CONFIGURATIONS)
+            raise ValueError(
+                f"Invalid cycle topology: '{self.cycle_topology}'. Available options: {options}"
+            )
 
         # Define objective function and constraints
         self.f = self.cycle_data["objective_function"]
@@ -392,6 +410,8 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
 
         # Initialize the figure and axes
         if not (self.figure and plt.fignum_exists(self.figure.number)):
+            # Reset the graphics objects if the figure was closed
+            self.graphics = copy.deepcopy(GRAPHICS_PLACEHOLDER)
             self.figure, self.axes = plt.subplots(
                 nrows, ncols, figsize=(5.2 * ncols, 4.8)
             )
@@ -443,7 +463,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         print(" Modify the configuration file and save it to update the plot")
         print(" Try to find a good initial guess for the optimization.")
         print(" Using a feasible initial guess improves optimization convergence.")
-        print(" Press 'enter' or close the figure to continue.")
+        print(" Press 'enter' to continue.")
         print("-" * 80)
 
         # Update the plot until termination signal
@@ -635,7 +655,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
                 markeredgewidth=1.25,
                 markerfacecolor="w",
                 color=color,
-                zorder=2, 
+                zorder=2,
             )
 
             # Store the new plot elements
@@ -663,6 +683,12 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
             y_data: Array of data points for the y-axis.
             color: Color code for the plot.
         """
+
+        # The heating and cooling fluid states have to be handled in a special way because
+        # they do not have share the same thermodynamic diagram as the working fluid
+        fluid_source = self.fixed_parameters["heating_fluid"]["name"]
+        fluid_sink = self.fixed_parameters["cooling_fluid"]["name"]
+
         if "_hot_side" in name or "_cold_side" in name:
             # Extract the component and side from the name
             if "_hot_side" in name:
@@ -677,9 +703,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
             data_2 = self.cycle_data["components"][component_name][side_2]
 
             # Check if the fluid name matches the heating or cooling fluids
-            fluid_heat = self.fixed_parameters["heating_fluid"]["name"]
-            fluid_cold = self.fixed_parameters["cooling_fluid"]["name"]
-            if data_1["fluid_name"] == fluid_heat or data_1["fluid_name"] == fluid_cold:
+            if data_1["fluid_name"] in [fluid_source, fluid_sink]:
                 # Handle special case to include the heat source process only when the
                 # y-axis variable is the temperature and the x-axis variable is enthalpy or pressure
                 # This exception was implemented to be able to visualize the temperature difference
@@ -698,10 +722,16 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
             color = data_1["color"]
         else:
             # Handle non-heat exchanger components
-            component_data = self.cycle_data["components"][name]
-            x_data = component_data["states"][prop_x]
-            y_data = component_data["states"][prop_y]
-            color = component_data["color"]
+            data = self.cycle_data["components"][name]
+            if data["fluid_name"] in [fluid_source, fluid_sink]:
+                # Returning None sets the visibility of the lines to False
+                x_data = None
+                y_data = None
+            else:
+                x_data = data["states"][prop_x]
+                y_data = data["states"][prop_y]
+
+            color = data["color"]
 
         return x_data, y_data, color
 

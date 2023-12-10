@@ -180,68 +180,32 @@ def add_string_to_keys(input_dict, suffix):
     return {f"{key}{suffix}": value for key, value in input_dict.items()}
 
 
-def print_dict(data, indent=0):
-    """
-    Recursively prints nested dictionaries with indentation.
-
-    Parameters
-    ----------
-    data : dict
-        The dictionary to print. It can contain nested dictionaries as values.
-    indent : int, optional
-        The initial level of indentation for the keys of the dictionary, by default 0.
-        It controls the number of spaces before each key.
-
-    Returns
-    -------
-    None
-
-    Examples
-    --------
-    >>> data = {"a": 1, "b": {"c": 2, "d": {"e": 3}}}
-    >>> print_dict(data)
-    a: 1
-    b:
-        c: 2
-        d:
-            e: 3
-    """
-    for key, value in data.items():
-        print("    " * indent + str(key) + ":", end=" ")
-        if isinstance(value, dict):
-            if value:  # Only print if the sub-dictionary is not empty
-                print()
-                print_dict(value, indent + 1)
-            else:
-                print(" {}")  # Print empty dictionary
-        else:
-            print(value)
-    # for key, value in data.items():
-    #     print("    " * indent + str(key) + ":", end=" ")
-    #     if isinstance(value, dict):
-    #         print("")
-    #         print_dict(value, indent + 1)
-    #     else:
-    #         print(value)
-
-def check_for_unused_keys(dict_in):
+def check_for_unused_keys(dict_in, dict_name, raise_error=False):
     """
     Checks for unused parameters in the given dictionaries and sub-dictionaries.
-    If unused items are found, prints them in a tree-like structure.
+    If unused items are found, prints them in a tree-like structure and optionally raises an error.
 
     Parameters
     ----------
-    parameters : dict
+    dict_in : dict
         The dictionary of parameters to check.
+    dict_name : str
+        The name of the dictionary variable.
+    raise_error : bool, optional
+        If True, raises an exception when unused items are found, otherwise just prints a warning.
 
     Returns
     -------
     None
     """
-    unused_parameters = not is_dict_empty(dict_in)
-    if unused_parameters:
-        print("Warning: There are unused items in the configuration.")         
-        print_dict(dict_in, indent=1)
+    if not is_dict_empty(dict_in):
+        dict_str = print_dict(dict_in, indent=1, return_output=True)
+
+        if raise_error:
+            raise ValueError(f"Dictionary '{dict_name}' is not empty. Contains unused items:\n{dict_str}")
+        else:
+            print(f"Warning: Dictionary '{dict_name}' contains unused items.")
+            print(dict_str)
 
 
 def is_dict_empty(data):
@@ -261,6 +225,42 @@ def is_dict_empty(data):
     if isinstance(data, dict):
         return all(is_dict_empty(v) for v in data.values()) if data else True
     return False  # Not a dictionary
+
+def print_dict(data, indent=0, return_output=False):
+    """
+    Recursively prints nested dictionaries with indentation or returns the formatted string.
+
+    Parameters
+    ----------
+    data : dict
+        The dictionary to print.
+    indent : int, optional
+        The initial level of indentation for the keys of the dictionary, by default 0.
+    return_output : bool, optional
+        If True, returns the formatted string instead of printing it.
+
+    Returns
+    -------
+    str or None
+        The formatted string representation of the dictionary if return_output is True, otherwise None.
+    """
+    lines = []
+    for key, value in data.items():
+        line = "    " * indent + str(key) + ": "
+        if isinstance(value, dict):
+            if value:
+                lines.append(line)
+                lines.append(print_dict(value, indent + 1, True))
+            else:
+                lines.append(line + "{}")
+        else:
+            lines.append(line + str(value))
+
+    output = "\n".join(lines)
+    if return_output:
+        return output
+    else:
+        print(output)
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):

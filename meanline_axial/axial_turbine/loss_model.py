@@ -12,6 +12,7 @@ LOSS_MODELS = [
     "benner_moustapha",
     "isentropic",
 ]
+
 LOSS_COEFFICIENTS = [
     "stagnation_pressure",
 ]

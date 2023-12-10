@@ -1,0 +1,112 @@
+cycle_topology: recuperated
+plot_settings:
+  pinch_point_diagram: true
+  fluid:
+    plot_saturation_line: true
+    plot_critical_point: true
+    plot_quality_isolines: true
+    plot_pseudocritical_line: false
+    plot_triple_point_liquid: false
+    plot_triple_point_vapor: false
+  diagrams:
+  - x_variable: s
+    y_variable: T
+    x_scale: linear
+    y_scale: linear
+fixed_parameters:
+  working_fluid:
+    name: CO2
+    backend: HEOS
+    exceptions: true
+  heating_fluid:
+    name: nitrogen
+    backend: HEOS
+    exceptions: true
+  cooling_fluid:
+    name: water
+    backend: HEOS
+    exceptions: true
+  net_power: 1000000.0
+  ambient_temperature: 300
+  ambient_pressure: 101325
+  heat_source:
+    inlet_temperature: 823.15
+    exit_temperature_max: 823.15
+    exit_temperature_min: 473.15
+    inlet_pressure: 101325
+    exit_pressure: 101325
+  heat_sink:
+    inlet_temperature: 293.15
+    exit_temperature_min: 303.15
+    exit_temperature_max: 313.15
+    inlet_pressure: 101325
+    exit_pressure: 101325
+  heater:
+    pressure_drop_hot_side: 0.01
+    pressure_drop_cold_side: 0.01
+    num_elements: 25
+  recuperator:
+    pressure_drop_hot_side: 0.01
+    pressure_drop_cold_side: 0.01
+    num_elements: 25
+  cooler:
+    pressure_drop_hot_side: 0.01
+    pressure_drop_cold_side: 0.01
+    num_elements: 25
+  turbine:
+    efficiency: 0.9
+    efficiency_type: isentropic
+  compressor:
+    efficiency: 0.85
+    efficiency_type: isentropic
+  heat_source_pump:
+    efficiency: 0.8
+    efficiency_type: isentropic
+  heat_sink_pump:
+    efficiency: 0.8
+    efficiency_type: isentropic
+design_variables:
+  heat_source_exit_temperature:
+    min: $heat_source.exit_temperature_min
+    max: $heat_source.exit_temperature_max
+    value: 0.5
+  heat_sink_exit_temperature:
+    min: $heat_sink.exit_temperature_min
+    max: $heat_sink.exit_temperature_max
+    value: 0.5
+  compressor_inlet_pressure:
+    min: 0.50*$cycle_fluid.critical_point.p
+    max: 5.00*$cycle_fluid.critical_point.p
+    value: 0.2
+  compressor_inlet_enthalpy:
+    min: 0.9*$cycle_fluid.liquid_at_heat_sink_temperature.h
+    max: 2.0*$cycle_fluid.liquid_at_heat_sink_temperature.h
+    value: 0.2
+  turbine_inlet_pressure:
+    min: 0.5*$cycle_fluid.critical_point.p
+    max: 5.0*$cycle_fluid.critical_point.p
+    value: 0.5
+  turbine_inlet_enthalpy:
+    min: 1.10*$cycle_fluid.critical_point.h
+    max: 1.00*$cycle_fluid.gas_at_heat_source_temperature.h
+    value: 0.9
+  recuperator_effectiveness:
+    min: 0.0
+    max: 1.0
+    value: 0.7
+constraints:
+- variable: $components.heater.temperature_difference
+  type: '>'
+  value: 10
+  normalize: true
+- variable: $components.recuperator.temperature_difference
+  type: '>'
+  value: 10
+  normalize: true
+- variable: $components.cooler.temperature_difference
+  type: '>'
+  value: 10
+  normalize: true
+objective_function:
+  variable: $energy_analysis.cycle_efficiency
+  type: maximize
