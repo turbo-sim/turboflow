@@ -63,7 +63,6 @@ if CASE == 1:
     print(solvers[0].problem.results["plane"]["Ma_rel"][3:])   
     print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
     print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
-    # print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
     print(solvers[0].problem.results["cascade"]["mass_flow_crit"])
                         
