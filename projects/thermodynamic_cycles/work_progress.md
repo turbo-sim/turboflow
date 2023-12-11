@@ -11,6 +11,8 @@
 - Implemented lazy initialization to avoid recomputing the saturation line.
 - Generalized the vapor quality calculation for values outside of the two-phase region.
 - Added calculation of superheating and subcooling that works inside and outside the two-phase region
+- Cleaned up the recompression and recuperated cycle functions and moved them to their own files.
+
 
 ### Optimization
 - Formulated the objective function and constraints automatically via configuration.
@@ -19,7 +21,9 @@
 - Added functionality to ensured the objective function are numeric.
 - Incorporated constraint and objective normalization options.
 - Improved the callback function to save convergence history.
-
+- Added option to specify the cycle topology in the configuration file and error message listing available options in case the cycle topology is invalid.
+- Modified objective/constraint parsing. Now all variables being parsed during configuration reading have to be preceded by '$'. The rendering function was extended to handle variables that are Numpy arrays (e.g., the vector of temperature differences across a heat exchanger).
+ 
 ### File IO
 - Encapsulated all problem parameters in a YAML configuration file.
 - Devised a method for normalizing constraints according to the configuration file.
@@ -39,9 +43,7 @@
 - Implemented default plotting options when specifics are not provided.
 - Added functionality to create an animation of the optimization process. Exporting the optimization progress of a video does not work when the image has a very low aspect ratio (i.e., when it is too wide). I experienced that the export works when the figure has one row with two subplots, but it fails when it has one row with 3 subplots.
 - Integrated a Q-T pinch point diagram that works for any cycle.
-
-
-expression engine for constraint and obj funct
+- The create/update plots functionality is handled with a class dictionary that keeps track of all the graphical objects and the axes to which they belong. This dictionary is re-initialized in case the figure window is closed and the user tries to plot the cycle again to have a smooth user experience.
 
 
 ### Work in Progress

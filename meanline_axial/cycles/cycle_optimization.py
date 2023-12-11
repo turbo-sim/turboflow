@@ -368,13 +368,25 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         df.index = df.index + 1  # Shifting index
         df = df.sort_index()  # Sorting by index
 
-        # Export to Excel
-        df.to_excel(
-            os.path.join(self.out_dir, filename),
-            index=False,
-            header=True,
-            sheet_name="cycle_states",
+        # # Export to Excel
+        # df.to_excel(
+        #     os.path.join(self.out_dir, filename),
+        #     index=False,
+        #     header=True,
+        #     sheet_name="cycle_states",
+        # )
+
+        # Prepare energy_analysis data
+        df_2 = pd.DataFrame(
+            list(self.cycle_data["energy_analysis"].items()),
+            columns=["Parameter", "Value"],
         )
+
+        # Export to Excel
+        filename = os.path.join(self.out_dir, filename)
+        with pd.ExcelWriter(filename, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="cycle_states")
+            df_2.to_excel(writer, index=False, sheet_name="energy_analysis")
 
     def plot_cycle(self):
         """
