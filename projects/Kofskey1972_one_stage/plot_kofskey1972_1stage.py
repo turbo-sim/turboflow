@@ -19,7 +19,6 @@ if desired_path not in sys.path:
     sys.path.append(desired_path)
 
 import meanline_axial as ml
-
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 
@@ -244,8 +243,6 @@ elif Case == 1:
     # filename = "output/performance_analysis_2023-12-06_12-59-53.xlsx" # throat_location  = 0.85
     # filename = "output/performance_analysis_2023-12-06_16-38-46.xlsx" # throat_location  = 1
     
-
-
     # Load performance data
     timestamp = ml.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
