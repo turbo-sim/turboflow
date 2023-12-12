@@ -11,7 +11,8 @@ if desired_path not in sys.path:
 import meanline_axial as ml
 
 # Define configuration filename
-CONFIG_FILE = "case_toluene.yaml"
+CONFIG_FILE = "case_butane.yaml"
+# CONFIG_FILE = "case_toluene.yaml"
 # CONFIG_FILE = "case_sCO2_recuperated.yaml"
 # CONFIG_FILE = "case_sCO2_recompression.yaml"
 

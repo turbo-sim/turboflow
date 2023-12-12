@@ -239,12 +239,12 @@ if Case == 0:
 
 elif Case == 1:
     # Get the name of the latest results file
-    filename = ml.find_latest_results_file(RESULTS_PATH)
+    filename = ml.utils.find_latest_results_file(RESULTS_PATH)
     # filename = "output/performance_analysis_2023-12-06_12-59-53.xlsx" # throat_location  = 0.85
     # filename = "output/performance_analysis_2023-12-06_16-38-46.xlsx" # throat_location  = 1
     
     # Load performance data
-    timestamp = ml.extract_timestamp(filename)
+    timestamp = ml.utils.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
 
     # Define plot settings
