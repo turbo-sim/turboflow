@@ -13,10 +13,10 @@ from scipy.optimize import curve_fit
 import os
 import sys
 
-desired_path = os.path.abspath("../..")
+# desired_path = os.path.abspath("../..")
 
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
+# if desired_path not in sys.path:
+#     sys.path.append(desired_path)
 
 import meanline_axial as ml
 RESULTS_PATH = "output"

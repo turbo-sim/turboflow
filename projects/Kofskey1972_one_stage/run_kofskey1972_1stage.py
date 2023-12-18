@@ -4,22 +4,20 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-desired_path = os.path.abspath("../..")
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-
 import meanline_axial as ml 
 
 # Define running option
 CASE = 2
 
 # Load configuration file
-CONFIG_FILE = "kofskey1972_1stage.yaml"
+CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
+# CONFIG_FILE = "kofskey1972_1stage.yaml"
+print(CONFIG_FILE)
 config = ml.read_configuration_file(CONFIG_FILE)
 
 # ml.print_dict(config)
+
+# print("hello", os.getcwd())
 
 x0 = {'w_out_1': 244.42314206706558,
   's_out_1': 3787.6640308614674,
@@ -65,6 +63,10 @@ if CASE == 1:
     print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
     print(solvers[0].problem.results["cascade"]["mass_flow_crit"])
+
+
+
+
                         
     # solvers[0].print_convergence_history(savefile=True)
 
