@@ -156,6 +156,7 @@ def evaluate_axial_turbine(
 
 
     """
+
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
     h0_in = boundary_conditions["h0_in"]
@@ -1083,8 +1084,8 @@ def evaluate_cascade_critical(
     
     cascade_exit_input = {"w" : critical_cascade_input["w*_out"],
                           "s" : critical_cascade_input["s*_out"],
-                            "beta" : geometry["metal_angle_te"],
-                           # "beta" : math.arccosd(geometry["A_throat_2"]/geometry["A_out"]),
+                           "beta" : geometry["metal_angle_te"],
+                        #   "beta" : math.arccosd(geometry["A_throat"]/geometry["A_out"]),
                           "rothalpy" : critical_state["inlet_plane"]["rothalpy"]}
     
     
@@ -1527,8 +1528,8 @@ def compute_residual_flow_angle(
         Ma_inc = 0.5
         x = (Ma-Ma_inc)/(Ma_crit_exit-Ma_inc)
         x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
-        # beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
-        beta_model = beta_subsonic
+        beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
+        # beta_model = beta_subsonic
     else:
         beta_model = math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
         

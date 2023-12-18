@@ -137,13 +137,17 @@ def get_exit_flow_angle_borg_agromayor(Ma_exit, Ma_crit_throat, Ma_crit_exit, ge
     
     # Compute deviation angle
     x = (Ma_exit - Ma_inc) / (Ma_crit_exit - Ma_inc)
-    y = x**2 * (2-x) * (x > 0)
-    # y = x**2 * (3-2*x) * (x > 0)
-    # a = (abs(gauging_angle) - math.arccosd(area_throat/area_exit))/(Ma_crit_exit**2-2*Ma_crit_exit*Ma_crit_throat+Ma_crit_throat**2)
-    # b = -2*a*Ma_crit_throat
-    # slope = 2*a*Ma_crit_exit+b
-    # slope_normalized = slope*(abs(gauging_angle)-beta_inc)/(Ma_crit_exit - Ma_inc)
-    # y = (3-slope_normalized)*x**2+(slope_normalized-2)*x**3
+    x2 = (Ma_crit_throat-Ma_inc)/(Ma_crit_exit-Ma_inc)
+    y1 = 1
+    x1 = 1
+    beta_max = math.arccosd(area_throat/area_exit)
+    y2 = (beta_max-beta_inc)/(abs(gauging_angle)-beta_inc) 
+
+    if y2-y1 < 1e-5:
+        k = 0
+    else:
+        k = 2*(y1-y2)/(x1**2-2*x1*x2+x2**2 + 1e-6)*(x1-x2)
+    y = (3-k)*x**2+(k-2)*x**3
     beta = beta_inc + (abs(gauging_angle) - beta_inc) * y
     
     return beta
