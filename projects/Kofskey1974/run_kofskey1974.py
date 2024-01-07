@@ -11,40 +11,52 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-desired_path = os.path.abspath("../..")
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-
 import meanline_axial as ml
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
-CONFIG_FILE = "kofskey1974.yaml"
+CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
 config = ml.read_configuration_file(CONFIG_FILE)
 
 # ml.print_dict(config)
 # borg
-# x0 = {'w_out_1': 292.2133961596657,
-#  's_out_1': 3906.8039609258676,
-#  'beta_out_1': 66.49296711887172,
-#  'v*_in_1': 81.05380363064901,
-#  'w*_throat_1': 316.9752175774574,
-#  's*_throat_1': 3907.6621322123183,
-#  'w*_out_1': 316.97518449944226,
-#  's*_out_1': 3907.662131086297,
-#  'w_out_2': 217.06420172836815,
-#  's_out_2': 3910.4988757144947,
-#  'beta_out_2': -53.546585557697206,
-#  'v*_in_2': 305.7188299530535,
-#  'w*_throat_2': 295.10961925560974,
-#  's*_throat_2': 3915.5101224463083,
-#  'w*_out_2': 271.00681404721223,
-#  's*_out_2': 3913.9374577082435,
-#  'v_in': 81.09772718643478}
+x0 = {'w_out_1': 292.2133961596657,
+ 's_out_1': 3906.8039609258676,
+ 'beta_out_1': 66.49296711887172,
+ 'v*_in_1': 81.05380363064901,
+ 'w*_throat_1': 316.9752175774574,
+ 's*_throat_1': 3907.6621322123183,
+ 'w*_out_1': 316.97518449944226,
+ 's*_out_1': 3907.662131086297,
+ 'w_out_2': 217.06420172836815,
+ 's_out_2': 3910.4988757144947,
+ 'beta_out_2': -53.546585557697206,
+ 'v*_in_2': 305.7188299530535,
+ 'w*_throat_2': 295.10961925560974,
+ 's*_throat_2': 3915.5101224463083,
+ 'w*_out_2': 271.00681404721223,
+ 's*_out_2': 3913.9374577082435,
+ 'v_in': 81.09772718643478}
+
+x0 = {'w_out_1': 284.8403181437687, 
+    's_out_1': 3906.5773009012155, 
+    'beta_out_1': 66.68464777693927, 
+    'v*_in_1': 81.07515491827422, 
+    'w*_throat_1': 317.03028180818956, 
+    's*_throat_1': 3907.5919369911985, 
+    'w*_out_1': 317.0551163891715, 
+    's*_out_1': 3907.664777632712, 
+    'w_out_2': 223.4468224020445, 
+    's_out_2': 3910.2596797662636, 
+    'beta_out_2': -55.26890292859983, 
+    'v*_in_2': 310.79033839298455,
+    'w*_throat_2': 294.04042785685164, 
+    's*_throat_2': 3915.589076558821, 
+    'w*_out_2': 294.0442056342112, 
+    's*_out_2': 3915.6008946851607, 
+    'v_in': 80.01025976504931}
 
 # aungier
 # x0 = {'w_out_1': 238.167621204032,
@@ -69,7 +81,7 @@ config = ml.read_configuration_file(CONFIG_FILE)
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
 
     # print(solvers[0].problem.results["overall"]["mass_flow_rate"])
     # print(solvers[0].problem.results["overall"]["PR_ts"])
@@ -86,6 +98,7 @@ if CASE == 1:
     print(solvers[0].problem.results["plane"]["Ma_rel"][3:])   
     print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    print(solvers[0].problem.vars_real)
                         
     # solvers[0].print_convergence_history(savefile=True)
 

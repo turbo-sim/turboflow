@@ -152,7 +152,7 @@ def get_exit_flow_angle_borg_agromayor(Ma_exit, Ma_crit_throat, Ma_crit_exit, ge
     
     return beta
 
-def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, opening_to_pitch):
+def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit_throat, Ma_crit_exit, geometry):
     """
     The exit flow angle is given by the gauge angle at subsonic conditions
     """

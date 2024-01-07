@@ -1,0 +1,29 @@
+{
+    "python": {
+        "terminal": {
+            "executeInFileDir": true
+        }
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "Python: Current File",
+                "type": "python",
+                "request": "launch",
+                "module": "debugpy",
+                "args": [
+                    "--wait-for-client",
+                    "--listen",
+                    "localhost:5678"
+                ],
+                "program": "${file}",
+                "console": "integratedTerminal",
+                "justMyCode": true,
+                "cwd": "${fileDirname}",
+            }
+        ]
+    },
+    "terminal.integrated.cwd": "${fileDirname}",
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+}

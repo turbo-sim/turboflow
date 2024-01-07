@@ -2,8 +2,7 @@ operation_points:
   fluid_name: air          # Fluid
   p0_in: 10.82e4           # Inlet total pressure
   T0_in: 310.0             # Inlet total temperature
-  # p_out: 10.82e4/2.144     # Exit static pressure
-  p_out: 10.82e4/1.6     # Exit static pressure
+  p_out: 10.82e4/2.144     # Exit static pressure
   alpha_in: 0              # Flow angle at first stator
   omega: 2036              # Rotational speed
 
@@ -11,15 +10,14 @@ performance_map:
   fluid_name: air
   T0_in: 310.0
   p0_in: 10.82e4
-  p_out: 10.82e4/np.linspace(1.5, 4.5, 30)
+  p_out: 10.82e4/np.linspace(1.5, 4.5, 40)
   #p_out: 10.82e4/np.linspace(2.3, 3, 2)
-  omega: [2036]
+  omega: 2036*np.array([1.05,1,0.9,0.7])
   alpha_in: 0
 
 model_options:
-  choking_condition : deviation
-  deviation_model : borg
-  blockage_model : 0.0 #flat_plate_turbulent
+  deviation_model : borg_agromayor
+  blockage_model : 'flat_plate_turbulent' #flat_plate_turbulent
   # rel_step_fd: 1e-3
   loss_model:
     model: benner
@@ -43,7 +41,8 @@ solver_options:
 geometry:
   cascade_type: ["stator", "rotor"]
   radius_hub: [8.36e-2, 8.36e-2, 8.31e-2, 8.03e-2]
-  radius_tip: [12.35e-2, 12.35e-2, 12.35e-2, 12.35e-2]
+  # radius_tip: [12.35e-2, 12.35e-2, 12.35e-2, 12.35e-2]
+  radius_tip: [12.35e-2, 12.35e-2, 12.35e-2 + 0.28e-3, 12.35e-2 + 0.28e-3]
   pitch: [1.8962e-2, 1.1409e-2] 
   chord: [2.2655e-2, 1.8251e-2]
   stagger_angle: [33.0, -15.7]  
@@ -51,8 +50,10 @@ geometry:
   diameter_le: [2*0.081e-2, 2*0.081e-2]
   wedge_angle_le: [50, 50]  
   metal_angle_le:  [0.0, 23.2] 
-  metal_angle_te: [66.6846,-55.2689]
+  metal_angle_te: [66.0,-54.6]
   thickness_te: [0.05e-2, 0.05e-2] 
   thickness_max: [0.3529e-2, 0.2071e-2] 
   tip_clearance: [0.0, 0.28e-3]  
-  throat_location_fraction: [0.85, 0.85]
+  throat_location_fraction: [1, 1]
+  # throat_location_fraction: [5/6, 5/6]
+

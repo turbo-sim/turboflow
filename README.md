@@ -129,7 +129,7 @@
 - [x] Geometry processing (Roberto)
   - [x] Clean up code
   - [x] Improve docstrings
-  - [ ] Discuss and improve the throat area calculation (Roberto/Lasse)
+  - [x] Discuss and improve the throat area calculation (Roberto/Lasse)
 - [ ] Update PySolverView to solve root finding problems with the optimization solver.
 - [x] Add computation time in solver report
 - [ ] Improve robustness with random generation of initial guesses
@@ -177,7 +177,7 @@
 	n: 
 	m: 
 	slope:
-- [ ] We improve slope so that it works when A_th=A_exit and in other cases (slope zero or one)
+- [x] We improve slope so that it works when A_th=A_exit and in other cases (slope zero or one)
 - [ ] Improve initialization / initial guess generation
 - [x] Write down notes explaining the behavior of the deviation model when the area is the same and when it changes
 - [ ] Write down notes explaining the equations for the blending
