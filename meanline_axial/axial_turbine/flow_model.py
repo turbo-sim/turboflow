@@ -201,9 +201,7 @@ def evaluate_axial_turbine(
 
         # Rename variables
         cascade = "_" + str(i + 1)
-        # w_throat = variables["w_throat" + cascade] * v0
         w_out = variables["w_out" + cascade] * v0
-        # s_throat = variables["s_throat" + cascade] * s_range + s_min
         s_out = variables["s_out" + cascade] * s_range + s_min
         beta_out = variables["beta_out" + cascade] * angle_range + angle_min
         v_crit_in = variables["v*_in" + cascade]
@@ -234,7 +232,6 @@ def evaluate_axial_turbine(
         }
         cascade_residuals = evaluate_cascade(
             cascade_inlet_input,
-            # cascade_throat_input,
             cascade_exit_input,
             critical_cascade_input,
             fluid,
@@ -263,6 +260,7 @@ def evaluate_axial_turbine(
                 results["plane"]["d"].values[-1],
                 geometry_cascade["radius_mean_out"],
                 geometry_cascade["A_out"],
+                results["plane"]["blockage"].values[-1],
                 geometry["radius_mean_in"][i + 1],
                 geometry["A_in"][i + 1],
                 fluid,
@@ -408,7 +406,6 @@ def evaluate_cascade(
         reference_values,
     )
 
-    
     choking_residual, beta_sub, beta_sup = compute_residual_flow_angle(geometry, critical_state, exit_plane, deviation_model)
 
     # Create dictionary with equation residuals
@@ -866,6 +863,7 @@ def evaluate_cascade_interspace(
     rho_exit,
     radius_exit,
     area_exit,
+    blockage_exit,
     radius_inlet,
     area_inlet,
     fluid,
@@ -929,7 +927,7 @@ def evaluate_cascade_interspace(
     v_t_in = v_t_exit * radius_exit / radius_inlet
 
     # Assume density variation is negligible
-    v_m_in = v_m_exit * area_exit / area_inlet
+    v_m_in = v_m_exit * area_exit / area_inlet *(1-blockage_exit)
 
     # Compute velocity vector
     v_in = np.sqrt(v_t_in**2 + v_m_in**2)
@@ -1085,7 +1083,6 @@ def evaluate_cascade_critical(
     cascade_exit_input = {"w" : critical_cascade_input["w*_out"],
                           "s" : critical_cascade_input["s*_out"],
                            "beta" : geometry["metal_angle_te"],
-                        #   "beta" : math.arccosd(geometry["A_throat"]/geometry["A_out"]),
                           "rothalpy" : critical_state["inlet_plane"]["rothalpy"]}
     
     
@@ -1461,7 +1458,6 @@ def compute_residual_mach_throat(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
 
 def compute_residual_flow_angle(
     geometry, critical_state, 
-    # throat_plane, 
     exit_plane, subsonic_deviation_model
 ):
     """
@@ -1759,8 +1755,8 @@ def compute_overall_performance(results):
     PR_ts = p0[0] / p[-1]
     h0_in = h0[0]
     h0_out = h0[-1]
-    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)
-    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)
+    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)*100
+    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)*100
     efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
     efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
     power = mass_flow * (h0_in - h0_out)
