@@ -432,7 +432,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         # Plot or update each thermodynamic_diagram
         for i, ax in enumerate(self.axes[:-1] if include_pinch_diagram else self.axes):
             plot_config = self.plot_settings["diagrams"][i]
-            plot_config = self._get_diagram_settings(plot_config)
+            plot_config = self._get_diagram_default_settings(plot_config)
             self._plot_thermodynamic_diagram(ax, plot_config, i)
 
         # Plot or update the pinch point diagram
@@ -514,7 +514,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         filename = os.path.join(self.optimization_dir, f"iteration_{iter:03d}.png")
         self.figure.savefig(filename)
 
-    def _get_diagram_settings(self, plot_config):
+    def _get_diagram_default_settings(self, plot_config):
         """
         Merges user-provided plot settings with default settings.
 
@@ -581,7 +581,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
         # Plot phase diagram
         self.fluid.plot_phase_diagram(axes=ax, **plot_config)
 
-        # Plot thermodynamic components
+        # Plot thermodynamic processes
         for name, component in self.cycle_data["components"].items():
             # Handle heat exchanger components in a special way
             if component["type"] == "heat_exchanger":
@@ -696,11 +696,7 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
             color: Color code for the plot.
         """
 
-        # The heating and cooling fluid states have to be handled in a special way because
-        # they do not have share the same thermodynamic diagram as the working fluid
-        fluid_source = self.fixed_parameters["heating_fluid"]["name"]
-        fluid_sink = self.fixed_parameters["cooling_fluid"]["name"]
-
+        # Get heat exchanger side data
         if "_hot_side" in name or "_cold_side" in name:
             # Extract the component and side from the name
             if "_hot_side" in name:
@@ -710,40 +706,29 @@ class ThermodynamicCycleProblem(solver.OptimizationProblem):
                 component_name, side_1 = name.replace("_cold_side", ""), "cold_side"
                 side_2 = "hot_side"
 
-            # Retrieve data
-            data_1 = self.cycle_data["components"][component_name][side_1]
-            data_2 = self.cycle_data["components"][component_name][side_2]
+            data = self.cycle_data["components"][component_name][side_1]
+            data_other_side = self.cycle_data["components"][component_name][side_2]
+            is_heat_exchanger = True
 
-            # Check if the fluid name matches the heating or cooling fluids
-            if data_1["fluid_name"] in [fluid_source, fluid_sink]:
-                # Handle special case to include the heat source process only when the
-                # y-axis variable is the temperature and the x-axis variable is enthalpy or pressure
-                # This exception was implemented to be able to visualize the temperature difference
-                # between working fluid and heat source/sink in the T-s and T-h diagrams
-                if prop_y == "T" and (prop_x == "h" or prop_x == "s"):
-                    x_data = data_2["states"][prop_x]
-                    y_data = data_1["states"][prop_y]
-                else:
-                    # Returning None sets the visibility of the lines to False
-                    x_data = None
-                    y_data = None
-            else:
-                x_data = data_1["states"][prop_x]
-                y_data = data_1["states"][prop_y]
-
-            color = data_1["color"]
-        else:
-            # Handle non-heat exchanger components
+        else: # Handle non-heat exchanger components           
             data = self.cycle_data["components"][name]
-            if data["fluid_name"] in [fluid_source, fluid_sink]:
-                # Returning None sets the visibility of the lines to False
-                x_data = None
-                y_data = None
-            else:
-                x_data = data["states"][prop_x]
-                y_data = data["states"][prop_y]
+            is_heat_exchanger = False
 
-            color = data["color"]
+        # Retrieve data
+        if data["states"]["identifier"][0] == "working_fluid":
+            # Components of the cycle
+            x_data = data["states"][prop_x]
+            y_data = data["states"][prop_y]
+        elif is_heat_exchanger and prop_y == "T" and prop_x in ["h", "s"]:
+            # Special case for heat exchangers
+            x_data = data_other_side["states"][prop_x]
+            y_data = data["states"][prop_y]
+        else:
+            # Other cases
+            x_data = None
+            y_data = None
+            
+        color = data["color"]
 
         return x_data, y_data, color
 

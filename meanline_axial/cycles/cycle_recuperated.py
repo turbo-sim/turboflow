@@ -2,7 +2,7 @@ import copy
 from .. import utilities
 from .. import fluid_properties as props
 
-from .cycle_components import compression_process, expansion_process, heat_exchanger
+from .components import compression_process, expansion_process, heat_exchanger
 
 COLORS_MATLAB = utilities.COLORS_MATLAB
 
@@ -18,9 +18,9 @@ def evaluate_cycle(
     parameters = copy.deepcopy(parameters)
 
     # Initialize fluid objects
-    working_fluid = props.Fluid(**parameters.pop("working_fluid"))
-    heating_fluid = props.Fluid(**parameters.pop("heating_fluid"))
-    cooling_fluid = props.Fluid(**parameters.pop("cooling_fluid"))
+    working_fluid = props.Fluid(**parameters.pop("working_fluid"), identifier="working_fluid")
+    heating_fluid = props.Fluid(**parameters.pop("heating_fluid"), identifier="heating_fluid")
+    cooling_fluid = props.Fluid(**parameters.pop("cooling_fluid"), identifier="cooling_fluid")
 
     # Extract heat source/sink parameters and give short names
     T_source_out_max = parameters["heat_source"].pop("exit_temperature_max")
@@ -282,18 +282,6 @@ def evaluate_cycle(
     # c_eq = None
     # c_ineq = None
 
-    # Cycle performance summary
-    output = {
-        **output,
-        "working_fluid": working_fluid,
-        "heating_fluid": heating_fluid,
-        "cooling_fluid": cooling_fluid,
-        "components": components,
-        "objective_function": f,
-        "equality_constraints": c_eq,
-        "inequality_constraints": c_ineq,
-    }
-
     # Set colors for plotting
     heater["hot_side"]["color"] = COLORS_MATLAB[6]
     heater["cold_side"]["color"] = COLORS_MATLAB[1]
@@ -307,5 +295,28 @@ def evaluate_cycle(
     # Check if any fixed parameter or design variable was not used
     utilities.check_for_unused_keys(parameters, "parameters", raise_error=True)
     utilities.check_for_unused_keys(variables, "variables", raise_error=True)
+
+    # # Summary of components
+    # components = {
+    #     "turbine": turbine,
+    #     "compressor": compressor,
+    #     # "recuperator": recuperator,
+    #     # "heater": heater,
+    #     # "cooler": cooler,
+    #     # "heat_source_pump": heat_source_pump,
+    #     # "heat_sink_pump": heat_sink_pump,
+    # }
+    
+    # Cycle performance summary
+    output = {
+        **output,
+        "working_fluid": working_fluid,
+        "heating_fluid": heating_fluid,
+        "cooling_fluid": cooling_fluid,
+        "components": components,
+        "objective_function": f,
+        "equality_constraints": c_eq,
+        "inequality_constraints": c_ineq,
+    }
 
     return output
