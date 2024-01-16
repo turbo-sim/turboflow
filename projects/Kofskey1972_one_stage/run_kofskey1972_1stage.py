@@ -39,27 +39,7 @@ if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
 
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=True, stop_on_failure=True)
-    
-    
-    # print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    # print(solvers[0].problem.results["overall"]["PR_ts"])
-    # print(solvers[0].problem.results["stage"]["reaction"])
-    print(solvers[0].problem.results["plane"]["beta"][3:])
-    print(solvers[0].problem.results["plane"]["s"][3:])    
-    print(solvers[0].problem.results["plane"]["h0"][3:])
-    print(solvers[0].problem.results["plane"]["d"][3:]) 
-    print(solvers[0].problem.results["plane"]["v"][3:])
-    print(solvers[0].problem.results["plane"]["h"][3:])    
-    print(solvers[0].problem.results["plane"]["w"][3:])
-    print(solvers[0].problem.results["plane"]["h0_rel"][3:])   
-    print(solvers[0].problem.results["plane"]["w_m"][3:])   
-    print(solvers[0].problem.results["plane"]["Ma_rel"][3:])   
-    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
-    print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    print(solvers[0].problem.results["cascade"]["mass_flow_crit"])      
-    # solvers[0].print_convergence_history(savefile=True)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=True, stop_on_failure=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
@@ -67,23 +47,32 @@ elif CASE == 2:
     # omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None)
 
 elif CASE == 3:
     
     # Load experimental dataset
-    data = pd.read_excel("./experimental_data_kofskey1972_1stage_interpolated.xlsx")
-    pressure_ratio_exp = data["pressure_ratio_ts"].values
-    speed_frac_exp = data["speed_percent"].values/100
+    sheets =  ['Mass flow rate', 'Torque', 'Total-to-static efficiency', 'alpha_out']
+    data = pd.read_excel("./experimental_data_kofskey1972_1stage_raw.xlsx", sheet_name=sheets)
+    
+    pressure_ratio_exp = []
+    speed_frac_exp = []
+    for sheet in sheets:
+        pressure_ratio_exp += list(data[sheet]['PR'].values)
+        speed_frac_exp += list(data[sheet]["omega"].values/100)
+
+    pressure_ratio_exp = np.array(pressure_ratio_exp)
+    speed_frac_exp = np.array(speed_frac_exp)
 
     # Generate operating points with same conditions as dataset
     operation_points = []
     design_point = config["operation_points"]
     for PR, speed_frac in zip(pressure_ratio_exp, speed_frac_exp):
-        current_point = copy.deepcopy(design_point)
-        current_point['p_out'] = design_point["p0_in"]/PR
-        current_point['omega'] = design_point["omega"]*speed_frac
-        operation_points.append(current_point)
+        if not speed_frac in [0.3, 0.5]: # 30 and 50% desing speed not included in validation plot
+            current_point = copy.deepcopy(design_point)
+            current_point['p_out'] = design_point["p0_in"]/PR
+            current_point['omega'] = design_point["omega"]*speed_frac
+            operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
     ml.compute_performance(operation_points, config)

@@ -10,14 +10,14 @@ performance_map:
   fluid_name: air
   T0_in: 310.0
   p0_in: 10.82e4
-  p_out: 10.82e4/np.linspace(1.5, 4.5, 40)
+  p_out: 10.82e4/np.linspace(1.5, 3.5, 40)
   #p_out: 10.82e4/np.linspace(2.3, 3, 2)
   omega: 2036*np.array([1.05,1,0.9,0.7])
   alpha_in: 0
 
 model_options:
-  deviation_model : borg_agromayor
-  blockage_model : 'flat_plate_turbulent' #flat_plate_turbulent
+  deviation_model : aungier
+  blockage_model : 0.0 #flat_plate_turbulent
   # rel_step_fd: 1e-3
   loss_model:
     model: benner
@@ -32,7 +32,7 @@ model_options:
 
 solver_options:
   method: hybr
-  tolerance: 1e-8
+  tolerance: 1e-7
   max_iterations: 100
   derivative_method: "2-point"
   derivative_rel_step: 1e-5
@@ -41,12 +41,12 @@ solver_options:
 geometry:
   cascade_type: ["stator", "rotor"]
   radius_hub: [8.36e-2, 8.36e-2, 8.31e-2, 8.03e-2]
-  # radius_tip: [12.35e-2, 12.35e-2, 12.35e-2, 12.35e-2]
-  radius_tip: [12.35e-2, 12.35e-2, 12.35e-2 + 0.28e-3, 12.35e-2 + 0.28e-3]
-  pitch: [1.8962e-2, 1.1409e-2] 
+  radius_tip: [12.35e-2, 12.35e-2, 12.35e-2, 12.35e-2]
+  # pitch: [1.858027655e-2, 1.140894174e-2] 
+  pitch: [1.896207585e-2, 1.140909091e-2]
   chord: [2.2655e-2, 1.8251e-2]
   stagger_angle: [33.0, -15.7]  
-  opening: [0.7505e-2, 0.6500e-2]
+  opening: [0.7505e-2*(1-0.064), 0.6500e-2*1.0]
   diameter_le: [2*0.081e-2, 2*0.081e-2]
   wedge_angle_le: [50, 50]  
   metal_angle_le:  [0.0, 23.2] 
@@ -55,5 +55,4 @@ geometry:
   thickness_max: [0.3529e-2, 0.2071e-2] 
   tip_clearance: [0.0, 0.28e-3]  
   throat_location_fraction: [1, 1]
-  # throat_location_fraction: [5/6, 5/6]
 

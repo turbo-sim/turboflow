@@ -226,6 +226,9 @@ def plot_subsets(
     xlabel="",
     ylabel="",
     title="",
+    colors = None,
+    linestyles = None, 
+    labels = None, 
     close_fig=True,
 ):
     # Plot variable y as a function of x on the subset defined by subsets
@@ -237,6 +240,11 @@ def plot_subsets(
     if not fig and not ax:
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
+    if not colors:
+            colors = plt.get_cmap(colormap)(np.linspace(0.5, 1, len(subsets) - 1))
+    if not linestyles:
+        linestyles = ['-']*len(subsets[1:])
+
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -244,11 +252,13 @@ def plot_subsets(
     y = get_lines(performance_data, y, subsets=subsets)
     x = get_lines(performance_data, x, subsets=subsets)
 
-    colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(subsets) - 1))
     for i in range(len(y)):
-        ax.plot(x[i], y[i], label=f"{subsets[0]} = {subsets[i+1]}", color=colors[i])
+        ax.plot(x[i], y[i], label=f"{subsets[0]} = {subsets[i+1]}", linestyle = linestyles[i], color=colors[i])
 
-    ax.legend()
+    if not labels == None:
+        ax.legend(labels)
+    else:
+        ax.legend()
 
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
 
@@ -288,6 +298,30 @@ def get_lines(performance_data, column_name, subsets=None):
                 lines.append(get_column(performance_data, column)[indices])
 
     return lines
+
+def plot_error(
+    values_exp, 
+    values_sim,
+    fig=None,
+    ax=None,
+    title="",
+    color = None,
+    label = None,
+    marker = None, 
+    close_fig=True,
+):
+    
+    if not fig and not ax:
+        fig, ax = plt.subplots(figsize=(6.4, 4.8))
+
+    ax.set_title(title)
+    ax.set_xlabel('Measured value')
+    ax.set_ylabel('Model value')
+
+    # Plot model value vs measured value
+    ax.scatter(values_exp, values_sim, color = color, marker = marker, label = label)
+
+    return fig, ax
 
 
 def find_column(performance_data, column_name):
