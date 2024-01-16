@@ -2,6 +2,15 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 16.01.2024
+- Critcial exit flow angle is now calculated with deviation model
+    - Add beta_crit_out as variable and another residual equation
+- Gauging angle is the arccos(area_throat/area_exit)
+- Aungier deviation model interpolated between mach = 0.5 and mach_crit_throat should be used
+
+## 08.01.2024
+- Add blockage factor to mass balance in interstage calculation
+
 ## 18.12.2023
 - Approximate slope of flow angle curve at critical point with parabolic function
 - Use this to calculate the deviation bin the range 0.5 < Ma_exit < Ma_crit
