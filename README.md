@@ -208,3 +208,11 @@ we have to expend the supersonic branch into the subsonic to calculate the flow 
 
 [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
 
+
+## Improvements from Marta
+- [ ] Change loader and dumper to recognize numpy (custom tags)
+- [ ] Use pedantic for validation instead of custom function (JSON schema)
+- [ ] Follow up gitlab pages
+- [ ] Dynamic generation of function mapping dictionary
+- [ ] Add logger with errors, info and warnings
+- [ ] FASTApi - open API (swagger)

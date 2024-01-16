@@ -160,10 +160,12 @@ class FluidState:
 
     """
 
-    def __init__(self, properties, fluid_name):
+    def __init__(self, fluid):
         # Use an internal dictionary to store properties
-        self._properties = properties
-        self._properties["fluid_name"] = fluid_name
+        self._properties = fluid.properties
+        self._properties["fluid_name"] = fluid.name
+        self._properties["converged"] = fluid.converged_flag
+        self._properties["identifier"] = fluid.identifier
 
     def __getattr__(self, name):
         # This method is called when an attribute is accessed
@@ -270,12 +272,14 @@ class Fluid:
         name,
         backend="HEOS",
         exceptions=True,
+        identifier=None,
     ):
         self.name = name
         self.backend = backend
         self._AS = CP.AbstractState(backend, name)
         self.exceptions = exceptions
         self.converged_flag = False
+        self.identifier = identifier
         self.properties = {}
 
         # Initialize variables
@@ -302,17 +306,17 @@ class Fluid:
         """Calculate the properties at the critical point"""
         rho_crit, T_crit = self._AS.rhomass_critical(), self._AS.T_critical()
         self.set_state(DmassT_INPUTS, rho_crit, T_crit, generalize_quality=False)
-        return FluidState(self.properties, self.name)
+        return FluidState(self)
 
     def _compute_triple_point_liquid(self):
         """Calculate the properties at the triple point (liquid state)"""
         self.set_state(QT_INPUTS, 0.00, self._AS.Ttriple(), generalize_quality=False)
-        return FluidState(self.properties, self.name)
+        return FluidState(self)
 
     def _compute_triple_point_vapor(self):
         """Calculate the properties at the triple point (vapor state)"""
         self.set_state(QT_INPUTS, 1.00, self._AS.Ttriple(), generalize_quality=False)
-        return FluidState(self.properties, self.name)
+        return FluidState(self)
 
     def get_props(self, input_type, prop_1, prop_2, generalize_quality=True):
         return self.set_state(
@@ -388,7 +392,7 @@ class Fluid:
                 raise e
 
         # TODO Return a new state that is not mutated?
-        return FluidState(self.properties, self.name)
+        return FluidState(self)
 
     def compute_properties_1phase(self, generalize_quality=True):
         """Get single-phase properties from CoolProp low level interface"""

@@ -9,8 +9,8 @@ from .config_validation import *
 from .solver import * 
 from .properties import *
 from .cycles import *
+from .utilities import *
 
-from . import utilities as utils
 
 from .axial_turbine import *
 from .axial_turbine.performance_analysis import *

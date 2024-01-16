@@ -2,7 +2,7 @@ import copy
 from .. import utilities
 from .. import fluid_properties as props
 
-from .cycle_components import compression_process, expansion_process, heat_exchanger
+from .components import compression_process, expansion_process, heat_exchanger
 
 COLORS_MATLAB = utilities.COLORS_MATLAB
 
@@ -18,10 +18,10 @@ def evaluate_cycle(
     parameters = copy.deepcopy(parameters)
 
     # Initialize fluid objects
-    working_fluid = props.Fluid(**parameters.pop("working_fluid"))
-    heating_fluid = props.Fluid(**parameters.pop("heating_fluid"))
-    cooling_fluid = props.Fluid(**parameters.pop("cooling_fluid"))
-
+    working_fluid = props.Fluid(**parameters.pop("working_fluid"), identifier="working_fluid")
+    heating_fluid = props.Fluid(**parameters.pop("heating_fluid"), identifier="heating_fluid")
+    cooling_fluid = props.Fluid(**parameters.pop("cooling_fluid"), identifier="cooling_fluid")
+    
     # Extract heat source/sink parameters and give short names
     T_source_out_max = parameters["heat_source"].pop("exit_temperature_max")
     T_source_out_min = parameters["heat_source"].pop("exit_temperature_min")
