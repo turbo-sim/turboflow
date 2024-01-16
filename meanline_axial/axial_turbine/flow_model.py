@@ -208,6 +208,7 @@ def evaluate_axial_turbine(
         w_crit_throat = variables["w*_throat" + cascade]
         s_crit_throat = variables["s*_throat" + cascade]
         w_crit_out = variables["w*_out" + cascade] * v0
+        beta_crit_out = variables["beta*_out" + cascade] * angle_range + angle_min
         s_crit_out = variables["s*_out" + cascade] * s_range + s_min
 
         # Evaluate current cascade
@@ -228,6 +229,7 @@ def evaluate_axial_turbine(
             "w*_throat": w_crit_throat,
             "s*_throat": s_crit_throat,
             "w*_out": w_crit_out,
+            "beta*_out" : beta_crit_out,
             "s*_out": s_crit_out,
         }
         cascade_residuals = evaluate_cascade(
@@ -1023,6 +1025,11 @@ def evaluate_cascade_critical(
     # Load reference values
     mass_flow_ref = reference_values["mass_flow_ref"]
 
+    # Load model options
+    loss_model = model_options["loss_model"]
+    blockage = model_options["blockage_model"]
+    deviation_model = model_options["deviation_model"]
+
     # Define critical state dictionary to store information
     critical_state = {}
 
@@ -1077,22 +1084,21 @@ def evaluate_cascade_critical(
     residuals_critical = dict(zip(residual_keys, residual_values))
     
     # Add residuals for the exit station
-    loss_model = model_options["loss_model"]
-    blockage = model_options["blockage_model"]
-    
     cascade_exit_input = {"w" : critical_cascade_input["w*_out"],
                           "s" : critical_cascade_input["s*_out"],
-                           "beta" : geometry["metal_angle_te"],
+                           "beta" : critical_cascade_input["beta*_out"],
                           "rothalpy" : critical_state["inlet_plane"]["rothalpy"]}
     
     
     exit_plane, loss_dict = evaluate_cascade_exit(cascade_exit_input, fluid, geometry, critical_state["inlet_plane"], angular_speed, blockage, loss_model)
     critical_state["exit_plane"] = exit_plane
+    beta_model = np.sign(critical_cascade_input["beta*_out"])*dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["throat_plane"]["Ma_rel"], geometry, deviation_model)
     
     # Quick trick to prevent convergence to supersonic exit for critical calculation
     subsonic_solution = max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
-    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref + subsonic_solution
+    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref  + subsonic_solution
     residuals_critical["Y*_out"] = exit_plane["loss_error"]
+    residuals_critical["beta*_out"] = math.cosd(beta_model)-math.cosd(critical_cascade_input["beta*_out"])
     
     return residuals_critical, critical_state
 
@@ -1188,7 +1194,7 @@ def compute_critical_values(
     critical_throat_input = {
         "w": w_throat,
         "s": s_throat,
-        "beta": theta_out,
+        "beta" : np.sign(geometry["metal_angle_te"])*math.arccosd(geometry["A_throat"]/geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
     }
 
@@ -1518,7 +1524,7 @@ def compute_residual_flow_angle(
         sigma = x**n/(x**n+(1-x)**m)
         return (1-sigma)*f1 + sigma*f2
     
-    beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_throat, Ma_crit_exit, geometry, subsonic_deviation_model)
+    beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_throat, geometry, subsonic_deviation_model)
     beta_supersonic = np.sign(beta)*math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
     if Ma <= Ma_crit_exit:
         Ma_inc = 0.5

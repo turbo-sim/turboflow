@@ -225,7 +225,6 @@ def calculate_full_geometry(geometry):
     A = np.pi * (radius_tip**2 - radius_hub**2)
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
-    # A_throat = np.pi * (radius_tip_throat**2 - radius_hub_throat**2)
     A_throat = 2*np.pi*radius_mean_throat*height_throat*geom["opening"]/geom["pitch"]
 
     # Compute flaring angle

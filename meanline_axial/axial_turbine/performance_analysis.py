@@ -25,8 +25,6 @@ SOLVERS_AVAILABLE = [
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 
-#INITIAL_GUESSES = [{"enthalpy_loss_fractions" : [0.5, 0.5], "eta_ts" : 0.8, "eta_tt" : 0.9, "Ma_crit" : 1},
-#                    {"enthalpy_loss_fractions" : [0.3, 0.7], "eta_ts" : 0.7, "eta_tt" : 0.8, "Ma_crit" : 1}]
 
 def get_heuristic_guess_input(n):
     
@@ -828,15 +826,14 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
             valid_keys_2 = [
                 "v_in",
-                # "w_throat",
                 "w_out",
-                # "s_throat",
                 "s_out",
                 "beta_out",
                 "v*_in",
                 "w*_throat",
                 "s*_throat",
                 "w*_out",
+                "beta*_out",
                 "s*_out",
             ]
             valid_keys_3 = ["v_in"]
@@ -1120,15 +1117,14 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             index = f"_{i+1}"
             initial_guess.update(
                 {
-                    # "w_throat" + index: w_throat,
                     "w_out" + index: w_out,
-                    # "s_throat" + index: s_throat,
                     "s_out" + index: s_out,
                     "beta_out" + index: theta_out,
                     "v*_in" + index: v_in_crit,
                     "w*_throat" + index: w_throat_crit,
                     "s*_throat" + index: s_throat,
                     "w*_out" + index: w_out_crit,
+                    "beta*_out" + index : theta_out,
                     "s*_out" + index: s_out,
                 }
             )

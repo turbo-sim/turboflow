@@ -392,7 +392,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     s = geometry["pitch"]
     We = geometry["wedge_angle_le"]
     theta_in = geometry["metal_angle_le"]
-    theta_out = geometry["metal_angle_te"]
+    theta_out = math.arccosd(geometry["A_throat"]/geometry["A_out"])
 
     chi = get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des)
 
