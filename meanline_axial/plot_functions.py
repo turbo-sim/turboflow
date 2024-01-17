@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-colormap = "Blues"
+colormap = "Reds"
 
 
 def load_data(filename):
@@ -241,7 +241,7 @@ def plot_subsets(
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
     if not colors:
-            colors = plt.get_cmap(colormap)(np.linspace(0.5, 1, len(subsets) - 1))
+            colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(subsets) - 1))
     if not linestyles:
         linestyles = ['-']*len(subsets[1:])
 
@@ -319,7 +319,7 @@ def plot_error(
     ax.set_ylabel('Model value')
 
     # Plot model value vs measured value
-    ax.scatter(values_exp, values_sim, color = color, marker = marker, label = label)
+    ax.plot(values_exp, values_sim, color = color, marker = marker, label = label, linestyle = 'none')
 
     return fig, ax
 

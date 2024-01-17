@@ -21,11 +21,11 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'performance_map'
+Case = 'error_plot' # performance_map/error_plot
 # Get the name of the latest results file
-filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
 # print(filename)
-# filename = 'output\performance_analysis_2024-01-16_10-02-13.xlsx' # Case 4
+filename = 'output\performance_analysis_2024-01-17_15-34-52.xlsx' 
 
 save_figs = False
 validation = True
@@ -417,7 +417,7 @@ elif Case == 'performance_map':
 
 elif Case == 'error_plot':
 
-    filename_sim = 'output\performance_analysis_2024-01-08_13-56-22.xlsx'
+    filename_sim = 'output\performance_analysis_2024-01-17_15-54-24.xlsx'
     filename_exp = './experimental_data_kofskey1974_interpolated.xlsx'
 
     speed_percent =np.flip([105, 100, 90, 70])
@@ -425,11 +425,6 @@ elif Case == 'error_plot':
     data_sim = data_sim["overall"]
     data_exp = pd.read_excel(filename_exp)
     data_exp = data_exp[data_exp["speed_percent"].isin(speed_percent)]
-
-    # error_mass_flow = (data_sim['overall']["mass_flow_rate"] - data_exp["mass_flow_rate"])/data_exp["mass_flow_rate"]
-    # error_eta = (data_sim['overall']["efficiency_ts"] - data_exp["efficiency_ts"])/data_exp["efficiency_ts"]
-    # error_torque = (data_sim['overall']["torque"] - data_exp["torque"])/data_exp["torque"]
-    # error_alpha = (data_sim['plane']["alpha_4"] - data_exp["angle_exit_abs"])/data_exp["angle_exit_abs"]
 
     fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))        
     fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
@@ -485,7 +480,7 @@ elif Case == 'error_plot':
 
     figs = [fig1, fig3]
     axs = [ax1, ax3]
-    error_band = 5/100
+    error_band = 2/100
     for fig, ax in zip(figs, axs):
         minima = ax.get_xlim()[0]
         maxima = ax.get_xlim()[-1]
@@ -514,10 +509,10 @@ elif Case == 'error_plot':
     ax3.legend()
     ax4.legend()
 
-    ax1.set_title("Mass flow rate")
-    ax2.set_title("Total to static efficiency")
-    ax3.set_title("Torque")
-    ax4.set_title("Absolute flow angle")
+    # ax1.set_title("Mass flow rate")
+    # ax2.set_title("Total to static efficiency")
+    # ax3.set_title("Torque")
+    # ax4.set_title("Absolute flow angle")
 
 
     if save_figs:

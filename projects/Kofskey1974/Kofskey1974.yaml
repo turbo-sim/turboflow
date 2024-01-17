@@ -5,6 +5,9 @@ operation_points:
   p_out: 10.82e4/2.144     # Exit static pressure
   alpha_in: 0              # Flow angle at first stator
   omega: 2036              # Rotational speed
+  # omega: 1832.4              # Rotational speed
+  # p_out: 34186.86528    # Exit static pressure
+
 
 performance_map:
   fluid_name: air
@@ -18,7 +21,7 @@ performance_map:
 model_options:
   deviation_model : aungier
   blockage_model : 0.0 #flat_plate_turbulent
-  # rel_step_fd: 1e-3
+  rel_step_fd: 1e-3
   loss_model:
     model: benner
     loss_coefficient: stagnation_pressure
@@ -32,7 +35,7 @@ model_options:
 
 solver_options:
   method: hybr
-  tolerance: 1e-7
+  tolerance: 1e-8
   max_iterations: 100
   derivative_method: "2-point"
   derivative_rel_step: 1e-5
@@ -54,5 +57,5 @@ geometry:
   thickness_te: [0.05e-2, 0.05e-2] 
   thickness_max: [0.3529e-2, 0.2071e-2] 
   tip_clearance: [0.0, 0.28e-3]  
-  throat_location_fraction: [1, 1]
+  throat_location_fraction: [5/6, 5/6]
 

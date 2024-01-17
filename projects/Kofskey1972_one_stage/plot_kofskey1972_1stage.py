@@ -20,11 +20,11 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'performance_map'
+Case = 'error_plot' # performance_map/error_plot
 # Get the name of the latest results file
-filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-# filename = "output/performance_analysis_2023-12-30_18-23-16.xlsx" 
-save_figs = False
+# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+filename = "output/performance_analysis_2024-01-17_15-20-39.xlsx" 
+save_figs = True
 validation = True
 show_figures = True
 
@@ -430,7 +430,7 @@ elif Case == 'performance_map':
             # ax1.plot(
             #     x_fit, y_fit, label=str(speed_percent[i]), linestyle="--", color=colors[i]
             # )
-            ax1.scatter(PR,m,marker = markers[i], color = colors[i])
+            ax1.plot(PR,m,marker = markers[i], color = colors[i], linestyle = "none")
             labels = [str(val) for val in speed_percent] * 2
             ax1.legend(
                 labels=labels,
@@ -442,7 +442,7 @@ elif Case == 'performance_map':
             eta_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]][
                 "efficiency_ts"
             ]
-            ax2.scatter(PR, eta_ts,  marker = markers[i], color=colors[i])
+            ax2.plot(PR, eta_ts,  marker = markers[i], color=colors[i], linestyle = "none")
             ax2.legend(
                 labels=labels,
                 ncols = 2,
@@ -452,7 +452,7 @@ elif Case == 'performance_map':
             # Exit absolute* flow angle
             alpha = validation_data[validation_data["speed_percent"] == speed_percent[i]]["angle_exit_abs"]
             pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax4.scatter(pr_ts, alpha, marker = markers[i], color=colors[i])
+            ax4.plot(pr_ts, alpha, marker = markers[i], color=colors[i], linestyle = "none")
             ax4.legend(
                 labels=labels,
                 ncols = 2,
@@ -462,7 +462,7 @@ elif Case == 'performance_map':
             # Torque
             tau = validation_data[validation_data["speed_percent"] == speed_percent[i]]["torque"]
             pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax5.scatter(pr_ts, tau,  marker = markers[i], color=colors[i])
+            ax5.plot(pr_ts, tau,  marker = markers[i], color=colors[i], linestyle = "none")
             ax5.legend(
                 labels=labels,
                 ncols = 2,
@@ -486,16 +486,16 @@ elif Case == 'performance_map':
     ax5.set_ylim([40, 140])
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures\Case_4_mass_flow_rate.png")
-        ml.plot_functions.save_figure(fig2, "figures\Case_4_efficiency.png")
-        ml.plot_functions.save_figure(fig3, "figures\Case_4_relative_flow_angle.png")
-        ml.plot_functions.save_figure(fig4, "figures\Case_4_absolute_flow_angle.png")
-        ml.plot_functions.save_figure(fig5, "figures\Case_4_torque.png")
+        ml.plot_functions.save_figure(fig1, "figures/1972_mass_flow_rate.png")
+        ml.plot_functions.save_figure(fig2, "figures/1972_efficiency.png")
+        ml.plot_functions.save_figure(fig3, "figures/1972_relative_flow_angle.png")
+        ml.plot_functions.save_figure(fig4, "figures/1972_absolute_flow_angle.png")
+        ml.plot_functions.save_figure(fig5, "figures/1972_torque.png")
 
             # Show figures
 elif Case == 'error_plot':
 
-    filename_sim = 'output\performance_analysis_2024-01-08_14-06-10.xlsx'
+    filename_sim = 'output\performance_analysis_2024-01-17_16-09-42.xlsx'
     filename_exp = './experimental_data_kofskey1972_1stage_raw.xlsx'
 
     speed_percent =np.flip([110, 100, 90, 70])
@@ -512,9 +512,9 @@ elif Case == 'error_plot':
         data_alpha = data_sim[170:]
 
 
-    fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))        
+    fig1, ax1 = plt.subplots(figsize=(6, 6))        
     fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
-    fig3, ax3 = plt.subplots(figsize=(6.4, 4.8))
+    fig3, ax3 = plt.subplots(figsize=(4.8, 4.8))
     fig4, ax4 = plt.subplots(figsize=(6.4, 4.8))
 
     # Define colors and markers
@@ -566,7 +566,7 @@ elif Case == 'error_plot':
 
     figs = [fig1, fig3]
     axs = [ax1, ax3]
-    error_band = 5/100
+    error_band = 2.5/100
     for fig, ax in zip(figs, axs):
         minima = ax.get_xlim()[0]
         maxima = ax.get_xlim()[-1]
@@ -595,10 +595,19 @@ elif Case == 'error_plot':
     ax3.legend()
     ax4.legend()
 
-    ax1.set_title("Mass flow rate")
-    ax2.set_title("Total to static efficiency")
-    ax3.set_title("Torque")
-    ax4.set_title("Absolute flow angle")
+    # ax1.set_title("Mass flow rate")
+    # ax2.set_title("Total to static efficiency")
+    # ax3.set_title("Torque")
+    # ax4.set_title("Absolute flow angle")
+
+    ax1.axis('equal')
+    ax1.set_xlim([2.55, 2.8])
+    ax1.set_ylim([2.55, 2.8])
+
+    ax3.axis('equal')
+    ax3.set_xlim([45, 135])
+    ax3.set_ylim([45, 135])
+
 
     if save_figs:
         ml.plot_functions.save_figure(fig1, "figures/1972_mass_flow_rate_error.png")

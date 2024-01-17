@@ -184,6 +184,11 @@
 - [x] check the throat area calculation i nthe geometyr.py script and clean it
 - [ ] add option to calculate throat loasses without trailing edge losses 
 
+## TODO 16.01.2024
+- [ ] Improve solver to not converge for low residual, and converge for satisfactory residuals
+- [ ] Implement the blender such that it is only used for zero deviation
+- [ ] Improve initial guess function
+
 
 Guidelines/instructions for the deviation model
 
