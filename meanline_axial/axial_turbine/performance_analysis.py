@@ -306,7 +306,8 @@ def compute_single_operation_point(
         for method in methods_to_try:
             success = False
             x0 = problem.get_initial_guess(initial_guess)
-            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
+            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method") 
+            solver_options["method"] = method
             solver = initialize_solver(problem, problem.x0, solver_options)
     
             try: 
