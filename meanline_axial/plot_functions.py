@@ -312,11 +312,7 @@ def plot_error(
 ):
     
     if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    ax.set_title(title)
-    ax.set_xlabel('Measured value')
-    ax.set_ylabel('Model value')
+        fig, ax = plt.subplots(figsize=(4.8, 4.8))
 
     # Plot model value vs measured value
     ax.plot(values_exp, values_sim, color = color, marker = marker, label = label, linestyle = 'none')

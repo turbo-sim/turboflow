@@ -22,16 +22,21 @@ x0 = {'w_out_1': 244.42314206706558,
   'w*_throat_1': 309.3325769414344,
   's*_throat_1': 3789.968019275075,
   'w*_out_1': 309.3325771576979,
+  'beta*_out_1': 65.8827237722127,
   's*_out_1': 3789.968019282878,
   'w_out_2': 240.72352688455877,
   's_out_2': 3797.034102749199,
   'beta_out_2': -61.497567096277514,
   'v*_in_2': 250.04121537545407,
   'w*_throat_2': 292.4919351280035,
+  'beta*_out_2': -61.92882664552348,
   's*_throat_2': 3800.736468314427,
   'w*_out_2': 259.39028119411665,
   's*_out_2': 3798.4449806382895,
   'v_in': 81.88511236557443}
+
+# x0 = {'w_out_1': 254.64481459027687, 's_out_1': 3788.0988671475766, 'beta_out_1': 65.35629772999161, 'v*_in_1': 83.98816821859472, 'w*_throat_1': 314.4890261689801, 's*_throat_1': 3782.91734770778, 'w*_out_1': 316.87102521583415, 'beta*_out_1': 65.8827237722127, 's*_out_1': 3790.368837919797, 'w_out_2': 262.0059095290473, 's_out_2': 3799.354136059052, 'beta_out_2': -62.111083232565726, 'v*_in_2': 277.5023843177447, 'w*_throat_2': 299.20936034032405, 's*_throat_2': 3788.098867152982, 'w*_out_2': 303.90255580066815, 
+# 'beta*_out_2': -61.92882664552348, 's*_out_2': 3803.9771433706733, 'v_in': 80.27955276303308}
 
 
 # Run calculations
@@ -39,15 +44,19 @@ if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
 
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=True, stop_on_failure=True)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
+    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
+    print("\n")
+    print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
+
+    # print(solvers[0].problem.vars_real)
 
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_map"]
-    # omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = x0)
 
 elif CASE == 3:
     

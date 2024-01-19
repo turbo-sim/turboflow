@@ -62,32 +62,13 @@ x0 = {'w_out_1': 293.49185257504075,
      's*_out_2': 3915.670216330829, 
      'v_in': 80.87654970689081}
 
-x0 = {'w_out_1': 293.74009056378264,
-      's_out_1': 3906.8595523426993, 
-      'beta_out_1': 66.5354196414861,
-      'v*_in_1': 81.05328920752547, 
-      'w*_throat_1': 316.975202887817, 
-      's*_throat_1': 3907.662152859119, 
-      'w*_out_1': 303.10229997861916, 
-      'beta*_out_1': 66.6285046603439, 
-      's*_out_1': 3907.184868529635, 
-      'w_out_2': 215.5400808725567, 
-      's_out_2': 3910.563356657865, 
-      'beta_out_2': -53.28033612758164, 
-      'v*_in_2': 308.97636394689323, 
-      'w*_throat_2': 294.4734855029855, 
-      's*_throat_2': 3915.6080863123752, 
-      'w*_out_2': 285.2554053047456, 
-      'beta*_out_2': -55.22268793295492, 
-      's*_out_2': 3915.10870534079, 
-      'v_in': 81.0249099321003}
 
 
 # Run calculations
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=None, stop_on_failure=True)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=True, stop_on_failure=True)
     print(solvers[0].problem.vars_real)
     # solvers[0].print_convergence_history(savefile=True)
 

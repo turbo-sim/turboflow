@@ -2,11 +2,11 @@ operation_points:
   fluid_name: air          # Fluid
   p0_in: 10.82e4           # Inlet total pressure
   T0_in: 310.0             # Inlet total temperature
-  p_out: 10.82e4/2.144     # Exit static pressure
+  # p_out: 10.82e4/2.144     # Exit static pressure
   alpha_in: 0              # Flow angle at first stator
-  omega: 2036              # Rotational speed
-  # omega: 1832.4              # Rotational speed
-  # p_out: 34186.86528    # Exit static pressure
+  # omega: 2036              # Rotational speed
+  omega: 1425.2            # Rotational speed
+  p_out: 68642.05306   # Exit static pressure
 
 
 performance_map:

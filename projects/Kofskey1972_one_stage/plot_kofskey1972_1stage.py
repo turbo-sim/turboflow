@@ -24,7 +24,7 @@ Case = 'error_plot' # performance_map/error_plot
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
 filename = "output/performance_analysis_2024-01-17_15-20-39.xlsx" 
-save_figs = True
+save_figs = False
 validation = True
 show_figures = True
 
@@ -33,10 +33,10 @@ if Case == 'pressure_line':
     # Load performance data
     timestamp = ml.utils.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
-    indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
+    # indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
 
-    for key in data.keys():
-        data[key] = data[key].loc[indices]
+    # for key in data.keys():
+    #     data[key] = data[key].loc[indices]
 
     # Define plot settings
     color_map = "jet"
@@ -512,10 +512,10 @@ elif Case == 'error_plot':
         data_alpha = data_sim[170:]
 
 
-    fig1, ax1 = plt.subplots(figsize=(6, 6))        
-    fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
+    fig1, ax1 = plt.subplots(figsize=(4.8, 4.8))        
+    fig2, ax2 = plt.subplots(figsize=(4.8, 4.8))
     fig3, ax3 = plt.subplots(figsize=(4.8, 4.8))
-    fig4, ax4 = plt.subplots(figsize=(6.4, 4.8))
+    fig4, ax4 = plt.subplots(figsize=(4.8, 4.8))
 
     # Define colors and markers
     colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
@@ -595,25 +595,42 @@ elif Case == 'error_plot':
     ax3.legend()
     ax4.legend()
 
-    # ax1.set_title("Mass flow rate")
-    # ax2.set_title("Total to static efficiency")
-    # ax3.set_title("Torque")
-    # ax4.set_title("Absolute flow angle")
+    ax1.set_xlabel('Measured mass flow rate [kg/s]')
+    ax1.set_ylabel('Simulated mass flow rate [kg/s]')
 
+    ax2.set_xlabel('Measured total-to-static efficiency [%]')
+    ax2.set_ylabel('Simulated total-to-static efficiency [%]')
+
+    ax4.set_xlabel('Measured rotor exit absolute flow angle [deg]')
+    ax4.set_ylabel('Simulated rotor exit absolute flow angle [deg]')
+
+    ax3.set_xlabel('Measured torque [Nm]')
+    ax3.set_ylabel('Simulated torque [Nm]')
+
+    x = 2.55
+    y = 2.8
     ax1.axis('equal')
-    ax1.set_xlim([2.55, 2.8])
-    ax1.set_ylim([2.55, 2.8])
+    ax1.set_xlim([x, y])
+    ax1.set_ylim([x, y])
 
-    ax3.axis('equal')
+    ax2.set_xlim([48, 92])
+    ax2.set_ylim([48, 92])
+    ax2.axis('equal')
+
     ax3.set_xlim([45, 135])
     ax3.set_ylim([45, 135])
+    ax3.axis('equal')
+
+    ax4.set_xlim([-49, 0])
+    ax4.set_ylim([-49, 0])
+    ax4.axis('equal')
 
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures/1972_mass_flow_rate_error.png")
-        ml.plot_functions.save_figure(fig2, "figures/1972_efficiency_error.png")
-        ml.plot_functions.save_figure(fig3, "figures/1972_torque_error.png")
-        ml.plot_functions.save_figure(fig4, "figures/1972_absolute_flow_angle_error.png")
+        ml.plot_functions.save_figure(fig1, "figures/error_11972_mass_flow_rate_error.png")
+        ml.plot_functions.save_figure(fig2, "figures/error_11972_efficiency_error.png")
+        ml.plot_functions.save_figure(fig3, "figures/error_11972_torque_error.png")
+        ml.plot_functions.save_figure(fig4, "figures/error_11972_absolute_flow_angle_error.png")
 
 if show_figures:
     plt.show()

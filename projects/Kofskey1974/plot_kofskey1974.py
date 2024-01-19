@@ -426,9 +426,10 @@ elif Case == 'error_plot':
     data_exp = pd.read_excel(filename_exp)
     data_exp = data_exp[data_exp["speed_percent"].isin(speed_percent)]
 
-    fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))        
-    fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
-    fig3, ax3 = plt.subplots(figsize=(6.4, 4.8))
+    fig1, ax1 = plt.subplots(figsize=(4.8, 4.8))        
+    fig2, ax2 = plt.subplots(figsize=(4.8, 4.8))
+    fig3, ax3 = plt.subplots(figsize=(4.8, 4.8))
+    fig4, ax4 = plt.subplots(figsize=(4.8, 4.8))
 
     # Define colors and markers
     colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
@@ -509,17 +510,28 @@ elif Case == 'error_plot':
     ax3.legend()
     ax4.legend()
 
-    # ax1.set_title("Mass flow rate")
-    # ax2.set_title("Total to static efficiency")
-    # ax3.set_title("Torque")
-    # ax4.set_title("Absolute flow angle")
+    ax1.set_xlabel('Measured mass flow rate [kg/s]')
+    ax1.set_ylabel('Simulated mass flow rate [kg/s]')
+
+    ax2.set_xlabel('Measured total-to-static efficiency [%]')
+    ax2.set_ylabel('Simulated total-to-static efficiency [%]')
+
+    ax4.set_xlabel('Measured rotor exit absolute flow angle [deg]')
+    ax4.set_ylabel('Simulated rotor exit absolute flow angle [deg]')
+
+    ax3.set_xlabel('Measured torque [Nm]')
+    ax3.set_ylabel('Simulated torque [Nm]')
+
+    ax1.axis('equal')
+    ax2.axis('equal')
+    ax3.axis('equal')
 
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures/1974_mass_flow_rate_error.png")
-        ml.plot_functions.save_figure(fig2, "figures/1974_efficiency_error.png")
-        ml.plot_functions.save_figure(fig3, "figures/1974_torque_error.png")
-        ml.plot_functions.save_figure(fig4, "figures/1974_absolute_flow_angle_error.png")
+        ml.plot_functions.save_figure(fig1, "figures/error_1974_mass_flow_rate_error.png")
+        ml.plot_functions.save_figure(fig2, "figures/error_1974_efficiency_error.png")
+        ml.plot_functions.save_figure(fig3, "figures/error_1974_torque_error.png")
+        ml.plot_functions.save_figure(fig4, "figures/error_1974_absolute_flow_angle_error.png")
 
 
 if show_figures:
