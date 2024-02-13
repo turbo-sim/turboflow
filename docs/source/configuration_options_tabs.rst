@@ -414,21 +414,6 @@
 
       .. tab-set::
 
-         .. tab-item:: choking_condition
-
-            Closure condition used to predict turbine choking.
-
-            .. list-table::
-               :widths: 20 80
-               :header-rows: 0
-
-               * - **Mandatory**
-                 - True
-               * - **Valid types**
-                 - ``str``
-               * - **Valid options**
-                 - ``deviation``, ``mach_critical``, ``mach_unity``
-
          .. tab-item:: deviation_model
 
             Deviation model used to predict the exit flow angle at subsonic conditions.
@@ -505,7 +490,7 @@
                      * - **Valid types**
                        - ``str``
                      * - **Valid options**
-                       - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``
+                       - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``, ``custom``
 
                .. tab-item:: loss_coefficient
 

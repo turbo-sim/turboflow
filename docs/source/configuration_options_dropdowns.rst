@@ -462,23 +462,6 @@
       * - **Valid types**
         - ``dict``
 
-   .. dropdown:: model_options.choking_condition
-      :color: secondary
-
-      Closure condition used to predict turbine choking.
-
-
-      .. list-table::
-         :widths: 20 80
-         :header-rows: 0
-
-         * - **Mandatory**
-           - True
-         * - **Valid types**
-           - ``str``
-         * - **Valid options**
-           - ``deviation``, ``mach_critical``, ``mach_unity``
-
    .. dropdown:: model_options.deviation_model
       :color: secondary
 
@@ -562,7 +545,7 @@
             * - **Valid types**
               - ``str``
             * - **Valid options**
-              - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``
+              - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``, ``custom``
 
       .. dropdown:: model_options.loss_model.loss_coefficient
          :color: secondary

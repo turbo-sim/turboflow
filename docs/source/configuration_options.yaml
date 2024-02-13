@@ -240,14 +240,6 @@ model_options:
   expected_type: dict
   valid_options: None
   _nested:
-    choking_condition:
-      description: Closure condition used to predict turbine choking.
-      is_mandatory: true
-      expected_type: str
-      valid_options:
-      - deviation
-      - mach_critical
-      - mach_unity
     deviation_model:
       description: Deviation model used to predict the exit flow angle at subsonic
         conditions.
@@ -291,6 +283,7 @@ model_options:
           - benner
           - benner_moustapha
           - isentropic
+          - custom
         loss_coefficient:
           description: Definition of the loss coefficient used to characterize the
             losses.
