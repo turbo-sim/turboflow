@@ -2,30 +2,20 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
-desired_path = os.path.abspath("../..")
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-
 import meanline_axial as ml
 
 # Define case parameters
-radius_curvature = np.inf
-pitch = 1.00
-opening = 0.40
-Ma_crit = 1.00
+Ma_crit = 1
 Ma_exit = np.linspace(0.00, 1.00, 200)
+geometry = {"A_throat" : 0.5,
+            "A_out" : 1}
 
 # Compute exit flow angles
-beta_metal = ml.meanline.get_subsonic_deviation(
-    Ma_exit, Ma_crit, opening / pitch, deviation_model="metal_angle"
+beta_aungier = ml.deviation_model.get_subsonic_deviation(
+    Ma_exit, Ma_crit, geometry, 'aungier'
 )
-beta_aungier = ml.meanline.get_subsonic_deviation(
-    Ma_exit, Ma_crit, opening / pitch, deviation_model="aungier"
-)
-beta_ainley = ml.meanline.get_subsonic_deviation(
-    Ma_exit, Ma_crit, opening / pitch, deviation_model="ainley_mathieson"
+beta_ainley = ml.deviation_model.get_subsonic_deviation(
+    Ma_exit, Ma_crit, geometry, "ainley_mathieson",
 )
 
 # Plot results
@@ -38,7 +28,9 @@ ax.set_xscale("linear")
 ax.set_yscale("linear")
 ax.plot(Ma_exit, beta_ainley, linewidth=1.25, label="Ainley-Mathieson")
 ax.plot(Ma_exit, beta_aungier, linewidth=1.25, label="Aungier")
-ax.plot(Ma_exit, beta_metal, linewidth=1.25, label="Metal")
 leg = ax.legend(loc="best")
 fig.tight_layout(pad=1, w_pad=None, h_pad=None)
+
+ax.set_ylim([58, 60.1])
+
 plt.show()

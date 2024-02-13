@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1974.yaml")

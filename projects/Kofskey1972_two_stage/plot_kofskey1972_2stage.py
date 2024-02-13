@@ -21,7 +21,7 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'pressure_line' # performance_map/error_plot
 
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
@@ -31,79 +31,103 @@ validation = True
 show_figures = True
 
 if Case == 'pressure_line':
-    
+
     # Load performance data
     timestamp = ml.utils.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
 
+    # Change data to be only design angular speed
+    sheets = data.keys()
+    filtered_indices = data["overall"][data["overall"]['speed_percent'] == 100].index
+    for sheet in sheets:
+        data[sheet] = data[sheet].loc[filtered_indices, :]
+
     # Define plot settings
-    color_map = "jet"
+    color_map = "Reds"
     outdir = "figures"
     
     # Plot mass flow rate
-    title = "Mass flow rate"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["mass_flow_rate"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Mass flow rate [kg/s]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Mass flow rate"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["mass_flow_rate"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
 
     # Plot efficiency curve
-    title = "Total-to-static efficiency"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["efficiency_ts"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Total-to-static efficiency [%]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Total-to-static efficiency"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["efficiency_ts"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Total-to-static efficiency [%]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
 
     # Plot exit absolute flow angle
-    title = "Rotor exit absolute flow angle"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["alpha_8"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Absolute flow angle [deg]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Rotor exit absolute flow angle"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["alpha_8"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Absolute flow angle [deg]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
 
     
     # Plot torque
-    title = "Torque"
+    # title = "Torque"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["torque"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Torque [Nm]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
+
+    # Plot mach
+    title = "Mach"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
+    linestyles = ['-', '--', ':','-.']
     fig1, ax1 = ml.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["torque"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Torque [Nm]",
-        title=title,
+        y_keys=["Ma_rel_2", "Ma_rel_4", "Ma_rel_6", "Ma_rel_8"],
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Cascade exit relative mach number [-]",
         filename=filename,
         outdir=outdir,
+        linestyles = linestyles,
         color_map=color_map,
-        save_figs=save_figs,
     )
+
+    ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'])
+    ax1.set_ylim([0.4,1.0])
+
+    if save_figs:
+        ml.plot_functions.save_figure(fig1, "figures/1972_2stage_mach.png")
 
 elif Case == 'performance_map':
 
@@ -119,7 +143,7 @@ elif Case == 'performance_map':
         "PR_ts",
         "mass_flow_rate",
         subsets,
-        xlabel="Total-to-static pressure ratio",
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
         linestyles = ['-', ':', '--', '-.'],
         close_fig=False,
@@ -131,7 +155,7 @@ elif Case == 'performance_map':
         "PR_ts",
         "efficiency_ts",
         subsets,
-        xlabel="Total-to-static pressure ratio",
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Total-to-static efficiency [%]",
         linestyles = ['-', ':', '--', '-.'],
         close_fig=False,
@@ -141,9 +165,9 @@ elif Case == 'performance_map':
     fig3, ax3 = ml.plot_functions.plot_subsets(
         data,
         "PR_ts",
-        "beta_4",
+        "beta_8",
         subsets,
-        xlabel="Total-to-static pressure ratio",
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit relative flow angle [deg]",
         linestyles = ['-', ':', '--', '-.'],
         close_fig=False,
@@ -155,7 +179,7 @@ elif Case == 'performance_map':
         "PR_ts",
         "alpha_8",
         subsets,
-        xlabel="Total-to-static pressure ratio",
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit absolute flow angle [deg]",
         linestyles = ['-', ':', '--', '-.'],
         close_fig=False,
@@ -167,7 +191,7 @@ elif Case == 'performance_map':
         "PR_ts",
         "torque",
         subsets,
-        xlabel="Total-to-static pressure ratio",
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Torque [Nm]",
         linestyles = ['-', ':', '--', '-.'],
         close_fig=False,
@@ -234,6 +258,30 @@ elif Case == 'performance_map':
                 ncols = 2,
                 title=legend_title,
             )
+    
+    # Manual settings
+    ax1.set_xlim([2.1, 5.4])
+    ax1.set_ylim([2.3, 2.5])
+
+    ax2.set_xlim([2.1, 5.4])
+    ax2.set_ylim([60, 90])
+
+    ax3.set_xlim([2.1, 5.4])
+    ax3.set_ylim([-50.0, -45.5])
+
+    ax4.set_xlim([2.1, 5.4])
+    ax4.set_ylim([-40, 50])
+
+    ax5.set_xlim([2.1, 5.4])
+    ax5.set_ylim([60, 180])
+
+    if save_figs:
+        ml.plot_functions.save_figure(fig1, "figures/1972_2stage_mass_flow_rate.png")
+        ml.plot_functions.save_figure(fig2, "figures/1972_2stage_efficiency.png")
+        ml.plot_functions.save_figure(fig3, "figures/1972_2stage_relative_flow_angle.png")
+        ml.plot_functions.save_figure(fig4, "figures/1972_2stage_absolute_flow_angle.png")
+        ml.plot_functions.save_figure(fig5, "figures/1972_2stage_torque.png")
+
 elif Case == 'error_plot':
 
     filename_sim = 'output\performance_analysis_2024-01-19_11-43-47.xlsx'
@@ -292,9 +340,7 @@ elif Case == 'error_plot':
     axs = [ax1, ax2]
     error_band = 2.5/100
     for fig, ax in zip(figs, axs):
-        minima = ax.get_xlim()[0]
-        maxima = ax.get_xlim()[-1]
-        evenly_distributed_values = np.linspace(minima, maxima, num=5)
+        evenly_distributed_values = np.linspace(-200, 200, 200)
 
         lower_bound = evenly_distributed_values * (1-error_band)
         upper_bound = evenly_distributed_values * (1+error_band)
@@ -303,12 +349,10 @@ elif Case == 'error_plot':
         ax.plot(evenly_distributed_values, upper_bound, 'k--')
 
     delta_deg = 5
-    minima = ax3.get_xlim()[0]
-    maxima = ax3.get_xlim()[-1]
-    ax3.plot([minima, maxima], [minima-delta_deg, maxima-delta_deg], 'k--')
-    ax3.plot([minima, maxima], [minima+delta_deg, maxima+delta_deg], 'k--')
+    ax3.plot([-200, 200], [-200-delta_deg, 200-delta_deg], 'k--')
+    ax3.plot([-200, 200], [-200+delta_deg, 200+delta_deg], 'k--')
 
-    ax1.legend()
+    ax1.legend(loc = 'upper left')
     ax2.legend()
     ax3.legend()
 
@@ -321,14 +365,38 @@ elif Case == 'error_plot':
     ax2.set_xlabel('Measured torque [Nm]')
     ax2.set_ylabel('Simulated torque [Nm]')
 
-    ax1.axis('equal')
-    ax2.axis('equal')
-    ax3.axis('equal')
+    # ax1.axis('equal')
+    ax1_limits = [2.3, 2.5]
+    ax1.set_xlim(ax1_limits)
+    ax1.set_ylim(ax1_limits)
+    tick_interval = 0.025
+    tick_limits = [2.325, 2.475]
+    ax1.set_xticks(np.linspace(tick_limits[0], tick_limits[1], 6))
+    ax1.set_yticks(np.linspace(tick_limits[0], tick_limits[1], 6))
+
+    ax2_limits = [60, 180]
+    ax2.set_xlim(ax2_limits)
+    ax2.set_ylim(ax2_limits)
+    tick_interval = 20
+    tick_limits = [80, 160]
+    ax2.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+    ax2.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+
+
+    # ax3.axis('equal')
+    ax3_limits = [-40, 50]
+    ax3.set_xlim(ax3_limits)
+    ax3.set_ylim(ax3_limits)
+    tick_interval = 10
+    tick_limits = [-30, 40]
+    ax3.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+    ax3.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures/error_1972_2stage_mass_flow_rate_error.png")
-        ml.plot_functions.save_figure(fig2, "figures/error_1972_2stage_error.png")
-        ml.plot_functions.save_figure(fig3, "figures/error_1972_2stage_absolute_flow_angle_error.png")
+        ml.plot_functions.save_figure(fig1, "figures/error_1972_2stage_mass_flow_rate.png")
+        ml.plot_functions.save_figure(fig2, "figures/error_1972_2stage_torque.png")
+        ml.plot_functions.save_figure(fig3, "figures/error_1972_2stage_absolute_flow_angle.png")
 
 
 # Show figures

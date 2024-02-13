@@ -88,6 +88,7 @@ def plot_lines(
     color_map="viridis",
     close_fig=False,
     save_figs=False,
+    linestyles = None,
     save_formats=['.png'],
     legend_loc='best',
 ):
@@ -144,8 +145,10 @@ def plot_lines(
     x = get_lines(performance_data, x_key)
     y = get_lines(performance_data, y_keys)
     
-    # Plot lines according to colormap
+    # Plot lines according to colormap and linestyles
     colors = plt.get_cmap(color_map)(np.linspace(0.2, 0.8, len(y_keys)))
+    if not isinstance(linestyles, (list, np.ndarray)):
+        linestyles = ['-']*len(y)
     if stack == True:
         ax.stackplot(x, y, labels=y_keys, colors=colors)
 
@@ -160,7 +163,7 @@ def plot_lines(
 
     else:
         for i in range(len(y)):
-            ax.plot(x, y[i], label=f"{y_keys[i]}", color=colors[i])
+            ax.plot(x, y[i], label=f"{y_keys[i]}", color=colors[i], linestyle = linestyles[i])
 
     # Set margins to zero
     ax.margins(x=0.01, y=0.01)
@@ -187,26 +190,34 @@ def plot_lines(
 
 def plot_line(
     performance_data,
-    x_name,
-    column_name,
+    x_key,
+    y_key,
     fig=None,
     ax=None,
     xlabel="",
     ylabel="",
     title="",
+    color = None,
+    linestyle = None,
     close_fig=True,
 ):
     if not fig and not ax:
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
+    if not isinstance(color, (list, np.ndarray)):
+        color = 'k'
+
+    if not linestyle:
+        linestyle = '-'
+
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-    y = get_lines(performance_data, column_name)
-    x = get_lines(performance_data, x_name)
+    y = get_lines(performance_data, y_key)
+    x = get_lines(performance_data, x_key)
 
-    ax.plot(x, y)
+    ax.plot(x, y, color = color, linestyle = linestyle, linewidth = 1.25)
 
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
 

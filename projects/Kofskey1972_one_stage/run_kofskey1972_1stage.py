@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -46,8 +46,15 @@ if CASE == 1:
 
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
     print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
-    print("\n")
     print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
+    print(solvers[0].problem.results["cascade"]["mass_flow_crit_throat"])
+    print(solvers[0].problem.results["cascade"]["mass_flow_crit_error"])
+    print(solvers[0].problem.results["cascade"]["Y_crit_throat"])
+    print(solvers[0].problem.results["cascade"]["Y_crit_out"])
+    print(solvers[0].problem.results["cascade"]["beta_crit_out"])
+    print(solvers[0].problem.results["cascade"]["d_crit_throat"])
+    print(solvers[0].problem.results["cascade"]["d_crit_out"])
+
 
     # print(solvers[0].problem.vars_real)
 

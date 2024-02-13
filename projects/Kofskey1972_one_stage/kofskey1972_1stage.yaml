@@ -44,7 +44,6 @@ geometry:
   pitch: [1.8294e-2, 1.524e-2]
   chord: [2.616e-2, 2.606e-2]
   stagger_angle: [+43.03, -31.05]
-  # opening: [0.7731e-2, 0.7248e-2]
   opening: [0.747503242e-2, 0.735223377e-2]
   diameter_le: [2*0.127e-2, 2*0.081e-2]
   wedge_angle_le: [50.00, 50.00]

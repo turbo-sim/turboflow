@@ -21,14 +21,14 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'performance_map' # performance_map/error_plot
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
 # print(filename)
-filename = 'output\performance_analysis_2024-01-17_15-34-52.xlsx' 
+filename = 'output\performance_analysis_2024-01-25_09-40-08.xlsx' 
 
 save_figs = False
-validation = True
+validation = False
 show_figures = True
 
 if Case == 'pressure_line':
@@ -38,8 +38,6 @@ if Case == 'pressure_line':
     data = ml.plot_functions.load_data(filename)
 
     # Define plot settings
-    save_figs = True
-    show_figures = True
     color_map = "magma"
     outdir = "figures"
 
@@ -241,64 +239,64 @@ elif Case == 'performance_map':
     subsets = ["omega"] + list(
         np.array([0.7, 0.9, 1, 1.05]) * design_point["omega"]
     )
-    fig1, ax1 = ml.plot_functions.plot_subsets(
-        data,
-        "PR_ts",
-        "mass_flow_rate",
-        subsets,
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Mass flow rate [kg/s]",
-        linestyles = ['-', ':', '--', '-.'],
-        close_fig=False,
-    )
+    # fig1, ax1 = ml.plot_functions.plot_subsets(
+    #     data,
+    #     "PR_ts",
+    #     "mass_flow_rate",
+    #     subsets,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     linestyles = ['-', ':', '--', '-.'],
+    #     close_fig=False,
+    # )
 
     # Plot total-to-static efficiency at different angular speeds
-    fig2, ax2 = ml.plot_functions.plot_subsets(
-        data,
-        "PR_ts",
-        "efficiency_ts",
-        subsets,
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Total-to-static efficiency [%]",
-        linestyles = ['-', ':', '--', '-.'],
-        close_fig=False,
-    )
+    # fig2, ax2 = ml.plot_functions.plot_subsets(
+    #     data,
+    #     "PR_ts",
+    #     "efficiency_ts",
+    #     subsets,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Total-to-static efficiency [%]",
+    #     linestyles = ['-', ':', '--', '-.'],
+    #     close_fig=False,
+    # )
 
     # Plot relative flow angle as different angular speed
     fig3, ax3 = ml.plot_functions.plot_subsets(
     data,
-    "PR_ts",
+    "Ma_rel_4",
     "beta_4",
     subsets,
-    xlabel="Total-to-static pressure ratio",
+    xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
     ylabel="Rotor exit relative flow angle [deg]",
     linestyles = ['-', ':', '--', '-.'],
     close_fig=False,
     )
 
     # Plot absolute flow angle as different angular speed
-    fig4, ax4 = ml.plot_functions.plot_subsets(
-    data,
-    "PR_ts",
-    "alpha_4",
-    subsets,
-    xlabel="Total-to-static pressure ratio",
-    ylabel="Rotor exit absolute flow angle [deg]",
-    linestyles = ['-', ':', '--', '-.'],
-    close_fig=False,
-    )
+    # fig4, ax4 = ml.plot_functions.plot_subsets(
+    # data,
+    # "PR_ts",
+    # "alpha_4",
+    # subsets,
+    # xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    # ylabel="Rotor exit absolute flow angle [deg]",
+    # linestyles = ['-', ':', '--', '-.'],
+    # close_fig=False,
+    # )
 
     # Plot torque as different angular speed
-    fig5, ax5 = ml.plot_functions.plot_subsets(
-    data,
-    "PR_ts",
-    "torque",
-    subsets,
-    xlabel="Total-to-static pressure ratio",
-    ylabel="Torque [Nm]",
-    linestyles = ['-', ':', '--', '-.'],
-    close_fig=False,
-    )
+    # fig5, ax5 = ml.plot_functions.plot_subsets(
+    # data,
+    # "PR_ts",
+    # "torque",
+    # subsets,
+    # xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    # ylabel="Torque [Nm]",
+    # linestyles = ['-', ':', '--', '-.'],
+    # close_fig=False,
+    # )
 
     # # Plot stacked losses at stator on subset
     # subset = ["omega", design_point["omega"]]
@@ -331,9 +329,6 @@ elif Case == 'performance_map':
         # Define colors and markers
         colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
         markers = ['x', 'o', '^', 's']
-        
-        # Define plot options
-        legend_title = "Percent of design \n angular speed"
 
         for i in range(len(speed_percent)):
 
@@ -353,19 +348,20 @@ elif Case == 'performance_map':
             # ax1.plot(
             #     x_fit, y_fit, label=str(speed_percent[i]), linestyle="--", color=colors[i]
             # )
-            ax1.scatter(PR,m,marker = markers[i], color = colors[i])
+            ax1.plot(PR,m,marker = markers[i], color = colors[i], linestyle = 'none')
             labels = [str(val) for val in speed_percent] * 2
             ax1.legend(
                 labels=labels,
                 ncols = 2,
                 title=legend_title,
+                loc = 'lower right'
             )
 
             # Total-to-static efficiency
             eta_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]][
                 "efficiency_ts"
             ]
-            ax2.scatter(PR, eta_ts, marker = markers[i], color=colors[i])
+            ax2.plot(PR, eta_ts, marker = markers[i], color=colors[i], linestyle = 'none')
             ax2.legend(
                 labels=labels,
                 ncols = 2,
@@ -375,7 +371,7 @@ elif Case == 'performance_map':
             # Exit absolute* flow angle
             alpha = validation_data[validation_data["speed_percent"] == speed_percent[i]]["angle_exit_abs"]
             pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax4.scatter(pr_ts, alpha, marker = markers[i], color=colors[i])
+            ax4.plot(pr_ts, alpha, marker = markers[i], color=colors[i], linestyle = 'none')
             ax4.legend(
                 labels=labels,
                 ncols = 2,
@@ -385,7 +381,7 @@ elif Case == 'performance_map':
             # Torque
             tau = validation_data[validation_data["speed_percent"] == speed_percent[i]]["torque"]
             pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax5.scatter(pr_ts, tau, marker = markers[i], color=colors[i])
+            ax5.plot(pr_ts, tau, marker = markers[i], color=colors[i], linestyle = 'none')
             ax5.legend(
                 labels=labels,
                 ncols = 2,
@@ -393,25 +389,34 @@ elif Case == 'performance_map':
             )
 
     # Manual settings
-    ax1.set_xlim([1.4, 3.6])
-    ax1.set_ylim([2.1, 2.6])
+    legend_title = "Percent of design \n angular speed"        
+    
+    # ax1.set_xlim([1.3, 3.6])
+    # ax1.set_ylim([2.0, 2.5])
 
-    ax2.set_xlim([1.4, 3.6])
-    ax2.set_ylim([50,100])
+    # ax2.set_xlim([1.3, 3.6])
+    # ax2.set_ylim([40,90])
 
-    ax3.set_xlim([1.4, 3.6])
+    # ax3.set_xlim([1.3, 3.6])
+    ax3.set_ylim([-56, -53])
     ax3.legend(labels = [70, 90, 100, 105], title=legend_title)
 
-    ax4.set_xlim([1.4, 3.6])
-    ax4.set_ylim([-35, 50])
+    # ax4.set_xlim([1.3, 3.6])
+    # ax4.set_ylim([-40, 60])
+    # tick_interval = 10
+    # tick_limits = [-40, 60]
+    # ax4.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
 
-    ax5.set_xlim([1.4, 3.6])
-    ax5.set_ylim([20, 100])
+    # ax5.set_xlim([1.3, 3.6])
+    # ax5.set_ylim([10, 100])
+    # tick_interval = 20
+    # tick_limits = [10, 110]
+    # ax5.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures/1974_mass_flow_rate_zero_dev.png")
+        # ml.plot_functions.save_figure(fig1, "figures/1974_mass_flow_rate.png")
         # ml.plot_functions.save_figure(fig2, "figures/1974_efficiency.png")
-        ml.plot_functions.save_figure(fig3, "figures/1974_relative_flow_angle_zero_dev.png")
+        ml.plot_functions.save_figure(fig3, "figures/1974_relative_flow_angle.png")
         # ml.plot_functions.save_figure(fig4, "figures/1974_absolute_flow_angle.png")
         # ml.plot_functions.save_figure(fig5, "figures/1974_torque.png")
 
@@ -434,7 +439,6 @@ elif Case == 'error_plot':
     # Define colors and markers
     colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
     markers = ['x', 'o', '^', 's']
-    fig4, ax4 = plt.subplots(figsize=(6.4, 4.8))
     
     for speed, color, marker in zip(speed_percent, colors, markers):
         fig1, ax1 = ml.plot_functions.plot_error(
@@ -481,10 +485,11 @@ elif Case == 'error_plot':
 
     figs = [fig1, fig3]
     axs = [ax1, ax3]
-    error_band = 2/100
+    error_band = 2.5/100
+    minima = -200
+    maxima = 200
     for fig, ax in zip(figs, axs):
-        minima = ax.get_xlim()[0]
-        maxima = ax.get_xlim()[-1]
+        
         evenly_distributed_values = np.linspace(minima, maxima, num=5)
 
         lower_bound = evenly_distributed_values * (1-error_band)
@@ -494,14 +499,10 @@ elif Case == 'error_plot':
         ax.plot(evenly_distributed_values, upper_bound, 'k--')
 
     eta_error = 5
-    minima = ax2.get_xlim()[0]
-    maxima = ax2.get_xlim()[-1]
     ax2.plot([minima, maxima], [minima-eta_error, maxima-eta_error], 'k--')
     ax2.plot([minima, maxima], [minima+eta_error, maxima+eta_error], 'k--')
 
     delta_deg = 5
-    minima = ax4.get_xlim()[0]
-    maxima = ax4.get_xlim()[-1]
     ax4.plot([minima, maxima], [minima-delta_deg, maxima-delta_deg], 'k--')
     ax4.plot([minima, maxima], [minima+delta_deg, maxima+delta_deg], 'k--')
 
@@ -522,9 +523,35 @@ elif Case == 'error_plot':
     ax3.set_xlabel('Measured torque [Nm]')
     ax3.set_ylabel('Simulated torque [Nm]')
 
-    ax1.axis('equal')
-    ax2.axis('equal')
-    ax3.axis('equal')
+    # ax1.axis('equal')
+    ax1_limits = [2.01, 2.46]
+    ax1.set_xlim(ax1_limits)
+    ax1.set_ylim(ax1_limits)
+
+    ax2_limits = [50, 90]
+    ax2.set_xlim(ax2_limits)
+    ax2.set_ylim(ax2_limits)
+    tick_interval = 10
+    tick_limits = [55, 85]
+    ax2.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+    ax2.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+
+    ax3_limits = [10, 100]
+    ax3.set_xlim(ax3_limits)
+    ax3.set_ylim(ax3_limits)
+    tick_interval = 10
+    tick_limits = [20, 90]
+    ax3.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+    ax3.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+
+    # ax4.axis('equal')
+    ax4_limits = [-40, 60]
+    ax4.set_xlim(ax4_limits)
+    ax4.set_ylim(ax4_limits)
+    tick_interval = 10
+    tick_limits = [-30, 50]
+    ax4.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
+    ax4.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
 
 
     if save_figs:
