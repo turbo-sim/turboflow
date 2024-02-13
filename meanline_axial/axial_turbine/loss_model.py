@@ -11,6 +11,7 @@ LOSS_MODELS = [
     "benner",
     "benner_moustapha",
     "isentropic",
+    "custom"
 ]
 
 LOSS_COEFFICIENTS = [
@@ -57,6 +58,15 @@ def evaluate_loss_model(loss_model_options, input_parameters):
             "loss_clearance": 0.0,
             "loss_total": 0.0,
         },
+        LOSS_MODELS[5]: lambda input_parameters: 
+                {
+                "loss_profile": 0.0,
+                "loss_incidence": 0.0,
+                "loss_trailing": 0.0,
+                "loss_secondary": 0.0,
+                "loss_clearance": 0.0,
+                "loss_total": loss_model_options["custom_value"],
+            },
     }
 
     # Evaluate loss model
@@ -73,9 +83,9 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     apply_tuning_factors(loss_dict, tuning_factors)
 
     # Optionally, recompute the total loss if needed
-    loss_dict["loss_total"] = sum(
-        value for key, value in loss_dict.items() if key != "loss_total"
-    )
+    # loss_dict["loss_total"] = sum(
+    #     value for key, value in loss_dict.items() if key != "loss_total"
+    # )
 
     # Compute the loss coefficient according to definition
     loss_coeff = loss_model_options["loss_coefficient"]

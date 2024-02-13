@@ -58,11 +58,17 @@ KEYS_CASCADE = [
     "dh_s",
     "Ma_crit_throat",
     "Ma_crit_out",
-    "mass_flow_crit",
-    "d_crit",
+    "beta_crit_out",
+    "mass_flow_crit_throat",
+    "mass_flow_crit_error",
+    "Y_crit_throat",
+    "Y_crit_out", 
+    "d_crit_throat",
+    "d_crit_out",
     "w_crit",
     "p_crit",
     "beta_crit",
+    "mass_flux_out",
     "incidence",
     "beta_subsonic" ,
     "beta_supersonic",
@@ -302,7 +308,6 @@ def evaluate_axial_turbine(
 
 def evaluate_cascade(
     cascade_inlet_input,
-    # cascade_throat_input,
     cascade_exit_input,
     critical_cascade_input,
     fluid,
@@ -432,8 +437,14 @@ def evaluate_cascade(
         "dh_s": dh_is,
         "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
         "Ma_crit_out": critical_state["exit_plane"]["Ma_rel"],
-        "mass_flow_crit": critical_state["throat_plane"]["mass_flow"],
-        "d_crit": critical_state["throat_plane"]["d"],
+        "beta_crit_out" : critical_state["exit_plane"]["beta"],
+        "mass_flow_crit_throat": critical_state["throat_plane"]["mass_flow"],
+        "mass_flow_crit_error": (critical_state["exit_plane"]["mass_flow"]-critical_state["throat_plane"]["mass_flow"])/mass_flow_reference,
+        "Y_crit_throat" : critical_state["throat_plane"]["loss_total"],
+        "Y_crit_out" : critical_state["exit_plane"]["loss_total"],
+        "d_crit_throat": critical_state["throat_plane"]["d"],
+        "d_crit_out": critical_state["exit_plane"]["d"],
+        "mass_flux_out" : exit_plane["w"]*exit_plane["d"],
         "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
         "beta_subsonic" : beta_sub,
         "beta_supersonic" : beta_sup,
@@ -1092,13 +1103,14 @@ def evaluate_cascade_critical(
     
     exit_plane, loss_dict = evaluate_cascade_exit(cascade_exit_input, fluid, geometry, critical_state["inlet_plane"], angular_speed, blockage, loss_model)
     critical_state["exit_plane"] = exit_plane
-    beta_model = np.sign(critical_cascade_input["beta*_out"])*dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["throat_plane"]["Ma_rel"], geometry, deviation_model)
-    
+    beta_model =  np.sign(critical_cascade_input["beta*_out"])*dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["throat_plane"]["Ma_rel"], geometry, deviation_model)
+    # beta_model = dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["exit_plane"]["Ma_rel"], geometry, deviation_model)
+
     # Quick trick to prevent convergence to supersonic exit for critical calculation
-    subsonic_solution = max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
-    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref  + subsonic_solution
+    subsonic_solution = np.sign((exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"]))*max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
+    residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref + subsonic_solution #TODO: fix of mass flow rate is negative
     residuals_critical["Y*_out"] = exit_plane["loss_error"]
-    residuals_critical["beta*_out"] = math.cosd(beta_model)-math.cosd(critical_cascade_input["beta*_out"])
+    residuals_critical["beta*_out"] = math.cosd(beta_model)-math.cosd(critical_cascade_input["beta*_out"]) 
     
     return residuals_critical, critical_state
 
@@ -1517,14 +1529,14 @@ def compute_residual_flow_angle(
     rho = exit_plane["d"]
     w = exit_plane["w"]
     beta = exit_plane["beta"]
-    blockage = exit_plane["blockage"]
-    
+    blockage = exit_plane["blockage"]    
     
     def sigmoid_blending_asymmetric(f1, f2, x, n, m):
         sigma = x**n/(x**n+(1-x)**m)
         return (1-sigma)*f1 + sigma*f2
     
     beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_throat, geometry, subsonic_deviation_model)
+    # beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_exit, geometry, subsonic_deviation_model)
     beta_supersonic = np.sign(beta)*math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
     if Ma <= Ma_crit_exit:
         Ma_inc = 0.5
@@ -1794,3 +1806,7 @@ def compute_overall_performance(results):
     utils.validate_keys(overall, KEYS_OVERALL, KEYS_OVERALL)
 
     return overall
+
+# TODO:
+# Change blade speed from u to 'blade speed'
+# Now it is overwritten by internal energy in the ouput file

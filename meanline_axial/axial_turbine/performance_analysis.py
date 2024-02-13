@@ -1120,12 +1120,12 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 {
                     "w_out" + index: w_out,
                     "s_out" + index: s_out,
-                    "beta_out" + index: theta_out,
+                    "beta_out" + index: np.sign(theta_out)*math.arccosd(A_throat/A_out),
                     "v*_in" + index: v_in_crit,
                     "w*_throat" + index: w_throat_crit,
                     "s*_throat" + index: s_throat,
                     "w*_out" + index: w_out_crit,
-                    "beta*_out" + index : theta_out,
+                    "beta*_out" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
                     "s*_out" + index: s_out,
                 }
             )

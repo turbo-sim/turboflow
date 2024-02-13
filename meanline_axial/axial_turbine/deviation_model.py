@@ -55,7 +55,7 @@ def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
             f"Invalid deviation model: '{model}'. Available options: {options}"
         )
     
-def get_exit_flow_angle_aungier(Ma_exit, Ma_crit_throat, geometry):
+def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     """
     Calculate deviation angle using the method proposed by :cite:`aungier_turbine_2006`.
     """
@@ -75,12 +75,12 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit_throat, geometry):
     delta[low_speed_mask] = delta_0
 
     # Compute deviation for 0.50 <= Ma_exit < 1.00
-    medium_speed_mask = (0.50 <= Ma_exit)  & (Ma_exit < Ma_crit_throat)
-    X = (2 * Ma_exit[medium_speed_mask] - 1) / (2 * Ma_crit_throat - 1)
+    medium_speed_mask = (0.50 <= Ma_exit)  & (Ma_exit < Ma_crit)
+    X = (2 * Ma_exit[medium_speed_mask] - 1) / (2 * Ma_crit - 1)
     delta[medium_speed_mask] = delta_0 * (1 - 10 * X**3 + 15 * X**4 - 6 * X**5)
 
     # Extrapolate to zero deviation for supersonic flow
-    supersonic_mask = Ma_exit >= Ma_crit_throat
+    supersonic_mask = Ma_exit >= Ma_crit
     delta[supersonic_mask] = 0.00
 
     # Compute flow angle from deviation
@@ -89,14 +89,13 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit_throat, geometry):
     return beta
 
 
-def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit_throat, Ma_crit_exit, geometry):
+def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     """
     Calculate deviation angle using the model proposed by :cite:`ainley_method_1951`.
     Equation digitized from Figure 5 of :cite:`ainley_method_1951`.
     """
     # TODO add equations of Ainley-Mathieson to docstring
-
-    gauging_angle = geometry["metal_angle_te"]
+    gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
         
     # Compute deviation for  Ma<0.5 (low-speed)
     delta_0 = abs(gauging_angle) - (35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0))
@@ -109,9 +108,9 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit_throat, Ma_crit_exit, 
     delta[low_speed_mask] = delta_0
 
     # Compute deviation for 0.50 <= Ma_exit < 1.00
-    medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < 1.00)
-    X = (2 * Ma_exit[medium_speed_mask] - 1) / (2 * Ma_crit_exit - 1)
-    delta[medium_speed_mask] = delta_0 * (1 - 10 * X**3 + 15 * X**4 - 6 * X**5)
+    medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < Ma_crit)
+    # delta[medium_speed_mask] = -delta_0/(Ma_crit-0.5)*Ma_exit[medium_speed_mask] + delta_0 + delta_0/(Ma_crit-0.5)*0.5
+    delta[medium_speed_mask] = delta_0*(1+(0.5-Ma_exit[medium_speed_mask])/(Ma_crit-0.5))
     # FIXME: no linear interpolation now?
 
     # Extrapolate to zero deviation for supersonic flow
