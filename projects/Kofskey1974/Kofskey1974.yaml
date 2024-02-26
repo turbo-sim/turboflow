@@ -14,8 +14,7 @@ performance_map:
   T0_in: 310.0
   p0_in: 10.82e4
   p_out: 10.82e4/np.linspace(1.4, 3.5, 40)
-  #p_out: 10.82e4/np.linspace(2.3, 3, 2)
-  omega: 2036*np.array([1.05,1,0.9,0.7])
+  omega: 2036 #*np.array([1.05,1,0.9,0.7])
   alpha_in: 0
 
 model_options:

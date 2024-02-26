@@ -10,18 +10,18 @@ performance_map:
   fluid_name: air          # Fluid
   p0_in: 10.82e4           # Inlet total pressure
   T0_in: 310.0             # Inlet total temperature
-  p_out: 10.82e4/np.linspace(1.1, 2.8, 60)    # Exit static pressure
+  p_out: 10.82e4/np.linspace(1.2, 2.8, 60)    # Exit static pressure
   alpha_in: 0              # Flow angle at first stator
   omega: 2036              # Rotational speed
 
 
 model_options:
-  deviation_model : aungier
+  deviation_model : zero_deviation
   blockage_model : 0.0 #flat_plate_turbulent
   rel_step_fd: 1e-3
   loss_model:
     model: custom
-    custom_value: 0.3
+    custom_value: 0.1
     loss_coefficient: stagnation_pressure
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:

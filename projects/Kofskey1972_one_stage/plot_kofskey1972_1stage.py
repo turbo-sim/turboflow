@@ -20,7 +20,7 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'pressure_line' # performance_map/error_plot
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
 filename = "output/performance_analysis_2024-01-17_15-20-39.xlsx" 
@@ -33,10 +33,10 @@ if Case == 'pressure_line':
     # Load performance data
     timestamp = ml.utils.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
-    # indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
+    indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
 
-    # for key in data.keys():
-    #     data[key] = data[key].loc[indices]
+    for key in data.keys():
+        data[key] = data[key].loc[indices]
 
     # Define plot settings
     color_map = "jet"
@@ -184,20 +184,20 @@ if Case == 'pressure_line':
     # )
 
     # Plot flow angles
-    # title = "Stator relative flow angles"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["beta_2"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Flow angles [deg]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
+    title = "Stator relative flow angles"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["beta_4"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Flow angles [deg]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
     # title = "Rotor relative flow angles"
     # filename = title.lower().replace(" ", "_") + '_' + timestamp

@@ -11,9 +11,11 @@ import os
 import meanline_axial as ml
 import copy
 
+import sys
+print(sys.path)
 
 # Define running option
-CASE = 2
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
@@ -36,8 +38,12 @@ if CASE == 0:
 
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=True, stop_on_failure=True)
-    print(solvers[0].problem.vars_real)
+    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
+    print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
+    print(solvers[0].problem.results["cascade"]["mass_flow_crit_error"])
+    print(solvers[0].problem.geometry["gauging_angle"])
+    # print(solvers[0].problem.vars_real)
     
 
 elif CASE == 1:

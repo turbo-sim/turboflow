@@ -23,7 +23,7 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'pressure_line'
+Case = 'mass_flux_plots'
 
 # Get the name of the latest results file
 # filename = "output/performance_analysis_2024-01-27_10-40-15.xlsx" # Y = 0.1
@@ -198,7 +198,7 @@ elif Case == 'mass_flux_plots':
     filename_7 = "output/performance_analysis_2024-01-27_10-44-08.xlsx" # Y = 0.30
 
     filenames = [filename_1, filename_3, filename_5, filename_7]
-    linestyles = ['-','--',':', '-.']
+    linestyles = ['-',':','--', '-.']
 
     fig, ax = plt.subplots(figsize=(6.4, 4.8))
     # Define plot settings
@@ -221,26 +221,45 @@ elif Case == 'mass_flux_plots':
         color = colors[i], 
         close_fig = False
     )
-        
-    ax.legend(labels = [0.0, 0.1, 0.2, 0.3], title = 'Loss coefficient')
+
+    labels = ["Y = 0.0", "Y = 0.1", "Y = 0.2", "Y = 0.3"]   
+    ax.legend(labels = labels, title = 'Loss coefficient')
     ax.set_ylim([160, 260])
 
 elif Case == 'unphysical_bump':
-    filename_1 = "output/performance_analysis_2024-01-27_10-44-08.xlsx" # No supersonic
+    # Y = 0.3
     filename_2 = "output/performance_analysis_2024-01-29_14-31-41.xlsx" # No bump
     filename_3 = "output/performance_analysis_2024-01-29_14-21-42.xlsx" # Bump
 
-    filenames = [filename_2, filename_3]
-    linestyles = ['-','--',':', '-.']
+    # Y = 0.0
+    filename_4 = "output/performance_analysis_2024-02-14_10-21-07.xlsx" #Isentropic
+
+    # Y = 0.1
+    filename_5 = "output/performance_analysis_2024-02-14_10-33-21.xlsx" # No bump
+    filename_6 = "output/performance_analysis_2024-02-14_10-45-31.xlsx" # bump
+
+    # Y = 0.2
+    filename_7 = "output/performance_analysis_2024-02-14_10-34-55.xlsx" # No bump
+    filename_8 = "output/performance_analysis_2024-02-14_10-37-22.xlsx" # bump
+
+    # filenames = [filename_4, filename_2, filename_3, filename_5, filename_6, filename_7, filename_8]
+    filenames = [filename_4, filename_5, filename_7, filename_2, filename_6, filename_8, filename_3]
+    # linestyles = ['-']+['-','-.']*3
+    linestyles = ['-']*4 + 3*['--']
 
     fig, ax = plt.subplots(figsize=(6.4, 4.8))
     # Define plot settings
     color_map = "Reds"
-    colors = plt.get_cmap(color_map)(np.linspace(0.2 + 1*0.266, 1, len(filenames)))
+    colors = plt.get_cmap(color_map)(np.linspace(0.2, 1, 4))
+    colors = [colors[0]]+[colors[1], colors[2], colors[3]]*2
 
     for i in range(len(filenames)):
         filename = filenames[i]
         data = ml.plot_functions.load_data(filename)
+        if filename == filename_2:
+            data_2 = data
+        elif filename == filename_3:
+            data_3 = data
         fig, ax = ml.plot_functions.plot_line(
         data,
         x_key="PR_ts",
@@ -254,9 +273,29 @@ elif Case == 'unphysical_bump':
         close_fig = False
     )
         
-    ax.legend(labels = ['Ma$_\mathrm{exit}$ = Ma$^*$','Ma$_\mathrm{exit}$ = 1'], title = 'Critical condition', loc = 'upper left')
-    ax.set_ylim([2.0, 2.15])
+    # ax.legend(labels = ['Ma$_\mathrm{exit}$ = Ma$^*$','Ma$_\mathrm{exit}$ = 1'], title = 'Critical condition', loc = 'lower right')
+    labels = ["Y = 0.0", "Y = 0.1", "Y = 0.2", "Y = 0.3"]
+    ax.legend(labels = labels, title = 'Loss coefficient', loc = 'lower right')
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
+    # xlim = ax.get_xlims()
+    # ylim = ax.get_ylims()
+    # extent = (xlim[0], xlim[1], ylim[0], ylim[1])
+
+    # Make zoomed in picture
+    x_zoom_2 = data_2["overall"]["PR_ts"]
+    y_zoom_2 = data_2["overall"]["mass_flow_rate"]
+    x_zoom_3 = data_3["overall"]["PR_ts"]
+    y_zoom_3 = data_3["overall"]["mass_flow_rate"]
+    x1, x2, y1, y2 = 1.7, 2.25, 2.05, 2.15  # subregion of the original image 
+    axins = ax.inset_axes(
+    [0.275, 0.1, 0.4, 0.4],
+    xlim=(x1, x2), ylim=(y1, y2), xticklabels=[], yticklabels=[])
+    axins.plot(x_zoom_2, y_zoom_2, color = colors[-1])
+    axins.plot(x_zoom_3, y_zoom_3, color = colors[-1], linestyle = '--')
+    ax.indicate_inset_zoom(axins, edgecolor="black")
+    # axins.imshow(Z2, extent=extent, origin="lower")
+
+    # ax.indicate_inset_zoom(axins, edgecolor="black")
 
 
 

@@ -1,0 +1,55 @@
+operation_points:
+  fluid_name: MM
+  T0_in: 450.00+273.15
+  p0_in: 12e5
+  p_out : 3e5 
+  omega: 9.454232065930453e+03
+  alpha_in: 0
+
+performance_map:
+  fluid_name: air
+  T0_in: 155.00+273.15
+  p0_in: 12e5
+  p_out: np.linspace(2e5, 4e5, 40)
+  omega: 9.454232065930453e+03 
+  alpha_in: 0 
+
+model_options:
+  deviation_model : aungier
+  blockage_model : 0.00  #flat_plate_turbulent
+  rel_step_fd: 1e-3
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
+
+solver_options:
+  method: hybr
+  tolerance: 1e-8
+  max_iterations: 100
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-3
+  display_progress: True
+
+geometry:
+  cascade_type: ["stator", "rotor"]
+  radius_hub: [0.0113534505098364, 0.0113534566452100, 0.0113534566452100, 0.0129012505924728]
+  radius_tip: [0.0170301735454710, 0.0170301704777842, 0.0170301704777842, 0.0162562735041528]
+  pitch: [0.00380026882373016, 0.00422395723642349]
+  chord: [0.00616921603374655, 0.00606368445078187]
+  stagger_angle: [0.698131700797732*180/np.pi, -0.761482529579643*180/np.pi]
+  opening: [0.000659909755885192, 0.00128707108393972]
+  diameter_le: [2*0.127e-2, 2*0.081e-2]
+  wedge_angle_le: [50.00, 50.00]
+  metal_angle_le: [0.00, -0.261799951623100*180/np.pi]
+  metal_angle_te: [1.39626340159546*180/np.pi, -1.26116510753619*180/np.pi]
+  thickness_te: [3.29954877942596e-05, 6.43535541969860e-05]
+  thickness_max: [0.00123384320674931, 0.00104037215452434]
+  tip_clearance: [0.00, 0.00050000]
+  throat_location_fraction: [5/6, 5/6]
