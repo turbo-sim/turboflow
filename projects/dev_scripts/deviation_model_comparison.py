@@ -18,7 +18,7 @@ beta_ainley = ml.deviation_model.get_subsonic_deviation(
     Ma_exit, Ma_crit, geometry, "ainley_mathieson",
 )
 
-# Plot results
+# Plot comparison
 fig = plt.figure(figsize=(6.4, 4.8))
 ax = fig.gca()
 ax.set_title("Deviation model testing")
