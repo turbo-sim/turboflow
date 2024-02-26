@@ -11,10 +11,11 @@ from .properties import *
 from .cycles import *
 from .utilities import *
 
-
 from .axial_turbine import *
 from .axial_turbine.performance_analysis import *
 
+# Set plot options
+set_plot_options()
 
 # from .plot_options import *
 

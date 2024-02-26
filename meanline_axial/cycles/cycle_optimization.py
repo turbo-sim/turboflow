@@ -15,8 +15,6 @@ from .. import fluid_properties as props
 from . import cycle_recuperated
 from . import cycle_split_compression
 
-
-utilities.set_plot_options()
 COLORS_MATLAB = utilities.COLORS_MATLAB
 LABEL_MAPPING = {
     "s": "Entropy [J/kg/K]",
