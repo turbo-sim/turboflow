@@ -1107,7 +1107,8 @@ def evaluate_cascade_critical(
     # beta_model = dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["exit_plane"]["Ma_rel"], geometry, deviation_model)
 
     # Quick trick to prevent convergence to supersonic exit for critical calculation
-    subsonic_solution = np.sign((exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"]))*max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
+    # subsonic_solution = np.sign((exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"]))*max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
+    subsonic_solution = max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
     residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref + subsonic_solution #TODO: fix of mass flow rate is negative
     residuals_critical["Y*_out"] = exit_plane["loss_error"]
     residuals_critical["beta*_out"] = math.cosd(beta_model)-math.cosd(critical_cascade_input["beta*_out"]) 
@@ -1542,8 +1543,8 @@ def compute_residual_flow_angle(
         Ma_inc = 0.5
         x = (Ma-Ma_inc)/(Ma_crit_exit-Ma_inc)
         x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
-        beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
-        # beta_model = beta_subsonic
+        # beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
+        beta_model = beta_subsonic
     else:
         beta_model = math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
         
