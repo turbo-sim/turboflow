@@ -1,12 +1,6 @@
 import os
 import sys
 import yaml
-
-package_path = os.path.abspath("..")
-
-if package_path not in sys.path:
-    sys.path.append(package_path)
-
 import meanline_axial as ml
 
 # Import the options dictionary
