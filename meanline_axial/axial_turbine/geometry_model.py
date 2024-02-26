@@ -227,6 +227,9 @@ def calculate_full_geometry(geometry):
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
     A_throat = 2*np.pi*radius_mean_throat*height_throat*geom["opening"]/geom["pitch"]
 
+    # Gauging angle
+    gauging_angle = math.arccosd(A_throat/A_out)
+
     # Compute flaring angle
     flaring_angle = np.arctan((height_out - height_in) / axial_chord)
 
@@ -279,6 +282,7 @@ def calculate_full_geometry(geometry):
         "thickness_te_opening_ratio": thickness_te_opening_ratio,
         "tip_clearance_height_ratio": tip_clearance_height,
         "diameter_le_chord_ratio": diameter_le_chord_ratio,
+        "gauging_angle" : gauging_angle,
     }
 
     return {**geometry, **new_parameters}
