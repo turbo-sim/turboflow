@@ -146,7 +146,7 @@ def plot_lines(
     y = get_lines(performance_data, y_keys)
     
     # Plot lines according to colormap and linestyles
-    colors = plt.get_cmap(color_map)(np.linspace(0.2, 0.8, len(y_keys)))
+    colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y_keys)))
     if not isinstance(linestyles, (list, np.ndarray)):
         linestyles = ['-']*len(y)
     if stack == True:
