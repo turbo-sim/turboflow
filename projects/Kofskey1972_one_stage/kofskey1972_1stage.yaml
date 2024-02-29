@@ -10,8 +10,8 @@ performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.6, 4.6, 40)
-  omega: 1627 #*np.array([1.1, 1, 0.9, 0.7])
+  p_out: 13.8e4/np.linspace(4.0, 5.0, 20)
+  omega: 1627*0.7 #*np.array([1.1, 1, 0.9, 0.7])
   alpha_in: 0 
 
 model_options:

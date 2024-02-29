@@ -1543,8 +1543,8 @@ def compute_residual_flow_angle(
         Ma_inc = 0.5
         x = (Ma-Ma_inc)/(Ma_crit_exit-Ma_inc)
         x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
-        # beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
-        beta_model = beta_subsonic
+        beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
+        # beta_model = beta_subsonic
     else:
         beta_model = math.arccosd(m_crit / rho / w / area_out / (1 - blockage))
         

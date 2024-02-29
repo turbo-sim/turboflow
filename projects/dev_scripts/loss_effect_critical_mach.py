@@ -14,7 +14,7 @@ import meanline_axial as ml
 
 # Script options
 plot_data = True
-interpolation = True
+interpolation = False
 check_interpolation = False
 plot_mass_flow = True
 plot_deviation = False
@@ -70,14 +70,14 @@ if plot_data:
     if interpolation:
         mach_crit_iterp = np.linspace(0.8, 1.05, 10)
         ax.plot(mach_crit_iterp, f2(mach_crit_iterp)/phi_max, color = 'k', linestyle = ':')
-        ax.text(0.82, 1.02, 'Subsonic', fontsize=13, color='k')
-        ax.text(1.05, 1.02, 'Supersonic', fontsize=13, color='k')
+        ax.text(0.75, 1.02, 'Converging', fontsize=13, color='k')
+        ax.text(1.075, 1.02, 'Diverging', fontsize=13, color='k')
 
     ax.legend(title = 'Loss coefficient')
     ax.set_xlim([0.4, 1.6])
     ax.set_ylim([0.44, 1.1])
     ax.set_ylabel('Normalized mass flux [$\phi/\phi_\mathrm{isentropic, max}$]')
-    ax.set_xlabel('Mach')
+    ax.set_xlabel('Mach number')
 
     ax1.legend(title = 'Loss coefficient')
     ax1.set_ylabel('Mach')
@@ -85,7 +85,7 @@ if plot_data:
 
     ax2.legend(title = 'Loss coefficient')
     ax2.set_ylabel('Mass flux [kg/$\mathrm{m}^2\cdot$s]')
-    ax2.set_xlabel('Total-to-static pressure ratio [$p_\mathrm{out}/p_{0, \mathrm{in}}$]')
+    ax2.set_xlabel('Total-to-static pressure ratio [$p_\mathrm{out}/p_{0, \mathrm{in}}$]')    
 
 if plot_mass_flow:
     filename = 'mass_flux_curves_compact.xlsx'
@@ -103,6 +103,15 @@ if plot_mass_flow:
         mach_crit[i] = data_subset.loc[data_subset["Mass flux"].idxmax(), "Mach"]
         index_first_mach_one_or_above = data_subset.index[data_subset['Mach'] >= 1][-1]
         phi_Ma_1[i] = data_subset.loc[index_first_mach_one_or_above, 'Mass flux']
+
+    # Calculate rediction in phi_max and mach_crit
+    phi_change = (phi_max[0:-1] - phi_max[1:])/phi_max[0:-1]*100
+    mach_change = (mach_crit[0:-1]-mach_crit[1:])/mach_crit[0:-1]*100
+    print(mach_crit)
+    print(phi_change)
+    print(mach_change)
+    print(np.sum(phi_change)/3) 
+    print(np.sum(mach_change)/3) 
 
     # plot mass flow rate for both choking conditions
     fig, ax = plt.subplots(figsize=(6.4, 4.8))

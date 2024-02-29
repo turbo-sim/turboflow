@@ -34,7 +34,6 @@ if Case == 'pressure_line':
     timestamp = ml.utils.extract_timestamp(filename)
     data = ml.plot_functions.load_data(filename)
     indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
-
     for key in data.keys():
         data[key] = data[key].loc[indices]
 
@@ -43,36 +42,36 @@ if Case == 'pressure_line':
     outdir = "figures"
 
     # Plot mass flow rate
-    title = "Mass flow rate"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["mass_flow_rate"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Mass flow rate [kg/s]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Mass flow rate"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["mass_flow_rate", "mass_flow_crit_2"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
 
     # Plot efficiency curve
-    title = "Total-to-static efficiency"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["efficiency_ts"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Total-to-static efficiency [%]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Total-to-static efficiency"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["efficieny_ts"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Total-to-static efficiency [%]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
 
 
     # Plot velocities
@@ -112,22 +111,7 @@ if Case == 'pressure_line':
     # fig1, ax1 = ml.plot_functions.plot_lines(
     #     data,
     #     x_key="PR_ts",
-    #     y_keys=["Ma_crit_out_1", "Ma_1", "Ma_2"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Mach number",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-    # title = "Rotor Mach number"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["Ma_crit_out_2", "Ma_rel_3", "Ma_rel_4"],
+    #     y_keys=["Ma_rel_2", "Ma_rel_4", "Ma_crit_throat_1", "Ma_crit_throat_2"],
     #     xlabel="Total-to-static pressure ratio",
     #     ylabel="Mach number",
     #     title=title,
@@ -169,19 +153,20 @@ if Case == 'pressure_line':
     # )
     
     # title = "Rotor density"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["d_crit_2","d_4", "d_5", "d_6"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Density [kg/m^3]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
+    title = 'misc'
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["Ma_4"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Density [kg/m^3]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
     # Plot flow angles
     title = "Stator relative flow angles"
@@ -189,7 +174,7 @@ if Case == 'pressure_line':
     fig1, ax1 = ml.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["beta_4"],
+        y_keys=["alpha_4"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Flow angles [deg]",
         title=title,

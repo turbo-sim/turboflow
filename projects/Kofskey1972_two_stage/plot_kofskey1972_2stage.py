@@ -24,8 +24,8 @@ else:
 Case = 'pressure_line' # performance_map/error_plot
 
 # Get the name of the latest results file
-filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-# filename = "output/performance_map_2stage.xlsx" 
+# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+filename = "output/performance_map_2stage.xlsx" 
 # filename = "output/performance_analysis_2024-01-19_09-10-15.xlsx" # 100% line
 # filename = "output/performance_analysis_2024-02-21_14-24-19.xlsx" # 100% line, 90% of 1st rotor area
 
@@ -40,32 +40,32 @@ if Case == 'pressure_line':
     data = ml.plot_functions.load_data(filename)
 
     # Change data to be only design angular speed
-    # sheets = data.keys()
-    # filtered_indices = data["overall"][data["overall"]['speed_percent'] == 100].index
-    # for sheet in sheets:
-    #     data[sheet] = data[sheet].loc[filtered_indices, :]
+    sheets = data.keys()
+    filtered_indices = data["overall"][data["overall"]['speed_percent'] == 100].index
+    for sheet in sheets:
+        data[sheet] = data[sheet].loc[filtered_indices, :]
 
     # Define plot settings
     color_map = "Reds"
     outdir = "figures"
     
     # Plot mass flow rate
-    title = "Mass flow rate"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        # y_keys=["mass_flow_rate", "mass_flow_crit_1", "mass_flow_crit_2", "mass_flow_crit_3", "mass_flow_crit_4"],
-        y_keys=["mass_flow_rate", "mass_flow_crit_throat_1", "mass_flow_crit_throat_2", "mass_flow_crit_throat_3", "mass_flow_crit_throat_4"],
-        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-        ylabel="Mass flow rate [kg/s]",
-        filename=filename,
-        outdir=outdir,
-        color_map = color_map,
-    )
+    # title = "Mass flow rate"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     # y_keys=["mass_flow_rate", "mass_flow_crit_1", "mass_flow_crit_2", "mass_flow_crit_3", "mass_flow_crit_4"],
+    #     y_keys=["mass_flow_rate", "mass_flow_crit_throat_1", "mass_flow_crit_throat_2", "mass_flow_crit_throat_3", "mass_flow_crit_throat_4"],
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map = color_map,
+    # )
     # ax1.set_ylim([2.38, 2.46])
-    ax1.set_ylim([2.2, 2.3])
-    ax1.legend(labels = ["$\dot{m}$", "$\dot{m}^*_1$", "$\dot{m}^*_2$", "$\dot{m}^*_3$", "$\dot{m}^*_4$"], loc = 'lower right')
+    # ax1.set_ylim([2.2, 2.3])
+    # ax1.legend(labels = ["$\dot{m}$", "$\dot{m}^*_1$", "$\dot{m}^*_2$", "$\dot{m}^*_3$", "$\dot{m}^*_4$"], loc = 'lower right')
 
     # Plot efficiency curve
     # title = "Total-to-static efficiency"
@@ -127,34 +127,34 @@ if Case == 'pressure_line':
     #     color_map=color_map,
     # )
 
-    title = "Stator exit relative flow angle"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["beta_8"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Relative flow angle [deg]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-    )
+    # title = "Stator exit relative flow angle"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["beta_8"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Relative flow angle [deg]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
 
-    title = "Static pressure"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["p_2", "p_4", "p_6", "p_8"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Cascade exit static pressure [Pa]",
-        title='',
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-    )
-    ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'], ncols = 1)
+    # title = "Static pressure"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["p_2", "p_4", "p_6", "p_8"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Cascade exit static pressure [Pa]",
+    #     title='',
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    # )
+    # ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'], ncols = 1)
 
     
     # Plot torque
@@ -199,7 +199,7 @@ if Case == 'pressure_line':
         filename=filename,
         outdir=outdir,
         linestyles = linestyles,
-        color_map='Grays',
+        color_map='Blues',
     )
 
     ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'])#, '$\mathrm{Ma}^*,1^\mathrm{st}$ stator', '$\mathrm{Ma}^*,1^\mathrm{st}$ rotor', '$\mathrm{Ma}^*,2^\mathrm{nd}$ stator', '$\mathrm{Ma}^*,2^\mathrm{nd}$ rotor'], ncols = 2)
