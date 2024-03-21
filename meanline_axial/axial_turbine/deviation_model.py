@@ -4,8 +4,8 @@ from .. import math
 
 DEVIATION_MODELS = ["aungier", "ainley_mathieson", "zero_deviation"]
 
-def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
-    """
+def get_subsonic_deviation(Ma_exit, Ma_crit, geometry, model):
+    r"""
     Calculate subsonic relative exit flow angle based on the selected deviation model.
 
     Available deviation models:
@@ -42,13 +42,12 @@ def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
         DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
         DEVIATION_MODELS[1]: get_exit_flow_angle_ainley_mathieson,
         DEVIATION_MODELS[2]: get_exit_flow_angle_zero_deviation,
-        # DEVIATION_MODELS[3]: get_exit_flow_angle_borg_agromayor
     }
 
     # Evaluate deviation model
     if model in deviation_model_functions:
         Ma_exit = np.float64(Ma_exit)
-        return deviation_model_functions[model](Ma_exit, Ma_crit_throat, geometry)
+        return deviation_model_functions[model](Ma_exit, Ma_crit, geometry)
     else:
         options = ", ".join(f"'{k}'" for k in deviation_model_functions)
         raise ValueError(
@@ -56,16 +55,65 @@ def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
         )
     
 def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
+    r"""
+    Calculate the flow angle using the deviation model proposed by :cite:`aungier_turbine_2006`.
+
+    This model defines the gauing angle with respect to tangential axis:
+
+    .. math::
+
+        \beta_g = 90 - \cos^{-1}\left(\frac{A_\mathrm{throat}}{A_\mathrm{out}}\right)
+    
+    The model involves a piecewise calculation depending on the mach number range:
+
+    - For :math:`Ma_\mathrm{exit} < 0.50`, the deviation is a function of the gauging angle:
+
+    .. math::
+
+        \delta_0 = \sin^{-1}\left(\frac{A_\mathrm{throat}}{A_\mathrm{out}} \left(1+\left(1-\frac{A_\mathrm{throat}}{A_\mathrm{out}}\right)\cdot\left(\frac{\beta_g}{90}\right)^2\right)\right)
+
+    - For :math:`0.50 \leq Ma_\mathrm{exit} < Ma_\mathrm{crit}`, the deviation is calculated by a fifth order interpolation between low and critical Mach numbers:
+
+    .. math::
+        \begin{align*}
+        X &= \frac{2\cdot Ma_\mathrm{exit}-1}{2\cdot Ma_\mathrm{crit}-1} \\
+        \delta &= \delta_0 \cdot (1-10X^3+15X^4-6X^5)
+        \end{align*}
+
+    - For :math:`Ma_\mathrm{exit} \geq Ma_\mathrm{crit}`, zero deviation is assumed:
+
+    .. math:: 
+        \delta = 0.00
+
+    The flow angle is then computed based on the deviation and the gauging angle:
+
+    .. math::
+        \beta = 90 - \beta_g - \delta
+
+    Parameters
+    ----------
+    Ma_exit : float
+        Exit Mach number.
+    Ma_crit : float
+        Critical Mach number.
+    method : str, optional
+        Type of solver. Should be one of
+
+            * 'hybr'       
+            * 'lm'               
+         
+    Returns
+    -------
+    `\beta` : float
+
+        Flow angle in degrees.
     """
-    Calculate deviation angle using the method proposed by :cite:`aungier_turbine_2006`.
-    """
-    # TODO add equations of Aungier model to docstring
-    # gauging_angle = geometry["metal_angle_te"]
+    # Calculate gauging angle wrt axial axis
     gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
 
     # Compute deviation for  Ma<0.5 (low-speed)
     beta_g = 90-abs(gauging_angle)
-    delta_0 = math.arcsind(math.cosd(gauging_angle) * (1 + (1 - math.cosd(gauging_angle)) * (beta_g / 90) ** 2)) - beta_g
+    delta_0 = math.arcsind(geometry["A_throat"]/geometry["A_out"] * (1 + (1 - geometry["A_throat"]/geometry["A_out"]) * (beta_g / 90) ** 2)) - beta_g
 
     # Initialize an empty array to store the results
     delta = np.empty_like(Ma_exit, dtype=float)
@@ -84,17 +132,56 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     delta[supersonic_mask] = 0.00
 
     # Compute flow angle from deviation
-    beta = abs(gauging_angle) - delta
+    beta = gauging_angle - delta
 
     return beta
 
 
 def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
+    r"""
+    Calculate the flow angle using the deviation model proposed by :cite:`ainley_method_1951`.
+
+    It involves a piecewise calculation
+    depending on the Mach number range:
+    - For Ma_exit < 0.50 (low-speed), the deviation is a function of the gauging angle:
+        :math::
+            \beta_g = cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
+    The fucntion is obtained by digitizing the Figure 5 in :cite:`ainley_method_1951`:
+        :math::
+            delt_0 = \beta_g - (35.0 + \frac{80.0-35.0}{79.0-40.0}\cdot (\beta_g-40.0))
+    - For 0.50 <= Ma_exit < Ma_crit (medium-speed), the deviation is calculated by a linear 
+      interpolation between low and critical Mach numbers:
+        :math::
+            delta = delta_0\cdot \left(1+\frac{0.5-\mathrm{Ma_exit}}{\mathr{Ma_crit}-0.5}\right)
+    - For Ma_exit >= 1.00 (supersonic), zero deviation is assumed:
+        :math:: 
+            \delta = 0.00
+
+    The flow angle (beta) is then computed based on the deviation and the gauging angle:
+    :math::
+        \beta = \beta_g - \delta
+
+    Parameters
+    ----------
+    Ma_exit : float 
+        Exit Mach number.
+    Ma_crit : float
+        Critical Mach number.
+    geometry : dict
+        Dictionary containing geometric parameters.
+        Should contain keys:
+        - 'A_throat': float
+            Cross-sectional area of the throat.
+        - 'A_out': float
+            Cross-sectional area of the exit.
+
+    Returns
+    -------
+    float
+        Flow angle in degrees.
+
     """
-    Calculate deviation angle using the model proposed by :cite:`ainley_method_1951`.
-    Equation digitized from Figure 5 of :cite:`ainley_method_1951`.
-    """
-    # TODO add equations of Ainley-Mathieson to docstring
+    # Compute gauging angle
     gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
         
     # Compute deviation for  Ma<0.5 (low-speed)
@@ -122,44 +209,38 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     
     return beta
 
-# def get_exit_flow_angle_borg_agromayor(Ma_exit, beta_crit, Ma_crit_exit, geometry):
-    
-#     # Load geometry
-#     area_throat = geometry["A_throat"]
-#     area_exit = geometry["A_out"]
-#     gauging_angle = math.arccosd(area_throat/area_exit)
-    
-#     # Compute deviation for  Ma<0.5 (low-speed)
-#     beta_inc = (35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0))
-    
-#     # Define limit for incompressible flow angle
-#     Ma_inc = 0.5
-    
-#     # Compute deviation angle
-#     x = (Ma_exit - Ma_inc) / (Ma_crit_exit - Ma_inc)
-#     # x2 = (Ma_crit_throat-Ma_inc)/(Ma_crit_exit-Ma_inc)
-#     # y1 = 1
-#     # x1 = 1
-#     beta_max = math.arccosd(area_throat/area_exit)
-#     # y2 = (beta_max-beta_inc)/(abs(gauging_angle)-beta_inc) 
+def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
+    r"""
+    Calculates the flow angle assuming zero deviation.
+    This involves calculating the gauging angle, which is the angle of zero deviation.
 
-#     # if y2-y1 < 1e-5:
-#     #     k = 0
-#     # else:
-#     #     k = 2*(y1-y2)/(x1**2-2*x1*x2+x2**2 + 1e-6)*(x1-x2) # TODO: restrict k
-#     k = 1
-#     y = (3-k)*x**2+(k-2)*x**3
-#     beta = beta_inc + (abs(beta_crit) - beta_inc) * y
-    
-#     return beta
+    The gauing angle is calculated as:
+    .. math::
+        \beta_g = cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
 
+    where :math:`A_\mathrm{throat}` is the cross-sectional area of the throat and
+    :math:`A_\mathrm{out}` is the cross-sectional area of the exit.
 
-def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit_throat, geometry):
+    Parameters
+    ----------
+    Ma_exit : float
+        Exit Mach number.
+    Ma_crit : float
+        Critical Mach number.
+    geometry : dict
+        Dictionary containing geometric parameters.
+        Should contain keys:
+        - 'A_throat': float
+            Cross-sectional area of the throat.
+        - 'A_out': float
+            Cross-sectional area of the exit.
+
+    Returns
+    -------
+    float
+        Flow angle in degrees.
+
     """
-    The exit flow angle is given by the gauge angle at subsonic conditions
-    """
-    # TODO add equation of zero-deviation to docstring
-    # return np.full_like(Ma_exit, abs(geometry["metal_angle_te"]))
     return math.arccosd(geometry["A_throat"]/geometry["A_out"])
 
 

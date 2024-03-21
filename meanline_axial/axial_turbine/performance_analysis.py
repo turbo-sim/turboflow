@@ -323,80 +323,6 @@ def compute_single_operation_point(
         if success:
             break
     
-    
-    # Attempt solving with the specified method
-    # name = SOLVER_MAP[solver_options["method"]]
-    # print(f" Trying to solve the problem using {name} method")
-    # solver = initialize_solver(problem, problem.x0, solver_options)
-    # try:
-    #     solution = solver.solve()
-    #     success = solution.success
-    # except Exception as e:
-    #     print(f" Error during solving: {e}")
-    #     success = False
-    # if not success:
-    #     print(f" Solution failed for the {name} method")
-      
-    # # Attempt solving with Lavenberg-Marquardt method
-    # if solver_options["method"] != "lm" and not success:
-    #     solver_options["method"] = "lm"
-    #     name = SOLVER_MAP[solver_options["method"]]
-    #     print(f" Trying to solve the problem using {name} method")
-    #     solver = initialize_solver(problem, problem.x0, solver_options)
-    #     try:
-    #         solution = solver.solve()
-    #         success = solution.success
-    #     except Exception as e:
-    #         print(f" Error during solving: {e}")
-    #         success = False
-    #     if not success:
-    #         print(f" Solution failed for the {name} method")
-      
-    # # TODO: Attempt solving with optimization algorithms?
-      
-    # # Attempt solving with a heuristic initial guess
-    # # TODO: To be improved with random generation of initial guess within ranges
-    # if isinstance(initial_guess, np.ndarray) and not success:
-    #     solver_options["method"] = "lm"
-    #     name = SOLVER_MAP[solver_options["method"]]
-    #     print(f" Trying to solve the problem with a new initial guess")
-    #     print(f" Using robust solver: {name}")
-    #     initial_guess = problem.get_initial_guess(None)
-    #     solver = initialize_solver(problem, problem.x0, solver_options)
-    #     try:
-    #         solution = solver.solve()
-    #         success = solution.success
-    #     except Exception as e:
-    #         print(f" Error during solving: {e}")
-    #         success = False
-      
-        # Attempt solving using different initial guesses
-        # TODO: To be improved with random generation of initial guess within ranges
-        # TODO: use sampling techniques like latin hypercube/ montecarlo sampling (fancy word for random sampling) / orthogonal sampling
-        # if not success:
-        #     N = 11
-        #     x0_arrays = {
-        #         "R": np.linspace(0.0, 0.95, N),
-        #         "eta_ts": np.linspace(0.6, 0.9, N),
-        #         "eta_tt": np.linspace(0.7, 1.0, N),
-        #         "Ma_crit": np.linspace(0.9, 0.9, N),
-        #     }
-
-        #     for i in range(N):
-        #         x0 = {key: values[i] for key, values in x0_arrays.items()}
-        #         print(f" Trying to solve the problem with a new initial guess")
-        #         print_dict(x0)
-        #         initial_guess = problem.get_initial_guess(x0)
-        #         solver = initialize_solver(problem, initial_guess, solver_options)
-        #         try:
-        #             solution = solver.solve()
-        #             success = solution.success
-        #         except Exception as e:
-        #             print(f" Error during solving: {e}")
-        #             success = False
-        #         if not success:
-        #             print(f" Solution failed for method '{solver_options['method']}'")
-
     if not success:
         print(" WARNING: All attempts failed to converge")
         solution = False
@@ -751,7 +677,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         # Calculate exit static properties for a isentropic expansion
         state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
         h_isentropic = state_out_s["h"]
-        d_isenthalpic = state_out_s["d"]
+        d_isentropic = state_out_s["d"]
 
         # Calculate exit static properties for a isenthalpic expansion
         state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
@@ -762,7 +688,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         # Define a reference mass flow rate
         A_out = self.geometry["A_out"][-1]
-        mass_flow_ref = A_out * v0 * d_isenthalpic
+        mass_flow_ref = A_out * v0 * d_isentropic
 
         # Define reference_values
         self.reference_values = {
@@ -770,7 +696,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             "s_min": s_in,
             "v0": v0,
             "h_out_s": h_isentropic,
-            "d_out_s": d_isenthalpic,
+            "d_out_s": d_isentropic,
             "mass_flow_ref": mass_flow_ref,
             "angle_range": 180,
             "angle_min": -90,
@@ -833,9 +759,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 "v*_in",
                 "w*_throat",
                 "s*_throat",
-                "w*_out",
-                "beta*_out",
-                "s*_out",
+                # "w*_out",
+                # "beta*_out",
+                # "s*_out",
             ]
             valid_keys_3 = ["v_in"]
 
@@ -1124,9 +1050,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                     "v*_in" + index: v_in_crit,
                     "w*_throat" + index: w_throat_crit,
                     "s*_throat" + index: s_throat,
-                    "w*_out" + index: w_out_crit,
-                    "beta*_out" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
-                    "s*_out" + index: s_out,
+                    # "w*_out" + index: w_out_crit,
+                    # "beta*_out" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
+                    # "s*_out" + index: s_out,
                 }
             )
 

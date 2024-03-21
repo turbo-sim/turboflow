@@ -146,7 +146,7 @@ def plot_lines(
     y = get_lines(performance_data, y_keys)
     
     # Plot lines according to colormap and linestyles
-    colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y_keys)))
+    colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, 4))
     if not isinstance(linestyles, (list, np.ndarray)):
         linestyles = ['-']*len(y)
     if stack == True:
@@ -355,12 +355,7 @@ def get_subset(performance_data, column_name, row_value):
     ].index
 
 
-
-def save_figure(fig, filename):
-    fig.savefig(filename, bbox_inches="tight")
-
-
-def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".pdf"]):
+def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".pdf", ".eps"]):
     """
     Save a given matplotlib figure in multiple file formats.
 

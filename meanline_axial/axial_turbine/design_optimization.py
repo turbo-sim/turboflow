@@ -2,42 +2,23 @@ import numpy as np
 
 from .. import solver as psv
 from .. import utilities as utils
+from . import geometry_model as geom
 from . import flow_model as flow
+from .. import properties as props
+import CoolProp as cp
 
-def compute_optimal_turbine(design_point, cascades_data, x0):
-    
-    # Calculate performance at given boundary conditions with given geometry
-    cascades_data["BC"] = design_point    
-    
-    # Get optimization specific options
-    method = cascades_data["optimization"].get("method", 'slsqp')
-    design_variables = cascades_data["optimization"].get("design_variables", {})
-    obj_func = cascades_data["optimization"].get("obj_func", 0)
-    constraints_eq = cascades_data["optimization"].get("constraints_eq", {})
-    constraints_ineq = cascades_data["optimization"].get("constraints_ineq",{})
-    bounds = cascades_data["optimization"].get("bounds",[])
+def compute_optimal_turbine(config, initial_guess = None):
     
     # Initialize problem object
-    problem = CascadesOptimizationProblem(cascades_data, 
-                                          design_variables,
-                                          obj_func,
-                                          constraints_eq,
-                                          constraints_ineq,
-                                          bounds)
-        
-    # Construct initial guess array
-    design_variables_values = []
-    for key, val in design_variables.items():
-        if isinstance(val, list):
-            design_variables_values.extend(val)
-        else:
-            design_variables_values.append(val)
-    x = np.concatenate((design_variables_values, x0))
+    problem = CascadesOptimizationProblem(config)
+
+    # Get initial guess
+    x0 = problem.get_initial_guess(initial_guess = initial_guess)
         
     # Initialize solver object    
-    solver = psv.OptimizationSolver(problem, x, display = True)#, update_on="function")
+    solver = psv.OptimizationSolver(problem, x0, display = True)
 
-    sol = solver.solve(method = method, options = {"maxiter" : 200})
+    sol = solver.solve()
     solver.plot_convergence_history(savefig = False)
     
     return solver
@@ -53,106 +34,72 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
     """
 
-    def __init__(self, cascades_data, design_variables = {}, obj_func = 0, constraints_eq = {}, constraints_ineq = {}, bounds = []):
-        
-        flow.calculate_number_of_stages(cascades_data)
-        flow.update_fixed_params(cascades_data)
-        
-        # Define reference mass flow rate
-        v0 = cascades_data["fixed_params"]["v0"]
-        d_in = cascades_data["fixed_params"]["d0_in"]
-        h0_in = cascades_data["fixed_params"]["h0_in"]
-        d_out_s = cascades_data["fixed_params"]["d_out_s"]
-        h_out_s = cascades_data["fixed_params"]["h_out_s"]
-        
-        # check validity of obj_func
-        available_obj_func = ["eta_ts", 0]
-        if obj_func not in available_obj_func:
-            raise Exception(f'obj_func not valid. Valid options are: {available_obj_func}')
-        
-        # Force objective function to 0 and constraints to be empty if no design variables are given
-        if design_variables == {}:
-            if obj_func != 0:
-                print("No design variables given. Objective function changed to 0")
-            obj_func = 0
-            if constraints_eq != {}:
-                print("No design variables given. constraints_eq changed to {}")
-            constraints_eq = {}
-            if constraints_ineq != {}:
-                print("No design variables given. constraints_ineq changed to {}")
-            constraints_ineq = {}
-            
-        # Define reference mass flow rate
-        if 'mass_flow_rate' in constraints_eq:
-            m = constraints_eq["mass_flow_rate"]
-        else:
-            A_in = cascades_data["geometry"]["A_in"][0]
-            m = A_in*v0*d_in 
-        cascades_data["fixed_params"]["m_ref"] = m
-        
-        # Calculate geometry
-        # cs.get_geometry(cascades_data["geometry"], m, h0_in, d_out_s, h_out_s)
+    def __init__(self, config):
 
-        self.cascades_data = cascades_data
-        self.design_variables = design_variables
-        self.constraints_eq = constraints_eq
-        self.constraints_ineq = constraints_ineq
-        self.bounds = bounds
-        self.obj_func = obj_func
-        self.h0_in = h0_in
-        self.d_out_s = d_out_s
-        self.h_out_s = h_out_s
-        self.m = m
-        self.n_cascades = cascades_data["geometry"]["n_cascades"]
-        
-    def get_values(self, x):
-        
-        m = self.m
-        h0_in = self.h0_in
-        h_out_s = self.h_out_s
-        d_out_s = self.d_out_s
-        n_cascades = self.n_cascades
-        
-        i = 0 # Index to assign design variables from vars
-        if "w_s" in self.design_variables.keys():
-            w_s = x[0] # Specific speed
-            w = flow.convert_specific_speed(w_s, m, d_out_s, h0_in, h_out_s)
-            self.cascades_data["BC"]["omega"] = w
-            i += 1
-            
-        # XXX: This is due to lack of flexibility in code (constant radius)
-        if "d_s" in self.design_variables.keys():
-            self.cascades_data["geometry"]["d_s"] = np.ones(self.n_cascades)*x[i]
-            i += 1
-            
-        if "r_ht" in self.design_variables.keys():
-            self.cascades_data["geometry"]["r_ht_in"] = x[i:i+n_cascades]
-            self.cascades_data["geometry"]["r_ht_out"] = x[i+1:i+1+n_cascades]
-            i += n_cascades+1
-            
-        keys_geometry = [key for key in ["ar", "bs", "theta_in", "theta_out"] if key in self.design_variables.keys()]
-        for key in keys_geometry:
-            self.cascades_data["geometry"][key] = [val for val in x[i:i+n_cascades]] 
-            i += n_cascades
+        # Get list of design variables
+        self.design_variables_keys = list(config["optimization"]["design_variables"])
+        self.obj_func = config["optimization"]["objective_function"]
+        self.bounds = []
 
-        flow.get_geometry(self.cascades_data["geometry"], m, h0_in, d_out_s, h_out_s)
+        # Update design point
+        self.update_boundary_conditions(config["operation_points"])
 
-        x0 = x[i:]
-        residuals = flow.evaluate_cascade_series(x0, self.cascades_data)
+        # Define geometry (fixed parameters)
+        self.geometry = config["geometry"]
+
+        # Initialize other attributes
+        self.model_options = config["model_options"]
         
+    def get_optimization_values(self, x):
+
+        # Rename reference values
+        h0_in = self.boundary_conditions["h0_in"]
+        mass_flow = self.reference_values["mass_flow_ref"]
+        h_is = self.reference_values["h_out_s"]    
+        d_is = self.reference_values["d_out_s"]
+
+        # Structure design variables to dictionary (Assume set of design variables) # TODO: Make flexible set of design variables 
+        design_variables = dict(zip(self.design_variables_keys, x))
+
+        # Construct array with independent variables
+        self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
+
+        # Update boundary conditions
+        omega_spec = design_variables["omega_spec"]
+        self.boundary_conditions["omega"] = self.get_omega(omega_spec, mass_flow, h0_in, d_is, h_is)
+        
+        # Scale and compute full geometry
+        diameter_spec = design_variables["diameter_spec"]
+        self.geometry["radius_mean"] = self.get_radius(diameter_spec, mass_flow, h0_in, d_is, h_is) # Constant for all cascade with this formulation?
+        self.geometry["hub_to_tip"] = np.array([value for key, value in design_variables.items() if key.startswith('hub_to_tip')]) # TODO: Fix such that it is ensured that the values are placed accroding to index
+        self.geometry["aspect_ratio"] = np.array([value for key, value in design_variables.items() if key.startswith('aspect_ratio')])
+        self.geometry["pitch_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('pitch_to_chord')])
+        self.geometry["trailing_edge_to_opening"] = np.array([value for key, value in design_variables.items() if key.startswith('trailing_edge_to_opening')])
+        self.geometry["thickness_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('thickness_to_chord')])
+        self.geometry = geom.calculate_geometry(self.geometry)
+        self.geometry = geom.calculate_full_geometry(self.geometry)
+
+        # Evaluate turbine model
+        self.results = flow.evaluate_axial_turbine(
+            self.vars_scaled,
+            self.boundary_conditions,
+            self.geometry,
+            self.fluid,
+            self.model_options,
+            self.reference_values,
+        )
         if self.obj_func == 0:
             self.f = 0 
-        elif self.obj_func == 'eta_ts':
-            self.f = -self.cascades_data["overall"]["eta_ts"]/100
-        
-        cons = []
-        keys_variables = ["plane", "cascade","stage", "overall"]
-        subset_cascades_data = {key: self.cascades_data[key] for key in keys_variables}
-        for key in self.constraints_eq.keys():
-            variable = find_variable(subset_cascades_data, key)
-            cons.append((variable-self.constraints_eq[key])/self.constraints_eq[key])
+        elif self.obj_func == 'efficiency_ts':
+            self.f = -self.results["overall"]["efficiency_ts"].values[0]/100
+        cons = np.array((self.results["overall"]["mass_flow_rate"].values-mass_flow)/mass_flow)
+        # keys_variables = ["plane", "cascade","stage", "overall"]
+        # subset_cascades_data = {key: self.cascades_data[key] for key in keys_variables}
+        # for key in self.constraints_eq.keys():
+        #     variable = find_variable(subset_cascades_data, key)
+        #     cons.append((variable-self.constraints_eq[key])/self.constraints_eq[key])
             
-        
+        residuals = np.array(list(self.results["residuals"].values()))
         self.c_eq = np.concatenate((residuals, cons))
         self.c_ineq = None
         
@@ -161,10 +108,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return objective_and_constraints
     
     def get_bounds(self):
-        
+        # TODO: improve to do checks in case bounds are given 
         if self.bounds == []:
-            self.bounds = get_default_bounds(self.cascades_data, self.design_variables.keys())
-            
+            self.bounds = self.get_default_bounds()
         return self.bounds
             
     def get_n_eq(self):
@@ -173,100 +119,229 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     def get_n_ineq(self):
         return self.get_number_of_constraints(self.c_ineq)
     
+    def get_initial_guess(self, initial_guess):
+        """
+        Structure the initial guess for the design optimization. 
+        The intial guess can either be provided by the user or given from a defualt value
+
+        """
+        if initial_guess == None:
+            self.extend_design_variables()
+            initial_guess = self.get_default_initial_guess()
+        
+        # TODO: Do checks on given initial guess
+        # x0 must be first
+        # geometry with indices in key must be sortes from the smallest to largest
+        self.design_variables_keys = initial_guess.keys()
+
+        return np.array(list(initial_guess.values()))
     
-def get_default_bounds(cascades_data, keys_design_variables):
-    """
-    Gives default bounds to each design variable.
-    """
-    
-    default_bounds_w_s  = (0.1, 1.5)  
-    default_bounds_d_s = (1, 3)
-    default_bounds_r_ht = (0.6, 0.95)
-    default_bounds_stator = {
-                      "ar" : (1, 2),
-                      "bs" : (1, 2),
-                      "theta_in" : (-15, 15),
-                      "theta_out" : (40, 80),
-                      "v_in" : (0.01, 0.5),
-                      "v_out" : (0.1, 0.99),
-                      "beta_out" : (30, 80),
-                      "s_out" : (1, 1.2),
-                      "v_in_crit" : (0.01, 0.7),
-                      "v_out_crit" : (0.1, 0.99)}
-    
-    default_bounds_rotor = {
-                      "ar" : (1, 2),
-                      "bs" : (1, 2),
-                      "theta_in" : (-15, 80),
-                      "theta_out" : (-80, -40),
-                      "v_in" : (0.1, 0.99),
-                      "v_out" : (0.1, 0.99),
-                      "beta_out" : (-80, -30),
-                      "s_out" : (1, 1.2),
-                      "v_in_crit" : (0.1, 0.99),
-                      "v_out_crit" : (0.1, 0.99)}
+    def extend_design_variables(self):
+        """
+        Extend list of design variables such that each cascade/plane specific variables have one value for each cascade/plane
+        """
+
+        number_of_cascades = len(self.geometry["cascade_type"])
+        for key in self.design_variables_keys:
+            if key == "hub_to_tip":
+                   self.design_variables_keys.remove("hub_to_tip")
+                   self.design_variables_keys += [f"hub_to_tip_{i+1}" for i in range(2*number_of_cascades)]
+            elif key == "aspect_ratio":
+                   self.design_variables_keys.remove("aspect_ratio")
+                   self.design_variables_keys += [f"aspect_ratio_{i+1}" for i in range(number_of_cascades)]
+            elif key == "pitch_to_chord":
+                   self.design_variables_keys.remove("pitch_to_chord")
+                   self.design_variables_keys += [f"pitch_to_chord_{i+1}" for i in range(number_of_cascades)]
+            elif key == "trailing_edge_to_opening":
+                   self.design_variables_keys.remove("trailing_edge_to_opening")
+                   self.design_variables_keys += [f"trailing_edge_to_opening_{i+1}" for i in range(number_of_cascades)]
+            elif key == "thickness_to_chord":
+                   self.design_variables_keys.remove("thickness_to_chord")
+                   self.design_variables_keys += [f"thickness_to_chord_{i+1}" for i in range(number_of_cascades)]
+            elif key == "metal_angle_le":
+                   self.design_variables_keys.remove("metal_angle_le")
+                   self.design_variables_keys += [f"metal_angle_le{i+1}" for i in range(number_of_cascades)]
+
+        return                       
+
+    def get_default_initial_guess(self):
+        """
+        Generate a default initial guess for design optimization
+        """
+
+        # Define dictionary with given design variables
+        initial_guess = np.array([]) 
+        for key in self.design_variables_keys:
+            if key == "omega_spec":
+                initial_guess = np.append(initial_guess, 1.0)
+            elif key == "diameter_spec":
+                initial_guess = np.append(initial_guess, 1.0)
+            elif key.startswith("hub_to_tip"):
+                initial_guess = np.append(initial_guess, 0.8)
+            elif key.startswith("aspect_ratio"):
+                initial_guess = np.append(initial_guess, 1.5)
+            elif key.startswith("pitch_to_chord"):
+                initial_guess = np.append(initial_guess, 0.9)
+            elif key.startswith("trailing_edge_to_opening"):
+                initial_guess = np.append(initial_guess, 0.1)
+            elif key.startswith("thickness_to_chord"):
+                initial_guess = np.append(initial_guess, 0.2)
+            elif key.startswith("metal_angle_le"):
+                initial_guess = np.append(initial_guess, 20*np.pi/180)
+        initial_guess = dict(zip(self.design_variables_keys, initial_guess))
+
+        # Add vector of independent variables to the initial guess
+        number_of_cascades = len(self.geometry["cascade_type"])
+        initial_guess_variables = {"v_in" : 0.1}
+        for i in range(number_of_cascades):
+            index = f"_{i+1}"
+            initial_guess_variables.update(
+                {
+                    "w_out" + index: 0.65,
+                    "s_out" + index: 1.01,
+                    "beta_out" + index: ((1-2*((i+1) % 2 == 0))*60+90)/180, # Trick to get different guess for stator/rotor
+                    "v*_in" + index: 0.4,
+                    "w*_throat" + index: 0.9,
+                    "s*_throat" + index: 1.01,
+                })
             
-    n_cascades = cascades_data["geometry"]["n_cascades"]
+        self.keys = initial_guess_variables.keys() # TODO: Move this
+        # self.keys used to merge with independent variables in get_optimization_values
+        # This implementation only works with default initial guess
+        return {**initial_guess_variables, **initial_guess} 
+                
+    def get_omega(self, omega_spec, mass_flow, h0_in, d_is, h_is):
+        return omega_spec*(h0_in-h_is)**(3/4)/((mass_flow/d_is)**0.5)
     
-    bounds = []
-    # Add bounds to specific speed
-    if "w_s" in keys_design_variables:
-        bounds += [default_bounds_w_s]
+    def get_radius(self, diameter_spec, mass_flow, h0_in, d_is, h_is):
+        return diameter_spec*(mass_flow/d_is)**0.5/((h0_in-h_is)**(1/4))/2
     
-    if "d_s" in keys_design_variables:
-        bounds += [default_bounds_d_s] 
-    
-    if "r_ht" in keys_design_variables:
-        bounds += [default_bounds_r_ht, default_bounds_r_ht, default_bounds_r_ht]
-        
-    
-    # Add bounds to geometry
-    keys_geometry = [key for key in ["ar", "bs", "theta_in", "theta_out"] if key in keys_design_variables]
-    for key in keys_geometry:
-        bounds += [default_bounds_stator[key]]
-        bounds += [default_bounds_rotor[key]]
+    def update_boundary_conditions(self, design_point):
+        """
+        Update the boundary conditions of the problem with the provided operation point.
 
-    # Add bounds to independant variables
-    bounds += [default_bounds_stator["v_in"]]
-    keys = ["v_out", "v_out", "s_out", "s_out", "beta_out"]
-    keys_crit = ["v_in_crit", "v_out_crit", "s_out"]
-    bounds_crit = []
-    for i in range(n_cascades):
-        if i%2 == 0:
-            bounds += [default_bounds_stator[key] for key in keys]
-            bounds_crit += [default_bounds_stator[key] for key in keys_crit]
-        else:
-            bounds += [default_bounds_rotor[key] for key in keys]
-            bounds_crit += [default_bounds_rotor[key] for key in keys_crit]
-       
-    bounds += bounds_crit
-    return bounds
+        This method updates the internal state of the object by setting new boundary conditions
+        as defined in the 'operation_point' dictionary. It also initializes a Fluid object
+        using the 'fluid_name' specified in the operation point.
 
+        The method computes additional properties and reference values like stagnation properties at
+        the inlet, exit static properties, spouting velocity, and reference mass flow rate.
+        These are stored in the object's internal state for further use in calculations.
 
-def get_initial_guess_array(cascades_data, keys_design_variables, x = None):
-    """
-    Gives design variables given by keys_design_variables from cascades data to 
-    form initial guess for design optimization. 
-    At maximum it includes specific speed and complete geometry in addition to 
-    variables needed to evaluate each cascade 
-    """
-    
-    n_cascades = cascades_data["geometry"]["n_cascades"]
-    
-    initial_guess = []
-    if "w_s" in keys_design_variables:
-        initial_guess += [cascades_data["BC"]["w_s"]]
-    
-    for i in range(n_cascades):
-        initial_guess += [val[i] for key, val in ["ar", "bs", "theta_in", "theta_out"] if key in keys_design_variables]
-        
-    if not isinstance(x, np.ndarray):
-        x = flow.generate_initial_guess(cascades_data, R = 0.5, eta_tt = 0.95, eta_ts = 0.9, Ma_crit = 0.95)
-        x = flow.scale_x0(x, cascades_data)
-        
-    initial_guess += list(x)
-    
-    return np.array(initial_guess)
+        Parameters
+        ----------
+        operation_point : dict
+            A dictionary containing the boundary conditions defining the operation point.
+            It must include the following keys:
+            - fluid_name: str, the name of the fluid to be used in the Fluid object.
+            - T0_in: float, the inlet temperature (in Kelvin).
+            - p0_in: float, the inlet pressure (in Pascals).
+            - p_out: float, the outlet pressure (in Pascals).
+            - omega: float, the rotational speed (in rad/s).
+            - alpha_in: float, the inlet flow angle (in degrees).
+
+        Returns
+        -------
+        None
+            This method does not return a value but updates the internal state of the object.
+
+        """
+
+        # Define current operating point
+        self.boundary_conditions = design_point
+
+        # Initialize fluid object
+        self.fluid = props.Fluid(design_point["fluid_name"])
+
+        # Rename variables
+        p0_in = design_point["p0_in"]
+        T0_in = design_point["T0_in"]
+        p_out = design_point["p_out"]
+
+        # Compute stagnation properties at inlet
+        state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        h0_in = state_in_stag["h"]
+        s_in = state_in_stag["s"]
+
+        # Store the inlet stagnation (h,s) for the first stage
+        # TODO: Improve logic of implementation?
+        self.boundary_conditions["h0_in"] = h0_in
+        self.boundary_conditions["s_in"] = s_in
+
+        # Calculate exit static properties for a isentropic expansion
+        state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        h_isentropic = state_out_s["h"]
+        d_isentropic = state_out_s["d"]
+
+        # Calculate exit static properties for a isenthalpic expansion
+        state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
+        s_isenthalpic = state_out_h["s"]
+
+        # Calculate spouting velocity
+        v0 = np.sqrt(2 * (h0_in - h_isentropic))
+
+        # Define a reference mass flow rate
+        mass_flow_rate = design_point["mass_flow_rate"]
+
+        # Define reference_values
+        self.reference_values = {
+            "s_range": s_isenthalpic - s_in,
+            "s_min": s_in,
+            "v0": v0,
+            "h_out_s": h_isentropic,
+            "d_out_s": d_isentropic,
+            "mass_flow_ref": mass_flow_rate,
+            "angle_range": 180,
+            "angle_min": -90,
+        }
+
+        return
+
+    def get_default_bounds(self):
+        """
+        Gives default bounds to each design variable.
+        """
+
+        bounds = []     
+
+        for key in self.design_variables_keys:
+            if key.startswith("w*_"):
+                bounds += [(0.4, 1.5)]
+            elif key.startswith("w_out"):
+                bounds += [(0.4, 1)]
+            elif key.startswith("v*_in_1"):
+                bounds += [(0.01, 0.8)]
+            elif key.startswith("v*_in"):
+                bounds += [(0.1, 1)]
+            elif key.startswith("v_in"):
+                bounds += [(0.01, 0.5)]
+            elif key.startswith("beta"): 
+                if int(key[-1]) % 2 == 0: 
+                    bounds += [(0.06, 0.28)] # Rotor (-40, -80) [degree]
+                else:
+                    bounds += [(0.72, 0.94)] # Stator (40, 80) [degree]
+            elif key.startswith("s*"):
+                bounds += [(1.0, 1.2)] # TODO: Check with scaling
+            elif key.startswith("s_"):
+                bounds += [(1.0, 1.2)] # TODO: Check with scaling
+            elif key == "omega_spec":
+                bounds += [(0.1, 10)]
+            elif key == "diameter_spec":
+                bounds += [(0.1, 10)]
+            elif key.startswith("hub_to_tip"):
+                bounds += [(0.6, 95)]
+            elif key.startswith("aspect_ratio"):
+                bounds += [(1.0, 2.0)]
+            elif key.startswith("pitch_to_chord"):
+                bounds += [(0.75, 1.10)]
+            elif key.startswith("trailing_edge_to_opening"):
+                bounds += [(0.1, 10)]
+            elif key.startswith("thickness_to_chord"):
+                bounds += [(0.15, 0.25)]
+            elif key.startswith("metal_angle_le"):
+                bounds += [(0, 60*np.pi/180)] # Fix bounds for stator and rotor
+
+        return tuple(bounds)
 
 def find_variable(cascades_data, variable):
     

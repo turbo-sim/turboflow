@@ -31,7 +31,7 @@ COLORS_MATLAB = [
 
 
 def set_plot_options(
-    fontsize=13,
+    fontsize=14,
     grid=True,
     major_ticks=True,
     minor_ticks=True,
@@ -70,8 +70,8 @@ def set_plot_options(
         "axes.grid.axis": "both",
         "axes.grid.which": "major",
         "axes.prop_cycle": cycler(color=color_order),
-        "grid.alpha": 0.5,
-        "grid.color": "black",
+        "grid.alpha": 1,
+        "grid.color": '#808080', # Grey equivalent to 50% transparency
         "grid.linestyle": "-",
         "grid.linewidth": 0.5,
         "legend.borderaxespad": 1,

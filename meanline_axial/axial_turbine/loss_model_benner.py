@@ -284,7 +284,7 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
     CR = math.cosd(beta_in) / math.cosd(
         beta_out
     )  # Convergence ratio from Benner et al.[2006]
-
+    print(beta_out)
     if AR <= 2:  # TODO: sigmoid blending to convert to smooth piecewise function
         denom = (
             np.sqrt(math.cosd(stagger))

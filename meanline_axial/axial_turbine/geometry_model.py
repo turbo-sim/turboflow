@@ -137,6 +137,55 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
         1 - throat_location_fraction
     ) * radius_in + throat_location_fraction * radius_out
 
+def calculate_geometry(geometry):
+    """
+    Convert the nomralized design variables for geometry to geometric parameters used in turbine evaluation
+    
+    """
+    # Create a copy of the input dictionary to avoid mutating the original
+    geom = geometry.copy()
+
+    # Compute hub and tip radius
+    radius_mean = geom["radius_mean"]
+    hub_to_tip = geom["hub_to_tip"]
+    radius_tip = 2*radius_mean/(1+hub_to_tip)
+    radius_hub = hub_to_tip*radius_tip
+
+    # Compute Blade height
+    height = radius_tip - radius_hub
+    height_mean = np.array([(height[i] + height[i+1])/2 for i in range(0, len(height), 2)])
+
+    # Compute chord
+    chord = height_mean/geom["aspect_ratio"]
+
+    # Compute pitch
+    pitch = geom["pitch_to_chord"]*chord
+
+    # Compute opening
+    opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
+
+    # Compute maximum thickness
+    thickness_max = geom["thickness_to_chord"]*chord
+
+    # Define new geometry dictionary
+    new_geometry = {"radius_hub" : radius_hub,
+                      "radius_tip" : radius_tip,
+                      "pitch" : pitch,
+                      "chord" : chord,
+                      "opening" : opening,
+                      "thickness_max" : thickness_max,
+                      "cascade_type" : ["stator", "rotor"],
+                      "metal_angle_le" : geom["metal_angle_le"],
+                      "metal_angle_te" : geom["metal_angle_te"],
+                      "stagger_angle" : geom["stagger_angle"],
+                      "diameter_le" : geom["diameter_le"],
+                      "wedge_angle_le" : geom["wedge_angle_le"],
+                      "thickness_te" : geom["thickness_te"],
+                      "tip_clearance" : geom["tip_clearance"],
+                      "throat_location_fraction" : geom["throat_location_fraction"]}
+
+    return new_geometry
+
 
 def calculate_full_geometry(geometry):
     """
