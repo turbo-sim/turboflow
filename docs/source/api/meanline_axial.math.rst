@@ -1,5 +1,5 @@
-Math 
-============
+meanline\_axial.math module
+===========================
 
 .. automodule:: meanline_axial.math
    :members:

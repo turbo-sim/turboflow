@@ -1,4 +1,4 @@
-Numerical solvers
+meanline\_axial.solver package
 ==============================
 
 Submodules
@@ -11,7 +11,7 @@ Submodules
    meanline_axial.solver.nonlinear_system_problems
    meanline_axial.solver.optimization
    meanline_axial.solver.optimization_problems
-   meanline_axial.solver.utilities
+   meanline_axial.solver.solver_utilities
 
 Module contents
 ---------------

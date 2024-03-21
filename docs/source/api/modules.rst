@@ -1,7 +1,7 @@
-API Reference
+meanline_axial
 ==============
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
 
    meanline_axial
