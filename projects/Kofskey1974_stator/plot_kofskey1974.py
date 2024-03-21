@@ -23,13 +23,13 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'mass_flux_plots'
+Case = 'pressure_line'
 
 # Get the name of the latest results file
 # filename = "output/performance_analysis_2024-01-27_10-40-15.xlsx" # Y = 0.1
 # filename = "output/performance_analysis_2024-01-29_14-21-42.xlsx" # Y = 0.0
-# filename = "output/performance_analysis_2024-01-29_16-22-47.xlsx"
-filename = ml.find_latest_results_file(RESULTS_PATH)
+filename = "output/performance_analysis_2024-01-29_16-22-47.xlsx" # Deviation
+# filename = ml.find_latest_results_file(RESULTS_PATH)
 
 save_figs = False
 validation = True
@@ -121,11 +121,15 @@ if Case == 'pressure_line':
         data,
         x_key="Ma_rel_2",
         y_key="beta_2",
-        xlabel="Exit relative mach number [-]",
-        ylabel="Exit relative flow angle [deg]",
+        # xlabel="Exit relative mach number [-]",
+        # ylabel="Exit relative flow angle [deg]",
         color = 'k',
         close_fig = False, 
     )
+
+    # Adjusting the space between the axis and the labels
+    # ax1.set_ylabel("Exit relative flow angle [deg]", labelpad=20)  # Increase the space for X-axis
+    # ax1.set_xlabel("Exit relative mach number [-]", labelpad=20)  # Increase the space for X-axis
 
     A_throat = 0.00961713
     A_out = 0.02595989
@@ -133,9 +137,31 @@ if Case == 'pressure_line':
     # Ma_crit_out = 0.76012957
     # beta_crit_out = 68.04758561
     beta_g = np.arccos(A_throat/A_out)*180/np.pi
-    ax1.set_ylim([67.01, 68.75])
+    ax1.set_ylim([67.01, 68.6])
     ax1.set_xlim([0.45, 1.2])
     fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
+
+    # Add line to illustrate ECC
+    ax1.plot([Ma_crit_throat, Ma_crit_throat], [67.01, beta_g], 'k--')
+    ax1.text(Ma_crit_throat-0.02, 67.01-0.1, "$\mathrm{Ma}^*$", fontsize=13, color='k')
+    ax1.text(Ma_crit_throat+0.03, 67.01+0.25, "Cascade chokes", fontsize=13, color='k')
+    line_y = [67.01+0.5, 67.01+0.4]
+    line_x = [Ma_crit_throat + 0.001, Ma_crit_throat + 0.1]
+    arrow1 = patches.FancyArrowPatch((line_x[0], line_y[0]), (line_x[1], line_y[1]), arrowstyle='<-', mutation_scale=15, color='k')
+    ax1.add_patch(arrow1)
+
+    # Add line to illustrate ICC
+    # ax1.plot([0.8, 0.8], [67.01, beta_g-0.1], 'k--')
+    # ax1.text(0.8-0.02, 67.01-0.1, "$\mathrm{Ma_{out}}^*$", fontsize=13, color='k')
+    # ax1.text(0.8-0.175, 67.01+0.25, "Throat choked \n (ICC)", fontsize=13, color='k')
+    # line_y = [67.01+0.4, 67.01+0.5]
+    # line_x = [0.8-0.0925, 0.8-0.001]
+    # arrow1 = patches.FancyArrowPatch((line_x[0], line_y[0]), (line_x[1], line_y[1]), arrowstyle='->', mutation_scale=15, color='k')
+    # ax1.add_patch(arrow1)
+
+    # Add line to illustrate low mach
+    ax1.plot([0.5, 0.5], [67.01, beta_g-0.84], 'k--')
+    ax1.text(0.5-0.02, 67.01-0.1, "$\mathrm{Ma}_0$", fontsize=13, color='k')
 
     # Add line to illustrate low speed deviation
     line_y = [beta_g-0.84, beta_g]
@@ -146,15 +172,54 @@ if Case == 'pressure_line':
     ax1.add_patch(arrow2)
     ax1.text(0.52,beta_g-0.42, '$\delta_0$', fontsize=13, color='k')
 
-    # Add line to illustrate gauign angle
-    ax1.plot([0, Ma_crit_throat], [beta_g, beta_g], color = 'k', linestyle = '--', label = r'$\beta_\mathrm{g}$')
-    ax1.text(0.62, beta_g+0.05, r'$\beta_\mathrm{g}$', fontsize=13, color='k')
+    # Add line to illustrate gauging angle
+    ax1.plot([0, 1.2], [beta_g, beta_g], color = 'k', linestyle = '--', label = r'$\beta_\mathrm{g}$')
+    ax1.text(0.45-0.03, beta_g+0.0, r'$\beta_\mathrm{g}$', fontsize=13, color='k')
 
-    # Add line illustrating supersonic limit
-    ax1.plot([Ma_crit_throat, Ma_crit_throat], [67.01+0.1, 68.75-0.1], linestyle = '--', color = 'k')
-    # ax1.plot([Ma_crit_throat, Ma_crit_throat], [beta_g+0.2, beta_g+0.3], color = 'k')
-    ax1.text(Ma_crit_throat-0.101, beta_g+0.2, 'Subsonic', fontsize=13, color='k')
-    ax1.text(Ma_crit_throat+0.01, beta_g+0.2, 'Supersonic', fontsize=13, color='k')
+    # Add arrow illustrating supersonic devaition
+    line_y = [beta_g-0.4, beta_g]
+    line_x = [1.05, 1.05]
+    arrow1 = patches.FancyArrowPatch((line_x[0], line_y[0]), (line_x[1], line_y[1]), arrowstyle='<-', mutation_scale=15, color='k')
+    arrow2 = patches.FancyArrowPatch((line_x[-2], line_y[-2]), (line_x[-1], line_y[-1]), arrowstyle='->', mutation_scale=15, color='k')
+    ax1.add_patch(arrow1)
+    ax1.add_patch(arrow2)
+    ax1.text(0.95, beta_g+0.05, 'Supersonic deviation', fontsize=13, color='k')
+
+    # Add arrow illustrating subsonic devaition
+    line_y = [beta_g-0.4, beta_g]
+    line_x = [0.71, 0.71]
+    arrow1 = patches.FancyArrowPatch((line_x[0], line_y[0]), (line_x[1], line_y[1]), arrowstyle='<-', mutation_scale=15, color='k')
+    arrow2 = patches.FancyArrowPatch((line_x[-2], line_y[-2]), (line_x[-1], line_y[-1]), arrowstyle='->', mutation_scale=15, color='k')
+    ax1.add_patch(arrow1)
+    ax1.add_patch(arrow2)
+    ax1.text(0.6, beta_g+0.05, 'Subsonic deviation', fontsize=13, color='k')
+
+    # Move the left and bottom spines to x = 0 and y = 0, respectively.
+    # ax1.spines[["left", "bottom"]].set_position(("data", 0))
+    # Hide the top and right spines.
+    ax1.spines[["top", "right"]].set_visible(False)
+
+    # Draw arrows (as black triangles: ">k"/"^k") at the end of the axes.  In each
+    # case, one of the coordinates (0) is a data coordinate (i.e., y = 0 or x = 0,
+    # respectively) and the other one (1) is an axes coordinate (i.e., at the very
+    # right/top of the axes).  Also, disable clipping (clip_on=False) as the marker
+    # actually spills out of the axes.
+    ax1.plot(1.2, 67.01, ">k", clip_on=False)
+    ax1.plot(0.45, 68.6, "^k", clip_on=False)
+
+    # Arrow for zero deviation
+    line_y = [beta_g + 0.2, beta_g+0.01]
+    line_x = [Ma_crit_throat-0.03, Ma_crit_throat]
+    arrow1 = patches.FancyArrowPatch((line_x[-2], line_y[-2]), (line_x[-1], line_y[-1]), arrowstyle='->', mutation_scale=15, color='k')
+    ax1.add_patch(arrow1)
+    ax1.text(Ma_crit_throat-0.1 ,beta_g + 0.21, 'Zero deviation', fontsize=13, color='k')
+
+    # Add axis labels
+    ax1.text(0.45-0.03, 68.6-0.05, r'$\beta$', fontsize=13, color='k')
+    ax1.text(1.2-0.03, 67.01-0.1, '$\mathrm{Ma}$', fontsize=13, color='k')
+
+    # Add circular marker for ICC and ECC
+    ax1.plot([Ma_crit_throat], [beta_g], marker='o', markerfacecolor='w', linestyle = 'none', color = 'k')
 
     #Grid
     ax1.grid(False)
@@ -162,6 +227,8 @@ if Case == 'pressure_line':
     # Ticks
     ax1.set_yticklabels([])
     ax1.set_yticks([])
+    ax1.set_xticklabels([])
+    ax1.set_xticks([])
 
 
     # # Plot the total-to-static efficiency distribution

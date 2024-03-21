@@ -2,16 +2,17 @@ operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out : [13.8e4/2.298] #, 13.8e4/2.5]
+  p_out : 13.8e4/2.298 #, 13.8e4/2.5]
   omega: 1627
+  mass_flow_rate: 10
   alpha_in: 0
 
 performance_map:
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(4.0, 5.0, 20)
-  omega: 1627*0.7 #*np.array([1.1, 1, 0.9, 0.7])
+  p_out: 13.8e4/np.linspace(1.6, 4.6, 40)
+  omega: 1627*np.array([1.1, 1, 0.9, 0.7])
   alpha_in: 0 
 
 model_options:
@@ -55,7 +56,17 @@ geometry:
   throat_location_fraction: [5/6, 5/6]
 
 
-# optimization:
+optimization:
+  objective_function: efficiency_ts
+  design_variables:
+    - omega_spec
+    - diameter_spec
+    - hub_to_tip
+    - aspect_ratio
+    - pitch_to_chord
+    - trailing_edge_to_opening
+    - thickness_to_chord
+
 #   fixed_parameters:
 #     - wedge_angle
 #     - thickness_max

@@ -3,15 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import CoolProp.CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
-
-import os
-import sys
-
-desired_path = os.path.abspath('../..')
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-    
 import meanline_axial as ml
     
 from scipy import optimize

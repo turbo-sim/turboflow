@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define running option
-CASE = 1
+CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
@@ -48,18 +48,18 @@ x0 = {'w_out_1': 293.49185257504075,
       'v*_in_1': 81.05328919923672, 
       'w*_throat_1': 316.97520064515345, 
       's*_throat_1': 3907.6621527854477, 
-      'w*_out_1': 316.9745088244802, 
-      'beta*_out_1': 66.68474646782406, 
-      's*_out_1': 3907.662129216508, 
+    #   'w*_out_1': 316.9745088244802, 
+    #   'beta*_out_1': 66.68474646782406, 
+    #   's*_out_1': 3907.662129216508, 
       'w_out_2': 215.6943694051554, 
       's_out_2': 3910.5547628080762, 
       'beta_out_2': -53.38524787065875, 
       'v*_in_2': 309.451331757237,
      'w*_throat_2': 294.36179468837173, 
      's*_throat_2': 3915.6702302392605, 
-     'w*_out_2': 294.3615408522683, 
-     'beta*_out_2': -55.26921939501282, 
-     's*_out_2': 3915.670216330829, 
+    #  'w*_out_2': 294.3615408522683, 
+    #  'beta*_out_2': -55.26921939501282, 
+    #  's*_out_2': 3915.670216330829, 
      'v_in': 80.87654970689081}
 
 
@@ -68,9 +68,10 @@ x0 = {'w_out_1': 293.49185257504075,
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=True, stop_on_failure=True)
-    print(solvers[0].problem.vars_real)
-    print(solvers[0].problem.geometry["gauging_angle"])
+    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    # print(solvers[0].problem.geometry["gauging_angle"])
     # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
@@ -84,19 +85,19 @@ elif CASE == 2:
 elif CASE == 3:
     
     # Load experimental dataset
-    data = pd.read_excel("./experimental_data_kofskey1974_interpolated.xlsx")
-    pressure_ratio_exp = data["pressure_ratio_ts"].values
-    speed_frac_exp = data["speed_percent"].values/100
+    data = pd.read_excel("./experimental_data_kofskey1974_raw.xlsx", sheet_name = "Interpolated pr_ts")
+    data = data[~data["pressure_ratio_ts_interp"].isna()]
+    pressure_ratio_exp = data[data["speed_percent"].isin([105, 100, 90, 70])]["pressure_ratio_ts_interp"].values
+    speed_frac_exp = data[data["speed_percent"].isin([105, 100, 90, 70])]["speed_percent"].values/100
 
     # Generate operating points with same conditions as dataset
     operation_points = []
     design_point = config["operation_points"]
     for PR, speed_frac in zip(pressure_ratio_exp, speed_frac_exp):
-        if not speed_frac in [0.3, 0.5]:
-            current_point = copy.deepcopy(design_point)
-            current_point['p_out'] = design_point["p0_in"]/PR
-            current_point['omega'] = design_point["omega"]*speed_frac
-            operation_points.append(current_point)
+        current_point = copy.deepcopy(design_point)
+        current_point['p_out'] = design_point["p0_in"]/PR
+        current_point['omega'] = design_point["omega"]*speed_frac
+        operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
     ml.compute_performance(operation_points, config, initial_guess = x0)

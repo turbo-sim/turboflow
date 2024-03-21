@@ -1,0 +1,4 @@
+Validation files Kofskey 1972 1stage case
+-------------------------------------------
+performance map: performance_analysis_2024-03-13_23-14-55
+Error map: performance_analysis_2024-03-14_01-52-41
