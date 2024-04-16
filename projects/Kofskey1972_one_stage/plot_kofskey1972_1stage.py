@@ -20,15 +20,39 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'pressure_line' # performance_map/error_plot
 # Get the name of the latest results file
-# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
+filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+# filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
 # filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
 save_figs = False
 validation = True
 show_figures = True
+
+def highlight_design_point(ax, design_point, text_location, markersize = 6):
+
+    # Rename variables
+    x_des = design_point[0]
+    y_des = design_point[1]
+    x_text = text_location[0]
+    y_text = text_location[1]
+
+    # Plot point
+    ax.plot(x_des, y_des, linestyle = "none", marker = "^", color = "k", markerfacecolor='k', markersize = markersize)
+
+    # Write text and draw arrow
+    if y_des > y_text:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'top')
+    else:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'bottom')    
+    # arrow1 = patches.FancyArrowPatch((x_text, y_text), (x_des, y_des), arrowstyle='-', mutation_scale=15, color='k')
+    # ax.add_patch(arrow1)
+    ax.plot([x_text, x_des], [y_text, y_des], linestyle = ':', color = 'k')
+
+    return 
 
 if Case == 'pressure_line':
 
@@ -92,12 +116,12 @@ if Case == 'pressure_line':
     #     save_figs=save_figs,
     # )
 
-    # title = "Rotor velocity"
+    # title = "Velocity"
     # filename = title.lower().replace(" ", "_") + '_' + timestamp
     # fig1, ax1 = ml.plot_functions.plot_lines(
     #     data,
     #     x_key="PR_ts",
-    #     y_keys=["w_3", "w_4"],
+    #     y_keys=["w_throat_2", "w_4"],
     #     xlabel="Total-to-static pressure ratio",
     #     ylabel="Velocity [m/s]",
     #     title=title,
@@ -108,14 +132,14 @@ if Case == 'pressure_line':
     # )
 
     # Plot Mach numbers
-    # title = "Stator Mach number"
+    # title = "Density"
     # filename = title.lower().replace(" ", "_") + '_' + timestamp
     # fig1, ax1 = ml.plot_functions.plot_lines(
     #     data,
     #     x_key="PR_ts",
-    #     y_keys=["Ma_rel_2", "Ma_rel_4", "Ma_crit_throat_1", "Ma_crit_throat_2"],
+    #     y_keys=["d_4", "d_throat_2"],
     #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Mach number",
+    #     ylabel="Density [kg/m^2]",
     #     title=title,
     #     filename=filename,
     #     outdir=outdir,
@@ -154,21 +178,20 @@ if Case == 'pressure_line':
     #     save_figs=save_figs,
     # )
     
-    # title = "Rotor density"
-    # title = 'misc'
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["Ma_4"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Density [kg/m^3]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
+    title = "Mach distribution"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["Ma_crit_throat_2", "Ma_rel_4"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Mach [-]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
     # Plot flow angles
     # title = "Stator relative flow angles"
@@ -191,7 +214,7 @@ if Case == 'pressure_line':
     fig1, ax1 = ml.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["beta_2"],
+        y_keys=["beta_4"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Flow angle [deg]",
         title=title,
@@ -232,30 +255,30 @@ if Case == 'pressure_line':
 
 
 
-    title = "Losses"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=    ['loss_profile_1', 
-                    # 'loss_clearance_1', 
-                    'loss_secondary_1', 
-                    'loss_trailing_1', 
-                    # 'loss_incidence_1',
-                    'loss_profile_2', 
-                    'loss_clearance_2', 
-                    'loss_secondary_2', 
-                    'loss_trailing_2', 
-                    # 'loss_incidence_2'
-                    ],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Flow angle [deg]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Losses"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=    ['loss_profile_1', 
+    #                 # 'loss_clearance_1', 
+    #                 'loss_secondary_1', 
+    #                 'loss_trailing_1', 
+    #                 # 'loss_incidence_1',
+    #                 'loss_profile_2', 
+    #                 'loss_clearance_2', 
+    #                 'loss_secondary_2', 
+    #                 'loss_trailing_2', 
+    #                 # 'loss_incidence_2'
+    #                 ],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Flow angle [deg]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
     # ax1.plot([1.5, 4], [-61.6, -61.6], 'k--')
     # ax1.legend(labels = ['Subsonic angle', 'Metal angle'], loc = 'best')
     
@@ -399,6 +422,12 @@ elif Case == 'performance_map':
         # Define plot options
         legend_title = "Percent of design \n angular speed"
 
+        # Find design point
+        pressure_ratio_des = design_point["p0_in"]/design_point["p_out"]
+        index_des = (validation_data[validation_data['speed_percent'] == 100]["pressure_ratio_ts"] - pressure_ratio_des).abs().idxmin()
+        design_point_result = validation_data.loc[index_des]
+        print(design_point_result)
+
         for i in range(len(speed_percent)):
 
             # Mass flow rate
@@ -456,6 +485,14 @@ elif Case == 'performance_map':
                 title=legend_title,
             )
 
+        # Highlight design points
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["mass_flow_rate"]]
+        highlight_design_point(ax1, design_point_coordinates, [design_point_result["pressure_ratio_ts"], 2.77])
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["torque"]]
+        highlight_design_point(ax5, design_point_coordinates, [design_point_result["pressure_ratio_ts"], 125])
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["angle_exit_abs"]]
+        highlight_design_point(ax4, design_point_coordinates, [2.75, -10])
+
     # Manual settings
     ax1.set_xlim([1.6, 4.6])
     ax1.set_ylim([2.55, 2.85])
@@ -474,8 +511,8 @@ elif Case == 'performance_map':
 
     if save_figs:
         ml.plot_functions.savefig_in_formats(fig1, "figures/1972_mass_flow_rate", formats=[".eps"])
-        ml.plot_functions.savefig_in_formats(fig2, "figures/1972_efficiency", formats=[".eps"])
-        ml.plot_functions.savefig_in_formats(fig3, "figures/1972_relative_flow_angle", formats=[".eps"])
+        # ml.plot_functions.savefig_in_formats(fig2, "figures/1972_efficiency", formats=[".eps"])
+        # ml.plot_functions.savefig_in_formats(fig3, "figures/1972_relative_flow_angle", formats=[".eps"])
         ml.plot_functions.savefig_in_formats(fig4, "figures/1972_absolute_flow_angle", formats=[".eps"])
         ml.plot_functions.savefig_in_formats(fig5, "figures/1972_torque", formats=[".eps"])
 

@@ -21,17 +21,40 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'performance_map' # performance_map/error_plot
+Case = 'pressure_line' # performance_map/error_plot
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-# filename = 'output\performance_analysis_2024-03-13_23-07-30.xlsx' # performance map
-# filename = 'output\performance_analysis_2024-03-15_22-26-05.xlsx' # experimental points
 filename = 'output\performance_analysis_2024-03-16_20-10-25.xlsx' # performance map, 1963 REVS
 # filename = 'output\performance_analysis_2024-03-16_20-20-51.xlsx' # experimental points 1963 REVS
 
-save_figs = True
+save_figs = False
 validation = True
 show_figures = True
+
+def highlight_design_point(ax, design_point, text_location, markersize = 6):
+
+    # Rename variables
+    x_des = design_point[0]
+    y_des = design_point[1]
+    x_text = text_location[0]
+    y_text = text_location[1]
+
+    # Plot point
+    ax.plot(x_des, y_des, linestyle = "none", marker = "^", color = "k", markerfacecolor='k', markersize = markersize)
+
+    # Write text and draw arrow
+    if y_des > y_text:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'top')
+    else:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'bottom')    
+    # arrow1 = patches.FancyArrowPatch((x_text, y_text), (x_des, y_des), arrowstyle='-', mutation_scale=15, color='k')
+    # ax.add_patch(arrow1)
+    ax.plot([x_text, x_des], [y_text, y_des], linestyle = ':', color = 'k')
+
+    return 
+
 
 if Case == 'pressure_line':
 
@@ -41,7 +64,7 @@ if Case == 'pressure_line':
 
     # Change data to be only design angular speed
     sheets = data.keys()
-    filtered_indices = data["overall"][data["overall"]['angular_speed'] == 2036].index
+    filtered_indices = data["overall"][data["overall"]['angular_speed'] == 1963].index
     for sheet in sheets:
         data[sheet] = data[sheet].loc[filtered_indices, :]
 
@@ -50,20 +73,20 @@ if Case == 'pressure_line':
     outdir = "figures"
 
     # Plot mass flow rate
-    title = "Mass flow rate"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["mass_flow_rate"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Mass flow rate [kg/s]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Mass flow rate"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["mass_flow_rate"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
 
     # Plot mach
     title = "Mach number"
@@ -104,37 +127,42 @@ if Case == 'pressure_line':
     labels = ["Stator actual", "Rotor actual", "Stator critical", "Rotor critical"]
     ax1.legend(labels = labels, ncols = 2, loc = "lower right")
 
+    ax1.plot([2.43, 2.43], [0.35, 0.978], 'k--')
+    ax1.plot([3.16, 3.16], [0.35, 0.94], 'k--')
+    ax1.text(2.48, 0.65, "Stator\nchokes", verticalalignment = 'center')
+    ax1.text(3.21, 0.65, "Rotor\nchokes", verticalalignment = 'center')
+
     # Plot pressure
-    title = "Rotor pressure"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["w_crit_2"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Pressure [Pa]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Rotor pressure"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["w_crit_2"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Pressure [Pa]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
 
 
-    title = "Rotor relative flow angles"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["beta_4"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Flow angles [deg]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # title = "Rotor relative flow angles"
+    # filename = title.lower().replace(" ", "_") + '_' + timestamp
+    # fig1, ax1 = ml.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["beta_4"],
+    #     xlabel="Total-to-static pressure ratio",
+    #     ylabel="Flow angles [deg]",
+    #     title=title,
+    #     filename=filename,
+    #     outdir=outdir,
+    #     color_map=color_map,
+    #     save_figs=save_figs,
+    # )
 
     # Group up the losses
     # df = data["cascade"]
@@ -303,6 +331,15 @@ elif Case == 'performance_map':
         markers = ['x', 'o', '^', 's']
         legend_title = "Percent of design \n angular speed"
 
+        # Find design point
+        pressure_ratio_des = design_point["p0_in"]/design_point["p_out"]
+        index_des = (mass_flow_data[mass_flow_data['speed_percent'] == 100]["pressure_ratio_ts_interp"] - pressure_ratio_des).abs().idxmin()
+        design_point_mass_flow = mass_flow_data.loc[index_des]
+        index_des = (torque_data[torque_data['speed_percent'] == 100]["pressure_ratio_ts_interp"] - pressure_ratio_des).abs().idxmin()
+        design_point_torque = torque_data.loc[index_des]
+        index_des = (alpha_data[alpha_data['speed_percent'] == 100]["pressure_ratio_ts_interp"] - pressure_ratio_des).abs().idxmin()
+        design_point_alpha = alpha_data.loc[index_des]
+
         for i in range(len(speed_percent)):
 
             # Mass flow rate
@@ -347,6 +384,14 @@ elif Case == 'performance_map':
                 ncols = 2,
                 title=legend_title,
             )  
+        
+        # Highlight design points
+        design_point_coordinates = [design_point_mass_flow["pressure_ratio_ts_interp"], design_point_mass_flow["mass_flow_rate"]]
+        highlight_design_point(ax1, design_point_coordinates, [design_point_mass_flow["pressure_ratio_ts_interp"], 2.42])
+        design_point_coordinates = [design_point_torque["pressure_ratio_ts_interp"], design_point_torque["torque"]]
+        highlight_design_point(ax5, design_point_coordinates, [design_point_torque["pressure_ratio_ts_interp"], 92])
+        design_point_coordinates = [design_point_alpha["pressure_ratio_ts_interp"], design_point_alpha["alpha"]]
+        highlight_design_point(ax4, design_point_coordinates, [design_point_alpha["pressure_ratio_ts_interp"], 35])
     
     ax1.set_xlim([1.3, 3.49])
     ax1.set_ylim([2.0, 2.5])

@@ -7,42 +7,56 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 4
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
 config = ml.read_configuration_file(CONFIG_FILE)
 
-# ml.print_dict(config)
+# ml.print_dict(config) 
 
 x0 = {'w_out_1': 244.42314206706558,
   's_out_1': 3787.6640308614674,
   'beta_out_1': 64.43917617780212,
-  'v*_in_1': 84.77882078058266,
+#   'v*_in_1': 84.77882078058266,
   'w*_throat_1': 309.3325769414344,
   's*_throat_1': 3789.968019275075,
-#   'w*_out_1': 309.3325771576979,
-#   'beta*_out_1': 65.8827237722127,
-#   's*_out_1': 3789.968019282878,
   'w_out_2': 240.72352688455877,
   's_out_2': 3797.034102749199,
   'beta_out_2': -61.497567096277514,
-  'v*_in_2': 250.04121537545407,
+#   'v*_in_2': 250.04121537545407,
   'w*_throat_2': 292.4919351280035,
-#   'beta*_out_2': -61.92882664552348,
   's*_throat_2': 3800.736468314427,
-#   'w*_out_2': 259.39028119411665,
-#   's*_out_2': 3798.4449806382895,
   'v_in': 81.88511236557443}
 
+x0 = {'w_out_1': 267.78187967067004, 
+      's_out_1': 3788.588319333078, 
+      'beta_out_1': 65.88272377225763, 
+    #   'beta*_throat_1': 65.8827237722576, 
+      'w*_throat_1': 253.29023745799333,
+       'w_out_2': 253.1073841704115, 
+       's_out_2': 3799.9882108125557, 
+       'beta_out_2': -61.15576777799674, 
+    #    'beta*_throat_2': -61.15576777799674, 
+       'w*_throat_2': 229.04793360175023, 
+       'v_in': 79.91497102905909}
 
 # Run calculations
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
 
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
-    # print(solvers[0].problem.results["cascade"]["d_crit_out"])
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    # print(solvers[0].problem.results["cascade"]["mass_flow_crit_throat"])
+    # print(solvers[0].problem.results["plane"]["p0"])
+    # print(solvers[0].problem.results["plane"]["T0"])
+    # print(solvers[0].problem.results["plane"]["loss_total"])
+    # print(solvers[0].problem.results["plane"]["Ma_rel"])
+    print(len(solvers[0].problem.vars_real))
+    print(len(solvers[0].problem.results["residuals"]))
+    # print(solvers[0].problem.reference_values)
 
 elif CASE == 2:
     # Compute performance map according to config file

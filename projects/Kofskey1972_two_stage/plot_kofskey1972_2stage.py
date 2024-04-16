@@ -10,6 +10,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import meanline_axial as ml
+import matplotlib.patches as patches
+
 
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1972_2stage.yaml"
@@ -21,16 +23,40 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'performance_map' # performance_map/error_plot
 
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-filename = "output/performance_analysis_2024-03-14_01-27-29.xlsx" # experimental point
-# filename = "output/performance_analysis_2024-03-14_00-30-26.xlsx" # perfromance map
+# filename = "output/performance_analysis_2024-03-14_01-27-29.xlsx" # experimental point
+filename = "output/performance_analysis_2024-03-14_00-30-26.xlsx" # perfromance map
 
 save_figs = False
 validation = True
 show_figures = True
+
+def highlight_design_point(ax, design_point, text_location, markersize = 6):
+
+    # Rename variables
+    x_des = design_point[0]
+    y_des = design_point[1]
+    x_text = text_location[0]
+    y_text = text_location[1]
+
+    # Plot point
+    ax.plot(x_des, y_des, linestyle = "none", marker = "^", color = "k", markerfacecolor='k', markersize = markersize)
+
+    # Write text and draw arrow
+    if y_des > y_text:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'top')
+    else:
+        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
+                verticalalignment = 'bottom')    
+    # arrow1 = patches.FancyArrowPatch((x_text, y_text), (x_des, y_des), arrowstyle='-', mutation_scale=15, color='k')
+    # ax.add_patch(arrow1)
+    ax.plot([x_text, x_des], [y_text, y_des], linestyle = ':', color = 'k')
+
+    return 
 
 if Case == 'pressure_line':
 
@@ -139,21 +165,21 @@ if Case == 'pressure_line':
     #     color_map=color_map,
     # )
 
-    # title = "Static pressure"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["p_2", "p_4", "p_6", "p_8"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Cascade exit static pressure [Pa]",
-    #     title='',
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    # )
-    # ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'], ncols = 1)
-
+    title = "Static pressure"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["p_2", "p_4", "p_6", "p_8"],
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Cascade exit static pressure [Pa]",
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+    )
+    ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'], ncols = 1)
+    ax1.set_xlim([2.1,5.9])
+    ax1.set_ylim([10000,90000])
     
     # Plot torque
     # title = "Torque"
@@ -293,6 +319,12 @@ elif Case == 'performance_map':
         # Define plot options
         legend_title = "Percent of design \n angular speed"
 
+        # Find design point
+        pressure_ratio_des = design_point["p0_in"]/design_point["p_out"]
+        index_des = (validation_data[validation_data['speed_percent'] == 100]["pressure_ratio_ts"] - pressure_ratio_des).abs().idxmin()
+        design_point_result = validation_data.loc[index_des]
+        print(design_point_result)
+        
         for i in range(len(speed_percent)):
 
             # Load pressure ratio
@@ -302,11 +334,12 @@ elif Case == 'performance_map':
             m = validation_data[validation_data['speed_percent'] == speed_percent[i]]["mass_flow_rate"]
             ax1.plot(PR,m,marker = markers[i], color = colors[i], linestyle = "none")
             labels = [str(val) for val in speed_percent] * 2
-            ax1.legend(
-                labels=labels,
-                ncols = 2,
-                title=legend_title,
-            )
+            # legend_1 = plt.legend(
+            #     labels=labels,
+            #     ncols = 2,
+            #     title=legend_title,
+            #     loc = "lower right"
+            # )
 
             # Total-to-static efficiency
             eta_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]][
@@ -338,6 +371,14 @@ elif Case == 'performance_map':
                 ncols = 2,
                 title=legend_title,
             )
+
+        # Highlight design points
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["mass_flow_rate"]]
+        highlight_design_point(ax1, design_point_coordinates, [4.25, 2.46])
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["torque"]]
+        highlight_design_point(ax5, design_point_coordinates, [3.25, 165])
+        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["angle_exit_abs"]]
+        highlight_design_point(ax4, design_point_coordinates, [3.25, -25])
     
     # Manual settings
     ax1.set_xlim([2.1, 5.4])
@@ -357,8 +398,8 @@ elif Case == 'performance_map':
 
     if save_figs:
         ml.plot_functions.savefig_in_formats(fig1, "figures/1972_2stage_mass_flow_rate", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
+        # ml.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
+        # ml.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
         ml.plot_functions.savefig_in_formats(fig4, "figures/1972_2stage_absolute_flow_angle", formats = [".eps"])
         ml.plot_functions.savefig_in_formats(fig5, "figures/1972_2stage_torque", formats = [".eps"])
 
@@ -507,6 +548,7 @@ elif Case == 'error_plot':
         ml.plot_functions.savefig_in_formats(fig1, "figures/error_1972_2stage_mass_flow_rate", formats = [".eps"])
         ml.plot_functions.savefig_in_formats(fig2, "figures/error_1972_2stage_torque", formats = [".eps"])
         ml.plot_functions.savefig_in_formats(fig3, "figures/error_1972_2stage_absolute_flow_angle", formats = [".eps"])
+
 
 
 # Show figures
