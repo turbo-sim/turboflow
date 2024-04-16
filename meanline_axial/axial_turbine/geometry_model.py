@@ -139,7 +139,7 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
 
 def calculate_geometry(geometry):
     """
-    Convert the nomralized design variables for geometry to geometric parameters used in turbine evaluation
+    Convert the normalized design variables for geometry to geometric parameters used in turbine evaluation
     
     """
     # Create a copy of the input dictionary to avoid mutating the original
@@ -148,12 +148,22 @@ def calculate_geometry(geometry):
     # Compute hub and tip radius
     radius_mean = geom["radius_mean"]
     hub_to_tip = geom["hub_to_tip"]
-    radius_tip = 2*radius_mean/(1+hub_to_tip)
-    radius_hub = hub_to_tip*radius_tip
+    # radius_tip = 2*radius_mean/(1+hub_to_tip)
+    # radius_hub = hub_to_tip*radius_tip
 
     # Compute Blade height
-    height = radius_tip - radius_hub
-    height_mean = np.array([(height[i] + height[i+1])/2 for i in range(0, len(height), 2)])
+    # height = radius_tip - radius_hub
+    # height_mean = np.array([(height[i] + height[i+1])/2 for i in range(0, len(height), 2)])
+
+    hub_to_tip_in = hub_to_tip[::2]
+    hub_to_tip_out = hub_to_tip[1::2]
+    height_in = 2*radius_mean*(1-hub_to_tip_in)/(1+hub_to_tip_in)
+    height_out = 2*radius_mean*(1-hub_to_tip_out)/(1+hub_to_tip_out)
+    height_mean = (height_in + height_out)/2
+    height = 2*radius_mean*(1-hub_to_tip)/(1+hub_to_tip)
+    
+    radius_hub = radius_mean - height/2
+    radius_tip = radius_mean + height/2
 
     # Compute chord
     chord = height_mean/geom["aspect_ratio"]
@@ -162,28 +172,62 @@ def calculate_geometry(geometry):
     pitch = geom["pitch_to_chord"]*chord
 
     # Compute opening
-    opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
+    # opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
+    # opening = np.array([min(opening[i], pitch[i]*0.99) for i in range(len(opening))])
+
+    opening = pitch*math.cosd(geom["metal_angle_te"])
 
     # Compute maximum thickness
-    thickness_max = geom["thickness_to_chord"]*chord
+    # thickness_max = geom["thickness_to_chord"]*chord
+    dTheta = abs(geom["metal_angle_le"] - geom["metal_angle_te"])
+    thickness_max = np.array([(0.15*(dTheta[i]*180/np.pi <= 40) + \
+            (0.15+1.25e-3*(dTheta[i]-40))*(40 < dTheta[i]*180/np.pi <= 120) + \
+            0.25*(dTheta[i]*180/np.pi > 120))*chord[i] for i in range(len(dTheta))])
+    
+    # Compute stagger angle
+    stagger_angle = 0.5*(geom["metal_angle_le"] + geom["metal_angle_te"])
+
+    # Compute trailing edge thickness
+    trailing_edge_thickness = geom["trailing_edge_to_opening"] * opening
+
+    # Compute axial chord
+    chord_ax = chord*math.cosd(stagger_angle)
+
+    # Compute areas
+    A_in = 2*np.pi*radius_mean*height_in
+    A_out = 2*np.pi*radius_mean*height_out
+    A_throat = 2*np.pi*radius_mean*height_out*opening/pitch
 
     # Define new geometry dictionary
-    new_geometry = {"radius_hub" : radius_hub,
+    new_geometry = {
+                    "radius_hub" : radius_hub,
                       "radius_tip" : radius_tip,
                       "pitch" : pitch,
                       "chord" : chord,
                       "opening" : opening,
                       "thickness_max" : thickness_max,
-                      "cascade_type" : ["stator", "rotor"],
+                      "cascade_type" : geom["cascade_type"],
                       "metal_angle_le" : geom["metal_angle_le"],
                       "metal_angle_te" : geom["metal_angle_te"],
-                      "stagger_angle" : geom["stagger_angle"],
+                      "stagger_angle" : stagger_angle,
                       "diameter_le" : geom["diameter_le"],
                       "wedge_angle_le" : geom["wedge_angle_le"],
-                      "thickness_te" : geom["thickness_te"],
+                      "thickness_te" : trailing_edge_thickness,
                       "tip_clearance" : geom["tip_clearance"],
-                      "throat_location_fraction" : geom["throat_location_fraction"]}
-
+                      "throat_location_fraction" : geom["throat_location_fraction"],
+                      "A_in" : A_in,
+                      "A_out" : A_out, 
+                      "A_throat" : A_throat,
+                      "radius_mean_in": np.ones(2)*radius_mean,
+                      "radius_mean_out": np.ones(2)*radius_mean,
+                      "radius_mean_throat": np.ones(2)*radius_mean,
+                      "number_of_stages": 1,
+                      "number_of_cascades": 2,
+                      "hub_tip_ratio_in": hub_to_tip_in,
+                      "height" : height,
+                      "axial_chord" : chord_ax
+                      }
+    
     return new_geometry
 
 
@@ -290,7 +334,6 @@ def calculate_full_geometry(geometry):
     thickness_te_opening_ratio = geom["thickness_te"] / geom["opening"]
     tip_clearance_height = geom["tip_clearance"] / height
     diameter_le_chord_ratio = geom["diameter_le"] / geom["chord"]
-    # throat_to_exit_opening_ratio =
 
     # Create a dictionary with the newly computed parameters
     new_parameters = {
