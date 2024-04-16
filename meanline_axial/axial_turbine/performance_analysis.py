@@ -752,36 +752,21 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         if isinstance(initial_guess, dict):
             valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
             valid_keys_2 = [
-                "v_in",
                 "w_out",
                 "s_out",
                 "beta_out",
                 "v*_in",
                 "w*_throat",
                 "s*_throat",
-                # "w*_out",
-                # "beta*_out",
-                # "s*_out",
             ]
-            valid_keys_3 = ["v_in"]
+            valid_keys_2 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_2]
+            valid_keys_3 = [key for key in valid_keys_2 if not key.startswith("v*_in")] + ["beta*_throat" + f"_{i+1}" for i in range(number_of_cascades)]
 
-            for i in range(number_of_cascades):
-                index = f"_{i+1}"
-                valid_keys_index = [
-                    key + index for key in valid_keys_2 if key != "v_in"
-                ]
-                valid_keys_3 += valid_keys_index
 
             check = []
-            check.append(
-                utils.check_lists_match(valid_keys_1, list(initial_guess.keys()))
-            )
-            check.append(
-                utils.check_lists_match(valid_keys_2, list(initial_guess.keys()))
-            )
-            check.append(
-                utils.check_lists_match(valid_keys_3, list(initial_guess.keys()))
-            )
+            check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
+            check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
+            check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
             
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
@@ -821,40 +806,22 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
                 )
 
-            # Check if initial guess is given with arrays: {"v_throat" : [215, 260]}
             elif check[1]:
-                # Check that all dict values are either a number or a list/array
+                # Check that set of input correspond with model option
+                if not self.model_options["choking_model"] == "evaluate_casacde_critical":
+                    raise ValueError("Set of input corresponds with different choking_model (evaluate_critical_state)")
+
+                # Check that all values are a number
                 if not all(
-                    isinstance(val, (int, float, list, np.ndarray))
-                    for val in initial_guess.values()
+                    isinstance(val, (int, float)) for val in initial_guess.values()
                 ):
-                    raise ValueError(
-                        "All dictionary elements must be either a number, list or NumPy array"
-                    )
-
-                # Check that array are of correct length
-                if not all(
-                    len(val) == number_of_cascades
-                    for key, val in initial_guess.items()
-                    if not key == "v_in"
-                ):
-                    raise ValueError(
-                        f"All arrays must be of length {number_of_cascades}"
-                    )
-
-                # Create dictionary with index
-                initial_guess_index = {}
-                for key, val in initial_guess.items():
-                    if isinstance(val, (list, np.ndarray)):
-                        for i in range(len(val)):
-                            initial_guess_index[f"{key}_{i+1}"] = val[i]
-                    else:
-                        initial_guess_index[key] = val
-
-                initial_guess = initial_guess_index
-
-            # Check if initial guess is given with indices: {"v_throat_1" : 215, "v_throat_2" : 260}
+                    raise ValueError("All dictionary values must be a float or int")
+                
             elif check[2]:
+                # Check that set of input correspond with model option
+                if not self.model_options["choking_model"] == "evaluate_cascade_throat":
+                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_throat)")
+                
                 # Check that all values are a number
                 if not all(
                     isinstance(val, (int, float)) for val in initial_guess.values()
@@ -882,9 +849,16 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             initial_guess = self.compute_heuristic_initial_guess(
                 enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
             )
+
         else:
             raise ValueError("Initial guess must be either None or a dictionary.")
-
+        
+        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+            initial_guess = {key : val for key, val in initial_guess.items() if not key.startswith("v*_in")}
+        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+            initial_guess = {key : val for key, val in initial_guess.items() if not key.startswith("beta*_throat")}
+        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
+            initial_guess = {key : val for key, val in initial_guess.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
 
         # Always normalize initial guess
         initial_guess_scaled = self.scale_values(initial_guess)
@@ -1048,11 +1022,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                     "s_out" + index: s_out,
                     "beta_out" + index: np.sign(theta_out)*math.arccosd(A_throat/A_out),
                     "v*_in" + index: v_in_crit,
+                    "beta*_throat" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
                     "w*_throat" + index: w_throat_crit,
                     "s*_throat" + index: s_throat,
-                    # "w*_out" + index: w_out_crit,
-                    # "beta*_out" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
-                    # "s*_out" + index: s_out,
                 }
             )
 
@@ -1072,50 +1044,6 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         initial_guess["v_in"] = mass_flow / m_temp
 
         return initial_guess
-
-
-# class CascadesOptimizationProblem(OptimizationProblem):
-#     def __init__(self, cascades_data, R, eta_tt, eta_ts, Ma_crit, x0=None):
-#         flow.calculate_number_of_stages(cascades_data)
-#         flow.update_fixed_params(cascades_data)
-#         flow.check_geometry(cascades_data)
-
-#         # Define reference mass flow rate
-#         v0 = cascades_data["fixed_params"]["v0"]
-#         d_in = cascades_data["fixed_params"]["d0_in"]
-#         A_in = cascades_data["geometry"]["A_in"][0]
-#         m_ref = A_in * v0 * d_in  # Reference mass flow rate
-#         cascades_data["fixed_params"]["m_ref"] = m_ref
-
-#         if x0 == None:
-#             x0 = flow.generate_initial_guess(cascades_data, R, eta_tt, eta_ts, Ma_crit)
-#         self.x0 = flow.scale_to_normalized_values(x0, cascades_data)
-#         self.cascades_data = cascades_data
-
-#     def get_values(self, vars):
-#         residuals = flow.evaluate_cascade_series(vars, self.cascades_data)
-#         self.f = 0
-#         self.c_eq = residuals
-#         self.c_ineq = None
-#         objective_and_constraints = self.merge_objective_and_constraints(
-#             self.f, self.c_eq, self.c_ineq
-#         )
-
-#         return objective_and_constraints
-
-#     def get_bounds(self):
-#         number_of_cascades = self.cascades_data["geometry"]["number_of_cascades"]
-#         lb, ub = flow.get_dof_bounds(number_of_cascades)
-#         bounds = [(lb[i], ub[i]) for i in range(len(lb))]
-#         return bounds
-
-#     def get_n_eq(self):
-#         return self.get_number_of_constraints(self.c_eq)
-
-#     def get_n_ineq(self):
-#         return self.get_number_of_constraints(self.c_ineq)
-
-
 
 
 def print_simulation_summary(solvers):
