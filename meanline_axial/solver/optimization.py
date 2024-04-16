@@ -254,7 +254,6 @@ class OptimizationSolver:
             method=self.method,
             tol=self.tol,
             options=self.options,
-            # hess=lambda x: np.zeros((self.x0.size,)),  # TODO: Is it necessary?
         )
 
         # Evaluate performance again for the converged solution
@@ -400,7 +399,8 @@ class OptimizationSolver:
                 if np.array_equal(x, self.cache["x"])
                 else fun_constr(x)
             )
-            eps = 1e-4 * np.abs(x)
+            # eps = 1e-4 * np.abs(x)
+            eps = np.sqrt(np.finfo(float).eps)
             jac = approx_derivative(
                 fun_constr, x, method="2-point", f0=fun_constr_0, abs_step=eps
             )
@@ -525,6 +525,12 @@ class OptimizationSolver:
         if self.plot:
             self._plot_callback()
 
+        # keys = ['loss_error_exit_1', 'mass_error_exit_1', 'm*_1', 'Y*_1', 'beta*_1', 'choking_1', 'loss_error_exit_2', 'mass_error_exit_2', 'm*_2', 'Y*_2', 'beta*_2', 'choking_2', 'p_out']
+        # max_key_length = max(len(key) for key in keys)
+        # for key, val in zip(keys, violation_eq):
+        #     spacing = ' ' * (max_key_length - len(key) + 2)
+        #     print(f"{key}:{spacing}{val:.5f}")
+        # print("\n")
         # Evaluate callback function
         if self.callback_func:
             self.callback_func_call_count += 1
