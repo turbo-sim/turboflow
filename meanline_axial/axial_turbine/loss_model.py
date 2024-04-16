@@ -11,7 +11,7 @@ LOSS_MODELS = [
     "benner",
     "benner_moustapha",
     "isentropic",
-    "custom"
+    "custom",
 ]
 
 LOSS_COEFFICIENTS = [
@@ -82,11 +82,6 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     tuning_factors = {f"loss_{key}": value for key, value in tuning_factors.items()}
     apply_tuning_factors(loss_dict, tuning_factors)
 
-    # Optionally, recompute the total loss if needed
-    # loss_dict["loss_total"] = sum(
-    #     value for key, value in loss_dict.items() if key != "loss_total"
-    # )
-
     # Compute the loss coefficient according to definition
     loss_coeff = loss_model_options["loss_coefficient"]
     if  loss_coeff == "stagnation_pressure":
@@ -101,7 +96,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         raise ValueError(f"Invalid loss coefficient '{loss_coeff}'. Available options: {options}")
 
     # Compute loss coefficient error
-    loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
+    loss_dict["loss_error"] = (Y_definition - loss_dict["loss_total"])
 
     # Save the definition of the loss coefficient
     loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
