@@ -16,7 +16,7 @@ import meanline_axial as ml
 plot_data = True
 interpolation = False
 check_interpolation = False
-plot_mass_flow = True
+plot_mass_flow = False
 plot_deviation = False
 
 def get_data(filename):
@@ -37,19 +37,33 @@ if interpolation:
         data_subset = data[data["Loss coefficient"] == Y[i]]
         phi_max[i] = data_subset["Mass flux"].max()
         mach_crit[i] = data_subset.loc[data_subset["Mass flux"].idxmax(), "Mach"]
-        
-    f = interpolate.interp1d(Y, mach_crit, kind = 'cubic', fill_value = 'extrapolate')
-    f2 = interpolate.interp1d(mach_crit, phi_max, 'linear', fill_value = 'extrapolate')
+            
+    # f = interpolate.interp1d(Y, mach_crit, kind = 'linear', fill_value = 'extrapolate')
+    # f2 = interpolate.interp1d(mach_crit, phi_max, 'linear', fill_value = 'extrapolate')
+    coeff_mach_crit = np.polyfit(Y, mach_crit, 4)
+    f = lambda x : coeff_mach_crit[0]*x**4 + coeff_mach_crit[1]*x**3 + coeff_mach_crit[2]*x**2 + coeff_mach_crit[3]*x + coeff_mach_crit[4]
+    coeff_phi_max = np.polyfit(Y, phi_max, 4)
+    f1 = lambda x : coeff_phi_max[0]*x**4 + coeff_phi_max[1]*x**3 + coeff_phi_max[2]*x**2 + coeff_phi_max[3]*x + coeff_phi_max[4]
     
     if check_interpolation:
         Y_interp = np.linspace(min(Y), 2.0, 10)
         mach_interp = f(Y_interp)
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-        ax.plot(Y_interp, mach_interp, label = 'Interpolated')
-        ax.plot(Y, mach_crit, label = 'Dataset')
-        ax.set_xlabel('Loss coefficent [Y]')
-        ax.set_ylabel('Critical mach number [Ma]')
-        ax.legend()
+        fig1, ax1 = plt.subplots(figsize=(6.4, 4.8))
+        ax1.plot(Y_interp, mach_interp, label = 'Interpolated')
+        ax1.plot(Y, mach_crit, label = 'Dataset')
+        ax1.set_xlabel('Loss coefficent [Y]')
+        ax1.set_ylabel('Critical mach number [Ma]')
+        ax1.legend()
+
+        Y_interp = np.linspace(min(Y), 2.0, 10)
+        phi_max_interp = f1(Y_interp)
+        fig2, ax2 = plt.subplots(figsize=(6.4, 4.8))
+        ax2.plot(Y_interp, phi_max_interp, label = 'Interpolated')
+        ax2.plot(Y, phi_max, label = 'Dataset')
+        ax2.set_xlabel('Loss coefficent [Y]')
+        ax2.set_ylabel('Critical mass  flux [kg/s*m^2]')
+        ax2.legend()
+
         plt.show()
 
 if plot_data: 
