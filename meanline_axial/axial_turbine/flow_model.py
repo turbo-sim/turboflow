@@ -8,6 +8,7 @@ from .. import math
 from .. import utilities as utils
 from . import loss_model as lm
 from . import deviation_model as dm
+from . import choking_model as cm
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
@@ -57,18 +58,12 @@ KEYS_CASCADE = [
     "loss_incidence",
     "dh_s",
     "Ma_crit_throat",
-    # "Ma_crit_out",
-    # "beta_crit_out",
+    "mass_flow_throat",
+    "w_throat",
+    "d_throat",
+    "Ma_throat",
+    "beta_throat",
     "mass_flow_crit_throat",
-    # "mass_flow_crit_out",
-    "Y_crit_throat",
-    # "Y_crit_out", 
-    "d_crit_throat",
-    # "d_crit_out",
-    "w_crit",
-    "p_crit",
-    "beta_crit",
-    # "mass_flux_out",
     "incidence",
     "beta_subsonic" ,
     "beta_supersonic",
@@ -193,7 +188,7 @@ def evaluate_axial_turbine(
 
     # Rename turbine inlet velocity
     v_in = variables["v_in"] * v0
-
+    
     for i in range(number_of_cascades):
         # Update angular speed
         angular_speed_cascade = angular_speed * (i % 2)
@@ -208,15 +203,9 @@ def evaluate_axial_turbine(
         # Rename variables
         cascade = "_" + str(i + 1)
         w_out = variables["w_out" + cascade] * v0
-        s_out = variables["s_out" + cascade] * s_range + s_min
+        s_out = variables["s_out" + cascade] * s_range + s_min # TODO: change scaling
         beta_out = variables["beta_out" + cascade] * angle_range + angle_min
-        v_crit_in = variables["v*_in" + cascade]
-        w_crit_throat = variables["w*_throat" + cascade]
-        s_crit_throat = variables["s*_throat" + cascade]
-        # w_crit_out = variables["w*_out" + cascade] * v0
-        # beta_crit_out = variables["beta*_out" + cascade] * angle_range + angle_min
-        # s_crit_out = variables["s*_out" + cascade] * s_range + s_min
-
+        
         # Evaluate current cascade
         cascade_inlet_input = {
             "h0": h0_in,
@@ -224,24 +213,18 @@ def evaluate_axial_turbine(
             "alpha": alpha_in,
             "v": v_in,
         }
-        # cascade_throat_input = {"w": w_throat, "s": s_throat}
         cascade_exit_input = {
             "w": w_out,
             "beta": beta_out,
             "s": s_out,
         }
-        critical_cascade_input = {
-            "v*_in": v_crit_in,
-            "w*_throat": w_crit_throat,
-            "s*_throat": s_crit_throat,
-            # "w*_out": w_crit_out,
-            # "beta*_out" : beta_crit_out,
-            # "s*_out": s_crit_out,
-        }
+        
+        choking_input = {key.replace(cascade, "") : val for key, val in variables.items() if ("*" and cascade in key) or key == "v*_in"}
+
         cascade_residuals = evaluate_cascade(
             cascade_inlet_input,
             cascade_exit_input,
-            critical_cascade_input,
+            choking_input,
             fluid,
             geometry_cascade,
             angular_speed_cascade,
@@ -274,7 +257,6 @@ def evaluate_axial_turbine(
                 fluid,
             )
 
-            
     # Add exit pressure error to residuals
     p_calc = results["plane"]["p"].values[-1]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
@@ -304,12 +286,13 @@ def evaluate_axial_turbine(
     }
     results["geometry"] = pd.DataFrame([geom_cascades])
     
+    
     return results
 
 def evaluate_cascade(
     cascade_inlet_input,
     cascade_exit_input,
-    critical_cascade_input,
+    choking_input,
     fluid,
     geometry,
     angular_speed,
@@ -391,21 +374,10 @@ def evaluate_cascade(
     dh_is = exit_plane["h"] - props_is["h"]
 
     # Evaluate critical state
-    # TODO: Pass x_crit as dicitonary to evaluate_lagrangian_gradient?
-    critical_cascade_input["h0_in"] = cascade_inlet_input["h0"]
-    critical_cascade_input["s_in"] = cascade_inlet_input["s"]
-    critical_cascade_input["alpha_in"] = cascade_inlet_input["alpha"]
-    x_crit = np.array(
-        [
-            critical_cascade_input["v*_in"],
-            critical_cascade_input["w*_throat"],
-            critical_cascade_input["s*_throat"],
-        ]
-    )
-
-    residuals_critical, critical_state = evaluate_cascade_critical(
-        x_crit,
-        critical_cascade_input,
+    residuals_critical, critical_state = cm.evaluate_choking(
+        choking_input,
+        inlet_plane, 
+        exit_plane,
         fluid,
         geometry,
         angular_speed,
@@ -413,15 +385,12 @@ def evaluate_cascade(
         reference_values,
     )
 
-    choking_residual, beta_sub, beta_sup = compute_residual_flow_angle(geometry, critical_state, exit_plane, deviation_model)
-
     # Create dictionary with equation residuals
     mass_error_exit = inlet_plane["mass_flow"] - exit_plane["mass_flow"]
     residuals = {
         "loss_error_exit": exit_plane["loss_error"],
         "mass_error_exit": mass_error_exit / mass_flow_reference,
         **residuals_critical,
-        "deviation": choking_residual,
     }
 
     # Return plane data in dataframe
@@ -436,19 +405,19 @@ def evaluate_cascade(
         **loss_dict,
         "dh_s": dh_is,
         "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
-        # "Ma_crit_out": critical_state["exit_plane"]["Ma_rel"],
-        # "beta_crit_out" : critical_state["exit_plane"]["beta"],
+        # "Ma_throat": throat_plane["Ma_rel"],
+        # "beta_throat" : throat_plane["beta"],
         "mass_flow_crit_throat": critical_state["throat_plane"]["mass_flow"],
-        # "mass_flow_crit_out": critical_state["exit_plane"]["mass_flow"],
-        "Y_crit_throat" : critical_state["throat_plane"]["loss_total"],
+        # "mass_flow_throat": throat_plane["mass_flow"],
+        # "w_throat" : throat_plane["w"],
         # "Y_crit_out" : critical_state["exit_plane"]["loss_total"],
-        "d_crit_throat": critical_state["throat_plane"]["d"],
+        # "d_throat": throat_plane["d"],
         # "d_crit_out": critical_state["exit_plane"]["d"],
         # "mass_flux_out" : exit_plane["w"]*exit_plane["d"],
         "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
-        "w_crit" : critical_state["throat_plane"]["w"],
-        "beta_subsonic" : beta_sub,
-        "beta_supersonic" : beta_sup,
+        # "w_crit" : critical_state["throat_plane"]["w"],
+        # "beta_subsonic" : beta_sub,
+        # "beta_supersonic" : beta_sup,
     }
     results["cascade"].loc[len(results["cascade"])] = cascade_data
 
@@ -955,361 +924,6 @@ def evaluate_cascade_interspace(
 
     return h0_in, s_in, alpha_in, v_in
 
-def evaluate_cascade_critical(
-    x_crit,
-    critical_cascade_input,
-    fluid,
-    geometry,
-    angular_speed,
-    model_options,
-    reference_values,
-):
-    r"""
-    Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
-    conservation and loss computation equations at the throat.
-
-    This function addresses the determination of the critical point in a cascade, which is defined as the
-    point of maximum mass flow rate for a given set of inlet conditions. Traditional approaches usually
-    treat this as an optimization problem, seeking to maximize the flow rate directly. However, this
-    function adopts an alternative strategy by converting the optimality condition into a set of equations.
-    The solution to the following set of equations is the same as the solution  of the corresponding optimization problem. 
-        
-    .. math::
-
-        \nabla L = \begin{bmatrix}
-        \frac{\partial f}{\partial x_1} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_1} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_1} \\
-        \frac{\partial f}{\partial x_2} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_2} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_2} \\
-        \frac{\partial f}{\partial x_3} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_3} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_3} \\
-        g_1(x_1, x_2, x_3) \\
-        g_2(x_1, x_2, x_3) \\
-        \end{bmatrix} = 0
-        
-    This function returns the value of the three last equations in the set above, while the two first equations are used to 
-    explicitly calculate the lagrange multipliers.
-    
-    .. math::
-        \lambda_1 = \frac{\frac{\partial g_2}{\partial x_2}\cdot\frac{-\partial f}{\partial x_1} - \frac{\partial g_2}{\partial x_1}\cdot-\frac{\partial f}{\partial x_2}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \\                     
-        \lambda_2 = \frac{\frac{\partial g_1}{\partial x_1}\cdot\frac{-\partial f}{\partial x_2} - \frac{\partial g_1}{\partial x_2}\cdot-\frac{\partial f}{\partial x_1}} 
-                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} 
-
-    By transforming the problem into a system of equations, this approach allows the evaluation of the critical
-    point without directly solving an optimization problem. One significant advantage of this
-    equation-oriented method is that it enables the coupling of these critical condition equations with the
-    other modeling equations. This integrated system of equations can then be efficiently solved using gradient-based
-    root finding algorithms (e.g., Newton-Raphson solvers).
-
-    Such a coupled solution strategy, as opposed to segregated approaches where nested systems are solved
-    sequentially and iteratively, offers superior computational efficiency. This method thus provides
-    a more direct and computationally effective way of determining the critical conditions in a cascade.
-
-    Parameters
-    ----------
-    x_crit : numpy.ndarray
-        Array containing independent variables for the function compute_critical_values ([v_in*, v_throat*, s_throat*](.
-    critical_cascade_input : dict
-        Dictionary containing additional input parameters required for compute_critical_values.
-    fluid : object
-        A fluid object with methods for thermodynamic property calculations.
-    geometry : dict
-        Geometric parameters of the cascade.
-    angular_speed : float
-        Angular speed of the cascade.
-    model_options : dict
-        Options for the model used in the critical condition evaluation.
-    reference_values : dict
-        Reference values used in the calculation, including the reference mass flow rate.
-
-    Returns
-    -------
-    tuple
-        - residuals_critical (dict): Dictionary containing the residuals of the Lagrange function
-          and the constraints ('L*', 'm*', 'Y*').
-        - critical_state (dict): Dictionary containing state information at the critical conditions.
-
-
-    .. note::
-
-        The evaluation of the critical conditions is essential for the correct modeling of choking.
-
-    """
-
-    # Load reference values
-    mass_flow_ref = reference_values["mass_flow_ref"]
-
-    # Load model options
-    loss_model = model_options["loss_model"]
-    blockage = model_options["blockage_model"]
-    deviation_model = model_options["deviation_model"]
-
-    # Define critical state dictionary to store information
-    critical_state = {}
-
-    # Evaluate the current cascade at critical conditions
-    f0 = compute_critical_values(
-        x_crit,
-        critical_cascade_input,
-        fluid,
-        geometry,
-        angular_speed,
-        critical_state,
-        model_options,
-        reference_values,
-    )
-
-    # Evaluate the Jacobian of the evaluate_critical_cascade function
-    J = compute_critical_jacobian(
-        x_crit,
-        critical_cascade_input,
-        fluid,
-        geometry,
-        angular_speed,
-        critical_state,
-        model_options,
-        reference_values,
-        f0,
-    )
-
-    # Rename gradients
-    a11, a12, a21, a22, b1, b2 = (
-        J[1, 0],
-        J[2, 0],
-        J[1, 1 + 1],
-        J[2, 1 + 1],
-        -1 * J[0, 0],
-        -1 * J[0, 1 + 1],
-    )  
-
-    # Calculate the Lagrange multipliers explicitly
-    eps = 1e-9  # TODO Division by zero sometimes?
-    l1 = (a22 * b1 - a12 * b2) / (a11 * a22 - a12 * a21 + eps)
-    l2 = (a11 * b2 - a21 * b1) / (a11 * a22 - a12 * a21 + eps)
-
-    # Evaluate the last equation
-    df, dg1, dg2 = J[0, 2 - 1], J[1, 2 - 1], J[2, 2 - 1]
-    grad = (df + l1 * dg1 + l2 * dg2) / mass_flow_ref
-
-    # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
-    g = f0[1:]  # The two constraints
-    residual_values = np.insert(g, 0, grad)
-    residual_keys = ["L*", "m*", "Y*"]
-    residuals_critical = dict(zip(residual_keys, residual_values))
-    
-    # Add residuals for the exit station
-    # cascade_exit_input = {"w" : critical_cascade_input["w*_out"],
-    #                       "s" : critical_cascade_input["s*_out"],
-    #                     #    "beta" : critical_cascade_input["beta*_out"],
-    #                     "beta" : np.sign(geometry["metal_angle_te"])*math.arccosd(geometry["A_throat"]/geometry["A_out"]),
-    #                       "rothalpy" : critical_state["inlet_plane"]["rothalpy"]}
-    
-    
-    # exit_plane, loss_dict = evaluate_cascade_exit(cascade_exit_input, fluid, geometry, critical_state["inlet_plane"], angular_speed, blockage, loss_model)
-    # critical_state["exit_plane"] = exit_plane
-    # beta_model =  np.sign(critical_cascade_input["beta*_out"])*dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["throat_plane"]["Ma_rel"], geometry, deviation_model)
-    # beta_model = dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_state["exit_plane"]["Ma_rel"], geometry, deviation_model)
-
-    # Quick trick to prevent convergence to supersonic exit for critical calculation
-    # subsonic_solution = np.sign((exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"]))*max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
-    # subsonic_solution = max(0, exit_plane["Ma_rel"]-critical_state["throat_plane"]["Ma_rel"])
-    # residuals_critical["m*_out"] = (exit_plane["mass_flow"] - critical_state["inlet_plane"]["mass_flow"])/mass_flow_ref + subsonic_solution #TODO: fix of mass flow rate is negative
-    # residuals_critical["Y*_out"] = exit_plane["loss_error"]
-    # residuals_critical["beta*_out"] = math.cosd(beta_model)-math.cosd(critical_cascade_input["beta*_out"]) 
-    
-    return residuals_critical, critical_state
-
-def compute_critical_values(
-    x_crit,
-    critical_cascade_input,
-    fluid,
-    geometry,
-    angular_speed,
-    critical_state,
-    model_options,
-    reference_values,
-):
-    """
-    Compute cascade performance at the critical conditions
-
-    This function evaluates the performance of a cascade at its critical operating point defined by:
-
-        1. Critical inlet absolute velocity,
-        2. Critical throat relative velocity,
-        3. Critical throat entropy.
-
-    Using these variables, the function calculates the critical mass flow rate and residuals of the mass balance and the loss model equations.
-
-    Parameters
-    ----------
-    x_crit : numpy.ndarray
-        Array containing scaled critical variables [v_in*, w_throat*, s_throat*].
-    critical_cascade_input : dict
-        Dictionary containing additional input parameters, including inlet conditions and geometry.
-    fluid : object
-        A fluid object with methods for thermodynamic property calculations.
-    geometry : dict
-        Geometric parameters of the cascade.
-    angular_speed : float
-        Angular speed of the cascade.
-    critical_state : dict
-        Dictionary to store the critical state information.
-    model_options : dict
-        Options for the model used in the critical condition evaluation.
-    reference_values : dict
-        Reference values used in the calculations, including mass flow reference and other parameters.
-
-    Returns
-    -------
-    numpy.ndarray
-        An array containing the computed mass flow at the throat plane and the residuals
-        for mass conservation and loss coefficient error.
-
-    """
-
-    # Define model options
-    loss_model = model_options["loss_model"]
-
-    # Load reference values
-    mass_flow_ref = reference_values["mass_flow_ref"]
-    v0 = reference_values["v0"]
-    s_range = reference_values["s_range"]
-    s_min = reference_values["s_min"]
-
-    # Load geometry
-    theta_out = geometry["metal_angle_te"]
-
-    # Load input for critical cascade
-    # TODO: use dictionary for input variables, not array indices
-    # TODO: In that case we need a wrapper around compute_critical_values
-    # TODO: to approximate the gradients
-    
-    # TODO: variables passed should already scaled as in evaluate_cascade()?
-    # TODO: problem with finite difference approximation?
-    s_in = critical_cascade_input["s_in"]
-    h0_in = critical_cascade_input["h0_in"]
-    alpha_in = critical_cascade_input["alpha_in"]
-    v_in, w_throat, s_throat = (
-        x_crit[0] * v0,
-        x_crit[1] * v0,
-        x_crit[2] * s_range + s_min,
-
-    )
-
-    # Evaluate inlet plane
-    critical_inlet_input = {
-        "v": v_in,
-        "s": s_in,
-        "h0": h0_in,
-        "alpha": alpha_in,
-    }
-    inlet_plane = evaluate_cascade_inlet(
-        critical_inlet_input, fluid, geometry, angular_speed
-    )
-
-    # Evaluate throat plane
-    critical_throat_input = {
-        "w": w_throat,
-        "s": s_throat,
-        "beta" : np.sign(geometry["metal_angle_te"])*math.arccosd(geometry["A_throat"]/geometry["A_out"]),
-        "rothalpy": inlet_plane["rothalpy"],
-    }
-
-    throat_plane, loss_dict = evaluate_cascade_throat(
-        critical_throat_input,
-        fluid,
-        geometry,
-        inlet_plane,
-        angular_speed,
-        model_options["blockage_model"],
-        loss_model,
-    )
-    
-
-    # Add residuals
-    residuals = np.array(
-        [
-            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
-            throat_plane["loss_error"],
-        ]
-    )
-
-    # Update critical state dictionary
-    critical_state["inlet_plane"] = inlet_plane
-    critical_state["throat_plane"] = throat_plane
-    
-    output = np.insert(residuals, 0, throat_plane["mass_flow"])
-
-    return output
-
-
-def compute_critical_jacobian(
-    x,
-    critical_cascade_input,
-    fluid,
-    geometry,
-    angular_speed,
-    critical_state,
-    model_options,
-    reference_values,
-    f0,
-):
-    """
-    Compute the Jacobian matrix of the compute_critical_values function using finite differences.
-
-    This function approximates the Jacobian of a combined function that includes the mass flow rate value,
-    mass balance residual, and loss model evaluation residual at the critical point. It uses forward finite
-    difference to approximate the partial derivatives of the Jacobian matrix.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        Array of input variables for the compute_critical_values function.
-    critical_cascade_input : dict
-        Dictionary containing additional input parameters for the compute_critical_values function.
-    fluid : object
-        A fluid object with methods for thermodynamic property calculations.
-    geometry : dict
-        Geometric parameters of the cascade.
-    angular_speed : float
-        Angular speed of the cascade.
-    critical_state : dict
-        Dictionary to store the critical state information.
-    model_options : dict
-        Options for the model used in the critical condition evaluation.
-    reference_values : dict
-        Reference values used in the calculations, including mass flow reference and other parameters.
-    f0 : numpy.ndarray
-        The function value at x, used for finite difference approximation.
-
-    Returns
-    -------
-    numpy.ndarray
-        The approximated Jacobian matrix of the compute_critical_values function.
-
-    """
-
-    # Define finite difference relative step size
-    eps = model_options["rel_step_fd"]*x
-
-    # Approximate problem Jacobian by finite differences
-    jacobian = approx_derivative(
-        compute_critical_values,
-        x,
-        method="2-point",
-        f0=f0,
-        abs_step=eps,
-        args=(
-            critical_cascade_input,
-            fluid,
-            geometry,
-            angular_speed,
-            critical_state,
-            model_options,
-            reference_values,
-        ),
-    )
-
-    return jacobian
-
 def evaluate_velocity_triangle_in(u, v, alpha):
     """
     Compute the velocity triangle at the inlet of the cascade.
@@ -1433,131 +1047,6 @@ def evaluate_velocity_triangle_out(u, w, beta):
     }
 
     return vel_out
-
-def compute_residual_mach_throat(Ma_crit, Ma_exit, Ma_throat, alpha=-100):
-    """
-    Calculate the residual between the actual Mach number at the throat and the target value.
-
-    This function computes the target Mach number as the minimum of the critical Mach number and 
-    the exit Mach number. The minimum is calculted using a smooth minimum approximation to avoid
-    a discontinuity in slope at the critical Mach. The residual is computed as the difference
-    between the target Mach number and the actual Mach number at the throat.
-
-    Parameters
-    ----------
-    Ma_crit : float
-        Critical Mach number, above which flow is considered supersonic.
-    Ma_exit : float
-        Mach number at the exit of the flow domain.
-    Ma_throat : float
-        Mach number at the throat of the flow domain.
-    alpha : float, optional
-        A parameter used in the smooth maximum function to control its behavior.
-        Default is -100.
-
-    Returns
-    -------
-    tuple
-        A tuple containing:
-
-        - residual (float): The residual between the target and throat Mach numbers.
-        - density_correction (float): No density correction required in this model (returns NaN).
-
-    """
-    # Mach number at the throat cannot be higher than Ma_crit
-    # Smooth maximum prevents slope discontinuity at the switch
-    Ma_array = np.array([Ma_crit, Ma_exit])
-    Ma_target = math.smooth_min(Ma_array, method="boltzmann", alpha=alpha)
-
-    # Retrieve residual for current solution
-    residual = Ma_throat - Ma_target
-
-    # No density correction required in this model
-    density_correction = np.nan
-
-    return residual, density_correction
-
-def compute_residual_flow_angle(
-    geometry, critical_state, 
-    exit_plane, subsonic_deviation_model
-):
-    """
-    Compute the residual between actual and target flow angles at the exit plane of a cascade.
-    
-    This function calculates the deviation angle of the flow at the exit plane. At subsonic conditions the deviation angle
-    is calculated by using a deviation model, while at supersonic conditions the deviation is calculated from the critical mass flow rate
-    of the system. The function returns the resdiual between the target angle given by the calculated deviation angle, and
-    the actual flow angle at the exit plane. 
-
-    Parameters
-    ----------
-    geometry : dict
-        A dictionary containing the cascade geometry information such as area, opening, and pitch.
-    critical_state : dict
-        A dictionary containing the critical state information including mass flow ('mass_flow')
-        and relative Mach number ('Ma_rel').
-    throat_plane : dict
-        A dictionary containing throat plane data.
-    exit_plane : dict
-        A dictionary containing exit plane data.
-    subsonic_deviation_model : str
-        A string specifying the model used for calculating the deviation angle at subsonic conditions.
-
-    Returns
-    -------
-    tuple
-        A tuple containing:
-
-        - residual (float): The difference between the cosine of the modeled and actual flow angles.
-        - density_correction (float): The density correction factor used in supersonic conditions
-          (returns NaN for subsonic conditions).
-
-    Warnings
-    --------
-    The density correction factor computed for supersonic conditions is a temporary solution
-    to account for numerical errors in nested finite difference calculations. This approach
-    may need revision or replacement in future versions of the code.
-    """
-    
-    # Load cascade geometry
-    area_out = geometry["A_out"]
-
-    # Load calculated critical condition
-    m_crit = critical_state["throat_plane"]["mass_flow"]
-    d_crit = critical_state["throat_plane"]["d"]
-    # Ma_crit_exit = critical_state["exit_plane"]["Ma_rel"]
-    Ma_crit_throat = critical_state["throat_plane"]["Ma_rel"]
-
-    # Load exit plane
-    Ma = exit_plane["Ma_rel"]
-    rho = exit_plane["d"]
-    w = exit_plane["w"]
-    beta = exit_plane["beta"]
-    blockage = exit_plane["blockage"]
-    
-    def sigmoid_blending_asymmetric(f1, f2, x, n, m):
-        sigma = x**n/(x**n+(1-x)**m)
-        return (1-sigma)*f1 + sigma*f2
-    
-    beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_throat, geometry, subsonic_deviation_model)
-    # beta_subsonic = np.sign(beta)*dm.get_subsonic_deviation(Ma, Ma_crit_exit, geometry, subsonic_deviation_model)
-    beta_supersonic = np.sign(beta)*math.arccosd(m_crit / rho / w / area_out )
-    # if Ma <= Ma_crit_exit:
-    if Ma <= Ma_crit_throat:
-        # Ma_inc = 0.5
-        # x = (Ma-Ma_inc)/(Ma_crit_exit-Ma_inc)
-        # x = (Ma-Ma_inc)/(Ma_crit_throat-Ma_inc)
-        # x = x*(x>0)*(x<1) + 0 * (x<0) + 1*(x>1)
-        # beta_model = sigmoid_blending_asymmetric(beta_subsonic, beta_supersonic, x, n = 3, m = 0.5)
-        beta_model = beta_subsonic
-    else:
-        beta_model = math.arccosd(m_crit / rho / w / area_out)
-        
-    # Compute error of guessed beta and deviation model
-    residual = math.cosd(beta_model) - math.cosd(beta)
-
-    return residual, beta_subsonic, beta_supersonic
-
 
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     r"""
