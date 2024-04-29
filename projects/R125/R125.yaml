@@ -1,15 +1,27 @@
-BC:
-  fluid_name: R125         # Fluid
-  p0_in: 3.65e6            # Inlet total pressure
-  T0_in: 463.15            # Inlet total temperature
-  p_out: 1.585e6           # Exit static pressure
-  alpha_in: 0              # Flow angle at first stator
-  omega: 3458              # Rotational speed
+operation_points:
+  fluid_name: R125
+  T0_in: 190 + 273.15
+  p0_in: 36.2e5
+  p_out : 15.85e5 
+  omega: 3810
+  alpha_in: 0
 
 
-loss_model: benner  # Loss model (Benner only for off-design, KO only other option)
-displacement_thickness : 0
-deviation_model : aungier
+model_options:
+  deviation_model : zero_deviation
+  blockage_model : 0.00  #flat_plate_turbulent
+  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  rel_step_fd: 1e-4
+  loss_model:
+    model: kacker_okapuu
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
 
 solver:
   method: lm
@@ -19,23 +31,58 @@ solver:
   derivative_rel_step: 1e-3
   display_progress: True
 
+solver_options:
+  method: hybr
+  tolerance: 1e-8
+  max_iterations: 100
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-3
+  display_progress: True
+
 
 geometry:
-  n_cascades: 2
-  r_ht_in: [0.6, 0.6]     # Hub to tip ratio
-  s: [0.00810605, 0.00730545]     # Pitch
-  c: [0.01320986, 0.01090814]     # Chord
-  b: [0.01011585, 0.00760931]     # Axial chord
-  H: [0.02041524, 0.02181628]     # Blade halloght
-  t_max: [0.00134406, 0.00110546] # Maximum blade thickness
-  o: [0.00140105, 0.00170127]     # Throat opening
-  We: [0.7854    , 0.78539816]    # Wedge angle (45 degrees in radians)
-  le: [0.00600448, 0.00600448]      # Leading edge radius
-  te: [0.00076057, 0.00760568]   # Trialing edge thickness
-  xi: [0.69854224, -0.79878082] # Stagger angle
-  theta_in: [0, -0.2618]   # Inlet metal angle
-  theta_out: [ 1.39708449, -1.33576165] # Exit metal angle
-  A_in: [0.00523744, 0.00523744]     # Inlet area
-  A_out: [0.00523744, 0.0059563]   # Exit area
-  t_cl: [0, 5e-4]            # Tip clearance
-  radius: [0.04083048, 0.04083048]    # Radius (should be constant)
+  cascade_type: ["stator", "rotor"]
+  radius_hub_in: [0.0296558098722470, 0.0296558098722470]
+  radius_hub_out: [0.0296557863275598, 0.0283522027992326]
+  radius_tip_in: [0.0494263527986391, 0.0494263763433263]
+  radius_tip_out: [0.0494263763433263, 0.0507299598716535]
+  pitch: [0.00565199385536298, 0.00662803455257531]
+  chord: [0.0106473088612715, 0.0106239763108052] 
+  stagger_angle: [0.698131700797732*180/np.pi, -0.801170263530059*180/np.pi] 
+  opening: [0.000981458433168469, 0.00151267676911608]
+  diameter_le: [2*0.00600448, 2*0.00600448] 
+  wedge_angle_le: [45.00, 45.00] 
+  metal_angle_le: [0*180/np.pi, -0.261797383150813*180/np.pi] 
+  metal_angle_te: [ 1.39626340159546*180/np.pi, -1.34054314390931*180/np.pi] 
+  thickness_te: [4.90729216584235e-05, 7.56338384558042e-05] 
+  thickness_max: [0.00212946177225429, 0.00188320045342651] 
+  tip_clearance: [0.00, 5e-4] 
+  throat_location_fraction: [1, 1]
+
+optimization:
+  objective_function: efficiency_ts
+  design_variables :
+    - omega_spec 
+    - diameter_spec 
+    - hub_to_tip_in
+    - hub_to_tip_out 
+    - aspect_ratio 
+    - pitch_to_chord 
+    - trailing_edge_to_opening  
+    - thickness_to_chord 
+    - metal_angle_le 
+    - metal_angle_te 
+  eq_constraints:
+    mass_flow_rate : 
+      value : 2.5
+      scale : 2.5
+    interstage_flaring : 
+      value : 1
+      scale : 1
+  # ineq_constraints:
+    # interstage_flaring : 
+    #    lower_bound : 0.8
+    #    upper_bound : 1
+    #    scale : 1
+  solver_options:
+    max_iter: 300
