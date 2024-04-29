@@ -7,13 +7,73 @@ from . import flow_model as flow
 from .. import properties as props
 import CoolProp as cp
 
+AVAILABLE_EQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
+AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
+AVAILABLE_OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
+AVAILABLE_DESIGN_VARIABLES = ["omega_spec", 
+                              "diameter_spec",
+                                "hub_to_tip_in",
+                                "hub_to_tip_out",
+                                "aspect_ratio",
+                                "pitch_to_chord",
+                                "trailing_edge_to_opening",
+                                "thickness_to_chord",
+                                "metal_angle_le",
+                                "metal_angle_te"
+                            ]
+
 def compute_optimal_turbine(config, initial_guess = None):
     
+    # Check objective function
+    if "objective_function" not in config["optimization"].keys():
+        raise ValueError(f"Error: Objective function is not specified in the configuration file. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
+    if not config["optimization"]["objective_function"] in AVAILABLE_OBJECTIVE_FUNCTIONS:
+        raise ValueError(f"Error: Objective function is not supported. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
+    
+    # Check equality constraints
+    if "eq_constraints" in config["optimization"].keys():
+        constraint_keys = config["optimization"]["eq_constraints"].keys() 
+        required_keys = {"scale", "value"}
+        for key in config["optimization"]["eq_constraints"].keys():
+            if key not in AVAILABLE_EQ_CONSTRAINTS:
+                raise ValueError(f"Error: Equality constraint {key} is not supported. Available equality constraints are: {', '.join(AVAILABLE_EQ_CONSTRAINTS)}")
+            if not set(list(config["optimization"]["eq_constraints"][key].keys())) == required_keys:
+                raise ValueError(f"Error: Missing keys for eq constraint {key}: {required_keys - set(config['optimization']['eq_constraints'][key].keys())}")
+    else:
+        config["optimization"]["eq_constraints"] = None
+
+    # Check inequality constraints
+    if "ineq_constraints" in config["optimization"].keys():
+        constraint_keys = config["optimization"]["ineq_constraints"].keys() 
+        required_keys = {"scale", "lower_bound", "upper_bound"}
+        for key in constraint_keys:
+            if key not in AVAILABLE_INEQ_CONSTRAINTS:
+                raise ValueError(f"Error: Inequality constraint {key} is not supported. Available inequality constraints are: {', '.join(AVAILABLE_INEQ_CONSTRAINTS)}")
+            if not set(list(config["optimization"]["ineq_constraints"][key].keys())) == required_keys:
+                raise ValueError(f"Error: Missing keys for ineq constraint {key}: {required_keys - set(config['optimization']['ineq_constraints'][key].keys())}")
+    else:
+        config["optimization"]["ineq_constraints"] = None
+
+    # Check design variables: Must be a list of strings 
+    if "design_variables" not in config["optimization"].keys():
+        raise ValueError(f"Error: design_variables is not specified in the configuration file")
+    else:
+        design_variables = config["optimization"]["design_variables"]
+        if not len(set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)) == 0:
+            raise ValueError(f"Error: Design variables are not supported: {set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)}")
+
+    # Check bounds: Must be a list of touples corresponding to the design variables
+    if "bounds" not in config["optimization"].keys():
+        config["optimization"]["bounds"] = None
+    else:
+        if not len(config["optimization"]["bounds"]) == len(config["optimization"]["design_variables"]):
+            raise ValueError(f"Error: Bounds not aligned with design variables. Number of bounds: {len(config['optimization']['bounds'])}. Number of design variables: {len(config['optimization']['design_variables'])}")
+
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
 
     # Get initial guess
-    x0 = problem.get_initial_guess(initial_guess = initial_guess)
+    x0 = problem.get_initial_guess(initial_guess)
         
     # Initialize solver object  
     max_iter = config["optimization"]["solver_options"]["max_iter"]  
@@ -38,9 +98,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     def __init__(self, config):
 
         # Get list of design variables
-        self.design_variables_keys = list(config["optimization"]["design_variables"])
+        self.design_variables_keys = config["optimization"]["design_variables"]
+        self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"omega_spec", "diameter_spec"}
         self.obj_func = config["optimization"]["objective_function"]
-        self.bounds = []
+        self.eq_constraints = config["optimization"]["eq_constraints"]
+        self.ineq_constraints = config["optimization"]["ineq_constraints"]
+        self.bounds = config["optimization"]["bounds"]
 
         # Update design point
         self.update_boundary_conditions(config["operation_points"])
@@ -67,23 +130,36 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Construct array with independent variables
         self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
 
-        # Update boundary conditions
+        # Calculate angular speed
         omega_spec = design_variables["omega_spec"]
         self.boundary_conditions["omega"] = self.get_omega(omega_spec, mass_flow, h0_in, d_is, h_is)
         
-        # Scale and compute full geometry
+        # Calculate mean radius
         diameter_spec = design_variables["diameter_spec"]
         self.geometry["radius_mean"] = self.get_radius(diameter_spec, mass_flow, h0_in, d_is, h_is) # Constant for all cascade with this formulation?
-        self.geometry["hub_to_tip"] = np.array([value for key, value in design_variables.items() if key.startswith('hub_to_tip')]) # TODO: Fix such that it is ensured that the values are placed accroding to index
-        self.geometry["aspect_ratio"] = np.array([value for key, value in design_variables.items() if key.startswith('aspect_ratio')])
-        self.geometry["pitch_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('pitch_to_chord')])
-        self.geometry["trailing_edge_to_opening"] = np.array([value for key, value in design_variables.items() if key.startswith('trailing_edge_to_opening')])
+        
+        # Assign geometry design variables to geometry attribute
+        for des_key in self.design_variables_geometry:
+            self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["omega_spec", "diameter_spec"])])
+        if "metal_angle_le" in design_variables.keys():
+            self.geometry["metal_angle_le"] = self.geometry["metal_angle_le"]*angle_range + angle_min 
+        if "metal_angle_te" in design_variables.keys():
+            self.geometry["metal_angle_te"] = self.geometry["metal_angle_te"]*angle_range + angle_min
+        
+        # self.geometry["hub_to_tip"] = np.array([value for key, value in design_variables.items() if key.startswith('hub_to_tip')]) # TODO: Fix such that it is ensured that the values are placed accroding to index
+        # self.geometry["aspect_ratio"] = np.array([value for key, value in design_variables.items() if key.startswith('aspect_ratio')])
+        # self.geometry["pitch_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('pitch_to_chord')])
+        # self.geometry["trailing_edge_to_opening"] = np.array([value for key, value in design_variables.items() if key.startswith('trailing_edge_to_opening')])
         # self.geometry["thickness_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('thickness_to_chord')])
-        self.geometry["metal_angle_le"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_le')])
-        self.geometry["metal_angle_te"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_te')])
+        # self.geometry["metal_angle_le"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_le')])
+        # self.geometry["metal_angle_te"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_te')])
         self.geometry = geom.calculate_geometry(self.geometry)
-        # self.geometry = geom.calculate_full_geometry(self.geometry)
 
+        # print("\n")
+        # for key, val in self.geometry.items():
+        #     print(f"{key}: {val}")
+        # stop
+    
         # Evaluate turbine model
         self.results = flow.evaluate_axial_turbine(
             self.vars_scaled,
@@ -93,17 +169,37 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.model_options,
             self.reference_values,
         )
-        if self.obj_func == 0:
-            self.f = 0 
-        elif self.obj_func == 'efficiency_ts':
-            self.f = -self.results["overall"]["efficiency_ts"].values[0]/100
 
-        cons = np.array((self.results["overall"]["mass_flow_rate"].values-mass_flow)/mass_flow)
-        areas = np.array(self.geometry["A_out"][0:-1] - self.geometry["A_in"][1:])
+        # Evaluate available objecitve functions
+        objective_functions = {"none" : 0,
+                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/100}                       
+        self.f = objective_functions[self.obj_func]
 
-        residuals = np.array(list(self.results["residuals"].values()))
-        self.c_eq = np.concatenate((residuals, cons, areas))
-        self.c_ineq = None
+        # Evaluate available equality constraints    
+        if self.eq_constraints is not None:
+            available_cons_eq = {"mass_flow_rate" : self.results["overall"]["mass_flow_rate"].values[0],
+                                "interstage_flaring" :  self.geometry["A_in"][1:]/self.geometry["A_out"][0:-1]}
+            cons_eq = np.array([])
+            for key in self.eq_constraints.keys():
+                cons_eq = np.append(cons_eq, (available_cons_eq[key] - self.eq_constraints[key]["value"])/self.eq_constraints[key]["scale"])
+
+            residuals = np.array(list(self.results["residuals"].values()))
+            self.c_eq = np.concatenate((residuals, cons_eq))
+        else:
+            self.c_eq = np.array(list(self.results["residuals"].values()))
+
+        # Evaluate available inequality constraints
+        if self.ineq_constraints is not None:
+            available_cons_ineq = {"interstage_flaring" : self.geometry["A_in"][1:]/self.geometry["A_out"][0:-1],
+                                #    "flaring" : self.geometry["flaring"],
+                                   }
+            cons_ineq = np.array([])
+            for key in self.ineq_constraints.keys():
+                cons_ineq = np.append(cons_ineq, (available_cons_ineq[key] - self.ineq_constraints[key]["lower_bound"])/self.ineq_constraints[key]["scale"])
+                cons_ineq = np.append(cons_ineq, (self.ineq_constraints[key]["upper_bound"] - available_cons_ineq[key])/self.ineq_constraints[key]["scale"])
+            self.c_ineq = cons_ineq
+        else:
+            self.c_ineq = None
 
         objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
         
@@ -111,7 +207,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     
     def get_bounds(self):
         # TODO: improve to do checks in case bounds are given 
-        if self.bounds == []:
+        if self.bounds == None:
             self.bounds = self.get_default_bounds()
 
         return self.bounds
@@ -127,14 +223,24 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Structure the initial guess for the design optimization. 
         The intial guess can either be provided by the user or given from a defualt value
 
+        x0 must be first
+        geometrical variables must follow the order of the cascades 
+
         """
         if initial_guess == None:
             self.extend_design_variables()
             initial_guess = self.get_default_initial_guess()
-        
-        # TODO: Do checks on given initial guess
-        # x0 must be first
-        # geometry with indices in key must be sortes from the smallest to largest
+
+        # Get keys with independent variables
+        number_of_cascades = len(self.geometry["cascade_type"])
+        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+            number_of_dof = number_of_cascades*6 + 1
+        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+            number_of_dof = number_of_cascades*6 + 1
+        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
+            number_of_dof = number_of_cascades*4 + 1
+        self.keys = list(initial_guess.keys())[0:number_of_dof]
+    
         self.design_variables_keys = initial_guess.keys()
 
         return np.array(list(initial_guess.values()))
@@ -151,8 +257,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 new_keys += ["omega_spec"]
             elif key == "diameter_spec":
                 new_keys += ["diameter_spec"]
-            elif key == "hub_to_tip":
-                new_keys += [f"hub_to_tip_{i+1}" for i in range(2*number_of_cascades)]
+            elif key == "hub_to_tip_in":
+                new_keys += [f"hub_to_tip_in_{i+1}" for i in range(number_of_cascades)]
+            elif key == "hub_to_tip_out":
+                new_keys += [f"hub_to_tip_out_{i+1}" for i in range(number_of_cascades)]
             elif key == "aspect_ratio":
                 new_keys += [f"aspect_ratio_{i+1}" for i in range(number_of_cascades)]
             elif key == "pitch_to_chord":
@@ -201,7 +309,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 if int(key[-1]) % 2 == 0:
                     initial_guess = np.append(initial_guess, 0.17) # -60 degrees for rotor
                 else:
-                    initial_guess = np.append(initial_guess, 0.94) # 80 degrees for stator 
+                    initial_guess = np.append(initial_guess, 0.94) # 80 degrees for stator
 
         initial_guess = dict(zip(self.design_variables_keys, initial_guess))
 
@@ -221,6 +329,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                     "s*_throat" + index: 0.15
                 })
             
+        # Adjust initial guess according to model options
         if self.model_options["choking_model"] == "evaluate_cascade_throat":
             initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not key.startswith("v*_in")}
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
@@ -303,7 +412,11 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
 
         # Define a reference mass flow rate
-        mass_flow_rate = design_point["mass_flow_rate"]
+        try:
+            mass_flow_rate = self.eq_constraints["mass_flow_rate"]["value"]
+        except:
+            mass_flow_rate = v0*d_isentropic
+
         # Define reference_values
         self.reference_values = {
             "s_range": s_isenthalpic - s_in,

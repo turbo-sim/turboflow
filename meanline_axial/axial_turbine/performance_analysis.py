@@ -582,7 +582,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         # Process turbine geometry
         geom.validate_turbine_geometry(config["geometry"])
         self.geometry = geom.calculate_full_geometry(config["geometry"])
-        self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
+        # self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
         self.model_options = config["model_options"]
