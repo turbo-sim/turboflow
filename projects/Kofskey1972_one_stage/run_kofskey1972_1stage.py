@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 1
+CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -49,14 +49,6 @@ if CASE == 1:
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
     print(solvers[0].problem.results["overall"]["efficiency_ts"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    # print(solvers[0].problem.results["cascade"]["mass_flow_crit_throat"])
-    # print(solvers[0].problem.results["plane"]["p0"])
-    # print(solvers[0].problem.results["plane"]["T0"])
-    # print(solvers[0].problem.results["plane"]["loss_total"])
-    # print(solvers[0].problem.results["plane"]["Ma_rel"])
-    print(len(solvers[0].problem.vars_real))
-    print(len(solvers[0].problem.results["residuals"]))
-    # print(solvers[0].problem.reference_values)
 
 elif CASE == 2:
     # Compute performance map according to config file
