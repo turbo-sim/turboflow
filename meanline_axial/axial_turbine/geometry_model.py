@@ -32,8 +32,10 @@ def validate_turbine_geometry(geom, display=False):
     # Define the list of keys that must be defined in the configuration file
     required_keys = {
         "cascade_type",
-        "radius_hub",
-        "radius_tip",
+        "radius_hub_in",
+        "radius_hub_out",
+        "radius_tip_in",
+        "radius_tip_out",
         "pitch",
         "chord",
         "stagger_angle",
@@ -145,63 +147,62 @@ def calculate_geometry(geometry):
     # Create a copy of the input dictionary to avoid mutating the original
     geom = geometry.copy()
 
-    # Compute hub and tip radius
+    # Get number of cascades
+    number_of_cascades = len(geom["cascade_type"])
+
+    # Get number of stages
+    if number_of_cascades > 1:
+        if math.is_even(number_of_cascades):
+            number_of_stages = int(number_of_cascades / 2)
+        else:
+            number_of_stages = int((number_of_cascades - 1) / 2)
+    else:
+        number_of_stages = 0
+
+    # Extract initial
     radius_mean = geom["radius_mean"]
-    hub_to_tip = geom["hub_to_tip"]
-    # radius_tip = 2*radius_mean/(1+hub_to_tip)
-    # radius_hub = hub_to_tip*radius_tip
+    hub_to_tip_in = geom["hub_to_tip_in"]
+    hub_to_tip_out = geom["hub_to_tip_out"]
 
-    # Compute Blade height
-    # height = radius_tip - radius_hub
-    # height_mean = np.array([(height[i] + height[i+1])/2 for i in range(0, len(height), 2)])
+    # Compute radius at hub and tip
+    radius_tip_in = 2*radius_mean/(1+hub_to_tip_in)
+    radius_tip_out = 2*radius_mean/(1+hub_to_tip_out)
+    radius_hub_in = hub_to_tip_in*radius_tip_in
+    radius_hub_out = hub_to_tip_out*radius_tip_out
 
-    hub_to_tip_in = hub_to_tip[::2]
-    hub_to_tip_out = hub_to_tip[1::2]
-    height_in = 2*radius_mean*(1-hub_to_tip_in)/(1+hub_to_tip_in)
-    height_out = 2*radius_mean*(1-hub_to_tip_out)/(1+hub_to_tip_out)
-    height_mean = (height_in + height_out)/2
-    height = 2*radius_mean*(1-hub_to_tip)/(1+hub_to_tip)
-    
-    radius_hub = radius_mean - height/2
-    radius_tip = radius_mean + height/2
+    # Compute blade heights
+    height_in = radius_tip_in - radius_hub_in
+    height_out = radius_tip_out - radius_hub_out
+    height = (height_in + height_out)/2
 
     # Compute chord
-    chord = height_mean/geom["aspect_ratio"]
+    chord = height/geom["aspect_ratio"]
 
     # Compute pitch
     pitch = geom["pitch_to_chord"]*chord
 
     # Compute opening
-    # opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
-    # opening = np.array([min(opening[i], pitch[i]*0.99) for i in range(len(opening))])
-
-    opening = pitch*math.cosd(geom["metal_angle_te"])
+    opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
+    opening = np.array([min(opening[i], pitch[i]*0.99) for i in range(len(opening))])
 
     # Compute maximum thickness
-    # thickness_max = geom["thickness_to_chord"]*chord
-    dTheta = abs(geom["metal_angle_le"] - geom["metal_angle_te"])
-    thickness_max = np.array([(0.15*(dTheta[i]*180/np.pi <= 40) + \
-            (0.15+1.25e-3*(dTheta[i]-40))*(40 < dTheta[i]*180/np.pi <= 120) + \
-            0.25*(dTheta[i]*180/np.pi > 120))*chord[i] for i in range(len(dTheta))])
-    
+    thickness_max = geom["thickness_to_chord"]*chord
+
     # Compute stagger angle
     stagger_angle = 0.5*(geom["metal_angle_le"] + geom["metal_angle_te"])
 
-    # Compute trailing edge thickness
-    trailing_edge_thickness = geom["trailing_edge_to_opening"] * opening
-
     # Compute axial chord
     chord_ax = chord*math.cosd(stagger_angle)
-
+    
     # Compute areas
-    A_in = 2*np.pi*radius_mean*height_in
-    A_out = 2*np.pi*radius_mean*height_out
+    A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
+    A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
     A_throat = 2*np.pi*radius_mean*height_out*opening/pitch
 
     # Define new geometry dictionary
     new_geometry = {
-                    "radius_hub" : radius_hub,
-                      "radius_tip" : radius_tip,
+                    "radius_hub_in" : radius_hub_in,
+                      "radius_tip_in" : radius_tip_in,
                       "pitch" : pitch,
                       "chord" : chord,
                       "opening" : opening,
@@ -212,7 +213,7 @@ def calculate_geometry(geometry):
                       "stagger_angle" : stagger_angle,
                       "diameter_le" : geom["diameter_le"],
                       "wedge_angle_le" : geom["wedge_angle_le"],
-                      "thickness_te" : trailing_edge_thickness,
+                      "thickness_te" : geom["thickness_te"],
                       "tip_clearance" : geom["tip_clearance"],
                       "throat_location_fraction" : geom["throat_location_fraction"],
                       "A_in" : A_in,
@@ -221,8 +222,8 @@ def calculate_geometry(geometry):
                       "radius_mean_in": np.ones(2)*radius_mean,
                       "radius_mean_out": np.ones(2)*radius_mean,
                       "radius_mean_throat": np.ones(2)*radius_mean,
-                      "number_of_stages": 1,
-                      "number_of_cascades": 2,
+                      "number_of_stages": number_of_stages,
+                      "number_of_cascades": number_of_cascades,
                       "hub_tip_ratio_in": hub_to_tip_in,
                       "height" : height,
                       "axial_chord" : chord_ax
@@ -265,57 +266,44 @@ def calculate_full_geometry(geometry):
     # Get the location of the throat as a fraction of meridional length
     throat_frac = geom["throat_location_fraction"]
 
-    # Extract initial radii and compute mean radius
-    radius_hub = geom["radius_hub"]
-    radius_tip = geom["radius_tip"]
-    radius_mean = (radius_hub + radius_tip) / 2  # Average of hub and tip radius
-
-    # Calculate shroud radius by adding clearance to tip radius
-    radius_shroud = geom["radius_tip"] + np.repeat(geom["tip_clearance"], 2)
-
-    # Calculate the inner and outer radii for the mean section
-    radius_mean_in = radius_mean[::2]  # Even indices: in
-    radius_mean_out = radius_mean[1::2]  # Odd indices: out
-    radius_mean_throat = calculate_throat_radius(
-        radius_mean_in, radius_mean_out, throat_frac
-    )
-
-    # Repeat calculations for hub
-    radius_hub_in = radius_hub[::2]
-    radius_hub_out = radius_hub[1::2]
+    # Extract initial radii and compute throat values 
+    radius_hub_in = geom["radius_hub_in"]
+    radius_hub_out = geom["radius_hub_out"]
+    radius_tip_in = geom["radius_tip_in"]
+    radius_tip_out = geom["radius_tip_out"]
     radius_hub_throat = calculate_throat_radius(
         radius_hub_in, radius_hub_out, throat_frac
     )
-
-    # Repeat calculations for tip
-    radius_tip_in = radius_tip[::2]
-    radius_tip_out = radius_tip[1::2]
     radius_tip_throat = calculate_throat_radius(
         radius_tip_in, radius_tip_out, throat_frac
-    )
+    ) 
 
-    # Repeat calculations for shroud
-    radius_shroud_in = radius_shroud[::2]
-    radius_shroud_out = radius_shroud[1::2]
+    # Calculate shroud radius by adding clearance to tip radius
+    radius_shroud_in = radius_tip_in + np.repeat(geom["tip_clearance"], number_of_stages)
+    radius_shroud_out = radius_tip_out + np.repeat(geom["tip_clearance"], number_of_stages)
     radius_shroud_throat = calculate_throat_radius(
         radius_shroud_in, radius_shroud_out, throat_frac
     )
 
+    # Calculate the inner and outer radii for the mean section
+    radius_mean_in = (radius_tip_in + radius_hub_in)/2
+    radius_mean_out = (radius_tip_out + radius_hub_out)/2
+    radius_mean_throat = calculate_throat_radius(
+        radius_mean_in, radius_mean_out, throat_frac
+    )
+
     # Compute hub to tip radius ratio
-    hub_tip_ratio = radius_hub / radius_tip
     hub_tip_ratio_in = radius_hub_in / radius_tip_out
     hub_tip_ratio_out = radius_hub_out / radius_tip_out
     hub_tip_ratio_throat = radius_hub_throat / radius_tip_throat
     
     # Compute blade height at different sections
-    height = geom["radius_tip"] - geom["radius_hub"]
     height_in = radius_tip_in - radius_hub_in
     height_out = radius_tip_out - radius_hub_out
     height_throat = radius_tip_throat - radius_hub_throat
     height = (height_in + height_out) / 2
 
     # Compute areas for the full, in, out, and throat sections
-    A = np.pi * (radius_tip**2 - radius_hub**2)
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
     A_throat = 2*np.pi*radius_mean_throat*height_throat*geom["opening"]/geom["pitch"]
@@ -324,7 +312,7 @@ def calculate_full_geometry(geometry):
     gauging_angle = math.arccosd(A_throat/A_out)
 
     # Compute flaring angle
-    flaring_angle = np.arctan((height_out - height_in) / axial_chord)
+    flaring_angle = np.arctan((height_out - height_in) / axial_chord / 2)
 
     # Compute geometric ratios
     aspect_ratio = height / axial_chord
@@ -340,8 +328,6 @@ def calculate_full_geometry(geometry):
         "number_of_stages": number_of_stages,
         "number_of_cascades": number_of_cascades,
         "axial_chord": axial_chord,
-        "radius_mean": radius_mean,
-        "radius_shroud": radius_shroud,
         "radius_mean_in": radius_mean_in,
         "radius_mean_out": radius_mean_out,
         "radius_mean_throat": radius_mean_throat,
@@ -354,11 +340,9 @@ def calculate_full_geometry(geometry):
         "radius_shroud_in": radius_shroud_in,
         "radius_shroud_out": radius_shroud_out,
         "radius_shroud_throat": radius_shroud_throat,
-        "hub_tip_ratio": hub_tip_ratio,
         "hub_tip_ratio_in": hub_tip_ratio_in,
         "hub_tip_ratio_out": hub_tip_ratio_out,
         "hub_tip_ratio_throat": hub_tip_ratio_throat,
-        "A": A,
         "A_in": A_in,
         "A_out": A_out,
         "A_throat": A_throat,
