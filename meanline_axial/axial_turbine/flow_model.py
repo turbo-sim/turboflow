@@ -188,7 +188,7 @@ def evaluate_axial_turbine(
 
     # Rename turbine inlet velocity
     v_in = variables["v_in"] * v0
-    
+
     for i in range(number_of_cascades):
         # Update angular speed
         angular_speed_cascade = angular_speed * (i % 2)
@@ -203,7 +203,7 @@ def evaluate_axial_turbine(
         # Rename variables
         cascade = "_" + str(i + 1)
         w_out = variables["w_out" + cascade] * v0
-        s_out = variables["s_out" + cascade] * s_range + s_min # TODO: change scaling
+        s_out = variables["s_out" + cascade] * s_range + s_min
         beta_out = variables["beta_out" + cascade] * angle_range + angle_min
         
         # Evaluate current cascade
@@ -285,7 +285,6 @@ def evaluate_axial_turbine(
         if len(utils.ensure_iterable(value)) == number_of_cascades
     }
     results["geometry"] = pd.DataFrame([geom_cascades])
-    
     
     return results
 
