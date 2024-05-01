@@ -335,9 +335,6 @@ def compute_critical_values(
     s_range = reference_values["s_range"]
     s_min = reference_values["s_min"]
 
-    # Load geometry
-    theta_out = geometry["metal_angle_te"]
-
     # Load input for critical cascade
     # TODO: use dictionary for input variables, not array indices
     # TODO: In that case we need a wrapper around compute_critical_values
@@ -370,7 +367,7 @@ def compute_critical_values(
     critical_throat_input = {
         "w": w_throat,
         "s": s_throat,
-        "beta" : np.sign(geometry["metal_angle_te"])*math.arccosd(geometry["A_throat"]/geometry["A_out"]),
+        "beta" : np.sign(geometry["gauging_angle"])*math.arccosd(geometry["A_throat"]/geometry["A_out"]),
         "rothalpy": critical_inlet_plane["rothalpy"],
     }
 

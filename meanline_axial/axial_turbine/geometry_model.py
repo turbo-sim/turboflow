@@ -40,18 +40,17 @@ def validate_turbine_geometry(geom, display=False):
         "chord",
         "stagger_angle",
         "opening",
-        "diameter_le",
-        "wedge_angle_le",
-        "metal_angle_le",
-        "metal_angle_te",
-        "thickness_te",
+        "leading_edge_diameter",
+        "leading_edge_wedge_angle",
+        "leading_edge_angle",
+        "trailing_edge_thickness",
         "tip_clearance",
-        "thickness_max",
+        "maximum_thickness",
         "throat_location_fraction",
     }
 
     # Angular variables need not be non-negative
-    angle_keys = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
+    angle_keys = ["leading_edge_angle", "stagger_angle"]
 
     # Check that there are no missing or extra variables
     utils.validate_keys(geom, required_keys, required_keys)
@@ -139,6 +138,7 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
         1 - throat_location_fraction
     ) * radius_in + throat_location_fraction * radius_out
 
+
 def calculate_geometry(geometry):
     """
     Convert the normalized design variables for geometry to geometric parameters used in turbine evaluation
@@ -181,52 +181,60 @@ def calculate_geometry(geometry):
     # Compute pitch
     pitch = geom["pitch_to_chord"]*chord
 
-    # Compute opening
-    opening = geom["thickness_te"]/geom["trailing_edge_to_opening"]
-    opening = np.array([min(opening[i], pitch[i]*0.99) for i in range(len(opening))])
-
     # Compute maximum thickness
-    thickness_max = geom["thickness_to_chord"]*chord
-
-    # Compute stagger angle
-    stagger_angle = 0.5*(geom["metal_angle_le"] + geom["metal_angle_te"])
-
-    # Compute axial chord
-    chord_ax = chord*math.cosd(stagger_angle)
+    gauging_angle = geom["gauging_angle"]
+    blade_camber = abs(geom["leading_edge_angle"] - gauging_angle)
+    maximum_thickness = np.array([(0.15*(blade_camber[i] <= 40) + \
+            (0.15+1.25e-3*(blade_camber[i]-40))*(40 < blade_camber[i] <= 120) + \
+            0.25*(blade_camber[i] > 120))*chord[i] for i in range(len(blade_camber))])
     
     # Compute areas
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
-    A_throat = 2*np.pi*radius_mean*height_out*opening/pitch
+    A_throat = A_out * math.cosd(gauging_angle)
+
+    # Compute opening
+    opening = A_throat*pitch/(2*np.pi*radius_mean*height_out)
+
+    # Compute trailing edge thickness
+    trailing_edge_thickness = geom["trailing_edge_to_opening"] * opening
+
+    # Compute stagger angle
+    stagger_angle = 0.5*(geom["leading_edge_angle"] + gauging_angle)
+
+    # Compute axial chord
+    chord_ax = chord*math.cosd(stagger_angle)
 
     # Define new geometry dictionary
     new_geometry = {
                     "radius_hub_in" : radius_hub_in,
                       "radius_tip_in" : radius_tip_in,
+                      "radius_hub_out" : radius_hub_out,
+                      "radius_tip_out" : radius_tip_out,
                       "pitch" : pitch,
                       "chord" : chord,
                       "opening" : opening,
-                      "thickness_max" : thickness_max,
+                      "maximum_thickness" : maximum_thickness,
                       "cascade_type" : geom["cascade_type"],
-                      "metal_angle_le" : geom["metal_angle_le"],
-                      "metal_angle_te" : geom["metal_angle_te"],
+                      "leading_edge_angle" : geom["leading_edge_angle"],
+                      "gauging_angle" : gauging_angle,
                       "stagger_angle" : stagger_angle,
-                      "diameter_le" : geom["diameter_le"],
-                      "wedge_angle_le" : geom["wedge_angle_le"],
-                      "thickness_te" : geom["thickness_te"],
+                      "leading_edge_diameter" : geom["leading_edge_diameter"],
+                      "leading_edge_wedge_angle" : geom["leading_edge_wedge_angle"],
+                      "trailing_edge_thickness" : trailing_edge_thickness,
                       "tip_clearance" : geom["tip_clearance"],
                       "throat_location_fraction" : geom["throat_location_fraction"],
-                      "A_in" : A_in,
-                      "A_out" : A_out, 
-                      "A_throat" : A_throat,
-                      "radius_mean_in": np.ones(2)*radius_mean,
-                      "radius_mean_out": np.ones(2)*radius_mean,
-                      "radius_mean_throat": np.ones(2)*radius_mean,
-                      "number_of_stages": number_of_stages,
-                      "number_of_cascades": number_of_cascades,
-                      "hub_tip_ratio_in": hub_to_tip_in,
-                      "height" : height,
-                      "axial_chord" : chord_ax
+                    #   "A_in" : A_in,
+                    #   "A_out" : A_out, 
+                    #   "A_throat" : A_throat,
+                    #   "radius_mean_in": np.ones(2)*radius_mean,
+                    #   "radius_mean_out": np.ones(2)*radius_mean,
+                    #   "radius_mean_throat": np.ones(2)*radius_mean,
+                    #   "number_of_stages": number_of_stages,
+                    #   "number_of_cascades": number_of_cascades,
+                    #   "hub_tip_ratio_in": hub_to_tip_in,
+                    #   "height" : height,
+                    #   "axial_chord" : chord_ax
                       }
     
     return new_geometry
@@ -259,9 +267,6 @@ def calculate_full_geometry(geometry):
             number_of_stages = int((number_of_cascades - 1) / 2)
     else:
         number_of_stages = 0
-
-    # Compute axial chord
-    axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
 
     # Get the location of the throat as a fraction of meridional length
     throat_frac = geom["throat_location_fraction"]
@@ -309,19 +314,22 @@ def calculate_full_geometry(geometry):
     A_throat = 2*np.pi*radius_mean_throat*height_throat*geom["opening"]/geom["pitch"]
 
     # Gauging angle
-    gauging_angle = math.arccosd(A_throat/A_out)
+    gauging_angle = math.arccosd(A_throat/A_out)*np.array([(-1)**i for i in range(number_of_cascades)])
+
+    # Compute axial chord
+    axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
 
     # Compute flaring angle
     flaring_angle = np.arctan((height_out - height_in) / axial_chord / 2)
 
     # Compute geometric ratios
-    aspect_ratio = height / axial_chord
+    aspect_ratio = height / geom["chord"]
     pitch_chord_ratio = geom["pitch"] / geom["chord"]
     solidity = 1.0 / pitch_chord_ratio
-    thickness_max_chord_ratio = geom["thickness_max"] / geom["chord"]
-    thickness_te_opening_ratio = geom["thickness_te"] / geom["opening"]
+    maximum_thickness_chord_ratio = geom["maximum_thickness"] / geom["chord"]
+    trailing_edge_thickness_opening_ratio = geom["trailing_edge_thickness"] / geom["opening"]
     tip_clearance_height = geom["tip_clearance"] / height
-    diameter_le_chord_ratio = geom["diameter_le"] / geom["chord"]
+    leading_edge_diameter_chord_ratio = geom["leading_edge_diameter"] / geom["chord"]
 
     # Create a dictionary with the newly computed parameters
     new_parameters = {
@@ -354,10 +362,10 @@ def calculate_full_geometry(geometry):
         "aspect_ratio": aspect_ratio,
         "pitch_chord_ratio": pitch_chord_ratio,
         "solidity": solidity,
-        "thickness_max_chord_ratio": thickness_max_chord_ratio,
-        "thickness_te_opening_ratio": thickness_te_opening_ratio,
+        "maximum_thickness_chord_ratio": maximum_thickness_chord_ratio,
+        "trailing_edge_thickness_opening_ratio": trailing_edge_thickness_opening_ratio,
         "tip_clearance_height_ratio": tip_clearance_height,
-        "diameter_le_chord_ratio": diameter_le_chord_ratio,
+        "leading_edge_diameter_chord_ratio": leading_edge_diameter_chord_ratio,
         "gauging_angle" : gauging_angle,
     }
 
@@ -433,24 +441,23 @@ def check_turbine_geometry(geometry, display=True):
     recommended_ranges = {
         "chord": {"min": 5e-3, "max": np.inf},
         "height": {"min": 5e-3, "max": np.inf},
-        "thickness_max": {"min": 1e-3, "max": np.inf},
-        "thickness_te": {"min": 5e-4, "max": np.inf},
+        "maximum_thickness": {"min": 1e-3, "max": np.inf},
+        "trailing_edge_thickness": {"min": 5e-4, "max": np.inf},
         "tip_clearance": {"min": 2e-4, "max": np.inf},
         "hub_tip_ratio": {"min": 0.50, "max": 0.95},
         "aspect_ratio": {"min": 0.8, "max": 5.0},
         "pitch_chord_ratio": {"min": 0.3, "max": 1.1},
         "stagger_angle": {"min": -10, "max": +70},
-        "metal_angle_le": {"min": -60, "max": +25},
-        "metal_angle_te": {"min": +40, "max": +80},
-        "wedge_angle_le": {"min": 10, "max": 60},
-        "diameter_le_chord_ratio": {"min": 0.03, "max": 0.30},
-        "thickness_max_chord_ratio": {"min": 0.05, "max": 0.30},
-        "thickness_te_opening_ratio": {"min": 0.00, "max": 0.40},
+        "leading_edge_angle": {"min": -60, "max": +25},
+        "leading_edge_wedge_angle": {"min": 10, "max": 60},
+        "leading_edge_diameter_chord_ratio": {"min": 0.03, "max": 0.30},
+        "maximum_thickness_chord_ratio": {"min": 0.05, "max": 0.30},
+        "trailing_edge_thickness_opening_ratio": {"min": 0.00, "max": 0.40},
         "tip_clearance_height_ratio": {"min": 0.0, "max": 0.05},
         "throat_location_fraction": {"min": 0.5, "max": 1.0},
     }
 
-    special_angles = ["metal_angle_le", "metal_angle_te", "stagger_angle"]
+    special_angles = ["leading_edge_angle", "stagger_angle"]
 
     # Get the the type of cascade
     cascade_types = geometry["cascade_type"]
@@ -539,13 +546,12 @@ def create_partial_geometry_from_optimization_variables(design_variables, cascad
     aspect_ratio = design_variables["aspect_ratio"]
     hub_tip_ratio = design_variables["hub_tip_ratio"]
 
-    metal_angle_le = design_variables["metal_angle_le"]
-    metal_angle_te = design_variables["metal_angle_te"]
-    thickness_te_opening_ratio = design_variables["thickness_te_opening_ratio"]
+    metal_angle_le = design_variables["leading_edge_angle"]
+    trailing_edge_thickness_opening_ratio = design_variables["trailing_edge_thickness_opening_ratio"]
 
-    diameter_le_chord_ratio = design_variables["diameter_le_chord_ratio"]
-    wedge_angle_le = design_variables["wedge_angle_le"]
-    thickness_max_chord_ratio = design_variables["thickness_max_chord_ratio"]
+    leading_edge_diameter_chord_ratio = design_variables["leading_edge_diameter_chord_ratio"]
+    leading_edge_wedge_angle = design_variables["leading_edge_wedge_angle"]
+    maximum_thickness_chord_ratio = design_variables["maximum_thickness_chord_ratio"]
     tip_clearance_height_ratio = design_variables["tip_clearance_height_ratio"]
     throat_location_fraction = design_variables["throat_location_fraction"]
 
@@ -599,11 +605,11 @@ def create_partial_geometry_from_optimization_variables(design_variables, cascad
 
     opening = pitch * math.cosd(metal_angle_te)
 
-    thickness_te = opening * thickness_te_opening_ratio
+    trailing_edge_thickness = opening * trailing_edge_thickness_opening_ratio
 
-    diameter_le = diameter_le_chord_ratio * chord
+    leading_edge_diameter = leading_edge_diameter_chord_ratio * chord
 
-    thickness_max = thickness_max_chord_ratio * chord
+    maximum_thickness = maximum_thickness_chord_ratio * chord
 
     tip_clearance = tip_clearance_height_ratio * height
 
@@ -626,12 +632,12 @@ def create_partial_geometry_from_optimization_variables(design_variables, cascad
         "chord": chord,
         "stagger_angle": stagger,
         "opening": opening,
-        "diameter_le": diameter_le,
-        "wedge_angle_le": wedge_angle_le,
+        "leading_edge_diameter": leading_edge_diameter,
+        "leading_edge_wedge_angle": leading_edge_wedge_angle,
         "metal_angle_le": metal_angle_le,
         "metal_angle_te": metal_angle_te,
-        "thickness_te": thickness_te,
-        "thickness_max": thickness_max,
+        "trailing_edge_thickness": trailing_edge_thickness,
+        "maximum_thickness": maximum_thickness,
         "tip_clearance": tip_clearance,
         "throat_location_fraction": throat_location_fraction,
     }

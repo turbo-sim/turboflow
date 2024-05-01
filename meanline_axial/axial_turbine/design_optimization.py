@@ -17,9 +17,8 @@ AVAILABLE_DESIGN_VARIABLES = ["omega_spec",
                                 "aspect_ratio",
                                 "pitch_to_chord",
                                 "trailing_edge_to_opening",
-                                "thickness_to_chord",
-                                "metal_angle_le",
-                                "metal_angle_te"
+                                "leading_edge_angle",
+                                "gauging_angle"
                             ]
 
 def compute_optimal_turbine(config, initial_guess = None):
@@ -127,6 +126,11 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Structure design variables to dictionary (Assume set of design variables) # TODO: Make flexible set of design variables 
         design_variables = dict(zip(self.design_variables_keys, x))
 
+        # d = design_variables
+        # print("\n")
+        # for key, val in d.items():
+        #     print(f"{key}: {val}")
+
         # Construct array with independent variables
         self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
 
@@ -139,27 +143,27 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.geometry["radius_mean"] = self.get_radius(diameter_spec, mass_flow, h0_in, d_is, h_is) # Constant for all cascade with this formulation?
         
         # Assign geometry design variables to geometry attribute
+
+        # d = self.geometry
+        # print("\n")
+        # for key, val in d.items():
+        #     print(f"{key}: {val}")
+
         for des_key in self.design_variables_geometry:
             self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["omega_spec", "diameter_spec"])])
-        if "metal_angle_le" in design_variables.keys():
-            self.geometry["metal_angle_le"] = self.geometry["metal_angle_le"]*angle_range + angle_min 
-        if "metal_angle_te" in design_variables.keys():
-            self.geometry["metal_angle_te"] = self.geometry["metal_angle_te"]*angle_range + angle_min
-        
-        # self.geometry["hub_to_tip"] = np.array([value for key, value in design_variables.items() if key.startswith('hub_to_tip')]) # TODO: Fix such that it is ensured that the values are placed accroding to index
-        # self.geometry["aspect_ratio"] = np.array([value for key, value in design_variables.items() if key.startswith('aspect_ratio')])
-        # self.geometry["pitch_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('pitch_to_chord')])
-        # self.geometry["trailing_edge_to_opening"] = np.array([value for key, value in design_variables.items() if key.startswith('trailing_edge_to_opening')])
-        # self.geometry["thickness_to_chord"] = np.array([value for key, value in design_variables.items() if key.startswith('thickness_to_chord')])
-        # self.geometry["metal_angle_le"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_le')])
-        # self.geometry["metal_angle_te"] = np.array([value*angle_range + angle_min for key, value in design_variables.items() if key.startswith('metal_angle_te')])
-        self.geometry = geom.calculate_geometry(self.geometry)
-
-        # print("\n")
-        # for key, val in self.geometry.items():
-        #     print(f"{key}: {val}")
-        # stop
+        self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min 
+        self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
+        self.geometry = geom.calculate_geometry(self.geometry)
+        self.geometry = geom.calculate_full_geometry(self.geometry)
+
+        # d = self.geometry
+        # print("\n")
+        # for key, val in d.items():
+        #     print(f"{key}: {val}")
+
+        # stop
+
         # Evaluate turbine model
         self.results = flow.evaluate_axial_turbine(
             self.vars_scaled,
@@ -269,10 +273,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 new_keys += [f"trailing_edge_to_opening_{i+1}" for i in range(number_of_cascades)]
             elif key == "thickness_to_chord":
                 new_keys += [f"thickness_to_chord_{i+1}" for i in range(number_of_cascades)]
-            elif key == "metal_angle_le":
-                new_keys += [f"metal_angle_le_{i+1}" for i in range(number_of_cascades)]
-            elif key == "metal_angle_te":
-                new_keys += [f"metal_angle_te_{i+1}" for i in range(number_of_cascades)]
+            elif key == "leading_edge_angle":
+                new_keys += [f"leading_edge_angle_{i+1}" for i in range(number_of_cascades)]
+            elif key == "gauging_angle":
+                new_keys += [f"gauging_angle_{i+1}" for i in range(number_of_cascades)]
 
         self.design_variables_keys = new_keys
 
@@ -300,12 +304,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 initial_guess = np.append(initial_guess, 0.1)
             elif key.startswith("thickness_to_chord"):
                 initial_guess = np.append(initial_guess, 0.2)
-            elif key.startswith("metal_angle_le"):
+            elif key.startswith("leading_edge_angle"):
                 if int(key[-1]) % 2 == 0:
                     initial_guess = np.append(initial_guess, 0.41) # -15 degrees for rotor
                 else:
                     initial_guess = np.append(initial_guess, 0.5) # 0 degrees for stator 
-            elif key.startswith("metal_angle_te"):
+            elif key.startswith("gauging_angle"):
                 if int(key[-1]) % 2 == 0:
                     initial_guess = np.append(initial_guess, 0.17) # -60 degrees for rotor
                 else:
@@ -472,12 +476,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 bounds += [(0.05, 0.4)]
             elif key.startswith("thickness_to_chord"):
                 bounds += [(0.15, 0.25)]
-            elif key.startswith("metal_angle_le"):
+            elif key.startswith("leading_edge_angle"):
                 if int(key[-1]) % 2 == 0: 
                     bounds += [(0.41, 0.92)] # Rotor (-15, 75) [degree]
                 else:
                     bounds += [(0.08, 0.58)] # Stator (-75, 15) [degree]
-            elif key.startswith("metal_angle_te"):
+            elif key.startswith("gauging_angle"):
                 if int(key[-1]) % 2 == 0: 
                     bounds += [(0.06, 0.28)] # Rotor (-40, -80) [degree]
                 else:

@@ -8,9 +8,9 @@ operation_points:
 
 
 model_options:
-  deviation_model : zero_deviation
+  deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
-  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
   loss_model:
     model: kacker_okapuu
@@ -50,12 +50,11 @@ geometry:
   chord: [0.0106473088612715, 0.0106239763108052] 
   stagger_angle: [0.698131700797732*180/np.pi, -0.801170263530059*180/np.pi] 
   opening: [0.000981458433168469, 0.00151267676911608]
-  diameter_le: [2*0.00600448, 2*0.00600448] 
-  wedge_angle_le: [45.00, 45.00] 
-  metal_angle_le: [0*180/np.pi, -0.261797383150813*180/np.pi] 
-  metal_angle_te: [ 1.39626340159546*180/np.pi, -1.34054314390931*180/np.pi] 
-  thickness_te: [4.90729216584235e-05, 7.56338384558042e-05] 
-  thickness_max: [0.00212946177225429, 0.00188320045342651] 
+  leading_edge_diameter: [2*0.00600448, 2*0.00600448] 
+  leading_edge_wedge_angle: [45.00, 45.00] 
+  leading_edge_angle: [0*180/np.pi, -0.261797383150813*180/np.pi] 
+  trailing_edge_thickness: [4.90729216584235e-05, 7.56338384558042e-05] 
+  maximum_thickness: [0.00212946177225429, 0.00188320045342651] 
   tip_clearance: [0.00, 5e-4] 
   throat_location_fraction: [1, 1]
 
@@ -69,13 +68,12 @@ optimization:
     - aspect_ratio 
     - pitch_to_chord 
     - trailing_edge_to_opening  
-    - thickness_to_chord 
-    - metal_angle_le 
-    - metal_angle_te 
+    - leading_edge_angle
+    - gauging_angle 
   eq_constraints:
     mass_flow_rate : 
-      value : 2.5
-      scale : 2.5
+      value : 10.66
+      scale : 10.66
     interstage_flaring : 
       value : 1
       scale : 1

@@ -413,7 +413,7 @@ def evaluate_cascade(
         # "d_throat": throat_plane["d"],
         # "d_crit_out": critical_state["exit_plane"]["d"],
         # "mass_flux_out" : exit_plane["w"]*exit_plane["d"],
-        "incidence": inlet_plane["beta"] - geometry["metal_angle_le"],
+        "incidence": inlet_plane["beta"] - geometry["leading_edge_angle"],
         # "w_crit" : critical_state["throat_plane"]["w"],
         # "beta_subsonic" : beta_sub,
         # "beta_supersonic" : beta_sup,

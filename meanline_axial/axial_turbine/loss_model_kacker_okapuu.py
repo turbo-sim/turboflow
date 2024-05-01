@@ -97,8 +97,8 @@ def get_profile_loss(flow_parameters, geometry):
             - "hub_tip_ratio_in" (float) : Hub to tip radius ratio at inlet.
             - "pitch" (float) : Pitch.
             - "chord" (float) : Chord length.
-            - "metal_angle_le" (float) : Inlet metal angle.
-            - "thickness_max" (float) : Maximum thickness.
+            - "leading_edge_angle" (float) : Inlet metal angle.
+            - "maximum_thickness" (float) : Maximum thickness.
 
     cascade_type : str
         Type of cascade ('stator' or 'rotor').
@@ -125,8 +125,8 @@ def get_profile_loss(flow_parameters, geometry):
     r_ht_in = geometry["hub_tip_ratio_in"]
     s = geometry["pitch"]
     c = geometry["chord"]
-    theta_in = geometry["metal_angle_le"]
-    t_max = geometry["thickness_max"]
+    theta_in = geometry["leading_edge_angle"]
+    t_max = geometry["maximum_thickness"]
     cascade_type = geometry["cascade_type"]
 
     # Reynolds number correction factor
@@ -214,7 +214,7 @@ def get_secondary_loss(flow_parameters, geometry):
             - "axial_chord" (float) : Blade span.
             - "height" (float) : Blade height.
             - "chord" (float) : Chord length.
-            - "metal_angle_le" (float) : Inlet metal angle.
+            - "leading_edge_angle" (float) : Inlet metal angle.
 
     Returns
     -------
@@ -232,7 +232,7 @@ def get_secondary_loss(flow_parameters, geometry):
     b = geometry["axial_chord"]
     H = geometry["height"]
     c = geometry["chord"]
-    theta_in = geometry["metal_angle_le"]
+    theta_in = geometry["leading_edge_angle"]
 
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
@@ -287,9 +287,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "thickness_te" (float) : Trailing edge thickness.
+            - "trailing_edge_thickness" (float) : Trailing edge thickness.
             - "opening" (float) : Throat width.
-            - "metal_angle_le" (float) : Inlet metal angle.
+            - "leading_edge_angle" (float) : Inlet metal angle.
 
     Returns
     -------
@@ -299,9 +299,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     """
 
-    t_te = geometry["thickness_te"]
+    t_te = geometry["trailing_edge_thickness"]
     o = geometry["opening"]
-    angle_in = geometry["metal_angle_le"]
+    angle_in = geometry["leading_edge_angle"]
     angle_out = flow_parameters["beta_out"]
 
     # Range of trailing edge to throat opening ratio

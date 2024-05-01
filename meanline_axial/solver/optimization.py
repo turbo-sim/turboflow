@@ -401,6 +401,7 @@ class OptimizationSolver:
             )
             # eps = 1e-4 * np.abs(x)
             eps = np.sqrt(np.finfo(float).eps)
+            # eps = 1e-5
             jac = approx_derivative(
                 fun_constr, x, method="2-point", f0=fun_constr_0, abs_step=eps
             )

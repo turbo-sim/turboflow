@@ -31,7 +31,7 @@ def compute_losses(input_parameters):
 
     # Assume angle of minimum incidence loss is equal to metal angle
     # TODO: Digitize Figure 2 from :cite:`moustapha_improved_1990`?
-    beta_des = geometry["metal_angle_le"]
+    beta_des = geometry["leading_edge_angle"]
 
     # Calculate inlet displacement thickness to height ratio
     delta_height = options["inlet_displacement_thickness_height_ratio"]
@@ -109,8 +109,8 @@ def get_profile_loss(flow_parameters, geometry):
             - "hub_tip_ratio_in" (float) : Hub to tip radius ratio at inlet.
             - "pitch" (float) : Pitch.
             - "chord" (float) : Chord length.
-            - "metal_angle_le" (float) : Inlet metal angle.
-            - "thickness_max" (float) : Maximum thickness.
+            - "leading_edge_angle" (float) : Inlet metal angle.
+            - "maximum_thickness" (float) : Maximum thickness.
 
     cascade_type : str
         Type of cascade ('stator' or 'rotor').
@@ -137,8 +137,8 @@ def get_profile_loss(flow_parameters, geometry):
     r_ht_in = geometry["hub_tip_ratio_in"]
     s = geometry["pitch"]
     c = geometry["chord"]
-    theta_in = geometry["metal_angle_le"]
-    t_max = geometry["thickness_max"]
+    theta_in = geometry["leading_edge_angle"]
+    t_max = geometry["maximum_thickness"]
     cascade_type = geometry["cascade_type"]
 
     # Reynolds number correction factor
@@ -225,9 +225,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "thickness_te" (float) : Trailing edge thickness.
+            - "trailing_edge_thickness" (float) : Trailing edge thickness.
             - "opening" (float) : Throat width.
-            - "metal_angle_le" (float) : Inlet metal angle.
+            - "leading_edge_angle" (float) : Inlet metal angle.
 
     Returns
     -------
@@ -237,9 +237,9 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     """
 
-    t_te = geometry["thickness_te"]
+    t_te = geometry["trailing_edge_thickness"]
     o = geometry["opening"]
-    angle_in = geometry["metal_angle_le"]
+    angle_in = geometry["leading_edge_angle"]
     angle_out = flow_parameters["beta_out"]
 
     # Range of trailing edge to throat opening ratio
@@ -418,7 +418,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
         Dictionary with the geometrical parameters describing the current cascade.
             - "pitch" (float) : Pitch.
             - "le" (float) : Leading edge diameter.
-            - "metal_angle_le" (float) : Inlet metal angle.
+            - "leading_edge_angle" (float) : Inlet metal angle.
             - "metal_angle_te" (float) : Exit metal angle.
 
     beta_des : float
@@ -441,8 +441,8 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     gamma = flow_parameters["gamma_out"]  # Specific heat ratio
 
     s = geometry["pitch"]  # Pitch
-    le = geometry["diameter_le"]  # Leading edge diameter
-    theta_in = geometry["metal_angle_le"]  # Inlet metal angle
+    le = geometry["leading_edge_diameter"]  # Leading edge diameter
+    theta_in = geometry["leading_edge_angle"]  # Inlet metal angle
     theta_out = geometry["metal_angle_te"]  # Exit metal angle
 
     # Compute incidence parameter

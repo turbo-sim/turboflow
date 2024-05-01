@@ -934,8 +934,8 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             s_out = entropy_distribution[i]
 
             # Rename necessary geometry
-            theta_in = geometry_cascade["metal_angle_le"]
-            theta_out = geometry_cascade["metal_angle_te"]
+            theta_in = geometry_cascade["leading_edge_angle"]
+            theta_out = geometry_cascade["gauging_angle"]
             A_out = geometry_cascade["A_out"]
             A_throat = geometry_cascade["A_throat"]
             A_in = geometry_cascade["A_in"]
