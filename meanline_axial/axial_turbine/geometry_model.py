@@ -139,7 +139,7 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     ) * radius_in + throat_location_fraction * radius_out
 
 
-def calculate_geometry(geometry):
+def prepare_geometry(geometry, radius_type):
     """
     Convert the normalized design variables for geometry to geometric parameters used in turbine evaluation
     
@@ -160,18 +160,44 @@ def calculate_geometry(geometry):
         number_of_stages = 0
 
     # Extract initial
-    radius_mean = geom["radius_mean"]
+    radius = geom["radius"]
     hub_to_tip_in = geom["hub_to_tip_in"]
     hub_to_tip_out = geom["hub_to_tip_out"]
 
     # Compute radius at hub and tip
-    radius_tip_in = 2*radius_mean/(1+hub_to_tip_in)
-    radius_tip_out = 2*radius_mean/(1+hub_to_tip_out)
-    radius_hub_in = hub_to_tip_in*radius_tip_in
-    radius_hub_out = hub_to_tip_out*radius_tip_out
+    if radius_type == "constant_mean":
+        radius_mean = radius
+        radius_tip_in = 2*radius_mean/(1+hub_to_tip_in)
+        radius_tip_out = 2*radius_mean/(1+hub_to_tip_out)
+        radius_hub_in = hub_to_tip_in*radius_tip_in
+        radius_hub_out = hub_to_tip_out*radius_tip_out
+        radius_mean_in = np.full_like(hub_to_tip_in, radius_mean)
+        radius_mean_out = np.full_like(hub_to_tip_out, radius_mean)
+    elif radius_type == "constant_hub":
+        radius_hub = radius
+        radius_tip_in = radius_hub/hub_to_tip_in
+        radius_tip_out = radius_hub/hub_to_tip_out
+        radius_mean_in = radius_tip_in*(1 + hub_to_tip_in)/2
+        radius_mean_out = radius_tip_out*(1 + hub_to_tip_out)/2
+        radius_hub_in = np.full_like(hub_to_tip_in, radius_hub)
+        radius_hub_out = np.full_like(hub_to_tip_out, radius_hub)
+    elif radius_type == "constant_tip":
+        radius_tip = radius
+        radius_hub_in = hub_to_tip_in*radius_tip
+        radius_hub_out = hub_to_tip_out*radius_tip
+        radius_tip_in = np.full_like(hub_to_tip_in, radius_tip)
+        radius_tip_out = np.full_like(hub_to_tip_out, radius_tip)
+        radius_mean_in = radius_tip_in*(1 + hub_to_tip_in)/2
+        radius_mean_out = radius_tip_out*(1 + hub_to_tip_out)/2
+
+    # Compute throat radius
+    radius_mean_throat = calculate_throat_radius(radius_mean_in, radius_mean_out, geom["throat_location_fraction"])
+    radius_hub_throat = calculate_throat_radius(radius_hub_in, radius_hub_out, geom["throat_location_fraction"])
+    radius_tip_throat = calculate_throat_radius(radius_tip_in, radius_tip_out, geom["throat_location_fraction"])
 
     # Compute blade heights
     height_in = radius_tip_in - radius_hub_in
+    height_throat = radius_tip_throat - radius_hub_throat
     height_out = radius_tip_out - radius_hub_out
     height = (height_in + height_out)/2
 
@@ -194,7 +220,7 @@ def calculate_geometry(geometry):
     A_throat = A_out * math.cosd(gauging_angle)
 
     # Compute opening
-    opening = A_throat*pitch/(2*np.pi*radius_mean*height_out)
+    opening = A_throat*pitch/(2*np.pi*radius_mean_throat*height_throat)
 
     # Compute trailing edge thickness
     trailing_edge_thickness = geom["trailing_edge_to_opening"] * opening
@@ -224,17 +250,6 @@ def calculate_geometry(geometry):
                       "trailing_edge_thickness" : trailing_edge_thickness,
                       "tip_clearance" : geom["tip_clearance"],
                       "throat_location_fraction" : geom["throat_location_fraction"],
-                    #   "A_in" : A_in,
-                    #   "A_out" : A_out, 
-                    #   "A_throat" : A_throat,
-                    #   "radius_mean_in": np.ones(2)*radius_mean,
-                    #   "radius_mean_out": np.ones(2)*radius_mean,
-                    #   "radius_mean_throat": np.ones(2)*radius_mean,
-                    #   "number_of_stages": number_of_stages,
-                    #   "number_of_cascades": number_of_cascades,
-                    #   "hub_tip_ratio_in": hub_to_tip_in,
-                    #   "height" : height,
-                    #   "axial_chord" : chord_ax
                       }
     
     return new_geometry

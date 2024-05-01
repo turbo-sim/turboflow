@@ -11,7 +11,7 @@ AVAILABLE_EQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
 AVAILABLE_DESIGN_VARIABLES = ["omega_spec", 
-                              "diameter_spec",
+                              "blade_jet_ratio",
                                 "hub_to_tip_in",
                                 "hub_to_tip_out",
                                 "aspect_ratio",
@@ -98,7 +98,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Get list of design variables
         self.design_variables_keys = config["optimization"]["design_variables"]
-        self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"omega_spec", "diameter_spec"}
+        self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"omega_spec", "blade_jet_ratio"}
         self.obj_func = config["optimization"]["objective_function"]
         self.eq_constraints = config["optimization"]["eq_constraints"]
         self.ineq_constraints = config["optimization"]["ineq_constraints"]
@@ -120,6 +120,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         mass_flow = self.reference_values["mass_flow_ref"]
         h_is = self.reference_values["h_out_s"]    
         d_is = self.reference_values["d_out_s"]
+        v0 = self.reference_values["v0"]
         angle_range = self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
 
@@ -139,30 +140,18 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.boundary_conditions["omega"] = self.get_omega(omega_spec, mass_flow, h0_in, d_is, h_is)
         
         # Calculate mean radius
-        diameter_spec = design_variables["diameter_spec"]
-        self.geometry["radius_mean"] = self.get_radius(diameter_spec, mass_flow, h0_in, d_is, h_is) # Constant for all cascade with this formulation?
+        blade_jet_ratio = design_variables["blade_jet_ratio"]
+        blade_speed = blade_jet_ratio*v0
+        self.geometry["radius"] = blade_speed/self.boundary_conditions["omega"]
         
         # Assign geometry design variables to geometry attribute
-
-        # d = self.geometry
-        # print("\n")
-        # for key, val in d.items():
-        #     print(f"{key}: {val}")
-
         for des_key in self.design_variables_geometry:
-            self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["omega_spec", "diameter_spec"])])
+            self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["omega_spec", "blade_jet_ratio"])])
         self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min 
         self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
-        self.geometry = geom.calculate_geometry(self.geometry)
+        self.geometry = geom.prepare_geometry(self.geometry, "constant_mean")
         self.geometry = geom.calculate_full_geometry(self.geometry)
-
-        # d = self.geometry
-        # print("\n")
-        # for key, val in d.items():
-        #     print(f"{key}: {val}")
-
-        # stop
 
         # Evaluate turbine model
         self.results = flow.evaluate_axial_turbine(
@@ -259,8 +248,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         for key in self.design_variables_keys:
             if key == "omega_spec":
                 new_keys += ["omega_spec"]
-            elif key == "diameter_spec":
-                new_keys += ["diameter_spec"]
+            elif key == "blade_jet_ratio":
+                new_keys += ["blade_jet_ratio"]
             elif key == "hub_to_tip_in":
                 new_keys += [f"hub_to_tip_in_{i+1}" for i in range(number_of_cascades)]
             elif key == "hub_to_tip_out":
@@ -292,8 +281,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         for key in self.design_variables_keys:
             if key == "omega_spec":
                 initial_guess = np.append(initial_guess, 1.2)
-            elif key == "diameter_spec":
-                initial_guess = np.append(initial_guess, 1.2)
+            elif key == "blade_jet_ratio":
+                initial_guess = np.append(initial_guess, 0.5)
             elif key.startswith("hub_to_tip"):
                 initial_guess = np.append(initial_guess, 0.6)
             elif key.startswith("aspect_ratio"):
@@ -464,8 +453,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 bounds += [(0.0, 0.32)]
             elif key == "omega_spec":
                 bounds += [(0.01, 10)]
-            elif key == "diameter_spec":
-                bounds += [(0.01, 10)]
+            elif key == "blade_jet_ratio":
+                bounds += [(0.1, 0.9)]
             elif key.startswith("hub_to_tip"):
                 bounds += [(0.6, 0.9)]
             elif key.startswith("aspect_ratio"):
