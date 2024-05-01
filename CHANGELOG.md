@@ -2,6 +2,13 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 01.05.2024
+- Blade jet ratio implemented as design variable
+- Updated prepare_geometry according to new set of design variables. Blade jet ratio assign a geometry, either hub, mean or tip, which is constant throughout the turbine. 
+- Updated geometrical model was somewhat detrimental to the convergence. Calculating the opening from the throat area was the source of this. The debugging was performed by creating a new branch, check_optimization, which holds the old geometrical model, and converges better. 
+- In addition to the step size for the finite difference approximation for the Jacobian, the convergence was sensitive to the scaling of the objective function 
+- Plot function to plot turbine in axial-radial plane
+
 ## 16.01.2024
 - Critcial exit flow angle is now calculated with deviation model
     - Add beta_crit_out as variable and another residual equation
