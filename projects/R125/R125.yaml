@@ -62,7 +62,7 @@ optimization:
   objective_function: efficiency_ts
   design_variables :
     - omega_spec 
-    - diameter_spec 
+    - blade_jet_ratio 
     - hub_to_tip_in
     - hub_to_tip_out 
     - aspect_ratio 

@@ -87,7 +87,7 @@ elif CASE == 3:
 
 elif CASE == 4:
     solvers = ml.compute_optimal_turbine(config)
-
+    fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 # Show plots
 # plt.show()
 

@@ -21,7 +21,7 @@ model_options:
   choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
   loss_model:
-    model: kacker_okapuu
+    model: benner
     loss_coefficient: stagnation_pressure
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
@@ -61,7 +61,7 @@ optimization:
   objective_function: efficiency_ts
   design_variables :
     - omega_spec 
-    - diameter_spec 
+    - blade_jet_ratio 
     - hub_to_tip_in
     - hub_to_tip_out 
     - aspect_ratio 
