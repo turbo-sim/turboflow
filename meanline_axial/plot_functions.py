@@ -380,3 +380,38 @@ def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".p
     """
     for ext in formats:
         fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
+
+def plot_axial_radial_plane(geometry):
+    
+    radius_hub_in = geometry["radius_hub_in"]
+    radius_hub_out = geometry["radius_hub_out"]
+    radius_tip_in = geometry["radius_tip_in"]
+    radius_tip_out = geometry["radius_tip_out"]
+    number_of_cascades = geometry["number_of_cascades"]
+    axial_chord = geometry["axial_chord"]
+    
+    
+    dx = 0.05*max(axial_chord)
+    x = np.array([])
+    for i in range(len(axial_chord)):
+        x = np.append(x, np.sum(axial_chord[0:i+1]) + i*dx)
+        x = np.append(x, np.sum(axial_chord[0:i+1]) + (i+1)*dx)
+    x[1:] = x[0:-1]
+    x[0] = 0
+
+    y_hub = np.array([val for pair in zip(radius_hub_in, radius_hub_out) for val in pair])
+    y_tip = np.array([val for pair in zip(radius_tip_in, radius_tip_out) for val in pair])
+
+    fig, ax = plt.subplots()
+    colors = ["0.5", "0.8"]
+    for i in range(number_of_cascades):    
+        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k')
+        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k')
+        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k')
+        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k')
+        
+        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = colors[i%2])
+    
+    plt.show()
+    
+    return fig, ax
