@@ -2,6 +2,12 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 02.05.2024
+- Correct hub_tip_ratio_in calculation in calculate full geometry. This affect performance analysis!
+- Add option to initialize optimization with feasable point. By giving the optimization a solved performance analysis problem, the result is converted to an initial guess for the design optimization. 
+- However, the geometry model is not fully consistent, as the stagger angle and maximum thickness is calculated for design optimization, but given for performance analysis. 
+- Also, the default initial guess and feasable initial guess can give very different geometries. 
+
 ## 01.05.2024
 - Blade jet ratio implemented as design variable
 - Updated prepare_geometry according to new set of design variables. Blade jet ratio assign a geometry, either hub, mean or tip, which is constant throughout the turbine. 
@@ -29,9 +35,6 @@
 ## 07.12.2023
 - Restructure utilities.py module into a subpackage with differentiated modules for the different utilities.
 - Add the first version of the cycle optimization functionality (recuperated brayton/rankine cycles)
-
-
-
 
 ## 07.12.2023
 - Removed throat calculation for actual cascade
