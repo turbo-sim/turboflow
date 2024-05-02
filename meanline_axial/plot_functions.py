@@ -411,7 +411,11 @@ def plot_axial_radial_plane(geometry):
         ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k')
         
         ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = colors[i%2])
-    
+    ax.grid(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel("Axial direction")
+    ax.set_ylabel("Radial direction")
     plt.show()
     
     return fig, ax
