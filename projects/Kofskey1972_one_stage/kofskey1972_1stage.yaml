@@ -60,16 +60,16 @@ geometry:
 optimization:
   objective_function: efficiency_ts
   design_variables :
-    - omega_spec 
+    - specific_speed 
     - blade_jet_ratio 
-    - hub_to_tip_in
-    - hub_to_tip_out 
+    - hub_tip_ratio_in
+    - hub_tip_ratio_out 
     - aspect_ratio 
-    - pitch_to_chord 
-    - trailing_edge_to_opening  
+    - pitch_chord_ratio 
+    - trailing_edge_thickness_opening_ratio  
     - leading_edge_angle
     - gauging_angle 
-  eq_constraints:
+  eq_constraints :
     mass_flow_rate : 
       value : 2.5
       scale : 2.5
@@ -81,5 +81,6 @@ optimization:
     #    lower_bound : 0.8
     #    upper_bound : 1
     #    scale : 1
+  radius_type : "constant_mean"
   solver_options:
     max_iter: 300

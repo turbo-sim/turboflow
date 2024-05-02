@@ -45,10 +45,10 @@ x0 = {'w_out_1': 267.78187967067004,
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
     print(solvers[0].problem.results["overall"]["efficiency_ts"])
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+
 
 elif CASE == 2:
     # Compute performance map according to config file
@@ -86,8 +86,13 @@ elif CASE == 3:
     ml.compute_performance(operation_points, config)
 
 elif CASE == 4:
-    solvers = ml.compute_optimal_turbine(config)
+    operation_points = config["operation_points"]
+
+    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
+
+    solvers = ml.compute_optimal_turbine(config, initial_guess = solvers[0].problem)
     fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+
 # Show plots
 # plt.show()
 

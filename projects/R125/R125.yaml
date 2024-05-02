@@ -8,9 +8,9 @@ operation_points:
 
 
 model_options:
-  deviation_model : aungier
+  deviation_model : zero_deviation
   blockage_model : 0.00  #flat_plate_turbulent
-  choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
   loss_model:
     model: kacker_okapuu
@@ -57,17 +57,18 @@ geometry:
   maximum_thickness: [0.00212946177225429, 0.00188320045342651] 
   tip_clearance: [0.00, 5e-4] 
   throat_location_fraction: [1, 1]
+  radius_type : "constant_mean"
 
 optimization:
   objective_function: efficiency_ts
   design_variables :
     - omega_spec 
     - blade_jet_ratio 
-    - hub_to_tip_in
-    - hub_to_tip_out 
+    - hub_tip_ratio_in
+    - hub_tip_ratio_out 
     - aspect_ratio 
-    - pitch_to_chord 
-    - trailing_edge_to_opening  
+    - pitch_chord_ratio 
+    - trailing_edge_thickness_opening_ratio  
     - leading_edge_angle
     - gauging_angle 
   eq_constraints:
