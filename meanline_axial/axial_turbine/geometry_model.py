@@ -161,8 +161,8 @@ def prepare_geometry(geometry, radius_type):
 
     # Extract initial
     radius = geom["radius"]
-    hub_to_tip_in = geom["hub_to_tip_in"]
-    hub_to_tip_out = geom["hub_to_tip_out"]
+    hub_to_tip_in = geom["hub_tip_ratio_in"]
+    hub_to_tip_out = geom["hub_tip_ratio_out"]
 
     # Compute radius at hub and tip
     if radius_type == "constant_mean":
@@ -205,15 +205,14 @@ def prepare_geometry(geometry, radius_type):
     chord = height/geom["aspect_ratio"]
 
     # Compute pitch
-    pitch = geom["pitch_to_chord"]*chord
+    pitch = geom["pitch_chord_ratio"]*chord
 
     # Compute maximum thickness
     gauging_angle = geom["gauging_angle"]
     blade_camber = abs(geom["leading_edge_angle"] - gauging_angle)
     maximum_thickness = np.array([(0.15*(blade_camber[i] <= 40) + \
             (0.15+1.25e-3*(blade_camber[i]-40))*(40 < blade_camber[i] <= 120) + \
-            0.25*(blade_camber[i] > 120))*chord[i] for i in range(len(blade_camber))])
-    
+            0.25*(blade_camber[i] > 120))*chord[i] for i in range(len(blade_camber))])    
     # Compute areas
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
@@ -223,13 +222,10 @@ def prepare_geometry(geometry, radius_type):
     opening = A_throat*pitch/(2*np.pi*radius_mean_throat*height_throat)
 
     # Compute trailing edge thickness
-    trailing_edge_thickness = geom["trailing_edge_to_opening"] * opening
+    trailing_edge_thickness = geom["trailing_edge_thickness_opening_ratio"] * opening
 
     # Compute stagger angle
     stagger_angle = 0.5*(geom["leading_edge_angle"] + gauging_angle)
-
-    # Compute axial chord
-    chord_ax = chord*math.cosd(stagger_angle)
 
     # Define new geometry dictionary
     new_geometry = {
@@ -313,7 +309,7 @@ def calculate_full_geometry(geometry):
     )
 
     # Compute hub to tip radius ratio
-    hub_tip_ratio_in = radius_hub_in / radius_tip_out
+    hub_tip_ratio_in = radius_hub_in / radius_tip_in
     hub_tip_ratio_out = radius_hub_out / radius_tip_out
     hub_tip_ratio_throat = radius_hub_throat / radius_tip_throat
     
@@ -583,8 +579,6 @@ def create_partial_geometry_from_optimization_variables(design_variables, cascad
     blade_speed = blade_jet_ratio * v0
 
     radius_mean_out = blade_speed / omega
-
-    # radius_type = ... # constant_mean, constant_hub, constant_tip
 
     if radius_type == "constant_mean":
         radius_mean = np.full_like(hub_tip_ratio, radius_mean_out)
