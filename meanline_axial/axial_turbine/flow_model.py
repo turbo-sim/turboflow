@@ -91,6 +91,10 @@ KEYS_OVERALL = [
     "h0_in",
     "h0_out",
     "h_out_s",
+    "specific_speed",
+    "blade_jet_ratio_hub",
+    "blade_jet_ratio_mean",
+    "blade_jet_ratio_tip",
 ]
 """List of keys for the overall performance metrics of the turbine. 
 This list is used to ensure the structure of the 'overall' dictionary in various functions."""
@@ -270,7 +274,7 @@ def evaluate_axial_turbine(
     # results["stage"] = pd.DataFrame([compute_stage_performance(results)])
 
     # Compute overall perfrormance
-    results["overall"] = pd.DataFrame([compute_overall_performance(results)])
+    results["overall"] = pd.DataFrame([compute_overall_performance(results, geometry)])
 
     # Store all residuals for export
     results["residuals"] = residuals
@@ -404,19 +408,8 @@ def evaluate_cascade(
         **loss_dict,
         "dh_s": dh_is,
         "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
-        # "Ma_throat": throat_plane["Ma_rel"],
-        # "beta_throat" : throat_plane["beta"],
         "mass_flow_crit_throat": critical_state["throat_plane"]["mass_flow"],
-        # "mass_flow_throat": throat_plane["mass_flow"],
-        # "w_throat" : throat_plane["w"],
-        # "Y_crit_out" : critical_state["exit_plane"]["loss_total"],
-        # "d_throat": throat_plane["d"],
-        # "d_crit_out": critical_state["exit_plane"]["d"],
-        # "mass_flux_out" : exit_plane["w"]*exit_plane["d"],
         "incidence": inlet_plane["beta"] - geometry["leading_edge_angle"],
-        # "w_crit" : critical_state["throat_plane"]["w"],
-        # "beta_subsonic" : beta_sub,
-        # "beta_supersonic" : beta_sup,
     }
     results["cascade"].loc[len(results["cascade"])] = cascade_data
 
@@ -1225,7 +1218,7 @@ def compute_stage_performance(results):
     return stages
 
 
-def compute_overall_performance(results):
+def compute_overall_performance(results, geometry):
     """
     Calculate the overall performance metrics of the turbine
 
@@ -1253,7 +1246,8 @@ def compute_overall_performance(results):
     # TODO: angular speed could be saved at each cascade. This would be needed anyways if we want to extend the code to machines with multiple angular speeds in the future (e.g., a multi-shaft gas turbine)
     angular_speed = results["boundary_conditions"]["omega"]
     v0 = results["reference_values"]["v0"]
-    h_out_s = results["reference_values"]["h_out_s"]  # FIXME: bad plaement of h_out_s variable?
+    h_out_s = results["reference_values"]["h_out_s"] 
+    d_out_s = results["reference_values"]["d_out_s"]
 
     # Calculation of overall performance
     p = results["plane"]["p"].values
@@ -1273,6 +1267,7 @@ def compute_overall_performance(results):
     efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
     power = mass_flow * (h0_in - h0_out)
     torque = power / angular_speed
+    specific_speed = angular_speed*(mass_flow/d_out_s)**0.5/((h0_in - h_out_s)**0.75)
 
     # Store all variables in dictionary
     overall = {
@@ -1294,6 +1289,10 @@ def compute_overall_performance(results):
         "h0_in": h0_in,
         "h0_out": h0_out,
         "h_out_s": h_out_s,
+        "specific_speed" : specific_speed,
+        "blade_jet_ratio_hub" : angular_speed*geometry["radius_hub_out"][-1]/v0,
+        "blade_jet_ratio_mean" : angular_speed*geometry["radius_mean_out"][-1]/v0,
+        "blade_jet_ratio_tip" : angular_speed*geometry["radius_tip_out"][-1]/v0,
     }
 
     # Check the dictionary has the expected keys

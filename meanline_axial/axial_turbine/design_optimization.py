@@ -5,21 +5,25 @@ from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
 from .. import properties as props
+from . import performance_analysis as pa
 import CoolProp as cp
 
 AVAILABLE_EQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
-AVAILABLE_DESIGN_VARIABLES = ["omega_spec", 
+AVAILABLE_DESIGN_VARIABLES = ["specific_speed", 
                               "blade_jet_ratio",
-                                "hub_to_tip_in",
-                                "hub_to_tip_out",
+                                "hub_tip_ratio_in",
+                                "hub_tip_ratio_out",
                                 "aspect_ratio",
-                                "pitch_to_chord",
-                                "trailing_edge_to_opening",
+                                "pitch_chord_ratio",
+                                "trailing_edge_thickness_opening_ratio",
                                 "leading_edge_angle",
                                 "gauging_angle"
                             ]
+AVAILABLE_GEOMETRIES = ["constant_mean",
+                        "constant_hub",
+                        "constant_tip"]
 
 def compute_optimal_turbine(config, initial_guess = None):
     
@@ -68,6 +72,14 @@ def compute_optimal_turbine(config, initial_guess = None):
         if not len(config["optimization"]["bounds"]) == len(config["optimization"]["design_variables"]):
             raise ValueError(f"Error: Bounds not aligned with design variables. Number of bounds: {len(config['optimization']['bounds'])}. Number of design variables: {len(config['optimization']['design_variables'])}")
 
+    # Check radius type
+    if "radius_type" not in config["optimization"]["radius_type"]:
+        config["optimization"]["radius_type"] = "constant_mean"
+    else:
+        if not config["optimization"]["radius_type"] in AVAILABLE_GEOMETRIES:
+            raise ValueError(f"Error: Radius type is not supported. Available radius types are: {', '.join(AVAILABLE_GEOMETRIES)}")
+
+
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
 
@@ -98,11 +110,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Get list of design variables
         self.design_variables_keys = config["optimization"]["design_variables"]
-        self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"omega_spec", "blade_jet_ratio"}
+        self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"specific_speed", "blade_jet_ratio"}
         self.obj_func = config["optimization"]["objective_function"]
         self.eq_constraints = config["optimization"]["eq_constraints"]
         self.ineq_constraints = config["optimization"]["ineq_constraints"]
         self.bounds = config["optimization"]["bounds"]
+        self.radius_type = config["optimization"]["radius_type"]
 
         # Update design point
         self.update_boundary_conditions(config["operation_points"])
@@ -127,17 +140,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Structure design variables to dictionary (Assume set of design variables) # TODO: Make flexible set of design variables 
         design_variables = dict(zip(self.design_variables_keys, x))
 
-        # d = design_variables
-        # print("\n")
-        # for key, val in d.items():
-        #     print(f"{key}: {val}")
-
         # Construct array with independent variables
         self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
 
         # Calculate angular speed
-        omega_spec = design_variables["omega_spec"]
-        self.boundary_conditions["omega"] = self.get_omega(omega_spec, mass_flow, h0_in, d_is, h_is)
+        specific_speed = design_variables["specific_speed"]
+        self.boundary_conditions["omega"] = self.get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)
         
         # Calculate mean radius
         blade_jet_ratio = design_variables["blade_jet_ratio"]
@@ -146,11 +154,11 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         
         # Assign geometry design variables to geometry attribute
         for des_key in self.design_variables_geometry:
-            self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["omega_spec", "blade_jet_ratio"])])
+            self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["specific_speed", "blade_jet_ratio"])])
         self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min 
         self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
-        self.geometry = geom.prepare_geometry(self.geometry, "constant_mean")
+        self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         self.geometry = geom.calculate_full_geometry(self.geometry)
 
         # Evaluate turbine model
@@ -223,6 +231,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         if initial_guess == None:
             self.extend_design_variables()
             initial_guess = self.get_default_initial_guess()
+        elif isinstance(initial_guess, pa.CascadesNonlinearSystemProblem):
+            initial_guess = self.convert_performance_analysis_results(initial_guess)
 
         # Get keys with independent variables
         number_of_cascades = len(self.geometry["cascade_type"])
@@ -246,22 +256,20 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         number_of_cascades = len(self.geometry["cascade_type"])
         new_keys = []
         for key in self.design_variables_keys:
-            if key == "omega_spec":
-                new_keys += ["omega_spec"]
+            if key == "specific_speed":
+                new_keys += ["specific_speed"]
             elif key == "blade_jet_ratio":
                 new_keys += ["blade_jet_ratio"]
-            elif key == "hub_to_tip_in":
-                new_keys += [f"hub_to_tip_in_{i+1}" for i in range(number_of_cascades)]
-            elif key == "hub_to_tip_out":
-                new_keys += [f"hub_to_tip_out_{i+1}" for i in range(number_of_cascades)]
+            elif key == "hub_tip_ratio_in":
+                new_keys += [f"hub_tip_ratio_in_{i+1}" for i in range(number_of_cascades)]
+            elif key == "hub_tip_ratio_out":
+                new_keys += [f"hub_tip_ratio_out_{i+1}" for i in range(number_of_cascades)]
             elif key == "aspect_ratio":
                 new_keys += [f"aspect_ratio_{i+1}" for i in range(number_of_cascades)]
-            elif key == "pitch_to_chord":
-                new_keys += [f"pitch_to_chord_{i+1}" for i in range(number_of_cascades)]
-            elif key == "trailing_edge_to_opening":
-                new_keys += [f"trailing_edge_to_opening_{i+1}" for i in range(number_of_cascades)]
-            elif key == "thickness_to_chord":
-                new_keys += [f"thickness_to_chord_{i+1}" for i in range(number_of_cascades)]
+            elif key == "pitch_chord_ratio":
+                new_keys += [f"pitch_chord_ratio_{i+1}" for i in range(number_of_cascades)]
+            elif key == "trailing_edge_thickness_opening_ratio":
+                new_keys += [f"trailing_edge_thickness_opening_ratio_{i+1}" for i in range(number_of_cascades)]
             elif key == "leading_edge_angle":
                 new_keys += [f"leading_edge_angle_{i+1}" for i in range(number_of_cascades)]
             elif key == "gauging_angle":
@@ -279,17 +287,17 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Define dictionary with given design variables
         initial_guess = np.array([]) 
         for key in self.design_variables_keys:
-            if key == "omega_spec":
+            if key == "specific_speed":
                 initial_guess = np.append(initial_guess, 1.2)
             elif key == "blade_jet_ratio":
                 initial_guess = np.append(initial_guess, 0.5)
-            elif key.startswith("hub_to_tip"):
+            elif key.startswith("hub_tip"):
                 initial_guess = np.append(initial_guess, 0.6)
             elif key.startswith("aspect_ratio"):
                 initial_guess = np.append(initial_guess, 1.5)
-            elif key.startswith("pitch_to_chord"):
+            elif key.startswith("pitch_chord_ratio"):
                 initial_guess = np.append(initial_guess, 0.9)
-            elif key.startswith("trailing_edge_to_opening"):
+            elif key.startswith("trailing_edge_thickness_opening_ratio"):
                 initial_guess = np.append(initial_guess, 0.1)
             elif key.startswith("thickness_to_chord"):
                 initial_guess = np.append(initial_guess, 0.2)
@@ -334,9 +342,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # self.keys used to merge with independent variables in get_optimization_values
         # This implementation only works with default initial guess
         return {**initial_guess_variables, **initial_guess} 
-                
-    def get_omega(self, omega_spec, mass_flow, h0_in, d_is, h_is):
-        return omega_spec*(h0_in-h_is)**(3/4)/((mass_flow/d_is)**0.5)
+          
+    def get_omega(self, specific_speed, mass_flow, h0_in, d_is, h_is):
+        return specific_speed*(h0_in-h_is)**(3/4)/((mass_flow/d_is)**0.5)
     
     def get_radius(self, diameter_spec, mass_flow, h0_in, d_is, h_is):
         return diameter_spec*(mass_flow/d_is)**0.5/((h0_in-h_is)**(1/4))/2
@@ -451,20 +459,18 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 bounds += [(0.0, 0.32)] 
             elif key.startswith("s_"):
                 bounds += [(0.0, 0.32)]
-            elif key == "omega_spec":
+            elif key == "specific_speed":
                 bounds += [(0.01, 10)]
             elif key == "blade_jet_ratio":
                 bounds += [(0.1, 0.9)]
-            elif key.startswith("hub_to_tip"):
+            elif key.startswith("hub_tip"):
                 bounds += [(0.6, 0.9)]
             elif key.startswith("aspect_ratio"):
                 bounds += [(1.0, 2.0)]
-            elif key.startswith("pitch_to_chord"):
+            elif key.startswith("pitch_chord_ratio"):
                 bounds += [(0.75, 1.10)]
-            elif key.startswith("trailing_edge_to_opening"):
+            elif key.startswith("trailing_edge_thickness_opening_ratio"):
                 bounds += [(0.05, 0.4)]
-            elif key.startswith("thickness_to_chord"):
-                bounds += [(0.15, 0.25)]
             elif key.startswith("leading_edge_angle"):
                 if int(key[-1]) % 2 == 0: 
                     bounds += [(0.41, 0.92)] # Rotor (-15, 75) [degree]
@@ -477,6 +483,49 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                     bounds += [(0.72, 0.94)] # Stator (40, 80) [degree]
 
         return tuple(bounds)
+    
+    def convert_performance_analysis_results(self, performance_problem):
+
+        """
+        Use result from a performance analysis to generate a feasable initial guess for design optimization
+        """
+
+        design_variables = self.design_variables_keys
+        radius_type = self.radius_type
+        mass_flow = self.reference_values["mass_flow_ref"]
+
+        geometry = performance_problem.geometry
+        overall = performance_problem.results["overall"]
+        vars_scaled = performance_problem.vars_scaled
+
+        angle_min = self.reference_values["angle_min"]
+        angle_range = self.reference_values["angle_range"]
+        d_out_s = self.reference_values["d_out_s"]
+        h0_in = self.boundary_conditions["h0_in"]
+        h_out_s = self.reference_values["h_out_s"]
+
+        initial_guess = {}
+        for design_variable in set(design_variables) - {"specific_speed", "blade_jet_ratio"}:
+            if "angle" in design_variable:
+                added_dict = {design_variable + f"_{i+1}" : (geometry[design_variable][i]-angle_min)/angle_range for i in range(len(geometry[design_variable]))}
+            else:
+                added_dict = {design_variable + f"_{i+1}" : geometry[design_variable][i] for i in range(len(geometry[design_variable]))}
+            initial_guess = {**initial_guess, **added_dict}
+
+
+        if "blade_jet_ratio" in design_variables:
+            if radius_type == "constant_mean":
+                initial_guess["blade_jet_ratio"] = overall["blade_jet_ratio_mean"].values[0]
+            elif radius_type == "constant_hub":
+                initial_guess["blade_jet_ratio"] = overall["blade_jet_ratio_hub"].values[0]
+            elif radius_type == "constant_mean":
+                initial_guess["blade_jet_ratio"] = overall["blade_jet_ratio_tip"].values[0]
+                
+        if "specific_speed" in design_variables:
+            angular_speed = overall["angular_speed"].values[0]
+            initial_guess["specific_speed"] = angular_speed*(mass_flow/d_out_s)**0.5/((h0_in - h_out_s)**0.75)
+
+        return {**vars_scaled, **initial_guess}
 
 def find_variable(cascades_data, variable):
     
@@ -489,3 +538,5 @@ def find_variable(cascades_data, variable):
             return cascades_data[key][variable]
 
     raise Exception(f"Could not find column {variable} in cascades_data")
+
+
