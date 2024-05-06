@@ -26,59 +26,9 @@ AVAILABLE_GEOMETRIES = ["constant_mean",
                         "constant_tip"]
 
 def compute_optimal_turbine(config, initial_guess = None):
-    
-    # Check objective function
-    if "objective_function" not in config["optimization"].keys():
-        raise ValueError(f"Error: Objective function is not specified in the configuration file. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
-    if not config["optimization"]["objective_function"] in AVAILABLE_OBJECTIVE_FUNCTIONS:
-        raise ValueError(f"Error: Objective function is not supported. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
-    
-    # Check equality constraints
-    if "eq_constraints" in config["optimization"].keys():
-        constraint_keys = config["optimization"]["eq_constraints"].keys() 
-        required_keys = {"scale", "value"}
-        for key in config["optimization"]["eq_constraints"].keys():
-            if key not in AVAILABLE_EQ_CONSTRAINTS:
-                raise ValueError(f"Error: Equality constraint {key} is not supported. Available equality constraints are: {', '.join(AVAILABLE_EQ_CONSTRAINTS)}")
-            if not set(list(config["optimization"]["eq_constraints"][key].keys())) == required_keys:
-                raise ValueError(f"Error: Missing keys for eq constraint {key}: {required_keys - set(config['optimization']['eq_constraints'][key].keys())}")
-    else:
-        config["optimization"]["eq_constraints"] = None
 
-    # Check inequality constraints
-    if "ineq_constraints" in config["optimization"].keys():
-        constraint_keys = config["optimization"]["ineq_constraints"].keys() 
-        required_keys = {"scale", "lower_bound", "upper_bound"}
-        for key in constraint_keys:
-            if key not in AVAILABLE_INEQ_CONSTRAINTS:
-                raise ValueError(f"Error: Inequality constraint {key} is not supported. Available inequality constraints are: {', '.join(AVAILABLE_INEQ_CONSTRAINTS)}")
-            if not set(list(config["optimization"]["ineq_constraints"][key].keys())) == required_keys:
-                raise ValueError(f"Error: Missing keys for ineq constraint {key}: {required_keys - set(config['optimization']['ineq_constraints'][key].keys())}")
-    else:
-        config["optimization"]["ineq_constraints"] = None
-
-    # Check design variables: Must be a list of strings 
-    if "design_variables" not in config["optimization"].keys():
-        raise ValueError(f"Error: design_variables is not specified in the configuration file")
-    else:
-        design_variables = config["optimization"]["design_variables"]
-        if not len(set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)) == 0:
-            raise ValueError(f"Error: Design variables are not supported: {set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)}")
-
-    # Check bounds: Must be a list of touples corresponding to the design variables
-    if "bounds" not in config["optimization"].keys():
-        config["optimization"]["bounds"] = None
-    else:
-        if not len(config["optimization"]["bounds"]) == len(config["optimization"]["design_variables"]):
-            raise ValueError(f"Error: Bounds not aligned with design variables. Number of bounds: {len(config['optimization']['bounds'])}. Number of design variables: {len(config['optimization']['design_variables'])}")
-
-    # Check radius type
-    if "radius_type" not in config["optimization"]["radius_type"]:
-        config["optimization"]["radius_type"] = "constant_mean"
-    else:
-        if not config["optimization"]["radius_type"] in AVAILABLE_GEOMETRIES:
-            raise ValueError(f"Error: Radius type is not supported. Available radius types are: {', '.join(AVAILABLE_GEOMETRIES)}")
-
+    # Check configuration
+    config = check_optimization_config(config)
 
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
@@ -538,5 +488,61 @@ def find_variable(cascades_data, variable):
             return cascades_data[key][variable]
 
     raise Exception(f"Could not find column {variable} in cascades_data")
+
+def check_optimization_config(config):
+
+     # Check objective function
+    if "objective_function" not in config["optimization"].keys():
+        raise ValueError(f"Error: Objective function is not specified in the configuration file. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
+    if not config["optimization"]["objective_function"] in AVAILABLE_OBJECTIVE_FUNCTIONS:
+        raise ValueError(f"Error: Objective function is not supported. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
+    
+    # Check equality constraints
+    if "eq_constraints" in config["optimization"].keys():
+        constraint_keys = config["optimization"]["eq_constraints"].keys() 
+        required_keys = {"scale", "value"}
+        for key in config["optimization"]["eq_constraints"].keys():
+            if key not in AVAILABLE_EQ_CONSTRAINTS:
+                raise ValueError(f"Error: Equality constraint {key} is not supported. Available equality constraints are: {', '.join(AVAILABLE_EQ_CONSTRAINTS)}")
+            if not set(list(config["optimization"]["eq_constraints"][key].keys())) == required_keys:
+                raise ValueError(f"Error: Missing keys for eq constraint {key}: {required_keys - set(config['optimization']['eq_constraints'][key].keys())}")
+    else:
+        config["optimization"]["eq_constraints"] = None
+
+    # Check inequality constraints
+    if "ineq_constraints" in config["optimization"].keys():
+        constraint_keys = config["optimization"]["ineq_constraints"].keys() 
+        required_keys = {"scale", "lower_bound", "upper_bound"}
+        for key in constraint_keys:
+            if key not in AVAILABLE_INEQ_CONSTRAINTS:
+                raise ValueError(f"Error: Inequality constraint {key} is not supported. Available inequality constraints are: {', '.join(AVAILABLE_INEQ_CONSTRAINTS)}")
+            if not set(list(config["optimization"]["ineq_constraints"][key].keys())) == required_keys:
+                raise ValueError(f"Error: Missing keys for ineq constraint {key}: {required_keys - set(config['optimization']['ineq_constraints'][key].keys())}")
+    else:
+        config["optimization"]["ineq_constraints"] = None
+
+    # Check design variables: Must be a list of strings 
+    if "design_variables" not in config["optimization"].keys():
+        raise ValueError(f"Error: design_variables is not specified in the configuration file")
+    else:
+        design_variables = config["optimization"]["design_variables"]
+        if not len(set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)) == 0:
+            raise ValueError(f"Error: Design variables are not supported: {set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)}")
+
+    # Check bounds: Must be a list of touples corresponding to the design variables
+    if "bounds" not in config["optimization"].keys():
+        config["optimization"]["bounds"] = None
+    else:
+        if not len(config["optimization"]["bounds"]) == len(config["optimization"]["design_variables"]):
+            raise ValueError(f"Error: Bounds not aligned with design variables. Number of bounds: {len(config['optimization']['bounds'])}. Number of design variables: {len(config['optimization']['design_variables'])}")
+
+    # Check radius type
+    if "radius_type" not in config["optimization"]:
+        config["optimization"]["radius_type"] = "constant_mean"
+    else:
+        if not config["optimization"]["radius_type"] in AVAILABLE_GEOMETRIES:
+            raise ValueError(f"Error: Radius type is not supported. Available radius types are: {', '.join(AVAILABLE_GEOMETRIES)}")
+        
+    return config
 
 
