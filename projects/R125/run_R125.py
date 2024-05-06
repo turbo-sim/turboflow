@@ -92,4 +92,14 @@ elif CASE == 3:
     ml.compute_performance(operation_points, config)
 
 elif CASE == 4:
-    solvers = ml.compute_optimal_turbine(config)
+    # operation_points = config["operation_points"]
+    # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
+    solvers = ml.compute_optimal_turbine(config, initial_guess = None)
+    if not solvers.convergence_history["constraint_violation"][-1] == 4.0832313918937047e-10:
+        print("constraint violation fails")
+    if not solvers.convergence_history["grad_count"][-1] == 80:
+        print("Number of iterations fails")
+    if not solvers.convergence_history["objective_value"][-1] ==  -0.9084032430486514:
+        print("Objecitve function fails")
+    # fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+

@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 4
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -46,9 +46,15 @@ if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
-    print(solvers[0].problem.results["overall"]["efficiency_ts"])
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-
+    print(solvers[0].problem.results["overall"]["efficiency_ts"].values[-1])
+    print(solvers[0].convergence_history["norm_residual"][-1])
+    print(solvers[0].convergence_history["func_count"][-1])
+    if not solvers[0].problem.results["overall"]["efficiency_ts"].values[-1] == 79.1050040422735:
+        print("Efficiency fail")
+    if not solvers[0].convergence_history["norm_residual"][-1] == 1.0806939526929114e-08:
+        print("Residual fail")
+    if not solvers[0].convergence_history["func_count"][-1] == 18:
+        print("Number of iterations fail")
 
 elif CASE == 2:
     # Compute performance map according to config file
@@ -88,9 +94,9 @@ elif CASE == 3:
 elif CASE == 4:
     operation_points = config["operation_points"]
 
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
+    # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
 
-    solvers = ml.compute_optimal_turbine(config, initial_guess = solvers[0].problem)
+    solvers = ml.compute_optimal_turbine(config, initial_guess = None)
     fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots

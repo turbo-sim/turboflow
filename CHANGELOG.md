@@ -2,6 +2,9 @@
 
 > WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
 
+## 06.05.2024
+- Manual test case
+
 ## 02.05.2024
 - Correct hub_tip_ratio_in calculation in calculate full geometry. This affect performance analysis!
 - Add option to initialize optimization with feasable point. By giving the optimization a solved performance analysis problem, the result is converted to an initial guess for the design optimization. 
