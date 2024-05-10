@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.deviation\_model module
+Deviation models
 ======================================================
 
 .. automodule:: meanline_axial.axial_turbine.deviation_model

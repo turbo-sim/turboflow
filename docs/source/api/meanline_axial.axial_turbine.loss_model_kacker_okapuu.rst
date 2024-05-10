@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.loss\_model\_kacker\_okapuu module
+Kacker & Okapuu loss model
 =================================================================
 
 .. automodule:: meanline_axial.axial_turbine.loss_model_kacker_okapuu

@@ -10,11 +10,10 @@ def validate_turbine_geometry(geom, display=False):
     - Ensures all required geometry parameters are specified in 'geom'.
     - Verifies that no parameters beyond the required set are included.
     - Checks 'number_of_cascades' is an integer and correctly dictates sizes of other parameters.
-    - Confirms 'radius_hub' and 'radius_tip' arrays have sizes twice that of 'number_of_cascades'.
-    - Validates that all other parameter arrays match the size of 'number_of_cascades'.
+    - Validates that all parameter arrays match the size of 'number_of_cascades'.
     - Asserts that all geometry parameter values are numeric (integers or floats).
     - Ensures non-angle parameters contain only non-negative values.
-    - Angle parameters ('metal_angle_leading', 'metal_angle_trailing') can be negative.
+    - Angle parameters ('leading_edge_angle', 'stagger_angle') can be negative.
 
     This function is intended as a preliminary check before in-depth geometry analysis.
 
@@ -77,12 +76,6 @@ def validate_turbine_geometry(geom, display=False):
         if not isinstance(value, np.ndarray):
             raise TypeError(f"Parameter '{key}' must be a NumPy array.")
 
-        # Check the size of the arrays
-        if key in ["radius_hub", "radius_tip"]:
-            if value.size != 2 * number_of_cascades:
-                raise ValueError(
-                    f"Size of '{key}' must be twice the number of cascades. Current value: {value}"
-                )
         else:
             if value.size != number_of_cascades:
                 raise ValueError(
@@ -116,7 +109,7 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     described in Eq. (3) of :cite:`ainley_method_1951`. The throat radius is computed
     as a linear combination of the inlet and outlet radii, weighted by the location of
     the throat expressed as a fraction of the axial length of the cascade.
-    For instance, a 'throat_location_fraction' of 5/6 would return the throat radius as:
+    For instance, a `throat_location_fraction` of 5/6 would return the throat radius as:
     (1/6)*radius_in + (5/6)*radius out.
 
     Parameters
@@ -141,7 +134,24 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
 
 def prepare_geometry(geometry, radius_type):
     """
-    Convert the normalized design variables for geometry to geometric parameters used in turbine evaluation
+
+    Convert the geometrical design variables to parameters suitable for turbine evaluation.
+
+    For design optimization, the geometrical design variables are defined as ratios, e.g. hub-to-tip radius and aspect ratio.
+    This function convert the set of geometrical design variables to a set which is suited for turbine evaluation. 
+    The function utilize `radius_type` to decide if the given radius is constant for hub, mean or tip throughout the turbine. 
+
+    Parameters
+    ----------
+    geometry : dict
+        A dictionary with all necessary geometrical parameters.
+    radius_type : str
+        A string deciding if hub, mean or tip radius is constant throughout the turbine. 
+
+    Returns
+    -------
+    dict
+        Set of geometry suited for turbine evaluation.
     
     """
     # Create a copy of the input dictionary to avoid mutating the original
@@ -257,11 +267,13 @@ def calculate_full_geometry(geometry):
 
     Parameters
     ----------
-    geometry (dict): A dictionary containing the input geometry parameters
+    geometry : dict
+        A dictionary containing the input geometry parameters
 
     Returns
     -------
-    dict: A new dictionary with both the original and newly computed geometry parameters.
+    dict 
+        A dictionary with both the original and newly computed geometry parameters.
     """
 
     # Create a copy of the input dictionary to avoid mutating the original
@@ -385,7 +397,7 @@ def calculate_full_geometry(geometry):
 
 def check_turbine_geometry(geometry, display=True):
     """
-    Checks if the geometry parameters are within the predefined recommended ranges.
+    Checks if the geometrical parameters are within the predefined recommended ranges.
 
 
     .. table:: Recommended Parameter Ranges and References
@@ -441,11 +453,13 @@ def check_turbine_geometry(geometry, display=True):
 
     Parameters
     ----------
-    geometry (dict): A dictionary containing the computed geometry of the turbine.
+    geometry : dict 
+        A dictionary containing the computed geometry of the turbine.
 
     Returns
     -------
-    list: A list of messages with a summary of the checks.
+    list 
+        A list of messages with a summary of the checks.
     """
 
     # Define good practice ranges for each parameter
@@ -548,122 +562,6 @@ def check_turbine_geometry(geometry, display=True):
         print(msg)
 
     return msg
-
-
-def create_partial_geometry_from_optimization_variables(design_variables, cascade_data):
-    cascade_type = design_variables["cascade_type"]
-    radius_type = design_variables["radius_type"]
-    pitch_chord_ratio = design_variables["pitch_chord_ratio"]
-    aspect_ratio = design_variables["aspect_ratio"]
-    hub_tip_ratio = design_variables["hub_tip_ratio"]
-
-    metal_angle_le = design_variables["leading_edge_angle"]
-    trailing_edge_thickness_opening_ratio = design_variables["trailing_edge_thickness_opening_ratio"]
-
-    leading_edge_diameter_chord_ratio = design_variables["leading_edge_diameter_chord_ratio"]
-    leading_edge_wedge_angle = design_variables["leading_edge_wedge_angle"]
-    maximum_thickness_chord_ratio = design_variables["maximum_thickness_chord_ratio"]
-    tip_clearance_height_ratio = design_variables["tip_clearance_height_ratio"]
-    throat_location_fraction = design_variables["throat_location_fraction"]
-
-    specific_speed = 0.9
-    blade_jet_ratio = 0.7
-
-    rho_out_is = 50
-    dh_is = 100e3
-    mass_flow = 50.00
-
-    v0 = np.sqrt(2 * dh_is)
-
-    omega = dh_is ** (0.75) / (mass_flow / rho_out_is) ** 0.50
-    blade_speed = blade_jet_ratio * v0
-
-    radius_mean_out = blade_speed / omega
-
-    if radius_type == "constant_mean":
-        radius_mean = np.full_like(hub_tip_ratio, radius_mean_out)
-        radius_hub = (2.0 * hub_tip_ratio) / (1.0 + hub_tip_ratio) * radius_mean_out
-        radius_tip = 2.0 / (1.0 + hub_tip_ratio) * radius_mean_out
-
-    elif radius_type == "constant_hub":
-        radius_hub_out = (
-            (2.0 * hub_tip_ratio[-1]) / (1.0 + hub_tip_ratio[-1]) * radius_mean_out
-        )
-        radius_hub = np.full_like(hub_tip_ratio, radius_hub_out)
-        radius_tip = radius_hub / hub_tip_ratio
-        radius_mean = 0.5 * (radius_hub + radius_mean)
-
-    elif radius_type == "constant_tip":
-        radius_tip_out = 2.0 / (1.0 + hub_tip_ratio[-1]) * radius_mean_out
-        radius_tip = np.full_like(hub_tip_ratio, radius_tip_out)
-        radius_hub = radius_hub * hub_tip_ratio
-        radius_mean = 0.5 * (radius_hub + radius_mean)
-    else:
-        raise ValueError(f"Invalid radius type: '{radius_type}'")
-
-    _height = radius_tip - radius_hub
-    height = 0.5 * (_height[::2] + _height[1::2])
-
-    axial_chord = height / aspect_ratio
-
-    stagger = 0.5 * (metal_angle_le + metal_angle_te)
-
-    chord = axial_chord / math.cosd(stagger)
-
-    pitch = chord * pitch_chord_ratio
-
-    opening = pitch * math.cosd(metal_angle_te)
-
-    trailing_edge_thickness = opening * trailing_edge_thickness_opening_ratio
-
-    leading_edge_diameter = leading_edge_diameter_chord_ratio * chord
-
-    maximum_thickness = maximum_thickness_chord_ratio * chord
-
-    tip_clearance = tip_clearance_height_ratio * height
-
-    # Give o_min different than o_exit?
-
-    # omega = specific_speed * (...)
-    # spouting_velocity = cascade_data["spouting_velocity"]
-
-    # # Compute exit radius from speed
-    # blade_speed = blade_jet_ratio * spouting_velocity
-    # radius_mean_out = blade_speed / omega
-
-    # # else:
-
-    geom = {
-        "cascade_type": cascade_type,
-        "radius_hub": radius_hub,
-        "radius_tip": radius_tip,
-        "pitch": pitch,
-        "chord": chord,
-        "stagger_angle": stagger,
-        "opening": opening,
-        "leading_edge_diameter": leading_edge_diameter,
-        "leading_edge_wedge_angle": leading_edge_wedge_angle,
-        "metal_angle_le": metal_angle_le,
-        "metal_angle_te": metal_angle_te,
-        "trailing_edge_thickness": trailing_edge_thickness,
-        "maximum_thickness": maximum_thickness,
-        "tip_clearance": tip_clearance,
-        "throat_location_fraction": throat_location_fraction,
-    }
-
-    return geom
-
-
-#  Two scenatios for optimization
-#  1. design from scratch
-#  2. design from existing geometry
-# Calculate the x_opt from "geometry" entry of configuration file
-# Getting the x_opt_0 is not a problem
-# We still need to define the fixed parameters / DOF and also the ub/lb and the constraint values
-
-# If config optimization defines initial guess for variable it uses it. If it does not define it, it tries to get it from geometyr. If geometry is not defined, then raises and error
-# Something similar for the bounds of the optimization
-
 
 # TODO: Check that this function behaves as intended
 # Make table of correct values and give reference to motivation

@@ -101,7 +101,7 @@ def isclose_significant_digits(a, b, significant_digits):
 def fill_array_with_increment(n):
     
     """
-    Fill an array of length 'n' with values that sum to 1,
+    Fill an array of length `n` with values that sum to 1,
     where each value is different but has the same increment
     between neighboring values.
     
@@ -196,4 +196,7 @@ def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return single_row_df
 
+if __name__ == "__main__":
 
+
+    print(fill_array_with_increment(3))

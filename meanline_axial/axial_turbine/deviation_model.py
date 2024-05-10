@@ -10,20 +10,20 @@ def get_subsonic_deviation(Ma_exit, Ma_crit, geometry, model):
 
     Available deviation models:
 
-    - "aungier": Calculate deviation using the method proposed by :cite:`aungier_turbine_2006`.
-    - "ainley_mathieson": Calculate deviation using the model proposed by :cite:`ainley_method_1951`.
-    - "metal_angle": Assume the exit flow angle is given by the gauge angle (zero deviation).
+    - `aungier`: Calculate deviation using the method proposed by :cite:`aungier_turbine_2006`.
+    - `ainley_mathieson`: Calculate deviation using the model proposed by :cite:`ainley_method_1951`.
+    - `zero_deviation`: Assume the exit flow angle is given by the gauge angle (zero deviation).
 
     Parameters
     ----------
-    deviation_model : str
-        The deviation model to use (e.g., 'aungier', 'ainley_mathieson', 'zero_deviation').
     Ma_exit : float or numpy.array
         The exit Mach number.
     Ma_crit : float
         The critical Mach number (possibly lower than one).
-    opening_to_pitch : float
-        The ratio of cascade opening to pitch.
+    geometry : dict
+        Dictionary of cascade geometry.
+    deviation_model : str
+        The deviation model to use (e.g., `aungier`, `ainley_mathieson`, `zero_deviation`).
 
     Returns
     -------
@@ -85,7 +85,7 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     .. math:: 
         \delta = 0.00
 
-    The flow angle is then computed based on the deviation and the gauging angle:
+    The flow angle (:math:`\beta`) is then computed based on the deviation and the gauging angle:
 
     .. math::
         \beta = 90 - \beta_g - \delta
@@ -96,16 +96,12 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
         Exit Mach number.
     Ma_crit : float
         Critical Mach number.
-    method : str, optional
-        Type of solver. Should be one of
-
-            * 'hybr'       
-            * 'lm'               
+    geometry : dict
+        Dictionary containing geometric parameters. Must contain floats `A_throat` and `A_out`, representing the cascade throat and exit area respectively.          
          
     Returns
     -------
-    `\beta` : float
-
+    float
         Flow angle in degrees.
     """
     # Calculate gauging angle wrt axial axis
@@ -141,24 +137,30 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     r"""
     Calculate the flow angle using the deviation model proposed by :cite:`ainley_method_1951`.
 
-    It involves a piecewise calculation
-    depending on the Mach number range:
-    - For Ma_exit < 0.50 (low-speed), the deviation is a function of the gauging angle:
-        :math::
-            \beta_g = cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
-    The fucntion is obtained by digitizing the Figure 5 in :cite:`ainley_method_1951`:
-        :math::
-            delt_0 = \beta_g - (35.0 + \frac{80.0-35.0}{79.0-40.0}\cdot (\beta_g-40.0))
-    - For 0.50 <= Ma_exit < Ma_crit (medium-speed), the deviation is calculated by a linear 
-      interpolation between low and critical Mach numbers:
-        :math::
-            delta = delta_0\cdot \left(1+\frac{0.5-\mathrm{Ma_exit}}{\mathr{Ma_crit}-0.5}\right)
-    - For Ma_exit >= 1.00 (supersonic), zero deviation is assumed:
-        :math:: 
-            \delta = 0.00
+    This model defines the gauing angle with respect to axial direction:
 
-    The flow angle (beta) is then computed based on the deviation and the gauging angle:
-    :math::
+    .. math::
+        \beta_g = \cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
+
+    - For :math:`\mathrm{Ma_exit} < 0.50` (low-speed), the deviation is a function of the gauging angle:
+
+    .. math::
+        \delta_0 = \beta_g - (35.0 + \frac{80.0-35.0}{79.0-40.0}\cdot (\beta_g-40.0))
+
+    - For :math:`0.50 \leq \mathrm{Ma_exit} < \mathrm{Ma_crit}` (medium-speed), the deviation is calculated by a linear 
+      interpolation between low and critical Mach numbers:
+
+    .. math::
+        \delta = \delta_0\cdot \left(1+\frac{0.5-\mathrm{Ma_exit}}{\mathrm{Ma_crit}-0.5}\right)
+
+    - For :math:`\mathrm{Ma_exit} \geq \mathrm{Ma_crit}` (supersonic), zero deviation is assumed:
+
+    .. math:: 
+        \delta = 0.00
+
+    The flow angle (:math:`\beta`) is then computed based on the deviation and the gauging angle:
+
+    .. math::
         \beta = \beta_g - \delta
 
     Parameters
@@ -168,12 +170,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     Ma_crit : float
         Critical Mach number.
     geometry : dict
-        Dictionary containing geometric parameters.
-        Should contain keys:
-        - 'A_throat': float
-            Cross-sectional area of the throat.
-        - 'A_out': float
-            Cross-sectional area of the exit.
+        Dictionary containing geometric parameters. Must contain floats `A_throat` and `A_out`, representing the cascade throat and exit area respectively.
 
     Returns
     -------
@@ -196,9 +193,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     # Compute deviation for 0.50 <= Ma_exit < 1.00
     medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < Ma_crit)
-    # delta[medium_speed_mask] = -delta_0/(Ma_crit-0.5)*Ma_exit[medium_speed_mask] + delta_0 + delta_0/(Ma_crit-0.5)*0.5
     delta[medium_speed_mask] = delta_0*(1+(0.5-Ma_exit[medium_speed_mask])/(Ma_crit-0.5))
-    # FIXME: no linear interpolation now?
 
     # Extrapolate to zero deviation for supersonic flow
     supersonic_mask = Ma_exit >= 1.00
@@ -214,9 +209,10 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
     Calculates the flow angle assuming zero deviation.
     This involves calculating the gauging angle, which is the angle of zero deviation.
 
-    The gauing angle is calculated as:
+    The gauging angle is calculated as:
+
     .. math::
-        \beta_g = cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
+        \beta_g = \cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})
 
     where :math:`A_\mathrm{throat}` is the cross-sectional area of the throat and
     :math:`A_\mathrm{out}` is the cross-sectional area of the exit.
@@ -228,12 +224,7 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
     Ma_crit : float
         Critical Mach number.
     geometry : dict
-        Dictionary containing geometric parameters.
-        Should contain keys:
-        - 'A_throat': float
-            Cross-sectional area of the throat.
-        - 'A_out': float
-            Cross-sectional area of the exit.
+        Dictionary containing geometric parameters. Must contain floats `A_throat` and `A_out`, representing the cascade throat and exit area respectively. 
 
     Returns
     -------

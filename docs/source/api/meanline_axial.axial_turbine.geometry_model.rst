@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.geometry\_model module
+Geometry model
 =====================================================
 
 .. automodule:: meanline_axial.axial_turbine.geometry_model

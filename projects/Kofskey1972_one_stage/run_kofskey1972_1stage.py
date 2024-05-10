@@ -47,14 +47,6 @@ if CASE == 1:
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
     print(solvers[0].problem.results["overall"]["efficiency_ts"].values[-1])
-    print(solvers[0].convergence_history["norm_residual"][-1])
-    print(solvers[0].convergence_history["func_count"][-1])
-    if not solvers[0].problem.results["overall"]["efficiency_ts"].values[-1] == 79.1050040422735:
-        print("Efficiency fail")
-    if not solvers[0].convergence_history["norm_residual"][-1] == 1.0806939526929114e-08:
-        print("Residual fail")
-    if not solvers[0].convergence_history["func_count"][-1] == 18:
-        print("Number of iterations fail")
 
 elif CASE == 2:
     # Compute performance map according to config file

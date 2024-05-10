@@ -328,9 +328,9 @@ OPTIONS_SOLVER = {
         "method": {
             "description": "Name of the numerical method used to solve the problem. Different methods may offer various advantages in terms of accuracy, speed, or stability, depending on the problem being solved",
             "is_mandatory": False,
-            "default_value": axial_turbine.SOLVERS_AVAILABLE[0],
+            "default_value": list(axial_turbine.SOLVER_MAP.keys())[0],
             "expected_type": str,
-            "valid_options": axial_turbine.SOLVERS_AVAILABLE,
+            "valid_options": list(axial_turbine.SOLVER_MAP.keys()),
         },
         "tolerance": {
             "description": "Termination tolerance for the solver. This value determines the precision of the solution. Lower tolerance values increase the precision but may require more computational time.",

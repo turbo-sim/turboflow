@@ -1,4 +1,4 @@
-meanline\_axial.math module
+Math
 ===========================
 
 .. automodule:: meanline_axial.math

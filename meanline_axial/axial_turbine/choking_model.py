@@ -20,6 +20,42 @@ def evaluate_choking(
     model_options,
     reference_values,
 ):
+    r"""
+    
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on selected choking model.
+
+    Parameters
+    ----------
+    choking_input : dict
+        Dictionary containing necessary input parameters required for selected choking model.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
+    exit_plane : dict
+        Dictionary containing data on the exit plane for the actual cascade operating condition.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    geometry : dict
+        Geometric parameters of the cascade.
+    angular_speed : float
+        Angular speed of the cascade.
+    model_options : dict
+        Options for the model used to evaluate choking.
+    reference_values : dict
+        Reference values used in the calculation, including the reference mass flow rate.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the residuals of choking model
+    dict
+        Dictionary containing state information on the critical conditions.
+
+    Raises
+    ------
+    ValueError
+        If an invalid choking model is provided.
+
+    """
     
     critical_cascade_functions = {CHOKING_MODELS[0] : evaluate_cascade_critical,
                                   CHOKING_MODELS[1] : evaluate_cascade_throat,
@@ -49,6 +85,42 @@ def evaluate_cascade_throat(
         angular_speed,
         model_options,
         reference_values,):
+    
+    r"""
+    
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the evaluate_cascade_throat choking model.
+
+    This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated
+    from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition, 
+    and by ensuring that the mach at the throat equals the critical at supercritical conditions. 
+
+    Parameters
+    ----------
+    choking_input : dict
+        Dictionary containing necessary input parameters required for selected choking model.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
+    exit_plane : dict
+        Dictionary containing data on the exit plane for the actual cascade operating condition.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    geometry : dict
+        Geometric parameters of the cascade.
+    angular_speed : float
+        Angular speed of the cascade.
+    model_options : dict
+        Options for the model used to evaluate choking.
+    reference_values : dict
+        Reference values used in the calculation, including the reference mass flow rate.
+
+    Returns
+    -------
+    dict
+        Dictionary containing the residuals of choking model.
+    dict
+        Dictionary containing state information on the critical conditions.
+
+    """
     
     # Rename variables
     loss_model = model_options["loss_model"]
@@ -106,6 +178,28 @@ def evaluate_cascade_throat(
 
 def interpolate_critical_state(p0_in, T0_in, Y):
 
+    r"""
+    Compute the critical mass flux and mach number from a correlation depending on the cascade inlet stagnation state and loss coefficient.
+    The correlation is made from linear regression analysis, and the regression coefficients are prescribed in the function. 
+
+    Parameters
+    ----------
+    p0_in : float
+        Cascade inlet stagnation pressure. 
+    T0_in : float
+        Cascade inlet stagnation temperature.
+    Y : float
+        Cascade throat total loss coefficnet.
+
+    Returns
+    -------
+    float
+        Critical mass flux.
+    float
+        Critical mach number.
+        
+    """
+
     x = np.array([1, p0_in, T0_in, Y, p0_in**2, T0_in**2, Y**2, p0_in*T0_in, p0_in*Y, T0_in*Y])
 
     coeff_mach_crit = np.array([ 9.97808878e-01, -8.59556818e-09,  2.18283101e-05, -3.38413836e-01,
@@ -131,14 +225,18 @@ def evaluate_cascade_critical(
     model_options,
     reference_values,):
     r"""
+
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_critical` choking model.
+
+    This choking model evaluate the critical state by optimizing the mass flow rate at the throat through the method of lagrange multipliers, and checks if the throat mach number exceed the critical. 
+    The exit flow angle is calculated by the selected devaition model at subsonic condition, and from the critical mass flow rate at supersonic conditions. 
+
     Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
     conservation and loss computation equations at the throat.
 
-    This function addresses the determination of the critical point in a cascade, which is defined as the
-    point of maximum mass flow rate for a given set of inlet conditions. Traditional approaches usually
-    treat this as an optimization problem, seeking to maximize the flow rate directly. However, this
-    function adopts an alternative strategy by converting the optimality condition into a set of equations.
-    The solution to the following set of equations is the same as the solution  of the corresponding optimization problem. 
+    The constrained optimization problem to maximize the mass flow rate can be converted to a set of equations through the method of lagrange multipliers. The method
+    utlize that at the optimal point, the gradient of the constraints are proportional to the gradient fo the objective function. Thus the solution to the optimization problem 
+    eaulas the solution as the following set of equations: 
         
     .. math::
 
@@ -173,6 +271,10 @@ def evaluate_cascade_critical(
     ----------
     critical_cascade_input : dict
         Dictionary containing additional input parameters required for compute_critical_values.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
+    exit_plane : dict
+        Dictionary containing data on the exit plane for the actual cascade operating condition.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -186,15 +288,10 @@ def evaluate_cascade_critical(
 
     Returns
     -------
-    tuple
-        - residuals_critical (dict): Dictionary containing the residuals of the Lagrange function
-          and the constraints ('L*', 'm*', 'Y*').
-        - critical_state (dict): Dictionary containing state information at the critical conditions.
-
-
-    .. note::
-
-        The evaluation of the critical conditions is essential for the correct modeling of choking.
+    dict
+        Dictionary containing the residuals of the Lagrange function and the constraints (`L*`, `m*`, `Y*`).
+    dict
+        Dictionary containing state information at the critical conditions.
 
     """
 
@@ -302,9 +399,9 @@ def compute_critical_values(
     Parameters
     ----------
     x_crit : numpy.ndarray
-        Array containing scaled critical variables [v_in*, w_throat*, s_throat*].
-    critical_cascade_input : dict
-        Dictionary containing additional input parameters, including inlet conditions and geometry.
+        Array containing scaled critical variables `[v_in*, w_throat*, s_throat*]`.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -321,7 +418,7 @@ def compute_critical_values(
     Returns
     -------
     numpy.ndarray
-        An array containing the computed mass flow at the throat plane and the residuals
+        An array containing the computed mass flow at the throat plane at critical state and the residuals
         for mass conservation and loss coefficient error.
 
     """
@@ -336,12 +433,6 @@ def compute_critical_values(
     s_min = reference_values["s_min"]
 
     # Load input for critical cascade
-    # TODO: use dictionary for input variables, not array indices
-    # TODO: In that case we need a wrapper around compute_critical_values
-    # TODO: to approximate the gradients
-    
-    # TODO: variables passed should already scaled as in evaluate_cascade()?
-    # TODO: problem with finite difference approximation?
     s_in = inlet_plane["s"]
     h0_in = inlet_plane["h0"]
     alpha_in = inlet_plane["alpha"]
@@ -420,9 +511,9 @@ def compute_critical_jacobian(
     Parameters
     ----------
     x : numpy.ndarray
-        Array of input variables for the compute_critical_values function.
-    critical_cascade_input : dict
-        Dictionary containing additional input parameters for the compute_critical_values function.
+        Array of input variables for the `compute_critical_values` function.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -478,6 +569,41 @@ def evaluate_cascade_isentropic_throat(
         model_options,
         reference_values,):
     
+    r"""
+    
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_isentropic_throat` choking model.
+
+    This choking model evaluates the cascade throat and checks if the throat mach number exceed unity. The throat is isentropic from inlet to throat. 
+    The exit flow angle is determined by ensuring that the mach at throat mach number equals the exit for subconic condition, and unity for supersonic conditions.
+
+    Parameters
+    ----------
+    choking_input : dict
+        Dictionary containing necessary input parameters required for selected choking model.
+    inlet_plane : dict
+        Dictionary containing data on the inlet plane for the actual cascade operating condition.
+    exit_plane : dict
+        Dictionary containing data on the exit plane for the actual cascade operating condition.
+    fluid : object
+        A fluid object with methods for thermodynamic property calculations.
+    geometry : dict
+        Geometric parameters of the cascade.
+    angular_speed : float
+        Angular speed of the cascade.
+    model_options : dict
+        Options for the model used to evaluate choking.
+    reference_values : dict
+        Reference values used in the calculation, including the reference mass flow rate.
+
+    Returns
+    -------
+    dict 
+        Dictionary containing the residuals of choking model.
+    dict
+        Dictionary satisfying the required elements for critical state dict. 
+
+    """
+    
     # Rename variables
     loss_model = model_options["loss_model"]
     blockage = model_options["blockage_model"]
@@ -503,8 +629,8 @@ def evaluate_cascade_isentropic_throat(
     loss_model,)
 
     # Evaluate critical mach
-    critical_state = {"throat_plane" : {"Ma_rel" : 1.0,
-                                        "mass_flow" : 2.7}}
+    critical_state = {"throat_plane" : {"Ma_rel" : np.nan,
+                                        "mass_flow" : np.nan}}
     
     choking_residual = throat_plane["Ma_rel"]-min(exit_plane["Ma_rel"], 1)
 

@@ -15,7 +15,7 @@ BLOCKAGE_MODELS = ["flat_plate_turbulent"]
 
 # Keys of the information that should be stored in results
 KEYS_KINEMATIC = [
-    "u",
+    "blade_speed",
     "v",
     "v_m",
     "v_t",
@@ -47,7 +47,7 @@ KEYS_PLANE = (
     ]
 )
 """List of keys for the plane performance metrics of the turbine. 
-This list is used to ensure the structure of the 'plane' dictionary in various functions."""
+This list is used to initialize a dataframe used to store plane specific performance metrics."""
 
 KEYS_CASCADE = [
     "loss_total",
@@ -70,40 +70,7 @@ KEYS_CASCADE = [
 ]
 
 """List of keys for the cascade performance metrics of the turbine. 
-This list is used to ensure the structure of the 'cascade' dictionary in various functions."""
-
-KEYS_OVERALL = [
-    "PR_tt",
-    "PR_ts",
-    "mass_flow_rate",
-    "efficiency_tt",
-    "efficiency_ts",
-    "efficiency_ts_drop_kinetic",
-    "efficiency_ts_drop_losses",
-    "power",
-    "torque",
-    "angular_speed",
-    "exit_flow_angle",
-    "exit_velocity",
-    "spouting_velocity",
-    "last_blade_velocity",
-    "blade_jet_ratio",
-    "h0_in",
-    "h0_out",
-    "h_out_s",
-    "specific_speed",
-    "blade_jet_ratio_hub",
-    "blade_jet_ratio_mean",
-    "blade_jet_ratio_tip",
-]
-"""List of keys for the overall performance metrics of the turbine. 
-This list is used to ensure the structure of the 'overall' dictionary in various functions."""
-
-KEYS_STAGE = [
-    "reaction",
-]
-"""List of keys for the stage performance metrics of the turbine. 
-This list is used to ensure the structure of the 'stage' dictionary in various functions."""
+his list is used to initialize a dataframe used to store plane specific performance metrics."""
 
 def evaluate_axial_turbine(
     variables,
@@ -116,22 +83,18 @@ def evaluate_axial_turbine(
     """
     Compute the performance of an axial turbine by evaluating a series of cascades.
 
-    This function evaluates each cascade in the series.
-    It begins by loading essential inputs such as geometry, boundary conditions, and reference values, which are integral to the assessment process.
+    The function iterates through each cascade, accumulating data on both performance and residuals used to evaluate the physicality of the flow. 
+    Between each cascade, the space between the cascades is modelled to give the input to the next cascade.
 
-    The evaluation proceeds cascade by cascade, employing two key functions in a structured sequence:
+    The results are organized into a dictionary that includes:
 
-    1. `evaluate_cascade`: Compute flow at the inlet station, throat, and exit planes of each cascade. In addition, this function evaluates
-    the turbine performance at the critical point, which is essential to model the correct behavior under choking conditions.
-    2. `evaluate_cascade_interspace`: Calculate the flow conditions after the interspace between consecutive cascades to obtain conditions at the inlet of the next cascade.
-
-    As the function iterates through each cascade, it accumulates data in a structured format. The results are organized into a dictionary that includes:
-
-    - 'cascade': Contains data specific to each cascade in the series, including loss coefficients and critical conditions.
-    - 'plane': Contains data specific to each flow station, including thermodynamic properties and velocity triangles.
-    - 'stage': Contains data specific to each turbine stage, including degree of reaction.
-    - 'overall': Summarizes the overall performance of the turbine, including total mass flow rate, efficiency, power output, and other key performance indicators.
-    - 'residuals': Summarizes the mismatch in the nonlinear system of equations used to model the turbine.
+    - `cascade`: Contains data specific to each cascade in the series, including loss coefficients and critical conditions.
+    - `plane`: Contains data specific to each flow station, including thermodynamic properties and velocity triangles.
+    - `stage`: Contains data specific to each turbine stage, including degree of reaction.
+    - `geometry`: Contains data on the turbine geometry. 
+    - `overall`: Summarizes the overall performance of the turbine, including mass flow rate, efficiency and power output.
+    - `reference_values`: Contain supplementary information. 
+    - `residuals`: Summarizes the mismatch in the nonlinear system of equations used to model the turbine.
 
     .. note::
 
@@ -141,7 +104,7 @@ def evaluate_axial_turbine(
     Parameters
     ----------
     variables : dict
-        Dictionary containing variable for the cascades.
+        Dictionary containing flow variable for the cascades.
     boundary_conditions : dict
         Dictionary containing boundary conditions for the series of cascades.
     geometry : dict
@@ -151,14 +114,13 @@ def evaluate_axial_turbine(
     model_options : dict
         Dictionary containing various model options.
     reference_values : dict
-        Dictionary containing reference values for normalization.
+        Dictionary containing reference values for scaling.
 
     Returns
     -------
     results : dict
         Dictionary containing the evaluated results, including planes, cascades, stage, overall,
         and geometry information.
-
 
     """
 
@@ -197,7 +159,7 @@ def evaluate_axial_turbine(
         # Update angular speed
         angular_speed_cascade = angular_speed * (i % 2)
 
-        # update geometry for current cascade #FIXME for new geometry model
+        # update geometry for current cascade
         geometry_cascade = {
             key: values[i]
             for key, values in geometry.items()
@@ -237,11 +199,11 @@ def evaluate_axial_turbine(
             reference_values,
         )
 
-        # Add cascade residuals to residual arrays
+        # Add cascade residuals to residual array
         cascade_residuals = utils.add_string_to_keys(cascade_residuals, f"_{i+1}")
         residuals.update(cascade_residuals)
 
-        # Calculate input of next cascade (Assume no change in density)
+        # Calculate input of next cascade 
         if i != number_of_cascades - 1:
             (
                 h0_in,
@@ -308,12 +270,9 @@ def evaluate_cascade(
     Evaluate the performance of a cascade configuration.
     
     This function evaluates the cascade performance by considering inlet, throat, and exit planes.
-    It also evaluates the cascade at point of choking. The results are stored in a dictionary. The function 
-    The function returns a dictionary of residuals that includes the mass balance error at both the throat and exit, loss coefficient errors, 
+    It also determines the condition for choking according to the selected choking model, and evaluates if the cascade is choked or not. The results are stored in a dictionary.
+    The function returns a dictionary of residuals that includes the mass balance error at both the inlet and exit, loss coefficient errors, 
     and the residuals related to the critical state and choking condition.
-    
-    This function relies on auxiliary functions like evaluate_cascade_inlet, evaluate_cascade_exit,
-    evaluate_cascade_critical, compute_residual_flow_angle, and compute_residual_mach_throat.
     
     Parameters
     ----------
@@ -341,7 +300,7 @@ def evaluate_cascade(
     Returns
     -------
     residuals : dict
-        A dictionary containing the residuals of the evaluation, which are key indicators of the model's accuracy and physical realism.
+        A dictionary containing the residuals of the cascade evaluation.
 
     """
 
@@ -397,13 +356,11 @@ def evaluate_cascade(
     }
 
     # Return plane data in dataframe
-    # TODO: add critical state as another plane?
     planes = [inlet_plane, exit_plane]
     for plane in planes:
         results["plane"].loc[len(results["plane"])] = plane
 
     # Return cascade data in dataframe
-    # TODO: how much critical point data do we want to retrieve?
     cascade_data = {
         **loss_dict,
         "dh_s": dh_is,
@@ -416,8 +373,8 @@ def evaluate_cascade(
     return residuals
 
 def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
-    """
-    Evaluate the inlet plane parameters of a cascade including velocity triangles,
+    r"""
+    Evaluate the inlet plane of a cascade including velocity triangles,
     thermodynamic properties, and flow characteristics.
 
     This function calculates performance data at the inlet of a cascade based on the cascade geometry,
@@ -427,13 +384,13 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     Parameters
     ----------
     cascade_inlet_input : dict
-        Input parameters specific to the cascade inlet, including stagnation enthalpy ('h0'),
-        entropy ('s'), absolute velocity ('v'), and flow angle ('alpha').
+        Input parameters specific to the cascade inlet, including stagnation enthalpy (`h0`),
+        entropy (`s`), absolute velocity (`v`), and flow angle (`alpha`).
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
-        Geometric parameters of the cascade such as radius at the mean inlet ('radius_mean_in'),
-        chord length, and inlet area ('A_in').
+        Geometric parameters of the cascade such as radius at the mean inlet (`radius_mean_in`),
+        chord length, and inlet area (`A_in`).
     angular_speed : float
         Angular speed of the cascade.
 
@@ -510,65 +467,42 @@ def evaluate_cascade_exit(
     blockage,
     loss_model,
 ):
-    """
-    Evaluate the parameters at the exit (or throat) of a cascade including velocity triangles,
-    thermodynamic properties, and loss coefficients.
+    r"""
 
-    This function calculates the performance data at the exit of a cascade based on the cascade geometry,
-    fluid, and flow conditions. It computes velocity triangles, static and stagnation
-    properties, Reynolds and Mach numbers, mass flow rate, and loss coefficients. The calculations
-    of the mass flow rate considers the blockage induced by the boundary layer displacement thickness.
+    Evaluate the exit plane of a cascade including velocity triangles,
+    thermodynamic properties, flow characteristics and loss coefficients.
+
+    This function calculates performance data at the exit of a cascade based on the cascade geometry,
+    fluid, and flow conditions. It computes velocity triangles, static and stagnation properties,
+    Reynolds and Mach numbers, the mass flow rate and loss coefficients at the exit.
 
     Parameters
     ----------
     cascade_exit_input : dict
-        Input parameters specific to the cascade exit, including relative velocity ('w'),
-        relative flow angle ('beta'), entropy ('s'), and rothalpy.
+        Input parameters specific to the cascade exit, including relative velocity (`w`),
+        relative flow angle (`beta`), entropy (`s`), and rothalpy.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
         Geometric parameters of the cascade such as chord length, opening, and area.
     inlet_plane : dict
-        performance data at the inlet plane of the cascade (needed for loss model calculations).
+        performance data at the inlet plane of the cascade.
     angular_speed : float
         Angular speed of the cascade.
     blockage : str or float or None
         The method or value for determining the throat blockage. It can be
-        a string specifying a model name ('flat_plate_turbulent'), a numeric
+        a string specifying a model name (`flat_plate_turbulent`), a numeric
         value between 0 and 1 representing the blockage factor directly, or
         None to use a default calculation method.
     loss_model : str
         The loss model used for calculating loss coefficients.
-    radius : float
-        Mean radius at the cascade exit.
-    area : float
-        Area of the cascade exit plane.
 
     Returns
     -------
-    tuple
-        A tuple containing:
-
-        - plane (dict): A dictionary of calculated performance data at the cascade exit including
-          velocity triangles, thermodynamic properties, Mach and Reynolds numbers, mass flow rate,
-          and loss coefficients.
-        - loss_dict (dict): A dictionary of loss breakdwon as calculated by the loss model.
-
-    Warnings
-    --------
-    The current implementation of this calculation has limitations regarding the relationship between
-    the throat and exit areas. It does not function correctly unless these areas are related according
-    to the cosine rule. Specifically, issues arise when:
-
-    1. The blockage factor at the throat and the exit are not the same. The code may converge for minor
-       discrepancies (about <1%), but larger differences lead to convergence issues.
-    2. The "throat_location_fraction" parameter is less than one, implying a change in the throat radius
-       or height relative to the exit plane.
-
-    These limitations restrict the code's application to cases with constant blade radius or height, or
-    when blockage factors at the throat and exit planes are identical. Future versions aim to address
-    these issues, enhancing the code's generality for varied geometrical configurations and differing
-    blockage factors at the throat and exit planes.
+    dict
+        A dictionary of calculated parameters at the cascade exit.
+    dict
+        A dictionary of loss coefficients as calculated by the loss model.
 
     """
 
@@ -614,19 +548,12 @@ def evaluate_cascade_exit(
     Ma_rel = w / a
     Re = rho * w * chord / mu
     rothalpy = h0_rel - 0.5 * blade_speed**2
-    # TODO: is rothalpy necessary? See calculations above
-    # TODO: not really. But it needs to be assigned either way
-    # TODO: Could be assignes as nan, but might as well calculate it
-    # TODO: Can also easiliy check that rothalpy is conserved in this way
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w_m * area * (1 - blockage_factor)
 
     # Evaluate loss coefficient
-    # TODO: why not give all variables to the loss model? 
-    # Introduce safeguard to prevent negative values for Re and Ma
-    # Useful to avoid invalid operations during convergence
     min_val = 1e-3
     loss_model_input = {
         "geometry": geometry,
@@ -675,65 +602,41 @@ def evaluate_cascade_throat(
     blockage,
     loss_model,
 ):
-    """
-    Evaluate the parameters at the exit (or throat) of a cascade including velocity triangles,
-    thermodynamic properties, and loss coefficients.
+    r"""
+    Evaluate the throat plane of a cascade including velocity triangles,
+    thermodynamic properties, flow characteristics and loss coefficients.
 
-    This function calculates the performance data at the exit of a cascade based on the cascade geometry,
-    fluid, and flow conditions. It computes velocity triangles, static and stagnation
-    properties, Reynolds and Mach numbers, mass flow rate, and loss coefficients. The calculations
-    of the mass flow rate considers the blockage induced by the boundary layer displacement thickness.
+    This function calculates performance data at the throat of a cascade based on the cascade geometry,
+    fluid, and flow conditions. It computes velocity triangles, static and stagnation properties,
+    Reynolds and Mach numbers, the mass flow rate and loss coefficients at the throat.
 
     Parameters
     ----------
-    cascade_exit_input : dict
-        Input parameters specific to the cascade exit, including relative velocity ('w'),
-        relative flow angle ('beta'), entropy ('s'), and rothalpy.
+    cascade_throat_input : dict
+        Input parameters specific to the cascade throat, including relative velocity (`w`),
+        relative flow angle (`beta`), entropy (`s`), and rothalpy.
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
         Geometric parameters of the cascade such as chord length, opening, and area.
     inlet_plane : dict
-        performance data at the inlet plane of the cascade (needed for loss model calculations).
+        performance data at the inlet plane of the cascade.
     angular_speed : float
         Angular speed of the cascade.
     blockage : str or float or None
         The method or value for determining the throat blockage. It can be
-        a string specifying a model name ('flat_plate_turbulent'), a numeric
+        a string specifying a model name (`flat_plate_turbulent`), a numeric
         value between 0 and 1 representing the blockage factor directly, or
         None to use a default calculation method.
     loss_model : str
         The loss model used for calculating loss coefficients.
-    radius : float
-        Mean radius at the cascade exit.
-    area : float
-        Area of the cascade exit plane.
 
     Returns
     -------
-    tuple
-        A tuple containing:
-
-        - plane (dict): A dictionary of calculated performance data at the cascade exit including
-          velocity triangles, thermodynamic properties, Mach and Reynolds numbers, mass flow rate,
-          and loss coefficients.
-        - loss_dict (dict): A dictionary of loss breakdwon as calculated by the loss model.
-
-    Warnings
-    --------
-    The current implementation of this calculation has limitations regarding the relationship between
-    the throat and exit areas. It does not function correctly unless these areas are related according
-    to the cosine rule. Specifically, issues arise when:
-
-    1. The blockage factor at the throat and the exit are not the same. The code may converge for minor
-       discrepancies (about <1%), but larger differences lead to convergence issues.
-    2. The "throat_location_fraction" parameter is less than one, implying a change in the throat radius
-       or height relative to the exit plane.
-
-    These limitations restrict the code's application to cases with constant blade radius or height, or
-    when blockage factors at the throat and exit planes are identical. Future versions aim to address
-    these issues, enhancing the code's generality for varied geometrical configurations and differing
-    blockage factors at the throat and exit planes.
+    dict
+        A dictionary of calculated parameters at the cascade throat.
+    dict
+        A dictionary of loss coefficients as calculated by the loss model.
 
     """
 
@@ -779,19 +682,12 @@ def evaluate_cascade_throat(
     Ma_rel = w / a
     Re = rho * w * chord / mu
     rothalpy = h0_rel - 0.5 * blade_speed**2
-    # TODO: is rothalpy necessary? See calculations above
-    # TODO: not really. But it needs to be assigned either way
-    # TODO: Could be assignes as nan, but might as well calculate it
-    # TODO: Can also easiliy check that rothalpy is conserved in this way
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w * area * (1 - blockage_factor)
 
     # Evaluate loss coefficient
-    # TODO: why not give all variables to the loss model? 
-    # Introduce safeguard to prevent negative values for Re and Ma
-    # Useful to avoid invalid operations during convergence
     min_val = 1e-3
     loss_model_input = {
         "geometry": geometry,
@@ -846,14 +742,14 @@ def evaluate_cascade_interspace(
     """
     Calculate the inlet conditions for the next cascade based on the exit conditions of the previous cascade.
 
-    This function computes the inlet thermodynamic and velocity conditions the next cascade using the exit conditions
+    This function computes the inlet thermodynamic and velocity conditions for the next cascade using the exit conditions
     from the previous cascade and the flow equations for the interspace between cascades.
 
     Assumptions:
 
-    1. No heat transfer (conservation of stagnation enthalpy)
-    2. No friction (conservation of angular momentum)
-    3. No density variation (incompressible limit)
+    - Conservation of stagnation enthalpy
+    - Conservation of angular momentum
+    - Negligible change in density
 
 
     Parameters
@@ -875,17 +771,18 @@ def evaluate_cascade_interspace(
     area_inlet : float
         Flow area at the inlet of the next cascade.
     fluid : object
-        A fluid object with methods for thermodynamic property calculations (e.g., CoolProp fluid).
+        A fluid object with methods for thermodynamic property calculations.
 
     Returns
     -------
-    tuple
-        A tuple containing:
-
-        - h0_in (float): Stagnation enthalpy at the inlet of the next cascade.
-        - s_in (float): Entropy at the inlet of the next cascade.
-        - alpha_in (float): Flow angle at the inlet of the next cascade (in radians).
-        - v_in (float): Magnitude of the velocity vector at the inlet of the next cascade.
+    float 
+        Stagnation enthalpy at the inlet of the next cascade.
+    float 
+        Entropy at the inlet of the next cascade.
+    float
+        Flow angle at the inlet of the next cascade (in degrees).
+    float
+        Velocity at the inlet of the next cascade.
 
     Warnings
     --------
@@ -916,7 +813,7 @@ def evaluate_cascade_interspace(
 
     return h0_in, s_in, alpha_in, v_in
 
-def evaluate_velocity_triangle_in(u, v, alpha):
+def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     """
     Compute the velocity triangle at the inlet of the cascade.
 
@@ -928,7 +825,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
 
     Parameters
     ----------
-    u : float
+    blade_speed : float
         Blade speed.
     v : float
         Absolute velocity.
@@ -940,15 +837,15 @@ def evaluate_velocity_triangle_in(u, v, alpha):
     dict
         A dictionary containing the following properties:
 
-        - "u" (float): Blade velocity.
-        - "v" (float): Absolute velocity.
-        - "v_m" (float): Meridional component of absolute velocity.
-        - "v_t" (float): Tangential component of absolute velocity.
-        - "alpha" (float): Absolute flow angle in radians.
-        - "w" (float): Relative velocity magnitude.
-        - "w_m" (float): Meridional component of relative velocity.
-        - "w_t" (float): Tangential component of relative velocity.
-        - "beta" (float): Relative flow angle in radians.
+        - `blade_speed` (float): Blade velocity.
+        - `v` (float): Absolute velocity.
+        - `v_m` (float): Meridional component of absolute velocity.
+        - `v_t` (float): Tangential component of absolute velocity.
+        - `alpha` (float): Absolute flow angle in radians.
+        - `w` (float): Relative velocity magnitude.
+        - `w_m` (float): Meridional component of relative velocity.
+        - `w_t` (float): Tangential component of relative velocity.
+        - `beta` (float): Relative flow angle in radians.
     """
 
     # Absolute velocities
@@ -956,7 +853,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
     v_m = v * math.cosd(alpha)
 
     # Relative velocities
-    w_t = v_t - u
+    w_t = v_t - blade_speed
     w_m = v_m
     w = np.sqrt(w_t**2 + w_m**2)
 
@@ -965,7 +862,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
 
     # Store in dict
     vel_in = {
-        "u": u,
+        "blade_speed": blade_speed,
         "v": v,
         "v_m": v_m,
         "v_t": v_t,
@@ -978,7 +875,7 @@ def evaluate_velocity_triangle_in(u, v, alpha):
 
     return vel_in
 
-def evaluate_velocity_triangle_out(u, w, beta):
+def evaluate_velocity_triangle_out(blade_speed, w, beta):
     """
     Compute the velocity triangle at the outlet of the cascade.
 
@@ -990,7 +887,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
 
     Parameters
     ----------
-    u : float
+    blade_speed : float
         Blade speed.
     w : float
         Relative velocity.
@@ -1002,15 +899,15 @@ def evaluate_velocity_triangle_out(u, w, beta):
     dict
         A dictionary containing the following properties:
 
-        - "u" (float): Blade velocity.
-        - "v" (float): Absolute velocity.
-        - "v_m" (float): Meridional component of absolute velocity.
-        - "v_t" (float): Tangential component of absolute velocity.
-        - "alpha" (float): Absolute flow angle in radians.
-        - "w" (float): Relative velocity magnitude.
-        - "w_m" (float): Meridional component of relative velocity.
-        - "w_t" (float): Tangential component of relative velocity.
-        - "beta" (float): Relative flow angle in radians.
+        - `blade_speed` (float): Blade velocity.
+        - `v` (float): Absolute velocity.
+        - `v_m` (float): Meridional component of absolute velocity.
+        - `v_t` (float): Tangential component of absolute velocity.
+        - `alpha` (float): Absolute flow angle in radians.
+        - `w` (float): Relative velocity magnitude.
+        - `w_m` (float): Meridional component of relative velocity.
+        - `w_t` (float): Tangential component of relative velocity.
+        - `beta` (float): Relative flow angle in radians.
     """
 
     # Relative velocities
@@ -1018,7 +915,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
     w_m = w * math.cosd(beta)
 
     # Absolute velocities
-    v_t = w_t + u
+    v_t = w_t + blade_speed
     v_m = w_m
     v = np.sqrt(v_t**2 + v_m**2)
 
@@ -1027,7 +924,7 @@ def evaluate_velocity_triangle_out(u, w, beta):
 
     # Store in dict
     vel_out = {
-        "u": u,
+        "blade_speed": blade_speed,
         "v": v,
         "v_m": v_m,
         "v_t": v_t,
@@ -1067,16 +964,15 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     ----------
     blockage_model : str or float or None
         The method or value for determining the blockage factor. It can be
-        a string specifying a model name ('flat_plate_turbulent'), a numeric
+        a string specifying a model name (`flat_plate_turbulent`), a numeric
         value between 0 and 1 representing the blockage factor directly, or
         None to use a default calculation method.
-    Re : float, optional
-        Reynolds number, used if `blockage_model` is 'flat_plate_turbulent'.
-    chord : float, optional
-        Chord length, used if `blockage_model` is 'flat_plate_turbulent'.
-    opening : float, optional
-        Throat opening size, used to calculate the blockage factor when
-        `blockage_model` is None or a numeric value.
+    Re : float
+        Reynolds number, used if `blockage_model` is `flat_plate_turbulent`.
+    chord : float
+        Chord length, used if `blockage_model` is `flat_plate_turbulent`.
+    opening : float
+        Throat opening, used if `blockage_model` is `flat_plate_turbulent`.
 
     Returns
     -------
@@ -1128,13 +1024,13 @@ def compute_efficiency_breakdown(results):
     -------
     pd.DataFrame
         A DataFrame containing efficiency drop fractions for each loss type in each cascade.
-        Columns are named as 'efficiency_drop_{loss_type}', where 'loss_type' includes:
+        Columns are named as `efficiency_drop_{loss_type}`, where `loss_type` includes:
 
-        - 'profile'
-        - 'incidence'
-        - 'secondary'
-        - 'clearance'
-        - 'trailing'
+        - `profile`
+        - `incidence`
+        - `secondary`
+        - `clearance`
+        - `trailing`
 
     """
     # Load parameters
@@ -1170,28 +1066,21 @@ def compute_efficiency_breakdown(results):
 
 
 def compute_stage_performance(results):
-    """
-    Calculate the stage performance metrics of the turbine
+    r"""
+    Calculate the stage performance metrics of the turbine.
+
+    This function extracts necessary values from the `results` dictionary, performs calculations to determine
+    stage performance metrics, and returns these in a dictionary.
 
     Parameters
     ----------
-    number_of_stages : int
-        The number of stages in the cascading system.
-    planes : dict
-        A dictionary containing performance data at each plane in the cascading system.
+    results : dict
+        A dictionary containing all necessary information, such as geometry and flow characteristics.
 
     Returns
     -------
     dict
-        A dictionary with calculated stage parameters. Currently, this includes:
-        - 'R' (numpy.ndarray): An array of degree of reaction values for each stage.
-
-    Warnings
-    --------
-    This function currently only computes the degree of reaction. Other stage parameters,
-    which might be relevant for a comprehensive analysis of the cascading system, are not
-    computed in this version of the function. Future implementations may include additional
-    parameters for a more detailed stage analysis.
+        A dictionary with calculated stage parameters.
 
     """
 
@@ -1212,38 +1101,27 @@ def compute_stage_performance(results):
     # Store all variables in dictionary
     stages = {"reaction": R}
 
-    # Check the dictionary has the expected keys
-    utils.validate_keys(stages, KEYS_STAGE, KEYS_STAGE)
-
     return stages
 
 
 def compute_overall_performance(results, geometry):
     """
-    Calculate the overall performance metrics of the turbine
+    Calculate the overall performance metrics of the turbine.
 
-    This function extracts necessary values from the 'results' dictionary, performs calculations to determine
-    overall performance metrics, and stores these metrics in the "overall" dictionary. The function also checks
-    that the overall dictionary has all the expected keys and does not contain any unexpected keys.
-
-    The keys for the 'overall' dictionary are defined in the :obj:`KEYS_OVERALL` list. Refer to its documentation
-    for the complete list of keys.
+    This function extracts necessary values from the `results` dictionary, performs calculations to determine
+    overall performance metrics, and returns these in a dictionary.
 
     Parameters
     ----------
     results : dict
-        A dictionary containing various operational parameters at each flow station
+        A dictionary containing all necessary information, such as geometry and flow characteristics.
 
     Returns
     -------
     dict
-        An updated dictionary with a new key 'overall' containing the calculated performance metrics.
-        The keys for these metrics are defined in :obj:`KEYS_OVERALL`.
+        An dictionary containing the calculated performance metrics.
     """
 
-    # TODO: Refactor so results is the only required argument
-    # TODO: recalculate h_out_s and v0 from results data might be a simple solution
-    # TODO: angular speed could be saved at each cascade. This would be needed anyways if we want to extend the code to machines with multiple angular speeds in the future (e.g., a multi-shaft gas turbine)
     angular_speed = results["boundary_conditions"]["omega"]
     v0 = results["reference_values"]["v0"]
     h_out_s = results["reference_values"]["h_out_s"] 
@@ -1254,7 +1132,7 @@ def compute_overall_performance(results, geometry):
     p0 = results["plane"]["p0"].values
     h0 = results["plane"]["h0"].values
     v_out = results["plane"]["v"].values[-1]
-    u_out = results["plane"]["u"].values[-1]
+    u_out = results["plane"]["blade_speed"].values[-1]
     mass_flow = results["plane"]["mass_flow"].values[-1]
     exit_flow_angle = results["plane"]["alpha"].values[-1]
     PR_tt = p0[0] / p0[-1]
@@ -1295,11 +1173,5 @@ def compute_overall_performance(results, geometry):
         "blade_jet_ratio_tip" : angular_speed*geometry["radius_tip_out"][-1]/v0,
     }
 
-    # Check the dictionary has the expected keys
-    utils.validate_keys(overall, KEYS_OVERALL, KEYS_OVERALL)
-
     return overall
 
-# TODO:
-# Change blade speed from u to 'blade speed'
-# Now it is overwritten by internal energy in the ouput file

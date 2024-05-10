@@ -3,17 +3,42 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-colormap = "Reds"
-
-
 def load_data(filename):
-    # Import file that contains all performance parameteres
-    # The resulting variable 'performance_data' will be a dictionary where keys are sheet names and values are DataFrames
+
+    """
+    Load performance data from an Excel file.
+
+    This function imports an Excel file containing performance parameters. It reads the data into a dictionary
+    named 'performance_data' where each key corresponds to a sheet name in the Excel file, and each value is
+    a pandas DataFrame containing the data from that sheet. The data is rounded to avoid precision loss when
+    loading from Excel.
+
+    The excel file must contain the following sheets:
+
+        - `operation point`
+        - `plane`
+        - `cascade`
+        - `overall`
+
+    Parameters
+    ----------
+    filename : str
+        The name of the Excel file containing performance parameters.
+
+    Returns
+    -------
+    dict
+        A dictionary containing performance data, where keys are sheet names and values are DataFrames.
+
+    """
+
+    # Read excel file
     performance_data = pd.read_excel(
         filename, sheet_name=["operation point", "plane", "cascade", 
                               #"stage",
                               "overall"]
     )
+
     # Round off to ignore precision loss by loading data from excel
     for key, df in performance_data.items():
         performance_data[key] = df.round(10)
@@ -21,71 +46,22 @@ def load_data(filename):
     return performance_data
 
 
-def plot_lines_on_subset(
-    performance_data,
-    x_name,
-    column_names,
-    subset,
-    fig=None,
-    ax=None,
-    xlabel="",
-    ylabel="",
-    title=None,
-    close_fig=True,
-    stack=False,
-):
-    # Plot each parameter in column_names as a function of x_name in the given subset
-    # subset can only be one subset
-
-    subset[1:] = [round(value, 10) for value in subset[1:]]
-
-    if len(subset) > 2:
-        raise Exception(
-            "Only one subset (i.e. (key, value)) is accepted for this function"
-        )
-
-    if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    if title == None:
-        ax.set_title(f"{subset[0]} = {subset[1]}")
-    else:
-        ax.set_title(title)
-
-    y = get_lines(performance_data, column_names, subsets=subset)
-    x = get_lines(performance_data, x_name, subsets=subset)
-
-    colors = plt.get_cmap(colormap)(np.linspace(0.4, 1, len(column_names)))
-    if stack == True:
-        ax.stackplot(x[0], y, labels=column_names, colors=colors)
-    else:
-        for i in range(len(y)):
-            ax.plot(x[0], y[i], label=f"{column_names[i]}", color=colors[i])
-
-    ax.legend()
-    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
-
-    if close_fig == True:
-        plt.close(fig)
-
-    return fig, ax
-
-
 def plot_lines(
     performance_data,
     x_key,
     y_keys,
+    subsets = None,
     fig=None,
     ax=None,
     xlabel="",
     ylabel="",
     title="",
-    stack=False,
+    labels = None,
     filename=None,
     outdir="figures",
+    stack=False,
     color_map="viridis",
+    colors = None,
     close_fig=False,
     save_figs=False,
     linestyles = None,
@@ -95,14 +71,20 @@ def plot_lines(
     """
     Plot lines from performance data.
 
+    This function plots lines from performance data. It supports plotting multiple lines on the same axes
+    with customizable labels, colors, and linestyles. The resulting plot can be saved to a file if desired.
+
     Parameters
     ----------
     performance_data : DataFrame
         The performance data to plot.
-    x_name : str
-        Name of the column in data to be used as x-axis values.
-    column_names : list of str
-        Names of the columns in data to be plotted.
+    x_key : str
+        Name of the column in performance_data to be used as x-axis values.
+    y_keys : list of str
+        Names of the columns in performance_data to be plotted.
+    subsets : list, optional
+        Name and value of subsets to plot from performance_data. First instance should be a string representing the column name, while the 
+        remaining elemnts represet the values defining the subset. Default is None.
     fig : matplotlib.figure.Figure, optional
         An existing figure object. If None, a new figure is created.
     ax : matplotlib.axes.Axes, optional
@@ -113,23 +95,36 @@ def plot_lines(
         The label for the y-axis.
     title : str, optional
         The title of the plot.
+    labels : list of str, optional
+        Labels for the plotted lines. Default is None.
+    filename : str, optional
+        The filename for saving the figure. Default is None.
+    outdir : str, optional
+        The directory where figures should be saved. Default is 'figures'.
+    stack : bool, optional
+        Whether to stack the plotted lines. Default is False.
+    color_map : str, optional
+        The colormap used for the lines. Default is 'viridis'.
+    colors : list of str or colors, optional
+        Colors for the plotted lines. Default is None.
     close_fig : bool, optional
-        Whether to close the figure after plotting. Default is True.
+        Whether to close the figure after plotting. Default is False.
     save_figs : bool, optional
         Whether to save the figure. Default is False.
-    figures_folder : str, optional
-        The directory where figures should be saved. Default is 'figures'.
-    datetime_format : str, optional
-        Format for datetime string in the saved filename. Default is '%Y-%m-%d_%H-%M-%S'.
-    colormap : str, optional
-        The colormap used for the lines. Default is 'viridis'.
+    linestyles : list of str, optional
+        Linestyles for the plotted lines. Default is None.
+    save_formats : list of str, optional
+        File formats for saving the figure. Default is ['.png'].
+    legend_loc : str, optional
+        Location for the legend. Default is 'best'.
 
     Returns
     -------
-    fig : matplotlib.figure.Figure
+    matplotlib.figure.Figure
         The figure object.
-    ax : matplotlib.axes.Axes
+    matplotlib.axes.Axes
         The axes object.
+
     """
 
     # Create figure if not provided
@@ -142,35 +137,52 @@ def plot_lines(
     ax.set_ylabel(ylabel)
 
     # Get data
-    x = get_lines(performance_data, x_key)
-    y = get_lines(performance_data, y_keys)
-    
-    # Plot lines according to colormap and linestyles
-    colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y)))
-    if not isinstance(linestyles, (list, np.ndarray)):
+    if subsets == None:
+        x = get_lines(performance_data, x_key)
+        y = get_lines(performance_data, y_keys)
+    else:
+        x = get_lines(performance_data, x_key, subsets=subsets)
+        y = get_lines(performance_data, y_keys, subsets=subsets)
+
+    # Get colors
+    if colors == None:
+        colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y)))
+
+    # Get labels
+    if labels == None:
+        if subsets is not None:
+            labels = [f"{subsets[0]} = {subsets[i+1]}" for i in range(len(subsets)-1)]
+        elif len(y_keys) > 1:
+            labels = [f"{y_keys[i]}" for i in range(len(y))]
+
+    # Get linestyles
+    if linestyles == None:
         linestyles = ['-']*len(y)
+    
+    # Plot figure        
     if stack == True:
         ax.stackplot(x, y, labels=y_keys, colors=colors)
 
         # Add edges by overlaying lines
-        
         y_arrays = [series.values for series in y]
         cumulative_y = np.cumsum(y_arrays, axis=0)
         for i, series in enumerate(y_arrays):
             if i == 0:
                 ax.plot(x, series, color='black', linewidth=0.5)
             ax.plot(x, cumulative_y[i], color='black', linewidth=0.5)
-
+    elif subsets is not None:
+        for i in range(len(y)):
+            ax.plot(x[i], y[i], label=labels[i], color=colors[i], linestyle = linestyles[i])
     else:
         for i in range(len(y)):
-            ax.plot(x, y[i], label=f"{y_keys[i]}", color=colors[i], linestyle = linestyles[i])
+            ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle = linestyles[i])
 
     # Set margins to zero
     ax.margins(x=0.01, y=0.01)
 
     # Add legend
     if len(y) > 1:
-        ax.legend(loc=legend_loc, fontsize=9)
+        ax.legend(loc=legend_loc)
     fig.tight_layout(pad=1, w_pad=None, h_pad=None)
 
     # Create output directory if it does not exist
@@ -188,101 +200,30 @@ def plot_lines(
     return fig, ax
 
 
-def plot_line(
-    performance_data,
-    x_key,
-    y_key,
-    fig=None,
-    ax=None,
-    xlabel="",
-    ylabel="",
-    title="",
-    color = None,
-    linestyle = None,
-    close_fig=True,
-):
-    if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    if not isinstance(color, (list, np.ndarray)):
-        color = 'k'
-
-    if not linestyle:
-        linestyle = '-'
-
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-
-    y = get_lines(performance_data, y_key)
-    x = get_lines(performance_data, x_key)
-
-    ax.plot(x, y, color = color, linestyle = linestyle, linewidth = 1.25)
-
-    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
-
-    if close_fig == True:
-        plt.close(fig)
-
-    return fig, ax
-
-
-def plot_subsets(
-    performance_data,
-    x,
-    y,
-    subsets,
-    fig=None,
-    ax=None,
-    xlabel="",
-    ylabel="",
-    title="",
-    colors = None,
-    linestyles = None, 
-    labels = None, 
-    close_fig=True,
-):
-    # Plot variable y as a function of x on the subset defined by subsets
-    # *Subset is a tuple where first element is the key of a column in performance data
-    # The subsequent values defines each subset of performance data
-
-    subsets[1:] = [round(value, 10) for value in subsets[1:]]
-
-    if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
-
-    if not colors:
-            colors = plt.get_cmap(colormap)(np.linspace(0.2, 1, len(subsets) - 1))
-    if not linestyles:
-        linestyles = ['-']*len(subsets[1:])
-
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-
-    y = get_lines(performance_data, y, subsets=subsets)
-    x = get_lines(performance_data, x, subsets=subsets)
-
-    for i in range(len(y)):
-        ax.plot(x[i], y[i], label=f"{subsets[0]} = {subsets[i+1]}", linestyle = linestyles[i], color=colors[i])
-
-    if not labels == None:
-        ax.legend(labels)
-    else:
-        ax.legend()
-
-    fig.tight_layout(pad=1, w_pad=None, h_pad=None)
-
-    if close_fig == True:
-        plt.close(fig)
-
-    return fig, ax
-
-
 def get_lines(performance_data, column_name, subsets=None):
-    # Return an array of parameter column_name in performance_data
-    # subset is a tuple where the first value determines the parameter, while the subsequent values
-    # determines the values of the parameter that defines the subset
+    """
+    Retrieve lines of data from the specified column in `performance_data`.
+
+    This function returns a list of array from the specified column(s) of the performance data.
+    If no subset is specified, it returns lines covering all rows in `performance_data`. If a subset
+    is specified, it returns lines covering only the rows that match the specified subset.        
+
+    Parameters
+    ----------
+    performance_data : DataFrame
+        The DataFrame containing the performance data.
+    column_name : str or list of str
+        The name(s) of the column(s) from which to retrieve data.
+    subsets : list, optional
+        Name and value of subsets to get data from performance_data. First instance should be a string representing the column name, while the 
+        remaining elemnts represet the values defining the subset. Default is None.
+
+    Returns
+    -------
+    list
+        A list of arrays from the specified column(s) of performance_data.
+
+    """
 
     # Get lines covering all rows in performance_data
     if subsets == None:
@@ -310,29 +251,31 @@ def get_lines(performance_data, column_name, subsets=None):
 
     return lines
 
-def plot_error(
-    values_exp, 
-    values_sim,
-    fig=None,
-    ax=None,
-    title="",
-    color = None,
-    label = None,
-    marker = None, 
-    close_fig=True,
-):
-    
-    if not fig and not ax:
-        fig, ax = plt.subplots(figsize=(4.8, 4.8))
-
-    # Plot model value vs measured value
-    ax.plot(values_exp, values_sim, color = color, marker = marker, label = label, linestyle = 'none')
-
-    return fig, ax
-
-
 def find_column(performance_data, column_name):
-    # Function for column named column_name in all sheets in performance_data
+    """
+    Find the sheet containing the specified column in `performance_data`.
+
+    This function searches through all sheets in `performance_data` to find the one containing the specified column.
+    If the column is found, it returns the name of the sheet. If the column is not found, it raises an exception.
+
+    Parameters
+    ----------
+    performance_data : dict
+        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.
+    column_name : str
+        The name of the column to find.
+
+    Returns
+    -------
+    str
+        The name of the sheet containing the specified column.
+
+    Raises
+    ------
+    Exception
+        If the specified column is not found in any sheet of performance_data.
+
+    """
 
     for key in performance_data.keys():
         if any(element == column_name for element in performance_data[key].columns):
@@ -342,12 +285,53 @@ def find_column(performance_data, column_name):
 
 
 def get_column(performance_data, column_name):
+    """
+    Retrieve a column of data from `performance_data`. 
+
+    This function retrieves the specified column of data from `performance_data` by finding the sheet containing 
+    the column using the `find_column` function. It then returns the column as a pandas Series.
+
+    Parameters
+    ----------
+    performance_data : dict
+        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.
+    column_name : str
+        The name of the column to retrieve.
+
+    Returns
+    -------
+    pandas.Series
+        The column of data corresponding to column_name.
+
+    """
     sheet = find_column(performance_data, column_name)
 
     return performance_data[sheet][column_name]
 
 
 def get_subset(performance_data, column_name, row_value):
+    """
+    Retrieve the index of rows in `performance_data` where `column_name` equals `row_value`.
+
+    This function retrieves the index of rows in `performance_data` where the specified column (`column_name`) 
+    equals the specified value (`row_value`). It first finds the sheet containing the column using the 
+    `find_column` function, then returns the index of rows where the column has the specified value.
+
+    Parameters
+    ----------
+    performance_data : dict
+        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.
+    column_name : str
+        The name of the column to search for `row_value`.
+    row_value : object
+        The value to match in `column_name`.
+
+    Returns
+    -------
+    pandas.Index
+        The index of rows where `column_name` equals `row_value`.
+    
+    """
     sheet = find_column(performance_data, column_name)
 
     return performance_data[sheet][
@@ -367,7 +351,7 @@ def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".p
         The full path to save the figure excluding the file extension.
     formats : list of str, optional
         A list of string file extensions to specify which formats the figure should be saved in.
-        Default is ['.png', '.svg', '.pdf'].
+        Default is ['.png', '.svg', '.pdf', ".eps"].
 
     Examples
     --------
@@ -382,6 +366,35 @@ def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".p
         fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
 
 def plot_axial_radial_plane(geometry):
+
+    r"""
+    Plot the turbine geometry in an axial-radial plane.
+
+    This function plots the turbine geometry in an axial-radial plane. It takes the turbine geometry data
+    as input, including the radii at the inner and outer hub and tip, the number of cascades, and the axial
+    chord lengths. It then constructs and displays the plot, which represents the turbine blades in the
+    axial-radial plane.
+
+    Parameters
+    ----------
+    geometry : dict
+        A dictionary containing turbine geometry data including:
+
+        - `radius_hub_in` (array-like) : Inner hub radii at each cascade.
+        - `radius_hub_out` (array-like) : Outer hub radii at each cascade.
+        - `radius_tip_in` (array-like) : Inner tip radii at each cascade.
+        - `radius_tip_out` (array-like) : Outer tip radii at each cascade.
+        - `number_of_cascades` (int) : Number of cascades in the turbine.
+        - `axial_chord` (array-like) : Axial chord lengths at each cascade.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated figure.
+    matplotlib.axes.Axes
+        The generated axes.
+    
+    """
     
     radius_hub_in = geometry["radius_hub_in"]
     radius_hub_out = geometry["radius_hub_out"]

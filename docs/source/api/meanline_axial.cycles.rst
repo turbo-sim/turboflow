@@ -1,4 +1,4 @@
-meanline\_axial.cycles package
+Cycle functions
 ==============================
 
 Submodules

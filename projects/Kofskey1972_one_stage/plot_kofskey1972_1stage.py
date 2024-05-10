@@ -20,10 +20,10 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'pressure_line' # performance_map/error_plot
+Case = 'error_plot' # performance_map/error_plot
 # Get the name of the latest results file
-filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-# filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
+# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
 # filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
 save_figs = False
@@ -401,7 +401,8 @@ elif Case == 'performance_map':
     # # Plot stacked losses at rotor on subset
     # subset = ["omega", design_point["omega"]]
     # column_names = ["d_5", "d_6"]
-    # fig, ax = ml.plot_functions.plot_lines_on_subset(performance_data, 'pr_ts', column_names, subset, xlabel = "Total-to-static pressure ratio", ylabel = "Relative flow angles", title = "Rotor losses", close_fig = False)
+    # fig, ax = ml.
+    # .plot_lines_on_subset(performance_data, 'pr_ts', column_names, subset, xlabel = "Total-to-static pressure ratio", ylabel = "Relative flow angles", title = "Rotor losses", close_fig = False)
 
     # Validation plots
     if validation == True:
@@ -547,56 +548,51 @@ elif Case == 'error_plot':
     markers = ['x', 'o', '^', 's']
     for speed, color, marker in zip(speed_percent, colors, markers):
 
-        fig1, ax1 = ml.plot_functions.plot_error(
+        ax1.plot(
             data_exp["Mass flow rate"][data_exp["Mass flow rate"]["omega"] == speed]["m"],
             data_mass_flow[(data_mass_flow["speed_percent"] > speed-1) & (data_mass_flow["speed_percent"] < speed+1)]["mass_flow_rate"],
-            fig = fig1,
-            ax = ax1,
             color = color,
             marker = marker,
             label = str(speed),
+            linestyle = 'none'
         )
 
 
-        fig2, ax2 = ml.plot_functions.plot_error(
+        ax2.plot(
             data_exp["Total-to-static efficiency"][data_exp["Total-to-static efficiency"]["omega"] == speed]["Efficiency_ts"],
             data_eta[(data_eta["speed_percent"] > speed-1) & (data_eta["speed_percent"] < speed+1)]["efficiency_ts"],
-            fig = fig2,
-            ax = ax2,
             color = color,
             marker = marker,
             label = str(speed),
+            linestyle = 'none'
         )
 
 
-        fig3, ax3 = ml.plot_functions.plot_error(
+        ax3.plot(
             data_exp["Torque"][data_exp["Torque"]["omega"] == speed]["Torque"],
             data_torque[(data_torque["speed_percent"] > speed-1) & (data_torque["speed_percent"] < speed+1)]["torque"],
-            fig = fig3,
-            ax = ax3,
             color = color,
             marker = marker,
             label = str(speed),
+            linestyle = 'none'
         )
 
-        fig4, ax4 = ml.plot_functions.plot_error(
+        ax4.plot(
             data_exp["alpha_out"][data_exp["alpha_out"]["omega"] == speed]["alpha_out"],
             data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["exit_flow_angle"],
-            fig = fig4,
-            ax = ax4,
             color = color,
             marker = marker,
             label = str(speed),
+            linestyle = 'none'
         )
 
-        fig5, ax5 = ml.plot_functions.plot_error(
+        ax5.plot(
             data_exp["alpha_out"][data_exp["alpha_out"]["omega"] == speed]["cos_angle"],
             data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["cos_alpha"],
-            fig = fig5,
-            ax = ax5,
             color = color,
             marker = marker,
             label = str(speed),
+            linestyle = 'none'
         )
 
     # Add lines to plots
@@ -692,6 +688,77 @@ elif Case == 'error_plot':
         # ml.plot_functions.savefig_in_formats(fig2, "figures/error_1972_efficiency", formats=[".eps"])
         ml.plot_functions.savefig_in_formats(fig3, "figures/error_1972_torque", formats=[".eps"])
         # ml.plot_functions.savefig_in_formats(fig4, "figures/error_1972_absolute_flow_angle", formats=[".eps"])
+
+elif Case == 'test':
+
+    # Load performance data
+    timestamp = ml.utils.extract_timestamp(filename)
+    data = ml.plot_functions.load_data(filename)
+
+    # Define plot settings
+    color_map = "Reds"
+    outdir = "figures"
+
+    # Plot angular speed lines
+    subsets = ["omega"] + list(
+        np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"]
+    )
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key = "PR_ts",
+        y_keys = ["mass_flow_rate"],
+        subsets = subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        linestyles = ['-', ':', '--', '-.'],
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+    
+    # Print design speed line
+    indices = data['overall'].index[data["overall"]["angular_speed"] == 1627]
+    for key in data.keys():
+        data[key] = data[key].loc[indices]
+    title = "Pressure"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["p_1", "p_2", "p_3", "p_4"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Static pressure [kg/s]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+
+
+    # Print stacked losses 
+    title = "Total-to-static efficiency distribution"
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
+    fig1, ax1 = ml.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=[
+            "loss_profile_4",
+            "loss_clearance_4",
+            "loss_secondary_4",
+            "loss_trailing_4",
+            "loss_incidence_4",
+        ],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Loss coefficient",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+        stack=True,
+        legend_loc="best",
+    )
+
 
 if show_figures:
     plt.show()

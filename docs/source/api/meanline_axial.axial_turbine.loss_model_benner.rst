@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.loss\_model\_benner module
+Benner loss model
 =========================================================
 
 .. automodule:: meanline_axial.axial_turbine.loss_model_benner

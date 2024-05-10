@@ -90,7 +90,6 @@ def smooth_min(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
     of the ```smooth_max()`` function for more information about the approximation
     methods available.
 
-
     Parameters
     ----------
     x : array_like
@@ -101,8 +100,7 @@ def smooth_min(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
         - ``boltzmann`` (default)
         - ``logsumexp``
         - ``p-norm``
-
-        Default is 'boltzmann'.
+        
     alpha : float, optional
         Sharpness parameter.Large values produce a tight approximation to the
         minimum function
@@ -230,9 +228,9 @@ def smooth_abs(x, method="quadratic", epsilon=1e-5):
     method : str, optional
         The method of approximation:
 
-         - ``quadratic``
-         - ``hyperbolic``
-         - ``logcosh``
+        - ``quadratic`` (default)
+        - ``hyperbolic``
+        - ``logcosh``
 
     epsilon : float, optional
         A small positive constant affecting the approximation. Default is 1e-5.

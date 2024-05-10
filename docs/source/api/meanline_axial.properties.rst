@@ -1,4 +1,4 @@
-meanline\_axial.properties package
+Fluid properties functions
 ==================================
 
 Submodules

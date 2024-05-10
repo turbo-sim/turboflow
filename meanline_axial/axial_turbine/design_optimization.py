@@ -27,6 +27,26 @@ AVAILABLE_GEOMETRIES = ["constant_mean",
 
 def compute_optimal_turbine(config, initial_guess = None):
 
+    r"""
+    Calculate the optimal turbine configuration based on the specified optimization problem.
+
+    The function checks the configuration file before performing design optimization. 
+
+    Parameters
+    ----------
+    config : dict
+        A dictionary containing necessary configuration options for computing optimal turbine.
+    initial_guess : None or dict
+        The initial guess of the design optimization. If None, a defualt initial guess is provided. If given, he initial guess must correspond
+        with the given set of design variables given in the configuration dictionary. 
+
+    Returns
+    -------
+    solution : object
+        The solution object containing the results of the design optimization.
+    """
+
+
     # Check configuration
     config = check_optimization_config(config)
 
@@ -47,16 +67,84 @@ def compute_optimal_turbine(config, initial_guess = None):
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
-    A class representing a turbine design optimization problem
+    A class representing a turbine design optimization problem.
+
+    This class is designed for solving design optimization problems of axial turbines. It is initialized by providing a 
+    dictionary containing information on design variables, objective function, constraints and bounds. 
+
+    Parameters
+    ----------
+    config : dictionary
+        A dictionary containing necessary configuration options for computing optimal turbine.
+
+    Attributes
+    ----------
+    fluid : FluidCoolProp_2Phase
+        An instance of the FluidCoolProp_2Phase class representing the fluid properties.
+    results : dict
+        A dictionary to store results.
+    boundary_conditions : dict
+        A dictionary containing boundary condition data.
+    geometry : dict
+        A dictionary containing geometry-related data.
+    model_options : dict
+        A dictionary containing options related to the analysis model.
+    reference_values : dict
+        A dictionary containing reference values for calculations.
+    design_variables_keys : list
+        A list of strings defining the selected design variables. 
+    objective_function : str
+        A string defining the selected objective function for the design optimization problem.
+    eq_constraints : list
+        A list of strings containing the selected equaility constraints for the design optimization problem. 
+    ineq_constraints : list
+        A list of strings containing the selected inequaility constraints for the design optimization problem.
+    bounds : list
+        A list of tuples on the form (lower bound, upper bound) defining the bounds for the design optimization problem. 
+    radius_type : str
+        A string deciding what type of turbine geometry should be condidered (constant mean, hub or tip radius).
+    vars_scaled : dict
+        A dict containing the scaled flow design variables used to evaluate turbine performance.
+
 
     Methods
     -------
-    get_values(x)
-        Evaluate the system of equations for a given set of decision variables.
+    get_optimization_values(x)
+        Evaluate the objective function and constraints at a given point `x`.
+    get_bounds()
+        Provide the bounds for the design optimization problem.
+    get_n_eq()
+        Get the number of equality constraints.
+    get_n_ineq()
+        Get the number of oinequality constraints.
+    get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)
+        Convert specific speed to actual angular speed
+    get_initial_guess(initial_guess)
+        Get the initial guess for the design optimization problem.
+    extend_design_variables()
+        Index the design variables for each cascade for the default initial guess.
+    get_default_initial_guess()
+        Generate a default initial guess for the design optimization problem.
+    get_default_bounds()
+        Generate a set of default bounds for each design variable.
+    update_boundary_conditions(design_point)
+        Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.
+    convert_performance_analysis_results(performance_problem)
+        Generate a feasable set of initial guess from a solved performance analysis problem object.
 
     """
 
     def __init__(self, config):
+
+        r"""
+        Initialize a CascadesOptimizationProblem.
+
+        Parameters
+        ----------
+        config : dict
+            A dictionary containing case-specific data.
+
+        """
 
         # Get list of design variables
         self.design_variables_keys = config["optimization"]["design_variables"]
@@ -77,6 +165,20 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.model_options = config["model_options"]
         
     def get_optimization_values(self, x):
+
+        r"""
+        Evaluate the objective function and constraints at a given pint `x`. 
+
+        Parameters
+        ----------
+        x : array-like
+            Vector of design variables.
+
+        Returns
+        -------
+        numpy.ndarray
+            An array containg the value of the objective function and constraints.
+        """
 
         # Rename reference values
         h0_in = self.boundary_conditions["h0_in"]
@@ -105,7 +207,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Assign geometry design variables to geometry attribute
         for des_key in self.design_variables_geometry:
             self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["specific_speed", "blade_jet_ratio"])])
-        self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min 
+        self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min # TODO!
         self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
@@ -157,25 +259,72 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return objective_and_constraints
     
     def get_bounds(self):
-        # TODO: improve to do checks in case bounds are given 
+
+        r"""
+        Provide the bounds for the design optimization problem. 
+
+        Returns
+        -------
+        list
+            List of toutples containg the lower and upper bound for each design variable. 
+        """
+
         if self.bounds == None:
             self.bounds = self.get_default_bounds()
 
         return self.bounds
             
     def get_n_eq(self):
+        
+        r"""
+        Get the number of equality constraints.
+
+        Returns
+        -------
+        int
+            Number of equality constraints.
+
+        """
+
         return self.get_number_of_constraints(self.c_eq)
     
     def get_n_ineq(self):
+        r"""
+        Get the number of inequality constraints.
+
+        Returns
+        -------
+        int
+            Number of inequality constraints.
+
+        """
         return self.get_number_of_constraints(self.c_ineq)
     
     def get_initial_guess(self, initial_guess):
-        """
-        Structure the initial guess for the design optimization. 
-        The intial guess can either be provided by the user or given from a defualt value
+        r"""
+        
+        Get the initial guess for the design optimization problem. 
 
-        x0 must be first
-        geometrical variables must follow the order of the cascades 
+        The initial guess can be given from a defualt set of values, generated from a solved performance analysis problem object or provided by the user. 
+        If given by the user, the initial guess must be given as a dictionary where the key of each cascade specific value is indexed according 
+        to the order at which the cascade occur in the turbine. For example, `aspect_ratio_1`, `aspect_ratio_2` etc. 
+        In addition, the flow variables must occur first (velocities, entropies and flow angles).
+        If a solved performance analysis problem object (CascadesNonlinearSystemProblem) is given, the code generate a feasable initial guess through the
+        `convert_performance_analysis_results` method. 
+
+        Parameters
+        ----------
+        inital_guess : None, dict or solved 
+            The initial guess. Defualt guess if None.
+
+        Returns
+        -------
+        numpy.ndarray
+            Array of the values of the initial guess.
+
+        Notes
+        -----
+        The keys are assigned as an attribute and is zipped together with the array in get_optimization_values(x).
 
         """
         if initial_guess == None:
@@ -199,8 +348,18 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return np.array(list(initial_guess.values()))
     
     def extend_design_variables(self):
-        """
-        Extend list of design variables such that each cascade/plane specific variables have one value for each cascade/plane
+        r"""
+        Index the design variables for each cascade for the default initial guess.
+
+        The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio. 
+        This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
+        for example `aspect_ratio_1` for first cascade and etc. 
+
+        Returns
+        -------
+        None
+            This method does not return a value but updates the `design_variables_keys` attribute of the object.       
+        
         """
 
         number_of_cascades = len(self.geometry["cascade_type"])
@@ -231,7 +390,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
     def get_default_initial_guess(self):
         """
-        Generate a default initial guess for design optimization
+        Generate a default initial guess for the design optimization problem. 
+
+        Each available design variable have an associated defualt initial guess value. This function take the
+        `design_variables_keys` attribute and assign a value for each key. 
+
+        Returns
+        -------
+        dict
+            Initial guess for the design optimization problem.
+
         """
 
         # Define dictionary with given design variables
@@ -288,45 +456,60 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
             initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
 
-        self.keys = initial_guess_variables.keys() # TODO: Move this
-        # self.keys used to merge with independent variables in get_optimization_values
-        # This implementation only works with default initial guess
         return {**initial_guess_variables, **initial_guess} 
           
     def get_omega(self, specific_speed, mass_flow, h0_in, d_is, h_is):
+        r"""
+        Convert specific speed to actual angular speed
+
+        Parameters
+        ----------
+        specific_speed : float
+            Given specific speed.
+        mass_flow : float
+            Given mass flow rate.
+        h0_in : float
+            Turbine inlet stagnation enthalpy.
+        d_is : float
+            Turbine exit density for an isentropic expansion.
+        h_is : float
+            Turbine exit enthalpy for an isentropic expansion.
+
+        Returns
+        -------
+        float
+            Actual angular speed.
+
+        """
+
         return specific_speed*(h0_in-h_is)**(3/4)/((mass_flow/d_is)**0.5)
-    
-    def get_radius(self, diameter_spec, mass_flow, h0_in, d_is, h_is):
-        return diameter_spec*(mass_flow/d_is)**0.5/((h0_in-h_is)**(1/4))/2
     
     def update_boundary_conditions(self, design_point):
         """
-        Update the boundary conditions of the problem with the provided operation point.
+        Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem. 
 
-        This method updates the internal state of the object by setting new boundary conditions
-        as defined in the 'operation_point' dictionary. It also initializes a Fluid object
-        using the 'fluid_name' specified in the operation point.
-
+        This method updates the boundary conditions attributes used to evaluate the turbine performance. 
+        It also initializes a Fluid object using the 'fluid_name' specified in the operation point.
         The method computes additional properties and reference values like stagnation properties at
         the inlet, exit static properties, spouting velocity, and reference mass flow rate.
         These are stored in the object's internal state for further use in calculations.
 
         Parameters
         ----------
-        operation_point : dict
-            A dictionary containing the boundary conditions defining the operation point.
-            It must include the following keys:
-            - fluid_name: str, the name of the fluid to be used in the Fluid object.
-            - T0_in: float, the inlet temperature (in Kelvin).
-            - p0_in: float, the inlet pressure (in Pascals).
-            - p_out: float, the outlet pressure (in Pascals).
-            - omega: float, the rotational speed (in rad/s).
-            - alpha_in: float, the inlet flow angle (in degrees).
+        design_point : dict
+            A dictionary containing the boundary conditions defining the operation point. It must include the following keys:
+
+            - `fluid_name` (str) : The name of the fluid to be used in the Fluid object.
+            - `T0_in` (float): The inlet temperature (in Kelvin).
+            - `p0_in` (float): The inlet pressure (in Pascals).
+            - `p_out` (float): The outlet pressure (in Pascals).
+            - `omega` (float): The rotational speed (in rad/s).
+            - `alpha_in` (float): The inlet flow angle (in degrees).
 
         Returns
         -------
         None
-            This method does not return a value but updates the internal state of the object.
+            This method does not return a value but updates the attributes of the object.
 
         """
 
@@ -383,8 +566,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return
     
     def get_default_bounds(self):
-        """
-        Gives default bounds to each design variable.
+        r"""
+        Generate a set of default bounds for each design variable. 
+
+        The function iterates through each design variable in `design_variables_keys` and assignes a tuple with associated 
+        defualt set of upper and lower bounds.
+
+        Returns
+        -------
+        tuple
+            A tuple of tuples with the lower and upper bound for each design variable.
         """
 
         bounds = []     
@@ -436,8 +627,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     
     def convert_performance_analysis_results(self, performance_problem):
 
-        """
-        Use result from a performance analysis to generate a feasable initial guess for design optimization
+        r"""
+        Generate a feasable set of initial guess from a solved performance analysis problem object. 
+
+        The function adopt the vars_scaled attribute from the solved performance analysis problem, the geometry and 
+        angular speed to generate an initial guess of correct form to be given to the design optimization problem. 
+
+        Returns
+        -------
+        dict
+            Feasable initial guess.
         """
 
         design_variables = self.design_variables_keys
@@ -477,19 +676,32 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         return {**vars_scaled, **initial_guess}
 
-def find_variable(cascades_data, variable):
-    
-    # Function to find variable in cascades_data
-    
-    for key in cascades_data.keys():
-        
-        if any(element == variable for element in cascades_data[key]):
-            
-            return cascades_data[key][variable]
-
-    raise Exception(f"Could not find column {variable} in cascades_data")
-
 def check_optimization_config(config):
+
+    r"""
+    
+    Checks the given configuration file for the desing optimization problem.
+
+    The following checks are performed:
+
+        - checks that `config['optimization']` contain `objective_function`, and that this is a string which is in `AVAILABLE_OBJECTIVE_FUNCTIONS`.
+        - checks if `config['optimization']` contain `eq_constraints`. If so, it checks that each element is a dict, where the key is contained in `AVAILABLE_EQ_CONSTRAINTS` and that it has a scale and value item. If not specified in configuration file, `config['optimization']['eq_constraints]` is set to None.
+        - checks if `config['optimization']` contain `ineq_constraints`. If so, it checks that each element is a dict, where the key is contained in `AVAILABLE_EQ_CONSTRAINTS` and that it has a scale and value item. If not specified in configuration file, `config['optimization']['ineq_constraints]` is set to None.
+        - checks if `config['optimization']` contain `design_variables`. This should be a list of strings that is contained in `AVAILABLE_DESIGN_VARIABLES`.
+        - checks if `config['optimization']` contain `bounds`. If given, it should be a iterable of tuples on the form (lower bound, upper bound), corresponding to the design variables. Set to None if not given. 
+        - checks if `config['optimization']` contain `radius_type`, and that it is contained in `AVAILABLE_GEOMETRIES`. Set to constant_mean if not given.
+
+    Parameters
+    ----------
+    config : dict
+        A dictionary containing necessary configuration options for computing optimal turbine.
+
+    Returns
+    -------
+    dict
+        The configuration dictionary. It is the same as the input if all required elements are given correctly. 
+    
+    """
 
      # Check objective function
     if "objective_function" not in config["optimization"].keys():
@@ -529,7 +741,7 @@ def check_optimization_config(config):
         if not len(set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)) == 0:
             raise ValueError(f"Error: Design variables are not supported: {set(design_variables)-set(AVAILABLE_DESIGN_VARIABLES)}")
 
-    # Check bounds: Must be a list of touples corresponding to the design variables
+    # Check bounds: Must be a list of tuples corresponding to the design variables
     if "bounds" not in config["optimization"].keys():
         config["optimization"]["bounds"] = None
     else:

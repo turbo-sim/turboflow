@@ -3,7 +3,39 @@ from .. import math
 
 def compute_losses(input_parameters):
     
-    r"""Evaluate loss coefficient according to Moustapha (1997) model"""
+    r"""
+    
+    Evaluate loss coefficient according to :cite:`kacker_mean_1982` and :cite:`moustapha_improved_1990`. 
+
+    This model split the total loss coefficient into profile, secondary, trailing edge, tip clearance and incidence.
+    The model adopt the incidence loss coefficient proposed by  :cite:`moustapha_improved_1990`, but is otherwise similar to the
+    model proposed by :cite:`kacker_mean_1982`.
+    The loss coefficient are combined through the following relation:
+
+    .. math::
+
+        \mathrm{Y_{tot}} = \mathrm{Y_{p}} + \mathrm{Y_{te}} + \mathrm{Y_{corr}}\mathrm{Y_{s}} + \mathrm{Y_{cl}} + \mathrm{Y_{inc}}
+
+    The function calls a function for each loss component:
+
+        - :math:`\mathrm{Y_{p}}` : `get_profile_loss`
+        - :math:`\mathrm{Y_{te}}` : `get_trailing_edge_loss`
+        - :math:`\mathrm{Y_{s}}` : `get_secondary_loss`
+        - :math:`\mathrm{Y_{cl}}` : `get_tip_clearance_loss`
+        - :math:`\mathrm{Y_{inc}}` : `get_incidence_loss`
+        - :math:`\mathrm{Y_{corr}}` : `get_secondary_loss_correction_factor`
+
+    Parameters
+    ----------
+    input_parameters : dict
+        A dictionary containing containing the keys, `flow`, `geometry` and `options`.
+
+    Returns
+    -------
+    dict
+        A dictionary with the loss components.
+    
+    """
     
     # Load data
     flow_parameters = input_parameters["flow"]
@@ -24,14 +56,13 @@ def compute_losses(input_parameters):
     
     # Incidence loss for profile loss
     Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des)
-    Y_p += Y_inc
     
     # Incidence correction factor for secondary loss coefficient
     Y_corr = get_secondary_loss_correction_factor(flow_parameters, geometry)
     Y_s *= Y_corr
     
     # Calculate total pressure loss coefficient
-    Y=Y_p+Y_s+Y_cl+Y_te
+    Y=Y_p+Y_s+Y_cl+Y_te + Y_inc
     
     # Return a dictionary of loss components
     losses = {
@@ -49,18 +80,19 @@ def get_profile_loss(flow_parameters, geometry):
     
     r"""
     Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
-    The equation for :math:`Y_p` is given by:
+    The equation for :math:`\mathrm{Y_p}` is given by:
 
     .. math::
 
-        Y_p = Yp_{reaction} - \left|\frac{\theta_{in}}{\beta_{out}}\right| \cdot
-        \left(\frac{\theta_{in}}{\beta_{out}}\right) \cdot (Yp_{impulse} - Yp_{reaction})
+        \mathrm{Y_p} = \mathrm{Y_{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot
+        \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (\mathrm{Y_{impulse}} - \mathrm{Y_{reaction}})
 
     where:
-        - :math:`Yp_{reaction}` is the reaction loss coefficient computed using Aungier correlation.
-        - :math:`Yp_{impulse}` is the impulse loss coefficient computed using Aungier correlation.
-        - :math:`\\theta_{in}` is the inlet metal angle.
-        - :math:`\\beta_{out}` is the exit flow angle.
+
+        - :math:`\mathrm{Y_{reaction}}` is the reaction loss coefficient computed using Aungier correlation.
+        - :math:`\mathrm{Y_{impulse}}` is the impulse loss coefficient computed using Aungier correlation.
+        - :math:`\theta_\mathrm{in}` is the inlet metal angle.
+        - :math:`\beta_\mathrm{out}` is the exit flow angle.
 
     The function also applies various corrections based on flow parameters and geometry factors.
 
@@ -68,30 +100,13 @@ def get_profile_loss(flow_parameters, geometry):
     ----------
     flow_parameters : dict
         Dictionary containing flow-related parameters.
-            - "Re_out" (float) : Reynolds number at the outlet.
-            - "Ma_rel_out" (float) : Exit relative Mach number.
-            - "Ma_rel_in" (float) : Inlet relative Mach number.
-            - "p0_rel_in" (float) : Inlet total relative pressure.
-            - "p_in" (float) : Inlet static pressure.
-            - "p0_rel_out" (float) : Exit total relative pressure.
-            - "p_out" (float) : Exit static pressure.
-            - "beta_out" (float) : Exit relative flow angle.
-
     geometry : dict
         Dictionary with geometric parameters.
-            - "hub_tip_ratio_in" (float) : Hub to tip radius ratio at inlet.
-            - "pitch" (float) : Pitch.
-            - "chord" (float) : Chord length.
-            - "leading_edge_angle" (float) : Inlet metal angle.
-            - "maximum_thickness" (float) : Maximum thickness.
-
-    cascade_type : str
-        Type of cascade ('stator' or 'rotor').
 
     Returns
     -------
     float
-        Profile loss coefficient (:math:`Y_p`).
+        Profile loss coefficient.
 
     """
             
@@ -158,44 +173,68 @@ def get_profile_loss(flow_parameters, geometry):
 
 def get_secondary_loss(flow_parameters, geometry):
     
-    r"""    
+    r"""
     The function calculates the secondary loss coefficient using the Kacker-Okapuu model.
-    The main equation for Y_s is given by:
+    The main equation for :math:`\mathrm{Y_s}` is given by:
 
     .. math::
 
-        Y_s = 1.2 \cdot K_s \cdot 0.0334 \cdot far \cdot Z \cdot \frac{\cos(\beta_{out})}{\cos(\theta_{in})}
+        \mathrm{Y_s} = 1.2 \cdot \mathrm{K_s} \cdot 0.0334 \cdot far \cdot Z \cdot \frac{\cos(\beta_{out})}{\cos(\theta_{in})}
 
     where:
+
         - :math:`K_s` is a correction factor accounting for compressible flow effects.
         - :math:`far` is a factor that account for the aspect ratio of the current cascade.
         - :math:`Z` is a blade loading parameter.
-        - :math:`\\beta_{out}` is the exit flow angle.
-        - :math:`\\theta_{in}` is the inlet metal angle.
+        - :math:`\beta_\mathrm{out}` is the exit flow angle.
+        - :math:`\theta_\mathrm{in}` is the inlet metal angle.
 
-    The function also applies various corrections and computations based on flow parameters and geometry factors.
+    The correction factor :math:`\mathrm{K_s}` from a separate correction factor given from `get_compressible_correction_factors`.
+    `get_compressible_correction_factors` returns :math:`\mathrm{K_s}`, which is used to calculate :math:`\mathrm{K_s}`:
 
+    .. math::
+
+        \mathrm{K_s} = 1 - \left(\frac{b}{H}\right)^2 (1-\mathrm{K_p})
+
+    where:
+
+        - :math:`b` is the axial chord.
+        - :math:`H` is the mean blade height.
+
+    The aspect ratio factor is calculated from the following correlation:
+
+    .. math:: 
+
+        far = \begin{cases}
+                1 - \frac{0.25 \sqrt{|2-H/c|}}{H/c} & \text{if } H/c < 2.0 \\
+                c/H & \text{if } H/c \geq 2.0
+                \end{cases}
+
+    where :math:`c` is the blade chord.
+
+    The loading parameters is caclualated from the following correlation:
+
+    .. math::
+
+        Z = 4 (\tan(\beta_\mathrm{in}) - \tan(\beta_\mathrm{out}))^2\frac{\cos^2(\beta_\mathrm{out})}{\cos(\beta_m)} 
+
+    where:
+
+        - :math:`\beta_\mathrm{in}` and :math:`\beta_\mathrm{out}` is the inlet and exit relative flow angle
+        - :math:`\beta_m = \tan^{-1}(0.5(\tan(\beta_\mathrm{in})-\tan(\beta_\mathrm{out})))` is the mean gas angle.
+           
     Parameters
     ----------
     flow_parameters : dict
         Dictionary containing flow-related parameters.
-            - "Ma_rel_out" (float) : Exit relative Mach number.
-            - "Ma_rel_in" (float) : Inlet relative Mach number.
-            - "beta_out" (float) : Exit flow angle.
-            - "beta_in" (float) : Inlet flow angle.
 
     geometry : dict
         Dictionary with geometric parameters.
-            - "axial_chord" (float) : Blade span.
-            - "height" (float) : Blade height.
-            - "chord" (float) : Chord length.
-            - "leading_edge_angle" (float) : Inlet metal angle.
 
     Returns
     -------
     float
-        Secondary loss coefficient (Y_s).
-
+        Secondary loss coefficient.
 
     """
         
@@ -225,25 +264,26 @@ def get_secondary_loss(flow_parameters, geometry):
 
 def get_trailing_edge_loss(flow_parameters, geometry):
     
-    r"""    
+    r"""
     Calculate the trailing edge loss coefficient using the Kacker-Okapuu model.
     The main equation for the kinetic-energy coefficient is given by:
 
     .. math::
 
-        d_{\phi^2} = d_{\phi^2_{reaction}} - \left|\frac{\theta_{in}}{\beta_{out}}\right| \cdot
-        \left(\frac{\theta_{in}}{\beta_{out}}\right) \cdot (d_{\phi^2_{impulse}} - d_{\phi^2_{reaction}})
-        
+        d_{\phi^2} = d_{\phi^2_\mathrm{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot
+        \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (d_{\phi^2_\mathrm{impulse}} - d_{\phi^2_\mathrm{reaction}})
+
     The kinetic-energy coefficient is converted to the total pressure loss coefficient by:
-        
+
     .. math::
 
-        Y_{te} = \frac{1}{{1 - \phi^2}} - 1
+        \mathrm{Y_{te}} = \frac{1}{{1 - \phi^2}} - 1
 
     where:
-        - :math:`d_{\phi^2_{reaction}}` and :math:`d_{\phi^2_{impulse}}` are coefficients related to kinetic energy loss for reaction and impulse blades respectively, and are interpolated based on trailing edge to throat opening ratio (r_to).
-        - :math:`\beta_{out}` is the exit flow angle.
-        - :math:`\theta_{in}` is the inlet metal angle.
+
+        - :math:`d_{\phi^2_\mathrm{reaction}}` and :math:`d_{\phi^2_\mathrm{impulse}}` are coefficients related to kinetic energy loss for reaction and impulse blades respectively, and are interpolated based on trailing edge to throat opening ratio.
+        - :math:`\beta_\mathrm{out}` is the exit flow angle.
+        - :math:`\theta_\mathrm{in}` is the inlet metal angle.
 
     The function also applies various interpolations and computations based on flow parameters and geometry factors.
 
@@ -251,19 +291,13 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     ----------
     flow_parameters : dict
         Dictionary containing flow-related parameters.
-            - "beta_out" (float) : Exit flow angle.
-
     geometry : dict
         Dictionary with geometric parameters.
-            - "trailing_edge_thickness" (float) : Trailing edge thickness.
-            - "opening" (float) : Throat width.
-            - "leading_edge_angle" (float) : Inlet metal angle.
 
     Returns
     -------
     float
-        Trailing edge loss coefficient (:math:`Y_{te}`).
-
+        Trailing edge loss coefficient.
 
     """
     
@@ -305,40 +339,28 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 
     .. math::
 
-        Y_{cl} = B \cdot Z \cdot \frac{c}{H} \cdot \left(\frac{t_{cl}}{H}\right)^{0.78}
+        \mathrm{Y_{cl}} = B \cdot Z \cdot \frac{c}{H} \cdot \left(\frac{t_\mathrm{cl}}{H}\right)^{0.78}
 
     where:
+
         - :math:`B` is an empirical parameter that depends on the type of cascade (0 for stator, 0.37 for shrouded rotor).
         - :math:`Z` is a blade loading parameter
-        - :math:`c` is the chord length.
-        - :math:`H` is the blade height.
-        - :math:`t_{cl}` is the tip clearance.
-
-    The function also applies various computations and corrections based on flow parameters, geometry, and cascade type.
+        - :math:`c` is the chord.
+        - :math:`H` is the mean blade height.
+        - :math:`t_\mathrm{cl}` is the tip clearance.
 
 
     Parameters
     ----------
     flow_parameters : dict
         Dictionary containing flow-related parameters.
-            - "beta_out" (float) : Exit flow angle.
-            - "beta_in" (float) : Inlet flow angle.
-
     geometry : dict
         Dictionary with geometric parameters.
-            - "height" (float) : Blade height.
-            - "chord" (float) : Chord length.
-            - "tip_clearance" (float) : Tip clearance.
-
-    cascade_type : str
-        Type of cascade ('stator' or 'rotor').
 
     Returns
     -------
     float
-        Tip clearance loss coefficient (Y_cl).
-
-
+        Tip clearance loss coefficient.
     """
     
     beta_out = flow_parameters["beta_out"]
@@ -369,52 +391,33 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 def get_incidence_loss(flow_parameters, geometry, beta_des): 
     
     r"""
-    Calculate the total pressure loss coefficient due to incidence in a cascade according to :cite'moustapha_incidence_1990'
+    Calculate the incidence loss coefficient according to the correlation proposed by :cite:`moustapha_improved_1990`.
     
     The model first computes the incidence parameter, :math:`\chi`. Based on this parameter, the kinetic-energy incidence 
     loss coefficient is calculated to match experimental data.
 
-    For 0 <= :math:`\chi` <= 800:
-
     .. math::
 
-        \Delta\phi^2_p = 0.778e^{-5}*\chi + 0.56e^{-7}*\chi^2 + 0.4e^{-10}*\chi^3 + 2.054e^{-19}*\chi^6
+        \Delta\phi^2_p = \begin{cases}
+                        -5.1734e^{-6}\chi + 7.6902e^{-9}\chi^2 & \text{if } -800 \leq \chi \leq 0 \\
+                        0.778e^{-5}\chi + 0.56e^{-7}\chi^2 + 0.4e^{-10}\chi^3 + 2.054e^{-19}\chi^6 & \text{if } 0 \leq \chi \leq 800
+                        \end{cases}
 
-    For -800 <= :math:`\chi` < 0:
-
-    .. math::
-
-        \Delta\phi^2_p = -5.1734e^{-6}*\chi + 7.6902e^{-9}*\chi^2
-
-    The kinetic-energy coefficient is converted to total pressure loss coefficient (:math:`Y`) using the formula:
-
-    .. math::
-
-        Y = \frac{[1 - \frac{\gamma-1}{2}M_2^2 (\frac{1}{\phi^2} - 1)]^{\frac{-\gamma}{\gamma-1}} - 1}{1 - (1 + \frac{\gamma-1}{2} M_2^2)^{\frac{-\gamma}{\gamma-1}}}
-
+    The kinetic-energy coefficient is converted to total pressure loss coefficient through the `convert_kinetic_energy_coefficient` function. 
 
     Parameters
     ----------
     flow_parameters : dict
-        Dictionary containing kinetic and thermodynamic variables describing the flow through the current cascade.
-            - "Ma_rel_out" (float) : Exit relative Mach number.
-            - "beta_in" (float) : Inlet relative flow angle.
-            - "gamma" (float) : Specific heat ratio.
-
+        Dictionary containing flow-related parameters.
     geometry : dict
-        Dictionary with the geometrical parameters describing the current cascade.
-            - "pitch" (float) : Pitch.
-            - "leading_edge_diameter" (float) : Leading edge diameter.
-            - "leading_edge_angle" (float) : Inlet metal angle.
-            - "metal_angle_te" (float) : Exit metal angle.
-
+        Dictionary with geometric parameters.
     beta_des : float
-        Desired beta value.
+        Inlet flow angle for zero incidence losses (design).
 
     Returns
     -------
     float
-        Total pressure loss coefficient (:math:`Y_\mathrm{inc}`).
+        Incidence loss coefficient.
 
     Raises
     ------
@@ -455,24 +458,33 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     
     r"""
     Calculate the correction factor for the secondary loss coefficient to account for incidence losses.
-    The correction factor is calculated based on the secondary flow incidence parameter (:math_`chi`), which is determined using
+
+    The correction factor is calculated based on the secondary flow incidence parameter (:math:`\chi`), which is determined using
     geometrical and flow parameters.
 
-    The correction factor (:math:`Y_{corr}`) is given by:
+    The correction factor (:math:`Y_\mathrm{corr}`) is given by:
 
     .. math::
 
-        Y_{corr} = \begin{cases}
+        Y_\mathrm{corr} = \begin{cases}
         e^{0.9\chi} + 13\chi^2 + 400\chi^4 & \text{if } \chi \geq 0 \\
         e^{0.9\chi} & \text{if } \chi < 0
         \end{cases}
 
+    and the incidence paramter is calculated as:
+
+    .. math::
+
+        \chi = \frac{\beta_\mathrm{in} - \theta_\mathrm{in}}{180 - (\theta_\mathrm{in} + \theta_\mathrm{out})}\left(\frac{\cos(\theta_\mathrm{in})}{\cos(\theta_\mathrm{out})}\right)^{-1.5}\left(\frac{\mathrm{d_{le}}}{c}\right)^{-0.3}
+
     where:
+
         - :math:`\chi` is the secondary flow incidence parameter.
         - :math:`c` is the chord length.
-        - :math:`le` is the leading edge diameter.
-        - :math:`\theta_{in}` is the inlet metal angle.
-        - :math:`\theta_{out}` is the exit metal angle.
+        - :math:`\mathrm{d_{le}}` is the leading edge diameter.
+        - :math:`\theta_\mathrm{in}` is the inlet metal angle.
+        - :math:`\theta_\mathrm{out}` is the exit metal angle.
+        - :math:`\beta_\mathrm{in}` is the inlet relative flow angle.
 
     The function also checks if the secondary incidence parameter falls within the range of the experimental data used to 
     determine the correction factor.
@@ -481,19 +493,13 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     ----------
     flow_parameters : dict
         Dictionary containing flow-related parameters.
-            - "beta_in" (float) : Inlet flow angle.
-
     geometry : dict
         Dictionary with geometric parameters.
-            - "chord" (float) : Chord length.
-            - "leading_edge_diameter" (float) : Leading edge diameter.
-            - "leading_edge_angle" (float) : Inlet metal angle.
-            - "metal_angle_te" (float) : Exit metal angle.
 
     Returns
     -------
     float
-        Secondary loss correction factor (Y_corr).
+        Secondary loss correction factor.
 
     """
     
@@ -505,7 +511,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     theta_in=geometry["leading_edge_angle"]
     theta_out = geometry["metal_angle_te"]
     
-    chi = get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in)
+    chi = (abs(beta_in)-abs(theta_in))/(180-(theta_in+theta_out))*(math.cosd(theta_in)/math.cosd(theta_out))**-1.5*(le/c)**-0.3
     
     if not (-0.4 < chi < 0.3):
         raise Warning("Secondary incidence parameter out of range: chi = {chi}")
@@ -519,9 +525,53 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 
 def nozzle_blades(r_sc,angle_out):
     
-    # Use Aungier correlation to compute the pressure loss coefficient
-    # This correlation is a formula that reproduces the figures from the Ainley
-    # and Mathieson original figures
+    r"""
+    Use Aungier correlation to compute the pressure loss coefficient for nozzle blades :cite:`aungier_turbine_2006`.
+
+    This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,
+    and is a function of the pitch-to-chord ratio and exit relative flow angle. 
+
+    The correlation uses the following equations:
+
+    .. math::
+
+        & \beta_\mathrm{tan} = 90 - \beta_\mathrm{ax} \\
+        & \left(\frac{s}{c}\right)_\mathrm{min} = \begin{cases}
+                                                    0.46 + \frac{\beta_\mathrm{tan}}{77} && \text{if } \beta_\mathrm{tan} < 30 \\
+                                                    0.614 + \frac{\beta_\mathrm{tan}}{130} && \text{if } \beta_\mathrm{tan} \geq 30
+                                                \end{cases} \\
+        & X = \left(\frac{s}{c}\right) - \left(\frac{s}{c}\right)_\mathrm{min} \\
+        & A = \begin{cases}
+                0.025 + \frac{27 - \beta_\mathrm{tan}}{530} && \text{if } \beta_\mathrm{tan} < 27 \\
+                0.025 + \frac{27 - \beta_\mathrm{tan}}{3085} && \text{if } \beta_\mathrm{tan} \geq 27
+              \end{cases} \\
+        & B = 0.1583 - \frac{\beta_\mathrm{tan}}{1640} \\
+        & C = 0.08\left(\frac{\beta_\mathrm{tan}}{30}\right)^2 -1 \\
+        & n = 1 + \frac{\beta_\mathrm{tan}}{30} \\
+        & \mathrm{Y_{p,reaction}} = \begin{cases}
+                A + BX^2 + CX^3 && \text{if } \beta_\mathrm{tan} < 30 \\
+                A + B |X|^n && \text{if } \beta_\mathrm{tan} \geq 30
+              \end{cases}   
+
+    where:
+
+        - :math:`s` is the pitch
+        - :math:`c` is the chord
+        - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. 
+        
+    Parameters
+    ----------
+    r_sc : float
+        Pitch-to-chord ratio.
+    angle_out : float
+        Exit relative flow angle (in degrees).
+
+    Returns
+    -------
+    float
+        Pressure loss coefficient for impulse blades.
+
+    """
     
     phi = 90-angle_out
     r_sc_min = (0.46+phi/77)*(phi < 30) + (0.614+phi/130)*(phi >= 30)
@@ -536,9 +586,46 @@ def nozzle_blades(r_sc,angle_out):
 
 def impulse_blades(r_sc,angle_out):
     
-    # Use Aungier correlation to compute the pressure loss coefficient
-    # This correlation is a formula that reproduces the figures from the Ainley
-    # and Mathieson original figures
+    r"""
+    Use Aungier correlation to compute the pressure loss coefficient for impulse blades :cite:`aungier_turbine_2006`.
+
+    This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,
+    and is a function of the pitch-to-chord ratio and exit relative flow angle. 
+
+    The correlation uses the following equations:
+
+    .. math::
+
+        & \beta_\mathrm{tan} = 90 - \beta_\mathrm{ax} \\
+        & \left(\frac{s}{c}\right)_\mathrm{min} = 0.224 + 1.575\left(\frac{\beta_\mathrm{tan}}{90}\right) - \left(\frac{\beta_\mathrm{tan}}{90}\right)^2 \\
+        & X = \left(\frac{s}{c}\right) - \left(\frac{s}{c}\right)_\mathrm{min} \\
+        & A = 0.242 - \frac{\beta_\mathrm{tan}}{151} + \left(\frac{\beta_\mathrm{tan}}{127}\right)^2 \\
+        & B = \begin{cases}
+                0.3 + \frac{30 - \beta_\mathrm{tan}}{50} && \text{if } \beta_\mathrm{tan} < 30 \\
+                0.3 + \frac{30 - \beta_\mathrm{tan}}{275} && \text{if } \beta_\mathrm{tan} \geq 30
+              \end{cases} \\
+        & C = 0.88 - \frac{\beta_\mathrm{tan}}{42.4} + \left(\frac{\beta_\mathrm{tan}}{72.8}\right)^2 \\
+        & \mathrm{Y_{p,impulse}} = A + BX^2 - CX^3 
+
+    where:
+
+        - :math:`s` is the pitch
+        - :math:`c` is the chord
+        - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. 
+        
+    Parameters
+    ----------
+    r_sc : float
+        Pitch-to-chord ratio.
+    angle_out : float
+        Exit relative flow angle (in degrees).
+
+    Returns
+    -------
+    float
+        Pressure loss coefficient for impulse blades.
+
+    """
     
     phi = 90-angle_out
     r_sc_min = 0.224+1.575*(phi/90)-(phi/90)**2
@@ -552,9 +639,43 @@ def impulse_blades(r_sc,angle_out):
 
 def get_compressible_correction_factors(Ma_rel_in,Ma_rel_out):
     
-    # Compute compressible flow correction factor according to Kacker and Okapuu loss model
-    # The loss correlation proposed by ainley ant Mathieson overpredicts losses at high mach numbers 
-    # These correction factors reduces losses accordingly at higher mach numbers
+    r"""
+
+    Compute compressible flow correction factor according to Kacker and Okapuu loss model :cite:`kacker_mean_1982`.
+
+    The correction factors :math:`\mathrm{K_1}`, :math:`\mathrm{K_2}` and :math:`\mathrm{K_p}` was introduced by :cite:`kacker_mean_1982` to correct previous correlation (:cite:`ainley_method_1951`)
+    for effect of higher mach number and channel acceleration. The correction factors reduces the losses at higher mach number. Their definition follows: 
+
+    .. math::
+
+        &\mathrm{K_1} = \begin{cases}
+                1 & \text{if } \mathrm{Ma_{out}} < 0.2 \\
+                1 - 1.25(\mathrm{Ma_{out}} - 0.2) & \text{if } \mathrm{Ma_{out}} \geq 0.2
+              \end{cases} \\
+        &\mathrm{K_2} = \left(\frac{\mathrm{Ma_{in}}}{\mathrm{Ma_{out}}}\right) \\
+        &\mathrm{K_p} = 1 - \mathrm{K_2}(1-\mathrm{K_1})
+
+    where:
+
+        - :math:`\mathrm{Ma_{in}}` is the relative mach number at the cascade inlet.
+        -  :math:`\mathrm{Ma_{out}}` is the relative mach number at the cascade exit.
+    
+    Parameters
+    ----------
+    Ma_rel_in : float
+        Inlet relative mach number.
+    Ma_rel_out : float
+        Exit relative mach number.
+
+    Returns
+    -------
+    float
+        Correction factor :math:`\mathrm{K_p}`.
+    float
+        Correction factor :math:`\mathrm{K_2}`.
+    float
+        Correction factor :math:`\mathrm{K_1}`.
+    """
     
     K1=1*(Ma_rel_out < 0.2) + (1-1.25*(Ma_rel_out-0.2))*(Ma_rel_out > 0.2 and Ma_rel_out < 1.00)
     K2=(Ma_rel_in/Ma_rel_out)**2
@@ -564,12 +685,25 @@ def get_compressible_correction_factors(Ma_rel_in,Ma_rel_out):
 
 def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     
-    # Compute the ratio between mach at hub and mean span at the inlet of the current cascade
-    # Due to radial variation in gas conditions, mach at the hub will alway be higher than at mean
-    # Thus, shock losses at the hub could occur even when the mach is subsonic at the mean balde span
-    
-    # r_ht is the hub to tip ratio at the inlet of the current cascade
-    # cascade_type is a string that specify whether the current cascade is a stator or a rotor
+    r"""
+    Compute the ratio between Mach at the hub and mean span at the inlet of the current cascade.
+
+    Due to radial variation in gas conditions, Mach at the hub will always be higher than at the mean.
+    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span. 
+
+    Parameters
+    ----------
+    r_ht : float
+        Hub to tip ratio at the inlet of the current cascade.
+    cascade_type : str
+        Type of the current cascade, either 'stator' or 'rotor'.
+
+    Returns
+    -------
+    float
+        Ratio between Mach at the hub and mean span at the inlet of the current cascade.
+
+    """
     
     if r_ht < 0.5:
         r_ht = 0.5     # Numerical trick to prevent extrapolation
@@ -593,23 +727,46 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
 
 
 def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
+        
+    r"""
+    Calculate the incidence parameter according to the correlation proposed by :cite:`moustapha_improved_1990`. 
     
-    # Computes the incidence parameters according to :cite'moustapha_incidence_1990'
-    # Depends on the leading edge diamater (le), pitch (s), inelt metal angle (theta_in)
-    # exit metal_angle (theta_out), inlet relative flow angle (beta_in) and design inlet relative flow angle (beta_des)
-    
-    # The parameter is calculated by the following formula:
-    
-    # .. math::
+    The incidence parameter is used to calculate the increment in profile losses due to the effect of incidence according to function `get_incidence_loss`.
 
-    #    \chi = \left(\frac{d}{s}\right)^{-1.6}  \left(\frac{\cos{\beta_1}}{\cos{\beta_2}} \right)^{-2}  \left(\alpha_1 - \alpha_{1,\mathrm{des}}\right)
+    The quantity is calculated as:
 
-    # The leading edge to pitch ratio :math:`\left(\frac{d}{s}\right)` reduced the incidence losses when increased. 
-    # The term :math:`left(\frac{\cos{\beta_1}}{\cos{\beta_2}} \right)` attempt to describe the degree of reaction through the flow section, and reduces the incidence losses when increased 
-    # The term :math:`\left(\alpha_1 - \alpha_{1,\mathrm{des}}\right)` is the incidence angle 
+    .. math::
+
+        \chi = \left(\frac{\mathrm{d_{le}}}{s}\right)^{-1.6}\left(\frac{\cos{\theta_\mathrm{in}}}{\cos{\theta_\mathrm{out}}}\right)^{-2}(\beta_\mathrm{in} - \beta_\mathrm{des})
+
+    where:
+
+        - :math:`\mathrm{d_{le}}` is the leading edge diameter.  
+        - :math:`s` is the pitch.
+        - :math:`\theta_\mathrm{in}` and :math:`\theta_\mathrm{out}` is the blade metal angle at the inlet and outlet respectively.
+        - :math:`\beta_\mathrm{in}` and :math:`\beta_\mathrm{des}` is the inlet relative flow angle at given and design conditions respectively.
+
+    Parameters
+    ----------
+    le : float
+        Leading edge diameter.
+    s : float
+        Pitch.
+    theta_in : float
+        Leading edge metal angle (in degrees).
+    theta_out : float
+        Trailing edge metal angle (in degrees).
+    beta_in : float
+        Inlet relative flow angle (in degrees).
+    beta_des : float
+        Inlet relative flow angle at design condition (in degrees).
+
+    Returns
+    -------
+    float
+        Incidence parameter.
+    """
     
-    # TODO: add docstring explaning the equations and the original paper
-    # TODO: possibly include the equation number (or figure number) of the original paper
     # TODO: explain smoothing/blending tricks
 
     chi = (le/s)**(-1.6)*(math.cosd(theta_in)/math.cosd(theta_out))**(-2)*(abs(beta_in)-abs(beta_des))
@@ -617,13 +774,39 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
     
 def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
 
-    # TODO: this conversion assumes that the fluid is a perfect gas
-    # TODO: we can create a more general function to convert between different loss coefficient deffinitions
-    #   TODO: stagation pressure loss coefficient
-    #   TODO: enthalpy loss coefficient (two-variants)
-    #   TODO: kinetic energy loss coefficient
-    #   TODO: entropy loss coefficient
-    # Given the fluid state, I believe it is possible to convert between all of them
+    r"""
+    
+    Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
+
+    .. math::
+
+        \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
+
+    where:
+
+        - :math:`\gamma` is the specific heat ratio.
+        - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
+        - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
+    
+    Parameters
+    ----------
+    dPhi : float
+        Kinetic energy coefficient increment.
+    gamma : float
+        Heat capacity ratio.
+    Ma_rel_out : float
+        The cascade exit relative mach number.
+
+    Returns
+    -------
+    float
+        The total pressure loss coefficient.  
+
+    Warnings
+    --------
+    This conversion assumes that the fluid is a perfect gas.  
+
+    """
 
     denom = 1-(1+(gamma-1)/2*Ma_rel_out**2)**(-gamma/(gamma-1))
     numer =  (1-(gamma-1)/2*Ma_rel_out**2*(1/(1-dPhi)-1))**(-gamma/(gamma-1))-1
@@ -631,7 +814,3 @@ def convert_kinetic_energy_coefficient(dPhi,gamma,Ma_rel_out):
     Y = numer/denom
      
     return Y
-
-def get_secondary_incidence_loss_parameter(le, c, theta_in, theta_out, beta_in):
-    
-    return (abs(beta_in)-abs(theta_in))/(180-(theta_in+theta_out))*(math.cosd(theta_in)/math.cosd(theta_out))**-1.5*(le/c)**-0.3

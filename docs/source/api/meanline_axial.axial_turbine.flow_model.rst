@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.flow\_model module
+Turbine flow model
 =================================================
 
 .. automodule:: meanline_axial.axial_turbine.flow_model

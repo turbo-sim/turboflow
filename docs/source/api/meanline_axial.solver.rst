@@ -1,4 +1,4 @@
-meanline\_axial.solver package
+Solver functions
 ==============================
 
 Submodules

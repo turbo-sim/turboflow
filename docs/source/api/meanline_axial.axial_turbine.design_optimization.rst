@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.design\_optimization module
+Design optimization
 ==========================================================
 
 .. automodule:: meanline_axial.axial_turbine.design_optimization

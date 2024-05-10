@@ -1,4 +1,4 @@
-meanline\_axial.utilities package
+Utilities
 =================================
 
 Submodules

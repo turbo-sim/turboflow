@@ -15,7 +15,6 @@ def run_script(script_path):
     cmd = ["python", script_path]
     subprocess.check_call(cmd)
  
-
 if __name__ == "__main__":
     # run_script("build_nomenclature.py")
     # run_script("build_bibliography.py")

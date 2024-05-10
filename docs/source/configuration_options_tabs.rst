@@ -490,7 +490,7 @@
                      * - **Valid types**
                        - ``str``
                      * - **Valid options**
-                       - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``, ``custom``
+                       - ``kacker_okapuu``, ``moustapha``, ``benner``, ``isentropic``, ``custom``
 
                .. tab-item:: loss_coefficient
 

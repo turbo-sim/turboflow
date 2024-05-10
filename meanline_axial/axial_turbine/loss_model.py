@@ -1,7 +1,6 @@
 from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
-from . import loss_model_benner_moustapha as bm
 from .. import utilities as utils
 
 # List of valid options
@@ -9,14 +8,19 @@ LOSS_MODELS = [
     "kacker_okapuu",
     "moustapha",
     "benner",
-    "benner_moustapha",
     "isentropic",
     "custom",
 ]
+"""
+Available loss models.
+"""
 
 LOSS_COEFFICIENTS = [
     "stagnation_pressure",
 ]
+"""
+Available loss coefficients.
+"""
 
 # Keys that the output loss dictionary must have
 KEYS_LOSSES = [
@@ -35,22 +39,32 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     """
     Calculate loss coefficient based on the selected loss model.
 
-    Args:
-        loss_model_options (dict): Options for the loss model.
-        input_parameters (dict): Input parameters required for loss model calculation.
+    The avaialble loss models are:
+
+    - `kacker_okapuu` : loss model according to :cite:`kacker_mean_1982`.
+    - `moustapha` : loss model according to :cite:`moustapha_improved_1990`.
+    - `benner` : loss model according to :cite:`benner_influence_1997`, :cite:`benner_empirical_2006-1` and :cite:`benner_empirical_2006`. 
+    - `isentropic` : Loss coefficient set to zero (isentropic).
+    - `custom` :  Constant loss coefficent according to user. Require `loss_model_options["custom_value"]`.
+
+    Parameters
+    ----------
+    loss_model_options : dict 
+        Options for the loss calculation.
+    input_parameters : dict
+        Input parameters required for loss model calculation.
 
     Returns:
-        tuple: (Y, loss_dict), where Y is the loss coefficient and loss_dict is a dictionary of loss components.
+    dict
+        A dictionary containing loss components.
     """
-    # TODO improve docstring and add citations to the papers of each loss model
 
     # Function mappings for each loss model
     loss_model_functions = {
         LOSS_MODELS[0]: ko.compute_losses,
         LOSS_MODELS[1]: mo.compute_losses,
         LOSS_MODELS[2]: br.compute_losses,
-        LOSS_MODELS[3]: bm.compute_losses,
-        LOSS_MODELS[4]: lambda _: {
+        LOSS_MODELS[3]: lambda _: {
             "loss_profile": 0.0,
             "loss_incidence": 0.0,
             "loss_trailing": 0.0,
@@ -58,7 +72,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
             "loss_clearance": 0.0,
             "loss_total": 0.0,
         },
-        LOSS_MODELS[5]: lambda input_parameters: 
+        LOSS_MODELS[4]: lambda input_parameters: 
                 {
                 "loss_profile": 0.0,
                 "loss_incidence": 0.0,
@@ -101,22 +115,24 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Save the definition of the loss coefficient
     loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
 
-    # Validate the output losses dictionary
-    utils.validate_keys(loss_dict, KEYS_LOSSES, KEYS_LOSSES)
-
     return loss_dict
 
 
 def apply_tuning_factors(loss_dict, tuning_factors):
     """
-    Applies tuning factors to the loss model
+    Apply tuning factors to the loss model
 
-    Args:
-        loss_dict (dict): Dictionary containing loss components.
-        tuning_factors (dict): Dictionary containing the multiplicative tuning factors.
+    The tuning factors are multiplied with their associated loss component.
+
+    Parameters
+    ----------
+    loss_dict : dict 
+        A dictionary containing loss components.
+    tuning_factors : dict 
+        A dictionary containing the multiplicative tuning factors.
 
     Raises:
-        KeyError: If a key from tuning_factors is not found in loss_dict.
+        KeyError: If a key from `tuning_factors` is not found in `loss_dict`.
     """
 
     for key, factor in tuning_factors.items():
@@ -126,29 +142,3 @@ def apply_tuning_factors(loss_dict, tuning_factors):
 
     return loss_dict
 
-
-def validate_loss_dictionary(loss_dict):
-    """
-    Validates that the loss dictionary contains exactly the expected keys
-
-    Parameters:
-    - loss_dict (dict): The dictionary to validate.
-
-    Raises:
-    - ValueError: If the dictionary does not contain the required keys or contains extra keys.
-    """
-
-    missing_keys = set(KEYS_LOSSES) - loss_dict.keys()
-    extra_keys = loss_dict.keys() - set(KEYS_LOSSES)
-
-    if missing_keys:
-        raise ValueError(
-            f"Missing required keys in loss dictionary: {', '.join(missing_keys)}"
-        )
-
-    if extra_keys:
-        raise ValueError(
-            f"Extra keys found in loss dictionary: {', '.join(extra_keys)}"
-        )
-
-    return loss_dict

@@ -1,4 +1,4 @@
-meanline\_axial.axial\_turbine.loss\_model\_moustapha module
+Kacker, Okapuu & Moustapha model
 ============================================================
 
 .. automodule:: meanline_axial.axial_turbine.loss_model_moustapha

@@ -16,17 +16,35 @@ from .. import properties as props
 from . import geometry_model as geom
 from . import flow_model as flow
 
-
-
-SOLVERS_AVAILABLE = [
-    "lm",
-    "hybr",
-]
-
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
+"""
+Available solvers for performance analysis.
+"""
 
 
 def get_heuristic_guess_input(n):
+   
+   r"""
+   
+   Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
+
+   Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
+   an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
+   
+   The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
+   or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
+
+   Parameters
+    ----------
+    n : int
+        Number of cascades.
+
+    Returns
+    -------
+    list
+        List of sets of variables used to generate an initial guess.
+
+   """
     
    eta_ts_vec = [0.8, 0.7, 0.6]
     
@@ -55,16 +73,13 @@ def compute_performance(
     stop_on_failure=False,
     export_results=True,
 ):
-    """
+    r"""
     Compute and export the performance of each specified operation point to an Excel file.
 
     This function handles two types of input for operation points:
 
         1. An explicit list of dictionaries, each detailing a specific operation point.
-
-        2. A dictionary where each key has a range of values, representing the cross-product
-        of all possible operation points. It generates the Cartesian product of these ranges
-        internally.
+        2. A dictionary where each key has a range of values, representing the cross-product of all possible operation points. It generates the Cartesian product of these ranges internally.
 
     For each operation point, it computes performance based on the provided case data and compiles
     the results into an Excel workbook with multiple sheets for various data sections.
@@ -74,10 +89,23 @@ def compute_performance(
     then stored in a structured Excel file with separate sheets for each aspect of the data (e.g.,
     overall, plane, cascade, stage, solver, and solution data).
 
-    The initial guess for the first operation point is set to a default value. For subsequent operation
-    points, the function employs a strategy to use the closest previously computed operation point's solution
+    The initial guess variable is used for the first operation point. If given, it must be a dictionary with the following keys:
+
+        - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
+        - `eta_ts`, which is the assumed total-to-static efficiency.
+        - `eta_tt`, which is the assumed total-to-total efficiency.
+        - `Ma_crit`, which is the assumed critical mash number.
+
+    It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This 
+    require care as the user must have a complete knowledge of the different variables, and setup, of the initial guess that must be given that 
+    corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value. 
+    For subsequent operation points, the function employs a strategy to use the closest previously computed operation point's solution
     as the initial guess. This approach is based on the heuristic that similar operation points have similar
     performance characteristics, which can improve convergence speed and robustness of the solution process.
+    If the solution fails to converge, a set of initial guesses is provided to try other guesses (see `get_heuristic_guess_input`).
+
+    The function returns a list of solver object for each operation point. This contain information on both solver related performance (see psv.NonlinearSystemSolver) 
+    and the object of the performance analysis problem (see CascadesNonlinearSystemProblem). 
 
     Parameters
     ----------
@@ -86,21 +114,22 @@ def compute_performance(
         ranges from which operation points will be generated.
     config : dict
         A dictionary containing necessary configuration options for computing performance at each operation point.
+    initial_guess : optional
+        A dictionary with the required elements to generate an initial guess (see description above).
     out_file : str, optional
         The name for the output Excel file. If not provided, a default name with a timestamp is generated.
     out_dir : str, optional
         The directory where the Excel file will be saved. Defaults to 'output'.
+    stop_on_failure: bool, optional
+        If true, the analysis stops if the solution fails to converge for an operating point.
+    export_result : bool, optional
+        If true, the result is exported to an excel file. 
 
     Returns
     -------
-    str
-        The absolute path to the created Excel file.
+    list
+        A List of solver object for each operation point.
 
-    See Also
-    --------
-    compute_operation_point : For computing the performance of a single operation point.
-    generate_operation_points : For generation of operation points from ranges.
-    validate_operation_point : For validation of individual operation points.
     """
 
     # Check the type of operation_points argument
@@ -254,39 +283,31 @@ def compute_single_operation_point(
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
 
+    The initial guess make take three forms:
+
+        - None, which generate a default initial guess
+        - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:
+
+            - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
+            - `eta_ts`, which is the assumed total-to-static efficiency.
+            - `eta_tt`, which is the assumed total-to-total efficiency.
+            - `Ma_crit`, which is the assumed critical mash number.
+
+        - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration. 
+
     Parameters
     ----------
     boundary_conditions : dict
         A dictionary containing boundary conditions for the operation point.
-
-    cascades_data : dict
-        A dictionary containing data related to the cascades problem.
-
-    initial_guess : array-like or dict, optional
-        The initial guess for the solver. If None, default initial guesses are used.
-        If provided, the initial guess should not be scaled (it is scaled internally)
+    initial_guess : dict, optional
+        A dictionary with the required elements to generate an initial guess (see description above).
+    config : dict
+        A dictionary containing necessary configuration options for computing performance at the operational point.
 
     Returns
     -------
-    solution : object
+    psv.NonlinearSystemSolver
         The solution object containing the results of the operation point calculation.
-
-    Notes
-    -----
-    - This function attempts to compute an operation point for a given set of boundary
-      conditions using various solver methods and initial guesses before giving up.
-    - The boundary_conditions dictionary should include the necessary parameters for the
-      problem.
-    - The initial_guess can be provided as an array-like object or a dictionary. If None,
-      default values are used for initial guesses.
-    - The function iteratively tries different solver methods, including user-specified
-      methods and the Levenberg-Marquardt method, to solve the problem.
-    - It also attempts solving with a heuristic initial guess and explores different
-      initial guesses from parameter arrays.
-    - The function prints information about the solver method and any failures during the
-      computation.
-    - If successful convergence is achieved, the function returns the solution object.
-    - If all attempts fail to converge, a warning message is printed.
 
     """
 
@@ -296,11 +317,10 @@ def compute_single_operation_point(
     # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
     # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
-    # initial_guess = problem.get_initial_guess(initial_guess)
     solver_options = copy.deepcopy(config["solver_options"])
 
     initial_guesses = [initial_guess] + get_heuristic_guess_input(problem.geometry["number_of_cascades"])
-    methods_to_try = [solver_options["method"]] + [method for method in SOLVERS_AVAILABLE if method != solver_options["method"]]
+    methods_to_try = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
 
     for initial_guess in initial_guesses:
         for method in methods_to_try:
@@ -333,42 +353,21 @@ def compute_single_operation_point(
 
 def initialize_solver(problem, initial_guess, solver_options):
     """
-    Compute a solution for an operating point of a problem using various solver methods and initial guesses.
-
-    This function aims to find a solution for a specified operating point. If the initial attempt fails, the function
-    will try to solve the problem using different algorithms and initial guesses
-
-    - The function first updates the problem's boundary conditions using the operating point.
-    - It attempts to solve the problem with the specified solver method. If it fails, it tries the Levenberg-Marquardt method.
-    - If the provided initial guess is an array, the function will attempt to solve the problem with a heuristic initial guess.
-    - The function also explores different initial guesses based on parameter arrays for parameters like 'R', 'eta_ts', 'eta_tt', and 'Ma_crit'.
-    - If all attempts fail, a warning message is printed.
-    - The function returns the solver object and the computed results, which can be further analyzed or used in subsequent calculations.
+    Initialize a `psv.NonlinearSystemSolver` object used to solve a `CascadesNonlinearSystemProblem`.
 
     Parameters
     ----------
-    operating_point : dict
-        A dictionary containing the operating point's parameters and values.
-
-    problem : object
-        An object representing the performance analysis problem
-
-    initial_guess : array-like
+    problem : CascadesNonlinearSystemProblem object
+        A `CascadesNonlinearSystemProblem` object representing the performance analysis problem.
+    initial_guess : dict
         The initial guess for the solver.
-
     solver_options : dict
         A dictionary containing options for the solver
 
-        - If an initial guess is provided as an array, it will be used as is.
-        - If no initial guess is provided, default values for R, eta_tt, eta_ts, and Ma_crit
-            are used to generate an initial guess.
-        - If an initial guess is provided as a dictionary, it should include the necessary
-            parameters for the problem.
-
     Returns
     -------
-    tuple
-        A tuple containing the solver object and the problem's results after computation.
+    psv.NonlinearSystemSolver object
+        An object used to solve the performance analysis problem.
 
     """
 
@@ -534,7 +533,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     A class representing a nonlinear system problem for cascade analysis.
 
     This class is designed for solving nonlinear systems of equations related to cascade analysis.
-    Derived classes must implement the `get_values` method to evaluate the system of equations for a given set of decision variables.
+    Derived classes must implement the `get_residual_values` method to evaluate the system of equations for a given set of decision variables.
 
     Additionally, specific problem classes can define the `get_jacobian` method to compute Jacobians.
     If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
@@ -545,7 +544,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         An instance of the FluidCoolProp_2Phase class representing the fluid properties.
     results : dict
         A dictionary to store results.
-    BC : dict
+    boundary_conditions : dict
         A dictionary containing boundary condition data.
     geometry : dict
         A dictionary containing geometry-related data.
@@ -553,11 +552,29 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         A dictionary containing options related to the analysis model.
     reference_values : dict
         A dictionary containing reference values for calculations.
+    vars_scaled
+        A dicionary of scaled variables used to evaluate turbine performance.
+    vars_real
+        A dicionary of real variables used to evaluate turbine performance. 
 
     Methods
     -------
     get_values(x)
         Evaluate the system of equations for a given set of decision variables.
+    update_boundary_conditions(operation_point)
+        Update the boundary conditions of the problem with the provided operation point.
+    scale_values(variables, to_normalized = False)
+        Convert values between normalized and real values.
+    get_initial_guess(initial_guess = None)
+        Determine the initial guess for the performance analysis based on the given parameters or default values.
+    compute_heuristic_initial_guess(enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit)
+        Compute the heuristic initial guess for the performance analysis based on the given parameters.
+    print_simulation_summary(solvers)
+        Print a formatted footer summarizing the performance of all operation points.
+    print_boundary_conditions(BC)
+        Print the boundary conditions.
+    print_operation_points(operation_points)
+        Prints a summary table of operation points scheduled for simulation.
 
     Examples
     --------
@@ -575,7 +592,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         Parameters
         ----------
-        case_data : dict
+        config : dict
             A dictionary containing case-specific data.
         """
 
@@ -599,8 +616,8 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         Returns
         -------
-        tuple
-            A tuple containing residuals and a list of keys for the residuals.
+        numpy nd.array
+            An array containing residual values.
         """
 
         # Create dictionary of scaled variables
@@ -625,10 +642,8 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         """
         Update the boundary conditions of the problem with the provided operation point.
 
-        This method updates the internal state of the object by setting new boundary conditions
-        as defined in the 'operation_point' dictionary. It also initializes a Fluid object
-        using the 'fluid_name' specified in the operation point.
-
+        This method updates the boundary conditions attributes used to evaluate the turbine performance. 
+        It also initializes a Fluid object using the 'fluid_name' specified in the operation point.
         The method computes additional properties and reference values like stagnation properties at
         the inlet, exit static properties, spouting velocity, and reference mass flow rate.
         These are stored in the object's internal state for further use in calculations.
@@ -636,14 +651,14 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         Parameters
         ----------
         operation_point : dict
-            A dictionary containing the boundary conditions defining the operation point.
-            It must include the following keys:
-            - fluid_name: str, the name of the fluid to be used in the Fluid object.
-            - T0_in: float, the inlet temperature (in Kelvin).
-            - p0_in: float, the inlet pressure (in Pascals).
-            - p_out: float, the outlet pressure (in Pascals).
-            - omega: float, the rotational speed (in rad/s).
-            - alpha_in: float, the inlet flow angle (in degrees).
+            A dictionary containing the boundary conditions defining the operation point. It must include the following keys:
+
+            - `fluid_name` (str) : The name of the fluid to be used in the Fluid object.
+            - `T0_in` (float): The inlet temperature (in Kelvin).
+            - `p0_in` (float): The inlet pressure (in Pascals).
+            - `p_out` (float): The outlet pressure (in Pascals).
+            - `omega` (float): The rotational speed (in rad/s).
+            - `alpha_in` (float): The inlet flow angle (in degrees).
 
         Returns
         -------
@@ -653,7 +668,6 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         """
 
         # Define current operating point
-        validate_operation_point(operation_point)
         self.boundary_conditions = operation_point
 
         # Initialize fluid object
@@ -710,8 +724,10 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         Parameters
         ----------
-        variables: Dictionary containing values to be scaled.
-        to_real: If True, scale to real values; if False, scale to normalized values.
+        variables: dict
+            A dictionary containing values to be scaled.
+        to_real: bool
+            If True, scale to real values; if False, scale to normalized values.
 
         Returns
         -------
@@ -745,6 +761,40 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         return scaled_variables
 
     def get_initial_guess(self, initial_guess=None):
+
+        """
+        Determine the initial guess for the performance analysis based on the given parameters or default values.
+
+        The given `initial_guess` make take three forms:
+
+            - None, which generate a default initial guess
+            - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:
+
+                - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
+                - `eta_ts`, which is the assumed total-to-static efficiency.
+                - `eta_tt`, which is the assumed total-to-total efficiency.
+                - `Ma_crit`, which is the assumed critical mash number.
+                
+            - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration. 
+
+        The initial guess is scaled in this function. 
+            
+        Parameters
+        ----------
+        initial_guess : dict, optional
+            A dictionary containing the initial guess parameters.
+
+        Returns
+        -------
+        dict
+            Initial guess for the performance analysis.
+
+        Raises
+        ------
+        ValueError
+            If the provided initial_guess is invalid or incompatible with the model options.
+
+        """
 
         number_of_cascades = self.geometry["number_of_cascades"]
 
@@ -872,6 +922,31 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     def compute_heuristic_initial_guess(
         self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
     ):
+        
+        """
+        Compute the heuristic initial guess for the performance analysis based on the given parameters.
+
+        This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,
+        total-to-static and total-to-total efficiencies, and critical Mach number. 
+
+        Parameters
+        ----------
+        enthalpy_loss_fractions : array-like
+            Enthalpy loss fractions for each cascade.
+        eta_tt : float
+            Total-to-total efficiency.
+        eta_ts : float
+            Total-to-static efficiency.
+        Ma_crit : float
+            Critical Mach number.
+
+        Returns
+        -------
+        dict
+            Heuristic initial guess for the performance analysis.
+
+        """
+        
         # Load object attributes
         geometry = self.geometry
         boundary_conditions = self.boundary_conditions
@@ -1124,6 +1199,26 @@ def print_simulation_summary(solvers):
 
 
 def print_boundary_conditions(BC):
+    """
+    Print the boundary conditions.
+
+    This function prints the boundary conditions in a formatted manner. It takes a dictionary `BC`
+    containing the following keys:
+
+        - `fluid_name` (str): Name of the fluid.
+        - `alpha_in` (float): Flow angle at inlet in degrees.
+        - `T0_in` (float): Total temperature at inlet in Kelvin.
+        - `p0_in` (float): Total pressure at inlet in Pascal.
+        - `p_out` (float): Static pressure at outlet in Pascal.
+        - `omega` (float): Angular speed in radians per second.
+
+    Parameters
+    ----------
+    BC : dict
+        A dictionary containing the boundary conditions.    
+
+    """
+
     column_width = 25  # Adjust this to your desired width
     print("-" * 80)
     print(" Operating point: ")

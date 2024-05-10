@@ -281,7 +281,6 @@ model_options:
           - kacker_okapuu
           - moustapha
           - benner
-          - benner_moustapha
           - isentropic
           - custom
         loss_coefficient:

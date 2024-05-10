@@ -545,7 +545,7 @@
             * - **Valid types**
               - ``str``
             * - **Valid options**
-              - ``kacker_okapuu``, ``moustapha``, ``benner``, ``benner_moustapha``, ``isentropic``, ``custom``
+              - ``kacker_okapuu``, ``moustapha``, ``benner``, ``isentropic``, ``custom``
 
       .. dropdown:: model_options.loss_model.loss_coefficient
          :color: secondary
