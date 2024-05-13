@@ -71,17 +71,14 @@ optimization:
     - trailing_edge_thickness_opening_ratio  
     - leading_edge_angle
     - gauging_angle 
-  eq_constraints:
-    mass_flow_rate : 
+  constraints :
+    - variable : mass_flow_rate
+      type : "="
       value : 10.66
-      scale : 10.66
-    interstage_flaring : 
+      normalize : True 
+    - variable : interstage_flaring 
+      type : "="
       value : 1
-      scale : 1
-  # ineq_constraints:
-    # interstage_flaring : 
-    #    lower_bound : 0.8
-    #    upper_bound : 1
-    #    scale : 1
+      normalize : True
   solver_options:
     max_iter: 300

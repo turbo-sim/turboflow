@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-test = "performance_analysis"
+test = "optimization"
 
 # Run calculations
 if test == "performance_analysis":

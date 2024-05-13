@@ -150,10 +150,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.design_variables_keys = config["optimization"]["design_variables"]
         self.design_variables_geometry = set(self.design_variables_keys) - set(set(self.design_variables_keys) - set(AVAILABLE_DESIGN_VARIABLES)) - {"specific_speed", "blade_jet_ratio"}
         self.obj_func = config["optimization"]["objective_function"]
-        self.eq_constraints = config["optimization"]["eq_constraints"]
-        self.ineq_constraints = config["optimization"]["ineq_constraints"]
         self.bounds = config["optimization"]["bounds"]
         self.radius_type = config["optimization"]["radius_type"]
+        self.eq_constraints, self.ineq_constraints = self.get_constraints(config["optimization"]["constraints"])
 
         # Update design point
         self.update_boundary_conditions(config["operation_points"])
@@ -207,8 +206,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Assign geometry design variables to geometry attribute
         for des_key in self.design_variables_geometry:
             self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["specific_speed", "blade_jet_ratio"])])
-        self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min # TODO!
-        self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
+            if des_key == "leading_edge_angle":
+                 self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min
+            if des_key == "gauging_angle":
+                 self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         self.geometry = geom.calculate_full_geometry(self.geometry)
@@ -229,30 +230,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.f = objective_functions[self.obj_func]
 
         # Evaluate available equality constraints    
-        if self.eq_constraints is not None:
-            available_cons_eq = {"mass_flow_rate" : self.results["overall"]["mass_flow_rate"].values[0],
-                                "interstage_flaring" :  self.geometry["A_in"][1:]/self.geometry["A_out"][0:-1]}
-            cons_eq = np.array([])
-            for key in self.eq_constraints.keys():
-                cons_eq = np.append(cons_eq, (available_cons_eq[key] - self.eq_constraints[key]["value"])/self.eq_constraints[key]["scale"])
-
-            residuals = np.array(list(self.results["residuals"].values()))
-            self.c_eq = np.concatenate((residuals, cons_eq))
-        else:
-            self.c_eq = np.array(list(self.results["residuals"].values()))
-
-        # Evaluate available inequality constraints
-        if self.ineq_constraints is not None:
-            available_cons_ineq = {"interstage_flaring" : self.geometry["A_in"][1:]/self.geometry["A_out"][0:-1],
-                                #    "flaring" : self.geometry["flaring"],
-                                   }
-            cons_ineq = np.array([])
-            for key in self.ineq_constraints.keys():
-                cons_ineq = np.append(cons_ineq, (available_cons_ineq[key] - self.ineq_constraints[key]["lower_bound"])/self.ineq_constraints[key]["scale"])
-                cons_ineq = np.append(cons_ineq, (self.ineq_constraints[key]["upper_bound"] - available_cons_ineq[key])/self.ineq_constraints[key]["scale"])
-            self.c_ineq = cons_ineq
-        else:
-            self.c_ineq = None
+        available_constraints = {"mass_flow_rate" : self.results["overall"]["mass_flow_rate"].values[0],
+                                "interstage_flaring" :  self.geometry["A_in"][1:]/self.geometry["A_out"][0:-1],
+                                "flaring" : self.geometry["flaring_angle"]}
+        self.c_eq = np.array(list(self.results["residuals"].values()))
+        self.c_ineq = np.array([])
+        for constraint in self.eq_constraints:
+            self.c_eq = np.append(self.c_eq, (available_constraints[constraint["variable"]] - constraint["value"])/constraint["scale"])
+            
+        for constraint in self.ineq_constraints:
+            self.c_ineq = np.append(self.c_ineq, (constraint["value"] - available_constraints[constraint["variable"]])/constraint["scale"])
 
         objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
         
@@ -546,10 +533,25 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
 
         # Define a reference mass flow rate
-        try:
-            mass_flow_rate = self.eq_constraints["mass_flow_rate"]["value"]
-        except:
-            mass_flow_rate = v0*d_isentropic
+        # try:
+        #     # mass_flow_rate = self.eq_constraints["mass_flow_rate"]["value"]
+        #     for constraint in self.eq_constraints:
+        #         if constraint["variable"] == "mass_flow_rate":
+        #             mass_flow_rate = constraint["value"]
+        #             break
+        # except:
+        #     mass_flow_rate = v0*d_isentropic
+
+        mass_flow_rate = None  # Initialize mass_flow_rate to None
+        # Try to find mass_flow_rate from eq_constraints
+        for constraint in self.eq_constraints:
+            if constraint.get("variable") == "mass_flow_rate":
+                mass_flow_rate = constraint.get("value")
+                break
+
+        # If mass_flow_rate not found, calculate using default formula
+        if mass_flow_rate is None:
+            mass_flow_rate = v0 * d_isentropic
 
         # Define reference_values
         self.reference_values = {
@@ -675,6 +677,69 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             initial_guess["specific_speed"] = angular_speed*(mass_flow/d_out_s)**0.5/((h0_in - h_out_s)**0.75)
 
         return {**vars_scaled, **initial_guess}
+    
+    def get_constraints(self, constraints):
+
+        """
+        Converts a list of constraints to equality and inequality constraints.
+
+        Parameters:
+        -----------
+        constraints : list of dict
+            List of constraints where each constraint is represented as a dictionary
+            with keys "type", "variable", "value", and "normalize". "type" represents
+            the type of constraint ('=', '<', or '>'). "variable" is the variable
+            involved in the constraint. "value" is the value of the constraint. "normalize"
+            specifies whether to normalize the constraint value.
+
+        Returns:
+        --------
+        list of dict
+            List of equality constraints, each represented as a dictionary with keys
+            "variable", "value", and "scale". "variable" is the variable involved
+            in the constraint. "value" is the value of the constraint. "scale" is
+            the scaling factor applied to the value.
+        list of dict
+            List of inequality constraints, each represented as a dictionary with keys
+            "variable", "value", and "scale". "variable" is the variable involved
+            in the constraint. "value" is the value of the constraint. "scale" is
+            the scaling factor applied to the value.
+        """
+
+        eq_constraints = []
+        ineq_constraints = []
+        for constraint in constraints:
+            if constraint["type"] == '=':
+                if constraint["normalize"]:
+                    eq_constraints += [{"variable" : constraint["variable"],
+                                    "value" : constraint["value"],
+                                    "scale" : constraint["value"]}]
+                else:
+                    eq_constraints += [{"variable" : constraint["variable"],
+                                    "value" : constraint["value"],
+                                    "scale" : 1}]
+                    
+            elif constraint["type"] == "<": 
+                if constraint["normalize"]:
+                    ineq_constraints += [{"variable" : constraint["variable"],
+                                        "value": constraint["value"],
+                                        "scale" : abs(constraint["value"])}]
+                else:
+                    ineq_constraints += [{"variable" : constraint["variable"],
+                                        "value": constraint["value"],
+                                        "scale" : 1}]
+                    
+            elif constraint["type"] == ">":
+                if constraint["normalize"]:
+                    ineq_constraints += [{"variable" : constraint["variable"],
+                                        "value": constraint["value"],
+                                        "scale" : -1*abs(constraint["value"])}]
+                else:
+                    ineq_constraints += [{"variable" : constraint["variable"],
+                                        "value": constraint["value"],
+                                        "scale" : -1}]
+        return eq_constraints, ineq_constraints
+
 
 def check_optimization_config(config):
 
@@ -710,28 +775,29 @@ def check_optimization_config(config):
         raise ValueError(f"Error: Objective function is not supported. Available objective functions are: {', '.join(AVAILABLE_OBJECTIVE_FUNCTIONS)}")
     
     # Check equality constraints
-    if "eq_constraints" in config["optimization"].keys():
-        constraint_keys = config["optimization"]["eq_constraints"].keys() 
-        required_keys = {"scale", "value"}
-        for key in config["optimization"]["eq_constraints"].keys():
-            if key not in AVAILABLE_EQ_CONSTRAINTS:
-                raise ValueError(f"Error: Equality constraint {key} is not supported. Available equality constraints are: {', '.join(AVAILABLE_EQ_CONSTRAINTS)}")
-            if not set(list(config["optimization"]["eq_constraints"][key].keys())) == required_keys:
-                raise ValueError(f"Error: Missing keys for eq constraint {key}: {required_keys - set(config['optimization']['eq_constraints'][key].keys())}")
-    else:
-        config["optimization"]["eq_constraints"] = None
 
-    # Check inequality constraints
-    if "ineq_constraints" in config["optimization"].keys():
-        constraint_keys = config["optimization"]["ineq_constraints"].keys() 
-        required_keys = {"scale", "lower_bound", "upper_bound"}
-        for key in constraint_keys:
-            if key not in AVAILABLE_INEQ_CONSTRAINTS:
-                raise ValueError(f"Error: Inequality constraint {key} is not supported. Available inequality constraints are: {', '.join(AVAILABLE_INEQ_CONSTRAINTS)}")
-            if not set(list(config["optimization"]["ineq_constraints"][key].keys())) == required_keys:
-                raise ValueError(f"Error: Missing keys for ineq constraint {key}: {required_keys - set(config['optimization']['ineq_constraints'][key].keys())}")
-    else:
-        config["optimization"]["ineq_constraints"] = None
+    # if "eq_constraints" in config["optimization"].keys():
+    #     constraint_keys = config["optimization"]["eq_constraints"].keys() 
+    #     required_keys = {"scale", "value"}
+    #     for key in config["optimization"]["eq_constraints"].keys():
+    #         if key not in AVAILABLE_EQ_CONSTRAINTS:
+    #             raise ValueError(f"Error: Equality constraint {key} is not supported. Available equality constraints are: {', '.join(AVAILABLE_EQ_CONSTRAINTS)}")
+    #         if not set(list(config["optimization"]["eq_constraints"][key].keys())) == required_keys:
+    #             raise ValueError(f"Error: Missing keys for eq constraint {key}: {required_keys - set(config['optimization']['eq_constraints'][key].keys())}")
+    # else:
+    #     config["optimization"]["eq_constraints"] = None
+
+    # # Check inequality constraints
+    # if "ineq_constraints" in config["optimization"].keys():
+    #     constraint_keys = config["optimization"]["ineq_constraints"].keys() 
+    #     required_keys = {"scale", "lower_bound", "upper_bound"}
+    #     for key in constraint_keys:
+    #         if key not in AVAILABLE_INEQ_CONSTRAINTS:
+    #             raise ValueError(f"Error: Inequality constraint {key} is not supported. Available inequality constraints are: {', '.join(AVAILABLE_INEQ_CONSTRAINTS)}")
+    #         if not set(list(config["optimization"]["ineq_constraints"][key].keys())) == required_keys:
+    #             raise ValueError(f"Error: Missing keys for ineq constraint {key}: {required_keys - set(config['optimization']['ineq_constraints'][key].keys())}")
+    # else:
+    #     config["optimization"]["ineq_constraints"] = None
 
     # Check design variables: Must be a list of strings 
     if "design_variables" not in config["optimization"].keys():
