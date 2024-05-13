@@ -13,65 +13,6 @@ from . import choking_model as cm
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
 
-# Keys of the information that should be stored in results
-KEYS_KINEMATIC = [
-    "blade_speed",
-    "v",
-    "v_m",
-    "v_t",
-    "alpha",
-    "w",
-    "w_m",
-    "w_t",
-    "beta",
-]
-
-KEYS_PROPS_STATIC = ["p", "T", "h", "s", "d", "Z", "a", "mu", "k", "cp", "cv", "gamma"]
-KEYS_PROPS_STAG_ABS = [f"{key}0" for key in KEYS_PROPS_STATIC]
-KEYS_PROPS_STAG_REL = [f"{key}0_rel" for key in KEYS_PROPS_STATIC]
-KEYS_LOSSES = lm.KEYS_LOSSES
-
-KEYS_PLANE = (
-    KEYS_KINEMATIC
-    + KEYS_PROPS_STATIC
-    + KEYS_PROPS_STAG_ABS
-    + KEYS_PROPS_STAG_REL
-    + KEYS_LOSSES
-    + [
-        "Ma",
-        "Ma_rel",
-        "Re",
-        "mass_flow",
-        "rothalpy",
-        "blockage",
-    ]
-)
-"""List of keys for the plane performance metrics of the turbine. 
-This list is used to initialize a dataframe used to store plane specific performance metrics."""
-
-KEYS_CASCADE = [
-    "loss_total",
-    "loss_profile",
-    "loss_clearance",
-    "loss_secondary",
-    "loss_trailing",
-    "loss_incidence",
-    "dh_s",
-    "Ma_crit_throat",
-    "mass_flow_throat",
-    "w_throat",
-    "d_throat",
-    "Ma_throat",
-    "beta_throat",
-    "mass_flow_crit_throat",
-    "incidence",
-    "beta_subsonic" ,
-    "beta_supersonic",
-]
-
-"""List of keys for the cascade performance metrics of the turbine. 
-his list is used to initialize a dataframe used to store plane specific performance metrics."""
-
 def evaluate_axial_turbine(
     variables,
     boundary_conditions,
@@ -140,8 +81,8 @@ def evaluate_axial_turbine(
 
     # Initialize results structure
     results = {
-        "plane": pd.DataFrame(columns=KEYS_PLANE),
-        "cascade": pd.DataFrame(columns=KEYS_CASCADE),
+        "plane": pd.DataFrame(),
+        "cascade": pd.DataFrame(),
         "stage": {},
         "overall": {},
         "geometry": geometry,
@@ -356,19 +297,18 @@ def evaluate_cascade(
     }
 
     # Return plane data in dataframe
-    planes = [inlet_plane, exit_plane]
-    for plane in planes:
-        results["plane"].loc[len(results["plane"])] = plane
+    results["plane"].loc[len(results["plane"]), inlet_plane.keys()] = inlet_plane
+    results["plane"].loc[len(results["plane"]), exit_plane.keys()] = exit_plane
 
     # Return cascade data in dataframe
     cascade_data = {
         **loss_dict,
+        **critical_state,
         "dh_s": dh_is,
-        "Ma_crit_throat": critical_state["throat_plane"]["Ma_rel"],
-        "mass_flow_crit_throat": critical_state["throat_plane"]["mass_flow"],
         "incidence": inlet_plane["beta"] - geometry["leading_edge_angle"],
     }
-    results["cascade"].loc[len(results["cascade"])] = cascade_data
+
+    results["cascade"].loc[len(results["cascade"]), cascade_data.keys()] = cascade_data
 
     return residuals
 
@@ -447,14 +387,13 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
         **static_properties,
         **stagnation_properties,
         **relative_stagnation_properties,
-        **{key: np.nan for key in KEYS_LOSSES},
         "Ma": Ma,
         "Ma_rel": Ma_rel,
         "Re": Re,
         "mass_flow": m,
         "rothalpy": rothalpy,
-        "blockage": np.nan,
     }
+
 
     return plane
 
@@ -587,7 +526,6 @@ def evaluate_cascade_exit(
         "Ma_rel": Ma_rel,
         "Re": Re,
         "mass_flow": mass_flow,
-        "displacement_thickness": np.nan,  # Not relevant for exit/throat plane
         "rothalpy": rothalpy,
         "blockage": blockage_factor,
     }
@@ -721,7 +659,6 @@ def evaluate_cascade_throat(
         "Ma_rel": Ma_rel,
         "Re": Re,
         "mass_flow": mass_flow,
-        "displacement_thickness": np.nan,  # Not relevant for exit/throat plane
         "rothalpy": rothalpy,
         "blockage": blockage_factor,
     }

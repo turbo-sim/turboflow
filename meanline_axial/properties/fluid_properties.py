@@ -163,9 +163,9 @@ class FluidState:
     def __init__(self, fluid):
         # Use an internal dictionary to store properties
         self._properties = fluid.properties
-        self._properties["fluid_name"] = fluid.name
-        self._properties["converged"] = fluid.converged_flag
-        self._properties["identifier"] = fluid.identifier
+        # self._properties["fluid_name"] = fluid.name
+        # self._properties["converged"] = fluid.converged_flag
+        # self._properties["identifier"] = fluid.identifier
 
     def __getattr__(self, name):
         # This method is called when an attribute is accessed

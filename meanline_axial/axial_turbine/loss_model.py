@@ -112,9 +112,6 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Compute loss coefficient error
     loss_dict["loss_error"] = (Y_definition - loss_dict["loss_total"])
 
-    # Save the definition of the loss coefficient
-    loss_dict["loss_definition"] = loss_model_options["loss_coefficient"]
-
     return loss_dict
 
 

@@ -27,7 +27,7 @@ def evaluate_choking(
     Parameters
     ----------
     choking_input : dict
-        Dictionary containing necessary input parameters required for selected choking model.
+        Dictionary containing necessary input parameters required for selected choking model. See each models documentation for specifics. 
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -97,7 +97,11 @@ def evaluate_cascade_throat(
     Parameters
     ----------
     choking_input : dict
-        Dictionary containing necessary input parameters required for selected choking model.
+        Dictionary containing scaled input parameters required for selected choking model. Required items are:
+
+        - `w*_throat` : throat velocity. 
+        - `s*_throat` : throat entropy.
+        - `beta*_throat` : throat relative flow angle.  
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -116,9 +120,14 @@ def evaluate_cascade_throat(
     Returns
     -------
     dict
-        Dictionary containing the residuals of choking model.
+        Dictionary containing the residuals of choking model:
+        
+        - `m*`: Mass flow rate residual.
+        - `Y*`: Loss error residual.
+        - `beta*`: Residual of the flow angle.
+        - `choking`: Choking residual.
     dict
-        Dictionary containing state information on the critical conditions.
+        Dictionary containing relevant information on the critical state and throat plane. 
 
     """
     
@@ -151,8 +160,6 @@ def evaluate_cascade_throat(
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
     critical_mass_flux, critical_mach =  interpolate_critical_state(inlet_plane["p0_rel"], inlet_plane["T0_rel"], Y_tot)
-    critical_state = {"throat_plane" : {"Ma_rel" : critical_mach,
-                                        "mass_flow" : critical_mass_flux*A_throat}}
     
     # Evaluate residual flow angle
     beta_model = np.sign(throat_plane["beta"])*dm.get_subsonic_deviation(throat_plane["Ma_rel"], critical_mach, geometry, deviation_model)
@@ -174,7 +181,12 @@ def evaluate_cascade_throat(
     residual_keys = ["m*", "Y*", "beta*", "choking"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
-    return residuals_critical, critical_state
+    # Define output values
+    critical_state = {"critical_mach" : critical_mach,
+                      "critical_mass_flow_rate" : critical_mass_flux*A_throat}
+    throat_plane = {f"{key}_throat" : val for key,val in throat_plane.items()} 
+
+    return residuals_critical, {**critical_state, **throat_plane}
 
 def interpolate_critical_state(p0_in, T0_in, Y):
 
@@ -270,7 +282,11 @@ def evaluate_cascade_critical(
     Parameters
     ----------
     critical_cascade_input : dict
-        Dictionary containing additional input parameters required for compute_critical_values.
+        Dictionary containing scaled input parameters required for selected choking model. Required items are:
+
+        - `v*_in` : inlet velocity at critical state.  
+        - `w*_throat` : throat velocity at critical state. 
+        - `s*_throat` : throat entropy at critical state.
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -289,9 +305,14 @@ def evaluate_cascade_critical(
     Returns
     -------
     dict
-        Dictionary containing the residuals of the Lagrange function and the constraints (`L*`, `m*`, `Y*`).
+        Dictionary containing the residuals of choking model:
+        
+        - `m*`: Mass flow rate residual.
+        - `Y*`: Loss error residual.
+        - `L*`: Residual of the lagrange function.
+        - `choking`: Choking residual.
     dict
-        Dictionary containing state information at the critical conditions.
+        Dictionary containing state information on the critical conditions at inlet and throat plane. 
 
     """
 
@@ -366,6 +387,11 @@ def evaluate_cascade_critical(
     else:
         beta_model = np.sign(exit_plane["beta"])*math.arccosd(critical_mass_flow / exit_plane["d"] / exit_plane["w"] / geometry["A_out"])
     choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
+
+    # Restructure critical state dictionary
+    inlet_plane = {f"critical_{key}_in" : val for key,val in critical_state["inlet_plane"].items()}
+    throat_plane = {f"critical_{key}_throat" : val for key,val in critical_state["throat_plane"].items()}
+    critical_state = {**inlet_plane, **throat_plane}
     
     # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
     g = f0[1:]  # The two constraints
@@ -579,7 +605,9 @@ def evaluate_cascade_isentropic_throat(
     Parameters
     ----------
     choking_input : dict
-        Dictionary containing necessary input parameters required for selected choking model.
+        Dictionary containing scaled input parameters required for selected choking model. Required items are:
+
+        - `w*_throat` : throat velocity. 
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -598,7 +626,10 @@ def evaluate_cascade_isentropic_throat(
     Returns
     -------
     dict 
-        Dictionary containing the residuals of choking model.
+        Dictionary containing the residuals of choking model:
+
+        - `m*`: Mass flow rate residual.
+        - `choking`: Choking residual.
     dict
         Dictionary satisfying the required elements for critical state dict. 
 
@@ -628,10 +659,7 @@ def evaluate_cascade_isentropic_throat(
     blockage,
     loss_model,)
 
-    # Evaluate critical mach
-    critical_state = {"throat_plane" : {"Ma_rel" : np.nan,
-                                        "mass_flow" : np.nan}}
-    
+    # Evaluate critical mach    
     choking_residual = throat_plane["Ma_rel"]-min(exit_plane["Ma_rel"], 1)
 
     # Evaluate resiudals 
@@ -640,4 +668,7 @@ def evaluate_cascade_isentropic_throat(
     residual_keys = ["m*", "choking"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
-    return residuals_critical, critical_state
+    # Define output values
+    throat_plane = {f"{key}_throat" : val for key,val in throat_plane.items()} 
+
+    return residuals_critical, throat_plane
