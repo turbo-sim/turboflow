@@ -16,7 +16,7 @@ performance_map:
   alpha_in: 0 
 
 model_options:
-  deviation_model : zero_deviation
+  deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
   choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
@@ -69,18 +69,15 @@ optimization:
     - trailing_edge_thickness_opening_ratio  
     - leading_edge_angle
     - gauging_angle 
-  eq_constraints :
-    mass_flow_rate : 
+  constraints :
+    - variable : mass_flow_rate
+      type : "="
       value : 2.5
-      scale : 2.5
-    interstage_flaring : 
+      normalize : True 
+    - variable : interstage_flaring 
+      type : "="
       value : 1
-      scale : 1
-  # ineq_constraints:
-    # interstage_flaring : 
-    #    lower_bound : 0.8
-    #    upper_bound : 1
-    #    scale : 1
+      normalize : True
   radius_type : "constant_mean"
   solver_options:
     max_iter: 300

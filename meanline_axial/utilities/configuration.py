@@ -176,7 +176,7 @@ NUMERIC = "<numeric value>"
 
 def validate_configuration_options(config, schema):
     """
-    Validates thee configuration against the provided schema.
+    Validates the configuration against the provided schema.
     This function performs several checks, including:
 
     - Presence of unexpected keys: Ensures there are no extra fields in the configuration
