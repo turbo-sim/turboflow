@@ -1,6 +1,10 @@
 # Changelog
 
-> WARNING! There are convergence problems for supersonic cases when using the `mach_critical` and `mach_unity` options for the choking condition (Kofskey case). I am not sure since when do we have these problems because I had not used these options before. We have to see if we broke something when refactoring the code and make sure that the `mach_critical` and `mach_unity` options work again.\
+## 13.05.2024
+- Changed the storage for plane and cascade data. The KEYS used to initialize was no longer needed as the dataframe could be initialized as an empty dataframe. What properties that are stored is now controlled by the output of the evalauete plane functions and choked model functions. This makes it more easier to control and more flexible imo.  
+- in fluid_properties, more specifically FluidState class, I commented out "fluid_name", "converged" and "identifier". I had troubles storing these values in the pandas dataframe, and they dont seem to be stored anywhere else either way. 
+- in loss_model, I removed the 'loss_coefficient' from the loss_dict.  I had troubles storing these values in the pandas dataframe, and the value is already specified in the config file. 
+- Changed method for giving constraints to the design_optimization code. Now we give one list of constraints, where the type is specified within each constraint. 
 
 ## 06.05.2024
 - Manual test case
