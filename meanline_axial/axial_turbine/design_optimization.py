@@ -58,7 +58,7 @@ def compute_optimal_turbine(config, initial_guess = None):
         
     # Initialize solver object  
     max_iter = config["optimization"]["solver_options"]["max_iter"]  
-    solver = psv.OptimizationSolver(problem, x0, max_iter= max_iter, display = True)
+    solver = psv.OptimizationSolver(problem, x0, max_iter= max_iter,tol = 1e-6, display = True)
 
     sol = solver.solve()
     solver.plot_convergence_history(savefig = False)

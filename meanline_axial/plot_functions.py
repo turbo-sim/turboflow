@@ -396,6 +396,7 @@ def plot_axial_radial_plane(geometry):
     
     """
     
+    # Load data
     radius_hub_in = geometry["radius_hub_in"]
     radius_hub_out = geometry["radius_hub_out"]
     radius_tip_in = geometry["radius_tip_in"]
@@ -404,7 +405,9 @@ def plot_axial_radial_plane(geometry):
     axial_chord = geometry["axial_chord"]
     
     
-    dx = 0.05*max(axial_chord)
+    dx = 0.05*max(axial_chord) # Axial spacing between cascades
+
+    # Define x-points
     x = np.array([])
     for i in range(len(axial_chord)):
         x = np.append(x, np.sum(axial_chord[0:i+1]) + i*dx)
@@ -412,18 +415,22 @@ def plot_axial_radial_plane(geometry):
     x[1:] = x[0:-1]
     x[0] = 0
 
+    # Define hub and tip points 
     y_hub = np.array([val for pair in zip(radius_hub_in, radius_hub_out) for val in pair])
     y_tip = np.array([val for pair in zip(radius_tip_in, radius_tip_out) for val in pair])
 
+    # Plot cascades
     fig, ax = plt.subplots()
-    colors = ["0.5", "0.8"]
+    colors = ["0.5", "0.8"] # Colors for stator and rotor rwo respectively
     for i in range(number_of_cascades):    
-        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k')
-        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k')
-        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k')
-        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k')
+        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k') # Plot tip 
+        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k') # Plt hub 
+        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k') # Plot inlet vertical line
+        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k') # Plot outlet vertical line
         
-        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = colors[i%2])
+        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = colors[i%2]) # Fill cascade with color
+
+    # Set plot options 
     ax.grid(False)
     ax.set_xticks([])
     ax.set_yticks([])
