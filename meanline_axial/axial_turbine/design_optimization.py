@@ -46,7 +46,6 @@ def compute_optimal_turbine(config, initial_guess = None):
         The solution object containing the results of the design optimization.
     """
 
-
     # Check configuration
     config = check_optimization_config(config)
 
