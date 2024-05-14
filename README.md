@@ -1,5 +1,5 @@
 
-# Meanline Axial: Axial Turbine Mean-line Modelling
+# TurboFlow: Axial Turbine Mean-line Modelling
 
 **Meanline Axial** is a tool for mean-line modelling of axial turbines. It provides a systematic approach to analyze and optimize axial turbines based on specified requirements.
 
