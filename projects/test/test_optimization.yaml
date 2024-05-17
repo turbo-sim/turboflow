@@ -8,10 +8,10 @@ operation_points:
 
 
 model_options:
-  deviation_model : zero_deviation
+  deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
   choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
-  rel_step_fd: 1e-4
+  # rel_step_fd: 1e-4
   loss_model:
     model: kacker_okapuu
     loss_coefficient: stagnation_pressure
@@ -23,17 +23,17 @@ model_options:
       trailing: 1.00
       clearance: 1.00
 
-solver:
-  method: lm
-  tolerance: 1e-9
-  max_iterations: 50
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
+# solver:
+#   method: lm
+#   tolerance: 1e-9
+#   max_iterations: 50
+#   derivative_method: "2-point"
+#   derivative_rel_step: 1e-3
+#   display_progress: True
 
 solver_options:
   method: hybr
-  tolerance: 1e-8
+  tol: 1e-8
   max_iterations: 100
   derivative_method: "2-point"
   derivative_rel_step: 1e-3
@@ -80,5 +80,30 @@ optimization:
       type : "="
       value : 1
       normalize : True
+    # - variable : mass_flow_rate
+    #   type : "<"
+    #   value : 20
+    #   normalize : True 
+
   solver_options:
-    max_iter: 300
+    library: pygmo
+    method: snopt
+    tolerance: 1e-3
+    max_iterations: 300
+    derivative_method: 2-point
+    # derivative_abs_step: 1e-6
+    print_convergence: True
+    plot_convergence: True
+    update_on: "gradient"
+
+# Roberto: changed from relative to absolute step because it was giving problems for variables that can take a value equal to zero
+
+# Roberto: lessons learned after some experimentation:
+#  - Increasing the size/scale of the objective function (efficiency) helps convergence (it also makes optimization more aggresive)
+#  - SNOPT and other solvers struggles to converge when tol<1e-3
+#  - If derivative_abs_step is not provided the new wrapper will use a suitable value
+#     - eps^(1/2) for forward finite differences (2-point in Scipy's terminology)
+#     - eps^(1/3) for central finite differences (3-point in Scipy's terminology)
+#  - SLSQP and SNOPT solvers converge better when using the "optimal" step size (is it always the case?)
+#  - I also experienced better termination using the 3-point method. This suggest that accurate finite differences are necessary for proper termination to tight tolerance
+#  Is the termination not working well because of inaccurate finite differences, or because there is a non-smooth function being triggered? (abs, min, max, if's). We should scan the code and replace by smoothed functions from math module
