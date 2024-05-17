@@ -1,6 +1,6 @@
 import numpy as np
 
-from .. import solver as psv
+from .. import pysolver_view as psv
 from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
@@ -25,7 +25,7 @@ AVAILABLE_GEOMETRIES = ["constant_mean",
                         "constant_hub",
                         "constant_tip"]
 
-def compute_optimal_turbine(config, initial_guess = None):
+def compute_optimal_turbine(config, initial_guess=None):
 
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -54,14 +54,21 @@ def compute_optimal_turbine(config, initial_guess = None):
 
     # Get initial guess
     x0 = problem.get_initial_guess(initial_guess)
-        
-    # Initialize solver object  
-    max_iter = config["optimization"]["solver_options"]["max_iter"]  
-    solver = psv.OptimizationSolver(problem, x0, max_iter= max_iter,tol = 1e-6, display = True)
 
-    sol = solver.solve()
-    solver.plot_convergence_history(savefig = False)
-    
+    # Perform initial function call to initialize problem
+    # This populates the arrays of equality and inequality constraints
+    # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
+    problem.fitness(x0)
+
+    # Load solver configuration
+    solver_config = config["optimization"]["solver_options"]
+
+    # Initialize solver object using keyword-argument dictionary unpacking
+    solver = psv.OptimizationSolver(problem, **solver_config)
+
+    # Solve optimization problem for initial guess x0
+    solver.solve(x0)
+
     return solver
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
@@ -162,7 +169,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize other attributes
         self.model_options = config["model_options"]
         
-    def get_optimization_values(self, x):
+    def fitness(self, x):
 
         r"""
         Evaluate the objective function and constraints at a given pint `x`. 
@@ -225,7 +232,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Evaluate available objecitve functions
         objective_functions = {"none" : 0,
-                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/100}                       
+                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/10}  #/100}                       
         self.f = objective_functions[self.obj_func]
 
         # Evaluate available equality constraints    
@@ -240,7 +247,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         for constraint in self.ineq_constraints:
             self.c_ineq = np.append(self.c_ineq, (constraint["value"] - available_constraints[constraint["variable"]])/constraint["scale"])
 
-        objective_and_constraints = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
+        objective_and_constraints = psv.combine_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
         
         return objective_and_constraints
     
@@ -260,7 +267,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         return self.bounds
             
-    def get_n_eq(self):
+    def get_nec(self):
         
         r"""
         Get the number of equality constraints.
@@ -272,9 +279,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         """
 
-        return self.get_number_of_constraints(self.c_eq)
+        return psv.count_constraints(self.c_eq)
     
-    def get_n_ineq(self):
+    def get_nic(self):
         r"""
         Get the number of inequality constraints.
 
@@ -284,7 +291,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             Number of inequality constraints.
 
         """
-        return self.get_number_of_constraints(self.c_ineq)
+        return psv.count_constraints(self.c_ineq)
     
     def get_initial_guess(self, initial_guess):
         r"""
@@ -624,7 +631,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 else:
                     bounds += [(0.72, 0.94)] # Stator (40, 80) [degree]
 
-        return tuple(bounds)
+
+        # Convert bounds to pygmo convention
+        lb = [lower_bound for lower_bound, _ in bounds]
+        ub = [upper_bound for _, upper_bound in bounds]
+        bounds = (lb, ub)
+
+        return bounds
     
     def convert_performance_analysis_results(self, performance_problem):
 

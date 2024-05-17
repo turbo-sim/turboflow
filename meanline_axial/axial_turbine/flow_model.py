@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from scipy.linalg import solve
 import CoolProp as cp
+from scipy.linalg import solve
 from scipy.optimize._numdiff import approx_derivative
 
 from .. import math

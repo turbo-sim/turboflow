@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .. import solver
+from .. import pysolver_view as psv
 from .. import utilities
 from .. import fluid_properties as props
 
@@ -47,7 +47,7 @@ GRAPHICS_PLACEHOLDER = {
 }
 
 
-class ThermodynamicCycleProblem(solver.OptimizationProblem):
+class ThermodynamicCycleProblem(psv.OptimizationProblem):
     """
     A class to represent a thermodynamic cycle optimization problem.
 
