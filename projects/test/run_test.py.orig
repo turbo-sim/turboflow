@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
+<<<<<<< HEAD
+=======
 # test = "optimization"
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5
 test = "performance_analysis"
 
 # Run calculations
@@ -48,7 +51,18 @@ elif test == "optimization":
     # Load configuration file
     CONFIG_FILE = os.path.abspath("test_optimization.yaml")
     config = ml.read_configuration_file(CONFIG_FILE)
+<<<<<<< HEAD
+
     solvers = ml.compute_optimal_turbine(config, initial_guess = None, export_results=True)
+    if not solvers.convergence_history["constraint_violation"][-1] == 4.0832313918937047e-10:
+        print("constraint violation fails")
+    if not solvers.convergence_history["grad_count"][-1] == 80:
+        print("Number of iterations fails")
+    if not solvers.convergence_history["objective_value"][-1] ==  -0.9084032430486514:
+        print("Objecitve function fails")
+=======
+    solvers = ml.compute_optimal_turbine(config, initial_guess = None)
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5
 
     # if not solvers.convergence_history["constraint_violation"][-1] == 4.0832313918937047e-10:
     #     print("constraint violation fails")

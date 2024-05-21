@@ -30,7 +30,7 @@ class LorentzEquations(NonlinearSystemProblem):
     
     Methods
     -------
-    get_values(vars)`:
+    evaluate_problem(vars)`:
         Evaluate the Lorentz system at a given state.
 
     Attributes
@@ -48,12 +48,12 @@ class LorentzEquations(NonlinearSystemProblem):
         self.beta = beta
         self.rho = rho
 
-    def get_values(self, vars):
+    def residual(self, vars):
         x, y, z = vars
         eq1 = self.sigma * (y - x)
         eq2 = x * (self.rho - z) - y
         eq3 = x * y - self.beta * z
         return np.array([eq1, eq2, eq3])
-
-    # def get_jacobian(self, x):
-    #     return approx_derivative(self.get_values, x, method="cs")
+    
+    def gradient(self, x):
+        return approx_derivative(self.residual, x, method="cs")

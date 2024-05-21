@@ -1,10 +1,15 @@
 import numpy as np
+<<<<<<< HEAD
 import pandas as pd
 import CoolProp as cp
 import datetime
 import os
 import yaml
+from .. import solver as psv
+=======
+
 from .. import pysolver_view as psv
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5
 from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
@@ -29,6 +34,7 @@ AVAILABLE_GEOMETRIES = ["constant_mean",
                         "constant_hub",
                         "constant_tip"]
 
+<<<<<<< HEAD
 def compute_optimal_turbine(
     config, 
     initial_guess = None,
@@ -36,6 +42,9 @@ def compute_optimal_turbine(
     out_dir="output",
     export_results=True,
     ):
+=======
+def compute_optimal_turbine(config, initial_guess=None):
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5
 
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -65,19 +74,9 @@ def compute_optimal_turbine(
     # Get initial guess
     x0 = problem.get_initial_guess(initial_guess)
 
-    # Perform initial function call to initialize problem
-    # This populates the arrays of equality and inequality constraints
-    # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
-    problem.fitness(x0)
-
-    # Load solver configuration
-    solver_config = config["optimization"]["solver_options"]
-
-    # Initialize solver object using keyword-argument dictionary unpacking
-    solver = psv.OptimizationSolver(problem, **solver_config)
-
-    # Solve optimization problem for initial guess x0
-    solver.solve(x0)
+<<<<<<< HEAD
+    sol = solver.solve()
+    solver.plot_convergence_history(savefig = False)
 
     dfs = {
         "operation point": pd.DataFrame({key : pd.Series(val) for key, val in problem.boundary_conditions.items()}),
@@ -104,7 +103,7 @@ def compute_optimal_turbine(
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-	# Define filename with unique date-time identifier
+        # Define filename with unique date-time identifier
         if out_filename == None:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             out_filename = f"design_optimization_{current_time}"
@@ -122,6 +121,21 @@ def compute_optimal_turbine(
             for sheet_name, df in dfs.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=True)
 
+=======
+    # Perform initial function call to initialize problem
+    # This populates the arrays of equality and inequality constraints
+    # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
+    problem.fitness(x0)
+
+    # Load solver configuration
+    solver_config = config["optimization"]["solver_options"]
+
+    # Initialize solver object using keyword-argument dictionary unpacking
+    solver = psv.OptimizationSolver(problem, **solver_config)
+
+    # Solve optimization problem for initial guess x0
+    solver.solve(x0)
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5
 
     return solver
 
@@ -286,7 +300,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Evaluate available objecitve functions
         objective_functions = {"none" : 0,
-                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/100}                       
+                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/10}  #/100}                       
         self.f = objective_functions[self.obj_func]
 
         # Evaluate available equality constraints    

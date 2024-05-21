@@ -11,8 +11,10 @@ else:
     sys.excepthook = IPython.core.ultratb.ColorTB()
 
 
-from .solver_utilities import *
+from .utilities import *
+from .numerical_differentiation import *
 from .optimization import *
+from .optimization_problems import *
+from .optimization_wrappers import *
 from .nonlinear_system import *
-# from .optimization_problems import *
-# from .nonlinear_system_problems import *
+from .nonlinear_system_problems import *

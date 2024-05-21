@@ -54,10 +54,11 @@ def evaluate_constraints(data, constraints):
         if type == '=':
             c_eq.append(mismatch)
         elif type == '>':
-            c_ineq.append(mismatch)
-        elif type == '<':
-            # Change sign because optimizer handles c_ineq > 0
+            # Change sign as optimization wrapper handles c_ineq < 0
             c_ineq.append(-mismatch)
+        elif type == '<':
+            # Do not change sign as optimization wrapper handles c_ineq < 0
+            c_ineq.append(mismatch)
         else:
             raise ValueError(f"Unknown constraint type: {type}")
 

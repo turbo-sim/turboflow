@@ -6,7 +6,7 @@ from .plot_functions import *
 from .config_validation import *
 
 # Import subpackages
-from .solver import * 
+from .pysolver_view import * 
 from .properties import *
 from .cycles import *
 from .utilities import *

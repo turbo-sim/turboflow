@@ -86,6 +86,9 @@ optimization:
     #   normalize : True 
 
   solver_options:
+<<<<<<< HEAD
+    max_iter: 100
+=======
     library: pygmo
     method: snopt
     tolerance: 1e-3
@@ -107,3 +110,4 @@ optimization:
 #  - SLSQP and SNOPT solvers converge better when using the "optimal" step size (is it always the case?)
 #  - I also experienced better termination using the 3-point method. This suggest that accurate finite differences are necessary for proper termination to tight tolerance
 #  Is the termination not working well because of inaccurate finite differences, or because there is a non-smooth function being triggered? (abs, min, max, if's). We should scan the code and replace by smoothed functions from math module
+>>>>>>> e44028cee3372d4d5f6e49bd6cce6d57688b10d5

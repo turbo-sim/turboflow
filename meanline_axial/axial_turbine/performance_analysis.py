@@ -10,7 +10,7 @@ import CoolProp as cp
 import matplotlib.pyplot as plt
 
 from .. import math
-from .. import solver as psv
+from .. import pysolver_view as psv
 from .. import utilities as utils
 from .. import properties as props
 from . import geometry_model as geom
@@ -187,8 +187,8 @@ def compute_performance(
             # Retrieve solver data
             solver_status = {
                 "completed": True,
-                "success": solver.solution.success,
-                "message": solver.solution.message,
+                "success": solver.success,
+                "message": solver.message,
                 "grad_count": solver.convergence_history["grad_count"][-1],
                 "func_count": solver.convergence_history["func_count"][-1],
                 "func_count_total": solver.convergence_history["func_count_total"][-1],
@@ -326,65 +326,31 @@ def compute_single_operation_point(
     for initial_guess in initial_guesses:
         for method in methods_to_try:
             success = False
-            x0 = problem.get_initial_guess(initial_guess)
+            x0 = problem.get_initial_guess(initial_guess)  # TODO: Roberto_17.05.2023: It seems we are not using this value. Why take it as output then?
             print(f" Trying to solve the problem using {SOLVER_MAP[method]} method") 
             solver_options["method"] = method
-            solver = initialize_solver(problem, problem.x0, solver_options)
-    
+
+            solver = psv.NonlinearSystemSolver(problem, **solver_options)
+            # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
+            # TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?
+
             try: 
-                solution = solver.solve()
-                success = solution.success
+                solver.solve(problem.x0)                
                 
             except Exception as e:
                 print(f" Error during solving: {e}")
-                success = False
+                solver.success = False
                     
-            if success:
+            if solver.success:
                 break
-        if success:
+        if solver.success:
             break
     
-    if not success:
+    if not solver.success:
         print(" WARNING: All attempts failed to converge")
-        solution = False
         # TODO: Add messages to Log file
 
     return solver, problem.results
-
-
-def initialize_solver(problem, initial_guess, solver_options):
-    """
-    Initialize a `psv.NonlinearSystemSolver` object used to solve a `CascadesNonlinearSystemProblem`.
-
-    Parameters
-    ----------
-    problem : CascadesNonlinearSystemProblem object
-        A `CascadesNonlinearSystemProblem` object representing the performance analysis problem.
-    initial_guess : dict
-        The initial guess for the solver.
-    solver_options : dict
-        A dictionary containing options for the solver
-
-    Returns
-    -------
-    psv.NonlinearSystemSolver object
-        An object used to solve the performance analysis problem.
-
-    """
-
-    # Initialize solver object
-    solver = psv.NonlinearSystemSolver(
-        problem,
-        initial_guess,
-        method=solver_options["method"],
-        tol=solver_options["tolerance"],
-        max_iter=solver_options["max_iterations"],
-        derivative_method=solver_options["derivative_method"],
-        derivative_rel_step=solver_options["derivative_rel_step"],
-        display=solver_options["display_progress"],
-    )
-
-    return solver
 
 
 def find_closest_operation_point(current_op_point, operation_points, solution_data):
@@ -534,7 +500,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     A class representing a nonlinear system problem for cascade analysis.
 
     This class is designed for solving nonlinear systems of equations related to cascade analysis.
-    Derived classes must implement the `get_residual_values` method to evaluate the system of equations for a given set of decision variables.
+    Derived classes must implement the `residual` method to evaluate the system of equations for a given set of decision variables.
 
     Additionally, specific problem classes can define the `get_jacobian` method to compute Jacobians.
     If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
@@ -606,7 +572,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         self.model_options = config["model_options"]
         self.keys = []
 
-    def get_residual_values(self, x):
+    def residual(self, x):
         """
         Evaluate the system of equations for a given set of decision variables.
 
@@ -672,7 +638,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions = operation_point
 
         # Initialize fluid object
-        self.fluid = props.Fluid(operation_point["fluid_name"])
+        self.fluid = props.Fluid(operation_point["fluid_name"], exceptions=True)
 
         # Rename variables
         p0_in = operation_point["p0_in"]
@@ -1162,7 +1128,7 @@ def print_simulation_summary(solvers):
         # Check if the solver is not None and has the required attribute
         if solver and hasattr(solver, "elapsed_time"):
             times.append(solver.elapsed_time)
-            if not solver.solution.success:
+            if not solver.success:
                 failed_points.append(i)
         else:
             # Handle failed solver or missing attributes

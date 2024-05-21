@@ -14,7 +14,7 @@ CONFIG_FILE = os.path.abspath("MM_base.yaml")
 config = ml.read_configuration_file(CONFIG_FILE)
 
 print(config["geometry"]["radius_hub"])
-stop
+# stop
 
 x0 = {'w_out_1': 117.45901482502731, 
       's_out_1': 1749.2457442847763, 

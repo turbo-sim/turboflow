@@ -5,11 +5,14 @@ import logging
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
+
+from datetime import datetime
+from abc import ABC, abstractmethod
 from matplotlib.ticker import MultipleLocator
 from scipy.optimize import root
-from scipy.optimize._numdiff import approx_derivative
-from abc import ABC, abstractmethod
-from datetime import datetime
+
+from . import numerical_differentiation
+from .utilities import savefig_in_formats
 
 SOLVER_OPTIONS = ["hybr", "lm"]
 
@@ -33,15 +36,16 @@ class NonlinearSystemSolver:
     ----------
     problem : NonlinearSystemProblem
         An instance of a problem defining the system of equations to be solved.
-    x0 : array_like
-        Initial guess for the independent variables.
     method : str, optional
         Method to be used by scipy's root for solving the nonlinear system. Available solvers are:
 
-        - :code:`hybr`: Refers to MINPACK's 'hybrd' method. This is a modification of Powell's hybrid method and can be viewed as a quasi-Newton method. It is suitable for smooth functions and known to be robust, but can sometimes be slower than other methods.
-        - :code:`lm`: The Levenberg-Marquardt method. Often used for least-squares problems, it blends the steepest descent and the Gauss-Newton method. This method can perform well for functions that are reasonably well-behaved.
+        - :code:`hybr`:  Uses MINPACK's 'hybrd' method, which is is a modification of Powell's hybrid method.
+        - :code:`lm`: The Levenberg-Marquardt method, which blends the steepest descent and the Gauss-Newton methods.
 
-        The choice between :code:`hybr` and :code:`lm` largely depends on the specifics of the problem at hand and the nature of the function. Both methods have their strengths and can be applicable in various contexts. It is advisable to understand the characteristics of the system being solved and experiment with both methods to determine the most appropriate choice for a given problem.
+        The choice between :code:`hybr` and :code:`lm` largely depends on the specifics of the problem at hand. 
+        The :code:`hybr` usually requires less gradient evaluations and it is often faster when analytic gradients are not available.
+        It is advisable to experiment with both methods to determine the most appropriate choice for a given problem.
+
         Defaults to 'hybr'.
     tol : float, optional
         Tolerance for the solver termination. Defaults to 1e-9.
@@ -51,8 +55,8 @@ class NonlinearSystemSolver:
         Additional options to be passed to scipy's root.
     derivative_method : str, optional
         Finite difference method to be used when the problem Jacobian is not provided. Defaults to '2-point'
-    derivative_rel_step : float, optional
-        Finite difference relative step size to be used when the problem Jacobian is not provided. Defaults to 1e-6
+    derivative_abs_step : float, optional
+        Finite difference absolute step size to be used when the problem Jacobian is not provided. Defaults to 1e-6
     display : bool, optional
         If True, displays the convergence progress. Defaults to True.
     plot : bool, optional
@@ -65,12 +69,12 @@ class NonlinearSystemSolver:
 
     Methods
     -------
-    solve(x0=None)
-        Solve the system of nonlinear equations.
-    get_residual_values(x)
-        Evaluate the given nonlinear system problem.
-    get_residual_jacobian(x)
-        Evaluate the Jacobian of the system.
+    solve(x0)
+        Solve the system of nonlinear equations using the specified initial guess `x0`.
+    residual(x)
+        Evaluate the vector of residuals of the at a given point `x`.
+    gradient(x)
+        Evaluate the Jacobian of the system at a given point `x`.
     print_convergence_history()
         Print the convergence history of the problem.
     plot_convergence_history()
@@ -81,30 +85,31 @@ class NonlinearSystemSolver:
     def __init__(
         self,
         problem,
-        x0,
         method="hybr",
-        tol=1e-9,
-        max_iter=100,
+        tolerance=1e-6,
+        max_iterations=100,
         options={},
         derivative_method="2-point",
-        derivative_rel_step=1e-6,
-        display=True,
-        plot=False,
+        derivative_abs_step=1e-6,
+        print_convergence=True,
+        plot_convergence=False,
+        plot_scale='log',
         logger=None,
         update_on="function",
         callback_func=None,
     ):
         # Initialize class variables
         self.problem = problem
-        self.display = display
-        self.plot = plot
+        self.display = print_convergence
+        self.plot = plot_convergence
+        self.plot_scale = plot_scale
         self.logger = logger
         self.method = method
-        self.tol = tol
-        self.maxiter = max_iter
+        self.tol = tolerance
+        self.maxiter = max_iterations
         self.options = copy.deepcopy(options) if options else {}
         self.derivative_method = derivative_method
-        self.derivative_rel_step = derivative_rel_step
+        self.derivative_abs_step = derivative_abs_step
         self.callback_func = callback_func
         self.callback_func_call_count = 0
 
@@ -132,21 +137,16 @@ class NonlinearSystemSolver:
                 "Invalid value for 'update_on'. It should be either 'function' or 'gradient'."
             )
 
-        # Initialize problem
-        self.x0 = x0
-        eval = self.problem.get_residual_values(self.x0)
-        if np.any([item is None for item in eval]):
-            raise ValueError(
-                "Problem evaluation contains None values. There may be an issue with the problem object provided."
-            )
-
         # Initialize variables for convergence report
-        self.last_x = None
-        self.last_residuals = None
+        self.f_final = None
+        self.x_final = None
+        self.x_last = None
+        self.residuals_last = None
         self.grad_count = 0
         self.func_count = 0
         self.func_count_tot = 0
-        self.solution = None
+        self.success = None
+        self.message = None
         self.solution_report = []
         self.elapsed_time = None
         self.include_solution_in_footer = False
@@ -159,18 +159,18 @@ class NonlinearSystemSolver:
         }
 
         # Initialize convergence plot
-        # (convergence_history must be initialized before)
+        # TODO ??? (convergence_history must be initialized before)
         if self.plot:
             self._plot_callback(initialize=True)
 
-    def solve(self, x0=None):
+    def solve(self, x0):
         """
-        Solve the nonlinear system using scipy's root.
+        Solve the nonlinear system using the specified solver.
 
         Parameters
         ----------
-        x0 : array-like, optional
-            Initial guess for the solution of the nonlinear system. If not provided, the initial guess set during instantiation is used.
+        x0 : array-like
+            Initial guess for the solution of the nonlinear system.
 
         Returns
         -------
@@ -178,6 +178,8 @@ class NonlinearSystemSolver:
             A result object from scipy's root detailing the outcome of the solution process.
 
         """
+        # Get start datetime
+        self.start_datetime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
         # Start timing with high-resolution timer
         start_time = time.perf_counter()
@@ -186,28 +188,31 @@ class NonlinearSystemSolver:
         self._write_header()
 
         # Solve the root finding problem
-        self.x0 = self.x0 if x0 is None else x0
-        self.solution = root(
-            self.get_residual_values,
-            self.x0,
-            jac=self.get_residual_jacobian,
+        solution = root(
+            self.residual,
+            x0,
+            jac=self.gradient,
             method=self.method,
             tol=self.tol,
             options=self.options,
         )
 
-        # Evaluate performance again for the converged solution
-        self.get_residual_values(self.solution.x)
+        # Save solution
+        self.x_final = copy.deepcopy(self.x_last)
+        self.f_final = self.residual(self.x_final)
+        self.success = solution.success
+        self.message = solution.message
 
         # Calculate elapsed time
         self.elapsed_time = time.perf_counter() - start_time
 
         # Print report footer
+        self._print_convergence_progress(self.x_final)
         self._write_footer()
 
-        return self.solution
+        return self.x_final
 
-    def get_residual_values(self, x, called_from_jac=False):
+    def residual(self, x, called_from_jac=False):
         """
         Evaluate the nonlinear system residuals.
 
@@ -226,7 +231,7 @@ class NonlinearSystemSolver:
         self.func_count_tot += 1
 
         # Compute problem residuals
-        self.last_residuals = self.problem.get_residual_values(x)
+        self.residuals_last = self.problem.residual(x)
 
         # Update progress report
         if not called_from_jac:
@@ -234,14 +239,14 @@ class NonlinearSystemSolver:
             if self.update_on == "function":
                 self._print_convergence_progress(x)
 
-        return self.last_residuals
+        return self.residuals_last
 
-    def get_residual_jacobian(self, x):
+    def gradient(self, x):
         """
         Evaluates the Jacobian of the nonlinear system of equations at the specified point x.
 
-        This method will use the `get_residual_jacobian` method of the NonlinearSystemProblem class if it exists.
-        If the `get_residual_jacobian` method is not implemented the Jacobian is appoximated using forward finite differences.
+        This method will use the `gradient` method of the NonlinearSystemProblem class if it exists.
+        If the `gradient` method is not implemented the Jacobian is appoximated using forward finite differences.
 
         Parameters
         ----------
@@ -251,24 +256,24 @@ class NonlinearSystemSolver:
         Returns
         -------
         array-like
-            Jacobian matrix of the residual vector.
+            Jacobian matrix of the residual vector formatted as a 2D array.
         """
 
         # Evaluate the Jacobian of the residual vector
         self.grad_count += 1
-        if hasattr(self.problem, "get_residual_jacobian"):
+        if hasattr(self.problem, "gradient"):
             # If the problem has its own Jacobian method, use it
-            jacobian = self.problem.get_residual_jacobian(x)
+            jacobian = self.problem.gradient(x)
 
         else:
             # Fall back to finite differences
-            fun = lambda x: self.get_residual_values(x, called_from_jac=True)
-            jacobian = approx_derivative(
+            fun = lambda x: self.residual(x, called_from_jac=True)
+            jacobian = numerical_differentiation.approx_gradient(
                 fun,
                 x,
-                f0=self.last_residuals,
+                f0=self.residuals_last,
                 method=self.derivative_method,
-                abs_step=self.derivative_rel_step * np.abs(x),
+                abs_step=self.derivative_abs_step,
             )
 
         # Update progress report
@@ -287,7 +292,8 @@ class NonlinearSystemSolver:
         """
         # Define header text
         initial_message = (
-            f" Solve system of equations for {type(self.problem).__name__}"
+            f" Solve system of equations for {type(self.problem).__name__}\n"
+            f" Root-finding algorithm employed: {self.method}"
         )
         self.header = f" {'Func-eval':>15}{'Grad-eval':>15}{'Norm of residual':>24}{'Norm of step':>24} "
         separator = "-" * len(self.header)
@@ -319,8 +325,8 @@ class NonlinearSystemSolver:
         This method captures and prints the following metrics:
         - Number of function evaluations
         - Number of gradient evaluations
-        - Two-norm of the residual vector
-        - Two-norm of the update step
+        - Two-norm of residual vector
+        - Two-norm of solution step
 
         The method also updates the stored convergence history for potential future analysis.
 
@@ -336,13 +342,13 @@ class NonlinearSystemSolver:
         vector is computed using the two-norm.
         """
         # Compute norm of residual vector
-        residual = self.last_residuals
+        residual = self.residuals_last
         norm_residual = np.linalg.norm(residual)
         # norm_residual = np.max([np.linalg.norm(residual), np.finfo(float).eps])
 
         # Compute the norm of the last step
-        norm_step = np.linalg.norm(x - self.last_x) if self.last_x is not None else 0
-        self.last_x = x.copy()
+        norm_step = np.linalg.norm(x - self.x_last) if self.x_last is not None else 0
+        self.x_last = x.copy()
 
         # Store convergence status
         self.convergence_history["grad_count"].append(self.grad_count)
@@ -388,11 +394,11 @@ class NonlinearSystemSolver:
         """
         # Define footer text
         separator = "-" * len(self.header)
-        exit_message = f"Exit message: {self.solution.message}"
-        success_status = f"Success: {self.solution.success}"
+        exit_message = f"Exit message: {self.message}"
+        success_status = f"Success: {self.success}"
         time_message = f"Solution time: {self.elapsed_time:.3f} seconds"
         solution_header = "Solution:"
-        solution_vars = [f"   x{i} = {x:+6e}" for i, x in enumerate(self.solution.x)]
+        solution_vars = [f"   x{i} = {x:+6e}" for i, x in enumerate(self.x_final)]
         lines_to_output = [separator, success_status, exit_message, time_message]
         if self.include_solution_in_footer:
             lines_to_output += [solution_header]
@@ -429,9 +435,9 @@ class NonlinearSystemSolver:
             self.fig, self.ax = plt.subplots()
             (self.obj_line,) = self.ax.plot([], [], color="#D95319", marker="o")
             self.ax.set_xlabel("Number of iterations")
-            self.ax.set_ylabel("Two-norm of the residual vector")
-            self.ax.set_yscale("log")  # Set y-axis to logarithmic scale
-            self.ax.xaxis.set_major_locator(MultipleLocator(1))
+            self.ax.set_ylabel("Two-norm of residual vector")
+            self.ax.set_yscale(self.plot_scale)
+            # self.ax.xaxis.set_major_locator(MultipleLocator(1))
             # self.ax.legend(loc="upper right")
             self.fig.tight_layout(pad=1)
 
@@ -461,35 +467,46 @@ class NonlinearSystemSolver:
 
         The convergence history includes:
             - Number of function evaluations
-            - Number of function evaluations (including finite differences)
             - Number of gradient evaluations
             - Two-norm of the residual vector
-            - Two-norm of the update step
+            - Two-norm of the solution step
 
-        The method provides a comprehensive report on the final solution, including:
+        The method provides a detailed report on:
             - Exit message
             - Success status
-            - Final independent variables values
+            - Execution time
 
+        This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.
+
+        Parameters
+        ----------
+        savefile : bool, optional
+            If True, the convergence history will be saved to a file, otherwise printed to standard output. Default is False.
+        filename : str, optional
+            The name of the file to save the convergence history. If not specified, the filename is automatically generated
+            using the problem name and the start datetime. The file extension is not required.
+        output_dir : str, optional
+            The directory where the plot file will be saved if savefile is True. Default is "output".
+
+        Raises
+        ------
+        ValueError
+            If this method is called before the problem has been solved.
 
         """
-        if self.solution:
+        if self.x_final is not None:
             if savefile:
-                # Create figures directory if it does not exist
+                # Create output directory if it does not exist
                 if not os.path.exists(output_dir):
                     os.makedirs(output_dir)
 
                 # Give a name to the file if it is not specified
                 if filename is None:
-                    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                    filename = os.path.join(
-                        output_dir, f"convergence_history_{current_time}.txt"
-                    )
-                else:
-                    filename = os.path.join(output_dir, f"{filename}.txt")
+                    filename = f"convergence_{type(self.problem).__name__}_{self.start_datetime}.txt"
 
-                # Save plots
-                with open(filename, "w") as f:
+                # Write report to file
+                fullfile = os.path.join(output_dir, filename)
+                with open(fullfile, "w") as f:
                     f.write("\n".join(self.solution_report))
 
             else:
@@ -497,64 +514,71 @@ class NonlinearSystemSolver:
                     print(line)
 
         else:
-            warnings.warn(
-                "This method should be used after invoking the 'solve()' method."
-            )
+            raise ValueError("This method can only be used after invoking the 'solve()' method.")
+
 
     def plot_convergence_history(
-        self, savefig=True, name=None, use_datetime=False, path=None
+        self, savefile=False, filename=None, output_dir="output"
     ):
         """
-        Plot the convergence history of the problem.
+        Plot the convergence history of the problem as the two-norm of the residual vector versus the number of iterations.
+        
+        This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.
 
-        This method plots the two norm of the residual vector versus the number of iterations
+        Parameters
+        ----------
+        savefile : bool, optional
+            If True, the plot is saved to a file instead of being displayed. Default is False.
+        filename : str, optional
+            The name of the file to save the plot to. If not specified, the filename is automatically generated
+            using the problem name and the start datetime. The file extension is not required.
+        output_dir : str, optional
+            The directory where the plot file will be saved if savefile is True. Default is "output".
 
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The Matplotlib figure object for the plot. This can be used for further customization or display.
+
+        Raises
+        ------
+        ValueError
+            If this method is called before the problem has been solved.
         """
-        if self.solution:
+        if self.x_final is not None:
             self._plot_callback(initialize=True)
         else:
-            warnings.warn(
-                "This method should be used after invoking the 'solve()' method."
-            )
+            raise ValueError("This method can only be used after invoking the 'solve()' method.")
 
-        if savefig:
-            # Give a name to the figure if it is not specified
-            if name is None:
-                name = f"convergence_history_{type(self.problem).__name__}"
+        if savefile:
+            # Create output directory if it does not exist
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
 
-            # Define figures directory if it is not provided
-            if path is None:
-                path = os.path.join(os.getcwd(), "figures")
-
-            # Create figures directory if it does not exist
-            if not os.path.exists(path):
-                os.makedirs(path)
-
-            # Define file name and path
-            if use_datetime:
-                current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                filename = os.path.join(path, f"{name}_{current_time}")
-            else:
-                filename = os.path.join(path, f"{name}")
+            # Give a name to the file if it is not specified
+            if filename is None:
+                filename = f"convergence_{type(self.problem).__name__}_{self.start_datetime}"
 
             # Save plots
-            self.fig.savefig(filename + ".png", bbox_inches="tight")
-            self.fig.savefig(filename + ".svg", bbox_inches="tight")
+            fullfile = os.path.join(output_dir, filename)
+            savefig_in_formats(self.fig, fullfile, formats=[".png", ".svg"])
 
+        return self.fig
 
+    
 class NonlinearSystemProblem(ABC):
     """
     Abstract base class for root-finding problems.
 
     Derived root-finding problem objects must implement the following method:
 
-    - `get_residual_values`: Evaluate the system of equations for a given set of decision variables.
+    - `residual`: Evaluate the system of equations for a given set of decision variables.
 
-    Additionally, specific problem classes can define the `get_residual_jacobian` method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
+    Additionally, specific problem classes can define the `gradient` method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.
 
     Methods
     -------
-    get_residual_values(x)
+    residual(x)
         Evaluate the system of equations for a given set of decision variables.
 
     Examples
@@ -562,13 +586,13 @@ class NonlinearSystemProblem(ABC):
     Here's an example of how to derive from `RootFindingProblem`::
 
         class MyRootFindingProblem(RootFindingProblem):
-            def get_residual_values(self, x):
+            def residual(self, x):
                 # Implement evaluation logic here
                 pass
     """
 
     @abstractmethod
-    def get_residual_values(self, x):
+    def residual(self, x):
         """
         Evaluate the system of equations for given decision variables.
 
