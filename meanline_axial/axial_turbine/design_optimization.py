@@ -1,12 +1,16 @@
 import numpy as np
-
+import pandas as pd
+import CoolProp as cp
+import datetime
+import os
+import yaml
 from .. import solver as psv
 from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
 from .. import properties as props
 from . import performance_analysis as pa
-import CoolProp as cp
+
 
 AVAILABLE_EQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
@@ -25,7 +29,13 @@ AVAILABLE_GEOMETRIES = ["constant_mean",
                         "constant_hub",
                         "constant_tip"]
 
-def compute_optimal_turbine(config, initial_guess = None):
+def compute_optimal_turbine(
+    config, 
+    initial_guess = None,
+    out_filename=None,
+    out_dir="output",
+    export_results=True,
+    ):
 
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -61,7 +71,51 @@ def compute_optimal_turbine(config, initial_guess = None):
 
     sol = solver.solve()
     solver.plot_convergence_history(savefig = False)
-    
+
+    dfs = {
+        "operation point": pd.DataFrame({key : pd.Series(val) for key, val in problem.boundary_conditions.items()}),
+        "overall": pd.DataFrame(problem.results["overall"], index = [0]),
+        "plane": problem.results["plane"],
+        "cascade": problem.results["cascade"],
+        # "stage": pd.concat(stage_data, ignore_index=True),
+        "geometry": pd.DataFrame({key : pd.Series(val) for key, val in problem.geometry.items()}),
+        "solver": pd.DataFrame({
+                "completed": pd.Series(True, index = [0]),
+                "success": pd.Series(solver.solution.success, index = [0]),
+                "message": pd.Series(solver.solution.message, index = [0]),
+                "grad_count": solver.convergence_history["grad_count"],
+                "func_count": solver.convergence_history["func_count"],
+                "func_count_total": solver.convergence_history["func_count_total"],
+                "objective_value" : solver.convergence_history["objective_value"],
+                "constraint_violation": solver.convergence_history["constraint_violation"],
+                "norm_step": solver.convergence_history["norm_step"],
+            }, index = range(len(solver.convergence_history["grad_count"]))),
+    }
+
+    if export_results:
+        # Create a directory to save simulation results
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        # Define filename with unique date-time identifier
+        if out_filename == None:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            out_filename = f"design_optimization_{current_time}"
+
+        # Export simulation configuration as YAML file
+        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+        config_data = utils.convert_numpy_to_python(config_data, precision=12)
+        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+        with open(config_file, "w") as file:
+            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+        # Export optimal turbine in excel file
+        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for sheet_name, df in dfs.items():
+                df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+
     return solver
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
@@ -530,16 +584,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         s_isenthalpic = state_out_h["s"]
         # Calculate spouting velocity
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
-
-        # Define a reference mass flow rate
-        # try:
-        #     # mass_flow_rate = self.eq_constraints["mass_flow_rate"]["value"]
-        #     for constraint in self.eq_constraints:
-        #         if constraint["variable"] == "mass_flow_rate":
-        #             mass_flow_rate = constraint["value"]
-        #             break
-        # except:
-        #     mass_flow_rate = v0*d_isentropic
 
         mass_flow_rate = None  # Initialize mass_flow_rate to None
         # Try to find mass_flow_rate from eq_constraints
