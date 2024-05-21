@@ -191,12 +191,12 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     low_speed_mask = Ma_exit < 0.50
     delta[low_speed_mask] = delta_0
 
-    # Compute deviation for 0.50 <= Ma_exit < 1.00
+    # Compute deviation for 0.50 <= Ma_exit < Ma_crit
     medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < Ma_crit)
-    delta[medium_speed_mask] = delta_0*(1+(0.5-Ma_exit[medium_speed_mask])/(Ma_crit-0.5))
+    delta[medium_speed_mask] = delta_0/(1-0.5/Ma_crit)*(1-Ma_exit/Ma_crit)
 
     # Extrapolate to zero deviation for supersonic flow
-    supersonic_mask = Ma_exit >= 1.00
+    supersonic_mask = Ma_exit >= Ma_crit
     delta[supersonic_mask] = 0.00
 
     # Compute flow angle from deviation
