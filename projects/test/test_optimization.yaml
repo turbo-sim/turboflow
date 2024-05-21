@@ -81,4 +81,4 @@ optimization:
       value : 1
       normalize : True
   solver_options:
-    max_iter: 300
+    max_iter: 100

@@ -20,10 +20,10 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'error_plot' # performance_map/error_plot
+Case = 'pressure_line' # performance_map/error_plot
 # Get the name of the latest results file
-# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
+filename = ml.utils.find_latest_results_file(RESULTS_PATH)
+# filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
 # filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
 save_figs = False
@@ -83,107 +83,12 @@ if Case == 'pressure_line':
         save_figs=save_figs,
     )
 
-    # Plot efficiency curve
-    # title = "Total-to-static efficiency"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["efficieny_ts"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Total-to-static efficiency [%]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-
-    # Plot velocities
-    # title = "Stator velocity"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["w_1", "w_2"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Velocity [m/s]",
-    #     title=title,
-    #     filename="stator_velocity"+'_'+timestamp,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-    # title = "Velocity"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["w_throat_2", "w_4"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Velocity [m/s]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-    # Plot Mach numbers
-    # title = "Density"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["d_4", "d_throat_2"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Density [kg/m^2]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-    # Plot pressures
-    # title = "Stator pressure"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["p_1", "p_2"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Pressure [Pa]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-    # title = "Rotor pressure"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["p_3", "p_4"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Pressure [Pa]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-    
     title = "Mach distribution"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["Ma_crit_throat_2", "Ma_rel_4"],
+        y_keys=["Ma_rel_4", "Ma_rel_2", "critical_Ma_rel_throat_1", "critical_Ma_rel_throat_2"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Mach [-]",
         title=title,
@@ -193,28 +98,12 @@ if Case == 'pressure_line':
         save_figs=save_figs,
     )
 
-    # Plot flow angles
-    # title = "Stator relative flow angles"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["alpha_4"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Flow angles [deg]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
     title = "Rotor relative flow angles"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = ml.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["beta_4"],
+        y_keys=["beta_2"],
         xlabel="Total-to-static pressure ratio",
         ylabel="Flow angle [deg]",
         title=title,
@@ -223,101 +112,15 @@ if Case == 'pressure_line':
         color_map=color_map,
         save_figs=save_figs,
     )
-    # ax1.plot([1.5, 4], [-61.6, -61.6], 'k--')
-    # ax1.legend(labels = ['Subsonic angle', 'Metal angle'], loc = 'best')
-
-    # title = "Losses"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=[
-    #         "efficiency_drop_profile_1",
-    #             # "efficiency_drop_incidence_1",
-    #             "efficiency_drop_secondary_1",
-    #             # "efficiency_drop_clearance_1",
-    #             "efficiency_drop_trailing_1",
-    #             "efficiency_drop_profile_2",
-    #             # "efficiency_drop_incidence_2",
-    #             "efficiency_drop_secondary_2",
-    #             "efficiency_drop_clearance_2",
-    #             "efficiency_drop_trailing_2",
-    #             ],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Flow angle [deg]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-
-
-
-
-    # title = "Losses"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=    ['loss_profile_1', 
-    #                 # 'loss_clearance_1', 
-    #                 'loss_secondary_1', 
-    #                 'loss_trailing_1', 
-    #                 # 'loss_incidence_1',
-    #                 'loss_profile_2', 
-    #                 'loss_clearance_2', 
-    #                 'loss_secondary_2', 
-    #                 'loss_trailing_2', 
-    #                 # 'loss_incidence_2'
-    #                 ],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Flow angle [deg]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
-    # ax1.plot([1.5, 4], [-61.6, -61.6], 'k--')
-    # ax1.legend(labels = ['Subsonic angle', 'Metal angle'], loc = 'best')
-    
-    ml.plot_functions.savefig_in_formats(fig1, 'flow_angle', formats=['.png'])
-    
+        
     # Group up the losses
-    df = data["cascade"]
-    losses = [col for col in df.columns if col.startswith("efficiency_drop_")]
-    stator_losses = [col for col in losses if col.endswith("_1")]
-    rotor_losses = [col for col in losses if col.endswith("_2")]
-    data["cascade"]["efficiency_ts_drop_stator"] = df[stator_losses].sum(axis=1)
-    data["cascade"]["efficiency_ts_drop_rotor"] = df[rotor_losses].sum(axis=1)
+    # df = data["cascade"]
+    # losses = [col for col in df.columns if col.startswith("efficiency_drop_")]
+    # stator_losses = [col for col in losses if col.endswith("_1")]
+    # rotor_losses = [col for col in losses if col.endswith("_2")]
+    # data["cascade"]["efficiency_ts_drop_stator"] = df[stator_losses].sum(axis=1)
+    # data["cascade"]["efficiency_ts_drop_rotor"] = df[rotor_losses].sum(axis=1)
 
-    # Plot the total-to-static efficiency distribution
-    # title = "Total-to-static efficiency distribution"
-    # filename = title.lower().replace(" ", "_") + "_" + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=[
-    #         "efficiency_ts",
-    #         "efficiency_ts_drop_kinetic",
-    #         "efficiency_ts_drop_stator",
-    #         "efficiency_ts_drop_rotor",
-    #     ],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Total-to-static efficiency",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    #     stack=True,
-    #     legend_loc="lower left",
-    # )
-
-    # Show figures
-    if show_figures:
-        plt.show()
 
 elif Case == 'performance_map':
 

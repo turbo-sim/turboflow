@@ -1,43 +1,42 @@
-operation_points:
+operation_points: 
   fluid_name: air
   T0_in: 295.6
   p0_in: 13.8e4
   p_out : 13.8e4/2.298 #, 13.8e4/2.5]
-  # p_out : 13.8e4/2.9 #, 13.8e4/2.5]
   omega: 1627
   alpha_in: 0
 
-performance_map:
-  fluid_name: air
+performance_map: # Optional
+  fluid_name: air 
   T0_in: 295.6
   p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(1.6, 4.6, 40)
-  omega: 1627 #*np.array([1.1, 1, 0.9, 0.7])
+  p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+  omega: 1627 
   alpha_in: 0 
 
-model_options:
-  deviation_model : aungier
-  blockage_model : 0.00  #flat_plate_turbulent
-  choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
-  rel_step_fd: 1e-4
-  loss_model:
-    model: benner
-    loss_coefficient: stagnation_pressure
-    inlet_displacement_thickness_height_ratio: 0.011
-    tuning_factors:
-      profile: 1.00
-      incidence: 1.00
-      secondary: 1.00
-      trailing: 1.00
-      clearance: 1.00
+model_options: # Optional
+  deviation_model : aungier  # Optional
+  blockage_model : 0.00  #flat_plate_turbulent  # Optional
+  choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
+  rel_step_fd: 1e-4  # Optional
+  loss_model:  # Optional
+    model: benner  # Optional
+    loss_coefficient: stagnation_pressure  # Optional
+    inlet_displacement_thickness_height_ratio: 0.011  # Optional
+    tuning_factors:  # Optional
+      profile: 1.00  # Optional
+      incidence: 1.00  # Optional
+      secondary: 1.00  # Optional
+      trailing: 1.00  # Optional
+      clearance: 1.00  # Optional
 
-solver_options:
-  method: hybr
-  tolerance: 1e-8
-  max_iterations: 100
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
+solver_options: # Optional
+  method: hybr  # Optional
+  tolerance: 1e-8  # Optional
+  max_iterations: 100  # Optional
+  derivative_method: "2-point"  # Optional
+  derivative_rel_step: 1e-3  # Optional
+  display_progress: True  # Optional
 
 geometry:
   cascade_type: ["stator", "rotor"]
