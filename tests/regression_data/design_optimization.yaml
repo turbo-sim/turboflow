@@ -1,0 +1,232 @@
+operation_points:
+  fluid_name: R125
+  T0_in: 463.15
+  p0_in: 3620000.0
+  p_out: 1585000.0
+  omega: 3972.105864572915
+  alpha_in: 0
+  h0_in: 497686.3106530505
+  s_in: 1837.707528152813
+model_options:
+  deviation_model: zero_deviation
+  blockage_model: 0.0
+  choking_model: evaluate_cascade_isentropic_throat
+  rel_step_fd: 0.0001
+  loss_model:
+    model: kacker_okapuu
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.0
+      incidence: 1.0
+      secondary: 1.0
+      trailing: 1.0
+      clearance: 1.0
+solver:
+  method: lm
+  tolerance: 1.0e-09
+  max_iterations: 50
+  derivative_method: 2-point
+  derivative_rel_step: 0.001
+  display_progress: true
+solver_options:
+  method: hybr
+  tolerance: 1.0e-08
+  max_iterations: 100
+  derivative_method: 2-point
+  derivative_rel_step: 0.001
+  display_progress: true
+geometry:
+  cascade_type:
+  - stator
+  - rotor
+  radius_hub_in:
+  - 0.029655809872
+  - 0.029655809872
+  radius_hub_out:
+  - 0.029655786328
+  - 0.028352202799
+  radius_tip_in:
+  - 0.049426352799
+  - 0.049426376343
+  radius_tip_out:
+  - 0.049426376343
+  - 0.050729959872
+  pitch:
+  - 0.005651993855
+  - 0.006628034553
+  chord:
+  - 0.010647308861
+  - 0.010623976311
+  stagger_angle:
+  - 40.0
+  - -45.903674771656
+  opening:
+  - 0.000981458433
+  - 0.001512676769
+  leading_edge_diameter:
+  - 0.01200896
+  - 0.01200896
+  leading_edge_wedge_angle:
+  - 45.0
+  - 45.0
+  leading_edge_angle:
+  - 0.0
+  - -16.2
+  trailing_edge_thickness:
+  - 4.9072922e-05
+  - 7.5633838e-05
+  maximum_thickness:
+  - 0.002129461772
+  - 0.001883200453
+  tip_clearance:
+  - 0.0
+  - 0.0005
+  throat_location_fraction:
+  - 1
+  - 1
+  radius: 0.020679455557
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U17
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 68
+    - 4
+    - 8
+  - !!binary |
+    aAAAAHUAAABiAAAAXwAAAHQAAABpAAAAcAAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAF8AAABv
+    AAAAdQAAAHQAAAA=
+  : - 0.6
+    - 0.6
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U37
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 148
+    - 4
+    - 8
+  - !!binary |
+    dAAAAHIAAABhAAAAaQAAAGwAAABpAAAAbgAAAGcAAABfAAAAZQAAAGQAAABnAAAAZQAAAF8AAAB0
+    AAAAaAAAAGkAAABjAAAAawAAAG4AAABlAAAAcwAAAHMAAABfAAAAbwAAAHAAAABlAAAAbgAAAGkA
+    AABuAAAAZwAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAA==
+  : - 0.1
+    - 0.1
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U17
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 68
+    - 4
+    - 8
+  - !!binary |
+    cAAAAGkAAAB0AAAAYwAAAGgAAABfAAAAYwAAAGgAAABvAAAAcgAAAGQAAABfAAAAcgAAAGEAAAB0
+    AAAAaQAAAG8AAAA=
+  : - 0.9
+    - 0.9
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U16
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 64
+    - 4
+    - 8
+  - !!binary |
+    aAAAAHUAAABiAAAAXwAAAHQAAABpAAAAcAAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAF8AAABp
+    AAAAbgAAAA==
+  : - 0.6
+    - 0.6
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U12
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 48
+    - 4
+    - 8
+  - !!binary |
+    YQAAAHMAAABwAAAAZQAAAGMAAAB0AAAAXwAAAHIAAABhAAAAdAAAAGkAAABvAAAA
+  : - 1.5
+    - 1.5
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U13
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 52
+    - 4
+    - 8
+  - !!binary |
+    ZwAAAGEAAAB1AAAAZwAAAGkAAABuAAAAZwAAAF8AAABhAAAAbgAAAGcAAABsAAAAZQAAAA==
+  : - 79.2
+    - -59.4
+optimization:
+  objective_function: efficiency_ts
+  radius_type: constant_mean
+  design_variables:
+  - specific_speed
+  - blade_jet_ratio
+  - hub_tip_ratio_in
+  - hub_tip_ratio_out
+  - aspect_ratio
+  - pitch_chord_ratio
+  - trailing_edge_thickness_opening_ratio
+  - leading_edge_angle
+  - gauging_angle
+  constraints:
+  - variable: mass_flow_rate
+    type: '='
+    value: 10.66
+    normalize: true
+  - variable: interstage_flaring
+    type: '='
+    value: 1
+    normalize: true
+  solver_options:
+    max_iter: 100
+  bounds: null

@@ -1,0 +1,87 @@
+operation_points:
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 138000.0
+  p_out: 60052.21932114883
+  omega: 1627
+  alpha_in: 0
+performance_map:
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 138000.0
+  p_out:
+  - 60000.00000000001
+  - 57500.0
+  omega: 1627
+  alpha_in: 0
+model_options:
+  deviation_model: aungier
+  blockage_model: 0.0
+  choking_model: evaluate_cascade_critical
+  rel_step_fd: 0.0001
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.0
+      incidence: 1.0
+      secondary: 1.0
+      trailing: 1.0
+      clearance: 1.0
+solver_options:
+  method: hybr
+  tolerance: 1.0e-08
+  max_iterations: 100
+  derivative_method: 2-point
+  derivative_rel_step: 0.001
+  display_progress: true
+geometry:
+  cascade_type:
+  - stator
+  - rotor
+  radius_hub_in:
+  - 0.084785
+  - 0.084785
+  radius_hub_out:
+  - 0.084785
+  - 0.081875
+  radius_tip_in:
+  - 0.118415
+  - 0.118415
+  radius_tip_out:
+  - 0.118415
+  - 0.121325
+  pitch:
+  - 0.018294
+  - 0.01524
+  chord:
+  - 0.02616
+  - 0.02606
+  stagger_angle:
+  - 43.03
+  - -31.05
+  opening:
+  - 0.00747503242
+  - 0.00735223377
+  leading_edge_angle:
+  - 0.0
+  - 29.6
+  leading_edge_wedge_angle:
+  - 50.0
+  - 50.0
+  leading_edge_diameter:
+  - 0.00254
+  - 0.00162
+  trailing_edge_thickness:
+  - 0.0005
+  - 0.0005
+  maximum_thickness:
+  - 0.00505
+  - 0.00447
+  tip_clearance:
+  - 0.0
+  - 0.0003
+  throat_location_fraction:
+  - 1
+  - 1

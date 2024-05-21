@@ -1,0 +1,57 @@
+operation_points:
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 13.8e4
+  p_out : 13.8e4/2.298
+  omega: 1627
+  alpha_in: 0
+
+performance_map:
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 13.8e4
+  p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+  omega: 1627 
+  alpha_in: 0 
+
+model_options:
+  deviation_model : aungier
+  blockage_model : 0.00  #flat_plate_turbulent
+  choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  rel_step_fd: 1e-4
+  loss_model:
+    model: moustapha
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
+
+solver_options:
+  method: hybr
+  tolerance: 1e-8
+  max_iterations: 100
+  derivative_method: "2-point"
+  derivative_rel_step: 1e-3
+  display_progress: True
+
+geometry:
+  cascade_type: ["stator", "rotor"]
+  radius_hub_in: [0.084785, 0.084785]
+  radius_hub_out: [0.084785, 0.081875]
+  radius_tip_in: [0.118415, 0.118415]
+  radius_tip_out: [0.118415, 0.121325]
+  pitch: [1.8294e-2, 1.524e-2]
+  chord: [2.616e-2, 2.606e-2]
+  stagger_angle: [+43.03, -31.05]
+  opening: [0.747503242e-2, 0.735223377e-2]
+  leading_edge_angle : [0.00, 29.60]
+  leading_edge_wedge_angle : [50.00, 50.00]
+  leading_edge_diameter : [2*0.127e-2, 2*0.081e-2]
+  trailing_edge_thickness : [0.050e-2, 0.050e-2]
+  maximum_thickness : [0.505e-2, 0.447e-2]
+  tip_clearance: [0.00, 0.030e-2]
+  throat_location_fraction: [1, 1]

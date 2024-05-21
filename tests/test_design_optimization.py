@@ -12,13 +12,7 @@ import meanline_axial as ml
 DATA_DIR = "regression_data"
 CONFIG_DIR = "config_files"
 CONFIG_FILES = [
-    "performance_analysis_evaluate_cascade_throat.yaml",
-    "performance_analysis_evaluate_cascade_critical.yaml",
-    "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
-    "performance_analysis_kacker_okapuu.yaml",
-    "performance_analysis_moustapha.yaml",
-    "performance_analysis_zero_deviation.yaml",
-    "performance_analysis_ainley_mathieson.yaml",
+    "design_optimization.yaml",
 ]
 
 # Define test settings
@@ -30,17 +24,17 @@ if not os.path.exists(DATA_DIR):
 
 
 # Helper function to check values
-def check_values(old_values, new_values, column, config_name, discrepancies):
+def check_value(old_value, new_value, column, config_name, discrepancies):
     """
-    Compare and check if the values from the saved dataset and current calculations match.
+    Compare and check if the value from the saved dataset and current calculatio match.
     Any discrepancies found are added to the discrepancies list with detailed messages.
 
     Parameters
     ----------
-    old_values : numpy.array
-        Array of saved values from the dataset.
-    new_values : numpy.array
-        Array of current values from the solver.
+    old_value : float
+        Saved value from the dataset.
+    new_value : float
+        Current value from the solver.
     column : str
         The name of the data column being compared.
     config_name : str
@@ -48,22 +42,21 @@ def check_values(old_values, new_values, column, config_name, discrepancies):
     discrepancies : list
         A list to record discrepancies found during comparison.    
     """
-    for i, (saved, current) in enumerate(zip(old_values, new_values)):
-        if isinstance(saved, str) and saved != current:
-            discrepancies.append(
-                f"Mismatch in '{config_name}' at operation point {i+1}, of '{column}': expected '{saved}', got '{current}'"
-            )
-        elif not isinstance(saved, str) and not ml.isclose_significant_digits(
-            saved, current, DIGIT_TOLERANCE
-        ):
-            discrepancies.append(
-                f"Mismatch in '{config_name}' at operation point {i+1}, of '{column}': expected {saved:.5e}, got {current:.5e}"
-            )
+    if isinstance(old_value, str) and old_value != new_value:
+        discrepancies.append(
+            f"Mismatch of '{column}' in '{config_name}' : expected '{old_value}', got '{new_value}'"
+        )
+    elif not isinstance(old_value, str) and not ml.isclose_significant_digits(
+        old_value, new_value, DIGIT_TOLERANCE
+    ):
+        discrepancies.append(
+            f"Mismatch of '{column}' in '{config_name}': expected {old_value:.5e}, got {new_value:.5e}"
+        )
 
 
 # Fixture to compute solver performance
 @pytest.fixture(scope="session", params=CONFIG_FILES)
-def compute_performance_from_config(request):
+def compute_optimal_turbine_from_config(request):
     """
     Compute solver performance for cases specified in the configuration file.
 
@@ -87,13 +80,12 @@ def compute_performance_from_config(request):
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
     config = ml.read_configuration_file(config_path)
-    operation_points = config["performance_map"]
-    solvers = ml.compute_performance(operation_points, config, export_results = False)
+    solvers = ml.compute_optimal_turbine(config, initial_guess = None, export_results = False)
     return solvers, config_file 
 
 
 # Test solver convergence using fixture
-def test_performance_analysis(compute_performance_from_config):
+def test_design_optimization(compute_optimal_turbine_from_config):
     """
     Test performance analysis functionality. The function compares the calculated values against saved data on convergence
     and overall performance. 
@@ -109,7 +101,7 @@ def test_performance_analysis(compute_performance_from_config):
     """
     
     # Get the solvers list and configuration filename
-    solvers, config_file = compute_performance_from_config
+    solver, config_file = compute_optimal_turbine_from_config
     config_name, _ = os.path.splitext(config_file)
 
     # Load saved convergence history from Excel file
@@ -118,15 +110,15 @@ def test_performance_analysis(compute_performance_from_config):
 
     # Loop over all operating points
     mismatch = []  # List to store discrepancies
-    for key in solvers[0].convergence_history.keys():
-        value_old = saved_df["solver"][key].to_numpy()
-        value_new = np.array([solvers[i].convergence_history[key][-1] for i in range(len(solvers))])
-        check_values(value_old, value_new, key, config_name, mismatch)
+    for key in solver.convergence_history.keys():
+        value_old = saved_df["solver"][key].to_numpy()[-1]
+        value_new = solver.convergence_history[key][-1]
+        check_value(value_old, value_new, key, config_name, mismatch)
 
-    for key in solvers[0].problem.results["overall"].keys():
-        value_old = saved_df["overall"][key].to_numpy()
-        value_new = np.array([solvers[i].problem.results["overall"][key][0] for i in range(len(solvers))])
-        check_values(value_old, value_new, key, config_name, mismatch)
+    for key in solver.problem.results["overall"].keys():
+        value_old = saved_df["overall"][key].to_numpy()[0]
+        value_new = solver.problem.results["overall"][key][0]
+        check_value(value_old, value_new, key, config_name, mismatch)
 
     # Assert no discrepancies
     test_passed = not mismatch
@@ -144,13 +136,13 @@ def create_simulation_regression_data(config_file, outdir):
     config_name, _ = os.path.splitext(config_file)
     base_filename = f"{config_name}"
     filename = f"{base_filename}"
+    
     # If file exists, append a timestamp to the new file name
     if os.path.exists(filename):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{base_filename}_{timestamp}"
 
-    operation_points = config["performance_map"]
-    solvers = ml.compute_performance(operation_points, config, out_dir = outdir, out_filename= filename, export_results = True)
+    solvers = ml.compute_optimal_turbine(config, out_dir = outdir, out_filename= filename, export_results = True)
 
     print(f"Regression data set saved: {filename}")
 
@@ -158,12 +150,9 @@ def create_simulation_regression_data(config_file, outdir):
 # Run the tests
 if __name__ == "__main__":
 
-    new_tests = ["performance_analysis_ainley_mathieson.yaml"]
-
     # Run simulatins and save regression data
-    for config_file in new_tests:
+    for config_file in CONFIG_FILES:
         create_simulation_regression_data(config_file, DATA_DIR)
 
     # Running pytest from Python
     # pytest.main([__file__, "-vv"])
-
