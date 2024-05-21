@@ -154,6 +154,8 @@ def plot_lines(
             labels = [f"{subsets[0]} = {subsets[i+1]}" for i in range(len(subsets)-1)]
         elif len(y_keys) > 1:
             labels = [f"{y_keys[i]}" for i in range(len(y))]
+        else:
+            labels = y_keys
 
     # Get linestyles
     if linestyles == None:
@@ -403,39 +405,204 @@ def plot_axial_radial_plane(geometry):
     radius_tip_out = geometry["radius_tip_out"]
     number_of_cascades = geometry["number_of_cascades"]
     axial_chord = geometry["axial_chord"]
+    tip_clearance = geometry["tip_clearance"]
     
+    # Define unspecified geometrical parameters
+    ct = 0.05 # Thickness of casing relative to maximum tip radius
+    cl = 1.2 # Length of casing to turbine 
+    cs = 0.1 # Axial spacing between cascades relative to max axial chord
     
-    dx = 0.05*max(axial_chord) # Axial spacing between cascades
-
-    # Define x-points
+    # Get x-points
+    dx = cs*max(axial_chord)
     x = np.array([])
     for i in range(len(axial_chord)):
         x = np.append(x, np.sum(axial_chord[0:i+1]) + i*dx)
         x = np.append(x, np.sum(axial_chord[0:i+1]) + (i+1)*dx)
     x[1:] = x[0:-1]
     x[0] = 0
-
-    # Define hub and tip points 
-    y_hub = np.array([val for pair in zip(radius_hub_in, radius_hub_out) for val in pair])
-    y_tip = np.array([val for pair in zip(radius_tip_in, radius_tip_out) for val in pair])
-
-    # Plot cascades
-    fig, ax = plt.subplots()
-    colors = ["0.5", "0.8"] # Colors for stator and rotor rwo respectively
-    for i in range(number_of_cascades):    
-        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k') # Plot tip 
-        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k') # Plt hub 
-        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k') # Plot inlet vertical line
-        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k') # Plot outlet vertical line
         
-        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = colors[i%2]) # Fill cascade with color
+    # Get tip and hub points
+    y_hub = np.array([val for pair in zip(radius_hub_in, radius_hub_out) for val in pair]) 
+    y_tip = np.array([val for pair in zip(radius_tip_in, radius_tip_out) for val in pair]) 
+    
+    # Initialize figure and axis object
+    fig, ax = plt.subplots()
+    
+    # Plot upper casing
+    tip_clearance_extended = np.array([val for pair in zip(tip_clearance, tip_clearance) for val in pair]) # Extend tip clearance vector 
+    casing_thickness = max(y_tip)*ct
+    x_casing = x
+    x_casing = np.insert(x_casing, 0, x[0] - (cl-1)*x[-1]/2)
+    x_casing = np.append(x_casing, x[-1] + (cl-1)*x[-1]/2)
+    
+    y_casing_lower = y_tip + tip_clearance_extended
+    y_casing_lower = np.insert(y_casing_lower, 0, y_casing_lower[0])
+    y_casing_lower = np.append(y_casing_lower, y_casing_lower[-1])
+    y_casing_upper = np.ones(len(x_casing))*(max(y_tip) + casing_thickness)
+    
+    ax.plot(x_casing, y_casing_lower, 'k')
+    ax.plot(x_casing, y_casing_upper, 'k')
+    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], 'k')
+    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], 'k')
+    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color = '0.5')
+    
+    # Plot lower casing
+    tip_clearance_extended = np.array([val for pair in zip(np.flip(tip_clearance), np.flip(tip_clearance)) for val in pair]) # Extend tip clearance vector 
+    y_casing_upper = y_hub - tip_clearance_extended
+    y_casing_upper = np.insert(y_casing_upper, 0, y_casing_upper[0])
+    y_casing_upper = np.append(y_casing_upper, y_casing_upper[-1])
+    y_casing_lower = y_casing_upper - casing_thickness
+    
+    ax.plot(x_casing, y_casing_lower, 'k')
+    ax.plot(x_casing, y_casing_upper, 'k')
+    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], 'k')
+    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], 'k')
+    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color = '0.5')                                                
+    
+    # Plot cascades
+    for i in range(number_of_cascades):    
+        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k') # Plot tip
+        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k') # Plot hub
+        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k') # Plot inlet vertical line
+        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k') # Plot exit vertical line
+        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = '1') # Fill cascade with color
 
-    # Set plot options 
+    # Plot axis of rotation
+    plt.annotate('', xy=(x[-1], 0), xytext=(0, 0),
+             arrowprops=dict(facecolor='black', arrowstyle='-|>'))
+        
     ax.grid(False)
+    ax.tick_params(which = "both", direction = 'out', right = False)
+    ax.tick_params(which = "minor", left = False)
+    # ax.set_yticks([])
     ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xlabel("Axial direction")
-    ax.set_ylabel("Radial direction")
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    # ax.spines['left'].set_visible(False)
+    ax.set_xlabel("Axis of rotation")
+    ax.set_ylabel("Radius")
+    ax.set_aspect('equal')
+    lims = ax.get_ylim()
+    ax.set_ylim([0, lims[-1]])
     plt.show()
     
     return fig, ax
+
+def plot_velocity_triangles(plane):
+
+    """
+    Plot velocity triangles for each stage of a turbine.
+
+    Parameters
+    ----------
+    plane : dict
+        A dictionary containing velocity components for each plane of the turbine.
+        The dictionary should have the following keys:
+        - 'v_m': Meridional velocities.
+        - 'v_t': Tangential velocities.
+        - 'w_m': Meridional velocities of relative motion.
+        - 'w_t': Tangential velocities of relative motion.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure object containing the velocity triangle plot.
+
+    matplotlib.axes._subplots.AxesSubplot
+        The matplotlib axis object containing the velocity triangle plot.
+
+    """
+
+    # Load variables
+    v_ms = plane["v_m"]
+    v_ts = plane["v_t"]
+    w_ms = plane["w_m"]
+    w_ts = plane["w_t"]
+
+    # Get maximum an minimum tangential velocities
+    max_w_t = max(np.array([val for pair in zip(v_ts, w_ts) for val in pair]))
+    min_w_t = min(np.array([val for pair in zip(v_ts, w_ts) for val in pair]))
+
+    # Nameing of planes (for marking)
+    plane_name = ["inlet", "exit"]
+
+    # Tuning options
+    dx = 0.1 # Spacing between triangles
+    hs = 10 # Horizontal spacing between line and symbol (absolute)
+    start = 0 # Starting point in y direction
+    fontsize = 12 # Fontsize 
+
+    # Get rotor indexes
+    i_rotor = np.array([val for pair in zip(plane.index[2::4], plane.index[3::4]) for val in pair])
+
+    # initialize figure and axis
+    fig, ax = plt.subplots()
+
+    # Plot velocity triangles
+    for i in range(len(plane)):
+
+        v_m = v_ms[i]
+        v_t = v_ts[i]
+
+        w_m = w_ms[i]
+        w_t = w_ts[i]
+
+        # Define cascade name
+        cascade = "Stator" # Changed if rotor (see below)
+
+        # Plot absolute velocity
+        ax.plot([0, 0], [start, start - v_m], color = 'k', linestyle = ':') # Plot meridional velocity 
+        ax.plot([0, v_t], [start - v_m, start - v_m], color = 'k', linestyle = ':') # Plot tangntial velocity
+        ax.plot([0, v_t], [start, start -v_m], 'k') # Plot velocity
+        x_mid = v_t/2
+        y_mid = (start + start -v_m)/2
+        plt.annotate('', xy=(x_mid, y_mid), xytext=(0, start),
+                arrowprops=dict(facecolor='black', arrowstyle='-|>')) # Arrow for absolute velocity
+        sign = -1 if x_mid < 0 else 1
+        ax.text(x_mid + hs*sign, y_mid, f'$v$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for absolute velocity
+
+        # Plot relative velocity
+        if i in i_rotor:
+            
+            cascade = "Rotor"
+            ax.plot([0, w_t], [start - w_m, start - w_m], color = 'k', linestyle = ':') # Plot tangntial velocity
+            ax.plot([0, w_t], [start, start -w_m], color = 'k') # Plot velocity
+            ax.plot([w_t, v_t], [start - w_m, start - w_m], 'k') # Plot blade speed
+            x_mid = w_t/2
+            y_mid = (start + start -w_m)/2
+            plt.annotate('', xy=(x_mid, y_mid), xytext=(0, start),
+                    arrowprops=dict(facecolor='black', arrowstyle='-|>')) # Arrow for relative velocity
+            sign = -1 if x_mid < 0 else 1
+            ax.text(x_mid + hs*np.sign(x_mid), y_mid, f'$w$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for relative velocity
+            x_mid = (w_t+v_t)/2
+            y_mid = start -w_m
+            plt.annotate('', xy=(x_mid, y_mid), xytext=(w_t, start-w_m),
+                    arrowprops=dict(facecolor='k', arrowstyle='-|>')) # Arrow for blade speed
+            ax.text(x_mid, y_mid, f'$u$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for blade speed
+        
+        # Add explanatory text
+        if w_t < 0:
+            ax.text(max_w_t/2, start-v_m/2, f'{cascade} {plane_name[i%2]}', fontsize=fontsize, ha='center', va='center', color='k')
+        else:
+            ax.text(min_w_t/2, start-v_m/2, f'{cascade} {plane_name[i%2]}', fontsize=fontsize, ha='center', va='center', color='k')
+        
+        # Plot line diciding the different triangles
+        ax.plot([min_w_t, max_w_t], [start - w_m - dx*v_m, start - w_m - dx*v_m], 'k:')
+
+        # Update starting point for the next velocity triangle
+        start = start - w_m - 2*dx*v_m
+        
+    # Set plot options
+    ax.grid(False)
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    plt.show()
+
+    return fig, ax
+    
+
