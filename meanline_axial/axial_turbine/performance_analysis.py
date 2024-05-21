@@ -144,22 +144,6 @@ def compute_performance(
     for operation_point in operation_points:
         validate_operation_point(operation_point)
 
-    # Create a directory to save simulation results
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-
-    # Define filename with unique date-time identifier
-    if out_filename == None:
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        out_filename = f"performance_analysis_{current_time}"
-
-    # Export simulation configuration as YAML file
-    config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-    config_data = utils.convert_numpy_to_python(config_data, precision=12)
-    config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-    with open(config_file, "w") as file:
-        yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
-
     # Initialize lists to hold dataframes for each operation point
     operation_point_data = []
     overall_data = []
@@ -208,8 +192,8 @@ def compute_performance(
                 "grad_count": solver.convergence_history["grad_count"][-1],
                 "func_count": solver.convergence_history["func_count"][-1],
                 "func_count_total": solver.convergence_history["func_count_total"][-1],
-                "norm_residual_last": solver.convergence_history["norm_residual"][-1],
-                "norm_step_last": solver.convergence_history["norm_step"][-1],
+                "norm_residual": solver.convergence_history["norm_residual"][-1],
+                "norm_step": solver.convergence_history["norm_step"][-1],
             }
 
             # Collect results
@@ -262,6 +246,23 @@ def compute_performance(
 
     # Write dataframes to excel
     if export_results:
+        # Create a directory to save simulation results
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        # Define filename with unique date-time identifier
+        if out_filename == None:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            out_filename = f"performance_analysis_{current_time}"
+
+        # Export simulation configuration as YAML file
+        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+        config_data = utils.convert_numpy_to_python(config_data, precision=12)
+        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+        with open(config_file, "w") as file:
+            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+        # Export performance results in excel file
         filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
         with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
             for sheet_name, df in dfs.items():
@@ -810,13 +811,14 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 "s*_throat",
             ]
             valid_keys_2 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_2]
-            valid_keys_3 = [key for key in valid_keys_2 if not key.startswith("v*_in")] + ["beta*_throat" + f"_{i+1}" for i in range(number_of_cascades)]
-
+            valid_keys_3 = [key for key in valid_keys_2 if not key.startswith("v*_in")] + [f"beta*_throat_{i+1}" for i in range(number_of_cascades)]
+            valid_keys_4 = [key for key in valid_keys_2 if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))]
 
             check = []
             check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
             check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
             check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
+            check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
             
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
@@ -858,8 +860,8 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
             elif check[1]:
                 # Check that set of input correspond with model option
-                if not self.model_options["choking_model"] == "evaluate_casacde_critical":
-                    raise ValueError("Set of input corresponds with different choking_model (evaluate_critical_state)")
+                if not self.model_options["choking_model"] == "evaluate_cascade_critical":
+                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_critical)")
 
                 # Check that all values are a number
                 if not all(
@@ -871,6 +873,17 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 # Check that set of input correspond with model option
                 if not self.model_options["choking_model"] == "evaluate_cascade_throat":
                     raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_throat)")
+                
+                # Check that all values are a number
+                if not all(
+                    isinstance(val, (int, float)) for val in initial_guess.values()
+                ):
+                    raise ValueError("All dictionary values must be a float or int")
+                
+            elif check[3]:
+                # Check that set of input correspond with model option
+                if not self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
+                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)")
                 
                 # Check that all values are a number
                 if not all(
