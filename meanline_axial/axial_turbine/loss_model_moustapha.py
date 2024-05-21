@@ -434,7 +434,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     s=geometry["pitch"] # Pitch
     le=geometry["leading_edge_diameter"] # Leading edge diameter
     theta_in=geometry["leading_edge_angle"] # Inlet metal angle
-    theta_out = geometry["metal_angle_te"] # Exit metal angle
+    theta_out = geometry["gauging_angle"] # Exit metal angle
     
     # Compute incidence parameter
     chi = get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des)
@@ -509,7 +509,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     c=geometry["chord"]
     le=geometry["leading_edge_diameter"]
     theta_in=geometry["leading_edge_angle"]
-    theta_out = geometry["metal_angle_te"]
+    theta_out = geometry["gauging_angle"]
     
     chi = (abs(beta_in)-abs(theta_in))/(180-(theta_in+theta_out))*(math.cosd(theta_in)/math.cosd(theta_out))**-1.5*(le/c)**-0.3
     
