@@ -79,6 +79,7 @@ def compute_optimal_turbine(
     # Solve optimization problem for initial guess x0
     solver.solve(x0)
 
+
     dfs = {
         "operation point": pd.DataFrame({key : pd.Series(val) for key, val in problem.boundary_conditions.items()}),
         "overall": pd.DataFrame(problem.results["overall"], index = [0]),
@@ -88,8 +89,8 @@ def compute_optimal_turbine(
         "geometry": pd.DataFrame({key : pd.Series(val) for key, val in problem.geometry.items()}),
         "solver": pd.DataFrame({
                 "completed": pd.Series(True, index = [0]),
-                "success": pd.Series(solver.solution.success, index = [0]),
-                "message": pd.Series(solver.solution.message, index = [0]),
+                "success": pd.Series(solver.success, index = [0]),
+                "message": pd.Series(solver.message, index = [0]),
                 "grad_count": solver.convergence_history["grad_count"],
                 "func_count": solver.convergence_history["func_count"],
                 "func_count_total": solver.convergence_history["func_count_total"],
@@ -286,7 +287,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Evaluate available objecitve functions
         objective_functions = {"none" : 0,
-                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/100}                       
+                              "efficiency_ts" : -self.results["overall"]["efficiency_ts"].values[0]/10}                       
         self.f = objective_functions[self.obj_func]
 
         # Evaluate available equality constraints    
