@@ -34,8 +34,9 @@ solver_options:
   tolerance: 1.0e-08
   max_iterations: 100
   derivative_method: 2-point
-  derivative_rel_step: 0.001
-  display_progress: true
+  derivative_abs_step: 1.0e-06
+  print_convergence: true
+  plot_convergence: false
 geometry:
   cascade_type:
   - stator

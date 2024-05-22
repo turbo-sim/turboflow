@@ -138,7 +138,7 @@ def create_simulation_regression_data(config_file, outdir):
     filename = f"{base_filename}"
     
     # If file exists, append a timestamp to the new file name
-    if os.path.exists(filename):
+    if os.path.exists(f"{os.path.join(DATA_DIR, filename)}.xlsx"):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{base_filename}_{timestamp}"
 

@@ -35,8 +35,9 @@ solver_options:
   tolerance: 1e-8
   max_iterations: 100
   derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
+  derivative_abs_step: 1e-6
+  print_convergence: True
+  plot_convergence: False
 
 geometry:
   cascade_type: ["stator", "rotor"]

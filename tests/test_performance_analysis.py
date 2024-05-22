@@ -145,7 +145,7 @@ def create_simulation_regression_data(config_file, outdir):
     base_filename = f"{config_name}"
     filename = f"{base_filename}"
     # If file exists, append a timestamp to the new file name
-    if os.path.exists(filename):
+    if os.path.exists(f"{os.path.join(DATA_DIR, filename)}.xlsx"):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{base_filename}_{timestamp}"
 
@@ -158,10 +158,8 @@ def create_simulation_regression_data(config_file, outdir):
 # Run the tests
 if __name__ == "__main__":
 
-    new_tests = ["performance_analysis_ainley_mathieson.yaml"]
-
     # Run simulatins and save regression data
-    for config_file in new_tests:
+    for config_file in CONFIG_FILES:
         create_simulation_regression_data(config_file, DATA_DIR)
 
     # Running pytest from Python

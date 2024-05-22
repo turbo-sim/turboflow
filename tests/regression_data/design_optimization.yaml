@@ -3,7 +3,7 @@ operation_points:
   T0_in: 463.15
   p0_in: 3620000.0
   p_out: 1585000.0
-  omega: 3972.105864572915
+  omega: 3976.448895352781
   alpha_in: 0
   h0_in: 497686.3106530505
   s_in: 1837.707528152813
@@ -89,67 +89,6 @@ geometry:
   ? !!python/object/apply:numpy.core.multiarray.scalar
   - !!python/object/apply:numpy.dtype
     args:
-    - U17
-    - false
-    - true
-    state: !!python/tuple
-    - 3
-    - <
-    - null
-    - null
-    - null
-    - 68
-    - 4
-    - 8
-  - !!binary |
-    aAAAAHUAAABiAAAAXwAAAHQAAABpAAAAcAAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAF8AAABv
-    AAAAdQAAAHQAAAA=
-  : - 0.6
-    - 0.6
-  ? !!python/object/apply:numpy.core.multiarray.scalar
-  - !!python/object/apply:numpy.dtype
-    args:
-    - U37
-    - false
-    - true
-    state: !!python/tuple
-    - 3
-    - <
-    - null
-    - null
-    - null
-    - 148
-    - 4
-    - 8
-  - !!binary |
-    dAAAAHIAAABhAAAAaQAAAGwAAABpAAAAbgAAAGcAAABfAAAAZQAAAGQAAABnAAAAZQAAAF8AAAB0
-    AAAAaAAAAGkAAABjAAAAawAAAG4AAABlAAAAcwAAAHMAAABfAAAAbwAAAHAAAABlAAAAbgAAAGkA
-    AABuAAAAZwAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAA==
-  : - 0.1
-    - 0.1
-  ? !!python/object/apply:numpy.core.multiarray.scalar
-  - !!python/object/apply:numpy.dtype
-    args:
-    - U17
-    - false
-    - true
-    state: !!python/tuple
-    - 3
-    - <
-    - null
-    - null
-    - null
-    - 68
-    - 4
-    - 8
-  - !!binary |
-    cAAAAGkAAAB0AAAAYwAAAGgAAABfAAAAYwAAAGgAAABvAAAAcgAAAGQAAABfAAAAcgAAAGEAAAB0
-    AAAAaQAAAG8AAAA=
-  : - 0.9
-    - 0.9
-  ? !!python/object/apply:numpy.core.multiarray.scalar
-  - !!python/object/apply:numpy.dtype
-    args:
     - U16
     - false
     - true
@@ -205,6 +144,67 @@ geometry:
     ZwAAAGEAAAB1AAAAZwAAAGkAAABuAAAAZwAAAF8AAABhAAAAbgAAAGcAAABsAAAAZQAAAA==
   : - 79.2
     - -59.4
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U37
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 148
+    - 4
+    - 8
+  - !!binary |
+    dAAAAHIAAABhAAAAaQAAAGwAAABpAAAAbgAAAGcAAABfAAAAZQAAAGQAAABnAAAAZQAAAF8AAAB0
+    AAAAaAAAAGkAAABjAAAAawAAAG4AAABlAAAAcwAAAHMAAABfAAAAbwAAAHAAAABlAAAAbgAAAGkA
+    AABuAAAAZwAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAA==
+  : - 0.1
+    - 0.1
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U17
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 68
+    - 4
+    - 8
+  - !!binary |
+    cAAAAGkAAAB0AAAAYwAAAGgAAABfAAAAYwAAAGgAAABvAAAAcgAAAGQAAABfAAAAcgAAAGEAAAB0
+    AAAAaQAAAG8AAAA=
+  : - 0.9
+    - 0.9
+  ? !!python/object/apply:numpy.core.multiarray.scalar
+  - !!python/object/apply:numpy.dtype
+    args:
+    - U17
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - 68
+    - 4
+    - 8
+  - !!binary |
+    aAAAAHUAAABiAAAAXwAAAHQAAABpAAAAcAAAAF8AAAByAAAAYQAAAHQAAABpAAAAbwAAAF8AAABv
+    AAAAdQAAAHQAAAA=
+  : - 0.6
+    - 0.6
 optimization:
   objective_function: efficiency_ts
   radius_type: constant_mean
@@ -228,5 +228,12 @@ optimization:
     value: 1
     normalize: true
   solver_options:
-    max_iter: 100
+    library: scipy
+    method: slsqp
+    tolerance: 1.0e-06
+    max_iterations: 100
+    derivative_method: 2-point
+    print_convergence: true
+    plot_convergence: false
+    update_on: gradient
   bounds: null

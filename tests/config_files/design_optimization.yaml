@@ -81,4 +81,11 @@ optimization:
       value : 1
       normalize : True
   solver_options:
-    max_iter: 100
+    library: scipy
+    method: slsqp
+    tolerance: 1e-6
+    max_iterations: 100
+    derivative_method: 2-point
+    print_convergence: True
+    plot_convergence: False
+    update_on: "gradient"

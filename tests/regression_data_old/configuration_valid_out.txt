@@ -1,5 +1,0 @@
-Information messages:
-Configuration options were sucessfully validated.
-
-Error messages:
-None
