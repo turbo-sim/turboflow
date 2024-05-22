@@ -1,5 +1,9 @@
 # Changelog
 
+## 22.05.2024
+- Tests for all model options and optimization psuhed
+- Added script for checking configurations through pydantic
+
 ## 13.05.2024
 - Changed the storage for plane and cascade data. The KEYS used to initialize was no longer needed as the dataframe could be initialized as an empty dataframe. What properties that are stored is now controlled by the output of the evalauete plane functions and choked model functions. This makes it more easier to control and more flexible imo.  
 - in fluid_properties, more specifically FluidState class, I commented out "fluid_name", "converged" and "identifier". I had troubles storing these values in the pandas dataframe, and they dont seem to be stored anywhere else either way. 
