@@ -35,8 +35,9 @@ solver_options: # Optional
   tolerance: 1e-8  # Optional
   max_iterations: 100  # Optional
   derivative_method: "2-point"  # Optional
-  derivative_rel_step: 1e-3  # Optional
-  display_progress: True  # Optional
+  derivative_abs_step: 1e-6  # Optional
+  print_convergence: True
+  plot_convergence: True
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -57,7 +58,7 @@ geometry:
   throat_location_fraction: [1, 1]
 
 optimization:
-  objective_function: efficiency_ts
+  objective_function: efficiency_ts # Optional
   design_variables :
     - specific_speed 
     - blade_jet_ratio 
@@ -68,7 +69,7 @@ optimization:
     - trailing_edge_thickness_opening_ratio  
     - leading_edge_angle
     - gauging_angle 
-  constraints :
+  constraints : # Optional
     - variable : mass_flow_rate
       type : "="
       value : 2.5
@@ -77,6 +78,14 @@ optimization:
       type : "="
       value : 1
       normalize : True
-  radius_type : "constant_mean"
-  solver_options:
-    max_iter: 300
+  radius_type : "constant_mean" # Optional
+  solver_options: # Optional
+    library: pygmo # Optional
+    method: ipopt # Optional
+    tolerance: 1e-3 # Optional
+    max_iterations: 100 # Optional
+    derivative_method: 2-point # Optional
+    derivative_abs_step: 1e-6 # Optional
+    print_convergence: True # Optional
+    plot_convergence: True # Optional
+    update_on: "gradient" # Optional

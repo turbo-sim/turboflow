@@ -8,7 +8,7 @@ import meanline_axial as ml
 
 # Define running option
 # test = "optimization"
-test = "performance_analysis"
+test = "optimization"
 
 # Run calculations
 if test == "performance_analysis":
