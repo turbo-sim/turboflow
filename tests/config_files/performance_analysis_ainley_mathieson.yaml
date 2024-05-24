@@ -14,7 +14,7 @@ performance_map:
   omega: 1627 
   alpha_in: 0 
 
-model_options:
+simulation_options:
   deviation_model : ainley_mathieson
   blockage_model : 0.00  #flat_plate_turbulent
   choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat

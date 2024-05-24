@@ -86,7 +86,7 @@ def compute_performance_from_config(request):
     print()
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
-    config = ml.read_configuration_file(config_path)
+    config = ml.load_config(config_path, mode = "performance_analysis")
     operation_points = config["performance_map"]
     solvers = ml.compute_performance(operation_points, config, export_results = False)
     return solvers, config_file 

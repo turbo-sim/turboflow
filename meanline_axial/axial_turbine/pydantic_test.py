@@ -17,20 +17,24 @@ ROOT_SOLVERS = ["hybr", "lm"]
 DERIVATIVE_METHODS = ["2-point", "3-point"]
 OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
 DESIGN_VARIABLES = ["specific_speed", 
-                              "blade_jet_ratio",
-                                "hub_tip_ratio_in",
-                                "hub_tip_ratio_out",
-                                "aspect_ratio",
-                                "pitch_chord_ratio",
-                                "trailing_edge_thickness_opening_ratio",
-                                "leading_edge_angle",
-                                "gauging_angle"
-                            ]
+                    "blade_jet_ratio",
+                    "hub_tip_ratio_in",
+                    "hub_tip_ratio_out",
+                    "aspect_ratio",
+                    "pitch_chord_ratio",
+                    "trailing_edge_thickness_opening_ratio",
+                    "leading_edge_angle",
+                    "gauging_angle"
+                    ]
+
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 LIBRARIES = ["scipy", "pygmo", "pygmo_nlopt"]
+RADIUS_TYPE = ["constant_mean",
+               "constant_hub",
+               "constant_tip"]
 
-def check_string(input : str, options) -> str:
-    assert input in options, f"Invalid input: '{input}'. Available options: {options}"
+def check_string(input : str, input_type, options) -> str:
+    assert input in options, f"Invalid {input_type}: '{input}'. Available options: {options}"
     return input
 
 class OperationPoints(BaseModel):
@@ -57,40 +61,39 @@ class TuningFactors(BaseModel):
     clearance: float = 1.00
 
 class LossModel(BaseModel):
-    model : Annotated[str, AfterValidator(lambda input: check_string(input, LOSS_MODELS)), Field(default = 'benner')]
-    loss_coefficient: Annotated[str, AfterValidator(lambda input: check_string(input, LOSS_COEFFICIENTS)), Field(default = 'stagnation_pressure')]
+    model : Annotated[str, AfterValidator(lambda input: check_string(input, "loss model", LOSS_MODELS))]
+    loss_coefficient: Annotated[str, AfterValidator(lambda input: check_string(input, "loss coefficient",LOSS_COEFFICIENTS))]
     inlet_displacement_thickness_height_ratio: float = 0.011
     tuning_factors: TuningFactors = TuningFactors()
 
 class SimulationOptions(BaseModel):
-    deviation_model: Annotated[str, AfterValidator(lambda input: check_string(input, DEVIATION_MODELS)), Field(default = 'aungier')]
+    deviation_model: Annotated[str, AfterValidator(lambda input: check_string(input, "deviation model", DEVIATION_MODELS))]
     blockage_model: Union[str, float] = 0.00
-    choking_model: Annotated[str, AfterValidator(lambda input: check_string(input, CHOKING_MODELS)), Field(default = 'evaluate_cascade_critical')]
+    choking_model: Annotated[str, AfterValidator(lambda input: check_string(input, "choking model", CHOKING_MODELS))]
     rel_step_fd: float = 1e-4
-    loss_model: LossModel = LossModel()
+    loss_model: LossModel
 
 class SolverOptions(BaseModel):
-    method: Annotated[str, AfterValidator(lambda input: check_string(input, ROOT_SOLVERS)), Field(default = 'hybr')]
+    method: Annotated[str, AfterValidator(lambda input: check_string(input, "root solver",ROOT_SOLVERS)), Field(default = 'hybr')]
     tolerance: float = 1e-8
     max_iterations: int = 100
-    derivative_method: Annotated[str, AfterValidator(lambda input: check_string(input, DERIVATIVE_METHODS)), Field(default = '2-point')]
+    derivative_method: Annotated[str, AfterValidator(lambda input: check_string(input, "derivative method", DERIVATIVE_METHODS)), Field(default = '2-point')]
     derivative_abs_step: float = 1e-6
-    display_progress: bool = True
     print_convergence: bool = True
     plot_convergence: bool = False
 
-class Geometry(BaseModel):
-    cascade_type: List[Annotated[str, AfterValidator(lambda input: check_string(input, ["stator", "rotor"]))]]
+class GeometryPerformanceAnalysis(BaseModel):
+    cascade_type: List[Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))]]
     radius_hub_in: List[Annotated[float, Field(gt=0)]]
     radius_hub_out: List[Annotated[float, Field(gt=0)]]
     radius_tip_in: List[Annotated[float, Field(gt=0)]]
     radius_tip_out: List[Annotated[float, Field(gt=0)]]
     pitch: List[Annotated[float, Field(gt=0)]]
     chord: List[Annotated[float, Field(gt=0)]]
-    stagger_angle: List[float]
+    stagger_angle: List[Annotated[float, Field(le=90), Field(gt=-90)]]
     opening: List[Annotated[float, Field(gt=0)]]
-    leading_edge_angle: List[float]
-    leading_edge_wedge_angle: List[Annotated[float, Field(gt=0)]]
+    leading_edge_angle: List[Annotated[float, Field(le=90), Field(gt=-90)]]
+    leading_edge_wedge_angle: List[Annotated[float, Field(le=90), Field(gt=0)]]
     leading_edge_diameter: List[Annotated[float, Field(gt=0)]]
     trailing_edge_thickness: List[Annotated[float, Field(gt=0)]]
     maximum_thickness: List[Annotated[float, Field(gt=0)]]
@@ -98,40 +101,57 @@ class Geometry(BaseModel):
     throat_location_fraction: List[Annotated[float, Field(le=1), Field(gt=0)]]
 
 class Constraint(BaseModel):
-    variable : Annotated[str, AfterValidator(lambda input: check_string(input, CONSTRAINTS))]
+    variable : Annotated[str, AfterValidator(lambda input: check_string(input, "constraint", CONSTRAINTS))]
     type : Literal["<", "=", ">"]
     value : float
     normalize : bool
 
 class SolverOptionsOptimization(BaseModel):
-    library : Annotated[str, AfterValidator(lambda input: check_string(input, LIBRARIES)), Field(default = 'scipy')]
+    library : Annotated[str, AfterValidator(lambda input: check_string(input, "optimization library",LIBRARIES)), Field(default = 'scipy')]
     method : str = "slsqp" # TODO: Update when integrated into TurboFlow
     tolerance : float = 1e-5
     max_iterations : int = 100
-    derivative_method :  Annotated[str, AfterValidator(lambda input: check_string(input, DERIVATIVE_METHODS)), Field(default = '2-point')]
+    derivative_method :  Annotated[str, AfterValidator(lambda input: check_string(input, "derivative method",DERIVATIVE_METHODS)), Field(default = '2-point')]
     derivative_abs_step : float = None
     print_convergence : bool = True
     plot_convergence : bool = False
-    update_on : Annotated[str, AfterValidator(lambda input: check_string(input, ["gradient", "function"])), Field(default = 'gradient')]
+    update_on : Annotated[str, AfterValidator(lambda input: check_string(input, "update_on input",["gradient", "function"])), Field(default = 'gradient')]
 
 class Optimization(BaseModel):
-    objective_function : Annotated[str, AfterValidator(lambda input: check_string(input, OBJECTIVE_FUNCTIONS)), Field(default = 'efficiency_ts')]
-    design_variables : List[Annotated[str, AfterValidator(lambda input: check_string(input, DESIGN_VARIABLES))]]
+    objective_function : Annotated[str, AfterValidator(lambda input: check_string(input, "objective function",OBJECTIVE_FUNCTIONS)), Field(default = 'efficiency_ts')]
+    design_variables : List[Annotated[str, AfterValidator(lambda input: check_string(input, "design variable", DESIGN_VARIABLES))]]
     constraints : List[Constraint] = None
     solver_options : SolverOptionsOptimization = SolverOptionsOptimization()
+    radius_type : Annotated[str, AfterValidator(lambda input: check_string(input, "radius type", RADIUS_TYPE)), Field(default = 'constant_mean')]
+    bounds : List[tuple] = None
+
+class GeometryOptimization(BaseModel):
+
+    hub_tip_ratio_in : List[Annotated[float, Field(le=1), Field(gt=0)]]
+    hub_tip_ratio_out : List[Annotated[float, Field(le=1), Field(gt=0)]]
+    aspect_ratio : List[Annotated[float, Field(gt=0)]]
+    pitch_chord_ratio : List[Annotated[float, Field(gt=0)]]
+    gauging_angle : List[Annotated[float, Field(le=90), Field(gt=-90)]]
+    leading_edge_angle : List[Annotated[float, Field(le=90), Field(gt=-90)]]
+    trailing_edge_thickness_opening_ratio : List[Annotated[float, Field(le=1), Field(gt=0)]]
+    cascade_type : List[Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))]]
+    leading_edge_diameter : List[Annotated[float, Field(gt=0)]]
+    leading_edge_wedge_angle : List[Annotated[float, Field(le=90), Field(gt=0)]]
+    tip_clearance : List[Annotated[float, Field(ge=0)]]
+    throat_location_fraction : List[Annotated[float, Field(le=1), Field(gt=0)]]
 
 class PerformanceAnalysisConfig(BaseModel):
     operation_points: OperationPoints
     performance_map: PerformanceMap = OperationPoints
-    simulation_options: SimulationOptions = SimulationOptions()
+    simulation_options: SimulationOptions 
     solver_options: SolverOptions = SolverOptions()
-    geometry: Geometry
+    geometry: GeometryPerformanceAnalysis
 
 class DesignOptimizationConfig(BaseModel):
     operation_points: OperationPoints
-    simulation_options: SimulationOptions = SimulationOptions()
+    simulation_options: SimulationOptions
     optimization: Optimization
-    geometry: Geometry
+    geometry: Union[GeometryPerformanceAnalysis, GeometryOptimization] = Field(union_mode='left_to_right')
 
 def convert_configuration_options(config):
     """
@@ -268,17 +288,54 @@ def convert_configuration_options(config):
 
     return config
 
+def is_convertible_to_dict(obj):
+    """Check if an object can be converted to a dictionary by looking for the __dict__ attribute."""
+    return hasattr(obj, '__dict__')
+
+def object_to_dict(obj):
+    """Recursively convert an object's attributes to a dictionary."""
+    if isinstance(obj, dict):
+        return {k: object_to_dict(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return np.array([object_to_dict(i) for i in obj])
+    elif is_convertible_to_dict(obj):
+        return {k: object_to_dict(v) for k, v in vars(obj).items()}
+    else:
+        return obj
+
 # Function to load and validate the configuration file
 def load_config(config_file_path: str, mode = "performance_analysis"):
     try:
         with open(config_file_path, 'r') as config_file:
+            # Load config file
             config_data = yaml.safe_load(config_file)
+
+            # Convert string representation of numbers to number and lists to arrays
             config_data = convert_configuration_options(config_data)
+
+            # Perform confuguration check according to mode
             if mode == "performance_analysis":
                 config = PerformanceAnalysisConfig(**config_data)
             elif mode == "optimization":
                 config = DesignOptimizationConfig(**config_data)
+            
+            if config:
+                # Check which set of geometry the input corresponds with
+                if type(config.geometry) == GeometryOptimization: 
+                    geometry_type = "optimization" 
+                elif type(config.geometry) == GeometryPerformanceAnalysis: 
+                    geometry_type = "performance_analysis"
+                print("hei")
+                # Convert configuration object to a nested dictionary
+                config = object_to_dict(config)
+
+                # Mark the geometry with wich set it corresponds to 
+                config["geometry"]["geometry_type"] = geometry_type
+
+                # Print configuration summary
+                print("Configuration summary: \n")
             return config
+        
     except FileNotFoundError:
         print("Configuration file not found.")
     except ValidationError as e:
@@ -294,17 +351,4 @@ if __name__ == "__main__":
     config = load_config(config_file_path, mode = "optimization")
     if config:
         print("Configuration loaded successfully")
-        # print(config.performance_map.p_out)
-        # print(config.simulation_options.deviation_model)
-        # print(config.simulation_options.choking_model)
-        # print(config.simulation_options.blockage_model)
-        # print(config.simulation_options.rel_step_fd)
-        # print(config.simulation_options.loss_model.model)
-        # print(config.simulation_options.loss_model.loss_coefficient)
-        # print(config.simulation_options.loss_model.inlet_displacement_thickness_height_ratio)
-        # print(config.simulation_options.loss_model.tuning_factors.profile)
-        # print(config.simulation_options.loss_model.tuning_factors.incidence)
-        # print(config.simulation_options.loss_model.tuning_factors.secondary)
-        # print(config.simulation_options.loss_model.tuning_factors.trailing)
-        # print(config.simulation_options.loss_model.tuning_factors.clearance)
-        # Now you can use the validated config object in your function
+

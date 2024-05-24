@@ -569,7 +569,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         # self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
-        self.model_options = config["model_options"]
+        self.model_options = config["simulation_options"]
         self.keys = []
 
     def residual(self, x):

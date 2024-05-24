@@ -46,6 +46,7 @@ def validate_turbine_geometry(geom, display=False):
         "tip_clearance",
         "maximum_thickness",
         "throat_location_fraction",
+        "geometry_type"
     }
 
     # Angular variables need not be non-negative
@@ -65,11 +66,11 @@ def validate_turbine_geometry(geom, display=False):
         raise ValueError(
             f"Invalid types in 'cascade_type': {invalid_types_str}. Only 'stator' and 'rotor' are allowed."
         )
-
+    
     # Check array size and values
     for key, value in geom.items():
         # Skip the cascade_type in the loop
-        if key == "cascade_type":
+        if key in ["cascade_type", "geometry_type"]:
             continue
 
         # Check that all variables are numpy arrays
