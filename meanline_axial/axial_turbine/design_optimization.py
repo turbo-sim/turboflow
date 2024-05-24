@@ -219,7 +219,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.geometry = config["geometry"]
 
         # Initialize other attributes
-        self.model_options = config["model_options"]
+        self.model_options = config["simulation_options"]
         
     def fitness(self, x):
 

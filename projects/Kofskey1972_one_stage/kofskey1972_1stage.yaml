@@ -40,43 +40,43 @@ solver_options: # Optional
   print_convergence: True
   plot_convergence: True
 
-# geometry:
-#   cascade_type: ["stator", "rotor"]
-#   radius_hub_in: [0.084785, 0.084785]
-#   radius_hub_out: [0.084785, 0.081875]
-#   radius_tip_in: [0.118415, 0.118415]
-#   radius_tip_out: [0.118415, 0.121325]
-#   pitch: [1.8294e-2, 1.524e-2]
-#   chord: [2.616e-2, 2.606e-2]
-#   stagger_angle: [+43.03, -31.05]
-#   opening: [0.747503242e-2, 0.735223377e-2]
-#   leading_edge_angle : [0.00, 29.60]
-#   leading_edge_wedge_angle : [50.00, 50.00]
-#   leading_edge_diameter : [2*0.127e-2, 2*0.081e-2]
-#   trailing_edge_thickness : [0.050e-2, 0.050e-2]
-#   maximum_thickness : [0.505e-2, 0.447e-2]
-#   tip_clearance: [0.00, 0.030e-2]
-#   throat_location_fraction: [1, 1]
-
 geometry:
-  hub_tip_ratio_in : [0.6, 0.6]
-  hub_tip_ratio_out : [0.6, 0.6]
-  aspect_ratio : [2.0, 2.0]
-  pitch_chord_ratio : [1, 1]
-  gauging_angle : [60, -60]
-  leading_edge_angle : [50, 50]
-  trailing_edge_thickness_opening_ratio : [0.05, 0.05]
   cascade_type: ["stator", "rotor"]
+  radius_hub_in: [0.084785, 0.084785]
+  radius_hub_out: [0.084785, 0.081875]
+  radius_tip_in: [0.118415, 0.118415]
+  radius_tip_out: [0.118415, 0.121325]
+  pitch: [1.8294e-2, 1.524e-2]
+  chord: [2.616e-2, 2.606e-2]
+  stagger_angle: [+43.03, -31.05]
+  opening: [0.747503242e-2, 0.735223377e-2]
+  leading_edge_angle : [0.00, 29.60]
   leading_edge_wedge_angle : [50.00, 50.00]
   leading_edge_diameter : [2*0.127e-2, 2*0.081e-2]
+  trailing_edge_thickness : [0.050e-2, 0.050e-2]
+  maximum_thickness : [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
   throat_location_fraction: [1, 1]
+
+# geometry:
+#   hub_tip_ratio_in : [0.6, 0.6]
+#   hub_tip_ratio_out : [0.6, 0.6]
+#   aspect_ratio : [2.0, 2.0]
+#   pitch_chord_ratio : [1, 1]
+#   gauging_angle : [60, -60]
+#   leading_edge_angle : [50, 50]
+#   trailing_edge_thickness_opening_ratio : [0.05, 0.05]
+#   cascade_type: ["stator", "rotor"]
+#   leading_edge_wedge_angle : [50.00, 50.00]
+#   leading_edge_diameter : [2*0.127e-2, 2*0.081e-2]
+#   tip_clearance: [0.00, 0.030e-2]
+#   throat_location_fraction: [1, 1]
   
 
 optimization:
   objective_function: efficiency_ts # Optional
   design_variables :
-    - specific_speed 
+    specific_speed 
     - blade_jet_ratio 
     - hub_tip_ratio_in
     - hub_tip_ratio_out 
