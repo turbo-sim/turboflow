@@ -10,10 +10,8 @@ import meanline_axial as ml
 CASE = 1
 
 # Load configuration file
-# CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-CONFIG_FILE = os.path.abspath("new_config.yaml")
-# config = ml.load_config(CONFIG_FILE, mode = "optimization")
-config = ml.load_config(CONFIG_FILE)
+CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
+config = ml.read_configuration_file(CONFIG_FILE)
 # print(config["turbomachinery"]["axial_turbine"]["performance_analysis"]["solver_options"]["method"])
 
 
