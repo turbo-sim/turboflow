@@ -46,7 +46,6 @@ def validate_turbine_geometry(geom, display=False):
         "tip_clearance",
         "maximum_thickness",
         "throat_location_fraction",
-        "geometry_type"
     }
 
     # Angular variables need not be non-negative

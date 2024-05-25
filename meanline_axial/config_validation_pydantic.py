@@ -5,7 +5,7 @@ from typing import Union
 import yaml
 import numbers
 import numpy as np
-from .utilities import print_dict
+# from . import utilities
 
 TURBOMACHINERIES = ["axial_turbine"]
 
@@ -196,15 +196,15 @@ def load_config(config_file_path: str, mode = "performance_analysis", print_summ
             config = object_to_dict(config)
 
             # Print configuration summary
-            if print_summary:
-                succsess_message = "Configuration loaded successfully: "
-                dashed_line = "-"*len(succsess_message)
-                print(dashed_line)
-                print(succsess_message)
-                print(dashed_line)
-                print_dict(config)
-                print(dashed_line)
-                print("\n")
+            # if print_summary:
+            #     succsess_message = "Configuration loaded successfully: "
+            #     dashed_line = "-"*len(succsess_message)
+            #     print(dashed_line)
+            #     print(succsess_message)
+            #     print(dashed_line)
+            #     utilities.print_dict(config)
+            #     print(dashed_line)
+            #     print("\n")
             return config
         
     except FileNotFoundError:

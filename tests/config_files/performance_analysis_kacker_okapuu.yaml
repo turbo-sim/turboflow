@@ -1,3 +1,4 @@
+turbomachinery: axial_turbine
 operation_points:
   fluid_name: air
   T0_in: 295.6
@@ -6,13 +7,22 @@ operation_points:
   omega: 1627
   alpha_in: 0
 
-performance_map:
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
-  omega: 1627 
-  alpha_in: 0 
+performance_analysis :
+  performance_map:
+    fluid_name: air
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+    omega: 1627 
+    alpha_in: 0
+  solver_options:
+    method: hybr
+    tolerance: 1e-8
+    max_iterations: 100
+    derivative_method: "2-point"
+    derivative_abs_step: 1e-6
+    print_convergence: True
+    plot_convergence: False 
 
 simulation_options:
   deviation_model : aungier
@@ -29,15 +39,6 @@ simulation_options:
       secondary: 1.00
       trailing: 1.00
       clearance: 1.00
-
-solver_options:
-  method: hybr
-  tolerance: 1e-8
-  max_iterations: 100
-  derivative_method: "2-point"
-  derivative_abs_step: 1e-6
-  print_convergence: True
-  plot_convergence: False
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -57,25 +58,3 @@ geometry:
   tip_clearance: [0.00, 0.030e-2]
   throat_location_fraction: [1, 1]
 
-optimization:
-  objective_function: efficiency_ts
-  design_variables :
-    - specific_speed 
-    - blade_jet_ratio 
-    - hub_tip_ratio_in
-    - hub_tip_ratio_out 
-    - aspect_ratio 
-    - pitch_chord_ratio 
-    - trailing_edge_thickness_opening_ratio  
-    - leading_edge_angle
-    - gauging_angle 
-  eq_constraints :
-    mass_flow_rate : 
-      value : 2.5
-      scale : 2.5
-    interstage_flaring : 
-      value : 1
-      scale : 1
-  radius_type : "constant_mean"
-  solver_options:
-    max_iter: 300
