@@ -22,7 +22,8 @@ VARIABLES = ["specific_speed",
                     "pitch_chord_ratio",
                     "trailing_edge_thickness_opening_ratio",
                     "leading_edge_angle",
-                    "gauging_angle"
+                    "gauging_angle",
+                    "cascade_type"
                     ]
 
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]

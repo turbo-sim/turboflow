@@ -195,17 +195,19 @@ def load_config(config_file_path: str, mode = "performance_analysis", print_summ
             # Convert configuration object to a nested dictionary
             config = object_to_dict(config)
 
-            # Print configuration summary
-            # if print_summary:
-            #     succsess_message = "Configuration loaded successfully: "
-            #     dashed_line = "-"*len(succsess_message)
-            #     print(dashed_line)
-            #     print(succsess_message)
-            #     print(dashed_line)
-            #     utilities.print_dict(config)
-            #     print(dashed_line)
-            #     print("\n")
-            return config
+            if config is not None:
+                # Print configuration summary
+                # if print_summary:
+                #     succsess_message = "Configuration loaded successfully: "
+                #     dashed_line = "-"*len(succsess_message)
+                #     print(dashed_line)
+                #     print(succsess_message)
+                #     print(dashed_line)
+                #     utilities.print_dict(config)
+                #     print(dashed_line)
+                #     print("\n")
+                
+                return config
         
     except FileNotFoundError:
         print("Configuration file not found.")

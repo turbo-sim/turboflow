@@ -63,7 +63,7 @@ design_optimization:
   objective_function: efficiency_ts # Optional
   variables :
     specific_speed :
-      value : 0.1
+      value : 1.0
       lower_bound : 0.01
       upper_bound : 10
     blade_jet_ratio :

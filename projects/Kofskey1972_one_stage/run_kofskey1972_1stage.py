@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 1
+CASE = 4
 
 # Load configuration file
 # CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -92,7 +92,7 @@ elif CASE == 4:
 
     # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
 
-    solvers = ml.compute_optimal_turbine(config, initial_guess = None)
+    solvers = ml.compute_optimal_turbine(config)
     fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots
