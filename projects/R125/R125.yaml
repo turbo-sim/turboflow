@@ -1,3 +1,4 @@
+turbomachinery: axial_turbine
 operation_points:
   fluid_name: R125
   T0_in: 190 + 273.15
@@ -7,7 +8,8 @@ operation_points:
   alpha_in: 0
 
 
-model_options:
+simulation_options:
+  choking_model : evaluate_cascade_critical
   deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
   choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
@@ -23,21 +25,16 @@ model_options:
       trailing: 1.00
       clearance: 1.00
 
-solver:
-  method: lm
-  tolerance: 1e-9
-  max_iterations: 50
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
+performance_analysis :
+  solver_options:
+    method: hybr
+    tolerance: 1e-8
+    max_iterations: 100
+    derivative_method: "2-point"
+    derivative_abs_step: 1e-6  # Optional
+    print_convergence: True
+    plot_convergence: True
 
-solver_options:
-  method: hybr
-  tolerance: 1e-8
-  max_iterations: 100
-  derivative_method: "2-point"
-  derivative_rel_step: 1e-3
-  display_progress: True
 
 
 geometry:
@@ -58,30 +55,105 @@ geometry:
   tip_clearance: [0.00, 5e-4] 
   throat_location_fraction: [1, 1]
 
-optimization:
+design_optimization:
   objective_function: efficiency_ts
-  radius_type : constant_mean
-  design_variables :
-    - specific_speed 
-    - blade_jet_ratio 
-    - hub_tip_ratio_in
-    - hub_tip_ratio_out 
-    - aspect_ratio 
-    - pitch_chord_ratio 
-    - trailing_edge_thickness_opening_ratio  
-    - leading_edge_angle
-    - gauging_angle 
-  eq_constraints:
-    mass_flow_rate : 
+  variables :
+    specific_speed :
+      value : 1.2
+      lower_bound : 0.01
+      upper_bound : 10
+    blade_jet_ratio :
+      value : 0.5
+      lower_bound : 0.1
+      upper_bound : 0.9
+    hub_tip_ratio_in :
+      value : [0.6, 0.6]
+      lower_bound : [0.6, 0.6]
+      upper_bound : [0.9, 0.9]
+    hub_tip_ratio_out :
+      value : [0.6, 0.6]
+      lower_bound : [0.6, 0.6]
+      upper_bound : [0.9, 0.9]
+    aspect_ratio :
+      value : [1.5, 1.5]
+      lower_bound : [1.0, 1.0]
+      upper_bound : [2.0, 2.0]
+    pitch_chord_ratio :
+      value : [0.9, 0.9]
+      lower_bound : [0.75, 0.75]
+      upper_bound : [1.10, 1.10]
+    trailing_edge_thickness_opening_ratio :
+      value : [0.1, 0.1]
+      lower_bound : [0.05, 0.05]
+      upper_bound : [0.4, 0.4]
+    leading_edge_angle :
+      value : [0.41, 0.5]
+      lower_bound : [0.41, 0.08]
+      upper_bound : [0.92, 0.58]
+    gauging_angle :
+      value : [0.17, 0.94]
+      lower_bound : [0.06, 0.72]
+      upper_bound : [0.28, 0.94]
+    v_in :
+      value : 0.1
+      lower_bound : 0.001
+      upper_bound : 0.5
+    w_out : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s_out : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
+    beta_out : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    v*_in : 
+      value : [0.4, 0.4]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    beta*_throat : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    w*_throat : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s*_throat : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
+    throat_location_fraction : 
+      value : [1.0, 1.0]
+    leading_edge_diameter :
+      value : [2*0.127e-2, 2*0.081e-2]
+    leading_edge_wedge_angle :
+      value : [50.0, 50.0]
+    tip_clearance :
+      value : [0.00, 0.030e-2]
+    cascade_type : 
+      value : ["stator", "rotor"]
+  constraints : # Optional
+    mass_flow_rate :
+      type : "="
       value : 10.66
-      scale : 10.66
-    interstage_flaring : 
+      normalize : True 
+    interstage_flaring :
+      type : "="
       value : 1
-      scale : 1
-  # ineq_constraints:
-    # interstage_flaring : 
-    #    lower_bound : 0.8
-    #    upper_bound : 1
-    #    scale : 1
-  solver_options:
-    max_iter: 300
+      normalize : True
+  radius_type : "constant_mean" # Optional
+  solver_options: # Optional
+    library: pygmo # Optional
+    method: ipopt # Optional
+    tolerance: 1e-3 # Optional
+    max_iterations: 100 # Optional
+    derivative_method: 2-point # Optional
+    derivative_abs_step: 1e-6 # Optional
+    print_convergence: True # Optional
+    plot_convergence: True # Optional
+    update_on: "gradient" # Optional
+

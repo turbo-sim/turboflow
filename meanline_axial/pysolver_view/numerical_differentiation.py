@@ -1,6 +1,12 @@
 import numpy as np
 from scipy.optimize._numdiff import approx_derivative
 
+DERIVATIVE_METHODS = ["2-point", 
+                      "3-point", 
+                      "Complex step method",
+                      "forward_finite_differences",
+                      "central_finite_differences",
+                      "complex_step"]
 
 def approx_gradient(
     function_handle, x, f0=None, abs_step=None, method="central_finite_differences"

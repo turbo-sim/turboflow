@@ -307,8 +307,8 @@ def calculate_full_geometry(geometry):
     ) 
 
     # Calculate shroud radius by adding clearance to tip radius
-    radius_shroud_in = radius_tip_in + np.repeat(geom["tip_clearance"], number_of_stages)
-    radius_shroud_out = radius_tip_out + np.repeat(geom["tip_clearance"], number_of_stages)
+    radius_shroud_in = radius_tip_in + geom["tip_clearance"]
+    radius_shroud_out = radius_tip_out + geom["tip_clearance"]
     radius_shroud_throat = calculate_throat_radius(
         radius_shroud_in, radius_shroud_out, throat_frac
     )

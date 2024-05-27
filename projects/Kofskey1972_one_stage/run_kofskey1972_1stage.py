@@ -7,15 +7,11 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml 
 
 # Define running option
-CASE = 10
+CASE = 4
 
 # Load configuration file
-# CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-CONFIG_FILE = os.path.abspath("design_optimizaion_test.yaml")
-print(CONFIG_FILE)
-# config = ml.load_config(CONFIG_FILE, mode = "optimization")
-config = ml.load_config(CONFIG_FILE)
-# print(config["turbomachinery"]["axial_turbine"]["performance_analysis"]["solver_options"]["method"])
+CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
+config = ml.load_config(CONFIG_FILE, print_summary = False)
 
 
 x0 = {'w_out_1': 244.42314206706558,

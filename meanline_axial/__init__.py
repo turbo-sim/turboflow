@@ -3,7 +3,7 @@
 # Import submodules
 from .math import *
 from .plot_functions import *
-from .config_validation_pydantic import *
+from .config_validation import *
 
 # Import subpackages
 from .pysolver_view import * 

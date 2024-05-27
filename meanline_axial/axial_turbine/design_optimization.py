@@ -14,10 +14,19 @@ from . import performance_analysis as pa
 
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
-AVAILABLE_OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
-AVAILABLE_GEOMETRIES = ["constant_mean",
+OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
+RADIUS_TYPE = ["constant_mean",
                         "constant_hub",
                         "constant_tip"]
+ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
+INDEPENDENT_VARIABLES = ["v_in",
+                         "w_out",
+                         "s_out",
+                         "beta_out",
+                         "v*_in",
+                         "beta*_throat",
+                         "w*_throat",
+                         "s*_throat"]
 INDEXED_VARIABLES = [
                 "hub_tip_ratio_in", 
                 "hub_tip_ratio_out", 
@@ -32,14 +41,11 @@ INDEXED_VARIABLES = [
                 "tip_clearance",
                 "cascade_type",
             ]
-VARIABLES = INDEXED_VARIABLES + ["specific_speed", "blade_jet_ratio"]
-
-ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
+VARIABLES = INDEXED_VARIABLES + ["specific_speed", "blade_jet_ratio"] + INDEPENDENT_VARIABLES
 
 
 def compute_optimal_turbine(
     config, 
-    initial_guess = None,
     out_filename=None,
     out_dir="output",
     export_results=True,
@@ -66,9 +72,6 @@ def compute_optimal_turbine(
 
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
-
-    # Get initial guess
-    # x0 = problem.get_initial_guess(initial_guess)
 
     # Perform initial function call to initialize problem
     # This populates the arrays of equality and inequality constraints
@@ -174,7 +177,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
     Methods
     -------
-    get_optimization_values(x)
+    fitness(x)
         Evaluate the objective function and constraints at a given point `x`.
     get_bounds()
         Provide the bounds for the design optimization problem.
@@ -184,14 +187,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Get the number of oinequality constraints.
     get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)
         Convert specific speed to actual angular speed
-    get_initial_guess(initial_guess)
-        Get the initial guess for the design optimization problem.
-    extend_design_variables()
-        Index the design variables for each cascade for the default initial guess.
-    get_default_initial_guess()
-        Generate a default initial guess for the design optimization problem.
-    get_default_bounds()
-        Generate a set of default bounds for each design variable.
+    extend_variables(variables)
+        Convert a dict containing lists or arrays to a dictionaries of only one element.
+    get_given_bounds(design_variable)
+        Retrieves the lower and upper bounds for the given design variables.
+    get_constraints(self, constraints):
+        Converts a list of constraints to equality and inequality constraints.
     update_boundary_conditions(design_point)
         Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.
     convert_performance_analysis_results(performance_problem)
@@ -221,21 +222,27 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize model options
         self.model_options = config["simulation_options"]
+
+        # Adjust given variables according to choking model (remove excess variables)
+        variables = config["design_optimization"]["variables"]
+        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+            variables = {key : var for key, var in variables.items() if not key.startswith("v*_in")}
+        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+            variables = {key : var for key, var in variables.items() if not key.startswith("beta*_throat")}
+        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
+            variables = {key : var for key, var in variables.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
         
         # Separate fixed variables and design variables
         fixed_params = {}
         design_variables = {}
-        for key, value in config["design_optimization"]["variables"].items():
+        for key, value in variables.items():
             if value["lower_bound"] is not None:
                 design_variables[key] = value
             else:
                 fixed_params[key] = value
 
         # Initialize initial guess
-        number_of_cascades = 2 # TODO
         initial_guess = self.extend_variables(design_variables)
-        initial_guess_independent_variables = self.get_initial_guess_independent_variables(number_of_cascades)
-        initial_guess = {**initial_guess_independent_variables, **initial_guess}
         self.design_variables_keys = initial_guess.keys()
         self.initial_guess = np.array(list(initial_guess.values()))
 
@@ -244,13 +251,40 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize bounds
         lb, ub = self.get_given_bounds(design_variables)
-        lb_iv, ub_iv = self.get_bounds_independent_variables(initial_guess_independent_variables)
-        lb = lb_iv + lb
-        ub = ub_iv + ub
         self.bounds = (lb, ub)
+
+        # Adjust set of independent variables according to choking model
+        self.independent_variables = [key for key in initial_guess.keys() if any(key.startswith(var) for var in INDEPENDENT_VARIABLES)]
+        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+            self.independent_variables = [var for var in self.independent_variables if not var.startswith("v*_in")]
+        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+            self.independent_variables = [var for var in self.independent_variables if not var.startswith("beta*_throat")]
+        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
+            self.independent_variables = [var for var in self.independent_variables if not (var.startswith("v*_in") or var.startswith("s*_throat") or var.startswith("beta*_throat"))]
     
     def extend_variables(self, variables):
-    
+        """
+        Index the design variables for each cascade for the default initial guess.
+
+        The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio. 
+        This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
+        for example `aspect_ratio_1` for first cascade and etc.
+
+        Parameters
+        ----------
+        variables : dict
+            A dictionary where each key maps to a dictionary containing at least a 
+            "value" key. The "value" can be a list, numpy array, or float.
+
+        Returns
+        -------
+        dict
+            A dictionary where each list or numpy array in the original dictionary 
+            is expanded into individual elements with keys formatted as "key_index". 
+            Float values are kept as is.
+
+        """
+
         variables_extended = {}
         for key in variables.keys():
             if isinstance(variables[key]["value"], (list, np.ndarray)):
@@ -261,33 +295,26 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             
         return variables_extended
     
-    def get_initial_guess_independent_variables(self, number_of_cascades):
-        initial_guess_variables = {"v_in" : 0.1}
-        for i in range(number_of_cascades):
-            index = f"_{i+1}"
-            initial_guess_variables.update(
-                {
-                    "w_out" + index: 0.65,
-                    "s_out" + index: 0.15,
-                    "beta_out" + index: ((1-2*((i+1) % 2 == 0))*60+90)/180, # Trick to get different guess for stator/rotor
-                    "v*_in" + index: 0.4,
-                    "beta*_throat" + index: ((1-2*((i+1) % 2 == 0))*60+90)/180,
-                    "w*_throat" + index: 0.65,
-                    "s*_throat" + index: 0.15
-                })
-        
-        # Adjust initial guess according to model options
-        if self.model_options["choking_model"] == "evaluate_cascade_throat":
-            initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not key.startswith("v*_in")}
-        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
-            initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not key.startswith("beta*_throat")}
-        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
-            initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
-
-        self.keys = initial_guess_variables.keys()
-        return initial_guess_variables
-    
     def get_given_bounds(self, design_variables):
+
+        """
+        Retrieves the lower and upper bounds for the given design variables.
+
+        Parameters
+        ----------
+        design_variables : dict
+            A dictionary where each key maps to a dictionary containing a 
+            "value" key, a "lower_bound" key, and an "upper_bound" key. The values 
+            can be a list, numpy array, or float.
+
+        Returns
+        -------
+        lb : list
+            A list of lower bounds for the design variables.
+        ub : list
+            A list of upper bounds for the design variables.
+
+        """
     
         lb = []
         ub = []
@@ -303,44 +330,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 ub += [design_variables[key]["upper_bound"]]
                     
         return lb, ub
-    
-    def get_bounds_independent_variables(self, initial_guess_independent_variables):
-    
-        lb = []
-        ub = []
-        for key in initial_guess_independent_variables:
-                if key.startswith("w*_"):
-                    lb += [0.1]
-                    ub += [1.0]
-                elif key.startswith("w_out"):
-                    lb += [0.1]
-                    ub += [1.0]
-                elif key.startswith("v*_in_1"):
-                    lb += [0.1]
-                    ub += [0.8]
-                elif key.startswith("v*_in"):
-                    lb += [0.1]
-                    ub += [1.0]
-                elif key.startswith("v_in"):
-                    lb += [0.001]
-                    ub += [0.5]
-                elif key.startswith("beta"): 
-                    if int(key[-1]) % 2 == 0: 
-                        # Rotor (-40, -80) [degree]
-                        lb += [0.06]
-                        ub += [0.28]
-                    else:
-                        # Stator (40, 80) [degree]
-                        lb += [0.72]
-                        ub += [0.94]
-                elif key.startswith("s*"):
-                    lb += [0.0]
-                    ub += [0.32]
-                elif key.startswith("s_"):
-                    lb += [0.0]
-                    ub += [0.32]
-                    
-        return lb, ub 
 
     def fitness(self, x):
 
@@ -371,7 +360,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         design_variables = dict(zip(self.design_variables_keys, x))
 
         # Construct array with independent variables
-        self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
+        self.vars_scaled = {key : design_variables[key] for key in self.independent_variables}
 
         # Contruct variables
         variables = {**design_variables, **self.fixed_params}
@@ -437,9 +426,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             List of toutples containg the lower and upper bound for each design variable. 
         """
 
-        # if self.bounds == None:
-        #     self.bounds = self.get_default_bounds()
-
         return self.bounds
             
     def get_nec(self):
@@ -467,164 +453,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         """
         return psv.count_constraints(self.c_ineq)
-    
-    # def get_initial_guess(self, initial_guess):
-    #     r"""
-        
-    #     Get the initial guess for the design optimization problem. 
-
-    #     The initial guess can be given from a defualt set of values, generated from a solved performance analysis problem object or provided by the user. 
-    #     If given by the user, the initial guess must be given as a dictionary where the key of each cascade specific value is indexed according 
-    #     to the order at which the cascade occur in the turbine. For example, `aspect_ratio_1`, `aspect_ratio_2` etc. 
-    #     In addition, the flow variables must occur first (velocities, entropies and flow angles).
-    #     If a solved performance analysis problem object (CascadesNonlinearSystemProblem) is given, the code generate a feasable initial guess through the
-    #     `convert_performance_analysis_results` method. 
-
-    #     Parameters
-    #     ----------
-    #     inital_guess : None, dict or solved 
-    #         The initial guess. Defualt guess if None.
-
-    #     Returns
-    #     -------
-    #     numpy.ndarray
-    #         Array of the values of the initial guess.
-
-    #     Notes
-    #     -----
-    #     The keys are assigned as an attribute and is zipped together with the array in get_optimization_values(x).
-
-    #     """
-    #     if initial_guess == None:
-    #         self.extend_design_variables()
-    #         initial_guess = self.get_default_initial_guess()
-    #     elif isinstance(initial_guess, pa.CascadesNonlinearSystemProblem):
-    #         initial_guess = self.convert_performance_analysis_results(initial_guess)
-
-    #     # Get keys with independent variables
-    #     number_of_cascades = len(self.geometry["cascade_type"])
-    #     if self.model_options["choking_model"] == "evaluate_cascade_throat":
-    #         number_of_dof = number_of_cascades*6 + 1
-    #     elif self.model_options["choking_model"] == "evaluate_cascade_critical":
-    #         number_of_dof = number_of_cascades*6 + 1
-    #     elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
-    #         number_of_dof = number_of_cascades*4 + 1
-    #     self.keys = list(initial_guess.keys())[0:number_of_dof]
-    
-    #     self.design_variables_keys = initial_guess.keys()
-
-    #     return np.array(list(initial_guess.values()))
-    
-    # def extend_design_variables(self):
-    #     r"""
-    #     Index the design variables for each cascade for the default initial guess.
-
-    #     The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio. 
-    #     This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
-    #     for example `aspect_ratio_1` for first cascade and etc. 
-
-    #     Returns
-    #     -------
-    #     None
-    #         This method does not return a value but updates the `design_variables_keys` attribute of the object.       
-        
-    #     """
-
-    #     number_of_cascades = len(self.geometry["cascade_type"])
-    #     new_keys = []
-    #     for key in self.design_variables_keys:
-    #         if key == "specific_speed":
-    #             new_keys += ["specific_speed"]
-    #         elif key == "blade_jet_ratio":
-    #             new_keys += ["blade_jet_ratio"]
-    #         elif key == "hub_tip_ratio_in":
-    #             new_keys += [f"hub_tip_ratio_in_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "hub_tip_ratio_out":
-    #             new_keys += [f"hub_tip_ratio_out_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "aspect_ratio":
-    #             new_keys += [f"aspect_ratio_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "pitch_chord_ratio":
-    #             new_keys += [f"pitch_chord_ratio_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "trailing_edge_thickness_opening_ratio":
-    #             new_keys += [f"trailing_edge_thickness_opening_ratio_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "leading_edge_angle":
-    #             new_keys += [f"leading_edge_angle_{i+1}" for i in range(number_of_cascades)]
-    #         elif key == "gauging_angle":
-    #             new_keys += [f"gauging_angle_{i+1}" for i in range(number_of_cascades)]
-
-    #     self.design_variables_keys = new_keys
-
-    #     return                      
-
-    # def get_default_initial_guess(self):
-    #     """
-    #     Generate a default initial guess for the design optimization problem. 
-
-    #     Each available design variable have an associated defualt initial guess value. This function take the
-    #     `design_variables_keys` attribute and assign a value for each key. 
-
-    #     Returns
-    #     -------
-    #     dict
-    #         Initial guess for the design optimization problem.
-
-    #     """
-
-    #     # Define dictionary with given design variables
-    #     initial_guess = np.array([]) 
-    #     for key in self.design_variables_keys:
-    #         if key == "specific_speed":
-    #             initial_guess = np.append(initial_guess, 1.2)
-    #         elif key == "blade_jet_ratio":
-    #             initial_guess = np.append(initial_guess, 0.5)
-    #         elif key.startswith("hub_tip"):
-    #             initial_guess = np.append(initial_guess, 0.6)
-    #         elif key.startswith("aspect_ratio"):
-    #             initial_guess = np.append(initial_guess, 1.5)
-    #         elif key.startswith("pitch_chord_ratio"):
-    #             initial_guess = np.append(initial_guess, 0.9)
-    #         elif key.startswith("trailing_edge_thickness_opening_ratio"):
-    #             initial_guess = np.append(initial_guess, 0.1)
-    #         elif key.startswith("thickness_to_chord"):
-    #             initial_guess = np.append(initial_guess, 0.2)
-    #         elif key.startswith("leading_edge_angle"):
-    #             if int(key[-1]) % 2 == 0:
-    #                 initial_guess = np.append(initial_guess, 0.41) # -15 degrees for rotor
-    #             else:
-    #                 initial_guess = np.append(initial_guess, 0.5) # 0 degrees for stator 
-    #         elif key.startswith("gauging_angle"):
-    #             if int(key[-1]) % 2 == 0:
-    #                 initial_guess = np.append(initial_guess, 0.17) # -60 degrees for rotor
-    #             else:
-    #                 initial_guess = np.append(initial_guess, 0.94) # 80 degrees for stator
-
-    #     initial_guess = dict(zip(self.design_variables_keys, initial_guess))
-
-    #     # Add vector of independent variables to the initial guess
-    #     number_of_cascades = len(self.geometry["cascade_type"])
-    #     initial_guess_variables = {"v_in" : 0.1}
-    #     for i in range(number_of_cascades):
-    #         index = f"_{i+1}"
-    #         initial_guess_variables.update(
-    #             {
-    #                 "w_out" + index: 0.65,
-    #                 "s_out" + index: 0.15,
-    #                 "beta_out" + index: ((1-2*((i+1) % 2 == 0))*60+90)/180, # Trick to get different guess for stator/rotor
-    #                 "v*_in" + index: 0.4,
-    #                 "beta*_throat" + index: ((1-2*((i+1) % 2 == 0))*60+90)/180,
-    #                 "w*_throat" + index: 0.65,
-    #                 "s*_throat" + index: 0.15
-    #             })
-            
-    #     # Adjust initial guess according to model options
-    #     if self.model_options["choking_model"] == "evaluate_cascade_throat":
-    #         initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not key.startswith("v*_in")}
-    #     elif self.model_options["choking_model"] == "evaluate_cascade_critical":
-    #         initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not key.startswith("beta*_throat")}
-    #     elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
-    #         initial_guess_variables = {key : val for key, val in initial_guess_variables.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
-
-    #     return {**initial_guess_variables, **initial_guess} 
           
     def get_omega(self, specific_speed, mass_flow, h0_in, d_is, h_is):
         r"""
@@ -737,72 +565,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         }
 
         return
-    
-    # def get_default_bounds(self):
-        # r"""
-        # Generate a set of default bounds for each design variable. 
-
-        # The function iterates through each design variable in `design_variables_keys` and assignes a tuple with associated 
-        # defualt set of upper and lower bounds.
-
-        # Returns
-        # -------
-        # tuple
-        #     A tuple of tuples with the lower and upper bound for each design variable.
-        # """
-
-        # bounds = []     
-
-        # for key in self.design_variables_keys:
-        #     if key.startswith("w*_"):
-        #         bounds += [(0.1, 1.0)]
-        #     elif key.startswith("w_out"):
-        #         bounds += [(0.1, 1.0)]
-        #     elif key.startswith("v*_in_1"):
-        #         bounds += [(0.01, 0.8)]
-        #     elif key.startswith("v*_in"):
-        #         bounds += [(0.1, 1)]
-        #     elif key.startswith("v_in"):
-        #         bounds += [(0.001, 0.5)]
-        #     elif key.startswith("beta"): 
-        #         if int(key[-1]) % 2 == 0: 
-        #             bounds += [(0.06, 0.28)] # Rotor (-40, -80) [degree]
-        #         else:
-        #             bounds += [(0.72, 0.94)] # Stator (40, 80) [degree]
-        #     elif key.startswith("s*"):
-        #         bounds += [(0.0, 0.32)] 
-        #     elif key.startswith("s_"):
-        #         bounds += [(0.0, 0.32)]
-        #     elif key == "specific_speed":
-        #         bounds += [(0.01, 10)]
-        #     elif key == "blade_jet_ratio":
-        #         bounds += [(0.1, 0.9)]
-        #     elif key.startswith("hub_tip"):
-        #         bounds += [(0.6, 0.9)]
-        #     elif key.startswith("aspect_ratio"):
-        #         bounds += [(1.0, 2.0)]
-        #     elif key.startswith("pitch_chord_ratio"):
-        #         bounds += [(0.75, 1.10)]
-        #     elif key.startswith("trailing_edge_thickness_opening_ratio"):
-        #         bounds += [(0.05, 0.4)]
-        #     elif key.startswith("leading_edge_angle"):
-        #         if int(key[-1]) % 2 == 0: 
-        #             bounds += [(0.41, 0.92)] # Rotor (-15, 75) [degree]
-        #         else:
-        #             bounds += [(0.08, 0.58)] # Stator (-75, 15) [degree]
-        #     elif key.startswith("gauging_angle"):
-        #         if int(key[-1]) % 2 == 0: 
-        #             bounds += [(0.06, 0.28)] # Rotor (-40, -80) [degree]
-        #         else:
-        #             bounds += [(0.72, 0.94)] # Stator (40, 80) [degree]
-
-
-        # # Convert bounds to pygmo convention
-        # lb = [lower_bound for lower_bound, _ in bounds]
-        # ub = [upper_bound for _, upper_bound in bounds]
-        # bounds = (lb, ub)
-
-        # return bounds
     
     def convert_performance_analysis_results(self, performance_problem):
 

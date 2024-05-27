@@ -98,6 +98,38 @@ design_optimization:
       value : [0.17, 0.94]
       lower_bound : [0.06, 0.72]
       upper_bound : [0.28, 0.94]
+    v_in :
+      value : 0.1
+      lower_bound : 0.001
+      upper_bound : 0.5
+    w_out : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s_out : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
+    beta_out : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    v*_in : 
+      value : [0.4, 0.4]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    beta*_throat : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    w*_throat : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s*_throat : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
     throat_location_fraction : 
       value : [1.0, 1.0]
     leading_edge_diameter :
@@ -129,21 +161,5 @@ design_optimization:
     plot_convergence: True # Optional
     update_on: "gradient" # Optional
   
-
-
-
-# geometry:
-#   hub_tip_ratio_in : [0.6, 0.6]
-#   hub_tip_ratio_out : [0.6, 0.6]
-#   aspect_ratio : [2.0, 2.0]
-#   pitch_chord_ratio : [1, 1]
-#   gauging_angle : [60, -60]
-#   leading_edge_angle : [50, 50]
-#   trailing_edge_thickness_opening_ratio : [0.05, 0.05]
-#   cascade_type: ["stator", "rotor"]
-#   leading_edge_wedge_angle : [50.00, 50.00]
-#   leading_edge_diameter : [2*0.127e-2, 2*0.081e-2]
-#   tip_clearance: [0.00, 0.030e-2]
-#   throat_location_fraction: [1, 1]
   
 

@@ -34,29 +34,42 @@ performance_analysis :
     print_convergence: True
     plot_convergence: True
 
-
-# geometry:
-#   cascade_type: ["stator", "rotor"]
-#   radius_hub_in: [0.0296558098722470, 0.0296558098722470]
-#   radius_hub_out: [0.0296557863275598, 0.0283522027992326]
-#   radius_tip_in: [0.0494263527986391, 0.0494263763433263]
-#   radius_tip_out: [0.0494263763433263, 0.0507299598716535]
-#   pitch: [0.00565199385536298, 0.00662803455257531]
-#   chord: [0.0106473088612715, 0.0106239763108052] 
-#   stagger_angle: [0.698131700797732*180/np.pi, -0.801170263530059*180/np.pi] 
-#   opening: [0.000981458433168469, 0.00151267676911608]
-#   leading_edge_diameter: [2*0.00600448, 2*0.00600448] 
-#   leading_edge_wedge_angle: [45.00, 45.00] 
-#   leading_edge_angle: [0*180/np.pi, -0.261797383150813*180/np.pi] 
-#   trailing_edge_thickness: [4.90729216584235e-05, 7.56338384558042e-05] 
-#   maximum_thickness: [0.00212946177225429, 0.00188320045342651] 
-#   tip_clearance: [0.00, 5e-4] 
-#   throat_location_fraction: [1, 1]
-
 design_optimization:
   objective_function: efficiency_ts
   radius_type : constant_mean
   variables :
+    v_in :
+      value : 0.1
+      lower_bound : 0.001
+      upper_bound : 0.5
+    w_out : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s_out : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
+    beta_out : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    v*_in : 
+      value : [0.4, 0.4]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    beta*_throat : 
+      value : [0.83, 0.17]
+      lower_bound : [0.72, 0.06]
+      upper_bound : [0.94, 0.28]
+    w*_throat : 
+      value : [0.65, 0.65]
+      lower_bound : [0.1, 0.1]
+      upper_bound : [1.0, 1.0]
+    s*_throat : 
+      value : [0.15, 0.15]
+      lower_bound : [0.0, 0.0]
+      upper_bound : [0.32, 0.32]
     specific_speed :
       value : 1.2
       lower_bound : 0.01

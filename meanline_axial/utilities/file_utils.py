@@ -4,8 +4,62 @@ import yaml
 import time
 import logging
 from datetime import datetime
+import numpy as np
 
+def convert_numpy_to_python(data, precision=10):
+    """
+    Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
+    and rounds numerical values to the specified precision.
 
+    Parameters:
+    - data: The numpy data to convert.
+    - precision: The decimal precision to which float values should be rounded.
+
+    Returns:
+    - The converted data with all numpy types replaced by native Python types and float values rounded.
+    """
+
+    if data is None:
+        return None
+
+    if isinstance(data, dict):
+        return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
+
+    elif isinstance(data, list):
+        return [convert_numpy_to_python(item, precision) for item in data]
+
+    elif isinstance(data, np.ndarray):
+        # If the numpy array has more than one element, it is iterable.
+        if data.ndim > 0:
+            return [convert_numpy_to_python(item, precision) for item in data.tolist()]
+        else:
+            # This handles the case of a numpy array with a single scalar value.
+            return convert_numpy_to_python(data.item(), precision)
+
+    elif isinstance(
+        data,
+        (np.integer, np.int_, np.intc, np.intp, np.int8, np.int16, np.int32, np.int64),
+    ):
+        return int(data.item())
+
+    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+        return round(float(data.item()), precision)
+
+    elif isinstance(data, np.bool_):
+        return bool(data.item())
+
+    elif isinstance(data, (np.str_, np.unicode_)):
+        return str(data.item())
+
+    # This will handle Python built-in types and other types that are not numpy.
+    elif isinstance(data, (float, int, str, bool)):
+        if isinstance(data, float):
+            return round(data, precision)
+        return data
+
+    else:
+        raise TypeError(f"Unsupported data type: {type(data)}")
+    
 def compare_contents_or_files(file_or_content_1, file_or_content_2):
     """
     Compare the content of two inputs, which can be either file paths or strings.
