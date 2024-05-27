@@ -4,6 +4,7 @@ from typing import Optional, List, Union, Literal, Dict
 from typing_extensions import Self
 from typing_extensions import Annotated
 from pydantic.functional_validators import AfterValidator, BeforeValidator
+from ..axial_turbine import VARIABLES
 
 LOSS_MODELS = ["benner","moustapha",  "kacker_okapuu", "isentropic","custom"]
 LOSS_COEFFICIENTS = ["stagnation_pressure"]
@@ -14,17 +15,6 @@ CHOKING_MODELS = ["evaluate_cascade_critical",
 ROOT_SOLVERS = ["hybr", "lm"]
 DERIVATIVE_METHODS = ["2-point", "3-point"]
 OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
-VARIABLES = ["specific_speed", 
-                    "blade_jet_ratio",
-                    "hub_tip_ratio_in",
-                    "hub_tip_ratio_out",
-                    "aspect_ratio",
-                    "pitch_chord_ratio",
-                    "trailing_edge_thickness_opening_ratio",
-                    "leading_edge_angle",
-                    "gauging_angle",
-                    "cascade_type"
-                    ]
 
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 LIBRARIES = ["scipy", "pygmo", "pygmo_nlopt"]
@@ -100,7 +90,6 @@ class SolverOptionsPerformanceAnalysis(BaseModel):
     derivative_abs_step: float = 1e-6
     print_convergence: bool = True
     plot_convergence: bool = False
-
 
     # Avoid any other inputs
     class Config:
@@ -186,7 +175,7 @@ class PerformanceAnalysis(BaseModel):
         extra = "forbid"
 
 class Variable(BaseModel):
-    value : Union[float, List[float]]
+    value : Union[float, Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))], List[float], List[Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))]]]
     lower_bound : Union[float, List[float]] = None
     upper_bound : Union[float, List[float]] = None
 
@@ -194,11 +183,12 @@ class Variable(BaseModel):
     def check_length(self) -> Self:
         attributes = vars(self).values()
         input_type = type(self.value)
-        if not all(isinstance(attr, input_type) for attr in attributes):
-            raise ValueError('Variable input is not of same type')
-        if isinstance(self.value, list):
-            if not all(len(attr) == len(self.value) for attr in attributes):
-                raise ValueError('Variable input is not of same length')
+        if self.lower_bound is not None:
+            if not all(isinstance(attr, input_type) for attr in attributes):
+                raise ValueError('Variable input is not of same type')
+            if isinstance(self.value, list):
+                if not all(len(attr) == len(self.value) for attr in attributes):
+                    raise ValueError('Variable input is not of same length')
         return self
 
     # Avoid any other inputs

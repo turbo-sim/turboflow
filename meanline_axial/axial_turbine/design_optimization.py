@@ -15,29 +15,24 @@ from . import performance_analysis as pa
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
-AVAILABLE_DESIGN_VARIABLES = ["specific_speed", 
-                              "blade_jet_ratio",
-                                "hub_tip_ratio_in",
-                                "hub_tip_ratio_out",
-                                "aspect_ratio",
-                                "pitch_chord_ratio",
-                                "trailing_edge_thickness_opening_ratio",
-                                "leading_edge_angle",
-                                "gauging_angle"
-                            ]
 AVAILABLE_GEOMETRIES = ["constant_mean",
                         "constant_hub",
                         "constant_tip"]
-
 INDEXED_VARIABLES = [
-                "hub_tip_ratio_in", #geometry
-                "hub_tip_ratio_out", #geometry
-                "aspect_ratio", #geometry
-                "pitch_chord_ratio", #geometry
-                "trailing_edge_thickness_opening_ratio", #geometry
-                "leading_edge_angle", #geometry
-                "gauging_angle" #geometry
+                "hub_tip_ratio_in", 
+                "hub_tip_ratio_out", 
+                "aspect_ratio", 
+                "pitch_chord_ratio", 
+                "trailing_edge_thickness_opening_ratio", 
+                "leading_edge_angle", 
+                "gauging_angle", 
+                "throat_location_fraction",
+                "leading_edge_diameter",
+                "leading_edge_wedge_angle",
+                "tip_clearance",
+                "cascade_type",
             ]
+VARIABLES = INDEXED_VARIABLES + ["specific_speed", "blade_jet_ratio"]
 
 ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
 
@@ -231,7 +226,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         fixed_params = {}
         design_variables = {}
         for key, value in config["design_optimization"]["variables"].items():
-            if "lower_bound" in value:
+            if value["lower_bound"] is not None:
                 design_variables[key] = value
             else:
                 fixed_params[key] = value
@@ -372,16 +367,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         angle_range = self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
 
-        # Structure design variables to dictionary (Assume set of design variables) # TODO: Make flexible set of design variables 
+        # Structure design variables to dictionary (Assume set of design variables) 
         design_variables = dict(zip(self.design_variables_keys, x))
-        for key, val in design_variables.items():
-            print(f"{key} : {val}")
-        print("\n")
+
         # Construct array with independent variables
         self.vars_scaled = dict(zip(self.keys, x)) # TODO: Ensure independent variables are in the start of x! 
-        for key, val in self.vars_scaled.items():
-            print(f"{key} : {val}")
-        print("\n")
+
         # Contruct variables
         variables = {**design_variables, **self.fixed_params}
 
@@ -389,11 +380,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         specific_speed = variables["specific_speed"]
         self.boundary_conditions["omega"] = self.get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)
 
-        for key, val in self.boundary_conditions.items():
-            print(f"{key} : {val}")
-        print("\n")
-
-        
         # Calculate mean radius
         blade_jet_ratio = variables["blade_jet_ratio"]
         blade_speed = blade_jet_ratio*v0
@@ -405,22 +391,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.geometry[key] = np.array([v for k, v in variables.items() if k.startswith(key)])
             if key in ANGLE_KEYS:
                 self.geometry[key] = self.geometry[key]*angle_range + angle_min
-
-        self.geometry["cascade_type"] = ["stator", "rotor"] # TODO
-        self.geometry["throat_location_fraction"] = np.array([1, 1]) # TODO
-        self.geometry["leading_edge_diameter"] = np.array([2*0.127e-2, 2*0.081e-2]) # TODO
-        self.geometry["leading_edge_wedge_angle"] = np.array([50.0, 50.0]) # TODO
-        self.geometry["tip_clearance"] = np.array([0.00, 0.030e-2]) # TODO
-        for key, val in self.geometry.items():
-            print(f"{key} : {val}")
-        stop
-
-        # for des_key in self.design_variables_geometry:
-        #     self.geometry[des_key] = np.array([value for key, value in design_variables.items() if (key.startswith(des_key) and key not in ["specific_speed", "blade_jet_ratio"])])
-        #     if des_key == "leading_edge_angle":
-        #          self.geometry["leading_edge_angle"] = self.geometry["leading_edge_angle"]*angle_range + angle_min
-        #     if des_key == "gauging_angle":
-        #          self.geometry["gauging_angle"] = self.geometry["gauging_angle"]*angle_range + angle_min
     
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         self.geometry = geom.calculate_full_geometry(self.geometry)

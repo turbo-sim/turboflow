@@ -51,7 +51,7 @@ performance_analysis:
     alpha_in: 0 
   
   solver_options: # Optional
-    # method: hybr  # Optional
+    method: hybr  # Optional
     tolerance: 1e-8  # Optional
     max_iterations: 100  # Optional
     derivative_method: "2-point"  # Optional
@@ -63,11 +63,11 @@ design_optimization:
   objective_function: efficiency_ts # Optional
   variables :
     specific_speed :
-      value : 1.0
+      value : 1.2
       lower_bound : 0.01
       upper_bound : 10
     blade_jet_ratio :
-      value : 0.7
+      value : 0.5
       lower_bound : 0.1
       upper_bound : 0.9
     hub_tip_ratio_in :
@@ -98,6 +98,16 @@ design_optimization:
       value : [0.17, 0.94]
       lower_bound : [0.06, 0.72]
       upper_bound : [0.28, 0.94]
+    throat_location_fraction : 
+      value : [1.0, 1.0]
+    leading_edge_diameter :
+      value : [2*0.127e-2, 2*0.081e-2]
+    leading_edge_wedge_angle :
+      value : [50.0, 50.0]
+    tip_clearance :
+      value : [0.00, 0.030e-2]
+    cascade_type : 
+      value : ["stator", "rotor"]
   constraints : # Optional
     mass_flow_rate :
       type : "="
