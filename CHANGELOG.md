@@ -1,5 +1,13 @@
 # Changelog
 
+## 27.05.2024
+- Complete configuration check: 
+  - config_validation is intended to check what turbomachinery configuration is given and validation configuration accordingly
+  - turbo_configurations folder gather all turbomchainery configuration files (only config_axial_turbine now)
+  - see any config validation file for new setup
+- New way to define design variables
+- Updated all config files according to new config_validation
+
 ## 22.05.2024
 - Tests for all model options and optimization psuhed
 - Added script for checking configurations through pydantic
