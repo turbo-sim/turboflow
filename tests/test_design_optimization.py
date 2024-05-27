@@ -79,8 +79,8 @@ def compute_optimal_turbine_from_config(request):
     print()
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
-    config = ml.read_configuration_file(config_path)
-    solvers = ml.compute_optimal_turbine(config, initial_guess = None, export_results = False)
+    config = ml.load_config(config_path)
+    solvers = ml.compute_optimal_turbine(config, export_results = False)
     return solvers, config_file 
 
 
@@ -130,7 +130,7 @@ def create_simulation_regression_data(config_file, outdir):
 
     # Run simulations
     filepath = os.path.join(CONFIG_DIR, config_file)
-    config = ml.read_configuration_file(filepath)
+    config = ml.load_config(filepath)
 
     # Get configuration file name without extension
     config_name, _ = os.path.splitext(config_file)

@@ -18,29 +18,17 @@ CASE = 1
 
 # Load configuration file
 CONFIG_FILE = "kofskey1974_stator.yaml"
-config = ml.read_configuration_file(CONFIG_FILE)
+config = ml.load_config(CONFIG_FILE)
 
 # Run calculations
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])   
-    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
-    print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
-    print(solvers[0].problem.results["cascade"]["mass_flow_crit_throat"])
-    print(solvers[0].problem.results["cascade"]["mass_flow_crit_error"])
-    print(solvers[0].problem.results["cascade"]["Y_crit_throat"])
-    print(solvers[0].problem.results["cascade"]["Y_crit_out"])
-    print(solvers[0].problem.results["cascade"]["beta_crit_out"])
-    print(solvers[0].problem.results["cascade"]["d_crit_throat"])
-    print(solvers[0].problem.results["cascade"]["d_crit_out"])    
-    # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
-    operation_points = config["performance_map"]
-    # omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    operation_points = config["performance_analysis"]["performance_map"]
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
     ml.compute_performance(operation_points, config)

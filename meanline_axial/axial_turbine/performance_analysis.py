@@ -132,6 +132,10 @@ def compute_performance(
 
     """
 
+    # Check if geometry is provided
+    if config["geometry"] is None:
+        raise ValueError("Geometry is not provided")
+
     # Check the type of operation_points argument
     if isinstance(operation_points, dict):
         # Convert ranges to a list of operation points
@@ -318,7 +322,7 @@ def compute_single_operation_point(
     # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
     # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
-    solver_options = copy.deepcopy(config["solver_options"])
+    solver_options = copy.deepcopy(config["performance_analysis"]["solver_options"])
 
     initial_guesses = [initial_guess] + get_heuristic_guess_input(problem.geometry["number_of_cascades"])
     methods_to_try = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
@@ -445,6 +449,7 @@ def generate_operation_points(performance_map):
     - operation_points (list of dict): A list of dictionaries, each representing
       a unique combination of parameters from the performance_map.
     """
+    print(performance_map)
     # Make sure all values in the performance_map are iterables
     performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
 
@@ -569,7 +574,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         # self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
-        self.model_options = config["model_options"]
+        self.model_options = config["simulation_options"]
         self.keys = []
 
     def residual(self, x):

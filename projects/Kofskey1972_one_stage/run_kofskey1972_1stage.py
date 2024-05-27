@@ -8,11 +8,11 @@ import meanline_axial as ml
 
 # Define running option
 CASE = 1
+CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-config = ml.read_configuration_file(CONFIG_FILE)
-# print(config["turbomachinery"]["axial_turbine"]["performance_analysis"]["solver_options"]["method"])
+config = ml.load_config(CONFIG_FILE, print_summary = False)
 
 
 x0 = {'w_out_1': 244.42314206706558,
@@ -90,7 +90,7 @@ elif CASE == 4:
 
     # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
 
-    solvers = ml.compute_optimal_turbine(config, initial_guess = None)
+    solvers = ml.compute_optimal_turbine(config)
     fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots

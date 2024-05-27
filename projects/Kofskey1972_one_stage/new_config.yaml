@@ -1,12 +1,4 @@
 turbomachinery: axial_turbine
-operation_points: 
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 13.8e4
-  p_out : 13.8e4/2.298 #, 13.8e4/2.5]
-  omega: 1627
-  alpha_in: 0
-
 simulation_options: # Optional
   deviation_model : zero_deviation  # Optional
   # blockage_model : 0.00  #flat_plate_turbulent  # Optional
@@ -22,23 +14,6 @@ simulation_options: # Optional
       # secondary: 1.00  # Optional
       # trailing: 1.00  # Optional
       # clearance: 1.00  # Optional
-  
-performance_analysis :
-  performance_map: # Optional
-    fluid_name: air 
-    T0_in: 295.6
-    p0_in: 13.8e4
-    p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
-    omega: 1627 
-    alpha_in: 0 
-  solver_options: # Optional
-    method: hybr  # Optional
-    tolerance: 1e-8  # Optional
-    max_iterations: 100  # Optional
-    derivative_method: "2-point"  # Optional
-    derivative_abs_step: 1e-6  # Optional
-    print_convergence: True
-    plot_convergence: True
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -57,7 +32,32 @@ geometry:
   maximum_thickness : [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
   throat_location_fraction: [1, 1]
+
+operation_points: 
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 13.8e4
+  p_out : 13.8e4/2.298 #, 13.8e4/2.5]
+  omega: 1627
+  alpha_in: 0
+
+performance_analysis:
+  performance_map: # Optional
+    fluid_name: air 
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+    omega: 1627 
+    alpha_in: 0 
   
+  solver_options: # Optional
+    method: hybr  # Optional
+    tolerance: 1e-8  # Optional
+    max_iterations: 100  # Optional
+    derivative_method: "2-point"  # Optional
+    derivative_abs_step: 1e-6  # Optional
+    print_convergence: True
+    plot_convergence: True
 
 design_optimization:
   objective_function: efficiency_ts # Optional
@@ -161,5 +161,5 @@ design_optimization:
     plot_convergence: True # Optional
     update_on: "gradient" # Optional
   
-
+  
 

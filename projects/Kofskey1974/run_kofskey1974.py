@@ -14,11 +14,11 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define running option
-CASE = 4
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
-config = ml.read_configuration_file(CONFIG_FILE)
+config = ml.load_config(CONFIG_FILE)
 
 # ml.print_dict(config)
 
@@ -69,15 +69,10 @@ if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
-    print(solvers[0].problem.results["overall"]["efficiency_ts"])
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    # print(solvers[0].problem.geometry["gauging_angle"])
-    # solvers[0].print_convergence_history(savefile=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
-    operation_points = config["performance_map"]
-    # omega_frac = np.asarray([0.5, 0.7, 0.9, 1.0])
+    operation_points = config["performance_analysis"]["performance_map"]
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
     ml.compute_performance(operation_points, config, initial_guess = x0)

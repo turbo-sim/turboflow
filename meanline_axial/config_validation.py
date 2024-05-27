@@ -1,438 +1,261 @@
+
+from pydantic import BaseModel, ValidationError
+from .turbo_configurations import AxialTurbine
+from typing import Union
+import yaml
+import numbers
 import numpy as np
-from . import axial_turbine
 from . import utilities
 
+TURBOMACHINERIES = ["axial_turbine"]
 
-SETTINGS = {
-    "description": "Defines general settings controlling the behavior of the program.",
-    "is_mandatory": False,  # The code always sets a default value of {} if not provided
-    "expected_type": dict,
-    "valid_options": None,
-    "_nested": {
-        "skip_validation": {
-            "description": "Whether to skip the configuration validation or not.",
-            "is_mandatory": False,
-            "default_value": False,
-            "expected_type": bool,
-            "valid_options": None,
-        },
-        # "logger": {
-        #     "description": "To be completed",
-        #     "is_mandatory": False,
-        #     "default_value": False,
-        #     "expected_type": bool,
-        #     "valid_options": None,
-        # }
-    },
-}
-
-OPTIONS_GEOMETRY = {
-    "description": "Defines the turbine's geometric parameters.",
-    "is_mandatory": True,
-    "expected_type": dict,
-    "valid_options": None,
-    "_nested": {
-        "cascade_type": {
-            "description": "Specifies the types of cascade of each blade row.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": ["stator", "rotor"],
-        },
-        "radius_hub": {
-            "description": "Hub radius at the inlet and outlet of each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "radius_tip": {
-            "description": "Tip radius at the inlet and outlet of each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "pitch": {
-            "description": "Blade pitch (aslo known as spacing) for each cascade",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "chord": {
-            "description": "Blade chord for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "stagger_angle": {
-            "description": "Blade stagger angle for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "opening": {
-            "description": "Blade opening for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "diameter_le": {
-            "description": "Leading-edge diameter for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "wedge_angle_le": {
-            "description": "Wedge angle at the leading edge of each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "metal_angle_le": {
-            "description": "Metal angle at the leading edge of each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "metal_angle_te": {
-            "description": "Metal angle at the trailing edge of each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "thickness_te": {
-            "description": "Trailing edge thickness of the blades for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "thickness_max": {
-            "description": "Maximum thicknesses of the blades for each cascade.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "tip_clearance": {
-            "description": "Tip clearance of the blades for each cascade (usually zero for stator blades).",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-        "throat_location_fraction": {
-            "description": "Defines the position of the throat in the blade passages as a fraction of the cascade's axial length. This parameter is relevant when the annulus shape varies from the inlet to the outlet of the cascade, due to factors like flaring or non-constant radius. A value of 1 indicates that the throat is located exactly at the exit plane, aligning the throat's area and radius with the exit plane's dimensions. Adjusting this fraction allows for precise modeling of the throat location relative to the exit.",
-            "is_mandatory": True,
-            "expected_type": (list, np.ndarray),
-            "valid_options": None,
-        },
-    },
-}
-
-
-OPTIONS_OPERATION_POINTS = {
-    "description": "Defines operating conditions for turbine performance analysis. This can be provided in two formats. The first format is as a list of dictionaries, where each dictionary defines a single operation point. The second format is as a single dictionary where each key has a single value or an array of values. In this case, the function internally generates all possible combinations of operation points, similar to creating a performance map, by taking the Cartesian product of these ranges.",
-    "is_mandatory": True,
-    "expected_type": (dict, list, np.ndarray),
-    "valid_options": None,
-    "_nested": {
-        "fluid_name": {
-            "description": "Name of the working fluid.",
-            "is_mandatory": True,
-            "expected_type": str,
-            "valid_options": None,
-        },
-        "T0_in": {
-            "description": "Stagnation temperature at the inlet. Unit [K].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "p0_in": {
-            "description": "Stagnation pressure at the inlet. Unit [Pa].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "p_out": {
-            "description": "Static pressure at the exit. Unit [Pa].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "omega": {
-            "description": "Angular speed. Unit [rad/s].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "alpha_in": {
-            "description": "Flow angle at the inlet. Unit [deg].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-    },
-}
-
-
-OPTIONS_PERFORMANCE_MAP = {
-    "description": "Specifies a range of operating conditions for creating the turbine's performance map. This option is expected to be a dictionary where each key corresponds to a parameter (like inlet pressure, angular speed, etc.) and its value is a scalar or an array of possible values for that parameter. The code generates the complete set of operation points internally by calculating all possible combinations of operating conditions (i.e., taking the cartesian product of the ranges).",
-    "is_mandatory": False,
-    "expected_type": dict,
-    "valid_options": None,
-    "_nested": {
-        "fluid_name": {
-            "description": "Name of the working fluid.",
-            "is_mandatory": True,
-            "expected_type": str,
-            "valid_options": None,
-        },
-        "T0_in": {
-            "description": "Stagnation temperature at the inlet. Unit [K].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "p0_in": {
-            "description": "Stagnation pressure at the inlet. Unit [Pa].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "p_out": {
-            "description": "Static pressure at the exit. Unit [Pa].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "omega": {
-            "description": "Angular speed. Unit [rad/s].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-        "alpha_in": {
-            "description": "Flow angle at the inlet. Unit [deg].",
-            "is_mandatory": True,
-            "expected_type": (np.number, np.ndarray, list),
-            "valid_options": None,
-        },
-    },
-}
-
-
-OPTIONS_MODEL = {
-    "description": "Specifies the options related to the physical modeling of the problem",
-    "is_mandatory": True,
-    "expected_type": dict,
-    "valid_options": None,
-    "_nested": {
-        "deviation_model": {
-            "description": "Deviation model used to predict the exit flow angle at subsonic conditions.",
-            "is_mandatory": True,
-            "expected_type": str,
-            "valid_options": axial_turbine.DEVIATION_MODELS,
-        },
-        "blockage_model": {
-            "description": "Model used to predict the blockage factor due to boundary layer displacement thickness.",
-            "is_mandatory": True,
-            "default_value": 0.00,
-            "expected_type": [float, str],  # Allowing float and specific string values
-            "valid_options": axial_turbine.BLOCKAGE_MODELS + [utilities.NUMERIC],
-        },
-        "rel_step_fd": {
-            "description": "Relative step size of the finite differences used to approximate the critical condition Jacobian.",
-            "is_mandatory": False,
-            "default_value": 1e-3,
-            "expected_type": float,
-            "valid_options": None,
-        },
-        "loss_model": {
-            "description": "Specifies the options of the methods to estimate losses.",
-            "is_mandatory": True,
-            "expected_type": dict,
-            "valid_options": None,
-            "_nested": {
-                "model": {
-                    "description": "Name of the model used to calculate the losses.",
-                    "is_mandatory": True,
-                    "expected_type": str,
-                    "valid_options": axial_turbine.LOSS_MODELS,
-                },
-                "loss_coefficient": {
-                    "description": "Definition of the loss coefficient used to characterize the losses.",
-                    "is_mandatory": True,
-                    "expected_type": str,
-                    "valid_options": axial_turbine.LOSS_COEFFICIENTS,
-                },
-                "inlet_displacement_thickness_height_ratio": {
-                    "description": "Ratio of the endwall boundary layer displacement thickness at the inlet of a cascade to the height of the blade. Used in the secondary loss calculations of the `benner` loss model.",
-                    "is_mandatory": False,
-                    "default_value": 0.011,
-                    "expected_type": float,
-                    "valid_options": None,
-                },
-                "tuning_factors": {
-                    "description": "Specifies tuning factors to have control over the weight of the different loss components.",
-                    "is_mandatory": False,
-                    "expected_type": dict,
-                    "valid_options": None,  # None for nested structures
-                    "_nested": {
-                        "profile": {
-                            "description": "Multiplicative factor for the profile losses.",
-                            "is_mandatory": False,
-                            "default_value": 1.00,
-                            "expected_type": float,
-                            "valid_options": None,
-                        },
-                        "incidence": {
-                            "description": "Multiplicative factor for the incidence losses.",
-                            "is_mandatory": False,
-                            "default_value": 1.00,
-                            "expected_type": float,
-                            "valid_options": None,
-                        },
-                        "secondary": {
-                            "description": "Multiplicative factor for the secondary losses.",
-                            "is_mandatory": False,
-                            "default_value": 1.00,
-                            "expected_type": float,
-                            "valid_options": None,
-                        },
-                        "trailing": {
-                            "description": "Multiplicative factor for the trailing edge losses.",
-                            "is_mandatory": False,
-                            "default_value": 1.00,
-                            "expected_type": float,
-                            "valid_options": None,
-                        },
-                        "clearance": {
-                            "description": "Multiplicative factor for the tip clearance losses.",
-                            "is_mandatory": False,
-                            "default_value": 1.00,
-                            "expected_type": float,
-                            "valid_options": None,
-                        },
-                    },
-                },
-            },
-        },
-    },
-}
-
-
-OPTIONS_SOLVER = {
-    "description": "Specifies options related to the numerical methods used to solve the problem",
-    "is_mandatory": False,
-    "default_value": {},
-    "expected_type": dict,
-    "valid_options": None,
-    "_nested": {
-        "method": {
-            "description": "Name of the numerical method used to solve the problem. Different methods may offer various advantages in terms of accuracy, speed, or stability, depending on the problem being solved",
-            "is_mandatory": False,
-            "default_value": list(axial_turbine.SOLVER_MAP.keys())[0],
-            "expected_type": str,
-            "valid_options": list(axial_turbine.SOLVER_MAP.keys()),
-        },
-        "tolerance": {
-            "description": "Termination tolerance for the solver. This value determines the precision of the solution. Lower tolerance values increase the precision but may require more computational time.",
-            "is_mandatory": False,
-            "default_value": 1e-8,
-            "expected_type": (float, np.float64),
-            "valid_options": None,
-        },
-        "max_iterations": {
-            "description": "Maximum number of solver iterations. This sets an upper limit on the number of iterations to prevent endless computation in cases where convergence is slow or not achievable.",
-            "is_mandatory": False,
-            "default_value": 100,
-            "expected_type": (int, np.int64),
-            "valid_options": None,
-        },
-        "derivative_method": {
-            "description": "Finite difference method used to calculate the problem Jacobian",
-            "is_mandatory": False,
-            "default_value": "2-point",
-            "expected_type": str,
-            "valid_options": ["2-point", "3-point"],
-        },
-        "derivative_rel_step": {
-            "description": "Relative step size of the finite differences used to approximate the problem Jacobian. This step size is crucial in balancing the truncation error and round-off error. A larger step size may lead to higher truncation errors, whereas a very small step size can increase round-off errors due to the finite precision of floating point arithmetic. Choosing the appropriate step size is key to ensuring accuracy and stability in the derivative estimation process.",
-            "is_mandatory": False,
-            "default_value": 1e-4,
-            "expected_type": float,
-            "valid_options": None,
-        },
-        "display_progress": {
-            "description": "Whether to print the convergence history to the console. Enabling this option helps in monitoring the solver's progress and diagnosing convergence issues during the solution process.",
-            "is_mandatory": False,
-            "default_value": True,
-            "expected_type": bool,
-            "valid_options": None,
-        },
-    },
-}
-
-
-CONFIGURATION_OPTIONS = {
-    "geometry": OPTIONS_GEOMETRY,
-    "operation_points": OPTIONS_OPERATION_POINTS,
-    "performance_map": OPTIONS_PERFORMANCE_MAP,
-    "model_options": OPTIONS_MODEL,
-    "solver_options": OPTIONS_SOLVER,
-    "general_settings": SETTINGS,
-}
-
-
-# Managing configuration validation for a more complex and diverse codebase, like one supporting various
-# types of turbines and compressors, requires a balance between flexibility and maintainability.
-
-# 1. Modular Schema Approach
-# Divide your configuration schema into modular sections based on machine types.
-# Each module (like axial_turbine, radial_turbine, centrifugal_compressor, etc.) would have its own schema.
-# Keep a clear structure in your documentation by having separate sections or pages for each machine type.
-# Easily extend or modify schemas for specific machine types without affecting others.
-# Maintain a consistent naming convention across different types (e.g., geometry, loss_model) while allowing for type-specific validation.
-
-
-
-
-def read_configuration_file(filename, validate=True):
+def convert_configuration_options(config):
     """
-    Reads and validates the specified YAML configuration file.
+    Processes configuration data by evaluating string expressions as numerical values and converting lists to numpy arrays.
 
-    This function reads the specified YAML configuration file and performens 2 post-processing operations:
-
-    1. Evaluates string expressions in the configuration file to actual numerical values and converts configuration options to Numpy types.
-    2. Validates the configuration file against a predefined schema, checking that the configuration options and data types are compliant.
+    This function iteratively goes through the configuration dictionary and converts string representations of numbers
+    (e.g., "1+2", "2*np.pi") into actual numerical values using Python's `eval` function. It also ensures that all numerical
+    values are represented as Numpy types for consistency across the application.
 
     Parameters
     ----------
-    filename : str
-        The file path of the YAML configuration file.
+    config : dict
+        The configuration data loaded from a YAML file, typically containing a mix of strings, numbers, and lists.
 
     Returns
     -------
     dict
-        A dictionary containing the validated configuration options.
+        The postprocessed configuration data where string expressions are evaluated as numbers, and all numerical values
+        are cast to corresponding NumPy types.
 
-    See Also
-    --------
-    :obj:`convert_configuration_options`
-    :obj:`validate_configuration_options`
+    Raises
+    ------
+    ConfigurationError
+        If a list contains elements of different types after conversion, indicating an inconsistency in the expected data types.
     """
 
-    if validate:
-        # Read and validate configuration file
-        config, info, error = utilities.validate_configuration_file(filename, CONFIGURATION_OPTIONS)
+    def convert_strings_to_numbers(data):
+        """
+        Recursively converts string expressions within the configuration data to numerical values.
 
-        # Print info messages
-        if info:
-            print(info)
+        This function handles each element of the configuration: dictionaries are traversed recursively, lists are processed
+        element-wise, and strings are evaluated as numerical expressions. Non-string and valid numerical expressions are
+        returned as is. The conversion supports basic mathematical operations and is capable of recognizing Numpy functions
+        and constants when used in the strings.
 
-        # Raise errors from validation
-        if error:
-            raise error
+        Parameters
+        ----------
+        data : dict, list, str, or number
+            A piece of the configuration data that may contain strings representing numerical expressions.
 
-    else:
-        config = utilities.read_configuration_file(filename)
+        Returns
+        -------
+        The converted data, with all string expressions evaluated as numbers.
+        """
+        if isinstance(data, dict):
+            return {
+                key: convert_strings_to_numbers(value) for key, value in data.items()
+            }
+        elif isinstance(data, list):
+            return [convert_strings_to_numbers(item) for item in data]
+        elif isinstance(data, bool):
+            return data
+        elif isinstance(data, str):
+            # Evaluate strings as numbers if possible
+            try:
+                data = eval(data)
+                return convert_numbers_to_numpy(data)
+            except (NameError, SyntaxError, TypeError):
+                return data
+        elif isinstance(data, numbers.Number):
+            # Convert Python number types to corresponding NumPy number types
+            return convert_numbers_to_numpy(data)
+        else:
+            return data
+
+    def convert_numbers_to_numpy(data):
+        """
+        Casts Python native number types (int, float) to corresponding Numpy number types.
+
+        This function ensures that all numeric values in the configuration are represented using Numpy types.
+        It converts integers to `np.int64` and floats to `np.float64`.
+
+        Parameters
+        ----------
+        data : int, float
+            A numerical value that needs to be cast to a Numpy number type.
+
+        Returns
+        -------
+        The same numerical value cast to the corresponding Numpy number type.
+
+        """
+        if isinstance(data, int):
+            return np.int64(data)
+        elif isinstance(data, float):
+            return np.float64(data)
+        else:
+            return data
+
+    def convert_to_arrays(data, parent_key=""):
+        """
+        Convert lists within the input data to Numpy arrays.
+
+        Iterates through the input data recursively. If a list is encountered, the function checks if all elements are of the same type.
+        If they are, the list is converted to a Numpy array. If the elements are of different types, a :obj:`ConfigurationError` is raised.
+
+        Parameters
+        ----------
+        data : dict or list or any
+            The input data which may contain lists that need to be converted to NumPy arrays. The data can be a dictionary (with recursive processing for each value), a list, or any other data type.
+        parent_key : str, optional
+            The key in the parent dictionary corresponding to `data`, used for error messaging. The default is an empty string.
+
+        Returns
+        -------
+        dict or list or any
+            The input data with lists converted to NumPy arrays. The type of return matches the type of `data`. Dictionaries and other types are returned unmodified.
+
+        Raises
+        ------
+        ValueError
+            If a list within `data` contains elements of different types. The error message includes the problematic list and the types of its elements.
+
+        """
+        if isinstance(data, dict):
+            return {k: convert_to_arrays(v, parent_key=k) for k, v in data.items()}
+        elif isinstance(data, list):
+            if not data:  # Empty list
+                return data
+            first_type = type(data[0])
+            if not all(isinstance(item, first_type) for item in data):
+                element_types = [type(item) for item in data]
+                raise ValueError(
+                    f"Option '{parent_key}' contains elements of different types: {data}, "
+                    f"types: {element_types}"
+                )
+            return np.array(data)
+        else:
+            return data
+
+    # Convert the configuration options to Numpy arrays when relevant
+    config = convert_strings_to_numbers(config)
+    config = convert_to_arrays(config)
 
     return config
 
+def object_to_dict(obj):
+    """
+    Recursively convert an object's attributes to a dictionary.
+
+    This function takes an object and converts its attributes to a dictionary format. 
+    It handles nested dictionaries, lists, and objects with a `__dict__` attribute, 
+    recursively converting all attributes to dictionaries or arrays as appropriate.
+
+    Parameters
+    ----------
+    obj : any
+        The object to convert. This can be a dictionary, list, or an object 
+        with a `__dict__` attribute.
+
+    Returns
+    -------
+    dict
+        A dictionary representation of the object, where all nested attributes 
+        are recursively converted.
+    """
+    if isinstance(obj, dict):
+        return {k: object_to_dict(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return np.array([object_to_dict(i) for i in obj])
+    elif hasattr(obj, '__dict__'):
+        return {k: object_to_dict(v) for k, v in vars(obj).items()}
+    else:
+        return obj
+
+# Function to load and validate the configuration file
+def load_config(config_file_path: str, print_summary = True):
+    """
+    Load and process a configuration file.
+
+    This function reads a YAML configuration file, validates its contents, 
+    and converts it into a configuration object for turbomachinery analysis. 
+    The configuration can be printed as a summary if specified.
+
+    Parameters
+    ----------
+    config_file_path : str
+        Path to the YAML configuration file.
+    print_summary : bool, optional
+        Whether to print a summary of the loaded configuration (default is True).
+
+    Returns
+    -------
+    dict
+        A dictionary representation of the configuration object, 
+        with all nested attributes recursively converted.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the configuration file is not found.
+    ValueError
+        If required fields are missing or contain invalid values.
+    yaml.YAMLError
+        If there is an error parsing the YAML file.
+
+    """
+
+
+    try:
+        with open(config_file_path, 'r') as config_file:
+            # Load config file
+            config_data = yaml.safe_load(config_file)
+
+            # Convert string representation of numbers to number and lists to arrays
+            config_data = convert_configuration_options(config_data)
+
+            if 'turbomachinery' not in config_data:
+                raise ValueError("Missing 'turbomachinery' field in configuration.")
+            
+            turbomachinery_type = config_data['turbomachinery']
+            
+            if turbomachinery_type == 'axial_turbine':
+                config =  AxialTurbine(**config_data)
+            # elif turbomachinery_type == 'radial_turbine':
+            #     config =  RadialTurbineConfig(**config_data)
+            else:
+                raise ValueError(f"Unknown turbomachinery type: {turbomachinery_type}. Available turbomachineries are: {TURBOMACHINERIES}")
+
+            # Convert configuration object to a nested dictionary
+            config = object_to_dict(config)
+
+            if config is not None:
+                # Print configuration summary
+                if print_summary:
+                    succsess_message = "Configuration loaded successfully: "
+                    dashed_line = "-"*len(succsess_message)
+                    print(dashed_line)
+                    print(succsess_message)
+                    print(dashed_line)
+                    utilities.print_dict(config)
+                    print(dashed_line)
+                    print("\n")
+                
+            return config
+        
+    except FileNotFoundError:
+        print("Configuration file not found.")
+    except ValidationError as e:
+        print("Validation error in configuration file:")
+        print(e)
+    except yaml.YAMLError as e:
+        print("Error parsing YAML file:")
+        print(e)
+
+# Example usage
+if __name__ == "__main__":
+    config_file_path = "config.yaml"  # Path to your YAML configuration file
+    config = load_config(config_file_path, mode = "optimization")
+    if config:
+        print("Configuration loaded successfully")

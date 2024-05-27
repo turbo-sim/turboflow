@@ -12,10 +12,10 @@ import meanline_axial as ml
 import copy
 
 # Define running option
-CASE = 2
+CASE = 0
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
-config = ml.read_configuration_file(CONFIG_FILE)
+config = ml.load_config(CONFIG_FILE, print_summary = False)
 
 # Design point
 x0 = {'w_out_1': 257.7509701606976, 's_out_1': 3830.142368506702, 'beta_out_1': 65.39002538567198, 'v*_in_1': 82.21064268443507, 'w*_throat_1': 310.97345105076045, 's*_throat_1': 3832.0729200938576,  
@@ -35,18 +35,10 @@ if CASE == 0:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
-    print(solvers[0].problem.results["cascade"]["Ma_crit_throat"])
-    # print(solvers[0].problem.results["cascade"]["Ma_crit_out"])
-    # print(solvers[0].problem.results["cascade"]["mass_flow_crit_error"])
-    print(solvers[0].problem.geometry["gauging_angle"])
-    # print(solvers[0].problem.vars_real)
     
-
 elif CASE == 1:
     # Compute performance map according to config file
-    operation_points = config["performance_map"]
-    # omega_frac = np.asarray(1.00)
-    # operation_points["omega"] = operation_points["omega"]*omega_frac
+    operation_points = config["performance_analysis"]["performance_map"]
     solvers = ml.compute_performance(operation_points, config, initial_guess = x0)
 
 elif CASE == 2:

@@ -65,11 +65,11 @@ def validate_turbine_geometry(geom, display=False):
         raise ValueError(
             f"Invalid types in 'cascade_type': {invalid_types_str}. Only 'stator' and 'rotor' are allowed."
         )
-
+    
     # Check array size and values
     for key, value in geom.items():
         # Skip the cascade_type in the loop
-        if key == "cascade_type":
+        if key in ["cascade_type", "geometry_type"]:
             continue
 
         # Check that all variables are numpy arrays
@@ -307,8 +307,8 @@ def calculate_full_geometry(geometry):
     ) 
 
     # Calculate shroud radius by adding clearance to tip radius
-    radius_shroud_in = radius_tip_in + np.repeat(geom["tip_clearance"], number_of_stages)
-    radius_shroud_out = radius_tip_out + np.repeat(geom["tip_clearance"], number_of_stages)
+    radius_shroud_in = radius_tip_in + geom["tip_clearance"]
+    radius_shroud_out = radius_tip_out + geom["tip_clearance"]
     radius_shroud_throat = calculate_throat_radius(
         radius_shroud_in, radius_shroud_out, throat_frac
     )

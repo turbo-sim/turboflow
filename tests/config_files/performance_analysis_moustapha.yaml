@@ -1,3 +1,4 @@
+turbomachinery: axial_turbine
 operation_points:
   fluid_name: air
   T0_in: 295.6
@@ -6,15 +7,24 @@ operation_points:
   omega: 1627
   alpha_in: 0
 
-performance_map:
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 13.8e4
-  p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
-  omega: 1627 
-  alpha_in: 0 
+performance_analysis :
+  performance_map:
+    fluid_name: air
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+    omega: 1627 
+    alpha_in: 0
+  solver_options:
+    method: hybr
+    tolerance: 1e-8
+    max_iterations: 100
+    derivative_method: "2-point"
+    derivative_abs_step: 1e-6
+    print_convergence: True
+    plot_convergence: False 
 
-model_options:
+simulation_options:
   deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
   choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
@@ -29,15 +39,6 @@ model_options:
       secondary: 1.00
       trailing: 1.00
       clearance: 1.00
-
-solver_options:
-  method: hybr
-  tolerance: 1e-8
-  max_iterations: 100
-  derivative_method: "2-point"
-  derivative_abs_step: 1e-6
-  print_convergence: True
-  plot_convergence: False
 
 geometry:
   cascade_type: ["stator", "rotor"]
