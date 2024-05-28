@@ -4,14 +4,14 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import meanline_axial as ml 
+import turbo_flow as tf 
 
 # Define running option
 CASE = 1
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("MM_base.yaml")
-config = ml.read_configuration_file(CONFIG_FILE)
+config = tf.read_configuration_file(CONFIG_FILE)
 
 print(config["geometry"]["radius_hub"])
 # stop
@@ -40,4 +40,4 @@ x0 = {'w_out_1': 117.45901482502731,
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)

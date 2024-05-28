@@ -2,20 +2,20 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import meanline_axial.meanline as ml
+import turbo_flow.meanline as tf
 
 if __name__ == "__main__":
     # Define the distance parameter
     chi = np.linspace(-20, 20, 1000)
 
     # Define the loss coefficient_increment
-    loss_1 = ml.get_incidence_profile_loss_increment(
+    loss_1 = tf.get_incidence_profile_loss_increment(
         chi, chi_extrapolation=10, loss_limit=None
     )
-    loss_2 = ml.get_incidence_profile_loss_increment(
+    loss_2 = tf.get_incidence_profile_loss_increment(
         chi, chi_extrapolation=5, loss_limit=None
     )
-    loss_3 = ml.get_incidence_profile_loss_increment(
+    loss_3 = tf.get_incidence_profile_loss_increment(
         chi, chi_extrapolation=5, loss_limit=0.5
     )
 

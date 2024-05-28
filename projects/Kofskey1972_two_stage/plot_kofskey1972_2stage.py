@@ -9,14 +9,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import meanline_axial as ml
+import turbo_flow as tf
 import matplotlib.patches as patches
 
 
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1972_2stage.yaml"
 
-cascades_data = ml.read_configuration_file(CONFIG_FILE)
+cascades_data = tf.read_configuration_file(CONFIG_FILE)
 
 if isinstance(cascades_data["operation_points"], list):
     design_point = cascades_data["operation_points"][0]
@@ -61,8 +61,8 @@ def highlight_design_point(ax, design_point, text_location, markersize = 6):
 if Case == 'pressure_line':
 
     # Load performance data
-    timestamp = ml.utils.extract_timestamp(filename)
-    data = ml.plot_functions.load_data(filename)
+    timestamp = tf.utils.extract_timestamp(filename)
+    data = tf.plot_functions.load_data(filename)
 
     # Change data to be only design angular speed
     sheets = data.keys()
@@ -77,7 +77,7 @@ if Case == 'pressure_line':
     # Plot mass flow rate
     title = "Mass flow rate"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
@@ -124,7 +124,7 @@ if Case == 'pressure_line':
     # Relative exit flow angles
     title = "Rotor exit relative flow angle"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["beta_8"],
@@ -167,7 +167,7 @@ if Case == 'pressure_line':
 
     title = "Static pressure"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["p_2", "p_4", "p_6", "p_8"],
@@ -200,7 +200,7 @@ if Case == 'pressure_line':
     title = "Mach"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
     linestyles = ['-', ':','--','-.']
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["Ma_rel_2", "Ma_rel_4", "Ma_rel_6", "Ma_rel_8"],
@@ -212,7 +212,7 @@ if Case == 'pressure_line':
         color_map='Reds',
     )
 
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["Ma_crit_throat_1", "Ma_crit_throat_2", "Ma_crit_throat_3", "Ma_crit_throat_4"],
@@ -233,18 +233,18 @@ if Case == 'pressure_line':
     ax1.set_xlim([2.1,5.9])
 
     if save_figs:
-        ml.plot_functions.save_figure(fig1, "figures/1972_2stage_mach.png")
+        tf.plot_functions.save_figure(fig1, "figures/1972_2stage_mach.png")
 
 elif Case == 'performance_map':
 
-    timestamp = ml.utils.extract_timestamp(filename)
-    data = ml.plot_functions.load_data(filename)
+    timestamp = tf.utils.extract_timestamp(filename)
+    data = tf.plot_functions.load_data(filename)
 
     # Plot mass flow rate at different angular speed
     subsets = ["omega"] + list(
         np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"]
     )
-    fig1, ax1 = ml.plot_functions.plot_subsets(
+    fig1, ax1 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
         "mass_flow_rate",
@@ -256,7 +256,7 @@ elif Case == 'performance_map':
     )
 
     # Plot total-to-static efficiency at different angular speeds
-    fig2, ax2 = ml.plot_functions.plot_subsets(
+    fig2, ax2 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
         "efficiency_ts",
@@ -268,7 +268,7 @@ elif Case == 'performance_map':
     )
 
     # Plot relative flow angle as different angular speed
-    fig3, ax3 = ml.plot_functions.plot_subsets(
+    fig3, ax3 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
         "beta_8",
@@ -280,7 +280,7 @@ elif Case == 'performance_map':
     )
 
     # Plot absolute flow angle as different angular speed
-    fig4, ax4 = ml.plot_functions.plot_subsets(
+    fig4, ax4 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
         "alpha_8",
@@ -292,7 +292,7 @@ elif Case == 'performance_map':
     )
 
     # Plot torque as different angular speed
-    fig5, ax5 = ml.plot_functions.plot_subsets(
+    fig5, ax5 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
         "torque",
@@ -397,11 +397,11 @@ elif Case == 'performance_map':
     ax5.set_ylim([60, 180])
 
     if save_figs:
-        ml.plot_functions.savefig_in_formats(fig1, "figures/1972_2stage_mass_flow_rate", formats = [".eps"])
-        # ml.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
-        # ml.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig4, "figures/1972_2stage_absolute_flow_angle", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig5, "figures/1972_2stage_torque", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig1, "figures/1972_2stage_mass_flow_rate", formats = [".eps"])
+        # tf.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
+        # tf.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig4, "figures/1972_2stage_absolute_flow_angle", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig5, "figures/1972_2stage_torque", formats = [".eps"])
 
 elif Case == 'error_plot':
 
@@ -427,7 +427,7 @@ elif Case == 'error_plot':
     markers = ['x', 'o', '^', 's']
     for speed, color, marker in zip(speed_percent, colors, markers):
 
-        fig1, ax1 = ml.plot_functions.plot_error(
+        fig1, ax1 = tf.plot_functions.plot_error(
             data_exp[(data_exp["speed_percent"] == speed) & (data_exp["mass_flow"]>0)]['mass_flow'].values,
             data_mass_flow[(data_mass_flow["speed_percent"] > speed-1) & (data_mass_flow["speed_percent"] < speed+1)]["mass_flow_rate"],
             fig = fig1,
@@ -437,7 +437,7 @@ elif Case == 'error_plot':
             label = str(speed),
         )
 
-        fig2, ax2 = ml.plot_functions.plot_error(
+        fig2, ax2 = tf.plot_functions.plot_error(
             data_exp[(data_exp["speed_percent"] == speed) & (data_exp["torque"]>0)]['torque'].values,
             data_torque[(data_torque["speed_percent"] > speed-1) & (data_torque["speed_percent"] < speed+1)]["torque"],
             fig = fig2,
@@ -447,7 +447,7 @@ elif Case == 'error_plot':
             label = str(speed),
         )
 
-        fig3, ax3 = ml.plot_functions.plot_error(
+        fig3, ax3 = tf.plot_functions.plot_error(
             data_exp[(data_exp["speed_percent"] == speed) & (data_exp["alpha"].notna())]['alpha'].values,
             data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["exit_flow_angle"],
             fig = fig3,
@@ -457,7 +457,7 @@ elif Case == 'error_plot':
             label = str(speed),
         )
 
-        fig4, ax4 = ml.plot_functions.plot_error(
+        fig4, ax4 = tf.plot_functions.plot_error(
             data_exp[(data_exp["speed_percent"] == speed) & (data_exp["cos_angle"].notna())]['cos_angle'].values,
             data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["cos_alpha"],
             fig = fig4,
@@ -545,9 +545,9 @@ elif Case == 'error_plot':
     ax4.set_xlim(ax4_lims) 
 
     if save_figs:
-        ml.plot_functions.savefig_in_formats(fig1, "figures/error_1972_2stage_mass_flow_rate", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig2, "figures/error_1972_2stage_torque", formats = [".eps"])
-        ml.plot_functions.savefig_in_formats(fig3, "figures/error_1972_2stage_absolute_flow_angle", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig1, "figures/error_1972_2stage_mass_flow_rate", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig2, "figures/error_1972_2stage_torque", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(fig3, "figures/error_1972_2stage_absolute_flow_angle", formats = [".eps"])
 
 
 

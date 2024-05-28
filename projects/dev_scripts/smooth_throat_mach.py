@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import meanline_axial as ml
+import turbo_flow as tf
 
 if __name__ == "__main__":
 
@@ -11,9 +11,9 @@ if __name__ == "__main__":
 
     # Calculate softmin using various methods
     f_max = np.min(inputs, axis=0)
-    f_pnorm = ml.smooth_min(inputs, method="p-norm", alpha=25, axis=0)
-    f_logsumexp = ml.smooth_min(inputs, method="logsumexp", alpha=25, axis=0)
-    f_boltzmann = ml.smooth_min(inputs, method="boltzmann", alpha=25, axis=0)
+    f_pnorm = tf.smooth_min(inputs, method="p-norm", alpha=25, axis=0)
+    f_logsumexp = tf.smooth_min(inputs, method="logsumexp", alpha=25, axis=0)
+    f_boltzmann = tf.smooth_min(inputs, method="boltzmann", alpha=25, axis=0)
 
     # Create the folder to save figures
     fig_dir = "figures"

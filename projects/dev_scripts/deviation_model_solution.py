@@ -15,8 +15,8 @@ desired_path = os.path.abspath("../..")
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
-import meanline_axial as ml
-ml.set_plot_options()
+import turbo_flow as tf
+tf.set_plot_options()
 
 
 def throat(h, blocking):

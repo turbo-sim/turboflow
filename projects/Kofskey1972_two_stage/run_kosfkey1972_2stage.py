@@ -8,14 +8,14 @@ Created on Wed Sep 20 13:05:13 2023
 import numpy as np
 import pandas as pd
 import os
-import meanline_axial as ml
+import turbo_flow as tf
 import copy
 
 # Define running option
 CASE = 0
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
-config = ml.load_config(CONFIG_FILE, print_summary = False)
+config = tf.load_config(CONFIG_FILE, print_summary = False)
 
 # Design point
 x0 = {'w_out_1': 257.7509701606976, 's_out_1': 3830.142368506702, 'beta_out_1': 65.39002538567198, 'v*_in_1': 82.21064268443507, 'w*_throat_1': 310.97345105076045, 's*_throat_1': 3832.0729200938576,  
@@ -34,12 +34,12 @@ if CASE == 0:
 
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
     
 elif CASE == 1:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = x0)
 
 elif CASE == 2:
 
@@ -62,4 +62,4 @@ elif CASE == 2:
         operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
-    ml.compute_performance(operation_points, config, initial_guess = x0)
+    tf.compute_performance(operation_points, config, initial_guess = x0)

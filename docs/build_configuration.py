@@ -1,10 +1,10 @@
 import os
 import sys
 import yaml
-import meanline_axial as ml
+import turbo_flow as tf
 
 # Import the options dictionary
-config_options = ml.CONFIGURATION_OPTIONS
+config_options = tf.CONFIGURATION_OPTIONS
 
 # Define name map for nice visuals
 FIELD_MAP = {
@@ -19,12 +19,12 @@ FIELD_MAP = {
 def format_value(value, key):
     """Format as strings and add highlighting"""
     if key == "expected_type":
-        types =  [v if isinstance(v, str) else v.__name__ for v in ml.ensure_iterable(value)]
+        types =  [v if isinstance(v, str) else v.__name__ for v in tf.ensure_iterable(value)]
         return ", ".join([f"``{v}``" for v in types]  
         )
     elif key == "valid_options":
         return ", ".join(
-            [f"``{v}``" if isinstance(v, str) else v for v in ml.ensure_iterable(value)]
+            [f"``{v}``" if isinstance(v, str) else v for v in tf.ensure_iterable(value)]
         )
     return str(value)
 

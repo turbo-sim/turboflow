@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
-import meanline_axial as ml
+import turbo_flow as tf
 
 
 # Define regression settings
@@ -50,7 +50,7 @@ def check_values(old_values, new_values, column, config_name, discrepancies):
             discrepancies.append(
                 f"Mismatch in '{config_name}' at operation point {i+1}, of '{column}': expected '{saved}', got '{current}'"
             )
-        elif not isinstance(saved, str) and not ml.isclose_significant_digits(
+        elif not isinstance(saved, str) and not tf.isclose_significant_digits(
             saved, current, DIGIT_TOLERANCE
         ):
             discrepancies.append(
@@ -83,9 +83,9 @@ def compute_performance_from_config(request):
     print()
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
-    config = ml.load_config(config_path, )
+    config = tf.load_config(config_path, )
     operation_points = config["performance_analysis"]["performance_map"]
-    solvers = ml.compute_performance(operation_points, config, export_results = False)
+    solvers = tf.compute_performance(operation_points, config, export_results = False)
     return solvers, config_file 
 
 
@@ -135,7 +135,7 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
 
     # Run simulations
     filepath = os.path.join(config_dir, config_file)
-    config = ml.load_config(filepath)
+    config = tf.load_config(filepath)
 
     # Get configuration file name without extension
     config_name, _ = os.path.splitext(config_file)
@@ -147,7 +147,7 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
         filename = f"{base_filename}_{timestamp}"
 
     operation_points = config["performance_map"]
-    solvers = ml.compute_performance(operation_points, config, out_dir = outdir, out_filename= filename, export_results = True)
+    solvers = tf.compute_performance(operation_points, config, out_dir = outdir, out_filename= filename, export_results = True)
 
     print(f"Regression data set saved: {filename}")
 

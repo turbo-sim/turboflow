@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import meanline_axial as ml
+import turbo_flow as tf
 
 # Define case parameters
 Ma_crit = 1
@@ -11,10 +11,10 @@ geometry = {"A_throat" : 0.5,
             "A_out" : 1}
 
 # Compute exit flow angles
-beta_aungier = ml.deviation_model.get_subsonic_deviation(
+beta_aungier = tf.deviation_model.get_subsonic_deviation(
     Ma_exit, Ma_crit, geometry, 'aungier'
 )
-beta_ainley = ml.deviation_model.get_subsonic_deviation(
+beta_ainley = tf.deviation_model.get_subsonic_deviation(
     Ma_exit, Ma_crit, geometry, "ainley_mathieson",
 )
 
