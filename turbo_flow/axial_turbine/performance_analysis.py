@@ -205,7 +205,7 @@ def compute_performance(
             overall_data.append(results["overall"])
             plane_data.append(utils.flatten_dataframe(results["plane"]))
             cascade_data.append(utils.flatten_dataframe(results["cascade"]))
-            # stage_data.append(utils.flatten_dataframe(results["stage"]))
+            stage_data.append(utils.flatten_dataframe(results["stage"]))
             geometry_data.append(utils.flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append(solver.problem.vars_real)
@@ -227,7 +227,7 @@ def compute_performance(
             overall_data.append(pd.DataFrame([{}]))
             plane_data.append(pd.DataFrame([{}]))
             cascade_data.append(pd.DataFrame([{}]))
-            # stage_data.append(pd.DataFrame([{}]))
+            stage_data.append(pd.DataFrame([{}]))
             geometry_data.append(pd.DataFrame([{}]))
             solver_data.append(pd.DataFrame([solver_status]))
             solution_data.append([])
@@ -239,7 +239,7 @@ def compute_performance(
         "overall": pd.concat(overall_data, ignore_index=True),
         "plane": pd.concat(plane_data, ignore_index=True),
         "cascade": pd.concat(cascade_data, ignore_index=True),
-        # "stage": pd.concat(stage_data, ignore_index=True),
+        "stage": pd.concat(stage_data, ignore_index=True),
         "geometry": pd.concat(geometry_data, ignore_index=True),
         "solver": pd.concat(solver_data, ignore_index=True),
     }
@@ -337,7 +337,6 @@ def compute_single_operation_point(
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
             # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
             # TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?
-
             try: 
                 solver.solve(problem.x0)                
                 
@@ -449,7 +448,7 @@ def generate_operation_points(performance_map):
     - operation_points (list of dict): A list of dictionaries, each representing
       a unique combination of parameters from the performance_map.
     """
-    print(performance_map)
+
     # Make sure all values in the performance_map are iterables
     performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
 
