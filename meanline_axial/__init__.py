@@ -8,7 +8,7 @@ from .config_validation import *
 # Import subpackages
 from .pysolver_view import * 
 from .properties import *
-from .cycles import *
+from .thermodynamic_cycles import *
 from .utilities import *
 
 from .axial_turbine import *

@@ -12,7 +12,7 @@ from matplotlib.ticker import MultipleLocator
 from scipy.optimize import root
 
 from . import numerical_differentiation
-from .utilities import savefig_in_formats
+from .pysolver_utilities import savefig_in_formats
 
 SOLVER_OPTIONS = ["hybr", "lm"]
 

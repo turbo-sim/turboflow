@@ -5,14 +5,19 @@ import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define configuration filename
-CONFIG_FILE = "case_water.yaml"
+# CONFIG_FILE = "case_water.yaml"
 # CONFIG_FILE = "case_butane.yaml"
 # CONFIG_FILE = "case_toluene.yaml"
-# CONFIG_FILE = "case_sCO2_recuperated.yaml"
+CONFIG_FILE = "case_sCO2_recuperated.yaml"
 # CONFIG_FILE = "case_sCO2_recompression.yaml"
 
 # Initialize Brayton cycle problem
-config = ml.utilities.read_configuration_file(CONFIG_FILE)
+# config = ml.utilities.read_configuration_file(CONFIG_FILE)
+
+
+config = ml.load_config(CONFIG_FILE)
+
+
 thermoCycle = ml.cycles.ThermodynamicCycleProblem(config["problem_formulation"])
 thermoCycle.get_optimization_values(thermoCycle.x0)
 thermoCycle.plot_cycle()
