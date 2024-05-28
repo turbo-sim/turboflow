@@ -34,7 +34,7 @@ if CASE == 0:
 
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = tf.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = x0, export_results=True, stop_on_failure=True)
     
 elif CASE == 1:
     # Compute performance map according to config file
@@ -46,9 +46,6 @@ elif CASE == 2:
     # Load experimental dataset
     data = pd.read_excel("./experimental_data_kofskey1972_2stage_raw.xlsx")
     data = data[data["speed_percent"].isin([110, 100, 90, 70])]
-    # data = data[data["speed_percent"].isin([0])]
-
-    print(data)
 
     pressure_ratio_exp = data["pressure_ratio_ts"]
     speed_frac_exp = data["speed_percent"].values/100

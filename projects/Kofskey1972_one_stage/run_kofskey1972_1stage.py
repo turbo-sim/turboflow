@@ -8,12 +8,10 @@ import turbo_flow as tf
 
 # Define running option
 CASE = 1
-CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-config = ml.load_config(CONFIG_FILE, print_summary = False)
-
+config = tf.load_config(CONFIG_FILE, print_summary = True)
 
 x0 = {'w_out_1': 244.42314206706558,
   's_out_1': 3787.6640308614674,
@@ -90,7 +88,7 @@ elif CASE == 4:
 
     # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
 
-    solvers = tf.compute_optimal_turbine(config)
+    solvers = tf.compute_optimal_turbine(config, export_results = True)
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots

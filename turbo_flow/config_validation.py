@@ -171,7 +171,7 @@ def object_to_dict(obj):
     elif hasattr(obj, '__dict__'):
         return {k: object_to_dict(v) for k, v in vars(obj).items()}
     else:
-        return obj
+        return obj    
 
 # Function to load and validate the configuration file
 def load_config(config_file_path: str, print_summary = True):
