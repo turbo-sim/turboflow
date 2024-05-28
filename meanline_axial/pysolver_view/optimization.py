@@ -12,7 +12,7 @@ from matplotlib.ticker import MaxNLocator
 
 from . import numerical_differentiation
 from . import optimization_wrappers as _opt
-from .utilities import savefig_in_formats
+from .pysolver_utilities import savefig_in_formats
 
 
 # Define valid libraries and their corresponding methods

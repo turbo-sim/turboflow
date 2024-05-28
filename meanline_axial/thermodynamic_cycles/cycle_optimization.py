@@ -12,8 +12,8 @@ from .. import pysolver_view as psv
 from .. import utilities
 from .. import fluid_properties as props
 
-from . import cycle_recuperated
-from . import cycle_split_compression
+from . import brayton_recuperated
+from . import brayton_split_compression
 
 COLORS_MATLAB = utilities.COLORS_MATLAB
 LABEL_MAPPING = {
@@ -28,16 +28,10 @@ LABEL_MAPPING = {
 }
 
 # Cycle configurations available
-CYCLE_CONFIGURATIONS = [
-    "recuperated",
-    "split_compression",
-    "recompression",
-]
-
-TOPOLOGY_MAPPING = {
-    CYCLE_CONFIGURATIONS[0]: cycle_recuperated.evaluate_cycle,
-    CYCLE_CONFIGURATIONS[1]: cycle_split_compression.evaluate_cycle,
-    CYCLE_CONFIGURATIONS[2]: cycle_split_compression.evaluate_cycle,
+CYCLE_TOPOLOGIES = {
+    "recuperated": brayton_recuperated.evaluate_cycle,
+    "split_compression": brayton_split_compression.evaluate_cycle,
+    "recompression": brayton_split_compression.evaluate_cycle,
 }
 
 GRAPHICS_PLACEHOLDER = {
@@ -222,15 +216,15 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         vars_physical = self._scale_normalized_to_physical(self.variables)
 
         # Evaluate thermodynamic cycle
-        if self.cycle_topology in CYCLE_CONFIGURATIONS:
-            self.cycle_data = TOPOLOGY_MAPPING[self.cycle_topology](
+        if self.cycle_topology in CYCLE_TOPOLOGIES.keys():
+            self.cycle_data = CYCLE_TOPOLOGIES[self.cycle_topology](
                 vars_physical,
                 self.fixed_parameters,
                 self.constraints,
                 self.objective_function,
             )
         else:
-            options = ", ".join(f"'{k}'" for k in CYCLE_CONFIGURATIONS)
+            options = ", ".join(f"'{k}'" for k in CYCLE_TOPOLOGIES.keys())
             raise ValueError(
                 f"Invalid cycle topology: '{self.cycle_topology}'. Available options: {options}"
             )
