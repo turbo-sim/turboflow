@@ -1,10 +1,15 @@
 import os
 import numpy as np
-import pygmo as pg
-import pygmo_plugins_nonfree as ppnf
 from scipy.optimize import minimize
 
+# Attempt to import pygmo and pygmo_plugins_nonfree
+try:     
+    import pygmo as pg     
+    import pygmo_plugins_nonfree as ppnf     
+    PYGMO_AVAILABLE = True
 
+except ImportError:     
+    PYGMO_AVAILABLE = False
 
 SCIPY_SOLVERS = [
     "nelder-mead",
@@ -164,6 +169,10 @@ def minimize_pygmo(problem, x0, method, options):
     ValueError
         If an invalid solver name is specified.
     """
+
+    # Check if pygmo is available
+    if not PYGMO_AVAILABLE:         
+        raise ImportError("pygmo is not installed. Please install pygmo via Conda to use this function.")
 
     if method == "snopt":
         return _minimize_pygmo_snopt(problem, x0, options)
