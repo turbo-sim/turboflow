@@ -20,24 +20,21 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.8'  # or whichever version you are using
+        python-version: '3.11'  # or whichever version you are using
 
     - name: Set up Miniconda
       uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: '3.8'  # or whichever version you are using
+        python-version: '3.11'  # or whichever version you are using
 
     - name: Create conda environment
       run: conda env create -f environment.yml
 
     - name: Activate conda environment
-      run: source activate myenv  # replace 'myenv' with the name of your environment as specified in environment.yml
-
-    - name: Install dependencies
-      run: conda install --file requirements.txt  # if you have a requirements.txt file, otherwise skip this step
+      run: source activate meanline_env  # replace 'myenv' with the name of your environment as specified in environment.yml
 
     - name: Run tests
       run: |
-        source activate myenv
+        source activate meanline_env
         pytest  

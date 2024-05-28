@@ -9,19 +9,15 @@ import meanline_axial as ml
 
 
 # Define regression settings
-DATA_DIR = "regression_data"
-CONFIG_DIR = "config_files"
+TEST_FOLDER = "tests"
+DATA_DIR = os.path.join(TEST_FOLDER, "regression_data")
+CONFIG_DIR = os.path.join(TEST_FOLDER,"config_files")
 CONFIG_FILES = [
     "design_optimization.yaml",
 ]
 
 # Define test settings
 DIGIT_TOLERANCE = 10  
-
-# Create a directory to save regression test data
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR)
-
 
 # Helper function to check values
 def check_value(old_value, new_value, column, config_name, discrepancies):
@@ -125,11 +121,11 @@ def test_design_optimization(compute_optimal_turbine_from_config):
     assert test_passed, "Discrepancies found:\n" + "\n".join(mismatch)
 
 
-def create_simulation_regression_data(config_file, outdir):
+def create_simulation_regression_data(config_file, outdir, config_dir):
     """Save performance analysis data to Excel files for regression tests"""
 
     # Run simulations
-    filepath = os.path.join(CONFIG_DIR, config_file)
+    filepath = os.path.join(config_dir, config_file)
     config = ml.load_config(filepath)
 
     # Get configuration file name without extension
@@ -150,9 +146,16 @@ def create_simulation_regression_data(config_file, outdir):
 # Run the tests
 if __name__ == "__main__":
 
+    # Create a directory to save regression test data
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+
+    # Define directory of configuration files
+    config_dir = "config_files"
+    
     # Run simulatins and save regression data
     for config_file in CONFIG_FILES:
-        create_simulation_regression_data(config_file, DATA_DIR)
+        create_simulation_regression_data(config_file, DATA_DIR, config_dir)
 
     # Running pytest from Python
     # pytest.main([__file__, "-vv"])
