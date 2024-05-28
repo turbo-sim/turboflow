@@ -33,9 +33,11 @@ jobs:
 
     - name: Activate conda environment
       run: |
+        source "$(conda info --base)/etc/profile.d/conda.sh"
         conda activate meanline_env
 
     - name: Run tests
       run: |
+        source "$(conda info --base)/etc/profile.d/conda.sh"
         conda activate meanline_env
         pytest  
