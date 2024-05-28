@@ -29,15 +29,18 @@ jobs:
         python-version: '3.11'  # or whichever version you are using
 
     - name: Create conda environment
-      run: conda env create -f environment.yml
+      run: |
+        conda env create -f environment.yml
 
     - name: Activate conda environment
       run: |
         source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate meanline_env
+        conda activate turboflow_env
+        pip install --upgrade pip
+        pip install -e .
 
     - name: Run tests
       run: |
         source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate meanline_env
+        conda activate turboflow_env
         pytest  

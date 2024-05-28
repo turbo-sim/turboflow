@@ -1,4 +1,4 @@
-name: meanline_env
+name: turboflow_env
 #channels:
 #  - conda-forge
 dependencies:
@@ -30,3 +30,4 @@ dependencies:
     - sphinx-design
     - imageio
     - imageio[ffmpeg]
+    - pydantic
