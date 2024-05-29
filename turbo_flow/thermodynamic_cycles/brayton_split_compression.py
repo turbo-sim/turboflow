@@ -305,6 +305,7 @@ def evaluate_cycle(
     energy_balance = (Q_in + W_in) - (W_out + Q_out)
 
     # Mixing chamber check
+    # TODO remember to include mixing chamber exergy destruction in Second Law analysis
     a = m_total * recuperator_highT["cold_side"]["state_in"].h
     b = m_main * recuperator_lowT["cold_side"]["state_out"].h
     c = m_split * split_compressor["state_out"].h

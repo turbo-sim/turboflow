@@ -8,13 +8,16 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from .. import pysolver_view as psv
+from ..config_validation import read_configuration_file
 from .. import utilities
+from .. import pysolver_view as psv
 from .. import fluid_properties as props
 
 from . import brayton_recuperated
 from . import brayton_split_compression
 
+
+utilities.set_plot_options()
 COLORS_MATLAB = utilities.COLORS_MATLAB
 LABEL_MAPPING = {
     "s": "Entropy [J/kg/K]",
@@ -39,6 +42,95 @@ GRAPHICS_PLACEHOLDER = {
     "state_points": {},
     "pinch_point_lines": {},
 }
+
+
+class ThermodynamicCycleOptimization:
+    def __init__(self, config_file, out_dir=None):
+        """
+        Initializes the optimization manager with a configuration file.
+        Parameters:
+            config_file (str): The path to the YAML configuration file.
+        """
+
+        # Define filename with unique date-time identifier
+        if out_dir == None:
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            self.out_dir = f"results/case_{current_time}"
+
+        # Create a directory to save simulation results
+        if not os.path.exists(self.out_dir):
+            os.makedirs(self.out_dir)
+
+        self.config = self.load_config(config_file)
+        self.problem = self.setup_problem()
+        self.solver = self.setup_solver()
+
+    def load_config(self, config_file):
+        """
+        Loads configuration from a YAML file.
+        """
+        return read_configuration_file(config_file)
+
+    def setup_problem(self):
+        """
+        Sets up the ThermodynamicCycleProblem based on the loaded configuration.
+        """
+        self.problem = ThermodynamicCycleProblem(self.config["problem_formulation"])
+        self.problem.fitness(self.problem.x0)
+        return self.problem
+    
+
+    def setup_solver(self):
+        """
+        Configures and returns the optimization solver.
+        """
+
+        # Optimize the thermodynamic cycle
+        self.solver = psv.OptimizationSolver(
+            self.problem,
+            **self.config["solver_options"],
+            callback_functions=[
+                self.problem.plot_cycle_callback,
+                self.problem.save_config_callback,
+            ],
+        )
+
+        return self.solver
+
+
+    def run_optimization(self):
+        """
+        Executes the optimization process.
+        """
+        self.solver.solve(self.problem.x0)
+
+    def save_results(self):
+        """
+        Saves the results of the optimization, including configurations and output files.
+        """
+        filename = os.path.join(self.out_dir, "optimal_solution")
+        self.problem.to_excel(filename=filename + ".xlsx")
+        self.problem.save_current_configuration(filename=filename + ".yaml")
+
+        # Print final solution values
+        print()
+        print("Optimal set of design variables (normalized)")
+        for key, value in self.problem.vars_normalized.items():
+            print(f"{key:40}: {value:0.3f}")
+
+    def generate_output_files(self):
+        """
+        Generates additional output files, such as Excel files or plots.
+        """
+        # Code to handle output generation like creating plots or exporting to Excel
+
+    def create_animation(self):
+        """
+        Creates an animation of the optimization history.
+        """
+        # Code to generate animation from the optimization results
+
+
 
 
 class ThermodynamicCycleProblem(psv.OptimizationProblem):
@@ -107,12 +199,8 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         if not os.path.exists(self.out_dir):
             os.makedirs(self.out_dir)
 
-        # Save the initial configuration as YAML file
-        config_data = {k: v for k, v in self.configuration.items()}
-        config_data = utilities.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(self.out_dir, "initial_configuration.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+        # # Save the initial configuration as YAML file
+        # self.save_current_configuration("initial_configuration.yaml")
 
     def update_configuration(self, configuration):
         """
@@ -129,11 +217,11 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         self.constraints = conf["constraints"]
         self.fixed_parameters = conf["fixed_parameters"]
         self.objective_function = conf["objective_function"]
-        self.variables = {k: v["value"] for k, v in conf["design_variables"].items()}
+        self.vars_normalized = {k: v["value"] for k, v in conf["design_variables"].items()}
         self.lower_bounds = {k: v["min"] for k, v in conf["design_variables"].items()}
         self.upper_bounds = {k: v["max"] for k, v in conf["design_variables"].items()}
-        self.keys = list(self.variables.keys())
-        self.x0 = np.asarray([var for var in self.variables.values()])
+        self.keys = list(self.vars_normalized.keys())
+        self.x0 = np.asarray([var for var in self.vars_normalized.values()])
 
     def _calculate_special_points(self):
         """
@@ -186,7 +274,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
 
         # Save states in the fixed parameters dictionary
         self.fixed_parameters_bis = copy.deepcopy(self.fixed_parameters)
-        self.fixed_parameters_bis["cycle_fluid"] = {
+        self.fixed_parameters_bis["working_fluid"] = {
             "critical_point": self.fluid.critical_point.to_dict(),
             "triple_point_liquid": self.fluid.triple_point_liquid.to_dict(),
             "triple_point_vapor": self.fluid.triple_point_vapor.to_dict(),
@@ -198,6 +286,9 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         """
         Load and update the problem's configuration from a specified file.
 
+        Useful to plot the cycle according to the latest version of the configuration
+        file in real time (interactive initial guess generation)
+
         Parameters
         ----------
         config_file : str
@@ -207,18 +298,48 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         self.update_configuration(config["problem_formulation"])
         self._calculate_special_points()
 
-    def get_optimization_values(self, x):
+    def save_current_configuration(self, filename):
+        """Save the current configuration to a YAML file."""
+        config_data = {k: v for k, v in self.configuration.items()}
+        config_data = utilities.convert_numpy_to_python(config_data, precision=12)
+        with open(filename, "w") as file:
+            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+    def save_config_callback(self, x, iter):
+        """
+        A callback function to save the current configuration during optimization iterations.
+
+        Parameters:
+        - x : The current solution vector from the optimizer.
+        - iter : The current optimization iteration count.
+
+        This function acts as a bridge between the optimizer callback requirements and the
+        existing `save_current_configuration` function.
+        """
+
+        # Create a 'results' directory if it doesn't exist
+        self.optimization_dir = os.path.join(self.out_dir, "optimization")
+        os.makedirs(self.optimization_dir, exist_ok=True)
+        
+        # Define the filename using the solver's iteration number
+        filename = os.path.join(self.optimization_dir, f"iteration_{iter:03d}.yaml")
+        
+        # Call the existing function to save the configuration
+        self.save_current_configuration(filename)
+
+    def fitness(self, x):
         """
         Evaluate optimization problem
         """
-        # Create dictionary from array of normalized design variables
-        self.variables = dict(zip(self.keys, x))
-        vars_physical = self._scale_normalized_to_physical(self.variables)
+
+        # print("x", x)
+        # Update configuration with the current values of x
+        self.update_variables(x)
 
         # Evaluate thermodynamic cycle
         if self.cycle_topology in CYCLE_TOPOLOGIES.keys():
             self.cycle_data = CYCLE_TOPOLOGIES[self.cycle_topology](
-                vars_physical,
+                self.vars_physical,
                 self.fixed_parameters,
                 self.constraints,
                 self.objective_function,
@@ -235,21 +356,30 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         self.c_ineq = self.cycle_data["inequality_constraints"]
 
         # Combine objective function and constraints
-        out = self.merge_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
+        out = psv.combine_objective_and_constraints(self.f, self.c_eq, self.c_ineq)
 
         return out
 
+    def update_variables(self, x):
+        """Update the problem variables based on the new values provided by the optimizer."""
+        self.vars_normalized = dict(zip(self.keys, x))
+        self.vars_physical = self._scale_normalized_to_physical(self.vars_normalized)
+        for k, v in self.vars_normalized.items():
+            if k in self.configuration['design_variables']:
+                self.configuration['design_variables'][k]['value'] = v
+            else:
+                # Optionally handle the error or log a warning if the key does not exist
+                print(f"Warning: {k} is not a recognized design variable.")
+
     def get_bounds(self):
-        bounds = []
-        for _ in self.variables:
-            bounds.append((0.00, 1.00))
-        return bounds
+        dim = len(self.vars_normalized)
+        return ([0.0]*dim, [1.00]*dim)
 
-    def get_n_eq(self):
-        return self.get_number_of_constraints(self.c_eq)
+    def get_nec(self):
+        return psv.count_constraints(self.c_eq)
 
-    def get_n_ineq(self):
-        return self.get_number_of_constraints(self.c_ineq)
+    def get_nic(self):
+        return psv.count_constraints(self.c_ineq)
 
     def _scale_normalized_to_physical(self, vars_normalized):
         # Define helper function
@@ -375,7 +505,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         )
 
         # Export to Excel
-        filename = os.path.join(self.out_dir, filename)
+        # filename = os.path.join(self.out_dir, filename)
         with pd.ExcelWriter(filename, engine="openpyxl") as writer:
             df.to_excel(writer, index=False, sheet_name="cycle_states")
             df_2.to_excel(writer, index=False, sheet_name="energy_analysis")
@@ -474,7 +604,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         while not self.enter_pressed:
             # Read the configuration file
             self.load_configuration_file(configuration_file)
-            self.get_optimization_values(self.x0)
+            self.fitness(self.x0)
             self.plot_cycle()
 
             # Wait for the specified interval before updating again
@@ -495,7 +625,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         This function is intended to be passed as callback argument to the optimization solver
         """
         # Update and plot the cycle diagram
-        self.figure.suptitle(f"Optimization iteration: {iter:03d}", fontsize=14, y=0.90)
+        # self.figure.suptitle(f"Optimization iteration: {iter:03d}", fontsize=14, y=0.90)
         self.plot_cycle()
 
         # Create a 'results' directory if it doesn't exist
@@ -543,7 +673,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         # Merge with default values
         return default_settings | plot_config
 
-    def _plot_thermodynamic_diagram(self, ax, plot_config, ax_index):
+    def _plot_thermodynamic_diagram(self, ax, plot_config, ax_index=0):
         """
         Plots or updates the thermodynamic diagram on a specified axes.
 

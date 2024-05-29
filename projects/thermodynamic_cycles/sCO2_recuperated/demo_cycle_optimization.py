@@ -2,40 +2,16 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt    
-import turbo_flow as tf
-
-# TODO
-# The cycle problem class only takes information about the problem formulation, not the overall config file
-# specifying also the settings for the optimization problem
-# As a result, the output YAML is not as meaninful as it could be
-
-# Should I have the plotting within the CycleProblem class? or move it somewhere else
-# Keep in mind that I wanbt to updat eplot iteratively when calling function plot_cycle_realtime,
-# but also update the plots with the latest data during optimization when a callback function is called
-
-# Now I export properly the YAML file. Check the naming and the folder structure to comly with the exporting of figures
-# Export initial configuration and final configuration separately
-
-# I have to create a wraper class for doing hte optimization?
-
-# # Would it be better to have a class for optimization where I also handle the solution of the optimization problem
-# # In this class I could have the extra functionaliyt about plotting and exporting yaml file
-# # Would this apporach be more suited to save confguration file at start and end of the optimiazation
-# # Would this approach help me make parameter sweeps more, easily, or it does not really matter?
-
+import meanline_axial as ml
 
 
 # Define configuration filename
-# CONFIG_FILE = "case_water.yaml"
-# CONFIG_FILE = "case_butane.yaml"
-# CONFIG_FILE = "case_toluene.yaml"
-# CONFIG_FILE = "case_sCO2_recuperated.yaml"
-CONFIG_FILE = "case_sCO2_recompression.yaml"
+CONFIG_FILE = "case_sCO2_recuperated.yaml"
 
 
 
 # Usage example
-optimizer = tf.thermodynamic_cycles.ThermodynamicCycleOptimization(CONFIG_FILE)
+optimizer = ml.cycles.ThermodynamicCycleOptimization(CONFIG_FILE)
 # TODO options to add as configuration
 # Use plot callback or not, if yes, then make sure a function call to the plot_cycle function is done
 # Move the configuration function handling to the configuration management class
@@ -48,6 +24,8 @@ optimizer.save_results()
 # optimizer.generate_output_files()
 # optimizer.create_animation()
 
+
+print("hello")
 
 
 

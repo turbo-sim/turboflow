@@ -1,0 +1,8 @@
+The split compression cycle is a power generation system that utilizes a primary heat exchanger, a heat rejection unit, and two internal recuperators. The unique aspect of this cycle is the splitting of the flow before the heat rejection unit, which helps to minimize the temperature mismatch in the low-temperature recuperator, where the fluid exhibits high heat capacity near its critical point.
+
+The process begins as the fluid exiting the heat rejection unit is compressed in the main compressor (1 to 2) and then heated in the low-temperature recuperator (2 to 3). Similarly, the flow split before the heat rejection unit undergoes compression in the secondary compressor (9 to 10). The two flows are then combined in a mixing chamber (3, 10 to 4) located at the exit of the low-temperature recuperator.
+
+The merged flow proceeds to the high-temperature recuperator, where it is heated (4 to 5) before entering the primary heat exchanger for external heating (5 to 6). The fluid, now at high temperature and pressure, expands in the turbine (6 to 7), generating shaft power that drives the two compressors and the electric generator.
+The turbine exhaust flow passes through the hot side of the high-temperature (7 to 8) and low-temperature (8 to 9) recuperators. Finally, the flow is divided, with one portion directed to the split compressor and the other to the heat rejection unit and main compressor, completing the cycle.
+
+

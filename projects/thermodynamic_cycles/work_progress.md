@@ -1,5 +1,34 @@
 # Work Progress
 
+
+## Todo
+- Clean the script to plot the Ts diagram with the Z-factor contours
+- Clean the cycle optimization functionality
+  - Move plotting outside of main class
+  - Wrapper should just redefine some methods of the object? or create a new object with just the methods for optimization to prevent deepcoping problems?
+  - Clean script about IPOPT superiority with Hessian
+  - Make folder for the comparison of solvers for cycle optimization
+  - Make some notes describing each case of cycle optimization
+  - Merging of cycle optimization functionality with turbine optimization
+  - Merging of fluid properties from barotropic model and meanline axial
+  - Merging of barotropy with the meanline code?
+  - clean pysolverview  demo scripts and functinality. make sure it is consistent with the meanline code? combine int he same package to share utilities?
+  - Improve fluid property calculations:
+    - Pseudocritical Line
+    - Spinodal line
+    - Superheating
+    - Subcooling
+    - Generalized quality
+
+
+
+## Done
+- Ts diagram of the split compression cycle
+- Do inkscape illustration of the split compression cycle
+- Draft description of the split compression cycle (missing main modelling equations)
+- 
+
+
 ## Completed Tasks
 
 ### Modeling
@@ -22,7 +51,8 @@
 - Incorporated constraint and objective normalization options.
 - Improved the callback function to save convergence history.
 - Added option to specify the cycle topology in the configuration file and error message listing available options in case the cycle topology is invalid.
-- Modified objective/constraint parsing. Now all variables being parsed during configuration reading have to be preceded by '$'. The rendering function was extended to handle variables that are Numpy arrays (e.g., the vector of temperature differences across a heat exchanger).
+- Modified objective/constraint parsing. Now all variables being parsed during configuration reading have to be preceded by `$` character
+- The rendering function was extended to handle variables that are Numpy arrays (e.g., the vector of temperature differences across a heat exchanger).
  
 ### File IO
 - Encapsulated all problem parameters in a YAML configuration file.
@@ -59,7 +89,7 @@
 - [ ] Improve the generalization of vapor quality calculations for supercritical conditions.
 - [ ] Create a cycle optimization problem class.
 - [ ] Develop `plot interactive` and `start optimization` methods for the solver class.
-- [ ] Add `export configuration` functionality.
+- [ ] Add `export configuration` functionality. Very important, now I am only exporting excel data of the optimal solution
 - [ ] Implement a method to create GIFs from optimization runs.
 - [ ] Call the class in a loop to plot the cycle for different inlet temperatures or other parameters.
 - [ ] Add a directory with example optimization cases.

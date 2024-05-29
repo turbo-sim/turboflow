@@ -1,12 +1,11 @@
 solver_options:
-  library: pygmo
   method: snopt
-  tolerance: 1e-5
-  max_iterations: 50
+  tol: 1e-5
+  max_iter: 50
   derivative_method: 2-point
-  derivative_abs_step: 1e-8
-  print_convergence: True
-  plot_convergence: False
+  derivative_rel_step: 1e-8
+  display: True
+  plot: False
   logger: None
   update_on: gradient
 
