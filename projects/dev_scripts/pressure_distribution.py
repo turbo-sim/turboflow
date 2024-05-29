@@ -1,8 +1,8 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import turbo_flow as tf
-import turbo_flow.axial_turbine.geometry_model as geom
+import turboflow as tf
+import turboflow.axial_turbine.geometry_model as geom
 from scipy.optimize import root_scalar
   
 # Define auxiliaty functions

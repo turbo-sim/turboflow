@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, ValidationError, Field, model_validator, field_validator
+from pydantic import BaseModel, ValidationError, Field, model_validator, field_validator, ConfigDict
 from typing import Optional, List, Union, Literal, Dict
 from typing_extensions import Self
 from typing_extensions import Annotated
@@ -176,17 +176,13 @@ class OperationPoints(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
-
+    model_config = ConfigDict(extra = "forbid")
     fluid_name: str
     T0_in: Annotated[float, Field(gt=0)]
     p0_in: Annotated[float, Field(gt=0)]
     p_out: Annotated[float, Field(gt=0)]
     omega: Annotated[float, Field(gt=0)]
     alpha_in: float
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class PerformanceMap(BaseModel):
     """
@@ -212,16 +208,13 @@ class PerformanceMap(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     fluid_name: Union[str, List[str]]
     T0_in: Union[Annotated[float, Field(gt=0)], List[Annotated[float, Field(gt=0)]]]
     p0_in: Union[Annotated[float, Field(gt=0)], List[Annotated[float, Field(gt=0)]]]
     p_out: Union[Annotated[float, Field(gt=0)], List[Annotated[float, Field(gt=0)]]]
     omega: Union[Annotated[float, Field(gt=0)], List[Annotated[float, Field(gt=0)]]]
     alpha_in: Union[float, List[float]]
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class TuningFactors(BaseModel):
 
@@ -246,16 +239,12 @@ class TuningFactors(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
-
+    model_config = ConfigDict(extra = "forbid")
     profile: float = 1.00
     incidence: float = 1.00
     secondary: float = 1.00
     trailing: float = 1.00
     clearance: float = 1.00
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class LossModel(BaseModel):
     """
@@ -279,16 +268,12 @@ class LossModel(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
-
+    model_config = ConfigDict(extra = "forbid")
     model : Annotated[str, AfterValidator(lambda input: check_string(input, "loss model", LOSS_MODELS))]
     loss_coefficient: Annotated[str, AfterValidator(lambda input: check_string(input, "loss coefficient",LOSS_COEFFICIENTS))]
     custom_value : Annotated[float, Field(ge = 0)] = 0.1
     inlet_displacement_thickness_height_ratio: float = 0.011
     tuning_factors: TuningFactors = TuningFactors()
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class SimulationOptions(BaseModel):
     """
@@ -312,15 +297,13 @@ class SimulationOptions(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     deviation_model: Annotated[str, AfterValidator(lambda input: check_string(input, "deviation model", DEVIATION_MODELS))]
     blockage_model: Union[str, float] = 0.00
     choking_model: Annotated[str, AfterValidator(lambda input: check_string(input, "choking model", CHOKING_MODELS))]
     rel_step_fd: float = 1e-4
     loss_model: LossModel
 
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class SolverOptionsPerformanceAnalysis(BaseModel):
     """
@@ -348,6 +331,7 @@ class SolverOptionsPerformanceAnalysis(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     method: Annotated[str, AfterValidator(lambda input: check_string(input, "root solver",SOLVER_OPTIONS)), Field(default = 'hybr')]
     tolerance: float = 1e-8
     max_iterations: int = 100
@@ -356,9 +340,6 @@ class SolverOptionsPerformanceAnalysis(BaseModel):
     print_convergence: bool = True
     plot_convergence: bool = False
 
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class GeometryPerformanceAnalysis(BaseModel):
     """
@@ -404,6 +385,7 @@ class GeometryPerformanceAnalysis(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     cascade_type: List[Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))]]
     radius_hub_in: List[Annotated[float, Field(gt=0)]]
     radius_hub_out: List[Annotated[float, Field(gt=0)]]
@@ -427,10 +409,6 @@ class GeometryPerformanceAnalysis(BaseModel):
         if not all(len(attr) == len(self.cascade_type) for attr in attributes):
             raise ValueError('Geometry input is not of same length')
         return self
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class SolverOptionsOptimization(BaseModel):
     """
@@ -464,6 +442,7 @@ class SolverOptionsOptimization(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     library : Annotated[str, AfterValidator(lambda input: check_string(input, "optimization library",VALID_LIBRARIES_AND_METHODS.keys())), Field(default = 'scipy')]
     method : str = "slsqp"
     tolerance : float = 1e-5
@@ -482,10 +461,6 @@ class SolverOptionsOptimization(BaseModel):
             raise ValueError(f'Method {method} is not available in {lib} library.')
         return self    
 
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
-
 class PerformanceAnalysis(BaseModel):
     """
     Model describing performance analysis parameters.
@@ -502,12 +477,10 @@ class PerformanceAnalysis(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     performance_map: PerformanceMap = None
     solver_options: SolverOptionsPerformanceAnalysis = SolverOptionsPerformanceAnalysis()
 
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class Variable(BaseModel):
     """
@@ -531,6 +504,7 @@ class Variable(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     value : Union[float, Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))], List[float], List[Annotated[str, AfterValidator(lambda input: check_string(input, "cascade type", ["stator", "rotor"]))]]]
     lower_bound : Union[float, List[float]] = None
     upper_bound : Union[float, List[float]] = None
@@ -546,10 +520,6 @@ class Variable(BaseModel):
                 if not all(len(attr) == len(self.value) for attr in attributes):
                     raise ValueError('Variable input is not of same length')
         return self
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class Constraint(BaseModel):
     """
@@ -569,13 +539,10 @@ class Constraint(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     type : Literal["<", "=", ">"]
     value : float
     normalize : bool
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class DesignOptimization(BaseModel):
     """
@@ -601,6 +568,7 @@ class DesignOptimization(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     objective_function : Annotated[str, AfterValidator(lambda input: check_string(input, "objective function",OBJECTIVE_FUNCTIONS)), Field(default = 'efficiency_ts')]
     variables : Dict[Annotated[str, AfterValidator(lambda input: check_string(input, "variable", VARIABLES))], Variable] = None
     constraints : Dict[Annotated[str, AfterValidator(lambda input: check_string(input, "constraint", CONSTRAINTS))], Constraint] = None
@@ -620,10 +588,6 @@ class DesignOptimization(BaseModel):
             v = DEFAULT_VARIABLES
             print(f"Design optimization variables are missing: {lacking_keys}. Defualt set of variables are used.")
         return v
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
 
 class AxialTurbine(BaseModel):
     """
@@ -649,16 +613,12 @@ class AxialTurbine(BaseModel):
     extra : str, optional
         Indicates that no extra input is allowed. Default is "forbid".
     """
+    model_config = ConfigDict(extra = "forbid")
     turbomachinery : Literal["axial_turbine"]
     operation_points: OperationPoints
     simulation_options: SimulationOptions 
     geometry: GeometryPerformanceAnalysis = None
     performance_analysis : PerformanceAnalysis = PerformanceAnalysis() 
     design_optimization : DesignOptimization = DesignOptimization()
-
-    # Avoid any other inputs
-    class Config:
-        extra = "forbid"
-
 
 

@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import turbo_flow as tf
+import turboflow as tf
 
-ml.utilities.graphics.set_plot_options()
+tf.utilities.graphics.set_plot_options()
 
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1974_stator.yaml"

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import CoolProp.CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
-import turbo_flow as tf
+import turboflow as tf
     
 from scipy import optimize
 

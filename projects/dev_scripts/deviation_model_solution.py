@@ -15,7 +15,7 @@ desired_path = os.path.abspath("../..")
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
-import turbo_flow as tf
+import turboflow as tf
 tf.set_plot_options()
 
 

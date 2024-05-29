@@ -8,7 +8,7 @@ Created on Wed Sep 20 13:05:13 2023
 import numpy as np
 import pandas as pd
 import os
-import turbo_flow as tf
+import turboflow as tf
 import copy
 
 # Define running option

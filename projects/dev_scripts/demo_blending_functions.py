@@ -8,7 +8,7 @@ desired_path = os.path.abspath("../..")
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
-import turbo_flow as tf
+import turboflow as tf
 
 
 def sigmoid_hyperbolic(x, x0=0.5, alpha=1):

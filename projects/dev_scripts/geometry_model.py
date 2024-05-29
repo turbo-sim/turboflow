@@ -8,9 +8,9 @@ desired_path = os.path.abspath("../..")
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
-import turbo_flow as tf
-from turbo_flow import math
-from turbo_flow import meanline
+import turboflow as tf
+from turboflow import math
+from turboflow import meanline
 
 
 # Load configuration file

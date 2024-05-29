@@ -1,7 +1,7 @@
 import os
 import sys
 import yaml
-import turbo_flow as tf
+import turboflow as tf
 
 # Import the options dictionary
 config_options = tf.CONFIGURATION_OPTIONS
