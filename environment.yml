@@ -1,13 +1,16 @@
 name: turboflow_env
-#channels:
-#  - conda-forge
+channels:
+ - conda-forge
 dependencies:
   - python=3.11
   - pip
+  - pygmo
+  - pygmo_plugins_nonfree
   - pip:
     - numpy
     - scipy
     - matplotlib
+    - pydantic
     - pandas
     - coolprop
     - openpyxl
