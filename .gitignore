@@ -1,3 +1,5 @@
+*.egg-info/
+
 # Compiled Python files
 __pycache__/
 *.pyc

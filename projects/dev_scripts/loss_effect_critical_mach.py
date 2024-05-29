@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from scipy import interpolate
 import os
-import meanline_axial as ml
+import turbo_flow as tf
 
 # Script options
 plot_data = True
@@ -178,7 +178,7 @@ if plot_deviation:
         data_subset = data[data["Loss coefficient"] == Y[i]]
         mach = data_subset["Mach"]
         mach_crit[i] = data_subset.loc[data_subset["Mass flux"].idxmax(), "Mach"]
-        beta_aungier = ml.deviation_model.get_subsonic_deviation(
+        beta_aungier = tf.deviation_model.get_subsonic_deviation(
         mach, mach_crit[i], geometry, 'aungier'
         )
         ax.plot(mach, beta_aungier, color = colors[i], linestyle = linestyles[i], label = f"Y = {Y[i]:.1f}")

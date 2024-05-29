@@ -174,7 +174,7 @@ def evaluate_axial_turbine(
     results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
 
     # Compute stage performance
-    # results["stage"] = pd.DataFrame([compute_stage_performance(results)])
+    results["stage"] = pd.DataFrame(compute_stage_performance(results))
 
     # Compute overall perfrormance
     results["overall"] = pd.DataFrame([compute_overall_performance(results, geometry)])
@@ -1030,7 +1030,7 @@ def compute_stage_performance(results):
     h = results["plane"]["h"].values
     R = np.array(
         [
-            (h[i * 6 + 2] - h[i * 6 + 5]) / (h[i * 6] - h[i * 6 + 5])
+            (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])
             for i in range(number_of_stages)
         ]
     )

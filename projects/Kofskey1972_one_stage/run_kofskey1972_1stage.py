@@ -4,16 +4,14 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import meanline_axial as ml 
+import turbo_flow as tf 
 
 # Define running option
 CASE = 1
-CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-config = ml.load_config(CONFIG_FILE, print_summary = False)
-
+config = tf.load_config(CONFIG_FILE, print_summary = True)
 
 x0 = {'w_out_1': 244.42314206706558,
   's_out_1': 3787.6640308614674,
@@ -45,14 +43,14 @@ x0 = {'w_out_1': 267.78187967067004,
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = None, export_results=False, stop_on_failure=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_map"]
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    solvers = ml.compute_performance(operation_points, config, export_results=False)
+    solvers = tf.compute_performance(operation_points, config, export_results=False)
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
     print(solvers[1].problem.results["overall"]["mass_flow_rate"])
 
@@ -83,15 +81,15 @@ elif CASE == 3:
             operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
-    ml.compute_performance(operation_points, config)
+    tf.compute_performance(operation_points, config)
 
 elif CASE == 4:
     operation_points = config["operation_points"]
 
     # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
 
-    solvers = ml.compute_optimal_turbine(config)
-    fig, ax = ml.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+    solvers = tf.compute_optimal_turbine(config, export_results = True)
+    fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots
 # plt.show()

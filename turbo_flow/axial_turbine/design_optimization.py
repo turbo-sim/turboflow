@@ -92,7 +92,7 @@ def compute_optimal_turbine(
         "overall": pd.DataFrame(problem.results["overall"], index = [0]),
         "plane": problem.results["plane"],
         "cascade": problem.results["cascade"],
-        # "stage": pd.concat(stage_data, ignore_index=True),
+        "stage": problem.results["stage"],
         "geometry": pd.DataFrame({key : pd.Series(val) for key, val in problem.geometry.items()}),
         "solver": pd.DataFrame({
                 "completed": pd.Series(True, index = [0]),

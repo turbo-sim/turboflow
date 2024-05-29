@@ -9,14 +9,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import meanline_axial as ml
+import turbo_flow as tf
 
 ml.utilities.graphics.set_plot_options()
 
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1974_stator.yaml"
 
-cascades_data = ml.read_configuration_file(CONFIG_FILE)
+cascades_data = tf.read_configuration_file(CONFIG_FILE)
 
 if isinstance(cascades_data["operation_points"], list):
     design_point = cascades_data["operation_points"][0]
@@ -39,8 +39,8 @@ if Case == 'pressure_line':
     
 
     # Load performance data
-    timestamp = ml.extract_timestamp(filename)
-    data = ml.plot_functions.load_data(filename)
+    timestamp = tf.extract_timestamp(filename)
+    data = tf.plot_functions.load_data(filename)
 
     # Define plot settings
     color_map = "Reds"
@@ -49,7 +49,7 @@ if Case == 'pressure_line':
     # Plot mass flow rate
     title = "Mass flow rate"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
-    fig1, ax1 = ml.plot_functions.plot_lines(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=[ "mass_flow_rate"],
@@ -117,7 +117,7 @@ if Case == 'pressure_line':
     title = "Stator relative flow angles"
     filename = title.lower().replace(" ", "_") + '_' + timestamp
     colors = plt.get_cmap(color_map)(np.linspace(0.2, 1, 3))
-    fig1, ax1 = ml.plot_functions.plot_line(
+    fig1, ax1 = tf.plot_functions.plot_line(
         data,
         x_key="Ma_rel_2",
         y_key="beta_2",
@@ -275,8 +275,8 @@ elif Case == 'mass_flux_plots':
 
     for i in range(len(filenames)):
         filename = filenames[i]
-        data = ml.plot_functions.load_data(filename)
-        fig, ax = ml.plot_functions.plot_line(
+        data = tf.plot_functions.load_data(filename)
+        fig, ax = tf.plot_functions.plot_line(
         data,
         x_key="Ma_rel_2",
         y_key="mass_flux_throat_1",
@@ -322,12 +322,12 @@ elif Case == 'unphysical_bump':
 
     for i in range(len(filenames)):
         filename = filenames[i]
-        data = ml.plot_functions.load_data(filename)
+        data = tf.plot_functions.load_data(filename)
         if filename == filename_2:
             data_2 = data
         elif filename == filename_3:
             data_3 = data
-        fig, ax = ml.plot_functions.plot_line(
+        fig, ax = tf.plot_functions.plot_line(
         data,
         x_key="PR_ts",
         y_key="mass_flow_rate",

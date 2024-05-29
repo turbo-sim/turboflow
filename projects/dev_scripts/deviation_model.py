@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import CoolProp.CoolProp as cp
 from scipy.optimize._numdiff import approx_derivative
-import meanline_axial as ml
+import turbo_flow as tf
     
 from scipy import optimize
 
@@ -176,7 +176,7 @@ def sigmoid_blending_asymmetric(f1, f2, x, n, m):
 
 # Define case parameters
 fluid_name = "air"
-Fluid = ml.FluidCoolProp_2Phase(fluid_name, "HEOS")
+Fluid = tf.FluidCoolProp_2Phase(fluid_name, "HEOS")
 radius_curvature = np.inf
 pitch = 1.00
 opening = 0.5

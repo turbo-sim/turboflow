@@ -8,14 +8,14 @@ desired_path = os.path.abspath("../..")
 if desired_path not in sys.path:
     sys.path.append(desired_path)
 
-import meanline_axial as ml
-from meanline_axial import math
-from meanline_axial import meanline
+import turbo_flow as tf
+from turbo_flow import math
+from turbo_flow import meanline
 
 
 # Load configuration file
 CONFIG_FILE = "config_one_stage.yaml"
-case_data = ml.read_configuration_file(CONFIG_FILE)
+case_data = tf.read_configuration_file(CONFIG_FILE)
 
 # ml.print_dict(case_data)
 

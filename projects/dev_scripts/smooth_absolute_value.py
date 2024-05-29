@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import meanline_axial as ml
+import turbo_flow as tf
 
 if __name__ == "__main__":
 
@@ -10,9 +10,9 @@ if __name__ == "__main__":
 
     # Calculate softmin using various methods
     f_exact = np.abs(x)
-    f_quadratic = ml.smooth_abs(x, method='quadratic', epsilon=1e-4)
-    f_logarithmic = ml.smooth_abs(x, method='logarithmic', epsilon=1e-3)
-    f_hyperbolic = ml.smooth_abs(x, method='hyperbolic', epsilon=1e-3)
+    f_quadratic = tf.smooth_abs(x, method='quadratic', epsilon=1e-4)
+    f_logarithmic = tf.smooth_abs(x, method='logarithmic', epsilon=1e-3)
+    f_hyperbolic = tf.smooth_abs(x, method='hyperbolic', epsilon=1e-3)
  
     # Create the folder to save figures
     fig_dir = "figures"

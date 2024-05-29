@@ -171,7 +171,7 @@ def object_to_dict(obj):
     elif hasattr(obj, '__dict__'):
         return {k: object_to_dict(v) for k, v in vars(obj).items()}
     else:
-        return obj
+        return obj    
 
 # Function to load and validate the configuration file
 def load_config(config_file_path: str, print_summary = True):
@@ -252,6 +252,40 @@ def load_config(config_file_path: str, print_summary = True):
     except yaml.YAMLError as e:
         print("Error parsing YAML file:")
         print(e)
+
+def read_configuration_file(filename):
+    """
+    Reads a YAML configuration file and converts options to NumPy types when possible.
+
+    Parameters
+    ----------
+    filename : str
+        The path to the YAML configuration file.
+
+    Returns
+    -------
+    dict
+        A dictionary containing the configuration options, with values converted to NumPy types where applicable.
+
+    Raises
+    ------
+    Exception
+        If there is an error reading or parsing the configuration file.
+
+    """
+    # Read configuration file
+    try:
+        with open(filename, "r") as file:
+            config = yaml.safe_load(file)
+    except Exception as e:
+        raise Exception(
+            f"Error parsing configuration file: '{filename}'. Original error: {e}"
+        )
+
+    # Convert options to Numpy when possible
+    config = convert_configuration_options(config)
+
+    return config
 
 # Example usage
 if __name__ == "__main__":

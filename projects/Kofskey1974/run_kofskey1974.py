@@ -11,14 +11,14 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import meanline_axial as ml
+import turbo_flow as tf
 
 # Define running option
 CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
-config = ml.load_config(CONFIG_FILE)
+config = tf.load_config(CONFIG_FILE)
 
 # ml.print_dict(config)
 
@@ -68,14 +68,14 @@ x0 = {'w_out_1': 293.49185257504075,
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    solvers = ml.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
+    solvers = tf.compute_performance(operation_points, config, initial_guess = x0, export_results=False, stop_on_failure=True)
 
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    ml.compute_performance(operation_points, config, initial_guess = x0)
+    tf.compute_performance(operation_points, config, initial_guess = x0)
 
 elif CASE == 3:
     
@@ -95,4 +95,4 @@ elif CASE == 3:
         operation_points.append(current_point)
 
     # Compute performance at experimental operating points   
-    ml.compute_performance(operation_points, config, initial_guess = x0)
+    tf.compute_performance(operation_points, config, initial_guess = x0)

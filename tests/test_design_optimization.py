@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
-import meanline_axial as ml
+import turbo_flow as tf
 
 
 # Define regression settings
@@ -42,7 +42,7 @@ def check_value(old_value, new_value, column, config_name, discrepancies):
         discrepancies.append(
             f"Mismatch of '{column}' in '{config_name}' : expected '{old_value}', got '{new_value}'"
         )
-    elif not isinstance(old_value, str) and not ml.isclose_significant_digits(
+    elif not isinstance(old_value, str) and not tf.isclose_significant_digits(
         old_value, new_value, DIGIT_TOLERANCE
     ):
         discrepancies.append(
@@ -75,8 +75,8 @@ def compute_optimal_turbine_from_config(request):
     print()
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
-    config = ml.load_config(config_path)
-    solvers = ml.compute_optimal_turbine(config, export_results = False)
+    config = tf.load_config(config_path)
+    solvers = tf.compute_optimal_turbine(config, export_results = False)
     return solvers, config_file 
 
 
@@ -126,7 +126,7 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
 
     # Run simulations
     filepath = os.path.join(config_dir, config_file)
-    config = ml.load_config(filepath)
+    config = tf.load_config(filepath)
 
     # Get configuration file name without extension
     config_name, _ = os.path.splitext(config_file)
@@ -138,7 +138,7 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{base_filename}_{timestamp}"
 
-    solvers = ml.compute_optimal_turbine(config, out_dir = outdir, out_filename= filename, export_results = True)
+    solvers = tf.compute_optimal_turbine(config, out_dir = outdir, out_filename= filename, export_results = True)
 
     print(f"Regression data set saved: {filename}")
 
