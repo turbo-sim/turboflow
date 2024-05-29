@@ -16,6 +16,7 @@ simulation_options:
   loss_model:
     model: kacker_okapuu
     loss_coefficient: stagnation_pressure
+    custom_value: 0.1
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
       profile: 1.0

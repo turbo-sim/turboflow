@@ -1,27 +1,20 @@
+turbomachinery: axial_turbine
 operation_points:
   fluid_name: air
   T0_in: 295.6
   p0_in: 138000.0
   p_out: 60052.21932114883
-  omega: 1627
-  alpha_in: 0
-performance_map:
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 138000.0
-  p_out:
-  - 60000.00000000001
-  - 57500.0
-  omega: 1627
-  alpha_in: 0
-model_options:
+  omega: 1627.0
+  alpha_in: 0.0
+simulation_options:
   deviation_model: aungier
   blockage_model: 0.0
   choking_model: evaluate_cascade_critical
   rel_step_fd: 0.0001
   loss_model:
-    model: kacker_okapuu
+    model: benner
     loss_coefficient: stagnation_pressure
+    custom_value: 0.1
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
       profile: 1.0
@@ -29,14 +22,6 @@ model_options:
       secondary: 1.0
       trailing: 1.0
       clearance: 1.0
-solver_options:
-  method: hybr
-  tolerance: 1.0e-08
-  max_iterations: 100
-  derivative_method: 2-point
-  derivative_abs_step: 1.0e-06
-  print_convergence: true
-  plot_convergence: false
 geometry:
   cascade_type:
   - stator
@@ -84,27 +69,38 @@ geometry:
   - 0.0
   - 0.0003
   throat_location_fraction:
-  - 1
-  - 1
-optimization:
-  objective_function: efficiency_ts
-  design_variables:
-  - specific_speed
-  - blade_jet_ratio
-  - hub_tip_ratio_in
-  - hub_tip_ratio_out
-  - aspect_ratio
-  - pitch_chord_ratio
-  - trailing_edge_thickness_opening_ratio
-  - leading_edge_angle
-  - gauging_angle
-  eq_constraints:
-    mass_flow_rate:
-      value: 2.5
-      scale: 2.5
-    interstage_flaring:
-      value: 1
-      scale: 1
-  radius_type: constant_mean
+  - 1.0
+  - 1.0
+performance_analysis:
+  performance_map:
+    fluid_name: air
+    T0_in: 295.6
+    p0_in: 138000.0
+    p_out:
+    - 60000.00000000001
+    - 57500.0
+    omega: 1627.0
+    alpha_in: 0.0
   solver_options:
-    max_iter: 300
+    method: hybr
+    tolerance: 1.0e-08
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: 1.0e-06
+    print_convergence: true
+    plot_convergence: false
+design_optimization:
+  objective_function: efficiency_ts
+  variables: null
+  constraints: null
+  solver_options:
+    library: scipy
+    method: slsqp
+    tolerance: 1.0e-05
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: null
+    print_convergence: true
+    plot_convergence: false
+    update_on: gradient
+  radius_type: constant_mean

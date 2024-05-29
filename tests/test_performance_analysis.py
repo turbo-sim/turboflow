@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import turboflow as tf
+import platform
 
 
 # Define regression settings
@@ -25,6 +26,14 @@ CONFIG_FILES = [
 # Define test settings
 DIGIT_TOLERANCE = 10  
 
+# Check OS type
+os_name = platform.system()
+if os_name == 'Windows':
+    OS_TYPE = 'win'
+elif os_name == 'Linux':
+    OS_TYPE = 'linux'
+else:
+    OS_TYPE = 'unknown'
 
 # Helper function to check values
 def check_values(old_values, new_values, column, config_name, discrepancies):
@@ -110,7 +119,7 @@ def test_performance_analysis(compute_performance_from_config):
     config_name, _ = os.path.splitext(config_file)
 
     # Load saved convergence history from Excel file
-    filename = os.path.join(DATA_DIR, f"{config_name}.xlsx")
+    filename = os.path.join(DATA_DIR, f"{config_name}_{OS_TYPE}.xlsx")
     saved_df = pd.read_excel(filename, sheet_name=["solver", "overall"])
 
     # Loop over all operating points
@@ -130,42 +139,4 @@ def test_performance_analysis(compute_performance_from_config):
     assert test_passed, "Discrepancies found:\n" + "\n".join(mismatch)
 
 
-def create_simulation_regression_data(config_file, outdir, config_dir):
-    """Save performance analysis data to Excel files for regression tests"""
-
-    # Run simulations
-    filepath = os.path.join(config_dir, config_file)
-    config = tf.load_config(filepath)
-
-    # Get configuration file name without extension
-    config_name, _ = os.path.splitext(config_file)
-    base_filename = f"{config_name}"
-    filename = f"{base_filename}"
-    # If file exists, append a timestamp to the new file name
-    if os.path.exists(f"{os.path.join(DATA_DIR, filename)}.xlsx"):
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"{base_filename}_{timestamp}"
-
-    operation_points = config["performance_map"]
-    solvers = tf.compute_performance(operation_points, config, out_dir = outdir, out_filename= filename, export_results = True)
-
-    print(f"Regression data set saved: {filename}")
-
-
-# Run the tests
-if __name__ == "__main__":
-
-    # Create a directory to save regression test data
-    if not os.path.exists(DATA_DIR):
-        os.makedirs(DATA_DIR)
-
-    # Define directory of configuration files
-    config_dir = "config_files"
-
-    # Run simulatins and save regression data
-    for config_file in CONFIG_FILES:
-        create_simulation_regression_data(config_file, DATA_DIR, config_dir)
-
-    # Running pytest from Python
-    # pytest.main([__file__, "-vv"])
 
