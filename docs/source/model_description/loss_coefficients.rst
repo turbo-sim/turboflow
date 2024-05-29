@@ -73,3 +73,25 @@ cascade. Therefore, the loss coefficient error is given by
    Y_{\mathrm{error}} =  Y_{\mathrm{definition}}  -  
    Y_{\mathrm{loss\,model}}
 
+
+
+
+
+.. There are several definitions of the loss coefficient commonly used to characterize the irreversibility within blade cascades. The meanline model described in this paper can employ any of these definitions, which are provided here for reference. Throughout these definitions, the subscript "0" signifies the stagnation state for stator cascades and the relative stagnation state for rotor cascades.
+
+.. The **stagnation pressure loss coefficient** is defined as the reduction in stagnation pressure from inlet to outlet relative to the dynamic pressure at the cascade's exit:
+.. $$Y=\frac{p_{0, \mathrm{in}}-p_{0, \mathrm{out}}}{p_{0, \mathrm{out}} - p_\mathrm{out}}$$
+
+.. The **kinetic energy loss coefficient** is the ratio of the enthalpy increase due to irreversibility to the isentropic total-to-static enthalpy change:
+.. $$\Delta \phi^2  =  \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out},s}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out},s}^2} =1 - \left(\frac{v_{\mathrm{out}}}{v_{\mathrm{out},s}}\right)^2 =  1- \phi^2$$
+.. Here, $\phi^2$ is the ratio of actual to ideal kinetic energy at the cascade's exit, commonly interpreted as the efficiency of the cascade.
+
+.. The **enthalpy loss coefficient** is analogously defined, but it utilizes the actual total-to-static enthalpy change in the denominator:
+.. $$ \zeta=\frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out}}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out}}^2} = \left(\frac{v_{\mathrm{out},s}}{v_{\mathrm{out}}  }\right)^2 - 1 = \frac{1}{\phi^2}-1$$
+
+.. The **entropy loss coefficient** is the product of exit temperature and the entropy increase across the cascade, divided by the kinetic energy at the cascade's exit:
+.. $$\varsigma  = \frac{T_\mathrm{out}(s_{\mathrm{out}}-s_{\mathrm{in}})}{\frac{1}{2}v_{\mathrm{out}}^2} $$
+
+.. These four loss coefficient definitions are interconnected as they are different way to quantify the irreversibility within a cascade. The kinetic energy and enthalpy loss coefficient definitions can be directly converted as follows:
+.. $$\zeta = \frac{\Delta \phi^2}{1-\Delta \phi^2} \Longleftrightarrow \Delta \phi^2 = \frac{\zeta}{1+\zeta}$$
+.. However, to transition between either of these two definitions and the entropy loss coefficient or the stagnation pressure loss coefficient it is necessary to know the inlet thermodynamic state and the pressure ratio across the cascade [citation].
