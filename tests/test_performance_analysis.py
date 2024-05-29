@@ -24,7 +24,7 @@ CONFIG_FILES = [
 ]
 
 # Define test settings
-DIGIT_TOLERANCE = 10  
+DIGIT_TOLERANCE = 10
 
 # Check OS type
 os_name = platform.system()

@@ -4,7 +4,7 @@ import turboflow as tf
 import datetime
 import platform
 
-config_files_performance_analysis = [
+CONFIG_FILES_PERFORMANCE_ANALYSIS = [
     "performance_analysis_evaluate_cascade_throat.yaml",
     "performance_analysis_evaluate_cascade_critical.yaml",
     "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
@@ -14,12 +14,12 @@ config_files_performance_analysis = [
     "performance_analysis_ainley_mathieson.yaml",
 ]
 
-config_files_design_optimization = ["design_optimization.yaml"]
-data_dir = "regression_data"
-config_dir = "config_files"
+CONFIG_FILES_DESIGN_OPTIMIZATION = ["design_optimization.yaml"]
+DATA_DIR = "regression_data"
+CONFIG_DIR = "config_files"
 
-new_regression_PA = False
-new_regression_DO = True
+new_regression_PA = True
+new_regression_DO = False
 
 def create_regression_data_PA(config_file, data_dir, config_dir, os_type):
     """Save performance analysis data to Excel files for regression tests"""
@@ -73,12 +73,15 @@ def get_os_type():
         return 'unknown'
     
 # Get OS type
-os_type = get_os_type()
+OS_TYPE = get_os_type()
 
+# Create a directory to save regression test data
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
     
 if new_regression_PA:
-    for config in config_files_performance_analysis:
-        create_regression_data_PA(config, data_dir, config_dir, os_type)
+    for config in CONFIG_FILES_PERFORMANCE_ANALYSIS:
+        create_regression_data_PA(config, DATA_DIR, CONFIG_DIR, OS_TYPE)
 if new_regression_DO:
-    for config in config_files_design_optimization:
-        create_regression_data_DO(config, data_dir, config_dir, os_type)
+    for config in CONFIG_FILES_DESIGN_OPTIMIZATION:
+        create_regression_data_DO(config, DATA_DIR, CONFIG_DIR, OS_TYPE)

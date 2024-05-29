@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import turboflow as tf 
 
 # Define running option
-CASE = 10
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -47,12 +47,10 @@ if CASE == 1:
 
 elif CASE == 2:
     # Compute performance map according to config file
-    operation_points = config["performance_map"]
+    operation_points = config["performance_analysis"]["performance_map"]
     omega_frac = np.asarray(1.00)
     operation_points["omega"] = operation_points["omega"]*omega_frac
-    solvers = tf.compute_performance(operation_points, config, export_results=False)
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    print(solvers[1].problem.results["overall"]["mass_flow_rate"])
+    solvers = tf.compute_performance(operation_points, config, export_results=True)
 
 
 elif CASE == 3:
