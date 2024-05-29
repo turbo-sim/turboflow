@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  test:
+  test_ubuntu:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,13 +20,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'  # or whichever version you are using
+        python-version: '3.11'  
 
     - name: Set up Miniconda
       uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: '3.11'  # or whichever version you are using
+        python-version: '3.11'  
 
     - name: Create conda environment
       run: |
@@ -44,7 +44,7 @@ jobs:
         source "$(conda info --base)/etc/profile.d/conda.sh"
         conda activate turboflow_env
         pytest
-        
+
   test_windows:
     runs-on: windows-latest
 
@@ -55,13 +55,13 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'  # or whichever version you are using
+        python-version: '3.11' 
 
     - name: Set up Miniconda
       uses: conda-incubator/setup-miniconda@v2
       with:
         auto-update-conda: true
-        python-version: '3.11'  # or whichever version you are using
+        python-version: '3.11'  
 
     - name: Create conda environment
       run: conda env create -f environment.yml
