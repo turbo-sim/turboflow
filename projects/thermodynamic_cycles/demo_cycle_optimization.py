@@ -13,8 +13,6 @@ CONFIG_FILE = "case_sCO2_recuperated.yaml"
 
 # Initialize Brayton cycle problem
 # config = ml.utilities.read_configuration_file(CONFIG_FILE)
-
-
 config = ml.load_config(CONFIG_FILE)
 
 
