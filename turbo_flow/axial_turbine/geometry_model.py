@@ -529,8 +529,8 @@ def check_turbine_geometry(geometry, display=True):
             in_range = lb <= value <= ub
 
             # Create a formatted message in table format using f-strings
-            bounds = f"({lb:+0.2f}, {ub:+0.2f})"
-            formatted_message = f" {parameter+'_'+str(index+1):<34}{value:>+8.4f}{bounds:>20}{str(in_range):>14}"
+            bounds = f"({lb:+0.4f}, {ub:+0.4f})"
+            formatted_message = f" {parameter+'_'+str(index+1):<32}{value:>+8.4f}{bounds:>24}{str(in_range):>12}"
             msgs.append(formatted_message)
 
             # Append variables outside the recommended range to the list

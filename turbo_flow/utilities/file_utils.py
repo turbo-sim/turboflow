@@ -60,6 +60,7 @@ def convert_numpy_to_python(data, precision=10):
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
     
+    
 def compare_contents_or_files(file_or_content_1, file_or_content_2):
     """
     Compare the content of two inputs, which can be either file paths or strings.
@@ -187,7 +188,7 @@ def wait_for_file(file_path, timeout=None, poll_interval=0.1):
     """
     Wait until the specified file is created.
 
-    This function is used to wait until a Fluent transcript file is created.
+    This function is used to wait until a file is created.
 
     Parameters
     ----------
@@ -280,6 +281,7 @@ def is_dict_empty(data):
         return all(is_dict_empty(v) for v in data.values()) if data else True
     return False  # Not a dictionary
 
+
 def print_dict(data, indent=0, return_output=False):
     """
     Recursively prints nested dictionaries with indentation or returns the formatted string.
@@ -315,6 +317,43 @@ def print_dict(data, indent=0, return_output=False):
         return output
     else:
         print(output)
+
+
+def print_object(obj):
+    """
+    Prints all attributes and methods of an object, sorted alphabetically.
+
+    - Methods are identified as callable and printed with the prefix 'Method: '.
+    - Attributes are identified as non-callable and printed with the prefix 'Attribute: '.
+
+    Parameters
+    ----------
+    obj : object
+        The object whose attributes and methods are to be printed.
+
+    Returns
+    -------
+    None
+        This function does not return any value. It prints the attributes and methods of the given object.
+
+    """
+    # Retrieve all attributes and methods
+    attributes = dir(obj)
+
+    # Sort them alphabetically, case-insensitive
+    sorted_attributes = sorted(attributes, key=lambda x: x.lower())
+    
+    # Iterate over sorted attributes
+    for attr in sorted_attributes:
+        # Retrieve the attribute or method from the object
+        attribute_or_method = getattr(obj, attr)
+
+        # Check if it is callable (method) or not (attribute)
+        if callable(attribute_or_method):
+            print(f"Method: {attr}")
+        else:
+            print(f"Attribute: {attr}")
+
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):
@@ -379,5 +418,4 @@ class DictionaryValidationError(Exception):
         if self.key is not None and self.value is not None:
             return f"{self.message} Key: '{self.key}', Value: {self.value}"
         return self.message
-
 

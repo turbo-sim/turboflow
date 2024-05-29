@@ -38,7 +38,28 @@ def set_plot_options(
     margin=0.05,
     color_order="matlab",
 ):
-    """Set plot options for publication-quality figures"""
+    """
+    Set options for creating publication-quality figures using Matplotlib.
+
+    This function updates the internal Matplotlib settings to better align with standards for publication-quality figures.
+    Features include improved font selections, tick marks, grid appearance, and color selections.
+
+    Parameters
+    ----------
+    fontsize : int, optional
+        Font size for text elements in the plot. Default is 13.
+    grid : bool, optional
+        Whether to show grid lines on the plot. Default is True.
+    major_ticks : bool, optional
+        Whether to show major ticks. Default is True.
+    minor_ticks : bool, optional
+        Whether to show minor ticks. Default is True.
+    margin : float, optional
+        Margin size for axes. Default is 0.05.
+    color_order : str, optional
+        Color order to be used for plot lines. Options include "python" and "matlab". Default is "matlab".
+
+    """
 
     if isinstance(color_order, str):
         if color_order.lower() == "default":
@@ -139,14 +160,16 @@ def print_rc_parameters(filename=None):
         print(f"{key}: {value}")
 
     if filename:
-        with open(filename, 'w') as file:
+        with open(filename, "w") as file:
             for key, value in params.items():
                 file.write(f"{key}: {value}\n")
 
 
-def savefig_in_formats(fig, path_without_extension, formats=['.png', '.svg', '.pdf']):
+def savefig_in_formats(
+    fig, path_without_extension, formats=[".png", ".svg"], dpi=500
+):
     """
-    Save a given matplotlib figure in multiple file formats.
+    Save a given Matplotlib figure in multiple file formats.
 
     Parameters
     ----------
@@ -155,8 +178,12 @@ def savefig_in_formats(fig, path_without_extension, formats=['.png', '.svg', '.p
     path_without_extension : str
         The full path to save the figure excluding the file extension.
     formats : list of str, optional
-        A list of string file extensions to specify which formats the figure should be saved in. 
-        Default is ['.png', '.svg', '.pdf'].
+        A list of string file extensions to specify which formats the figure should be saved in.
+        Supported formats are ['.png', '.svg', '.pdf', '.eps'].
+        Default is ['.png', '.svg'].
+    dpi : int, optional
+        The resolution in dots per inch with which to save the image. This parameter affects only PNG files.
+        Default is 500.
 
     Examples
     --------
@@ -167,39 +194,20 @@ def savefig_in_formats(fig, path_without_extension, formats=['.png', '.svg', '.p
 
     This will save the figure as "filename.png", "filename.svg", and "filename.pdf" in the "/path/to/figure/" directory.
     """
+
+    # Validate export formats
+    allowed_formats = {".png", ".svg", ".pdf", ".eps"}
+    invalid_formats = set(formats) - allowed_formats
+    if invalid_formats:
+        raise ValueError(f"Unsupported file formats: {', '.join(invalid_formats)}. Allowed formats: {', '.join(allowed_formats)}")
+
     for ext in formats:
-        fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
-
-
-def _create_sample_plot():
-    # Create figure
-    fig = plt.figure(figsize=(6.4, 4.8))
-    ax = fig.gca()
-    ax.set_title(r"$f(x) = \cos(2\pi x + \phi)$")
-    ax.set_xlabel("$x$ axis")
-    ax.set_ylabel("$y$ axis")
-    ax.set_xscale("linear")
-    ax.set_yscale("linear")
-    ax.set_xlim([0, 1])
-    ax.set_ylim([-1.15, 1.15])
-    # ax.set_xticks([])
-    # ax.set_yticks([])
-
-    # Plot the function
-    x = np.linspace(0, 1, 200)
-    phi_array = np.arange(0, 1, 0.2) * np.pi
-    for phi in phi_array:
-        ax.plot(x, np.cos(2 * np.pi * x + phi), label=f"$\phi={phi/np.pi:0.2f}\pi$")
-
-    # Create legend
-    ax.legend(loc="lower right", ncol=1)
-
-    # Adjust PAD
-    fig.tight_layout(pad=1.00, w_pad=None, h_pad=None)
-
-    # Display figure
-    plt.show()
-
+        if ext == ".png":
+            # Save PNG files with specified DPI
+            fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight", dpi=dpi)
+        else:
+            # Save in vector formats without DPI setting
+            fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
 
 
 def create_gif(image_folder, output_file, duration=0.5):
@@ -217,7 +225,7 @@ def create_gif(image_folder, output_file, duration=0.5):
     """
     images = []
     for filename in sorted(os.listdir(image_folder)):
-        if filename.endswith('.png'):
+        if filename.endswith(".png"):
             file_path = os.path.join(image_folder, filename)
             images.append(imageio.imread(file_path))
 
@@ -239,9 +247,7 @@ def create_mp4(image_folder, output_file, fps=10):
     """
     with imageio.get_writer(output_file, fps=fps) as writer:
         for filename in sorted(os.listdir(image_folder)):
-            if filename.endswith('.png'):
+            if filename.endswith(".png"):
                 file_path = os.path.join(image_folder, filename)
                 image = imageio.imread(file_path)
                 writer.append_data(image)
-
-

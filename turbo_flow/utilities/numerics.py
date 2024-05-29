@@ -196,7 +196,37 @@ def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return single_row_df
 
-if __name__ == "__main__":
 
+def check_lists_match(list1, list2):
+    """
+    Check if two lists contain the exact same elements, regardless of their order.
 
-    print(fill_array_with_increment(3))
+    Parameters
+    ----------
+    list1 : list
+        The first list for comparison.
+    list2 : list
+        The second list for comparison.
+
+    Returns
+    -------
+    bool
+        Returns True if the lists contain the exact same elements, regardless of their order.
+        Returns False otherwise.
+
+    Examples
+    --------
+    >>> check_lists_match([1, 2, 3], [3, 2, 1])
+    True
+
+    >>> check_lists_match([1, 2, 3], [4, 5, 6])
+    False
+
+    """
+    # Convert the lists to sets to ignore order
+    list1_set = set(list1)
+    list2_set = set(list2)
+
+    # Check if the sets are equal (contain the same elements)
+    return list1_set == list2_set
+

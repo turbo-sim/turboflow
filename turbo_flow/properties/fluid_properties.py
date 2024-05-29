@@ -163,9 +163,9 @@ class FluidState:
     def __init__(self, fluid):
         # Use an internal dictionary to store properties
         self._properties = fluid.properties
-        # self._properties["fluid_name"] = fluid.name
-        # self._properties["converged"] = fluid.converged_flag
-        # self._properties["identifier"] = fluid.identifier
+        self._properties["fluid_name"] = fluid.name
+        self._properties["converged"] = fluid.converged_flag
+        self._properties["identifier"] = fluid.identifier
 
     def __getattr__(self, name):
         # This method is called when an attribute is accessed
@@ -296,6 +296,12 @@ class Fluid:
             self.critical_point = self._compute_critical_point()
             self.triple_point_liquid = self._compute_triple_point_liquid()
             self.triple_point_vapor = self._compute_triple_point_vapor()
+
+        # Pressure and temperature limits
+        self.p_min = 1
+        self.p_max = self._AS.pmax()
+        self.T_min = self._AS.Tmin()
+        self.T_max = self._AS.Tmax()
 
     def __getattr__(self, name):
         if name in self.properties:
@@ -722,7 +728,7 @@ class Fluid:
         # Check if the line exists for this axes
         if line_name in self.graphic_elements[axes]:
             line = self.graphic_elements[axes][line_name]
-            line.set_data(x_data, y_data)
+            line.set_data(np.atleast_1d(x_data), np.atleast_1d(y_data))
             # Update line properties
             for param, value in plot_params.items():
                 setattr(line, param, value)

@@ -236,3 +236,120 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
 
 
 
+
+
+# def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
+#     """
+#     Calculate subsonic relative exit flow angle based on the selected deviation model.
+
+#     Available deviation models:
+
+#     - "aungier": Calculate deviation using the method proposed by :cite:`aungier_turbine_2006`.
+#     - "ainley_mathieson": Calculate deviation using the model proposed by :cite:`ainley_method_1951`.
+#     - "metal_angle": Assume the exit flow angle is given by the gauge angle (zero deviation).
+
+#     Parameters
+#     ----------
+#     deviation_model : str
+#         The deviation model to use (e.g., 'aungier', 'ainley_mathieson', 'zero_deviation').
+#     Ma_exit : float or numpy.array
+#         The exit Mach number.
+#     Ma_crit : float
+#         The critical Mach number (possibly lower than one).
+#     opening_to_pitch : float
+#         The ratio of cascade opening to pitch.
+
+#     Returns
+#     -------
+#     float
+#         The relative exit flow angle including deviation in degrees (subsonic flow only).
+
+#     Raises
+#     ------
+#     ValueError
+#         If an invalid deviation model is provided.
+#     """
+
+
+#     # Function mappings for each deviation model
+#     deviation_model_functions = {
+#         DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
+#         DEVIATION_MODELS[1]: get_exit_flow_angle_ainley_mathieson,
+#         DEVIATION_MODELS[2]: get_exit_flow_angle_zero_deviation,
+#     }
+
+#     # Evaluate deviation model
+#     if model in deviation_model_functions:
+#         Ma_exit = np.float64(Ma_exit)
+#         beta, delta = deviation_model_functions[model](Ma_exit, Ma_crit_throat, geometry)
+#         return beta
+#     else:
+#         options = ", ".join(f"'{k}'" for k in deviation_model_functions)
+#         raise ValueError(
+#             f"Invalid deviation model: '{model}'. Available options: {options}"
+#         )
+    
+
+# def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
+#     """
+#     Calculate deviation angle using the method proposed by :cite:`aungier_turbine_2006`.
+#     """
+
+#     def _get_aungier_interpolant(x):
+#         x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+#         p = 1 - 10 * x**3 + 15 * x**4 - 6 * x**5  # Compute polynomial
+#         p = np.where(x < 0, 1, p)  # Trim to 1 where x < 0
+#         p = np.where(x > 1, 0, p)  # Trim to 0 where x > 1
+#         return p
+
+#     # TODO add equations of Aungier model to docstring
+#     gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
+
+#     # Compute deviation for Ma<0.5 (low-speed)
+#     Ma_0 = 0.5
+#     beta_g = 90-abs(gauging_angle)
+#     delta_0 = math.arcsind(math.cosd(gauging_angle) * (1 + (1 - math.cosd(gauging_angle)) * (beta_g / 90) ** 2)) - beta_g
+
+#     # Compute deviation
+#     X = (Ma_exit - Ma_0) / (Ma_crit - Ma_0)
+#     delta = delta_0 * _get_aungier_interpolant(X)
+
+#     # Compute flow angle from deviation
+#     beta = abs(gauging_angle) - delta
+
+#     return beta, delta
+
+
+# def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
+#     """
+#     Calculate deviation angle using the model proposed by :cite:`ainley_method_1951`.
+#     Equation digitized from Figure 5 of :cite:`ainley_method_1951`.
+#     """
+
+#     def _get_ainley_mathieson_interpolant(x):
+#         x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+#         p = 1 - x  # Compute polynomial
+#         p = np.where(x < 0, 1, p)  # Trim to 1 where x < 0
+#         p = np.where(x > 1, 0, p)  # Trim to 0 where x > 1
+#         return p
+
+#     # TODO add equations of Ainley-Mathieson to docstring
+#     # TODO Add warning that AM method is inaccurate if gauge_angle>70 and does not make sense if gauge_angle>72
+#     gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
+        
+#     # Compute deviation for Ma < Ma_0 (low-speed)
+#     Ma_0 = 0.5
+#     delta_0 = abs(gauging_angle) - (35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0))
+
+#     # Compute deviation
+#     X = (Ma_exit - Ma_0) / (Ma_crit - Ma_0)
+#     delta = delta_0 * _get_ainley_mathieson_interpolant(X)
+
+#     # Compute flow angle from deviation
+#     beta = abs(gauging_angle) - delta
+    
+#     return beta, delta
+
+
+
+

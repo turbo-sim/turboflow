@@ -326,3 +326,117 @@ def all_numeric(array):
 def all_non_negative(array):
     "Check if all items in Numpy array are non-negative"
     return np.all(array >= 0)
+
+
+def sigmoid_hyperbolic(x, x0=0.5, alpha=1):
+    """
+    Compute the sigmoid hyperbolic function.
+
+    This function calculates a sigmoid function based on the hyperbolic tangent.
+    The formula is given by:
+
+    .. math::
+        \sigma(x) = \frac{1 + \tanh\left(\frac{x - x_0}{\alpha}\right)}{2}
+
+    Parameters
+    ----------
+    x : array_like
+        Input data.
+    x0 : float, optional
+        Center of the sigmoid function. Default is 0.5.
+    alpha : float, optional
+        Scale parameter. Default is 0.1.
+
+    Returns
+    -------
+    array_like
+        Output of the sigmoid hyperbolic function.
+
+    """
+    x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+    sigma = (1 + np.tanh((x-x0)/alpha))/2
+    return sigma
+
+
+def sigmoid_rational(x, n, m):
+    """
+    Compute the sigmoid rational function.
+
+    This function calculates a sigmoid function using an algebraic approach based on a rational function.
+    The formula is given by:
+
+    .. math::
+        \sigma(x) = \frac{x^n}{x^n + (1-x)^m}
+
+    Parameters
+    ----------
+    x : array_like
+        Input data.
+    n : int
+        Power of the numerator.
+    m : int
+        Power of the denominator.
+
+    Returns
+    -------
+    array_like
+        Output of the sigmoid algebraic function.
+
+    """
+    x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+    x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
+    x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
+    sigma = x ** n / (x ** n + (1 - x) ** m)
+    return sigma
+
+
+def sigmoid_smoothstep(x):
+    """
+    Compute the smooth step function.
+
+    This function calculates a smooth step function with zero first-order 
+    derivatives at the endpoints. More information available at:
+    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/ 
+
+    Parameters
+    ----------
+    x : array_like
+        Input data.
+
+    Returns
+    -------
+    array_like
+        Output of the sigmoid smoothstep function.
+
+    """
+    x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+    x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
+    x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
+    return x ** 2 * (3 - 2 * x)
+
+
+def sigmoid_smootherstep(x):
+    """
+    Compute the smoother step function.
+
+    This function calculates a smoother step function with zero second-order 
+    derivatives at the endpoints. It is a modification of the smoothstep 
+    function to provide smoother transitions.
+
+    Parameters
+    ----------
+    x : array_like
+        Input data.
+
+    Returns
+    -------
+    array_like
+        Output of the sigmoid smootherstep function.
+
+    """
+    x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+    x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
+    x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
+    return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3
+
+
