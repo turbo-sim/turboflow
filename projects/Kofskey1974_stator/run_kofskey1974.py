@@ -11,7 +11,7 @@ import copy
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import turbo_flow as tf
+import turboflow as tf
 
 # Define running option
 CASE = 1

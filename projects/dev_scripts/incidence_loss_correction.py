@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import turbo_flow.meanline as tf
+import turboflow as tf
 
 if __name__ == "__main__":
     # Define the distance parameter

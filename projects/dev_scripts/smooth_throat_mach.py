@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import turbo_flow as tf
+import turboflow as tf
 
 if __name__ == "__main__":
 

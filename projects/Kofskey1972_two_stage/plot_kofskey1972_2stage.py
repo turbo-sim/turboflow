@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import turbo_flow as tf
+import turboflow as tf
 import matplotlib.patches as patches
 
 

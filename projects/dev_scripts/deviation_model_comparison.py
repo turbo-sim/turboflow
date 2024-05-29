@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import turbo_flow as tf
+import turboflow as tf
 
 # Define case parameters
 Ma_crit = 1

@@ -3,7 +3,7 @@ import os
 import sys
 
 # Define package name for re-usability
-package_name = "meanline_axial"
+package_name = "turboflow"
 
 # Define bash command to append cwd to PYTHONPATH
 PACKAGE_PATH = os.getcwd()

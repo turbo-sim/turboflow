@@ -5,7 +5,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
-import turbo_flow as tf
+import turboflow as tf
 
 
 # Define regression settings

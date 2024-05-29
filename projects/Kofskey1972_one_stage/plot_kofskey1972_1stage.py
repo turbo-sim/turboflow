@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import turbo_flow as tf
+import turboflow as tf
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 
