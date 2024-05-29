@@ -12,7 +12,8 @@ CONFIG_FILE = "case_sCO2_recuperated.yaml"
 # CONFIG_FILE = "case_sCO2_recompression.yaml"
 
 # Initialize Brayton cycle problem
-# config = ml.utilities.read_configuration_file(CONFIG_FILE)
+# config = tf.utilities.read_configuration_file(CONFIG_FILE)
+config = tf.load_config(CONFIG_FILE)
 
 
 config = tf.read_configuration_file(CONFIG_FILE)
