@@ -72,7 +72,9 @@ def get_os_type():
     else:
         return 'unknown'
     
+# Get OS type
 os_type = get_os_type()
+
     
 if new_regression_PA:
     for config in config_files_performance_analysis:
