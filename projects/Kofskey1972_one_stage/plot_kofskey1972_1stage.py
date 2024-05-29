@@ -14,7 +14,7 @@ import turboflow as tf
 RESULTS_PATH = "output"
 CONFIG_FILE = "kofskey1972_1stage.yaml"
 
-cascades_data = tf.read_configuration_file(CONFIG_FILE)
+cascades_data = tf.load_config(CONFIG_FILE, print_summary = False)
 
 if isinstance(cascades_data["operation_points"], list):
     design_point = cascades_data["operation_points"][0]
@@ -24,6 +24,7 @@ else:
 Case = "pressure_line"  # performance_map/error_plot
 # Get the name of the latest results file
 filename = tf.utils.find_latest_results_file(RESULTS_PATH)
+print(filename)
 # filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
 # filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
@@ -128,8 +129,8 @@ if Case == "pressure_line":
         save_figs=save_figs,
     )
 
-    title = "Rotor relative flow angles"
-    filename = title.lower().replace(" ", "_") + "_" + timestamp
+    title = "Stator relative flow angles"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -143,6 +144,22 @@ if Case == "pressure_line":
         save_figs=save_figs,
     )
 
+    title = "Rotor relative flow angles"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["beta_4"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Flow angle [deg]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+        
+        
     # Group up the losses
     # df = data["cascade"]
     # losses = [col for col in df.columns if col.startswith("efficiency_drop_")]
