@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt    
+import matplotlib.pyplot as plt
 import turboflow as tf
 
 # TODO
@@ -24,14 +24,12 @@ import turboflow as tf
 # # Would this approach help me make parameter sweeps more, easily, or it does not really matter?
 
 
-
 # Define configuration filename
 # CONFIG_FILE = "case_water.yaml"
 # CONFIG_FILE = "case_butane.yaml"
 # CONFIG_FILE = "case_toluene.yaml"
 # CONFIG_FILE = "case_sCO2_recuperated.yaml"
 CONFIG_FILE = "case_sCO2_recompression.yaml"
-
 
 
 # Usage example
@@ -47,8 +45,6 @@ optimizer.run_optimization()
 optimizer.save_results()
 # optimizer.generate_output_files()
 # optimizer.create_animation()
-
-
 
 
 # # Initialize Brayton cycle problem
@@ -92,6 +88,3 @@ optimizer.save_results()
 
 # # # Keep figures open
 # # plt.show()
-
-
-

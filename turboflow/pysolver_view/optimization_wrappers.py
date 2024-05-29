@@ -3,12 +3,13 @@ import numpy as np
 from scipy.optimize import minimize
 
 # Attempt to import pygmo and pygmo_plugins_nonfree
-try:     
-    import pygmo as pg     
-    import pygmo_plugins_nonfree as ppnf     
+try:
+    import pygmo as pg
+    import pygmo_plugins_nonfree as ppnf
+
     PYGMO_AVAILABLE = True
 
-except ImportError:     
+except ImportError:
     PYGMO_AVAILABLE = False
 
 SCIPY_SOLVERS = [
@@ -179,7 +180,7 @@ def minimize_pygmo(problem, x0, method, options):
             "   2. Install 'pygmo' and 'pygmo_plugins_nonfree' by running the following command:\n\n"
             "           conda install --channel conda-forge pygmo pygmo_plugins_nonfree\n"
         )
-    
+
     if method == "snopt":
         return _minimize_pygmo_snopt(problem, x0, options)
     elif method == "ipopt":
@@ -296,8 +297,11 @@ def _minimize_pygmo_snopt(problem, x0, options):
     # Optimization output
 
     message = _extract_snopt_message(algorithm.get_extra_info())
-    success = True if message == "Finished successfully - optimality conditions satisfied" else False
-
+    success = (
+        True
+        if message == "Finished successfully - optimality conditions satisfied"
+        else False
+    )
 
     return success, message
 

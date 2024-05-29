@@ -23,46 +23,50 @@ Available solvers for performance analysis.
 
 
 def get_heuristic_guess_input(n):
-   
-   r"""
-   
-   Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
+    r"""
 
-   Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
-   an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
-   
-   The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
-   or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
+    Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
 
-   Parameters
-    ----------
-    n : int
-        Number of cascades.
+    Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
+    an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
 
-    Returns
-    -------
-    list
-        List of sets of variables used to generate an initial guess.
+    The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
+    or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
 
-   """
-    
-   eta_ts_vec = [0.8, 0.7, 0.6]
-    
-   array = utils.fill_array_with_increment(n)
-   enthalpy_distributions = []
-   enthalpy_distributions.append(np.ones(n)*1/n)
-   enthalpy_distributions.append(array)    
-   enthalpy_distributions.append(np.flip(array))
-    
-   initial_guesses  = []
-   for eta_ts in eta_ts_vec:
-       for enthalpy_distribution in enthalpy_distributions:            
-           initial_guesses.append({"enthalpy_loss_fractions" : enthalpy_distribution,
-                                    "eta_ts" : eta_ts,
-                                    "eta_tt" : eta_ts+0.1,
-                                    "Ma_crit" : 0.95})
-           
-   return initial_guesses   
+    Parameters
+     ----------
+     n : int
+         Number of cascades.
+
+     Returns
+     -------
+     list
+         List of sets of variables used to generate an initial guess.
+
+    """
+
+    eta_ts_vec = [0.8, 0.7, 0.6]
+
+    array = utils.fill_array_with_increment(n)
+    enthalpy_distributions = []
+    enthalpy_distributions.append(np.ones(n) * 1 / n)
+    enthalpy_distributions.append(array)
+    enthalpy_distributions.append(np.flip(array))
+
+    initial_guesses = []
+    for eta_ts in eta_ts_vec:
+        for enthalpy_distribution in enthalpy_distributions:
+            initial_guesses.append(
+                {
+                    "enthalpy_loss_fractions": enthalpy_distribution,
+                    "eta_ts": eta_ts,
+                    "eta_tt": eta_ts + 0.1,
+                    "Ma_crit": 0.95,
+                }
+            )
+
+    return initial_guesses
+
 
 def compute_performance(
     operation_points,
@@ -96,16 +100,16 @@ def compute_performance(
         - `eta_tt`, which is the assumed total-to-total efficiency.
         - `Ma_crit`, which is the assumed critical mash number.
 
-    It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This 
-    require care as the user must have a complete knowledge of the different variables, and setup, of the initial guess that must be given that 
-    corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value. 
+    It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This
+    require care as the user must have a complete knowledge of the different variables, and setup, of the initial guess that must be given that
+    corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value.
     For subsequent operation points, the function employs a strategy to use the closest previously computed operation point's solution
     as the initial guess. This approach is based on the heuristic that similar operation points have similar
     performance characteristics, which can improve convergence speed and robustness of the solution process.
     If the solution fails to converge, a set of initial guesses is provided to try other guesses (see `get_heuristic_guess_input`).
 
-    The function returns a list of solver object for each operation point. This contain information on both solver related performance (see psv.NonlinearSystemSolver) 
-    and the object of the performance analysis problem (see CascadesNonlinearSystemProblem). 
+    The function returns a list of solver object for each operation point. This contain information on both solver related performance (see psv.NonlinearSystemSolver)
+    and the object of the performance analysis problem (see CascadesNonlinearSystemProblem).
 
     Parameters
     ----------
@@ -123,7 +127,7 @@ def compute_performance(
     stop_on_failure: bool, optional
         If true, the analysis stops if the solution fails to converge for an operating point.
     export_result : bool, optional
-        If true, the result is exported to an excel file. 
+        If true, the result is exported to an excel file.
 
     Returns
     -------
@@ -298,7 +302,7 @@ def compute_single_operation_point(
             - `eta_tt`, which is the assumed total-to-total efficiency.
             - `Ma_crit`, which is the assumed critical mash number.
 
-        - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration. 
+        - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.
 
     Parameters
     ----------
@@ -324,31 +328,37 @@ def compute_single_operation_point(
     problem.update_boundary_conditions(operating_point)
     solver_options = copy.deepcopy(config["performance_analysis"]["solver_options"])
 
-    initial_guesses = [initial_guess] + get_heuristic_guess_input(problem.geometry["number_of_cascades"])
-    methods_to_try = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
+    initial_guesses = [initial_guess] + get_heuristic_guess_input(
+        problem.geometry["number_of_cascades"]
+    )
+    methods_to_try = [solver_options["method"]] + [
+        method for method in SOLVER_MAP.keys() if method != solver_options["method"]
+    ]
 
     for initial_guess in initial_guesses:
         for method in methods_to_try:
             success = False
-            x0 = problem.get_initial_guess(initial_guess)  # TODO: Roberto_17.05.2023: It seems we are not using this value. Why take it as output then?
-            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method") 
+            x0 = problem.get_initial_guess(
+                initial_guess
+            )  # TODO: Roberto_17.05.2023: It seems we are not using this value. Why take it as output then?
+            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
             solver_options["method"] = method
 
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
             # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
             # TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?
-            try: 
-                solver.solve(problem.x0)                
-                
+            try:
+                solver.solve(problem.x0)
+
             except Exception as e:
                 print(f" Error during solving: {e}")
                 solver.success = False
-                    
+
             if solver.success:
                 break
         if solver.success:
             break
-    
+
     if not solver.success:
         print(" WARNING: All attempts failed to converge")
         # TODO: Add messages to Log file
@@ -526,7 +536,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     vars_scaled
         A dicionary of scaled variables used to evaluate turbine performance.
     vars_real
-        A dicionary of real variables used to evaluate turbine performance. 
+        A dicionary of real variables used to evaluate turbine performance.
 
     Methods
     -------
@@ -613,7 +623,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         """
         Update the boundary conditions of the problem with the provided operation point.
 
-        This method updates the boundary conditions attributes used to evaluate the turbine performance. 
+        This method updates the boundary conditions attributes used to evaluate the turbine performance.
         It also initializes a Fluid object using the 'fluid_name' specified in the operation point.
         The method computes additional properties and reference values like stagnation properties at
         the inlet, exit static properties, spouting velocity, and reference mass flow rate.
@@ -732,7 +742,6 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         return scaled_variables
 
     def get_initial_guess(self, initial_guess=None):
-
         """
         Determine the initial guess for the performance analysis based on the given parameters or default values.
 
@@ -745,11 +754,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 - `eta_ts`, which is the assumed total-to-static efficiency.
                 - `eta_tt`, which is the assumed total-to-total efficiency.
                 - `Ma_crit`, which is the assumed critical mash number.
-                
-            - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration. 
 
-        The initial guess is scaled in this function. 
-            
+            - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.
+
+        The initial guess is scaled in this function.
+
         Parameters
         ----------
         initial_guess : dict, optional
@@ -780,16 +789,30 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 "w*_throat",
                 "s*_throat",
             ]
-            valid_keys_2 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_2]
-            valid_keys_3 = [key for key in valid_keys_2 if not key.startswith("v*_in")] + [f"beta*_throat_{i+1}" for i in range(number_of_cascades)]
-            valid_keys_4 = [key for key in valid_keys_2 if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))]
+            valid_keys_2 = ["v_in"] + [
+                f"{key}_{i+1}"
+                for i in range(number_of_cascades)
+                for key in valid_keys_2
+            ]
+            valid_keys_3 = [
+                key for key in valid_keys_2 if not key.startswith("v*_in")
+            ] + [f"beta*_throat_{i+1}" for i in range(number_of_cascades)]
+            valid_keys_4 = [
+                key
+                for key in valid_keys_2
+                if not (
+                    key.startswith("v*_in")
+                    or key.startswith("s*_throat")
+                    or key.startswith("beta*_throat")
+                )
+            ]
 
             check = []
             check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
             check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
             check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
             check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
-            
+
             if check[0]:
                 enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
                 eta_tt = initial_guess["eta_tt"]
@@ -830,31 +853,43 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
             elif check[1]:
                 # Check that set of input correspond with model option
-                if not self.model_options["choking_model"] == "evaluate_cascade_critical":
-                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_critical)")
+                if (
+                    not self.model_options["choking_model"]
+                    == "evaluate_cascade_critical"
+                ):
+                    raise ValueError(
+                        "Set of input corresponds with different choking_model (evaluate_cascade_critical)"
+                    )
 
                 # Check that all values are a number
                 if not all(
                     isinstance(val, (int, float)) for val in initial_guess.values()
                 ):
                     raise ValueError("All dictionary values must be a float or int")
-                
+
             elif check[2]:
                 # Check that set of input correspond with model option
                 if not self.model_options["choking_model"] == "evaluate_cascade_throat":
-                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_throat)")
-                
+                    raise ValueError(
+                        "Set of input corresponds with different choking_model (evaluate_cascade_throat)"
+                    )
+
                 # Check that all values are a number
                 if not all(
                     isinstance(val, (int, float)) for val in initial_guess.values()
                 ):
                     raise ValueError("All dictionary values must be a float or int")
-                
+
             elif check[3]:
                 # Check that set of input correspond with model option
-                if not self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
-                    raise ValueError("Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)")
-                
+                if (
+                    not self.model_options["choking_model"]
+                    == "evaluate_cascade_isentropic_throat"
+                ):
+                    raise ValueError(
+                        "Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)"
+                    )
+
                 # Check that all values are a number
                 if not all(
                     isinstance(val, (int, float)) for val in initial_guess.values()
@@ -885,13 +920,31 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         else:
             raise ValueError("Initial guess must be either None or a dictionary.")
-        
+
         if self.model_options["choking_model"] == "evaluate_cascade_throat":
-            initial_guess = {key : val for key, val in initial_guess.items() if not key.startswith("v*_in")}
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not key.startswith("v*_in")
+            }
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
-            initial_guess = {key : val for key, val in initial_guess.items() if not key.startswith("beta*_throat")}
-        elif self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat":
-            initial_guess = {key : val for key, val in initial_guess.items() if not (key.startswith("v*_in") or key.startswith("s*_throat") or key.startswith("beta*_throat"))}
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not key.startswith("beta*_throat")
+            }
+        elif (
+            self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
+        ):
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not (
+                    key.startswith("v*_in")
+                    or key.startswith("s*_throat")
+                    or key.startswith("beta*_throat")
+                )
+            }
 
         # Always normalize initial guess
         initial_guess_scaled = self.scale_values(initial_guess)
@@ -905,12 +958,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     def compute_heuristic_initial_guess(
         self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
     ):
-        
         """
         Compute the heuristic initial guess for the performance analysis based on the given parameters.
 
         This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,
-        total-to-static and total-to-total efficiencies, and critical Mach number. 
+        total-to-static and total-to-total efficiencies, and critical Mach number.
 
         Parameters
         ----------
@@ -929,7 +981,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             Heuristic initial guess for the performance analysis.
 
         """
-        
+
         # Load object attributes
         geometry = self.geometry
         boundary_conditions = self.boundary_conditions
@@ -1057,20 +1109,25 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
             # Calculate critical state
             w_throat_crit = a_out * Ma_crit
-            h_throat_crit = h0_rel_in - 0.5 * w_throat_crit**2 # FIXME: h0_rel_in works less good?
+            h_throat_crit = (
+                h0_rel_in - 0.5 * w_throat_crit**2
+            )  # FIXME: h0_rel_in works less good?
             static_state_throat_crit = fluid.get_props(
                 cp.HmassSmass_INPUTS, h_throat_crit, s_throat
             )
             rho_throat_crit = static_state_throat_crit["d"]
             m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_throat
             w_m_in_crit = m_crit / rho_in / A_in
-            w_in_crit = w_m_in_crit / math.cosd(theta_in)  # XXX Works better with metal angle than inlet flow angle?
+            w_in_crit = w_m_in_crit / math.cosd(
+                theta_in
+            )  # XXX Works better with metal angle than inlet flow angle?
             velocity_triangle_crit_in = flow.evaluate_velocity_triangle_out(
-                blade_speed_in, w_in_crit, theta_in)
+                blade_speed_in, w_in_crit, theta_in
+            )
             v_in_crit = velocity_triangle_crit_in["v"]
-            
+
             rho_out_crit = rho_throat_crit
-            w_out_crit = m_crit/(rho_out_crit*A_out*math.cosd(theta_out))
+            w_out_crit = m_crit / (rho_out_crit * A_out * math.cosd(theta_out))
 
             # Store initial guess
             index = f"_{i+1}"
@@ -1078,9 +1135,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 {
                     "w_out" + index: w_out,
                     "s_out" + index: s_out,
-                    "beta_out" + index: np.sign(theta_out)*math.arccosd(A_throat/A_out),
+                    "beta_out"
+                    + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
                     "v*_in" + index: v_in_crit,
-                    "beta*_throat" + index : np.sign(theta_out)*math.arccosd(A_throat/A_out),
+                    "beta*_throat"
+                    + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
                     "w*_throat" + index: w_throat_crit,
                     "s*_throat" + index: s_throat,
                 }
@@ -1180,7 +1239,6 @@ def print_simulation_summary(solvers):
         print(line)
 
 
-
 def print_boundary_conditions(BC):
     """
     Print the boundary conditions.
@@ -1198,7 +1256,7 @@ def print_boundary_conditions(BC):
     Parameters
     ----------
     BC : dict
-        A dictionary containing the boundary conditions.    
+        A dictionary containing the boundary conditions.
 
     """
 

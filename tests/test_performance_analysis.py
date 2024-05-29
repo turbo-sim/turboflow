@@ -11,7 +11,7 @@ import turboflow as tf
 # Define regression settings
 TEST_FOLDER = "tests"
 DATA_DIR = os.path.join(TEST_FOLDER, "regression_data")
-CONFIG_DIR = os.path.join(TEST_FOLDER,"config_files")
+CONFIG_DIR = os.path.join(TEST_FOLDER, "config_files")
 CONFIG_FILES = [
     "performance_analysis_evaluate_cascade_throat.yaml",
     "performance_analysis_evaluate_cascade_critical.yaml",
@@ -23,7 +23,7 @@ CONFIG_FILES = [
 ]
 
 # Define test settings
-DIGIT_TOLERANCE = 10  
+DIGIT_TOLERANCE = 10
 
 
 # Helper function to check values
@@ -43,7 +43,7 @@ def check_values(old_values, new_values, column, config_name, discrepancies):
     config_name : str
         The name of the configuration file.
     discrepancies : list
-        A list to record discrepancies found during comparison.    
+        A list to record discrepancies found during comparison.
     """
     for i, (saved, current) in enumerate(zip(old_values, new_values)):
         if isinstance(saved, str) and saved != current:
@@ -83,17 +83,19 @@ def compute_performance_from_config(request):
     print()
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
-    config = tf.load_config(config_path, )
+    config = tf.load_config(
+        config_path,
+    )
     operation_points = config["performance_analysis"]["performance_map"]
-    solvers = tf.compute_performance(operation_points, config, export_results = False)
-    return solvers, config_file 
+    solvers = tf.compute_performance(operation_points, config, export_results=False)
+    return solvers, config_file
 
 
 # Test solver convergence using fixture
 def test_performance_analysis(compute_performance_from_config):
     """
     Test performance analysis functionality. The function compares the calculated values against saved data on convergence
-    and overall performance. 
+    and overall performance.
 
     Parameters
     ----------
@@ -104,7 +106,7 @@ def test_performance_analysis(compute_performance_from_config):
     -------
     Asserts that there are no discrepancies between saved convergence data and computed data.
     """
-    
+
     # Get the solvers list and configuration filename
     solvers, config_file = compute_performance_from_config
     config_name, _ = os.path.splitext(config_file)
@@ -117,12 +119,16 @@ def test_performance_analysis(compute_performance_from_config):
     mismatch = []  # List to store discrepancies
     for key in solvers[0].convergence_history.keys():
         value_old = saved_df["solver"][key].to_numpy()
-        value_new = np.array([solvers[i].convergence_history[key][-1] for i in range(len(solvers))])
+        value_new = np.array(
+            [solvers[i].convergence_history[key][-1] for i in range(len(solvers))]
+        )
         check_values(value_old, value_new, key, config_name, mismatch)
 
     for key in solvers[0].problem.results["overall"].keys():
         value_old = saved_df["overall"][key].to_numpy()
-        value_new = np.array([solvers[i].problem.results["overall"][key][0] for i in range(len(solvers))])
+        value_new = np.array(
+            [solvers[i].problem.results["overall"][key][0] for i in range(len(solvers))]
+        )
         check_values(value_old, value_new, key, config_name, mismatch)
 
     # Assert no discrepancies
@@ -147,7 +153,13 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
         filename = f"{base_filename}_{timestamp}"
 
     operation_points = config["performance_map"]
-    solvers = tf.compute_performance(operation_points, config, out_dir = outdir, out_filename= filename, export_results = True)
+    solvers = tf.compute_performance(
+        operation_points,
+        config,
+        out_dir=outdir,
+        out_filename=filename,
+        export_results=True,
+    )
 
     print(f"Regression data set saved: {filename}")
 
@@ -168,4 +180,3 @@ if __name__ == "__main__":
 
     # Running pytest from Python
     # pytest.main([__file__, "-vv"])
-

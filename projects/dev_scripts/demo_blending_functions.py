@@ -36,7 +36,7 @@ def sigmoid_hyperbolic(x, x0=0.5, alpha=1):
         Output of the sigmoid hyperbolic function.
 
     """
-    sigma = (1 + np.tanh((x-x0)/alpha))/2
+    sigma = (1 + np.tanh((x - x0) / alpha)) / 2
     return sigma
 
 
@@ -65,7 +65,7 @@ def sigmoid_rational(x, n, m):
         Output of the sigmoid algebraic function.
 
     """
-    sigma = x ** n / (x ** n + (1 - x) ** m)
+    sigma = x**n / (x**n + (1 - x) ** m)
     return sigma
 
 
@@ -73,9 +73,9 @@ def sigmoid_smoothstep(x):
     """
     Compute the smooth step function.
 
-    This function calculates a smooth step function with zero first-order 
+    This function calculates a smooth step function with zero first-order
     derivatives at the endpoints. More information available at:
-    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/ 
+    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/
 
     Parameters
     ----------
@@ -88,15 +88,15 @@ def sigmoid_smoothstep(x):
         Output of the sigmoid smoothstep function.
 
     """
-    return x ** 2 * (3 - 2 * x)
+    return x**2 * (3 - 2 * x)
 
 
 def sigmoid_smootherstep(x):
     """
     Compute the smoother step function.
 
-    This function calculates a smoother step function with zero second-order 
-    derivatives at the endpoints. It is a modification of the smoothstep 
+    This function calculates a smoother step function with zero second-order
+    derivatives at the endpoints. It is a modification of the smoothstep
     function to provide smoother transitions.
 
     Parameters
@@ -110,11 +110,7 @@ def sigmoid_smootherstep(x):
         Output of the sigmoid smootherstep function.
 
     """
-    return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3
-
-
-
-
+    return 6 * x**5 - 15 * x**4 + 10 * x**3
 
 
 # Define sampling vector
@@ -168,12 +164,19 @@ ax.set_xlabel(r"$x$ value")
 ax.set_ylabel(r"$y$ value")
 ax.set_xscale("linear")
 ax.set_yscale("linear")
-linestyles = ['-', '--', ':']
+linestyles = ["-", "--", ":"]
 colors = tf.utils.COLORS_MATLAB
 for i, n in enumerate([2, 3, 4]):
     for j, m in enumerate([2, 3, 4]):
         sigma = sigmoid_rational(x, n=n, m=m)
-        ax.plot(x, sigma, linewidth=1.25, label=rf"$n={n}, m={m}$", color=colors[i], linestyle=linestyles[j])
+        ax.plot(
+            x,
+            sigma,
+            linewidth=1.25,
+            label=rf"$n={n}, m={m}$",
+            color=colors[i],
+            linestyle=linestyles[j],
+        )
 
 # ax.plot(Ma_exit, beta_aungier, linewidth=1.25, label="Aungier")
 # ax.plot(Ma_exit, beta_metal, linewidth=1.25, label="Metal")

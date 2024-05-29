@@ -23,18 +23,19 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = 'performance_map' # performance_map/error_plot
+Case = "performance_map"  # performance_map/error_plot
 
 # Get the name of the latest results file
 # filename = ml.utils.find_latest_results_file(RESULTS_PATH)
 # filename = "output/performance_analysis_2024-03-14_01-27-29.xlsx" # experimental point
-filename = "output/performance_analysis_2024-03-14_00-30-26.xlsx" # perfromance map
+filename = "output/performance_analysis_2024-03-14_00-30-26.xlsx"  # perfromance map
 
 save_figs = False
 validation = True
 show_figures = True
 
-def highlight_design_point(ax, design_point, text_location, markersize = 6):
+
+def highlight_design_point(ax, design_point, text_location, markersize=6):
 
     # Rename variables
     x_des = design_point[0]
@@ -43,22 +44,45 @@ def highlight_design_point(ax, design_point, text_location, markersize = 6):
     y_text = text_location[1]
 
     # Plot point
-    ax.plot(x_des, y_des, linestyle = "none", marker = "^", color = "k", markerfacecolor='k', markersize = markersize)
+    ax.plot(
+        x_des,
+        y_des,
+        linestyle="none",
+        marker="^",
+        color="k",
+        markerfacecolor="k",
+        markersize=markersize,
+    )
 
     # Write text and draw arrow
     if y_des > y_text:
-        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
-                verticalalignment = 'top')
+        ax.text(
+            x_text,
+            y_text,
+            "Design point",
+            fontsize=13,
+            color="k",
+            horizontalalignment="center",
+            verticalalignment="top",
+        )
     else:
-        ax.text(x_text, y_text,  'Design point', fontsize=13, color='k', horizontalalignment='center',
-                verticalalignment = 'bottom')    
+        ax.text(
+            x_text,
+            y_text,
+            "Design point",
+            fontsize=13,
+            color="k",
+            horizontalalignment="center",
+            verticalalignment="bottom",
+        )
     # arrow1 = patches.FancyArrowPatch((x_text, y_text), (x_des, y_des), arrowstyle='-', mutation_scale=15, color='k')
     # ax.add_patch(arrow1)
-    ax.plot([x_text, x_des], [y_text, y_des], linestyle = ':', color = 'k')
+    ax.plot([x_text, x_des], [y_text, y_des], linestyle=":", color="k")
 
-    return 
+    return
 
-if Case == 'pressure_line':
+
+if Case == "pressure_line":
 
     # Load performance data
     timestamp = tf.utils.extract_timestamp(filename)
@@ -66,17 +90,17 @@ if Case == 'pressure_line':
 
     # Change data to be only design angular speed
     sheets = data.keys()
-    filtered_indices = data["overall"][data["overall"]['angular_speed'] == 1627].index
+    filtered_indices = data["overall"][data["overall"]["angular_speed"] == 1627].index
     for sheet in sheets:
         data[sheet] = data[sheet].loc[filtered_indices, :]
 
     # Define plot settings
     color_map = "Reds"
     outdir = "figures"
-    
+
     # Plot mass flow rate
     title = "Mass flow rate"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -85,7 +109,7 @@ if Case == 'pressure_line':
         ylabel="Mass flow rate [kg/s]",
         filename=filename,
         outdir=outdir,
-        color_map = color_map,
+        color_map=color_map,
     )
     # ax1.set_ylim([2.38, 2.46])
     # ax1.set_ylim([2.2, 2.3])
@@ -123,7 +147,7 @@ if Case == 'pressure_line':
 
     # Relative exit flow angles
     title = "Rotor exit relative flow angle"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -166,7 +190,7 @@ if Case == 'pressure_line':
     # )
 
     title = "Static pressure"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -177,10 +201,18 @@ if Case == 'pressure_line':
         outdir=outdir,
         color_map=color_map,
     )
-    ax1.legend(labels = ['$1^\mathrm{st}$ stator', '$1^\mathrm{st}$ rotor', '$2^\mathrm{nd}$ stator', '$2^\mathrm{nd}$ rotor'], ncols = 1)
-    ax1.set_xlim([2.1,5.9])
-    ax1.set_ylim([10000,90000])
-    
+    ax1.legend(
+        labels=[
+            "$1^\mathrm{st}$ stator",
+            "$1^\mathrm{st}$ rotor",
+            "$2^\mathrm{nd}$ stator",
+            "$2^\mathrm{nd}$ rotor",
+        ],
+        ncols=1,
+    )
+    ax1.set_xlim([2.1, 5.9])
+    ax1.set_ylim([10000, 90000])
+
     # Plot torque
     # title = "Torque"
     # filename = title.lower().replace(" ", "_") + '_' + timestamp
@@ -198,8 +230,8 @@ if Case == 'pressure_line':
 
     # Plot mach
     title = "Mach"
-    filename = title.lower().replace(" ", "_") + '_' + timestamp
-    linestyles = ['-', ':','--','-.']
+    filename = title.lower().replace(" ", "_") + "_" + timestamp
+    linestyles = ["-", ":", "--", "-."]
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -208,42 +240,53 @@ if Case == 'pressure_line':
         ylabel="Cascade exit relative mach number [-]",
         filename=filename,
         outdir=outdir,
-        linestyles = linestyles,
-        color_map='Reds',
+        linestyles=linestyles,
+        color_map="Reds",
     )
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
-        y_keys=["Ma_crit_throat_1", "Ma_crit_throat_2", "Ma_crit_throat_3", "Ma_crit_throat_4"],
+        y_keys=[
+            "Ma_crit_throat_1",
+            "Ma_crit_throat_2",
+            "Ma_crit_throat_3",
+            "Ma_crit_throat_4",
+        ],
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Cascade exit relative mach number [-]",
-        fig = fig1,
-        ax = ax1,
+        fig=fig1,
+        ax=ax1,
         filename=filename,
         outdir=outdir,
-        linestyles = linestyles,
-        color_map='Blues',
+        linestyles=linestyles,
+        color_map="Blues",
     )
 
-    labels = ['$1^\mathrm{st}$ stator actual', '$1^\mathrm{st}$ rotor actual', '$2^\mathrm{nd}$ stator actual', '$2^\mathrm{nd}$ rotor actual', 
-              '$1^\mathrm{st}$ stator critical', '$1^\mathrm{st}$ rotor critical', '$2^\mathrm{nd}$ stator critical', '$2^\mathrm{nd}$ rotor critical']
-    ax1.legend(labels = labels, ncols = 2, loc = 'upper left')
-    ax1.set_ylim([0.4,1.4])
-    ax1.set_xlim([2.1,5.9])
+    labels = [
+        "$1^\mathrm{st}$ stator actual",
+        "$1^\mathrm{st}$ rotor actual",
+        "$2^\mathrm{nd}$ stator actual",
+        "$2^\mathrm{nd}$ rotor actual",
+        "$1^\mathrm{st}$ stator critical",
+        "$1^\mathrm{st}$ rotor critical",
+        "$2^\mathrm{nd}$ stator critical",
+        "$2^\mathrm{nd}$ rotor critical",
+    ]
+    ax1.legend(labels=labels, ncols=2, loc="upper left")
+    ax1.set_ylim([0.4, 1.4])
+    ax1.set_xlim([2.1, 5.9])
 
     if save_figs:
         tf.plot_functions.save_figure(fig1, "figures/1972_2stage_mach.png")
 
-elif Case == 'performance_map':
+elif Case == "performance_map":
 
     timestamp = tf.utils.extract_timestamp(filename)
     data = tf.plot_functions.load_data(filename)
 
     # Plot mass flow rate at different angular speed
-    subsets = ["omega"] + list(
-        np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"]
-    )
+    subsets = ["omega"] + list(np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"])
     fig1, ax1 = tf.plot_functions.plot_subsets(
         data,
         "PR_ts",
@@ -251,7 +294,7 @@ elif Case == 'performance_map':
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        linestyles = ['-', ':', '--', '-.'],
+        linestyles=["-", ":", "--", "-."],
         close_fig=False,
     )
 
@@ -263,7 +306,7 @@ elif Case == 'performance_map':
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Total-to-static efficiency [%]",
-        linestyles = ['-', ':', '--', '-.'],
+        linestyles=["-", ":", "--", "-."],
         close_fig=False,
     )
 
@@ -275,7 +318,7 @@ elif Case == 'performance_map':
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit relative flow angle [deg]",
-        linestyles = ['-', ':', '--', '-.'],
+        linestyles=["-", ":", "--", "-."],
         close_fig=False,
     )
 
@@ -287,7 +330,7 @@ elif Case == 'performance_map':
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit absolute flow angle [deg]",
-        linestyles = ['-', ':', '--', '-.'],
+        linestyles=["-", ":", "--", "-."],
         close_fig=False,
     )
 
@@ -299,7 +342,7 @@ elif Case == 'performance_map':
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Torque [Nm]",
-        linestyles = ['-', ':', '--', '-.'],
+        linestyles=["-", ":", "--", "-."],
         close_fig=False,
     )
 
@@ -314,25 +357,38 @@ elif Case == 'performance_map':
 
         # Define colors and markers
         colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
-        markers = ['x', 'o', '^', 's']
+        markers = ["x", "o", "^", "s"]
 
         # Define plot options
         legend_title = "Percent of design \n angular speed"
 
         # Find design point
-        pressure_ratio_des = design_point["p0_in"]/design_point["p_out"]
-        index_des = (validation_data[validation_data['speed_percent'] == 100]["pressure_ratio_ts"] - pressure_ratio_des).abs().idxmin()
+        pressure_ratio_des = design_point["p0_in"] / design_point["p_out"]
+        index_des = (
+            (
+                validation_data[validation_data["speed_percent"] == 100][
+                    "pressure_ratio_ts"
+                ]
+                - pressure_ratio_des
+            )
+            .abs()
+            .idxmin()
+        )
         design_point_result = validation_data.loc[index_des]
         print(design_point_result)
-        
+
         for i in range(len(speed_percent)):
 
             # Load pressure ratio
-            PR = validation_data[validation_data['speed_percent'] == speed_percent[i]]["pressure_ratio_ts"]
+            PR = validation_data[validation_data["speed_percent"] == speed_percent[i]][
+                "pressure_ratio_ts"
+            ]
 
             # Mass flow rate
-            m = validation_data[validation_data['speed_percent'] == speed_percent[i]]["mass_flow_rate"]
-            ax1.plot(PR,m,marker = markers[i], color = colors[i], linestyle = "none")
+            m = validation_data[validation_data["speed_percent"] == speed_percent[i]][
+                "mass_flow_rate"
+            ]
+            ax1.plot(PR, m, marker=markers[i], color=colors[i], linestyle="none")
             labels = [str(val) for val in speed_percent] * 2
             # legend_1 = plt.legend(
             #     labels=labels,
@@ -342,44 +398,61 @@ elif Case == 'performance_map':
             # )
 
             # Total-to-static efficiency
-            eta_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]][
-                "efficiency_ts"
-            ]
-            ax2.plot(PR, eta_ts,  marker = markers[i], color=colors[i], linestyle = "none")
+            eta_ts = validation_data[
+                validation_data["speed_percent"] == speed_percent[i]
+            ]["efficiency_ts"]
+            ax2.plot(PR, eta_ts, marker=markers[i], color=colors[i], linestyle="none")
             ax2.legend(
                 labels=labels,
-                ncols = 2,
+                ncols=2,
                 title=legend_title,
             )
 
             # Exit absolute* flow angle
-            alpha = validation_data[validation_data["speed_percent"] == speed_percent[i]]["angle_exit_abs"]
-            pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax4.plot(pr_ts, alpha, marker = markers[i], color=colors[i], linestyle = "none")
+            alpha = validation_data[
+                validation_data["speed_percent"] == speed_percent[i]
+            ]["angle_exit_abs"]
+            pr_ts = validation_data[
+                validation_data["speed_percent"] == speed_percent[i]
+            ]["pressure_ratio_ts"]
+            ax4.plot(pr_ts, alpha, marker=markers[i], color=colors[i], linestyle="none")
             ax4.legend(
                 labels=labels,
-                ncols = 2,
+                ncols=2,
                 title=legend_title,
             )
 
             # Torque
-            tau = validation_data[validation_data["speed_percent"] == speed_percent[i]]["torque"]
-            pr_ts = validation_data[validation_data["speed_percent"] == speed_percent[i]]["pressure_ratio_ts"]
-            ax5.plot(pr_ts, tau,  marker = markers[i], color=colors[i], linestyle = "none")
+            tau = validation_data[validation_data["speed_percent"] == speed_percent[i]][
+                "torque"
+            ]
+            pr_ts = validation_data[
+                validation_data["speed_percent"] == speed_percent[i]
+            ]["pressure_ratio_ts"]
+            ax5.plot(pr_ts, tau, marker=markers[i], color=colors[i], linestyle="none")
             ax5.legend(
                 labels=labels,
-                ncols = 2,
+                ncols=2,
                 title=legend_title,
             )
 
         # Highlight design points
-        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["mass_flow_rate"]]
+        design_point_coordinates = [
+            design_point_result["pressure_ratio_ts"],
+            design_point_result["mass_flow_rate"],
+        ]
         highlight_design_point(ax1, design_point_coordinates, [4.25, 2.46])
-        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["torque"]]
+        design_point_coordinates = [
+            design_point_result["pressure_ratio_ts"],
+            design_point_result["torque"],
+        ]
         highlight_design_point(ax5, design_point_coordinates, [3.25, 165])
-        design_point_coordinates = [design_point_result["pressure_ratio_ts"], design_point_result["angle_exit_abs"]]
+        design_point_coordinates = [
+            design_point_result["pressure_ratio_ts"],
+            design_point_result["angle_exit_abs"],
+        ]
         highlight_design_point(ax4, design_point_coordinates, [3.25, -25])
-    
+
     # Manual settings
     ax1.set_xlim([2.1, 5.4])
     ax1.set_ylim([2.3, 2.5])
@@ -397,19 +470,25 @@ elif Case == 'performance_map':
     ax5.set_ylim([60, 180])
 
     if save_figs:
-        tf.plot_functions.savefig_in_formats(fig1, "figures/1972_2stage_mass_flow_rate", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(
+            fig1, "figures/1972_2stage_mass_flow_rate", formats=[".eps"]
+        )
         # tf.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
         # tf.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
-        tf.plot_functions.savefig_in_formats(fig4, "figures/1972_2stage_absolute_flow_angle", formats = [".eps"])
-        tf.plot_functions.savefig_in_formats(fig5, "figures/1972_2stage_torque", formats = [".eps"])
+        tf.plot_functions.savefig_in_formats(
+            fig4, "figures/1972_2stage_absolute_flow_angle", formats=[".eps"]
+        )
+        tf.plot_functions.savefig_in_formats(
+            fig5, "figures/1972_2stage_torque", formats=[".eps"]
+        )
 
-elif Case == 'error_plot':
+elif Case == "error_plot":
 
-    filename_exp = './experimental_data_kofskey1972_2stage_raw.xlsx'    
+    filename_exp = "./experimental_data_kofskey1972_2stage_raw.xlsx"
 
-    speed_percent =np.flip([110, 100, 90, 70])
-    data_sim = pd.read_excel(filename, sheet_name=['overall'])
-    data_exp = pd.read_excel(filename_exp, sheet_name = ['scaled'])
+    speed_percent = np.flip([110, 100, 90, 70])
+    data_sim = pd.read_excel(filename, sheet_name=["overall"])
+    data_exp = pd.read_excel(filename_exp, sheet_name=["scaled"])
     data_sim = data_sim["overall"]
     data_exp = data_exp["scaled"]
 
@@ -417,54 +496,74 @@ elif Case == 'error_plot':
     data_torque = data_sim[28:81]
     data_alpha = data_sim[81:]
 
-    fig1, ax1 = plt.subplots(figsize=(4.8, 4.8))        
+    fig1, ax1 = plt.subplots(figsize=(4.8, 4.8))
     fig2, ax2 = plt.subplots(figsize=(4.8, 4.8))
     fig3, ax3 = plt.subplots(figsize=(4.8, 4.8))
     fig4, ax4 = plt.subplots(figsize=(4.8, 4.8))
 
     # Define colors and markers
     colors = plt.get_cmap("Reds")(np.linspace(0.2, 1, len(speed_percent)))
-    markers = ['x', 'o', '^', 's']
+    markers = ["x", "o", "^", "s"]
     for speed, color, marker in zip(speed_percent, colors, markers):
 
         fig1, ax1 = tf.plot_functions.plot_error(
-            data_exp[(data_exp["speed_percent"] == speed) & (data_exp["mass_flow"]>0)]['mass_flow'].values,
-            data_mass_flow[(data_mass_flow["speed_percent"] > speed-1) & (data_mass_flow["speed_percent"] < speed+1)]["mass_flow_rate"],
-            fig = fig1,
-            ax = ax1,
-            color = color,
-            marker = marker,
-            label = str(speed),
+            data_exp[
+                (data_exp["speed_percent"] == speed) & (data_exp["mass_flow"] > 0)
+            ]["mass_flow"].values,
+            data_mass_flow[
+                (data_mass_flow["speed_percent"] > speed - 1)
+                & (data_mass_flow["speed_percent"] < speed + 1)
+            ]["mass_flow_rate"],
+            fig=fig1,
+            ax=ax1,
+            color=color,
+            marker=marker,
+            label=str(speed),
         )
 
         fig2, ax2 = tf.plot_functions.plot_error(
-            data_exp[(data_exp["speed_percent"] == speed) & (data_exp["torque"]>0)]['torque'].values,
-            data_torque[(data_torque["speed_percent"] > speed-1) & (data_torque["speed_percent"] < speed+1)]["torque"],
-            fig = fig2,
-            ax = ax2,
-            color = color,
-            marker = marker,
-            label = str(speed),
+            data_exp[(data_exp["speed_percent"] == speed) & (data_exp["torque"] > 0)][
+                "torque"
+            ].values,
+            data_torque[
+                (data_torque["speed_percent"] > speed - 1)
+                & (data_torque["speed_percent"] < speed + 1)
+            ]["torque"],
+            fig=fig2,
+            ax=ax2,
+            color=color,
+            marker=marker,
+            label=str(speed),
         )
 
         fig3, ax3 = tf.plot_functions.plot_error(
-            data_exp[(data_exp["speed_percent"] == speed) & (data_exp["alpha"].notna())]['alpha'].values,
-            data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["exit_flow_angle"],
-            fig = fig3,
-            ax = ax3,
-            color = color,
-            marker = marker,
-            label = str(speed),
+            data_exp[
+                (data_exp["speed_percent"] == speed) & (data_exp["alpha"].notna())
+            ]["alpha"].values,
+            data_alpha[
+                (data_alpha["speed_percent"] > speed - 1)
+                & (data_alpha["speed_percent"] < speed + 1)
+            ]["exit_flow_angle"],
+            fig=fig3,
+            ax=ax3,
+            color=color,
+            marker=marker,
+            label=str(speed),
         )
 
         fig4, ax4 = tf.plot_functions.plot_error(
-            data_exp[(data_exp["speed_percent"] == speed) & (data_exp["cos_angle"].notna())]['cos_angle'].values,
-            data_alpha[(data_alpha["speed_percent"] > speed-1) & (data_alpha["speed_percent"] < speed+1)]["cos_alpha"],
-            fig = fig4,
-            ax = ax4,
-            color = color,
-            marker = marker,
-            label = str(speed),
+            data_exp[
+                (data_exp["speed_percent"] == speed) & (data_exp["cos_angle"].notna())
+            ]["cos_angle"].values,
+            data_alpha[
+                (data_alpha["speed_percent"] > speed - 1)
+                & (data_alpha["speed_percent"] < speed + 1)
+            ]["cos_alpha"],
+            fig=fig4,
+            ax=ax4,
+            color=color,
+            marker=marker,
+            label=str(speed),
         )
 
     # Add lines to plots
@@ -473,45 +572,61 @@ elif Case == 'error_plot':
     evenly_distributed_values = np.linspace(minima, maxima, num=5)
 
     # Add lines to mass flow rate plot
-    ax1.plot(evenly_distributed_values, evenly_distributed_values* (1-2.5/100) , 'k--')
-    ax1.plot(evenly_distributed_values, evenly_distributed_values* (1+2.5/100), 'k--')
-    ax1.plot(evenly_distributed_values, evenly_distributed_values, 'k:')
+    ax1.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 - 2.5 / 100), "k--"
+    )
+    ax1.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 + 2.5 / 100), "k--"
+    )
+    ax1.plot(evenly_distributed_values, evenly_distributed_values, "k:")
 
     # Add lines to torque plot
-    ax2.plot(evenly_distributed_values, evenly_distributed_values* (1-2.5/100) , 'k--')
-    ax2.plot(evenly_distributed_values, evenly_distributed_values* (1+2.5/100), 'k--')
-    ax2.plot(evenly_distributed_values, evenly_distributed_values* (1-10/100) , 'k:')
-    ax2.plot(evenly_distributed_values, evenly_distributed_values* (1+10/100), 'k:')
+    ax2.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 - 2.5 / 100), "k--"
+    )
+    ax2.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 + 2.5 / 100), "k--"
+    )
+    ax2.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 - 10 / 100), "k:"
+    )
+    ax2.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 + 10 / 100), "k:"
+    )
 
     # Add lines to angle plot
     delta_deg = 5
-    ax3.plot([minima, maxima], [minima-delta_deg, maxima-delta_deg], 'k--')
-    ax3.plot([minima, maxima], [minima+delta_deg, maxima+delta_deg], 'k--')
+    ax3.plot([minima, maxima], [minima - delta_deg, maxima - delta_deg], "k--")
+    ax3.plot([minima, maxima], [minima + delta_deg, maxima + delta_deg], "k--")
     delta_deg = 10
-    ax3.plot([minima, maxima], [minima-delta_deg, maxima-delta_deg], 'k:')
-    ax3.plot([minima, maxima], [minima+delta_deg, maxima+delta_deg], 'k:')
+    ax3.plot([minima, maxima], [minima - delta_deg, maxima - delta_deg], "k:")
+    ax3.plot([minima, maxima], [minima + delta_deg, maxima + delta_deg], "k:")
 
     # Add lines to angle plot
-    ax4.plot(evenly_distributed_values, evenly_distributed_values* (1-2.5/100) , 'k--')
-    ax4.plot(evenly_distributed_values, evenly_distributed_values* (1+2.5/100), 'k--')
-    ax4.plot(evenly_distributed_values, evenly_distributed_values* (1-5/100) , 'k:')
-    ax4.plot(evenly_distributed_values, evenly_distributed_values* (1+5/100), 'k:')
+    ax4.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 - 2.5 / 100), "k--"
+    )
+    ax4.plot(
+        evenly_distributed_values, evenly_distributed_values * (1 + 2.5 / 100), "k--"
+    )
+    ax4.plot(evenly_distributed_values, evenly_distributed_values * (1 - 5 / 100), "k:")
+    ax4.plot(evenly_distributed_values, evenly_distributed_values * (1 + 5 / 100), "k:")
 
-    ax1.legend(loc = 'upper left')
+    ax1.legend(loc="upper left")
     ax2.legend()
     ax3.legend()
 
-    ax1.set_xlabel('Measured mass flow rate [kg/s]')
-    ax1.set_ylabel('Simulated mass flow rate [kg/s]')
+    ax1.set_xlabel("Measured mass flow rate [kg/s]")
+    ax1.set_ylabel("Simulated mass flow rate [kg/s]")
 
-    ax3.set_xlabel('Measured rotor exit absolute flow angle [deg]')
-    ax3.set_ylabel('Simulated rotor exit absolute flow angle [deg]')
+    ax3.set_xlabel("Measured rotor exit absolute flow angle [deg]")
+    ax3.set_ylabel("Simulated rotor exit absolute flow angle [deg]")
 
-    ax2.set_xlabel('Measured torque [Nm]')
-    ax2.set_ylabel('Simulated torque [Nm]')
+    ax2.set_xlabel("Measured torque [Nm]")
+    ax2.set_ylabel("Simulated torque [Nm]")
 
-    ax4.set_xlabel('Cosine of measured rotor exit absolute flow angle [-]')
-    ax4.set_ylabel('Cosine of simulated rotor exit absolute flow angle [-]')
+    ax4.set_xlabel("Cosine of measured rotor exit absolute flow angle [-]")
+    ax4.set_ylabel("Cosine of simulated rotor exit absolute flow angle [-]")
 
     # ax1.axis('equal')
     ax1_limits = [2.3, 2.5]
@@ -530,7 +645,6 @@ elif Case == 'error_plot':
     ax2.set_xticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
     ax2.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
 
-
     # ax3.axis('equal')
     ax3_limits = [-40, 50]
     ax3.set_xlim(ax3_limits)
@@ -542,15 +656,20 @@ elif Case == 'error_plot':
 
     ax4_lims = [0.70, 1.05]
     ax4.set_ylim(ax4_lims)
-    ax4.set_xlim(ax4_lims) 
+    ax4.set_xlim(ax4_lims)
 
     if save_figs:
-        tf.plot_functions.savefig_in_formats(fig1, "figures/error_1972_2stage_mass_flow_rate", formats = [".eps"])
-        tf.plot_functions.savefig_in_formats(fig2, "figures/error_1972_2stage_torque", formats = [".eps"])
-        tf.plot_functions.savefig_in_formats(fig3, "figures/error_1972_2stage_absolute_flow_angle", formats = [".eps"])
-
+        tf.plot_functions.savefig_in_formats(
+            fig1, "figures/error_1972_2stage_mass_flow_rate", formats=[".eps"]
+        )
+        tf.plot_functions.savefig_in_formats(
+            fig2, "figures/error_1972_2stage_torque", formats=[".eps"]
+        )
+        tf.plot_functions.savefig_in_formats(
+            fig3, "figures/error_1972_2stage_absolute_flow_angle", formats=[".eps"]
+        )
 
 
 # Show figures
 if show_figures:
-    plt.show()  
+    plt.show()

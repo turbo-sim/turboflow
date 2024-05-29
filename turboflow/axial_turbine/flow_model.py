@@ -13,6 +13,7 @@ from . import choking_model as cm
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
 
+
 def evaluate_axial_turbine(
     variables,
     boundary_conditions,
@@ -24,7 +25,7 @@ def evaluate_axial_turbine(
     """
     Compute the performance of an axial turbine by evaluating a series of cascades.
 
-    The function iterates through each cascade, accumulating data on both performance and residuals used to evaluate the physicality of the flow. 
+    The function iterates through each cascade, accumulating data on both performance and residuals used to evaluate the physicality of the flow.
     Between each cascade, the space between the cascades is modelled to give the input to the next cascade.
 
     The results are organized into a dictionary that includes:
@@ -32,9 +33,9 @@ def evaluate_axial_turbine(
     - `cascade`: Contains data specific to each cascade in the series, including loss coefficients and critical conditions.
     - `plane`: Contains data specific to each flow station, including thermodynamic properties and velocity triangles.
     - `stage`: Contains data specific to each turbine stage, including degree of reaction.
-    - `geometry`: Contains data on the turbine geometry. 
+    - `geometry`: Contains data on the turbine geometry.
     - `overall`: Summarizes the overall performance of the turbine, including mass flow rate, efficiency and power output.
-    - `reference_values`: Contain supplementary information. 
+    - `reference_values`: Contain supplementary information.
     - `residuals`: Summarizes the mismatch in the nonlinear system of equations used to model the turbine.
 
     .. note::
@@ -112,7 +113,7 @@ def evaluate_axial_turbine(
         w_out = variables["w_out" + cascade] * v0
         s_out = variables["s_out" + cascade] * s_range + s_min
         beta_out = variables["beta_out" + cascade] * angle_range + angle_min
-        
+
         # Evaluate current cascade
         cascade_inlet_input = {
             "h0": h0_in,
@@ -125,8 +126,12 @@ def evaluate_axial_turbine(
             "beta": beta_out,
             "s": s_out,
         }
-        
-        choking_input = {key.replace(cascade, "") : val for key, val in variables.items() if ("*" and cascade in key) or key == "v*_in"}
+
+        choking_input = {
+            key.replace(cascade, ""): val
+            for key, val in variables.items()
+            if ("*" and cascade in key) or key == "v*_in"
+        }
 
         cascade_residuals = evaluate_cascade(
             cascade_inlet_input,
@@ -144,7 +149,7 @@ def evaluate_axial_turbine(
         cascade_residuals = utils.add_string_to_keys(cascade_residuals, f"_{i+1}")
         residuals.update(cascade_residuals)
 
-        # Calculate input of next cascade 
+        # Calculate input of next cascade
         if i != number_of_cascades - 1:
             (
                 h0_in,
@@ -192,8 +197,9 @@ def evaluate_axial_turbine(
         if len(utils.ensure_iterable(value)) == number_of_cascades
     }
     results["geometry"] = pd.DataFrame([geom_cascades])
-    
+
     return results
+
 
 def evaluate_cascade(
     cascade_inlet_input,
@@ -206,15 +212,14 @@ def evaluate_cascade(
     model_options,
     reference_values,
 ):
-    
     """
     Evaluate the performance of a cascade configuration.
-    
+
     This function evaluates the cascade performance by considering inlet, throat, and exit planes.
     It also determines the condition for choking according to the selected choking model, and evaluates if the cascade is choked or not. The results are stored in a dictionary.
-    The function returns a dictionary of residuals that includes the mass balance error at both the inlet and exit, loss coefficient errors, 
+    The function returns a dictionary of residuals that includes the mass balance error at both the inlet and exit, loss coefficient errors,
     and the residuals related to the critical state and choking condition.
-    
+
     Parameters
     ----------
     cascade_inlet_input : dict
@@ -237,7 +242,7 @@ def evaluate_cascade(
         Dictionary containing various model options.
     reference_values : dict
         Dictionary containing reference values for normalization.
-    
+
     Returns
     -------
     residuals : dict
@@ -279,7 +284,7 @@ def evaluate_cascade(
     # Evaluate critical state
     residuals_critical, critical_state = cm.evaluate_choking(
         choking_input,
-        inlet_plane, 
+        inlet_plane,
         exit_plane,
         fluid,
         geometry,
@@ -311,6 +316,7 @@ def evaluate_cascade(
     results["cascade"].loc[len(results["cascade"]), cascade_data.keys()] = cascade_data
 
     return residuals
+
 
 def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     r"""
@@ -394,8 +400,8 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
         "rothalpy": rothalpy,
     }
 
-
     return plane
+
 
 def evaluate_cascade_exit(
     cascade_exit_input,
@@ -531,6 +537,7 @@ def evaluate_cascade_exit(
     }
     return plane, loss_dict
 
+
 def evaluate_cascade_throat(
     cascade_throat_input,
     fluid,
@@ -589,7 +596,6 @@ def evaluate_cascade_throat(
     opening = geometry["opening"]
     area = geometry["A_throat"]
     radius = geometry["radius_mean_throat"]
-
 
     # Calculate velocity triangles
     blade_speed = angular_speed * radius
@@ -664,6 +670,7 @@ def evaluate_cascade_throat(
     }
     return plane, loss_dict
 
+
 def evaluate_cascade_interspace(
     h0_exit,
     v_m_exit,
@@ -712,9 +719,9 @@ def evaluate_cascade_interspace(
 
     Returns
     -------
-    float 
+    float
         Stagnation enthalpy at the inlet of the next cascade.
-    float 
+    float
         Entropy at the inlet of the next cascade.
     float
         Flow angle at the inlet of the next cascade (in degrees).
@@ -736,7 +743,7 @@ def evaluate_cascade_interspace(
     v_t_in = v_t_exit * radius_exit / radius_inlet
 
     # Assume density variation is negligible
-    v_m_in = v_m_exit * area_exit / area_inlet *(1-blockage_exit)
+    v_m_in = v_m_exit * area_exit / area_inlet * (1 - blockage_exit)
 
     # Compute velocity vector
     v_in = np.sqrt(v_t_in**2 + v_m_in**2)
@@ -749,6 +756,7 @@ def evaluate_cascade_interspace(
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in
+
 
 def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     """
@@ -812,6 +820,7 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
 
     return vel_in
 
+
 def evaluate_velocity_triangle_out(blade_speed, w, beta):
     """
     Compute the velocity triangle at the outlet of the cascade.
@@ -874,6 +883,7 @@ def evaluate_velocity_triangle_out(blade_speed, w, beta):
 
     return vel_out
 
+
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     r"""
     Calculate the blockage factor due to boundary layer displacement thickness.
@@ -888,12 +898,12 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
         2. Using a numerical value specified directly by the user.
 
     The correlation for turbulent boundary layer displacement thickness over a flat plate is given by :cite:`cengel_fluid_2014`:
-    
+
     .. math::
         \delta^* = \frac{0.048}{Re^{1/5}} \times 0.9 \times \text{chord}
-        
+
     From this the blockage factor is calculated as
-    
+
     .. math::
         \text{blockage_factor} = 2 \times \frac{\delta^*}{\text{opening}}
 
@@ -1061,7 +1071,7 @@ def compute_overall_performance(results, geometry):
 
     angular_speed = results["boundary_conditions"]["omega"]
     v0 = results["reference_values"]["v0"]
-    h_out_s = results["reference_values"]["h_out_s"] 
+    h_out_s = results["reference_values"]["h_out_s"]
     d_out_s = results["reference_values"]["d_out_s"]
 
     # Calculation of overall performance
@@ -1076,13 +1086,15 @@ def compute_overall_performance(results, geometry):
     PR_ts = p0[0] / p[-1]
     h0_in = h0[0]
     h0_out = h0[-1]
-    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2)*100
-    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s)*100
+    efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2) * 100
+    efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s) * 100
     efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
     efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
     power = mass_flow * (h0_in - h0_out)
     torque = power / angular_speed
-    specific_speed = angular_speed*(mass_flow/d_out_s)**0.5/((h0_in - h_out_s)**0.75)
+    specific_speed = (
+        angular_speed * (mass_flow / d_out_s) ** 0.5 / ((h0_in - h_out_s) ** 0.75)
+    )
 
     # Store all variables in dictionary
     overall = {
@@ -1104,11 +1116,10 @@ def compute_overall_performance(results, geometry):
         "h0_in": h0_in,
         "h0_out": h0_out,
         "h_out_s": h_out_s,
-        "specific_speed" : specific_speed,
-        "blade_jet_ratio_hub" : angular_speed*geometry["radius_hub_out"][-1]/v0,
-        "blade_jet_ratio_mean" : angular_speed*geometry["radius_mean_out"][-1]/v0,
-        "blade_jet_ratio_tip" : angular_speed*geometry["radius_tip_out"][-1]/v0,
+        "specific_speed": specific_speed,
+        "blade_jet_ratio_hub": angular_speed * geometry["radius_hub_out"][-1] / v0,
+        "blade_jet_ratio_mean": angular_speed * geometry["radius_mean_out"][-1] / v0,
+        "blade_jet_ratio_tip": angular_speed * geometry["radius_tip_out"][-1] / v0,
     }
 
     return overall
-

@@ -29,6 +29,3 @@ case_data = tf.read_configuration_file(CONFIG_FILE)
 # geom = ml.meanline.calculate_full_geometry(geom)
 # ml.print_dict(geom)
 # geom_info = ml.meanline.check_turbine_geometry(geom)
-
-
-

@@ -19,9 +19,10 @@ FIELD_MAP = {
 def format_value(value, key):
     """Format as strings and add highlighting"""
     if key == "expected_type":
-        types =  [v if isinstance(v, str) else v.__name__ for v in tf.ensure_iterable(value)]
-        return ", ".join([f"``{v}``" for v in types]  
-        )
+        types = [
+            v if isinstance(v, str) else v.__name__ for v in tf.ensure_iterable(value)
+        ]
+        return ", ".join([f"``{v}``" for v in types])
     elif key == "valid_options":
         return ", ".join(
             [f"``{v}``" if isinstance(v, str) else v for v in tf.ensure_iterable(value)]
@@ -34,7 +35,7 @@ def create_options_rst_tabs(config_dict):
     Generate reStructuredText for tabs from a configuration dictionary.
 
     This function traverses a configuration dictionary to produce reStructuredText (RST)
-    formatted content using sphinx-design tabs. It handles both root-level and 
+    formatted content using sphinx-design tabs. It handles both root-level and
     nested dictionary entries, formatting them into readable dropdown sections.
 
     The `dict_to_rst_tabs` nested function is used to recursively process
@@ -54,6 +55,7 @@ def create_options_rst_tabs(config_dict):
         as interactive tab.
 
     """
+
     def dict_to_rst_tabs(d, indent=0, is_root=True, tab_key=None):
         """
         Recursively converts a nested dictionary into reStructuredText format for sphinx-design tabs.
@@ -130,7 +132,9 @@ def create_options_rst_tabs(config_dict):
     # Main function execution
     rst_content = ".. tab-set::\n\n"
     for tab_key, tab_value in config_dict.items():
-        rst_content += dict_to_rst_tabs(tab_value, indent=1, is_root=True, tab_key=tab_key)
+        rst_content += dict_to_rst_tabs(
+            tab_value, indent=1, is_root=True, tab_key=tab_key
+        )
     rst_content += "\n"
 
     return rst_content
@@ -141,7 +145,7 @@ def create_options_rst_dropdowns(config_dict):
     Generate reStructuredText for dropdowns from a configuration dictionary.
 
     This function traverses a configuration dictionary to produce reStructuredText (RST)
-    formatted content using sphinx-design dropdowns. It handles both root-level and 
+    formatted content using sphinx-design dropdowns. It handles both root-level and
     nested dictionary entries, formatting them into readable dropdown sections.
 
     The `dict_to_rst_dropdowns` nested function is used to recursively process
@@ -162,7 +166,9 @@ def create_options_rst_dropdowns(config_dict):
 
     """
 
-    def dict_to_rst_dropdowns(d, indent=0, parent_key='', dropdown_key=None, is_root=False):
+    def dict_to_rst_dropdowns(
+        d, indent=0, parent_key="", dropdown_key=None, is_root=False
+    ):
         """
         Recursively converts a nested dictionary into reStructuredText format for sphinx-design dropdowns.
 
@@ -194,24 +200,24 @@ def create_options_rst_dropdowns(config_dict):
 
         rst_output = []
 
-        # Construct the full dropdown title including the parent key  
+        # Construct the full dropdown title including the parent key
         dropdown_title = f"{parent_key}.{dropdown_key}" if parent_key else dropdown_key
         if is_root:
-            formated_root_key = dropdown_key.replace('_', ' ').title()
+            formated_root_key = dropdown_key.replace("_", " ").title()
             rst_output.append(f"{first_indent}.. dropdown:: {formated_root_key}")
             rst_output.append(f"{content_indent}:color: primary\n")
-                
+
         else:
             rst_output.append(f"{first_indent}.. dropdown:: {dropdown_title}")
             rst_output.append(f"{content_indent}:color: secondary\n")
 
         # Add option description outside the table
-        description = d.get('description', '')
+        description = d.get("description", "")
         if description:
             rst_output.append(f"{content_indent}{description}\n\n")
 
         # Create table for all the other keys
-        keys = [k for k in d if k not in ['_nested', 'description']]
+        keys = [k for k in d if k not in ["_nested", "description"]]
         if keys:
             table_header = (
                 f"{content_indent}.. list-table::\n"
@@ -223,13 +229,14 @@ def create_options_rst_dropdowns(config_dict):
             table_rows = [
                 f"{content_indent}   * - **{FIELD_MAP.get(key, key)}**\n"
                 f"{content_indent}     - {format_value(d[key], key)}"
-                for key in keys if not (key == 'valid_options' and d[key] is None)
+                for key in keys
+                if not (key == "valid_options" and d[key] is None)
             ]
             table_rows.append("")
             rst_output.extend(table_rows)
 
         # Handle nested dictionaries
-        nested_dict = d.get('_nested')
+        nested_dict = d.get("_nested")
         if nested_dict:
             nested_rst = [
                 f"{dict_to_rst_dropdowns(nested_value, indent + 1, dropdown_title, nested_key)}"
@@ -237,16 +244,17 @@ def create_options_rst_dropdowns(config_dict):
             ]
             rst_output.extend(nested_rst)
 
-        return '\n'.join(rst_output)
+        return "\n".join(rst_output)
 
     # Main function execution
     rst_content = ""
     for tab_key, tab_value in config_dict.items():
-        rst_content += dict_to_rst_dropdowns(tab_value, indent=0, dropdown_key=tab_key, is_root=True)
+        rst_content += dict_to_rst_dropdowns(
+            tab_value, indent=0, dropdown_key=tab_key, is_root=True
+        )
     rst_content += "\n"
 
     return rst_content
-
 
 
 def convert_types_to_strings(obj):

@@ -20,8 +20,8 @@ from .. import math
 
 def compute_losses(input_parameters):
     r"""
-    
-    Evaluate loss coefficient according to :cite:`benner_influence_1997`, :cite:`benner_empirical_2006-1` and :cite:`benner_empirical_2006`. 
+
+    Evaluate loss coefficient according to :cite:`benner_influence_1997`, :cite:`benner_empirical_2006-1` and :cite:`benner_empirical_2006`.
 
     This model split the total loss coefficient into profile, secondary, trailing edge, tip clearance and incidence losses.
     The loss coefficient are combined through the following relation:
@@ -37,7 +37,7 @@ def compute_losses(input_parameters):
 
         \frac{\delta}{H} = \frac{\delta}{H}_\mathrm{ref} \frac{\mathrm{Re_{in}}}{3\cdot10^5}^{-1/7}
 
-    The reference value may be specified by the user. 
+    The reference value may be specified by the user.
 
     The function calls a function for each loss component:
 
@@ -58,7 +58,7 @@ def compute_losses(input_parameters):
     -------
     dict
         A dictionary with the loss components.
-    
+
     """
 
     # Extract input parameters
@@ -306,11 +306,11 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
 
     where:
 
-        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.  
+        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.
         - :math:`H` is the mean height.
         - :math:`c` is the chord.
         - :math:`\delta^*` is the inlet endwall boundary layer displacement thickness.
-        - :math:`\xi` is the stagger angle. 
+        - :math:`\xi` is the stagger angle.
         - :math:`\beta_\mathrm{out}` is the exit relative flow angle.
 
     Parameters
@@ -333,10 +333,8 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
     chord = geometry["chord"]
     stagger = geometry["stagger_angle"]
 
-    AR = height / chord  
-    CR = math.cosd(beta_in) / math.cosd(
-        beta_out
-    )  
+    AR = height / chord
+    CR = math.cosd(beta_in) / math.cosd(beta_out)
     if AR <= 2:  # TODO: sigmoid blending to convert to smooth piecewise function
         denom = (
             np.sqrt(math.cosd(stagger))
@@ -422,7 +420,7 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 def get_incidence_loss(flow_parameters, geometry, beta_des):
     r"""
     Calculate the incidence loss coefficient according to the correlation proposed by :cite:`benner_influence_1997`.
-    
+
     This model calculates the incidence loss parameter through the function `get_incidence_parameter`. The kinetic energu coefficient
     can be obtained from `get_incidence_profile_loss_increment`, which is a function of the incidence parameter. The kinetic energy loss coefficient is converted
     to the total pressure loss coefficient through `convert_kinetic_energy_coefficient`.
@@ -450,7 +448,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     s = geometry["pitch"]
     We = geometry["leading_edge_wedge_angle"]
     theta_in = geometry["leading_edge_angle"]
-    theta_out = math.arccosd(geometry["A_throat"]/geometry["A_out"])
+    theta_out = math.arccosd(geometry["A_throat"] / geometry["A_out"])
 
     chi = get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des)
 
@@ -462,12 +460,11 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
 
 
 def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
-
     r"""
     Compute the ratio between Mach at the hub and mean span at the inlet of the current cascade.
 
     Due to radial variation in gas conditions, Mach at the hub will always be higher than at the mean.
-    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span. 
+    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span.
 
     Parameters
     ----------
@@ -553,7 +550,6 @@ def get_compressible_correction_factors(Ma_rel_in, Ma_rel_out):
 
 
 def nozzle_blades(r_sc, angle_out):
-
     r"""
     Use Aungier correlation to compute the pressure loss coefficient for nozzle blades :cite:`aungier_turbine_2006`.
 
@@ -620,7 +616,6 @@ def nozzle_blades(r_sc, angle_out):
 
 
 def impulse_blades(r_sc, angle_out):
-
     r"""
     Use Aungier correlation to compute the pressure loss coefficient for impulse blades :cite:`aungier_turbine_2006`.
 
@@ -661,7 +656,6 @@ def impulse_blades(r_sc, angle_out):
         Pressure loss coefficient for impulse blades.
 
     """
-        
 
     phi = 90 - angle_out
     r_sc_min = 0.224 + 1.575 * (phi / 90) - (phi / 90) ** 2
@@ -677,10 +671,10 @@ def impulse_blades(r_sc, angle_out):
 
 def get_penetration_depth(flow_parameters, geometry, delta_height):
     r"""
-    Calculated the penetration depth of the passage vortex separation line relative to the blade span. 
-    
-    The endwall inlet boundary layer generate a vortex which propagtes through the cascade section, 
-    and the spanwise penetration of this vortex affect the magnutude of the secondary loss coefficient. 
+    Calculated the penetration depth of the passage vortex separation line relative to the blade span.
+
+    The endwall inlet boundary layer generate a vortex which propagtes through the cascade section,
+    and the spanwise penetration of this vortex affect the magnutude of the secondary loss coefficient.
     This function approximate the vortex penetration depth to the blade span by the correlation developed by :cite:`benner_empirical_2006-1`.
 
     The quantity is calculated as:
@@ -691,7 +685,7 @@ def get_penetration_depth(flow_parameters, geometry, delta_height):
 
     where:
 
-        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.  
+        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.
         - :math:`H` is the mean height.
         - :math:`c` is the chord.
         - :math:`\delta^*` is the inlet endwall boundary layer displacement thickness.
@@ -713,7 +707,7 @@ def get_penetration_depth(flow_parameters, geometry, delta_height):
     -------
     float
         Spanwise penetration depth of the passage vortex relative to the mean blade height.
-    
+
     """
 
     # TODO: explain smoothing/blending tricks
@@ -745,9 +739,8 @@ def get_penetration_depth(flow_parameters, geometry, delta_height):
 
 
 def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
-
     r"""
-    
+
     Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
 
     .. math::
@@ -759,7 +752,7 @@ def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
         - :math:`\gamma` is the specific heat ratio.
         - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
         - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
-    
+
     Parameters
     ----------
     dPhi : float
@@ -772,11 +765,11 @@ def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
     Returns
     -------
     float
-        The total pressure loss coefficient.  
+        The total pressure loss coefficient.
 
     Warnings
     --------
-    This conversion assumes that the fluid is a perfect gas.  
+    This conversion assumes that the fluid is a perfect gas.
 
     """
 
@@ -925,10 +918,9 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
 
 
 def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
-
     r"""
-    Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`. 
-    
+    Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`.
+
     The incidence parameter is used to calculate the increment in profile losses due to the effect of incidence according to function `get_incidence_profile_loss_increment`.
 
     The quantity is calculated as:
@@ -939,7 +931,7 @@ def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
 
     where:
 
-        - :math:`\mathrm{d_{le}}` is the leading edge diameter.  
+        - :math:`\mathrm{d_{le}}` is the leading edge diameter.
         - :math:`s` is the pitch.
         - :math:`\mathrm{We_{le}}` is the leading edge wedge angle.
         - :math:`\theta_\mathrm{in}` and :math:`\theta_\mathrm{out}` is the blade metal angle at the inlet and outlet respectively.
@@ -978,7 +970,6 @@ def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
 
 
 def F_t(BSx, beta_in, beta_out):
-
     r"""
 
     Calculate the tangential loading coefficient according to the correlation proposed by :cite:`benner_empirical_2006-1`.
@@ -1007,7 +998,7 @@ def F_t(BSx, beta_in, beta_out):
     -------
     float
         Tangetnial loading parameter.
-    
+
     """
 
     a_m = math.arctand(0.5 * (math.tand(beta_in) + math.tand(beta_out)))
@@ -1021,4 +1012,3 @@ def F_t(BSx, beta_in, beta_out):
     )
 
     return F_t
-

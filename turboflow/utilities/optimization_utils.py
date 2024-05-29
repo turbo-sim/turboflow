@@ -57,16 +57,17 @@ def render_and_evaluate(expression, data):
 
     # Function to replace each match with its resolved value
     def replace_with_value(match):
-            nested_key = match.group(1)
-            try:
-                value = render_nested_value(nested_key, data)
-                if isinstance(value, np.ndarray):
-                    return "np.array(" + repr(value.tolist()) + ")"
-                else:
-                    return repr(value)
-            except KeyError:
-                raise KeyError(f"Variable '{nested_key}' not found in the provided data context.")
-
+        nested_key = match.group(1)
+        try:
+            value = render_nested_value(nested_key, data)
+            if isinstance(value, np.ndarray):
+                return "np.array(" + repr(value.tolist()) + ")"
+            else:
+                return repr(value)
+        except KeyError:
+            raise KeyError(
+                f"Variable '{nested_key}' not found in the provided data context."
+            )
 
     try:
         # Replace all $variable with their actual values
@@ -78,15 +79,17 @@ def render_and_evaluate(expression, data):
 
         # Now evaluate the expression
         return eval(resolved_expr)
-    
+
     except SyntaxError as e:
         raise SyntaxError(f"Syntax error in '{expression}': {e}")
     except Exception as e:
         # Enhanced error message
-        raise TypeError(f"Error evaluating expression '{expression}': {e}.\n"
-                        "If the expression is meant to use data from the configuration, "
-                        "ensure each variable is prefixed with '$'. For example, use '$variable_name' "
-                        "instead of 'variable_name'.")  
+        raise TypeError(
+            f"Error evaluating expression '{expression}': {e}.\n"
+            "If the expression is meant to use data from the configuration, "
+            "ensure each variable is prefixed with '$'. For example, use '$variable_name' "
+            "instead of 'variable_name'."
+        )
 
 
 def render_nested_value(nested_key, data):
@@ -173,7 +176,7 @@ def evaluate_constraints(data, constraints):
     Returns
     -------
     tuple of numpy.ndarray
-        Returns two numpy arrays: the first is an array of equality constraints, and the second is an array of 
+        Returns two numpy arrays: the first is an array of equality constraints, and the second is an array of
         inequality constraints. These arrays are flattened and concatenated from the evaluated constraint values.
 
     Raises
@@ -182,19 +185,19 @@ def evaluate_constraints(data, constraints):
         If an unknown constraint type is specified in the constraints list.
     """
     # Initialize constraint lists
-    c_eq = []    # Equality constraints
+    c_eq = []  # Equality constraints
     c_ineq = []  # Inequality constraints
 
     # Loop over all constraint from configuration file
     for constraint in constraints:
-        name = constraint['variable']
-        constraint_type = constraint['type']
-        target = constraint['value']
+        name = constraint["variable"]
+        constraint_type = constraint["type"]
+        target = constraint["value"]
         normalize = constraint.get("normalize", False)
 
         # Get the performance value for the given variable name
         current = render_and_evaluate(name, data)
-        if isinstance(target, str): # Try to render variable when not a number
+        if isinstance(target, str):  # Try to render variable when not a number
             target = render_and_evaluate(target, data)
 
         # Evaluate constraint
@@ -205,15 +208,17 @@ def evaluate_constraints(data, constraints):
         normalize_factor = normalize if num.is_numeric(normalize) else target
         if normalize is not False:
             if normalize_factor == 0:
-                raise ValueError(f"Cannot normalize constraint '{name} {constraint_type} {target}' because the normalization factor is '{normalize_factor}' (division by zero).")
+                raise ValueError(
+                    f"Cannot normalize constraint '{name} {constraint_type} {target}' because the normalization factor is '{normalize_factor}' (division by zero)."
+                )
             mismatch /= normalize_factor
 
         # Add constraints to lists
-        if constraint_type == '=':
+        if constraint_type == "=":
             c_eq.append(mismatch)
-        elif constraint_type == '>':
+        elif constraint_type == ">":
             c_ineq.append(mismatch)
-        elif constraint_type == '<':
+        elif constraint_type == "<":
             # Change sign because optimizer handles c_ineq > 0
             c_ineq.append(-mismatch)
         else:
@@ -221,7 +226,9 @@ def evaluate_constraints(data, constraints):
 
     # Flatten and concatenate constraints
     c_eq = np.hstack([np.atleast_1d(item) for item in c_eq]) if c_eq else np.array([])
-    c_ineq = np.hstack([np.atleast_1d(item) for item in c_ineq]) if c_ineq else np.array([])
+    c_ineq = (
+        np.hstack([np.atleast_1d(item) for item in c_ineq]) if c_ineq else np.array([])
+    )
 
     return c_eq, c_ineq
 
@@ -235,13 +242,13 @@ def evaluate_objective_function(data, objective_function):
     data : dict
         A dictionary containing performance data against which the objective function will be evaluated.
     objective_function : dict
-        A dictionary defining the objective function. It must have 'variable' (str) 
+        A dictionary defining the objective function. It must have 'variable' (str)
         and 'type' (str, either 'minimize' or 'maximize').
 
     Returns
     -------
     float
-        The value of the objective function, adjusted for optimization. Positive for minimization and 
+        The value of the objective function, adjusted for optimization. Positive for minimization and
         negative for maximization.
 
     Raises
@@ -251,17 +258,18 @@ def evaluate_objective_function(data, objective_function):
     """
 
     # Get the performance value for the given variable name
-    name = objective_function['variable']
-    type = objective_function['type']
+    name = objective_function["variable"]
+    type = objective_function["type"]
     value = render_and_evaluate(name, data)
 
     if not np.isscalar(value):
-        raise ValueError(f"The objective function '{name}' must be an scalar, but the value is: {value}")
+        raise ValueError(
+            f"The objective function '{name}' must be an scalar, but the value is: {value}"
+        )
 
-    if type == 'minimize':
+    if type == "minimize":
         return value
-    elif type == 'maximize':
+    elif type == "maximize":
         return -value
     else:
         raise ValueError(f"Unknown objective function type: {type}")
-

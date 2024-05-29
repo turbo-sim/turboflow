@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt    
+import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define configuration filename
@@ -10,8 +10,6 @@ CONFIG_FILE = "case_sCO2_recompression.yaml"
 
 # TODO For IPOPT is very important to provide the hessian or to increase the number of previous gradients used to update the bfgs
 # How many previous updates do SLSQP and SNOPT keep in memory
-
-
 
 
 # Analyze sensitivity to algorithm
@@ -23,7 +21,7 @@ ax_1.set_ylabel("Objective function values")
 
 # ax.set_yscale("log")
 # methods = ['scipy:slsqp', 'snopt', 'ipopt']
-methods = ['ipopt']
+methods = ["ipopt"]
 cmap = "magma"
 colors = plt.get_cmap(cmap)(np.linspace(0.25, 0.8, len(methods)))
 for method, color in zip(methods, colors):
@@ -76,5 +74,3 @@ ml.savefig_in_formats(fig, "figures/optimization_solvers")
 
 # Keep plots open
 plt.show()
-
-

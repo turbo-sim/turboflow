@@ -100,7 +100,7 @@ def smooth_min(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
         - ``boltzmann`` (default)
         - ``logsumexp``
         - ``p-norm``
-        
+
     alpha : float, optional
         Sharpness parameter.Large values produce a tight approximation to the
         minimum function
@@ -354,7 +354,7 @@ def sigmoid_hyperbolic(x, x0=0.5, alpha=1):
 
     """
     x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
-    sigma = (1 + np.tanh((x-x0)/alpha))/2
+    sigma = (1 + np.tanh((x - x0) / alpha)) / 2
     return sigma
 
 
@@ -386,7 +386,7 @@ def sigmoid_rational(x, n, m):
     x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
     x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
     x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
-    sigma = x ** n / (x ** n + (1 - x) ** m)
+    sigma = x**n / (x**n + (1 - x) ** m)
     return sigma
 
 
@@ -394,9 +394,9 @@ def sigmoid_smoothstep(x):
     """
     Compute the smooth step function.
 
-    This function calculates a smooth step function with zero first-order 
+    This function calculates a smooth step function with zero first-order
     derivatives at the endpoints. More information available at:
-    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/ 
+    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/
 
     Parameters
     ----------
@@ -412,15 +412,15 @@ def sigmoid_smoothstep(x):
     x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
     x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
     x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
-    return x ** 2 * (3 - 2 * x)
+    return x**2 * (3 - 2 * x)
 
 
 def sigmoid_smootherstep(x):
     """
     Compute the smoother step function.
 
-    This function calculates a smoother step function with zero second-order 
-    derivatives at the endpoints. It is a modification of the smoothstep 
+    This function calculates a smoother step function with zero second-order
+    derivatives at the endpoints. It is a modification of the smoothstep
     function to provide smoother transitions.
 
     Parameters
@@ -437,6 +437,4 @@ def sigmoid_smootherstep(x):
     x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
     x = np.where(x < 0, 0, x)  # Set x to 0 where x < 0
     x = np.where(x > 1, 1, x)  # Set x to 1 where x > 1
-    return 6 * x ** 5 - 15 * x ** 4 + 10 * x ** 3
-
-
+    return 6 * x**5 - 15 * x**4 + 10 * x**3

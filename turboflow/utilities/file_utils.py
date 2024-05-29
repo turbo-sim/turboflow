@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 import numpy as np
 
+
 def convert_numpy_to_python(data, precision=10):
     """
     Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
@@ -59,8 +60,8 @@ def convert_numpy_to_python(data, precision=10):
 
     else:
         raise TypeError(f"Unsupported data type: {type(data)}")
-    
-    
+
+
 def compare_contents_or_files(file_or_content_1, file_or_content_2):
     """
     Compare the content of two inputs, which can be either file paths or strings.
@@ -257,7 +258,9 @@ def check_for_unused_keys(dict_in, dict_name, raise_error=False):
         dict_str = print_dict(dict_in, indent=1, return_output=True)
 
         if raise_error:
-            raise ValueError(f"Dictionary '{dict_name}' is not empty. Contains unused items:\n{dict_str}")
+            raise ValueError(
+                f"Dictionary '{dict_name}' is not empty. Contains unused items:\n{dict_str}"
+            )
         else:
             print(f"Warning: Dictionary '{dict_name}' contains unused items.")
             print(dict_str)
@@ -342,7 +345,7 @@ def print_object(obj):
 
     # Sort them alphabetically, case-insensitive
     sorted_attributes = sorted(attributes, key=lambda x: x.lower())
-    
+
     # Iterate over sorted attributes
     for attr in sorted_attributes:
         # Retrieve the attribute or method from the object
@@ -353,7 +356,6 @@ def print_object(obj):
             print(f"Method: {attr}")
         else:
             print(f"Attribute: {attr}")
-
 
 
 def validate_keys(checked_dict, required_keys, allowed_keys=None):
@@ -418,4 +420,3 @@ class DictionaryValidationError(Exception):
         if self.key is not None and self.value is not None:
             return f"{self.message} Key: '{self.key}', Value: {self.value}"
         return self.message
-

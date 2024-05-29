@@ -44,9 +44,7 @@ class RosenbrockProblem(OptimizationProblem):
         xm_m1 = x[:-2]
         xm_p1 = x[2:]
         grad = np.zeros_like(x)
-        grad[1:-1] = (
-            200 * (xm - xm_m1**2) - 400 * (xm_p1 - xm**2) * xm - 2 * (1 - xm)
-        )
+        grad[1:-1] = 200 * (xm - xm_m1**2) - 400 * (xm_p1 - xm**2) * xm - 2 * (1 - xm)
         grad[0] = -400 * x[0] * (x[1] - x[0] ** 2) - 2 * (1 - x[0])
         grad[-1] = 200 * (x[-1] - x[-2] ** 2)
         return grad
@@ -77,7 +75,7 @@ class RosenbrockProblem(OptimizationProblem):
 
     def get_nic(self):
         return 0
-    
+
 
 class RosenbrockProblemConstrained(OptimizationProblem):
     r"""
@@ -137,13 +135,15 @@ class RosenbrockProblemConstrained(OptimizationProblem):
         gradient = approx_derivative(
             self.fitness,
             x,
-            method='2-point',
+            method="2-point",
             abs_step=1e-6 * np.abs(x),
         )
         return gradient
 
     def hessians(self, x):
-        H = approx_jacobian_hessians(self.fitness, x, abs_step=1e-4, lower_triangular=True)
+        H = approx_jacobian_hessians(
+            self.fitness, x, abs_step=1e-4, lower_triangular=True
+        )
         return H
 
     def get_bounds(self):
@@ -154,7 +154,7 @@ class RosenbrockProblemConstrained(OptimizationProblem):
 
     def get_nic(self):
         return 0
-    
+
 
 class HS71Problem(OptimizationProblem):
     r"""

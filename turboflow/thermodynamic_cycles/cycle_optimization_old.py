@@ -702,7 +702,7 @@
 #             data_other_side = self.cycle_data["components"][component_name][side_2]
 #             is_heat_exchanger = True
 
-#         else: # Handle non-heat exchanger components           
+#         else: # Handle non-heat exchanger components
 #             data = self.cycle_data["components"][name]
 #             is_heat_exchanger = False
 
@@ -719,7 +719,7 @@
 #             # Other cases
 #             x_data = None
 #             y_data = None
-            
+
 #         color = data["color"]
 
 #         return x_data, y_data, color

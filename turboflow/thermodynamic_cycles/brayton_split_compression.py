@@ -18,10 +18,16 @@ def evaluate_cycle(
     parameters = copy.deepcopy(parameters)
 
     # Initialize fluid objects
-    working_fluid = props.Fluid(**parameters.pop("working_fluid"), identifier="working_fluid")
-    heating_fluid = props.Fluid(**parameters.pop("heating_fluid"), identifier="heating_fluid")
-    cooling_fluid = props.Fluid(**parameters.pop("cooling_fluid"), identifier="cooling_fluid")
-    
+    working_fluid = props.Fluid(
+        **parameters.pop("working_fluid"), identifier="working_fluid"
+    )
+    heating_fluid = props.Fluid(
+        **parameters.pop("heating_fluid"), identifier="heating_fluid"
+    )
+    cooling_fluid = props.Fluid(
+        **parameters.pop("cooling_fluid"), identifier="cooling_fluid"
+    )
+
     # Extract heat source/sink parameters and give short names
     T_source_out_max = parameters["heat_source"].pop("exit_temperature_max")
     T_source_out_min = parameters["heat_source"].pop("exit_temperature_min")

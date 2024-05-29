@@ -4,10 +4,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 # Attempt to import imageio for video generatioj
-try:     
-    import imageio    
+try:
+    import imageio
+
     IMEGEIO_AVAILABLE = True
-except ImportError:     
+except ImportError:
     IMAGEIO_AVAILABLE = False
 
 
@@ -99,7 +100,7 @@ def set_plot_options(
         "axes.grid.which": "major",
         "axes.prop_cycle": cycler(color=color_order),
         "grid.alpha": 1,
-        "grid.color": '#808080', # Grey equivalent to 50% transparency
+        "grid.color": "#808080",  # Grey equivalent to 50% transparency
         "grid.linestyle": "-",
         "grid.linewidth": 0.5,
         "legend.borderaxespad": 1,
@@ -172,9 +173,7 @@ def print_rc_parameters(filename=None):
                 file.write(f"{key}: {value}\n")
 
 
-def savefig_in_formats(
-    fig, path_without_extension, formats=[".png", ".svg"], dpi=500
-):
+def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg"], dpi=500):
     """
     Save a given Matplotlib figure in multiple file formats.
 
@@ -206,7 +205,9 @@ def savefig_in_formats(
     allowed_formats = {".png", ".svg", ".pdf", ".eps"}
     invalid_formats = set(formats) - allowed_formats
     if invalid_formats:
-        raise ValueError(f"Unsupported file formats: {', '.join(invalid_formats)}. Allowed formats: {', '.join(allowed_formats)}")
+        raise ValueError(
+            f"Unsupported file formats: {', '.join(invalid_formats)}. Allowed formats: {', '.join(allowed_formats)}"
+        )
 
     for ext in formats:
         if ext == ".png":
@@ -231,8 +232,10 @@ def create_gif(image_folder, output_file, duration=0.5):
         Duration of each frame in the GIF, by default 0.5 seconds.
     """
 
-    if not IMEGEIO_AVAILABLE:         
-        raise ImportError("imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function.")
+    if not IMEGEIO_AVAILABLE:
+        raise ImportError(
+            "imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function."
+        )
 
     images = []
     for filename in sorted(os.listdir(image_folder)):
@@ -257,8 +260,10 @@ def create_mp4(image_folder, output_file, fps=10):
         Frames per second in the output video, by default 10.
     """
 
-    if not IMEGEIO_AVAILABLE:         
-        raise ImportError("imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function.")
+    if not IMEGEIO_AVAILABLE:
+        raise ImportError(
+            "imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function."
+        )
 
     with imageio.get_writer(output_file, fps=fps) as writer:
         for filename in sorted(os.listdir(image_folder)):

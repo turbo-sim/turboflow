@@ -1,17 +1,16 @@
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt    
-import meanline_axial as ml
+import matplotlib.pyplot as plt
+import turboflow as tf
 
 
 # Define configuration filename
 CONFIG_FILE = "case_sCO2_recuperated.yaml"
 
 
-
 # Usage example
-optimizer = ml.cycles.ThermodynamicCycleOptimization(CONFIG_FILE)
+optimizer = tf.cycles.ThermodynamicCycleOptimization(CONFIG_FILE)
 # TODO options to add as configuration
 # Use plot callback or not, if yes, then make sure a function call to the plot_cycle function is done
 # Move the configuration function handling to the configuration management class
@@ -26,7 +25,6 @@ optimizer.save_results()
 
 
 print("hello")
-
 
 
 # # Initialize Brayton cycle problem
@@ -70,6 +68,3 @@ print("hello")
 
 # # # Keep figures open
 # # plt.show()
-
-
-

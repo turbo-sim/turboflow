@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def load_data(filename):
 
+def load_data(filename):
     """
     Load performance data from an Excel file.
 
@@ -34,9 +34,14 @@ def load_data(filename):
 
     # Read excel file
     performance_data = pd.read_excel(
-        filename, sheet_name=["operation point", "plane", "cascade", 
-                              #"stage",
-                              "overall"]
+        filename,
+        sheet_name=[
+            "operation point",
+            "plane",
+            "cascade",
+            # "stage",
+            "overall",
+        ],
     )
 
     # Round off to ignore precision loss by loading data from excel
@@ -50,23 +55,23 @@ def plot_lines(
     performance_data,
     x_key,
     y_keys,
-    subsets = None,
+    subsets=None,
     fig=None,
     ax=None,
     xlabel="",
     ylabel="",
     title="",
-    labels = None,
+    labels=None,
     filename=None,
     outdir="figures",
     stack=False,
     color_map="viridis",
-    colors = None,
+    colors=None,
     close_fig=False,
     save_figs=False,
-    linestyles = None,
-    save_formats=['.png'],
-    legend_loc='best',
+    linestyles=None,
+    save_formats=[".png"],
+    legend_loc="best",
 ):
     """
     Plot lines from performance data.
@@ -83,7 +88,7 @@ def plot_lines(
     y_keys : list of str
         Names of the columns in performance_data to be plotted.
     subsets : list, optional
-        Name and value of subsets to plot from performance_data. First instance should be a string representing the column name, while the 
+        Name and value of subsets to plot from performance_data. First instance should be a string representing the column name, while the
         remaining elemnts represet the values defining the subset. Default is None.
     fig : matplotlib.figure.Figure, optional
         An existing figure object. If None, a new figure is created.
@@ -151,7 +156,7 @@ def plot_lines(
     # Get labels
     if labels == None:
         if subsets is not None:
-            labels = [f"{subsets[0]} = {subsets[i+1]}" for i in range(len(subsets)-1)]
+            labels = [f"{subsets[0]} = {subsets[i+1]}" for i in range(len(subsets) - 1)]
         elif len(y_keys) > 1:
             labels = [f"{y_keys[i]}" for i in range(len(y))]
         else:
@@ -159,9 +164,9 @@ def plot_lines(
 
     # Get linestyles
     if linestyles == None:
-        linestyles = ['-']*len(y)
-    
-    # Plot figure        
+        linestyles = ["-"] * len(y)
+
+    # Plot figure
     if stack == True:
         ax.stackplot(x, y, labels=y_keys, colors=colors)
 
@@ -170,14 +175,16 @@ def plot_lines(
         cumulative_y = np.cumsum(y_arrays, axis=0)
         for i, series in enumerate(y_arrays):
             if i == 0:
-                ax.plot(x, series, color='black', linewidth=0.5)
-            ax.plot(x, cumulative_y[i], color='black', linewidth=0.5)
+                ax.plot(x, series, color="black", linewidth=0.5)
+            ax.plot(x, cumulative_y[i], color="black", linewidth=0.5)
     elif subsets is not None:
         for i in range(len(y)):
-            ax.plot(x[i], y[i], label=labels[i], color=colors[i], linestyle = linestyles[i])
+            ax.plot(
+                x[i], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i]
+            )
     else:
         for i in range(len(y)):
-            ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle = linestyles[i])
+            ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
 
     # Set margins to zero
     ax.margins(x=0.01, y=0.01)
@@ -208,7 +215,7 @@ def get_lines(performance_data, column_name, subsets=None):
 
     This function returns a list of array from the specified column(s) of the performance data.
     If no subset is specified, it returns lines covering all rows in `performance_data`. If a subset
-    is specified, it returns lines covering only the rows that match the specified subset.        
+    is specified, it returns lines covering only the rows that match the specified subset.
 
     Parameters
     ----------
@@ -217,7 +224,7 @@ def get_lines(performance_data, column_name, subsets=None):
     column_name : str or list of str
         The name(s) of the column(s) from which to retrieve data.
     subsets : list, optional
-        Name and value of subsets to get data from performance_data. First instance should be a string representing the column name, while the 
+        Name and value of subsets to get data from performance_data. First instance should be a string representing the column name, while the
         remaining elemnts represet the values defining the subset. Default is None.
 
     Returns
@@ -252,6 +259,7 @@ def get_lines(performance_data, column_name, subsets=None):
                 lines.append(get_column(performance_data, column)[indices])
 
     return lines
+
 
 def find_column(performance_data, column_name):
     """
@@ -288,9 +296,9 @@ def find_column(performance_data, column_name):
 
 def get_column(performance_data, column_name):
     """
-    Retrieve a column of data from `performance_data`. 
+    Retrieve a column of data from `performance_data`.
 
-    This function retrieves the specified column of data from `performance_data` by finding the sheet containing 
+    This function retrieves the specified column of data from `performance_data` by finding the sheet containing
     the column using the `find_column` function. It then returns the column as a pandas Series.
 
     Parameters
@@ -315,8 +323,8 @@ def get_subset(performance_data, column_name, row_value):
     """
     Retrieve the index of rows in `performance_data` where `column_name` equals `row_value`.
 
-    This function retrieves the index of rows in `performance_data` where the specified column (`column_name`) 
-    equals the specified value (`row_value`). It first finds the sheet containing the column using the 
+    This function retrieves the index of rows in `performance_data` where the specified column (`column_name`)
+    equals the specified value (`row_value`). It first finds the sheet containing the column using the
     `find_column` function, then returns the index of rows where the column has the specified value.
 
     Parameters
@@ -332,7 +340,7 @@ def get_subset(performance_data, column_name, row_value):
     -------
     pandas.Index
         The index of rows where `column_name` equals `row_value`.
-    
+
     """
     sheet = find_column(performance_data, column_name)
 
@@ -341,7 +349,9 @@ def get_subset(performance_data, column_name, row_value):
     ].index
 
 
-def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".pdf", ".eps"]):
+def savefig_in_formats(
+    fig, path_without_extension, formats=[".png", ".svg", ".pdf", ".eps"]
+):
     """
     Save a given matplotlib figure in multiple file formats.
 
@@ -367,8 +377,8 @@ def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".p
     for ext in formats:
         fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
 
-def plot_axial_radial_plane(geometry):
 
+def plot_axial_radial_plane(geometry):
     r"""
     Plot the turbine geometry in an axial-radial plane.
 
@@ -395,9 +405,9 @@ def plot_axial_radial_plane(geometry):
         The generated figure.
     matplotlib.axes.Axes
         The generated axes.
-    
+
     """
-    
+
     # Load data
     radius_hub_in = geometry["radius_hub_in"]
     radius_hub_out = geometry["radius_hub_out"]
@@ -406,91 +416,120 @@ def plot_axial_radial_plane(geometry):
     number_of_cascades = geometry["number_of_cascades"]
     axial_chord = geometry["axial_chord"]
     tip_clearance = geometry["tip_clearance"]
-    
+
     # Define unspecified geometrical parameters
-    ct = 0.05 # Thickness of casing relative to maximum tip radius
-    cl = 1.2 # Length of casing to turbine 
-    cs = 0.1 # Axial spacing between cascades relative to max axial chord
-    
+    ct = 0.05  # Thickness of casing relative to maximum tip radius
+    cl = 1.2  # Length of casing to turbine
+    cs = 0.1  # Axial spacing between cascades relative to max axial chord
+
     # Get x-points
-    dx = cs*max(axial_chord)
+    dx = cs * max(axial_chord)
     x = np.array([])
     for i in range(len(axial_chord)):
-        x = np.append(x, np.sum(axial_chord[0:i+1]) + i*dx)
-        x = np.append(x, np.sum(axial_chord[0:i+1]) + (i+1)*dx)
+        x = np.append(x, np.sum(axial_chord[0 : i + 1]) + i * dx)
+        x = np.append(x, np.sum(axial_chord[0 : i + 1]) + (i + 1) * dx)
     x[1:] = x[0:-1]
     x[0] = 0
-        
+
     # Get tip and hub points
-    y_hub = np.array([val for pair in zip(radius_hub_in, radius_hub_out) for val in pair]) 
-    y_tip = np.array([val for pair in zip(radius_tip_in, radius_tip_out) for val in pair]) 
-    
+    y_hub = np.array(
+        [val for pair in zip(radius_hub_in, radius_hub_out) for val in pair]
+    )
+    y_tip = np.array(
+        [val for pair in zip(radius_tip_in, radius_tip_out) for val in pair]
+    )
+
     # Initialize figure and axis object
     fig, ax = plt.subplots()
-    
+
     # Plot upper casing
-    tip_clearance_extended = np.array([val for pair in zip(tip_clearance, tip_clearance) for val in pair]) # Extend tip clearance vector 
-    casing_thickness = max(y_tip)*ct
+    tip_clearance_extended = np.array(
+        [val for pair in zip(tip_clearance, tip_clearance) for val in pair]
+    )  # Extend tip clearance vector
+    casing_thickness = max(y_tip) * ct
     x_casing = x
-    x_casing = np.insert(x_casing, 0, x[0] - (cl-1)*x[-1]/2)
-    x_casing = np.append(x_casing, x[-1] + (cl-1)*x[-1]/2)
-    
+    x_casing = np.insert(x_casing, 0, x[0] - (cl - 1) * x[-1] / 2)
+    x_casing = np.append(x_casing, x[-1] + (cl - 1) * x[-1] / 2)
+
     y_casing_lower = y_tip + tip_clearance_extended
     y_casing_lower = np.insert(y_casing_lower, 0, y_casing_lower[0])
     y_casing_lower = np.append(y_casing_lower, y_casing_lower[-1])
-    y_casing_upper = np.ones(len(x_casing))*(max(y_tip) + casing_thickness)
-    
-    ax.plot(x_casing, y_casing_lower, 'k')
-    ax.plot(x_casing, y_casing_upper, 'k')
-    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], 'k')
-    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], 'k')
-    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color = '0.5')
-    
+    y_casing_upper = np.ones(len(x_casing)) * (max(y_tip) + casing_thickness)
+
+    ax.plot(x_casing, y_casing_lower, "k")
+    ax.plot(x_casing, y_casing_upper, "k")
+    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], "k")
+    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], "k")
+    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color="0.5")
+
     # Plot lower casing
-    tip_clearance_extended = np.array([val for pair in zip(np.flip(tip_clearance), np.flip(tip_clearance)) for val in pair]) # Extend tip clearance vector 
+    tip_clearance_extended = np.array(
+        [
+            val
+            for pair in zip(np.flip(tip_clearance), np.flip(tip_clearance))
+            for val in pair
+        ]
+    )  # Extend tip clearance vector
     y_casing_upper = y_hub - tip_clearance_extended
     y_casing_upper = np.insert(y_casing_upper, 0, y_casing_upper[0])
     y_casing_upper = np.append(y_casing_upper, y_casing_upper[-1])
     y_casing_lower = y_casing_upper - casing_thickness
-    
-    ax.plot(x_casing, y_casing_lower, 'k')
-    ax.plot(x_casing, y_casing_upper, 'k')
-    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], 'k')
-    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], 'k')
-    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color = '0.5')                                                
-    
+
+    ax.plot(x_casing, y_casing_lower, "k")
+    ax.plot(x_casing, y_casing_upper, "k")
+    ax.plot([x_casing[0], x_casing[0]], [y_casing_lower[0], y_casing_upper[0]], "k")
+    ax.plot([x_casing[-1], x_casing[-1]], [y_casing_lower[-1], y_casing_upper[-1]], "k")
+    ax.fill_between(x_casing, y_casing_lower, y_casing_upper, color="0.5")
+
     # Plot cascades
-    for i in range(number_of_cascades):    
-        ax.plot(x[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], 'k') # Plot tip
-        ax.plot(x[i*2:(i+1)*2],  y_hub[i*2:(i+1)*2], 'k') # Plot hub
-        ax.plot([x[i*2:(i+1)*2][0], x[i*2:(i+1)*2][0]], [y_hub[i*2:(i+1)*2][0], y_tip[i*2:(i+1)*2][0]], 'k') # Plot inlet vertical line
-        ax.plot([x[i*2:(i+1)*2][1], x[i*2:(i+1)*2][1]], [y_hub[i*2:(i+1)*2][1], y_tip[i*2:(i+1)*2][1]], 'k') # Plot exit vertical line
-        ax.fill_between(x[i*2:(i+1)*2], y_hub[i*2:(i+1)*2], y_tip[i*2:(i+1)*2], color = '1') # Fill cascade with color
+    for i in range(number_of_cascades):
+        ax.plot(x[i * 2 : (i + 1) * 2], y_tip[i * 2 : (i + 1) * 2], "k")  # Plot tip
+        ax.plot(x[i * 2 : (i + 1) * 2], y_hub[i * 2 : (i + 1) * 2], "k")  # Plot hub
+        ax.plot(
+            [x[i * 2 : (i + 1) * 2][0], x[i * 2 : (i + 1) * 2][0]],
+            [y_hub[i * 2 : (i + 1) * 2][0], y_tip[i * 2 : (i + 1) * 2][0]],
+            "k",
+        )  # Plot inlet vertical line
+        ax.plot(
+            [x[i * 2 : (i + 1) * 2][1], x[i * 2 : (i + 1) * 2][1]],
+            [y_hub[i * 2 : (i + 1) * 2][1], y_tip[i * 2 : (i + 1) * 2][1]],
+            "k",
+        )  # Plot exit vertical line
+        ax.fill_between(
+            x[i * 2 : (i + 1) * 2],
+            y_hub[i * 2 : (i + 1) * 2],
+            y_tip[i * 2 : (i + 1) * 2],
+            color="1",
+        )  # Fill cascade with color
 
     # Plot axis of rotation
-    plt.annotate('', xy=(x[-1], 0), xytext=(0, 0),
-             arrowprops=dict(facecolor='black', arrowstyle='-|>'))
-        
+    plt.annotate(
+        "",
+        xy=(x[-1], 0),
+        xytext=(0, 0),
+        arrowprops=dict(facecolor="black", arrowstyle="-|>"),
+    )
+
     ax.grid(False)
-    ax.tick_params(which = "both", direction = 'out', right = False)
-    ax.tick_params(which = "minor", left = False)
+    ax.tick_params(which="both", direction="out", right=False)
+    ax.tick_params(which="minor", left=False)
     # ax.set_yticks([])
     ax.set_xticks([])
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
     # ax.spines['left'].set_visible(False)
     ax.set_xlabel("Axis of rotation")
     ax.set_ylabel("Radius")
-    ax.set_aspect('equal')
+    ax.set_aspect("equal")
     lims = ax.get_ylim()
     ax.set_ylim([0, lims[-1]])
     plt.show()
-    
+
     return fig, ax
 
-def plot_velocity_triangles(plane):
 
+def plot_velocity_triangles(plane):
     """
     Plot velocity triangles for each stage of a turbine.
 
@@ -528,13 +567,15 @@ def plot_velocity_triangles(plane):
     plane_name = ["inlet", "exit"]
 
     # Tuning options
-    dx = 0.1 # Spacing between triangles
-    hs = 10 # Horizontal spacing between line and symbol (absolute)
-    start = 0 # Starting point in y direction
-    fontsize = 12 # Fontsize 
+    dx = 0.1  # Spacing between triangles
+    hs = 10  # Horizontal spacing between line and symbol (absolute)
+    start = 0  # Starting point in y direction
+    fontsize = 12  # Fontsize
 
     # Get rotor indexes
-    i_rotor = np.array([val for pair in zip(plane.index[2::4], plane.index[3::4]) for val in pair])
+    i_rotor = np.array(
+        [val for pair in zip(plane.index[2::4], plane.index[3::4]) for val in pair]
+    )
 
     # initialize figure and axis
     fig, ax = plt.subplots()
@@ -549,60 +590,118 @@ def plot_velocity_triangles(plane):
         w_t = w_ts[i]
 
         # Define cascade name
-        cascade = "Stator" # Changed if rotor (see below)
+        cascade = "Stator"  # Changed if rotor (see below)
 
         # Plot absolute velocity
-        ax.plot([0, 0], [start, start - v_m], color = 'k', linestyle = ':') # Plot meridional velocity 
-        ax.plot([0, v_t], [start - v_m, start - v_m], color = 'k', linestyle = ':') # Plot tangntial velocity
-        ax.plot([0, v_t], [start, start -v_m], 'k') # Plot velocity
-        x_mid = v_t/2
-        y_mid = (start + start -v_m)/2
-        plt.annotate('', xy=(x_mid, y_mid), xytext=(0, start),
-                arrowprops=dict(facecolor='black', arrowstyle='-|>')) # Arrow for absolute velocity
+        ax.plot(
+            [0, 0], [start, start - v_m], color="k", linestyle=":"
+        )  # Plot meridional velocity
+        ax.plot(
+            [0, v_t], [start - v_m, start - v_m], color="k", linestyle=":"
+        )  # Plot tangntial velocity
+        ax.plot([0, v_t], [start, start - v_m], "k")  # Plot velocity
+        x_mid = v_t / 2
+        y_mid = (start + start - v_m) / 2
+        plt.annotate(
+            "",
+            xy=(x_mid, y_mid),
+            xytext=(0, start),
+            arrowprops=dict(facecolor="black", arrowstyle="-|>"),
+        )  # Arrow for absolute velocity
         sign = -1 if x_mid < 0 else 1
-        ax.text(x_mid + hs*sign, y_mid, f'$v$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for absolute velocity
+        ax.text(
+            x_mid + hs * sign,
+            y_mid,
+            f"$v$",
+            fontsize=fontsize,
+            ha="center",
+            va="bottom",
+            color="k",
+        )  # Symbol for absolute velocity
 
         # Plot relative velocity
         if i in i_rotor:
-            
+
             cascade = "Rotor"
-            ax.plot([0, w_t], [start - w_m, start - w_m], color = 'k', linestyle = ':') # Plot tangntial velocity
-            ax.plot([0, w_t], [start, start -w_m], color = 'k') # Plot velocity
-            ax.plot([w_t, v_t], [start - w_m, start - w_m], 'k') # Plot blade speed
-            x_mid = w_t/2
-            y_mid = (start + start -w_m)/2
-            plt.annotate('', xy=(x_mid, y_mid), xytext=(0, start),
-                    arrowprops=dict(facecolor='black', arrowstyle='-|>')) # Arrow for relative velocity
+            ax.plot(
+                [0, w_t], [start - w_m, start - w_m], color="k", linestyle=":"
+            )  # Plot tangntial velocity
+            ax.plot([0, w_t], [start, start - w_m], color="k")  # Plot velocity
+            ax.plot([w_t, v_t], [start - w_m, start - w_m], "k")  # Plot blade speed
+            x_mid = w_t / 2
+            y_mid = (start + start - w_m) / 2
+            plt.annotate(
+                "",
+                xy=(x_mid, y_mid),
+                xytext=(0, start),
+                arrowprops=dict(facecolor="black", arrowstyle="-|>"),
+            )  # Arrow for relative velocity
             sign = -1 if x_mid < 0 else 1
-            ax.text(x_mid + hs*np.sign(x_mid), y_mid, f'$w$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for relative velocity
-            x_mid = (w_t+v_t)/2
-            y_mid = start -w_m
-            plt.annotate('', xy=(x_mid, y_mid), xytext=(w_t, start-w_m),
-                    arrowprops=dict(facecolor='k', arrowstyle='-|>')) # Arrow for blade speed
-            ax.text(x_mid, y_mid, f'$u$', fontsize=fontsize, ha='center', va='bottom', color='k') # Symbol for blade speed
-        
+            ax.text(
+                x_mid + hs * np.sign(x_mid),
+                y_mid,
+                f"$w$",
+                fontsize=fontsize,
+                ha="center",
+                va="bottom",
+                color="k",
+            )  # Symbol for relative velocity
+            x_mid = (w_t + v_t) / 2
+            y_mid = start - w_m
+            plt.annotate(
+                "",
+                xy=(x_mid, y_mid),
+                xytext=(w_t, start - w_m),
+                arrowprops=dict(facecolor="k", arrowstyle="-|>"),
+            )  # Arrow for blade speed
+            ax.text(
+                x_mid,
+                y_mid,
+                f"$u$",
+                fontsize=fontsize,
+                ha="center",
+                va="bottom",
+                color="k",
+            )  # Symbol for blade speed
+
         # Add explanatory text
         if w_t < 0:
-            ax.text(max_w_t/2, start-v_m/2, f'{cascade} {plane_name[i%2]}', fontsize=fontsize, ha='center', va='center', color='k')
+            ax.text(
+                max_w_t / 2,
+                start - v_m / 2,
+                f"{cascade} {plane_name[i%2]}",
+                fontsize=fontsize,
+                ha="center",
+                va="center",
+                color="k",
+            )
         else:
-            ax.text(min_w_t/2, start-v_m/2, f'{cascade} {plane_name[i%2]}', fontsize=fontsize, ha='center', va='center', color='k')
-        
+            ax.text(
+                min_w_t / 2,
+                start - v_m / 2,
+                f"{cascade} {plane_name[i%2]}",
+                fontsize=fontsize,
+                ha="center",
+                va="center",
+                color="k",
+            )
+
         # Plot line diciding the different triangles
-        ax.plot([min_w_t, max_w_t], [start - w_m - dx*v_m, start - w_m - dx*v_m], 'k:')
+        ax.plot(
+            [min_w_t, max_w_t], [start - w_m - dx * v_m, start - w_m - dx * v_m], "k:"
+        )
 
         # Update starting point for the next velocity triangle
-        start = start - w_m - 2*dx*v_m
-        
+        start = start - w_m - 2 * dx * v_m
+
     # Set plot options
     ax.grid(False)
     ax.set_yticks([])
     ax.set_xticks([])
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.spines['left'].set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
     plt.show()
 
     return fig, ax
-    
-

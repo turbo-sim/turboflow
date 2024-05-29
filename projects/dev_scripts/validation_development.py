@@ -13,11 +13,10 @@ case_data = tf.read_configuration_file(CONFIG_FILE)
 # print(case_data)
 
 # ml.print_dict(case_data["model_options"])
-config, _, _ = tf.validate_configuration_options(config=case_data, schema=ml.CONFIGURATION_OPTIONS)
+config, _, _ = tf.validate_configuration_options(
+    config=case_data, schema=ml.CONFIGURATION_OPTIONS
+)
 
 # ml.print_dict(config)
 
 # ml.print_dict(config)
-
-
-

@@ -13,11 +13,11 @@ x2 = 0.97
 y1 = -61.6
 y2 = -62.3
 
-a =(y1-y2)/(x1**2-2*x1*x2+x2**2)
-b = -2*a*x2
-c = y2+a*x2**2
+a = (y1 - y2) / (x1**2 - 2 * x1 * x2 + x2**2)
+b = -2 * a * x2
+c = y2 + a * x2**2
 
-y = lambda x: a*x**2+b*x+c
+y = lambda x: a * x**2 + b * x + c
 
 x = np.linspace(0.8, 1, 20)
 

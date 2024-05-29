@@ -54,6 +54,6 @@ class LorentzEquations(NonlinearSystemProblem):
         eq2 = x * (self.rho - z) - y
         eq3 = x * y - self.beta * z
         return np.array([eq1, eq2, eq3])
-    
+
     def gradient(self, x):
         return approx_derivative(self.residual, x, method="cs")

@@ -11,7 +11,6 @@ import barotropy as bpy
 from datetime import datetime
 
 
-
 # TODO
 # Add capability to export configuration file
 # Improve capability to export initial file (now it does not export solver options)
@@ -22,7 +21,6 @@ from datetime import datetime
 # Add colorbar
 # Add greyscale
 # Add white patch to the diagram
-
 
 
 # Define configuration filename
@@ -50,11 +48,6 @@ ax.set_xlabel("Entropy (kJ/kg/K)")
 ax.set_ylabel("Temperature ($^\circ$ C)")
 
 # thermoCycle.fluid.plot_phase_diagram(axes=ax, plot_saturation_line=True, plot_critical_point=True)
-
-
-
-
-
 
 
 # # ---------------------------------------------------------------------------- #
@@ -94,8 +87,8 @@ fluid = bpy.Fluid(name=fluid_name, backend="HEOS", exceptions=True)
 
 Nx = 50
 Ny = 50
-rho_1 = fluid.triple_point_vapor.d/20
-rho_2 = fluid.critical_point.d/2
+rho_1 = fluid.triple_point_vapor.d / 20
+rho_2 = fluid.critical_point.d / 2
 rho_3 = fluid.set_state(ml.PT_INPUTS, fluid.p_max, fluid.T_min).d
 T_1 = fluid.triple_point_liquid.T
 T_2 = fluid.critical_point.T
@@ -108,7 +101,9 @@ range_y2 = np.linspace(T_2, T_3, Ny)
 range_y = np.hstack([range_y1, range_y2])
 
 # Plot pressure isobars
-prop_dict = bpy.compute_properties_meshgrid(fluid, ml.DmassT_INPUTS, range_x, range_y, generalize_quality=False)
+prop_dict = bpy.compute_properties_meshgrid(
+    fluid, ml.DmassT_INPUTS, range_x, range_y, generalize_quality=False
+)
 
 contour = ax.contourf(
     prop_dict["s"],
@@ -121,7 +116,7 @@ contour = ax.contourf(
 
 
 # Add a colorbar with a label
-colorbar = fig.colorbar(contour, ax=ax, label='$Z$ — Compressibility factor')
+colorbar = fig.colorbar(contour, ax=ax, label="$Z$ — Compressibility factor")
 
 contour = ax.contour(
     prop_dict["s"],
@@ -140,7 +135,9 @@ contour = ax.contour(
 #                "y_scale": "linear"}
 
 
-fluid.plot_phase_diagram(x_variable="s", y_variable="T", axes=ax, plot_critical_point=False)
+fluid.plot_phase_diagram(
+    x_variable="s", y_variable="T", axes=ax, plot_critical_point=False
+)
 
 x = fluid.sat_liq["s"] + fluid.sat_vap["s"]
 y = fluid.sat_liq["T"] + fluid.sat_vap["T"]
@@ -169,8 +166,15 @@ for name, component in thermoCycle.cycle_data["components"].items():
             x = fluid_data["states"]["s"]
             y = fluid_data["states"]["T"]
             ax.plot(x, y, color=color)
-            ax.plot(x[[0, -1]], y[[0, -1]], marker="o", linestyle='None', color=color, markersize=3.5, zorder=4)
-
+            ax.plot(
+                x[[0, -1]],
+                y[[0, -1]],
+                marker="o",
+                linestyle="None",
+                color=color,
+                markersize=3.5,
+                zorder=4,
+            )
 
 
 ax.set_ylim([-50, 650])
@@ -182,7 +186,7 @@ ax.set_ylim([-50, 650])
 # # contourf(fluid.s_grid/1e3, fluid.T_grid-273.15, fluid.Z_grid, [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7 0.8, 0.9, 1.0, 1.1, 1.2], LineStyle='-', LineWidth=0.25, EdgeColor=[0.5, 0.5, 0.5], HandleVisibility='off');
 
 # Set plot scale
-bpy.scale_graphics_x(fig, 1/1e3, mode="multiply")
+bpy.scale_graphics_x(fig, 1 / 1e3, mode="multiply")
 bpy.scale_graphics_y(fig, -273.15, mode="add")
 
 # Adjust plot limits if updating
@@ -197,12 +201,7 @@ ml.savefig_in_formats(fig, f"figures/Ts_diagram_{fig_x:0.1f}_{fig_y:0.1f}")
 plt.show()
 
 
-
-
-
-
-# prop_pair = 
-
+# prop_pair =
 
 
 # # Colorbar settings
@@ -217,32 +216,15 @@ plt.show()
 # cbar.set_ticklabels([f"{level/1e5:.0f}" for level in range_z])
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # def get_latest_file(directory, filename):
 #     # Ensure the base directory exists
 #     if not os.path.exists(directory):
 #         return f"Directory {directory} does not exist."
-    
+
 #     # Initialize variables to track the latest folder and its timestamp
 #     latest_time = None
 #     latest_folder = None
-    
+
 #     # Iterate through all items in the specified directory
 #     for item in os.listdir(directory):
 #         # Construct the full path
@@ -262,7 +244,7 @@ plt.show()
 #             except ValueError:
 #                 # If the date format is incorrect, ignore this folder
 #                 continue
-    
+
 #     # If a latest folder was found
 #     if latest_folder:
 #         # Construct the path to the specified file within the latest folder
@@ -272,6 +254,5 @@ plt.show()
 #             return file_path
 #         else:
 #             return f"File {filename} does not exist in the latest directory."
-    
-#     return "No valid directories found."
 
+#     return "No valid directories found."

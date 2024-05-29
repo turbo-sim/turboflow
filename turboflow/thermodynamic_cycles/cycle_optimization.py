@@ -78,7 +78,6 @@ class ThermodynamicCycleOptimization:
         self.problem = ThermodynamicCycleProblem(self.config["problem_formulation"])
         self.problem.fitness(self.problem.x0)
         return self.problem
-    
 
     def setup_solver(self):
         """
@@ -96,7 +95,6 @@ class ThermodynamicCycleOptimization:
         )
 
         return self.solver
-
 
     def run_optimization(self):
         """
@@ -129,8 +127,6 @@ class ThermodynamicCycleOptimization:
         Creates an animation of the optimization history.
         """
         # Code to generate animation from the optimization results
-
-
 
 
 class ThermodynamicCycleProblem(psv.OptimizationProblem):
@@ -217,7 +213,9 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         self.constraints = conf["constraints"]
         self.fixed_parameters = conf["fixed_parameters"]
         self.objective_function = conf["objective_function"]
-        self.vars_normalized = {k: v["value"] for k, v in conf["design_variables"].items()}
+        self.vars_normalized = {
+            k: v["value"] for k, v in conf["design_variables"].items()
+        }
         self.lower_bounds = {k: v["min"] for k, v in conf["design_variables"].items()}
         self.upper_bounds = {k: v["max"] for k, v in conf["design_variables"].items()}
         self.keys = list(self.vars_normalized.keys())
@@ -320,10 +318,10 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         # Create a 'results' directory if it doesn't exist
         self.optimization_dir = os.path.join(self.out_dir, "optimization")
         os.makedirs(self.optimization_dir, exist_ok=True)
-        
+
         # Define the filename using the solver's iteration number
         filename = os.path.join(self.optimization_dir, f"iteration_{iter:03d}.yaml")
-        
+
         # Call the existing function to save the configuration
         self.save_current_configuration(filename)
 
@@ -365,15 +363,15 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
         self.vars_normalized = dict(zip(self.keys, x))
         self.vars_physical = self._scale_normalized_to_physical(self.vars_normalized)
         for k, v in self.vars_normalized.items():
-            if k in self.configuration['design_variables']:
-                self.configuration['design_variables'][k]['value'] = v
+            if k in self.configuration["design_variables"]:
+                self.configuration["design_variables"][k]["value"] = v
             else:
                 # Optionally handle the error or log a warning if the key does not exist
                 print(f"Warning: {k} is not a recognized design variable.")
 
     def get_bounds(self):
         dim = len(self.vars_normalized)
-        return ([0.0]*dim, [1.00]*dim)
+        return ([0.0] * dim, [1.00] * dim)
 
     def get_nec(self):
         return psv.count_constraints(self.c_eq)
@@ -832,7 +830,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
             data_other_side = self.cycle_data["components"][component_name][side_2]
             is_heat_exchanger = True
 
-        else: # Handle non-heat exchanger components           
+        else:  # Handle non-heat exchanger components
             data = self.cycle_data["components"][name]
             is_heat_exchanger = False
 
@@ -849,7 +847,7 @@ class ThermodynamicCycleProblem(psv.OptimizationProblem):
             # Other cases
             x_data = None
             y_data = None
-            
+
         color = data["color"]
 
         return x_data, y_data, color

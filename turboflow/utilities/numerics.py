@@ -5,6 +5,7 @@ import pandas as pd
 
 from collections.abc import Iterable
 
+
 def is_float(element: any) -> bool:
     """
     Check if the given element can be converted to a float.
@@ -19,8 +20,8 @@ def is_float(element: any) -> bool:
     bool
         True if the element can be converted to a float, False otherwise.
     """
-    
-    if element is None: 
+
+    if element is None:
         return False
     try:
         float(element)
@@ -28,11 +29,12 @@ def is_float(element: any) -> bool:
     except ValueError:
         return False
 
+
 def is_numeric(value):
     """
     Check if a value is a numeric type, including both Python and NumPy numeric types.
 
-    This function checks if the given value is a numeric type (int, float, complex) 
+    This function checks if the given value is a numeric type (int, float, complex)
     in the Python standard library or NumPy, while explicitly excluding boolean types.
 
     Parameters
@@ -43,7 +45,7 @@ def is_numeric(value):
     Returns
     -------
     bool
-        Returns True if the value is a numeric type (excluding booleans), 
+        Returns True if the value is a numeric type (excluding booleans),
         otherwise False.
     """
     if isinstance(value, numbers.Number) and not isinstance(value, bool):
@@ -51,9 +53,10 @@ def is_numeric(value):
     if isinstance(value, (np.int_, np.float_, np.complex_)):
         return True
     if isinstance(value, np.ndarray):
-        return np.issubdtype(value.dtype, np.number) and not np.issubdtype(value.dtype, np.bool_)
+        return np.issubdtype(value.dtype, np.number) and not np.issubdtype(
+            value.dtype, np.bool_
+        )
     return False
-
 
 
 def extract_timestamp(filename):
@@ -98,34 +101,33 @@ def isclose_significant_digits(a, b, significant_digits):
     format_spec = f".{significant_digits - 1}e"
     return format(a, format_spec) == format(b, format_spec)
 
+
 def fill_array_with_increment(n):
-    
     """
     Fill an array of length `n` with values that sum to 1,
     where each value is different but has the same increment
     between neighboring values.
-    
+
     Parameters
     ----------
     n : int
         Length of the array.
-    
+
     Returns
     -------
     array : ndarray
         Array of length 'n' filled with values incrementing
         by a constant factor, resulting in a sum of 1.
     """
-    
+
     if n <= 0:
         return []
 
-    increment = 1.0 / (n+1)
-    array = [increment * (i+1) for i in range(n)]
+    increment = 1.0 / (n + 1)
+    array = [increment * (i + 1) for i in range(n)]
     array /= np.sum(array)
 
     return array
-
 
 
 def ensure_iterable(obj):
@@ -229,4 +231,3 @@ def check_lists_match(list1, list2):
 
     # Check if the sets are equal (contain the same elements)
     return list1_set == list2_set
-

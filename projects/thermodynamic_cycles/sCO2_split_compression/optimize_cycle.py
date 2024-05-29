@@ -1,7 +1,7 @@
 import os
 import sys
 import numpy as np
-import matplotlib.pyplot as plt    
+import matplotlib.pyplot as plt
 import meanline_axial as ml
 
 # Define configuration filename
@@ -47,6 +47,3 @@ solver.problem.to_excel(filename="optimal_solution.xlsx")
 
 # Keep figures open
 plt.show()
-
-
-

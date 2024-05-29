@@ -43,13 +43,13 @@ def evaluate_loss_model(loss_model_options, input_parameters):
 
     - `kacker_okapuu` : loss model according to :cite:`kacker_mean_1982`.
     - `moustapha` : loss model according to :cite:`moustapha_improved_1990`.
-    - `benner` : loss model according to :cite:`benner_influence_1997`, :cite:`benner_empirical_2006-1` and :cite:`benner_empirical_2006`. 
+    - `benner` : loss model according to :cite:`benner_influence_1997`, :cite:`benner_empirical_2006-1` and :cite:`benner_empirical_2006`.
     - `isentropic` : Loss coefficient set to zero (isentropic).
     - `custom` :  Constant loss coefficent according to user. Require `loss_model_options["custom_value"]`.
 
     Parameters
     ----------
-    loss_model_options : dict 
+    loss_model_options : dict
         Options for the loss calculation.
     input_parameters : dict
         Input parameters required for loss model calculation.
@@ -72,15 +72,14 @@ def evaluate_loss_model(loss_model_options, input_parameters):
             "loss_clearance": 0.0,
             "loss_total": 0.0,
         },
-        LOSS_MODELS[4]: lambda input_parameters: 
-                {
-                "loss_profile": 0.0,
-                "loss_incidence": 0.0,
-                "loss_trailing": 0.0,
-                "loss_secondary": 0.0,
-                "loss_clearance": 0.0,
-                "loss_total": loss_model_options["custom_value"],
-            },
+        LOSS_MODELS[4]: lambda input_parameters: {
+            "loss_profile": 0.0,
+            "loss_incidence": 0.0,
+            "loss_trailing": 0.0,
+            "loss_secondary": 0.0,
+            "loss_clearance": 0.0,
+            "loss_total": loss_model_options["custom_value"],
+        },
     }
 
     # Evaluate loss model
@@ -98,7 +97,7 @@ def evaluate_loss_model(loss_model_options, input_parameters):
 
     # Compute the loss coefficient according to definition
     loss_coeff = loss_model_options["loss_coefficient"]
-    if  loss_coeff == "stagnation_pressure":
+    if loss_coeff == "stagnation_pressure":
         # TODO add other loss coefficient definitions
         p0rel_in = input_parameters["flow"]["p0_rel_in"]
         p0rel_out = input_parameters["flow"]["p0_rel_out"]
@@ -107,10 +106,12 @@ def evaluate_loss_model(loss_model_options, input_parameters):
 
     else:
         options = ", ".join(f"'{k}'" for k in LOSS_COEFFICIENTS)
-        raise ValueError(f"Invalid loss coefficient '{loss_coeff}'. Available options: {options}")
+        raise ValueError(
+            f"Invalid loss coefficient '{loss_coeff}'. Available options: {options}"
+        )
 
     # Compute loss coefficient error
-    loss_dict["loss_error"] = (Y_definition - loss_dict["loss_total"])
+    loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
 
     return loss_dict
 
@@ -123,9 +124,9 @@ def apply_tuning_factors(loss_dict, tuning_factors):
 
     Parameters
     ----------
-    loss_dict : dict 
+    loss_dict : dict
         A dictionary containing loss components.
-    tuning_factors : dict 
+    tuning_factors : dict
         A dictionary containing the multiplicative tuning factors.
 
     Raises:
@@ -138,4 +139,3 @@ def apply_tuning_factors(loss_dict, tuning_factors):
         loss_dict[key] *= factor
 
     return loss_dict
-

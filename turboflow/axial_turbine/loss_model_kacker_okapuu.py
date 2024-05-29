@@ -4,8 +4,8 @@ from .. import math
 
 def compute_losses(input_parameters):
     r"""
-    
-    Evaluate loss coefficient according to :cite:`kacker_mean_1982`. 
+
+    Evaluate loss coefficient according to :cite:`kacker_mean_1982`.
 
     This model split the total loss coefficient into profile, secondary, trailing edge and tip clearance.
     The loss coefficient are combined through the following relation:
@@ -30,7 +30,7 @@ def compute_losses(input_parameters):
     -------
     dict
         A dictionary with the loss components.
-    
+
     """
 
     # Load data
@@ -63,7 +63,6 @@ def compute_losses(input_parameters):
 
 
 def get_profile_loss(flow_parameters, geometry):
-
     r"""
     Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
     The equation for :math:`\mathrm{Y_p}` is given by:
@@ -465,7 +464,6 @@ def nozzle_blades(r_sc, angle_out):
 
 
 def impulse_blades(r_sc, angle_out):
-
     r"""
     Use Aungier correlation to compute the pressure loss coefficient for impulse blades :cite:`aungier_turbine_2006`.
 
@@ -569,12 +567,11 @@ def get_compressible_correction_factors(Ma_rel_in, Ma_rel_out):
 
 
 def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
-   
     r"""
     Compute the ratio between Mach at the hub and mean span at the inlet of the current cascade.
 
     Due to radial variation in gas conditions, Mach at the hub will always be higher than at the mean.
-    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span. 
+    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span.
 
     Parameters
     ----------

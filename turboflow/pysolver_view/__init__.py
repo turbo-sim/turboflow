@@ -7,6 +7,7 @@ except ImportError:
     pass
 else:
     import sys
+
     sys.excepthook = IPython.core.ultratb.ColorTB()
 
 

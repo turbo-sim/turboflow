@@ -1,12 +1,15 @@
 import numpy as np
 from scipy.optimize._numdiff import approx_derivative
 
-DERIVATIVE_METHODS = ["2-point", 
-                      "3-point", 
-                      "Complex step method",
-                      "forward_finite_differences",
-                      "central_finite_differences",
-                      "complex_step"]
+DERIVATIVE_METHODS = [
+    "2-point",
+    "3-point",
+    "Complex step method",
+    "forward_finite_differences",
+    "central_finite_differences",
+    "complex_step",
+]
+
 
 def approx_gradient(
     function_handle, x, f0=None, abs_step=None, method="central_finite_differences"
@@ -179,7 +182,6 @@ def complex_step_derivative(function_handle, x, abs_step=None):
         df[:, i] = np.imag(np.atleast_1d(function_handle(x_step))) / abs_step[i]
 
     return df.squeeze().real
-
 
 
 def approx_jacobian_hessians(f, x, abs_step=1e-5, lower_triangular=True):

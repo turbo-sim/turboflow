@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel, ValidationError
 from .turbo_configurations import AxialTurbine
 from typing import Union
@@ -8,6 +7,7 @@ import numpy as np
 from . import utilities
 
 TURBOMACHINERIES = ["axial_turbine"]
+
 
 def convert_configuration_options(config):
     """
@@ -144,42 +144,44 @@ def convert_configuration_options(config):
 
     return config
 
+
 def object_to_dict(obj):
     """
     Recursively convert an object's attributes to a dictionary.
 
-    This function takes an object and converts its attributes to a dictionary format. 
-    It handles nested dictionaries, lists, and objects with a `__dict__` attribute, 
+    This function takes an object and converts its attributes to a dictionary format.
+    It handles nested dictionaries, lists, and objects with a `__dict__` attribute,
     recursively converting all attributes to dictionaries or arrays as appropriate.
 
     Parameters
     ----------
     obj : any
-        The object to convert. This can be a dictionary, list, or an object 
+        The object to convert. This can be a dictionary, list, or an object
         with a `__dict__` attribute.
 
     Returns
     -------
     dict
-        A dictionary representation of the object, where all nested attributes 
+        A dictionary representation of the object, where all nested attributes
         are recursively converted.
     """
     if isinstance(obj, dict):
         return {k: object_to_dict(v) for k, v in obj.items()}
     elif isinstance(obj, list):
         return np.array([object_to_dict(i) for i in obj])
-    elif hasattr(obj, '__dict__'):
+    elif hasattr(obj, "__dict__"):
         return {k: object_to_dict(v) for k, v in vars(obj).items()}
     else:
-        return obj    
+        return obj
+
 
 # Function to load and validate the configuration file
-def load_config(config_file_path: str, print_summary = True):
+def load_config(config_file_path: str, print_summary=True):
     """
     Load and process a configuration file.
 
-    This function reads a YAML configuration file, validates its contents, 
-    and converts it into a configuration object for turbomachinery analysis. 
+    This function reads a YAML configuration file, validates its contents,
+    and converts it into a configuration object for turbomachinery analysis.
     The configuration can be printed as a summary if specified.
 
     Parameters
@@ -192,7 +194,7 @@ def load_config(config_file_path: str, print_summary = True):
     Returns
     -------
     dict
-        A dictionary representation of the configuration object, 
+        A dictionary representation of the configuration object,
         with all nested attributes recursively converted.
 
     Raises
@@ -206,26 +208,27 @@ def load_config(config_file_path: str, print_summary = True):
 
     """
 
-
     try:
-        with open(config_file_path, 'r') as config_file:
+        with open(config_file_path, "r") as config_file:
             # Load config file
             config_data = yaml.safe_load(config_file)
 
             # Convert string representation of numbers to number and lists to arrays
             config_data = convert_configuration_options(config_data)
 
-            if 'turbomachinery' not in config_data:
+            if "turbomachinery" not in config_data:
                 raise ValueError("Missing 'turbomachinery' field in configuration.")
-            
-            turbomachinery_type = config_data['turbomachinery']
-            
-            if turbomachinery_type == 'axial_turbine':
-                config =  AxialTurbine(**config_data)
+
+            turbomachinery_type = config_data["turbomachinery"]
+
+            if turbomachinery_type == "axial_turbine":
+                config = AxialTurbine(**config_data)
             # elif turbomachinery_type == 'radial_turbine':
             #     config =  RadialTurbineConfig(**config_data)
             else:
-                raise ValueError(f"Unknown turbomachinery type: {turbomachinery_type}. Available turbomachineries are: {TURBOMACHINERIES}")
+                raise ValueError(
+                    f"Unknown turbomachinery type: {turbomachinery_type}. Available turbomachineries are: {TURBOMACHINERIES}"
+                )
 
             # Convert configuration object to a nested dictionary
             config = object_to_dict(config)
@@ -234,16 +237,16 @@ def load_config(config_file_path: str, print_summary = True):
                 # Print configuration summary
                 if print_summary:
                     succsess_message = "Configuration loaded successfully: "
-                    dashed_line = "-"*len(succsess_message)
+                    dashed_line = "-" * len(succsess_message)
                     print(dashed_line)
                     print(succsess_message)
                     print(dashed_line)
                     utilities.print_dict(config)
                     print(dashed_line)
                     print("\n")
-                
+
             return config
-        
+
     except FileNotFoundError:
         print("Configuration file not found.")
     except ValidationError as e:
@@ -252,6 +255,7 @@ def load_config(config_file_path: str, print_summary = True):
     except yaml.YAMLError as e:
         print("Error parsing YAML file:")
         print(e)
+
 
 def read_configuration_file(filename):
     """
@@ -287,9 +291,10 @@ def read_configuration_file(filename):
 
     return config
 
+
 # Example usage
 if __name__ == "__main__":
     config_file_path = "config.yaml"  # Path to your YAML configuration file
-    config = load_config(config_file_path, mode = "optimization")
+    config = load_config(config_file_path, mode="optimization")
     if config:
         print("Configuration loaded successfully")

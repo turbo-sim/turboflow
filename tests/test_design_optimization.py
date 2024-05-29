@@ -11,13 +11,14 @@ import turboflow as tf
 # Define regression settings
 TEST_FOLDER = "tests"
 DATA_DIR = os.path.join(TEST_FOLDER, "regression_data")
-CONFIG_DIR = os.path.join(TEST_FOLDER,"config_files")
+CONFIG_DIR = os.path.join(TEST_FOLDER, "config_files")
 CONFIG_FILES = [
     "design_optimization.yaml",
 ]
 
 # Define test settings
-DIGIT_TOLERANCE = 10  
+DIGIT_TOLERANCE = 10
+
 
 # Helper function to check values
 def check_value(old_value, new_value, column, config_name, discrepancies):
@@ -36,7 +37,7 @@ def check_value(old_value, new_value, column, config_name, discrepancies):
     config_name : str
         The name of the configuration file.
     discrepancies : list
-        A list to record discrepancies found during comparison.    
+        A list to record discrepancies found during comparison.
     """
     if isinstance(old_value, str) and old_value != new_value:
         discrepancies.append(
@@ -76,15 +77,15 @@ def compute_optimal_turbine_from_config(request):
     config_file = request.param
     config_path = os.path.join(CONFIG_DIR, config_file)
     config = tf.load_config(config_path)
-    solvers = tf.compute_optimal_turbine(config, export_results = False)
-    return solvers, config_file 
+    solvers = tf.compute_optimal_turbine(config, export_results=False)
+    return solvers, config_file
 
 
 # Test solver convergence using fixture
 def test_design_optimization(compute_optimal_turbine_from_config):
     """
     Test performance analysis functionality. The function compares the calculated values against saved data on convergence
-    and overall performance. 
+    and overall performance.
 
     Parameters
     ----------
@@ -95,7 +96,7 @@ def test_design_optimization(compute_optimal_turbine_from_config):
     -------
     Asserts that there are no discrepancies between saved convergence data and computed data.
     """
-    
+
     # Get the solvers list and configuration filename
     solver, config_file = compute_optimal_turbine_from_config
     config_name, _ = os.path.splitext(config_file)
@@ -132,13 +133,15 @@ def create_simulation_regression_data(config_file, outdir, config_dir):
     config_name, _ = os.path.splitext(config_file)
     base_filename = f"{config_name}"
     filename = f"{base_filename}"
-    
+
     # If file exists, append a timestamp to the new file name
     if os.path.exists(f"{os.path.join(DATA_DIR, filename)}.xlsx"):
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"{base_filename}_{timestamp}"
 
-    solvers = tf.compute_optimal_turbine(config, out_dir = outdir, out_filename= filename, export_results = True)
+    solvers = tf.compute_optimal_turbine(
+        config, out_dir=outdir, out_filename=filename, export_results=True
+    )
 
     print(f"Regression data set saved: {filename}")
 
@@ -152,7 +155,7 @@ if __name__ == "__main__":
 
     # Define directory of configuration files
     config_dir = "config_files"
-    
+
     # Run simulatins and save regression data
     for config_file in CONFIG_FILES:
         create_simulation_regression_data(config_file, DATA_DIR, config_dir)

@@ -4,6 +4,7 @@ from .. import math
 
 DEVIATION_MODELS = ["aungier", "ainley_mathieson", "zero_deviation"]
 
+
 def get_subsonic_deviation(Ma_exit, Ma_crit, geometry, model):
     r"""
     Calculate subsonic relative exit flow angle based on the selected deviation model.
@@ -36,7 +37,6 @@ def get_subsonic_deviation(Ma_exit, Ma_crit, geometry, model):
         If an invalid deviation model is provided.
     """
 
-
     # Function mappings for each deviation model
     deviation_model_functions = {
         DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
@@ -53,7 +53,8 @@ def get_subsonic_deviation(Ma_exit, Ma_crit, geometry, model):
         raise ValueError(
             f"Invalid deviation model: '{model}'. Available options: {options}"
         )
-    
+
+
 def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     r"""
     Calculate the flow angle using the deviation model proposed by :cite:`aungier_turbine_2006`.
@@ -105,11 +106,18 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
         Flow angle in degrees.
     """
     # Calculate gauging angle wrt axial axis
-    gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
+    gauging_angle = math.arccosd(geometry["A_throat"] / geometry["A_out"])
 
     # Compute deviation for  Ma<0.5 (low-speed)
-    beta_g = 90-abs(gauging_angle)
-    delta_0 = math.arcsind(geometry["A_throat"]/geometry["A_out"] * (1 + (1 - geometry["A_throat"]/geometry["A_out"]) * (beta_g / 90) ** 2)) - beta_g
+    beta_g = 90 - abs(gauging_angle)
+    delta_0 = (
+        math.arcsind(
+            geometry["A_throat"]
+            / geometry["A_out"]
+            * (1 + (1 - geometry["A_throat"] / geometry["A_out"]) * (beta_g / 90) ** 2)
+        )
+        - beta_g
+    )
 
     # Initialize an empty array to store the results
     delta = np.empty_like(Ma_exit, dtype=float)
@@ -119,7 +127,7 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     delta[low_speed_mask] = delta_0
 
     # Compute deviation for 0.50 <= Ma_exit < 1.00
-    medium_speed_mask = (0.50 <= Ma_exit)  & (Ma_exit < Ma_crit)
+    medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < Ma_crit)
     X = (2 * Ma_exit[medium_speed_mask] - 1) / (2 * Ma_crit - 1)
     delta[medium_speed_mask] = delta_0 * (1 - 10 * X**3 + 15 * X**4 - 6 * X**5)
 
@@ -147,7 +155,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     .. math::
         \delta_0 = \beta_g - (35.0 + \frac{80.0-35.0}{79.0-40.0}\cdot (\beta_g-40.0))
 
-    - For :math:`0.50 \leq \mathrm{Ma_exit} < \mathrm{Ma_crit}` (medium-speed), the deviation is calculated by a linear 
+    - For :math:`0.50 \leq \mathrm{Ma_exit} < \mathrm{Ma_crit}` (medium-speed), the deviation is calculated by a linear
       interpolation between low and critical Mach numbers:
 
     .. math::
@@ -155,7 +163,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     - For :math:`\mathrm{Ma_exit} \geq \mathrm{Ma_crit}` (supersonic), zero deviation is assumed:
 
-    .. math:: 
+    .. math::
         \delta = 0.00
 
     The flow angle (:math:`\beta`) is then computed based on the deviation and the gauging angle:
@@ -165,7 +173,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     Parameters
     ----------
-    Ma_exit : float 
+    Ma_exit : float
         Exit Mach number.
     Ma_crit : float
         Critical Mach number.
@@ -179,10 +187,12 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     """
     # Compute gauging angle
-    gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
-        
+    gauging_angle = math.arccosd(geometry["A_throat"] / geometry["A_out"])
+
     # Compute deviation for  Ma<0.5 (low-speed)
-    delta_0 = abs(gauging_angle) - (35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0))
+    delta_0 = abs(gauging_angle) - (
+        35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0)
+    )
 
     # Initialize an empty array to store the results
     delta = np.empty_like(Ma_exit, dtype=float)
@@ -193,7 +203,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     # Compute deviation for 0.50 <= Ma_exit < Ma_crit
     medium_speed_mask = (0.50 <= Ma_exit) & (Ma_exit < Ma_crit)
-    delta[medium_speed_mask] = delta_0/(1-0.5/Ma_crit)*(1-Ma_exit/Ma_crit)
+    delta[medium_speed_mask] = delta_0 / (1 - 0.5 / Ma_crit) * (1 - Ma_exit / Ma_crit)
 
     # Extrapolate to zero deviation for supersonic flow
     supersonic_mask = Ma_exit >= Ma_crit
@@ -201,8 +211,9 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
 
     # Compute flow angle from deviation
     beta = abs(gauging_angle) - delta
-    
+
     return beta
+
 
 def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
     r"""
@@ -224,7 +235,7 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
     Ma_crit : float
         Critical Mach number.
     geometry : dict
-        Dictionary containing geometric parameters. Must contain floats `A_throat` and `A_out`, representing the cascade throat and exit area respectively. 
+        Dictionary containing geometric parameters. Must contain floats `A_throat` and `A_out`, representing the cascade throat and exit area respectively.
 
     Returns
     -------
@@ -232,10 +243,7 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
         Flow angle in degrees.
 
     """
-    return math.arccosd(geometry["A_throat"]/geometry["A_out"])
-
-
-
+    return math.arccosd(geometry["A_throat"] / geometry["A_out"])
 
 
 # def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
@@ -288,7 +296,7 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
 #         raise ValueError(
 #             f"Invalid deviation model: '{model}'. Available options: {options}"
 #         )
-    
+
 
 # def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
 #     """
@@ -336,7 +344,7 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
 #     # TODO add equations of Ainley-Mathieson to docstring
 #     # TODO Add warning that AM method is inaccurate if gauge_angle>70 and does not make sense if gauge_angle>72
 #     gauging_angle = math.arccosd(geometry["A_throat"]/geometry["A_out"])
-        
+
 #     # Compute deviation for Ma < Ma_0 (low-speed)
 #     Ma_0 = 0.5
 #     delta_0 = abs(gauging_angle) - (35.0 + (80.0 - 35.0) / (79.0 - 40.0) * (abs(gauging_angle) - 40.0))
@@ -347,9 +355,5 @@ def get_exit_flow_angle_zero_deviation(Ma_exit, Ma_crit, geometry):
 
 #     # Compute flow angle from deviation
 #     beta = abs(gauging_angle) - delta
-    
+
 #     return beta, delta
-
-
-
-

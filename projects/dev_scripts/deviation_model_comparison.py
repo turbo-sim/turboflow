@@ -7,15 +7,17 @@ import turboflow as tf
 # Define case parameters
 Ma_crit = 1
 Ma_exit = np.linspace(0.00, 1.00, 200)
-geometry = {"A_throat" : 0.5,
-            "A_out" : 1}
+geometry = {"A_throat": 0.5, "A_out": 1}
 
 # Compute exit flow angles
 beta_aungier = tf.deviation_model.get_subsonic_deviation(
-    Ma_exit, Ma_crit, geometry, 'aungier'
+    Ma_exit, Ma_crit, geometry, "aungier"
 )
 beta_ainley = tf.deviation_model.get_subsonic_deviation(
-    Ma_exit, Ma_crit, geometry, "ainley_mathieson",
+    Ma_exit,
+    Ma_crit,
+    geometry,
+    "ainley_mathieson",
 )
 
 # Plot comparison

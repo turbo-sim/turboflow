@@ -389,7 +389,7 @@ class OptimizationSolver:
                 x,
                 f0=fun(x),
                 method=self.derivative_method,
-                abs_step=self.derivative_abs_step, ## TODO make sure it works when design variable takes value 0 * np.abs(x),
+                abs_step=self.derivative_abs_step,  ## TODO make sure it works when design variable takes value 0 * np.abs(x),
             )
 
         # Reshape gradient for unconstrained problems
@@ -951,15 +951,16 @@ class _PygmoProblem:
     This class uses anonymous functions (lambda) to prevent issues with deep copying complex objects,
     (like Coolprop's AbstractState objects) which are not deep-copiable.
     """
+
     def __init__(self, wrapped_problem):
         # Pygmo requires a flattened Jacobian for gradients, unlike SciPy's two-dimensional array.
         self.fitness = lambda x: wrapped_problem.fitness(x)
         self.gradient = lambda x: wrapped_problem.gradient(x).flatten()
 
         # Directly link bounds and constraint counts from the original problem.
-        self.get_bounds = lambda : wrapped_problem.problem.get_bounds()
-        self.get_nec = lambda : wrapped_problem.problem.get_nec()
-        self.get_nic = lambda : wrapped_problem.problem.get_nic()
+        self.get_bounds = lambda: wrapped_problem.problem.get_bounds()
+        self.get_nec = lambda: wrapped_problem.problem.get_nec()
+        self.get_nic = lambda: wrapped_problem.problem.get_nic()
 
         # If the original problem defines Hessians, provide them as well.
         if hasattr(wrapped_problem.problem, "hessians"):

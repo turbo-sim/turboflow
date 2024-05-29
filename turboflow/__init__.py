@@ -7,6 +7,7 @@ except ImportError:
     pass
 else:
     import sys
+
     sys.excepthook = IPython.core.ultratb.ColorTB()
 
 
@@ -16,7 +17,7 @@ from .plot_functions import *
 from .config_validation import *
 
 # Import subpackages
-from .pysolver_view import * 
+from .pysolver_view import *
 from .properties import *
 from .thermodynamic_cycles import *
 from .utilities import *
@@ -27,7 +28,3 @@ from .axial_turbine.design_optimization import *
 
 # Set plot options
 set_plot_options()
-
-
-
-
