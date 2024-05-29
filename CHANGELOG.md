@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 29.05.2024
+- Update package to use `poetry` for dependency management
+- Format all codebase using `black`
+
+
 ## 27.05.2024
 - Complete configuration check: 
   - config_validation is intended to check what turbomachinery configuration is given and validation configuration accordingly
