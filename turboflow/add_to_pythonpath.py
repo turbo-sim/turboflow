@@ -6,7 +6,8 @@ import sys
 package_name = "turboflow"
 
 # Define bash command to append cwd to PYTHONPATH
-PACKAGE_PATH = os.getcwd()
+# PACKAGE_PATH = os.getcwd()
+PACKAGE_PATH = os.path.dirname(os.getcwd())
 bashrc_header = f"# Append {package_name} package to PYTHONPATH"
 if sys.platform == 'win32': # Windows
     bashrc_line = f'export PYTHONPATH=$PYTHONPATH\;"{PACKAGE_PATH}"'

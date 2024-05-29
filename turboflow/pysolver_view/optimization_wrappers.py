@@ -171,9 +171,15 @@ def minimize_pygmo(problem, x0, method, options):
     """
 
     # Check if pygmo is available
-    if not PYGMO_AVAILABLE:         
-        raise ImportError("pygmo is not installed. Please install pygmo via Conda to use this function.")
-
+    if not PYGMO_AVAILABLE:
+        raise ImportError(
+            f"To use the selected optimizer ({method}), you need to install 'pygmo' via Conda.\n\n"
+            "   1. Activate the Conda virtual environment where 'turboflow' is installed. For example:\n\n"
+            "           conda activate turboflow_env\n\n"
+            "   2. Install 'pygmo' and 'pygmo_plugins_nonfree' by running the following command:\n\n"
+            "           conda install --channel conda-forge pygmo pygmo_plugins_nonfree\n"
+        )
+    
     if method == "snopt":
         return _minimize_pygmo_snopt(problem, x0, options)
     elif method == "ipopt":

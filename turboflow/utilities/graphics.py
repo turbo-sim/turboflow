@@ -1,8 +1,15 @@
 import os
-import imageio
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+# Attempt to import imageio for video generatioj
+try:     
+    import imageio    
+    IMEGEIO_AVAILABLE = True
+except ImportError:     
+    IMAGEIO_AVAILABLE = False
+
 
 from cycler import cycler
 
@@ -223,6 +230,10 @@ def create_gif(image_folder, output_file, duration=0.5):
     duration : float, optional
         Duration of each frame in the GIF, by default 0.5 seconds.
     """
+
+    if not IMEGEIO_AVAILABLE:         
+        raise ImportError("imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function.")
+
     images = []
     for filename in sorted(os.listdir(image_folder)):
         if filename.endswith(".png"):
@@ -245,6 +256,10 @@ def create_mp4(image_folder, output_file, fps=10):
     fps : int, optional
         Frames per second in the output video, by default 10.
     """
+
+    if not IMEGEIO_AVAILABLE:         
+        raise ImportError("imageio is not installed. Please run `pip install imageio-ffmpeg` to run this function.")
+
     with imageio.get_writer(output_file, fps=fps) as writer:
         for filename in sorted(os.listdir(image_folder)):
             if filename.endswith(".png"):

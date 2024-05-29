@@ -221,3 +221,47 @@ we have to expend the supersonic branch into the subsonic to calculate the flow 
 - [ ] Dynamic generation of function mapping dictionary
 - [ ] Add logger with errors, info and warnings
 - [ ] FASTApi - open API (swagger)
+
+
+
+
+## Installation
+
+
+To create virtual environment to isolate installation
+
+
+conda env create -f environment.yaml
+
+
+conda activate turboflow_env
+pip install poetry
+
+
+poetry init
+
+
+## Developer installation
+
+
+Clone the repository
+
+conda env create -f environment.yaml
+
+
+conda activate turboflow_env
+pip install poetry
+
+poetry install
+
+
+## Additional optimizers
+optionally install pygmo optimizers
+
+conda install pygmo pygmo_plugins_nonfree
+
+
+Additionally, in order to use snopt you have to define the environmental variables for the license file and the xx.
+
+You can do this in windows following this tutorial, or by addtion these lines to you bashrc file in linux or if using gitbash in windows
+

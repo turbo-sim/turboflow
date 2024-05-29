@@ -1,4 +1,14 @@
-# from .meanline import *
+# Highlight exception messages
+# https://stackoverflow.com/questions/25109105/how-to-colorize-the-output-of-python-errors-in-the-gnome-terminal/52797444#52797444
+try:
+    import IPython.core.ultratb
+except ImportError:
+    # No IPython. Use default exception printing.
+    pass
+else:
+    import sys
+    sys.excepthook = IPython.core.ultratb.ColorTB()
+
 
 # Import submodules
 from .math import *
@@ -18,16 +28,6 @@ from .axial_turbine.design_optimization import *
 # Set plot options
 set_plot_options()
 
-# from .plot_options import *
-
-# from .utilities import *
-# from .cycle_optimization import *
-# from .cycle_optimization.cycle_optimization import *
-
-# 
-
-# from .configuration import *
-# from .configuration_options import *
 
 
 
