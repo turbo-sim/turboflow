@@ -9,6 +9,7 @@ on:
     branches:
       - main
 
+
 jobs:
   test_ubuntu:
     runs-on: ubuntu-latest
@@ -32,18 +33,19 @@ jobs:
       run: |
         conda env create -f environment.yml
 
-    - name: Activate conda environment
+    - name: Install dependencies
       run: |
         source "$(conda info --base)/etc/profile.d/conda.sh"
         conda activate turboflow_env
-        pip install --upgrade pip
-        pip install -e .
+        pip install poetry
+        poetry install
 
     - name: Run tests
       run: |
         source "$(conda info --base)/etc/profile.d/conda.sh"
         conda activate turboflow_env
         pytest
+
 
   test_windows:
     runs-on: windows-latest
@@ -66,13 +68,13 @@ jobs:
     - name: Create conda environment
       run: conda env create -f environment.yml
 
-    - name: Activate conda environment and install dependencies
+    - name: Install dependencies
       run: |
         conda activate turboflow_env
-        pip install --upgrade pip
-        pip install -e .
+        pip install poetry
+        poetry install
       shell: bash -l {0}
-
+      
     - name: Run tests
       run: |
         conda activate turboflow_env
