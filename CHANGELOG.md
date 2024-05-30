@@ -2,6 +2,13 @@
 
 
 ## 29.05.2024
+- Make repository public
+- Improve CI pipeline to use `poetry` as dependency manager
+- Release package in Python Package Index (PYPI)
+- Release documentation in GitHub Pages
+
+
+## 29.05.2024
 - Update package to use `poetry` for dependency management
 - Format all codebase using `black`
 
