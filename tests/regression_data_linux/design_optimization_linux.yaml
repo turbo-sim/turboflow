@@ -1,0 +1,241 @@
+turbomachinery: axial_turbine
+operation_points:
+  fluid_name: R125
+  T0_in: 463.15
+  p0_in: 3620000.0
+  p_out: 1585000.0
+  omega: 3978.880772777501
+  alpha_in: 0.0
+  h0_in: 497686.3106530505
+  s_in: 1837.707528152813
+simulation_options:
+  deviation_model: zero_deviation
+  blockage_model: 0.0
+  choking_model: evaluate_cascade_isentropic_throat
+  rel_step_fd: 0.0001
+  loss_model:
+    model: kacker_okapuu
+    loss_coefficient: stagnation_pressure
+    custom_value: 0.1
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.0
+      incidence: 1.0
+      secondary: 1.0
+      trailing: 1.0
+      clearance: 1.0
+performance_analysis:
+  performance_map: null
+  solver_options:
+    method: hybr
+    tolerance: 1.0e-08
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: 1.0e-06
+    print_convergence: true
+    plot_convergence: true
+design_optimization:
+  objective_function: efficiency_ts
+  variables:
+    v_in:
+      value: 0.1
+      lower_bound: 0.001
+      upper_bound: 0.5
+    w_out:
+      value:
+      - 0.65
+      - 0.65
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s_out:
+      value:
+      - 0.15
+      - 0.15
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    beta_out:
+      value:
+      - 0.83
+      - 0.17
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    v*_in:
+      value:
+      - 0.4
+      - 0.4
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    beta*_throat:
+      value:
+      - 0.83
+      - 0.17
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    w*_throat:
+      value:
+      - 0.65
+      - 0.65
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s*_throat:
+      value:
+      - 0.15
+      - 0.15
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    specific_speed:
+      value: 1.2
+      lower_bound: 0.01
+      upper_bound: 10.0
+    blade_jet_ratio:
+      value: 0.5
+      lower_bound: 0.1
+      upper_bound: 0.9
+    hub_tip_ratio_in:
+      value:
+      - 0.6
+      - 0.6
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
+    hub_tip_ratio_out:
+      value:
+      - 0.6
+      - 0.6
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
+    aspect_ratio:
+      value:
+      - 1.5
+      - 1.5
+      lower_bound:
+      - 1.0
+      - 1.0
+      upper_bound:
+      - 2.0
+      - 2.0
+    pitch_chord_ratio:
+      value:
+      - 0.9
+      - 0.9
+      lower_bound:
+      - 0.75
+      - 0.75
+      upper_bound:
+      - 1.1
+      - 1.1
+    trailing_edge_thickness_opening_ratio:
+      value:
+      - 0.1
+      - 0.1
+      lower_bound:
+      - 0.05
+      - 0.05
+      upper_bound:
+      - 0.4
+      - 0.4
+    leading_edge_angle:
+      value:
+      - 0.41
+      - 0.5
+      lower_bound:
+      - 0.41
+      - 0.08
+      upper_bound:
+      - 0.92
+      - 0.58
+    gauging_angle:
+      value:
+      - 0.17
+      - 0.94
+      lower_bound:
+      - 0.06
+      - 0.72
+      upper_bound:
+      - 0.28
+      - 0.94
+    throat_location_fraction:
+      value:
+      - 1.0
+      - 1.0
+      lower_bound: null
+      upper_bound: null
+    leading_edge_diameter:
+      value:
+      - 0.01200896
+      - 0.01200896
+      lower_bound: null
+      upper_bound: null
+    leading_edge_wedge_angle:
+      value:
+      - 45.0
+      - 45.0
+      lower_bound: null
+      upper_bound: null
+    tip_clearance:
+      value:
+      - 0.0
+      - 0.0005
+      lower_bound: null
+      upper_bound: null
+    cascade_type:
+      value:
+      - stator
+      - rotor
+      lower_bound: null
+      upper_bound: null
+  constraints:
+    mass_flow_rate:
+      type: '='
+      value: 10.66
+      normalize: true
+    interstage_flaring:
+      type: '='
+      value: 1.0
+      normalize: true
+  solver_options:
+    library: scipy
+    method: slsqp
+    tolerance: 1.0e-06
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: null
+    print_convergence: true
+    plot_convergence: false
+    update_on: gradient
+  radius_type: constant_mean
