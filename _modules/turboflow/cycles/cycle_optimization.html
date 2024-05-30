@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.cycles.cycle_optimization &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.cycles.cycle_optimization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.cycles.cycle_optimization</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">..config_validation</span> <span class="kn">import</span> <span class="n">read_configuration_file</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">pysolver_view</span> <span class="k">as</span> <span class="n">psv</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">fluid_properties</span> <span class="k">as</span> <span class="n">props</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">brayton_recuperated</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">brayton_split_compression</span>
+
+
+<span class="n">utilities</span><span class="o">.</span><span class="n">set_plot_options</span><span class="p">()</span>
+<span class="n">COLORS_MATLAB</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">COLORS_MATLAB</span>
+<span class="n">LABEL_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="s2">&quot;Entropy [J/kg/K]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="s2">&quot;Temperature [K]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="s2">&quot;Pressure [Pa]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;h&quot;</span><span class="p">:</span> <span class="s2">&quot;Enthalpy [J/kg]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;d&quot;</span><span class="p">:</span> <span class="s2">&quot;Density [kg/m$^3$]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="s2">&quot;Speed of sound [m/s]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Z&quot;</span><span class="p">:</span> <span class="s2">&quot;Compressibility factor [-]&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;heat&quot;</span><span class="p">:</span> <span class="s2">&quot;Heat flow rate [W]&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Cycle configurations available</span>
+<span class="n">CYCLE_TOPOLOGIES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;recuperated&quot;</span><span class="p">:</span> <span class="n">brayton_recuperated</span><span class="o">.</span><span class="n">evaluate_cycle</span><span class="p">,</span>
+    <span class="s2">&quot;split_compression&quot;</span><span class="p">:</span> <span class="n">brayton_split_compression</span><span class="o">.</span><span class="n">evaluate_cycle</span><span class="p">,</span>
+    <span class="s2">&quot;recompression&quot;</span><span class="p">:</span> <span class="n">brayton_split_compression</span><span class="o">.</span><span class="n">evaluate_cycle</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">GRAPHICS_PLACEHOLDER</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;process_lines&quot;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="s2">&quot;state_points&quot;</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">:</span> <span class="p">{},</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization">[docs]</a>
+<span class="k">class</span> <span class="nc">ThermodynamicCycleOptimization</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initializes the optimization manager with a configuration file.</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            config_file (str): The path to the YAML configuration file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Define filename with unique date-time identifier</span>
+        <span class="k">if</span> <span class="n">out_dir</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;results/case_</span><span class="si">{</span><span class="n">current_time</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Create a directory to save simulation results</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_problem</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setup_solver</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.load_config">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.load_config">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Loads configuration from a YAML file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">read_configuration_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.setup_problem">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_problem">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_problem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up the ThermodynamicCycleProblem based on the loaded configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">ThermodynamicCycleProblem</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;problem_formulation&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">fitness</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.setup_solver">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_solver">[docs]</a>
+    <span class="k">def</span> <span class="nf">setup_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configures and returns the optimization solver.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Optimize the thermodynamic cycle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">OptimizationSolver</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
+            <span class="n">callback_functions</span><span class="o">=</span><span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">plot_cycle_callback</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">save_config_callback</span><span class="p">,</span>
+            <span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solver</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.run_optimization">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.run_optimization">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the optimization process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.save_results">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.save_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the results of the optimization, including configurations and output files.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s2">&quot;optimal_solution&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.xlsx&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">save_current_configuration</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">filename</span> <span class="o">+</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Print final solution values</span>
+        <span class="nb">print</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal set of design variables (normalized)&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">vars_normalized</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">:</span><span class="s2">40</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">:</span><span class="s2">0.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.generate_output_files">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.generate_output_files">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_output_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates additional output files, such as Excel files or plots.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+        <span class="c1"># Code to handle output generation like creating plots or exporting to Excel</span>
+
+<div class="viewcode-block" id="ThermodynamicCycleOptimization.create_animation">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.create_animation">[docs]</a>
+    <span class="k">def</span> <span class="nf">create_animation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates an animation of the optimization history.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+</div>
+
+        <span class="c1"># Code to generate animation from the optimization results</span>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">ThermodynamicCycleProblem</span><span class="p">(</span><span class="n">psv</span><span class="o">.</span><span class="n">OptimizationProblem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class to represent a thermodynamic cycle optimization problem.</span>
+
+<span class="sd">    This class provides functionalities to load and update the configuration for</span>
+<span class="sd">    the thermodynamic cycle, and to perform interactive plotting based on the current</span>
+<span class="sd">    configuration.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plot_initialized : bool</span>
+<span class="sd">        Flag to indicate if the plot has been initialized.</span>
+<span class="sd">    constraints : dict</span>
+<span class="sd">        Dictionary holding the constraints of the problem.</span>
+<span class="sd">    fixed_parameters : dict</span>
+<span class="sd">        Dictionary holding the fixed parameters of the problem.</span>
+<span class="sd">    design_variables : dict</span>
+<span class="sd">        Dictionary holding the current values of the design variables.</span>
+<span class="sd">    lower_bounds : dict</span>
+<span class="sd">        Dictionary holding the lower bounds of the design variables.</span>
+<span class="sd">    upper_bounds : dict</span>
+<span class="sd">        Dictionary holding the upper bounds of the design variables.</span>
+<span class="sd">    keys : list</span>
+<span class="sd">        List of keys (names) of the design variables.</span>
+<span class="sd">    x0 : np.ndarray</span>
+<span class="sd">        Initial guess for the optimization problem.</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    update_config(configuration):</span>
+<span class="sd">        Update the problem&#39;s configuration based on the provided dictionary.</span>
+<span class="sd">    load_config_from_file(configuration_file):</span>
+<span class="sd">        Load and update the problem&#39;s configuration from a specified file.</span>
+<span class="sd">    plot_cycle_interactive(configuration_file, update_interval=0.20):</span>
+<span class="sd">        Perform interactive plotting, updating the plot based on the configuration file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">,</span> <span class="n">out_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Constructs all the necessary attributes for the ThermodynamicCycleProblem object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : dict</span>
+<span class="sd">            Dictionary containing the configuration for the thermodynamic cycle problem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Initialize variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure_TQ</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configuration</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">configuration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_configuration</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configuration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">GRAPHICS_PLACEHOLDER</span><span class="p">)</span>
+
+        <span class="c1"># Create fluid object to calculate states used for the scaling of design variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">Fluid</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">[</span><span class="s2">&quot;working_fluid&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_special_points</span><span class="p">()</span>
+
+        <span class="c1"># Define filename with unique date-time identifier</span>
+        <span class="k">if</span> <span class="n">out_dir</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;results/case_</span><span class="si">{</span><span class="n">current_time</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Create a directory to save simulation results</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">)</span>
+
+        <span class="c1"># # Save the initial configuration as YAML file</span>
+        <span class="c1"># self.save_current_configuration(&quot;initial_configuration.yaml&quot;)</span>
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.update_configuration">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_configuration">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the problem&#39;s configuration based on the provided dictionary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : dict</span>
+<span class="sd">            Dictionary containing the new configuration for the thermodynamic cycle problem.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">configuration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_topology</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;cycle_topology&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_settings</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;plot_settings&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;constraints&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;fixed_parameters&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span> <span class="o">=</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;objective_function&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;design_variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;design_variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">conf</span><span class="p">[</span><span class="s2">&quot;design_variables&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_calculate_special_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates and stores key thermodynamic states for the fluid used in the cycle.</span>
+
+<span class="sd">        This method computes two specific thermodynamic states:</span>
+<span class="sd">        1. Saturated liquid state at the heat sink inlet temperature.</span>
+<span class="sd">        2. Dilute gas state at the heat source inlet temperature.</span>
+
+<span class="sd">        If the heat sink inlet temperature is below the fluid&#39;s critical temperature,</span>
+<span class="sd">        the saturated liquid state is calculated at this temperature. If it is above</span>
+<span class="sd">        the critical temperature, the state is calculated along the pseudocritical line.</span>
+
+<span class="sd">        The dilute gas state is calculated at the heat source inlet temperature and at</span>
+<span class="sd">        very low pressure (slightly above the triple pressure)</span>
+
+<span class="sd">        The calculated states, along with the fluid&#39;s critical and triple point properties,</span>
+<span class="sd">        are stored in the `fixed_parameters` dictionary under the &#39;fluid&#39; key.</span>
+
+<span class="sd">        These states are intended to define the bounds of the design variables specified</span>
+<span class="sd">        in the YAML configuration file, for example:</span>
+
+<span class="sd">            compressor_inlet_enthalpy:</span>
+<span class="sd">            min: 0.9*$fluid.liquid_sink_temperature.h</span>
+<span class="sd">            max: 2.0*$fluid.liquid_sink_temperature.h</span>
+<span class="sd">            value: 0.2</span>
+<span class="sd">            turbine_inlet_pressure:</span>
+<span class="sd">            min: 0.75*$fluid.critical_point.p</span>
+<span class="sd">            max: 5.00*$fluid.critical_point.p</span>
+<span class="sd">            value: 0.5</span>
+<span class="sd">            turbine_inlet_enthalpy:</span>
+<span class="sd">            min: 1.10*$fluid.critical_point.h</span>
+<span class="sd">            max: 1.00*$fluid.gas_source_temperature.h</span>
+<span class="sd">            value: 0.90</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute saturated liquid state at sink temperature</span>
+        <span class="c1"># Use pseudocritical line if heat sink is above critical temperature</span>
+        <span class="n">T_sink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">[</span><span class="s2">&quot;heat_sink&quot;</span><span class="p">][</span><span class="s2">&quot;inlet_temperature&quot;</span><span class="p">]</span>
+        <span class="n">crit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">critical_point</span>
+        <span class="k">if</span> <span class="n">T_sink</span> <span class="o">&lt;</span> <span class="n">crit</span><span class="o">.</span><span class="n">T</span><span class="p">:</span>
+            <span class="n">state_sat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">props</span><span class="o">.</span><span class="n">QT_INPUTS</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">T_sink</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">state_sat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">props</span><span class="o">.</span><span class="n">DmassT_INPUTS</span><span class="p">,</span> <span class="n">crit</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span> <span class="n">T_sink</span><span class="p">)</span>
+
+        <span class="c1"># Compute dilute gas state at heat source temperature</span>
+        <span class="n">T_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">[</span><span class="s2">&quot;heat_source&quot;</span><span class="p">][</span><span class="s2">&quot;inlet_temperature&quot;</span><span class="p">]</span>
+        <span class="n">p_triple</span> <span class="o">=</span> <span class="mf">1.01</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">triple_point_liquid</span><span class="o">.</span><span class="n">p</span>
+        <span class="n">state_dilute</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">props</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p_triple</span><span class="p">,</span> <span class="n">T_source</span><span class="p">)</span>
+
+        <span class="c1"># Save states in the fixed parameters dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters_bis</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters_bis</span><span class="p">[</span><span class="s2">&quot;working_fluid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;critical_point&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">critical_point</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;triple_point_liquid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">triple_point_liquid</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;triple_point_vapor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">triple_point_vapor</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;liquid_at_heat_sink_temperature&quot;</span><span class="p">:</span> <span class="n">state_sat</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s2">&quot;gas_at_heat_source_temperature&quot;</span><span class="p">:</span> <span class="n">state_dilute</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.load_configuration_file">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.load_configuration_file">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_configuration_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load and update the problem&#39;s configuration from a specified file.</span>
+
+<span class="sd">        Useful to plot the cycle according to the latest version of the configuration</span>
+<span class="sd">        file in real time (interactive initial guess generation)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_file : str</span>
+<span class="sd">            Path to the configuration file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">read_configuration_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_configuration</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;problem_formulation&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_special_points</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.save_current_configuration">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_current_configuration">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_current_configuration</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the current configuration to a YAML file.&quot;&quot;&quot;</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">convert_numpy_to_python</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.save_config_callback">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_config_callback">[docs]</a>
+    <span class="k">def</span> <span class="nf">save_config_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">iter</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A callback function to save the current configuration during optimization iterations.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        - x : The current solution vector from the optimizer.</span>
+<span class="sd">        - iter : The current optimization iteration count.</span>
+
+<span class="sd">        This function acts as a bridge between the optimizer callback requirements and the</span>
+<span class="sd">        existing `save_current_configuration` function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create a &#39;results&#39; directory if it doesn&#39;t exist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Define the filename using the solver&#39;s iteration number</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;iteration_</span><span class="si">{</span><span class="nb">iter</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">.yaml&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Call the existing function to save the configuration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_current_configuration</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.fitness">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.fitness">[docs]</a>
+    <span class="k">def</span> <span class="nf">fitness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate optimization problem</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># print(&quot;x&quot;, x)</span>
+        <span class="c1"># Update configuration with the current values of x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_variables</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Evaluate thermodynamic cycle</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_topology</span> <span class="ow">in</span> <span class="n">CYCLE_TOPOLOGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span> <span class="o">=</span> <span class="n">CYCLE_TOPOLOGIES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cycle_topology</span><span class="p">](</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">vars_physical</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">constraints</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">objective_function</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">CYCLE_TOPOLOGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid cycle topology: &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cycle_topology</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Define objective function and constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;objective_function&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;equality_constraints&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;inequality_constraints&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Combine objective function and constraints</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">combine_objective_and_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.update_variables">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_variables">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the problem variables based on the new values provided by the optimizer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_physical</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_normalized_to_physical</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configuration</span><span class="p">[</span><span class="s2">&quot;design_variables&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configuration</span><span class="p">[</span><span class="s2">&quot;design_variables&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Optionally handle the error or log a warning if the key does not exist</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning: </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> is not a recognized design variable.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.get_bounds">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars_normalized</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">([</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">dim</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.00</span><span class="p">]</span> <span class="o">*</span> <span class="n">dim</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.get_nec">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nec">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">psv</span><span class="o">.</span><span class="n">count_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.get_nic">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nic">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">psv</span><span class="o">.</span><span class="n">count_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_scale_normalized_to_physical</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vars_normalized</span><span class="p">):</span>
+        <span class="c1"># Define helper function</span>
+        <span class="k">def</span> <span class="nf">scale_value</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">normalized_val</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">min_val</span> <span class="o">+</span> <span class="p">(</span><span class="n">max_val</span> <span class="o">-</span> <span class="n">min_val</span><span class="p">)</span> <span class="o">*</span> <span class="n">normalized_val</span>
+
+        <span class="c1"># Loop over normalized variables</span>
+        <span class="n">vars_physical</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">vars_normalized</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># Fetch the bounds expressions</span>
+                <span class="n">lower_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_bounds</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">upper_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_bounds</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+                <span class="c1"># Try to evaluate bounds as expressions if they are strings</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lower_expr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">render_and_evaluate</span><span class="p">(</span>
+                        <span class="n">lower_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters_bis</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="n">lower_expr</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">upper_expr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">render_and_evaluate</span><span class="p">(</span>
+                        <span class="n">upper_expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fixed_parameters_bis</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">upper_expr</span>
+
+                <span class="n">vars_physical</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">scale_value</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error processing bounds for &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">vars_physical</span>
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.to_excel">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.to_excel">[docs]</a>
+    <span class="k">def</span> <span class="nf">to_excel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;performance.xlsx&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Exports the cycle performance data to Excel file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Define variable map</span>
+        <span class="n">variable_map</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;fluid_name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;fluid_name&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;temperature&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;p&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;pressure&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Pa&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;kg/m3&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;Q&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;quality&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;Z&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;compressibility_factor&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;u&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;internal_energy&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;J/kg&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;h&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;enthalpy&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;J/kg&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;entropy&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;J/kg/K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;cp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;isobaric_heat_capacity&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;J/kg/K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;cv&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;isochoric_heat_capacity&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;J/kg/K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;heat_capacity_ratio&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;speed_of_sound&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;m/s&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;mu&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;dynamic_viscosity&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;Pa*s&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;thermal_conductivity&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;W/m/K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;superheating&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;superheating_degree&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;K&quot;</span><span class="p">},</span>
+            <span class="s2">&quot;subcooling&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;subcooling_degree&quot;</span><span class="p">,</span> <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="s2">&quot;K&quot;</span><span class="p">},</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Initialize a list to hold all rows of the DataFrame</span>
+        <span class="n">data_rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Prepare the headers and units rows</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">]</span>
+        <span class="n">units_row</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;units&quot;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="p">:</span>
+            <span class="n">headers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+            <span class="n">units_row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">variable_map</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;unit&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Iterate over each component in the dictionary</span>
+        <span class="k">for</span> <span class="n">component_name</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;heat_exchanger&quot;</span><span class="p">:</span>
+                <span class="c1"># Handle heat exchanger sides separately</span>
+                <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;hot_side&quot;</span><span class="p">,</span> <span class="s2">&quot;cold_side&quot;</span><span class="p">]:</span>
+                    <span class="c1"># Append the data for state_in and state_out to the rows list</span>
+                    <span class="n">state_in</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="n">side</span><span class="p">][</span><span class="s2">&quot;state_in&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                    <span class="n">state_out</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="n">side</span><span class="p">][</span><span class="s2">&quot;state_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                    <span class="n">data_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_in&quot;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="p">[</span><span class="n">state_in</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="p">]</span>
+                    <span class="p">)</span>
+                    <span class="n">data_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2">_out&quot;</span><span class="p">]</span>
+                        <span class="o">+</span> <span class="p">[</span><span class="n">state_out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="p">]</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Handle non-heat exchanger components</span>
+                <span class="c1"># Append the data for state_in and state_out to the rows list</span>
+                <span class="n">state_in</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;state_in&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="n">state_out</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;state_out&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+                <span class="n">data_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">_in&quot;</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="p">[</span><span class="n">state_in</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">data_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">component_name</span><span class="si">}</span><span class="s2">_out&quot;</span><span class="p">]</span>
+                    <span class="o">+</span> <span class="p">[</span><span class="n">state_out</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variable_map</span><span class="p">]</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Create a DataFrame with data rows</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_rows</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+
+        <span class="c1"># Insert the units row</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">units_row</span>  <span class="c1"># Adding a row</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span>  <span class="c1"># Shifting index</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>  <span class="c1"># Sorting by index</span>
+
+        <span class="c1"># # Export to Excel</span>
+        <span class="c1"># df.to_excel(</span>
+        <span class="c1">#     os.path.join(self.out_dir, filename),</span>
+        <span class="c1">#     index=False,</span>
+        <span class="c1">#     header=True,</span>
+        <span class="c1">#     sheet_name=&quot;cycle_states&quot;,</span>
+        <span class="c1"># )</span>
+
+        <span class="c1"># Prepare energy_analysis data</span>
+        <span class="n">df_2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;energy_analysis&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span>
+            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Parameter&quot;</span><span class="p">,</span> <span class="s2">&quot;Value&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Export to Excel</span>
+        <span class="c1"># filename = os.path.join(self.out_dir, filename)</span>
+        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;openpyxl&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s2">&quot;cycle_states&quot;</span><span class="p">)</span>
+            <span class="n">df_2</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s2">&quot;energy_analysis&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.plot_cycle">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_cycle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots or updates the thermodynamic cycle diagrams based on current settings,</span>
+<span class="sd">        including the option to include a pinch point diagram.</span>
+
+<span class="sd">        This function is capable of both creating new cycle diagrams and updating existing ones.</span>
+<span class="sd">        It&#39;s particularly useful in dynamic scenarios such as during optimization steps,</span>
+<span class="sd">        where the plot needs to be refreshed continually with new data.</span>
+<span class="sd">        The method also supports real-time updates based on the latest configuration settings.</span>
+
+<span class="sd">        The function first determines the number of subplots required based on the cycle diagrams</span>
+<span class="sd">        specified in the &#39;plot_settings&#39; attribute and whether a pinch point diagram is included.</span>
+<span class="sd">        It then either initializes a new figure and axes or updates existing ones.</span>
+<span class="sd">        Each thermodynamic diagram (phase diagram and cycle components) and the optional pinch point</span>
+<span class="sd">        diagram are plotted or updated accordingly.</span>
+
+<span class="sd">        The method ensures that the plot reflects the current state of the cycle, including any</span>
+<span class="sd">        changes during optimization or adjustments to configuration settings.</span>
+
+<span class="sd">        The data of the plots can be updated interactively, but the subplot objects created can</span>
+<span class="sd">        only be specified upon class initialization. For example, it is not possible to switch</span>
+<span class="sd">        on and off the pinch point diagram or to add new thermodynamic diagrams. The class would</span>
+<span class="sd">        have to be re-initialized upon those scenarios. The reason for this choice is that re-creating</span>
+<span class="sd">        a figure would be too time consuming and not practical for the real-time updating of the plots</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Determine the number of subplots</span>
+        <span class="n">include_pinch_diagram</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pinch_point_diagram&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;diagrams&quot;</span><span class="p">])</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">include_pinch_diagram</span><span class="p">)</span>
+        <span class="n">nrows</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># Initialize the figure and axes</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span> <span class="ow">and</span> <span class="n">plt</span><span class="o">.</span><span class="n">fignum_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">number</span><span class="p">)):</span>
+            <span class="c1"># Reset the graphics objects if the figure was closed</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">GRAPHICS_PLACEHOLDER</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+                <span class="n">nrows</span><span class="p">,</span> <span class="n">ncols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">5.2</span> <span class="o">*</span> <span class="n">ncols</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">)</span>
+
+        <span class="c1"># Plot or update each thermodynamic_diagram</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">include_pinch_diagram</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">):</span>
+            <span class="n">plot_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;diagrams&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">plot_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_diagram_default_settings</span><span class="p">(</span><span class="n">plot_config</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_thermodynamic_diagram</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="c1"># Plot or update the pinch point diagram</span>
+        <span class="k">if</span> <span class="n">include_pinch_diagram</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_plot_pinch_point_diagram</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ncols</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Adjust layout and refresh plot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.plot_cycle_realtime">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_realtime">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_cycle_realtime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">configuration_file</span><span class="p">,</span> <span class="n">update_interval</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform interactive plotting, updating the plot based on the configuration file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config_file : str</span>
+<span class="sd">            Path to the configuration file.</span>
+<span class="sd">        update_interval : float, optional</span>
+<span class="sd">            Time interval in seconds between plot updates (default is 0.1 seconds).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">wait_for_input</span><span class="p">():</span>
+            <span class="nb">input</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">enter_pressed</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Initialize secondary thread to wait for user input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enter_pressed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">wait_for_input</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="c1"># Print instructions message</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Creating thermodynamic cycle interactive plot&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; The current configuration file is: &#39;</span><span class="si">{</span><span class="n">configuration_file</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Modify the configuration file and save it to update the plot&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Try to find a good initial guess for the optimization.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Using a feasible initial guess improves optimization convergence.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Press &#39;enter&#39; to continue.&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+
+        <span class="c1"># Update the plot until termination signal</span>
+        <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enter_pressed</span><span class="p">:</span>
+            <span class="c1"># Read the configuration file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_configuration_file</span><span class="p">(</span><span class="n">configuration_file</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plot_cycle</span><span class="p">()</span>
+
+            <span class="c1"># Wait for the specified interval before updating again</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">update_interval</span><span class="p">)</span>
+
+            <span class="c1"># Exit interactive plotting when the user closes the figure</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">plt</span><span class="o">.</span><span class="n">fignum_exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+                <span class="k">break</span>
+
+            <span class="c1"># Exit interactive plotting when the user presses enter</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enter_pressed</span><span class="p">:</span>
+                <span class="k">break</span></div>
+
+
+<div class="viewcode-block" id="ThermodynamicCycleProblem.plot_cycle_callback">
+<a class="viewcode-back" href="../../../source/api/turboflow.cycles.cycle_optimization.html#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_callback">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_cycle_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="nb">iter</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot and save the thermodynamic cycle at different optimization iterations</span>
+
+<span class="sd">        This function is intended to be passed as callback argument to the optimization solver</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Update and plot the cycle diagram</span>
+        <span class="c1"># self.figure.suptitle(f&quot;Optimization iteration: {iter:03d}&quot;, fontsize=14, y=0.90)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_cycle</span><span class="p">()</span>
+
+        <span class="c1"># Create a &#39;results&#39; directory if it doesn&#39;t exist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out_dir</span><span class="p">,</span> <span class="s2">&quot;optimization&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Use the solver&#39;s iteration number for the filename</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimization_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;iteration_</span><span class="si">{</span><span class="nb">iter</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_get_diagram_default_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Merges user-provided plot settings with default settings.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        user_settings : dict</span>
+<span class="sd">            A dictionary of user-defined plot settings.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary containing the merged plot settings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">default_settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;x_variable&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;y_variable&quot;</span><span class="p">:</span> <span class="s2">&quot;T&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;x_scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;y_scale&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;plot_saturation_line&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;plot_critical_point&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;plot_quality_isolines&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;plot_pseudocritical_line&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;plot_triple_point_vap&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;plot_triple_point_liq&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;plot_spinodal_line&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="c1"># Add other default settings here</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Combine the global fluid settings with the &quot;plots&quot; settings</span>
+        <span class="n">fluid_settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fluid&quot;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">fluid_settings</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">if</span> <span class="n">fluid_settings</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">fluid_settings</span>
+        <span class="n">plot_config</span> <span class="o">=</span> <span class="n">plot_config</span> <span class="o">|</span> <span class="n">fluid_settings</span>
+
+        <span class="c1"># Merge with default values</span>
+        <span class="k">return</span> <span class="n">default_settings</span> <span class="o">|</span> <span class="n">plot_config</span>
+
+    <span class="k">def</span> <span class="nf">_plot_thermodynamic_diagram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">,</span> <span class="n">ax_index</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots or updates the thermodynamic diagram on a specified axes.</span>
+
+<span class="sd">        This function sets up the axes properties according to the provided plot configuration and</span>
+<span class="sd">        plots the phase diagram for the specified fluid. It then iterates over all the components in</span>
+<span class="sd">        the cycle data. For heat exchangers, it plots or updates the processes for both the hot and cold sides.</span>
+<span class="sd">        For other types of components, it plots or updates the process based on the component&#39;s data.</span>
+
+<span class="sd">        The function also adjusts the plot limits if it&#39;s updating an existing plot,</span>
+<span class="sd">        ensuring that the axes are scaled correctly to fit the new data.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The axes on which to plot or update the thermodynamic diagram.</span>
+<span class="sd">        plot_config : dict</span>
+<span class="sd">            A dictionary containing the plot settings, including variables to be plotted on the x and y axes, and scaling information.</span>
+<span class="sd">        ax_index : int</span>
+<span class="sd">            The index of the axes in the figure, used for identifying and updating existing plots.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set up axes properties</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;x_variable&quot;</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;y_variable&quot;</span><span class="p">]])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;x_scale&quot;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="n">plot_config</span><span class="p">[</span><span class="s2">&quot;y_scale&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Plot phase diagram</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">plot_phase_diagram</span><span class="p">(</span><span class="n">axes</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">plot_config</span><span class="p">)</span>
+
+        <span class="c1"># Plot thermodynamic processes</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Handle heat exchanger components in a special way</span>
+            <span class="k">if</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;heat_exchanger&quot;</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;hot_side&quot;</span><span class="p">,</span> <span class="s2">&quot;cold_side&quot;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_plot_cycle_process</span><span class="p">(</span>
+                        <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">side</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ax_index</span><span class="o">=</span><span class="n">ax_index</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_plot_cycle_process</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">plot_config</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ax_index</span><span class="o">=</span><span class="n">ax_index</span><span class="p">)</span>
+
+        <span class="c1"># Adjust plot limits if updating</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">relim</span><span class="p">(</span><span class="n">visible_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_plot_cycle_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">plot_settings</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ax_index</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates or updates the plot elements for a specific cycle process on a given axes.</span>
+
+<span class="sd">        This method checks if the plot elements for the specified cycle process already exist on the given axes.</span>
+<span class="sd">        If they exist and an axis index is provided, it updates these elements with new data. Otherwise, it creates</span>
+<span class="sd">        new plot elements (lines and points) and stores them for future updates.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the cycle process to plot or update.</span>
+<span class="sd">        plot_settings : dict</span>
+<span class="sd">            The plot settings dictionary containing settings such as x and y variables.</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The axes on which to plot or update the cycle process.</span>
+<span class="sd">        ax_index : int, optional</span>
+<span class="sd">            The index of the axes in the figure, used for updating existing plots. If None, new plots are created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Retrieve component data</span>
+        <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_process_data</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;x_variable&quot;</span><span class="p">],</span> <span class="n">plot_settings</span><span class="p">[</span><span class="s2">&quot;y_variable&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Initialize the dictionary for this axis index if it does not exist</span>
+        <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Handle existing plot elements</span>
+        <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">x_data</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">y_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Hide existing plot elements if data is None</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Update existing plot elements with new data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">x_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">y_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">y_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Create new plot elements if data is not None</span>
+            <span class="p">(</span><span class="n">line</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">x_data</span><span class="p">,</span>
+                <span class="n">y_data</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                <span class="n">markersize</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
+                <span class="n">markeredgewidth</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span>
+                <span class="n">markerfacecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="p">(</span><span class="n">points</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">x_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                <span class="p">[</span><span class="n">y_data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+                <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span>
+                <span class="n">markersize</span><span class="o">=</span><span class="mf">4.0</span><span class="p">,</span>
+                <span class="n">markeredgewidth</span><span class="o">=</span><span class="mf">1.25</span><span class="p">,</span>
+                <span class="n">markerfacecolor</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span>
+                <span class="n">zorder</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Store the new plot elements</span>
+            <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;process_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;state_points&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span>
+
+    <span class="k">def</span> <span class="nf">_get_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">prop_x</span><span class="p">,</span> <span class="n">prop_y</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieve thermodynamic data for a specified process of the cycle.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the cycle process.</span>
+<span class="sd">        prop_x : str</span>
+<span class="sd">            Property name to plot on the x-axis.</span>
+<span class="sd">        prop_y : str</span>
+<span class="sd">            Property name to plot on the y-axis.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of (np.ndarray, np.ndarray, str)</span>
+<span class="sd">            x_data: Array of data points for the x-axis.</span>
+<span class="sd">            y_data: Array of data points for the y-axis.</span>
+<span class="sd">            color: Color code for the plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get heat exchanger side data</span>
+        <span class="k">if</span> <span class="s2">&quot;_hot_side&quot;</span> <span class="ow">in</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">&quot;_cold_side&quot;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+            <span class="c1"># Extract the component and side from the name</span>
+            <span class="k">if</span> <span class="s2">&quot;_hot_side&quot;</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">component_name</span><span class="p">,</span> <span class="n">side_1</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_hot_side&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="s2">&quot;hot_side&quot;</span>
+                <span class="n">side_2</span> <span class="o">=</span> <span class="s2">&quot;cold_side&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">component_name</span><span class="p">,</span> <span class="n">side_1</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_cold_side&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="s2">&quot;cold_side&quot;</span>
+                <span class="n">side_2</span> <span class="o">=</span> <span class="s2">&quot;hot_side&quot;</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">][</span><span class="n">component_name</span><span class="p">][</span><span class="n">side_1</span><span class="p">]</span>
+            <span class="n">data_other_side</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">][</span><span class="n">component_name</span><span class="p">][</span><span class="n">side_2</span><span class="p">]</span>
+            <span class="n">is_heat_exchanger</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Handle non-heat exchanger components</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">is_heat_exchanger</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Retrieve data</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="s2">&quot;identifier&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;working_fluid&quot;</span><span class="p">:</span>
+            <span class="c1"># Components of the cycle</span>
+            <span class="n">x_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="n">prop_x</span><span class="p">]</span>
+            <span class="n">y_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="n">prop_y</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">is_heat_exchanger</span> <span class="ow">and</span> <span class="n">prop_y</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span> <span class="ow">and</span> <span class="n">prop_x</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">]:</span>
+            <span class="c1"># Special case for heat exchangers</span>
+            <span class="n">x_data</span> <span class="o">=</span> <span class="n">data_other_side</span><span class="p">[</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="n">prop_x</span><span class="p">]</span>
+            <span class="n">y_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="n">prop_y</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Other cases</span>
+            <span class="n">x_data</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">y_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">color</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">,</span> <span class="n">color</span>
+
+    <span class="k">def</span> <span class="nf">_plot_pinch_point_diagram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">ax_index</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plots or updates the pinch point diagram for the thermodynamic cycle&#39;s heat exchangers.</span>
+
+<span class="sd">        This method visualizes the temperature vs. heat flow rate for each heat exchanger in the cycle.</span>
+<span class="sd">        The function is capable of plotting the diagram for the first time or updating it with the latest data</span>
+<span class="sd">        if called subsequently. It uses a sorted approach, beginning with the heat exchanger that has the minimum</span>
+<span class="sd">        temperature on the cold side and proceeding in ascending order of temperature.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The axes on which to plot or update the pinch point diagram.</span>
+<span class="sd">        ax_index : int</span>
+<span class="sd">            The index of the axes in the figure, used to identify and access the specific axes</span>
+<span class="sd">            for updating the existing plot elements stored in the &#39;graphics&#39; attribute.</span>
+
+<span class="sd">        Notes:</span>
+<span class="sd">        -----</span>
+<span class="sd">        The method relies on the &#39;graphics&#39; attribute of the class to store and update plot elements.</span>
+<span class="sd">        It handles the creation of new plot elements (lines, endpoints, vertical lines) when first called</span>
+<span class="sd">        and updates these elements with new data from &#39;cycle_data&#39; during subsequent calls.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="s2">&quot;heat&quot;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Initialize the graphic object dict for this axis index if it does not exist</span>
+        <span class="k">if</span> <span class="n">ax_index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Set the axes labels</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="s2">&quot;heat&quot;</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">LABEL_MAPPING</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Extract heat exchanger names and their minimum cold side temperatures</span>
+        <span class="n">heat_exchangers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">component</span><span class="p">[</span><span class="s2">&quot;cold_side&quot;</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">][</span><span class="s2">&quot;T&quot;</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;heat_exchanger&quot;</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Sort heat exchangers by minimum temperature on the cold side</span>
+        <span class="n">sorted_heat_exchangers</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">heat_exchangers</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Loop over all heat exchangers</span>
+        <span class="n">Q0</span> <span class="o">=</span> <span class="mf">0.00</span>
+        <span class="k">for</span> <span class="n">HX_name</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sorted_heat_exchangers</span><span class="p">:</span>
+            <span class="n">component</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cycle_data</span><span class="p">[</span><span class="s2">&quot;components&quot;</span><span class="p">][</span><span class="n">HX_name</span><span class="p">]</span>
+            <span class="c1"># Hot side</span>
+            <span class="n">c_hot</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;hot_side&quot;</span><span class="p">][</span><span class="s2">&quot;color&quot;</span><span class="p">]</span>
+            <span class="n">props_hot</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;hot_side&quot;</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]</span>
+            <span class="n">mass_flow_hot</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;hot_side&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span>
+            <span class="n">Q_hot</span> <span class="o">=</span> <span class="p">(</span><span class="n">props_hot</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">props_hot</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">mass_flow_hot</span>
+            <span class="n">T_hot</span> <span class="o">=</span> <span class="n">props_hot</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Cold side</span>
+            <span class="n">c_cold</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;cold_side&quot;</span><span class="p">][</span><span class="s2">&quot;color&quot;</span><span class="p">]</span>
+            <span class="n">props_cold</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;cold_side&quot;</span><span class="p">][</span><span class="s2">&quot;states&quot;</span><span class="p">]</span>
+            <span class="n">mass_flow_cold</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="s2">&quot;cold_side&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span>
+            <span class="n">Q_cold</span> <span class="o">=</span> <span class="p">(</span><span class="n">props_cold</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">props_cold</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">mass_flow_cold</span>
+            <span class="n">T_cold</span> <span class="o">=</span> <span class="n">props_cold</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Check if the plot elements for this component already exist</span>
+            <span class="k">if</span> <span class="n">HX_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">]:</span>
+                <span class="c1"># Update existing plot elements</span>
+                <span class="n">plot_elements</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">HX_name</span><span class="p">]</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;hot_line&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">,</span> <span class="n">T_hot</span><span class="p">)</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;cold_line&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">,</span> <span class="n">T_cold</span><span class="p">)</span>
+
+                <span class="c1"># Update endpoints</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;hot_start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T_hot</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;hot_end&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">T_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;cold_start&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T_cold</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;cold_end&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_data</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">T_cold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+                <span class="c1"># Update vertical lines</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;start_line&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_xdata</span><span class="p">([</span><span class="n">Q0</span><span class="p">,</span> <span class="n">Q0</span><span class="p">])</span>
+                <span class="n">plot_elements</span><span class="p">[</span><span class="s2">&quot;end_line&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_xdata</span><span class="p">([</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Create new plot elements</span>
+                <span class="p">(</span><span class="n">hot_line</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">,</span> <span class="n">T_hot</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">c_hot</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">cold_line</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">,</span> <span class="n">T_cold</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">c_cold</span><span class="p">)</span>
+
+                <span class="c1"># Create endpoints</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;markersize&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;markerfacecolor&quot;</span><span class="p">:</span> <span class="s2">&quot;white&quot;</span><span class="p">}</span>
+                <span class="p">(</span><span class="n">hot_1</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T_hot</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">c_hot</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">hot_2</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">T_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">c_hot</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">cold_1</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">T_cold</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">c_cold</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+                <span class="p">(</span><span class="n">cold_2</span><span class="p">,)</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_cold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">T_cold</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">c_cold</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+
+                <span class="c1"># Create vertical lines</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="s2">&quot;linestyle&quot;</span><span class="p">:</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">}</span>
+                <span class="n">start_line</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Q0</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+                <span class="n">end_line</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">param</span><span class="p">)</span>
+
+                <span class="c1"># Store new plot elements</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">graphics</span><span class="p">[</span><span class="s2">&quot;pinch_point_lines&quot;</span><span class="p">][</span><span class="n">ax_index</span><span class="p">][</span><span class="n">HX_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;hot_line&quot;</span><span class="p">:</span> <span class="n">hot_line</span><span class="p">,</span>
+                    <span class="s2">&quot;cold_line&quot;</span><span class="p">:</span> <span class="n">cold_line</span><span class="p">,</span>
+                    <span class="s2">&quot;hot_start&quot;</span><span class="p">:</span> <span class="n">hot_1</span><span class="p">,</span>
+                    <span class="s2">&quot;hot_end&quot;</span><span class="p">:</span> <span class="n">hot_2</span><span class="p">,</span>
+                    <span class="s2">&quot;cold_start&quot;</span><span class="p">:</span> <span class="n">cold_1</span><span class="p">,</span>
+                    <span class="s2">&quot;cold_end&quot;</span><span class="p">:</span> <span class="n">cold_2</span><span class="p">,</span>
+                    <span class="s2">&quot;start_line&quot;</span><span class="p">:</span> <span class="n">start_line</span><span class="p">,</span>
+                    <span class="s2">&quot;end_line&quot;</span><span class="p">:</span> <span class="n">end_line</span><span class="p">,</span>
+                <span class="p">}</span>
+
+            <span class="c1"># Update abscissa for the next heat exchanger</span>
+            <span class="n">Q0</span> <span class="o">+=</span> <span class="n">Q_hot</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span> <span class="n">Q0</span> <span class="o">/</span> <span class="mi">50</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">Q0</span> <span class="o">+</span> <span class="n">Q0</span> <span class="o">/</span> <span class="mi">50</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

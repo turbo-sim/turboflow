@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.math &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.math</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.math</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="smooth_max">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_max">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a smooth approximation to the maximum of an array using the specified method.</span>
+
+<span class="sd">    The p-norm approximation to the maximum is given by :cite:p:`weisstein_vector_2023`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f_{\alpha}(x) = \left( \sum_i x_i^\alpha \right)^{\frac{1}{\alpha}}</span>
+
+<span class="sd">    The Boltzmann approximation is given by :cite:p:`blanchard_accurately_2021`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f_{\alpha}(x) = \frac{1}{\alpha} \log \left( \sum_i e^{\alpha \,(x_i - \hat{x})} \right) + \hat{x}</span>
+
+
+<span class="sd">    This LogSumExp approximation is given by :cite:p:`blanchard_accurately_2021`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f_{\alpha}(x) = \frac{1}{\alpha} \log \left( \sum_i e^{\alpha \,(x_i - \hat{x})} \right) + \hat{x}</span>
+
+<span class="sd">    where the shift :math:`\hat{x}` is defined as:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \hat{x} = \text{sign}(\alpha) \cdot \max(\text{sign}(\alpha) \cdot x)</span>
+
+<span class="sd">    Shifting `x` prevents numerical overflow due to the finite precision of floating-point operations</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    method : str, optional</span>
+<span class="sd">        Method to be used for the approximation. Supported methods are:</span>
+
+<span class="sd">        - ``boltzmann`` (default)</span>
+<span class="sd">        - ``logsumexp``</span>
+<span class="sd">        - ``p-norm``</span>
+
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Sharpness parameter. Large values produce a tight approximation to the</span>
+<span class="sd">        maximum function</span>
+<span class="sd">    axis : None or int or tuple of ints, optional</span>
+<span class="sd">        Axis or axes along which to operate. By default, flattened input is</span>
+<span class="sd">        used. If this is a tuple of ints, the maximum is selected over</span>
+<span class="sd">        multiple axes, instead of a single axis or all the axes as before.</span>
+<span class="sd">    keepdims : bool, optional</span>
+<span class="sd">        If this is set to True, the axes which are reduced are left</span>
+<span class="sd">        in the result as dimensions with size one. With this option,</span>
+<span class="sd">        the result will broadcast correctly against the input array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    max_approx : ndarray or scalar</span>
+<span class="sd">        Approximate maximum of `x` using the specified method.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an unsupported method is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;logsumexp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;boltzmann&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;p-norm&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Supported methods are:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;logsumexp&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;boltzmann&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;p-norm&#39;&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="smooth_min">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_min">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a smooth approximation to the minimum of an array using the specified method.</span>
+
+<span class="sd">    The smooth minimum approximation is equivalent to the smooth maximum with a</span>
+<span class="sd">    negative value of the sharpness parameter :math:`\alpha`. See documentation</span>
+<span class="sd">    of the ```smooth_max()`` function for more information about the approximation</span>
+<span class="sd">    methods available.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    method : str, optional</span>
+<span class="sd">        Method to be used for the approximation. Supported methods are:</span>
+
+<span class="sd">        - ``boltzmann`` (default)</span>
+<span class="sd">        - ``logsumexp``</span>
+<span class="sd">        - ``p-norm``</span>
+
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Sharpness parameter.Large values produce a tight approximation to the</span>
+<span class="sd">        minimum function</span>
+<span class="sd">    axis : None or int or tuple of ints, optional</span>
+<span class="sd">        Axis or axes along which to operate. By default, flattened input is</span>
+<span class="sd">        used. If this is a tuple of ints, the minimum is selected over</span>
+<span class="sd">        multiple axes, instead of a single axis or all the axes as before.</span>
+<span class="sd">    keepdims : bool, optional</span>
+<span class="sd">        If this is set to True, the axes which are reduced are left</span>
+<span class="sd">        in the result as dimensions with size one. With this option,</span>
+<span class="sd">        the result will broadcast correctly against the input array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    min_approx : ndarray or scalar</span>
+<span class="sd">        Approximate minimum of `x` using the specified method.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an unsupported method is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;logsumexp&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;boltzmann&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;p-norm&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Supported methods are:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;logsumexp&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;boltzmann&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;p-norm&#39;&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smooth approximation to the maximum of an array using the log-sum-exp method&quot;&quot;&quot;</span>
+
+    <span class="c1"># Determine the shift for numerical stability</span>
+    <span class="n">shift_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Compute log-sum-exp with the shift and scale by alpha</span>
+    <span class="n">log_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift_value</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Normalize the result by alpha and correct for the shift</span>
+    <span class="n">approx_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_sum</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">shift_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">alpha</span>
+
+    <span class="c1"># Handle keepdims</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="n">approx_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">approx_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">approx_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">approx_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">approx_max</span>
+
+
+<span class="k">def</span> <span class="nf">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smooth approximation to the maximum of an array using the Boltzmann weighted average&quot;&quot;&quot;</span>
+
+    <span class="c1"># Compute the shift for numerical stability</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Compute the weighted sum (numerator) of the elements of x</span>
+    <span class="n">weighted_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Compute the sum of the smooth_max weights (denominator)</span>
+    <span class="n">weight_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Compute the Boltzmann-weighted average avoiding division by zero</span>
+    <span class="n">max_approx</span> <span class="o">=</span> <span class="n">weighted_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">weight_sum</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
+        <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
+        <span class="n">max_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">max_approx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">max_approx</span>
+
+
+<span class="k">def</span> <span class="nf">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Smooth approximation to the maximum of an array using the p-norm method&quot;&quot;&quot;</span>
+
+    <span class="c1"># Compute the p-norm approximation</span>
+    <span class="n">pnorm_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">alpha</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
+        <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
+        <span class="n">pnorm_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">pnorm_approx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">pnorm_approx</span>
+
+
+<div class="viewcode-block" id="smooth_abs">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_abs">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_abs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;quadratic&quot;</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a smooth approximation of the absolute value function according to the specified method.</span>
+
+<span class="sd">    1. The quadratic approximation is given by :cite:p:`ramirez_x_2013`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       f_{\epsilon}(x) = \sqrt{x^2 + \epsilon}</span>
+
+<span class="sd">    2. The hyperbolic tangent approximation is given by :cite:p:`bagul_smooth_2017`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       f_{\epsilon}(x) = \epsilon \tanh{x / \epsilon}</span>
+
+<span class="sd">    3. The log-cosh approximation is given by :cite:p:`saleh_statistical_2022`:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       f_{\epsilon}(x) = \epsilon \log\left(\cosh\left(\frac{x}{\epsilon}\right)\right)</span>
+
+<span class="sd">    The quadratic method is the most computationally efficient, but also requires a smaller value of :math:`\epsilon` to yield a good approximation.</span>
+<span class="sd">    The transcendental methods give a better approximation to the absolute value function, at the expense of a higher computational time.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : float or np.ndarray</span>
+<span class="sd">        Input value(s) for which the approximation is computed.</span>
+<span class="sd">    method : str, optional</span>
+<span class="sd">        The method of approximation:</span>
+
+<span class="sd">        - ``quadratic`` (default)</span>
+<span class="sd">        - ``hyperbolic``</span>
+<span class="sd">        - ``logcosh``</span>
+
+<span class="sd">    epsilon : float, optional</span>
+<span class="sd">        A small positive constant affecting the approximation. Default is 1e-5.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or np.ndarray</span>
+<span class="sd">        Smooth approximation value(s) of the absolute function.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an unsupported approximation method is provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;quadratic&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_abs_quadratic</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;hyperbolic&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_abs_tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;logarithmic&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_smooth_abs_logcosh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unsupported method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Supported methods are:</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;quadratic&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;hyperbolic&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;- &#39;logcosh&#39;&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_smooth_abs_quadratic</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quadratic approximation of the absolute value function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_smooth_abs_tanh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hyperbolic tangent approximation of the absolute value function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">epsilon</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_smooth_abs_logcosh</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Log-cosh approximation of the absolute value function.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">epsilon</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">epsilon</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="sind">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.sind">[docs]</a>
+<span class="k">def</span> <span class="nf">sind</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sine of an angle given in degrees.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cosd">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.cosd">[docs]</a>
+<span class="k">def</span> <span class="nf">cosd</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the cosine of an angle given in degrees.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="tand">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.tand">[docs]</a>
+<span class="k">def</span> <span class="nf">tand</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the tangent of an angle given in degrees.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="arcsind">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.arcsind">[docs]</a>
+<span class="k">def</span> <span class="nf">arcsind</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the arcsine of a value and return the result in degrees.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+
+
+<div class="viewcode-block" id="arccosd">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.arccosd">[docs]</a>
+<span class="k">def</span> <span class="nf">arccosd</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the arccosine of a value and return the result in degrees.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+
+
+<div class="viewcode-block" id="arctand">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.arctand">[docs]</a>
+<span class="k">def</span> <span class="nf">arctand</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the arctangent of a value and return the result in degrees.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span></div>
+
+
+
+<div class="viewcode-block" id="is_odd">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.is_odd">[docs]</a>
+<span class="k">def</span> <span class="nf">is_odd</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a number is odd. Returns True if the provided number is odd, and False otherwise.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">number</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="is_even">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.is_even">[docs]</a>
+<span class="k">def</span> <span class="nf">is_even</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if a number is even. Returns True if the provided number is even, and False otherwise.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">number</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="all_numeric">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.all_numeric">[docs]</a>
+<span class="k">def</span> <span class="nf">all_numeric</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if all items in Numpy array are numeric (floats or ints)&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="all_non_negative">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.all_non_negative">[docs]</a>
+<span class="k">def</span> <span class="nf">all_non_negative</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="s2">&quot;Check if all items in Numpy array are non-negative&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">array</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sigmoid_hyperbolic">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.sigmoid_hyperbolic">[docs]</a>
+<span class="k">def</span> <span class="nf">sigmoid_hyperbolic</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the sigmoid hyperbolic function.</span>
+
+<span class="sd">    This function calculates a sigmoid function based on the hyperbolic tangent.</span>
+<span class="sd">    The formula is given by:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \sigma(x) = \frac{1 + \tanh\left(\frac{x - x_0}{\alpha}\right)}{2}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    x0 : float, optional</span>
+<span class="sd">        Center of the sigmoid function. Default is 0.5.</span>
+<span class="sd">    alpha : float, optional</span>
+<span class="sd">        Scale parameter. Default is 0.1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array_like</span>
+<span class="sd">        Output of the sigmoid hyperbolic function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Ensure x is a NumPy array for vectorized operations</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">/</span> <span class="n">alpha</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">sigma</span></div>
+
+
+
+<div class="viewcode-block" id="sigmoid_rational">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.sigmoid_rational">[docs]</a>
+<span class="k">def</span> <span class="nf">sigmoid_rational</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the sigmoid rational function.</span>
+
+<span class="sd">    This function calculates a sigmoid function using an algebraic approach based on a rational function.</span>
+<span class="sd">    The formula is given by:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \sigma(x) = \frac{x^n}{x^n + (1-x)^m}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Power of the numerator.</span>
+<span class="sd">    m : int</span>
+<span class="sd">        Power of the denominator.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array_like</span>
+<span class="sd">        Output of the sigmoid algebraic function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Ensure x is a NumPy array for vectorized operations</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 0 where x &lt; 0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 1 where x &gt; 1</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="n">n</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="n">m</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sigma</span></div>
+
+
+
+<div class="viewcode-block" id="sigmoid_smoothstep">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.sigmoid_smoothstep">[docs]</a>
+<span class="k">def</span> <span class="nf">sigmoid_smoothstep</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the smooth step function.</span>
+
+<span class="sd">    This function calculates a smooth step function with zero first-order</span>
+<span class="sd">    derivatives at the endpoints. More information available at:</span>
+<span class="sd">    https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array_like</span>
+<span class="sd">        Output of the sigmoid smoothstep function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Ensure x is a NumPy array for vectorized operations</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 0 where x &lt; 0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 1 where x &gt; 1</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sigmoid_smootherstep">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.sigmoid_smootherstep">[docs]</a>
+<span class="k">def</span> <span class="nf">sigmoid_smootherstep</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the smoother step function.</span>
+
+<span class="sd">    This function calculates a smoother step function with zero second-order</span>
+<span class="sd">    derivatives at the endpoints. It is a modification of the smoothstep</span>
+<span class="sd">    function to provide smoother transitions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        Input data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array_like</span>
+<span class="sd">        Output of the sigmoid smootherstep function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Ensure x is a NumPy array for vectorized operations</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 0 where x &lt; 0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c1"># Set x to 1 where x &gt; 1</span>
+    <span class="k">return</span> <span class="mi">6</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">5</span> <span class="o">-</span> <span class="mi">15</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

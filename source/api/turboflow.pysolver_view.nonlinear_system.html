@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.pysolver_view.nonlinear_system module &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="turboflow.pysolver_view.nonlinear_system_problems module" href="turboflow.pysolver_view.nonlinear_system_problems.html" />
+    <link rel="prev" title="PySolverView" href="turboflow.pysolver_view.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.pysolver_view.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.html#module-turboflow.pysolver_view">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.pysolver_view.html">PySolverView</a></li>
+      <li class="breadcrumb-item active">turboflow.pysolver_view.nonlinear_system module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.pysolver_view.nonlinear_system.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.pysolver_view.nonlinear_system">
+<span id="turboflow-pysolver-view-nonlinear-system-module"></span><h1>turboflow.pysolver_view.nonlinear_system module<a class="headerlink" href="#module-turboflow.pysolver_view.nonlinear_system" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.nonlinear_system.</span></span><span class="sig-name descname"><span class="pre">NonlinearSystemProblem</span></span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for root-finding problems.</p>
+<p>Derived root-finding problem objects must implement the following method:</p>
+<ul class="simple">
+<li><p><cite>residual</cite>: Evaluate the system of equations for a given set of decision variables.</p></li>
+</ul>
+<p>Additionally, specific problem classes can define the <cite>gradient</cite> method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.</p>
+<p class="rubric">Examples</p>
+<p>Here’s an example of how to derive from <cite>RootFindingProblem</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyRootFindingProblem</span><span class="p">(</span><span class="n">RootFindingProblem</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="c1"># Implement evaluation logic here</span>
+        <span class="k">pass</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>residual(x)</strong></p></td>
+<td><p>Evaluate the system of equations for a given set of decision variables.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem.residual">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemProblem.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem.residual" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the system of equations for given decision variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of decision variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Vector containing the values of the system of equations for the given decision variables.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.nonlinear_system.</span></span><span class="sig-name descname"><span class="pre">NonlinearSystemSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hybr'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2-point'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_abs_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_convergence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_convergence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'log'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'function'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Solver class for nonlinear systems of equations.</p>
+<p>The solver is designed to handle system of nonlinear equations of the form:</p>
+<div class="math notranslate nohighlight">
+\[F(x) = 0\]</div>
+<p>where <span class="math notranslate nohighlight">\(F: \mathbb{R}^n \rightarrow \mathbb{R}^n\)</span> is a vector-valued
+function of the vector <span class="math notranslate nohighlight">\(x\)</span>.</p>
+<p>The class interfaces with the <cite>root</cite> method from <cite>scipy.optimize</cite> to solve the equations and provides a structured framework for initialization, solution monitoring, and post-processing.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>problem</strong><span class="classifier">NonlinearSystemProblem</span></dt><dd><p>An instance of a problem defining the system of equations to be solved.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str, optional</span></dt><dd><p>Method to be used by scipy’s root for solving the nonlinear system. Available solvers are:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">hybr</span></code>:  Uses MINPACK’s ‘hybrd’ method, which is is a modification of Powell’s hybrid method.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">lm</span></code>: The Levenberg-Marquardt method, which blends the steepest descent and the Gauss-Newton methods.</p></li>
+</ul>
+<p>The choice between <code class="code docutils literal notranslate"><span class="pre">hybr</span></code> and <code class="code docutils literal notranslate"><span class="pre">lm</span></code> largely depends on the specifics of the problem at hand.
+The <code class="code docutils literal notranslate"><span class="pre">hybr</span></code> usually requires less gradient evaluations and it is often faster when analytic gradients are not available.
+It is advisable to experiment with both methods to determine the most appropriate choice for a given problem.</p>
+<p>Defaults to ‘hybr’.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Tolerance for the solver termination. Defaults to 1e-9.</p>
+</dd>
+<dt><strong>max_iter</strong><span class="classifier">integer, optional</span></dt><dd><p>Maximum number of function evaluations for the solver termination. Defaults to 100.</p>
+</dd>
+<dt><strong>options</strong><span class="classifier">dict, optional</span></dt><dd><p>Additional options to be passed to scipy’s root.</p>
+</dd>
+<dt><strong>derivative_method</strong><span class="classifier">str, optional</span></dt><dd><p>Finite difference method to be used when the problem Jacobian is not provided. Defaults to ‘2-point’</p>
+</dd>
+<dt><strong>derivative_abs_step</strong><span class="classifier">float, optional</span></dt><dd><p>Finite difference absolute step size to be used when the problem Jacobian is not provided. Defaults to 1e-6</p>
+</dd>
+<dt><strong>display</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, displays the convergence progress. Defaults to True.</p>
+</dd>
+<dt><strong>plot</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, plots the convergence progress. Defaults to False.</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger, optional</span></dt><dd><p>Logger object to which logging messages will be directed. Defaults to None.</p>
+</dd>
+<dt><strong>update_on</strong><span class="classifier">str, optional</span></dt><dd><p>Specifies if the convergence report should be updated on a new function evaluations (“function”) or on gradient evaluations (“gradient”). Defaults to “function”.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>solve(x0)</strong></p></td>
+<td><p>Solve the system of nonlinear equations using the specified initial guess <cite>x0</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>residual(x)</strong></p></td>
+<td><p>Evaluate the vector of residuals of the at a given point <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>gradient(x)</strong></p></td>
+<td><p>Evaluate the Jacobian of the system at a given point <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>print_convergence_history()</strong></p></td>
+<td><p>Print the convergence history of the problem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>plot_convergence_history()</strong></p></td>
+<td><p>Plot the convergence history.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.gradient">
+<span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver.gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.gradient" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the Jacobian of the nonlinear system of equations at the specified point x.</p>
+<p>This method will use the <cite>gradient</cite> method of the NonlinearSystemProblem class if it exists.
+If the <cite>gradient</cite> method is not implemented the Jacobian is appoximated using forward finite differences.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of independent variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array-like</dt><dd><p>Jacobian matrix of the residual vector formatted as a 2D array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.plot_convergence_history">
+<span class="sig-name descname"><span class="pre">plot_convergence_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver.plot_convergence_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.plot_convergence_history" title="Link to this definition"></a></dt>
+<dd><p>Plot the convergence history of the problem as the two-norm of the residual vector versus the number of iterations.</p>
+<p>This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>savefile</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, the plot is saved to a file instead of being displayed. Default is False.</p>
+</dd>
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>The name of the file to save the plot to. If not specified, the filename is automatically generated
+using the problem name and the start datetime. The file extension is not required.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">str, optional</span></dt><dd><p>The directory where the plot file will be saved if savefile is True. Default is “output”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The Matplotlib figure object for the plot. This can be used for further customization or display.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If this method is called before the problem has been solved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.print_convergence_history">
+<span class="sig-name descname"><span class="pre">print_convergence_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver.print_convergence_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.print_convergence_history" title="Link to this definition"></a></dt>
+<dd><p>Print the convergence history of the problem.</p>
+<dl class="simple">
+<dt>The convergence history includes:</dt><dd><ul class="simple">
+<li><p>Number of function evaluations</p></li>
+<li><p>Number of gradient evaluations</p></li>
+<li><p>Two-norm of the residual vector</p></li>
+<li><p>Two-norm of the solution step</p></li>
+</ul>
+</dd>
+<dt>The method provides a detailed report on:</dt><dd><ul class="simple">
+<li><p>Exit message</p></li>
+<li><p>Success status</p></li>
+<li><p>Execution time</p></li>
+</ul>
+</dd>
+</dl>
+<p>This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>savefile</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, the convergence history will be saved to a file, otherwise printed to standard output. Default is False.</p>
+</dd>
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>The name of the file to save the convergence history. If not specified, the filename is automatically generated
+using the problem name and the start datetime. The file extension is not required.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">str, optional</span></dt><dd><p>The directory where the plot file will be saved if savefile is True. Default is “output”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If this method is called before the problem has been solved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">called_from_jac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.residual" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the nonlinear system residuals.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Independent variable vector.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Residuals of the problem.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/nonlinear_system.html#NonlinearSystemSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver.solve" title="Link to this definition"></a></dt>
+<dd><p>Solve the nonlinear system using the specified solver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x0</strong><span class="classifier">array-like</span></dt><dd><p>Initial guess for the solution of the nonlinear system.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>RootResults</dt><dd><p>A result object from scipy’s root detailing the outcome of the solution process.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.pysolver_view.html" class="btn btn-neutral float-left" title="PySolverView" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.pysolver_view.nonlinear_system_problems.html" class="btn btn-neutral float-right" title="turboflow.pysolver_view.nonlinear_system_problems module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

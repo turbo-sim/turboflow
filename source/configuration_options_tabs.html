@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>&lt;no title&gt; &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/configuration_options_tabs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-0" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-0">
+geometry</label><div class="sd-tab-content docutils">
+<p>Defines the turbine’s geometric parameters.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-6" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-6">
+cascade_type</label><div class="sd-tab-content docutils">
+<p>Specifies the types of cascade of each blade row.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stator</span></code>, <code class="docutils literal notranslate"><span class="pre">rotor</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-7" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-7">
+radius_hub</label><div class="sd-tab-content docutils">
+<p>Hub radius at the inlet and outlet of each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-8" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-8">
+radius_tip</label><div class="sd-tab-content docutils">
+<p>Tip radius at the inlet and outlet of each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-9" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-9">
+pitch</label><div class="sd-tab-content docutils">
+<p>Blade pitch (aslo known as spacing) for each cascade</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-10" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-10">
+chord</label><div class="sd-tab-content docutils">
+<p>Blade chord for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-11" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-11">
+stagger_angle</label><div class="sd-tab-content docutils">
+<p>Blade stagger angle for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-12" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-12">
+opening</label><div class="sd-tab-content docutils">
+<p>Blade opening for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-13" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-13">
+diameter_le</label><div class="sd-tab-content docutils">
+<p>Leading-edge diameter for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-14" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-14">
+wedge_angle_le</label><div class="sd-tab-content docutils">
+<p>Wedge angle at the leading edge of each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-15" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-15">
+metal_angle_le</label><div class="sd-tab-content docutils">
+<p>Metal angle at the leading edge of each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-16" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-16">
+metal_angle_te</label><div class="sd-tab-content docutils">
+<p>Metal angle at the trailing edge of each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-17" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-17">
+thickness_te</label><div class="sd-tab-content docutils">
+<p>Trailing edge thickness of the blades for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-18" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-18">
+thickness_max</label><div class="sd-tab-content docutils">
+<p>Maximum thicknesses of the blades for each cascade.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-19" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-19">
+tip_clearance</label><div class="sd-tab-content docutils">
+<p>Tip clearance of the blades for each cascade (usually zero for stator blades).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-20" name="sd-tab-set-1" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-20">
+throat_location_fraction</label><div class="sd-tab-content docutils">
+<p>Defines the position of the throat in the blade passages as a fraction of the cascade’s axial length. This parameter is relevant when the annulus shape varies from the inlet to the outlet of the cascade, due to factors like flaring or non-constant radius. A value of 1 indicates that the throat is located exactly at the exit plane, aligning the throat’s area and radius with the exit plane’s dimensions. Adjusting this fraction allows for precise modeling of the throat location relative to the exit.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-1" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-1">
+operation_points</label><div class="sd-tab-content docutils">
+<p>Defines operating conditions for turbine performance analysis. This can be provided in two formats. The first format is as a list of dictionaries, where each dictionary defines a single operation point. The second format is as a single dictionary where each key has a single value or an array of values. In this case, the function internally generates all possible combinations of operation points, similar to creating a performance map, by taking the Cartesian product of these ranges.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-21" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-21">
+fluid_name</label><div class="sd-tab-content docutils">
+<p>Name of the working fluid.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-22" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-22">
+T0_in</label><div class="sd-tab-content docutils">
+<p>Stagnation temperature at the inlet. Unit [K].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-23" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-23">
+p0_in</label><div class="sd-tab-content docutils">
+<p>Stagnation pressure at the inlet. Unit [Pa].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-24" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-24">
+p_out</label><div class="sd-tab-content docutils">
+<p>Static pressure at the exit. Unit [Pa].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-25" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-25">
+omega</label><div class="sd-tab-content docutils">
+<p>Angular speed. Unit [rad/s].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-26" name="sd-tab-set-2" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-26">
+alpha_in</label><div class="sd-tab-content docutils">
+<p>Flow angle at the inlet. Unit [deg].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-2" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-2">
+performance_map</label><div class="sd-tab-content docutils">
+<p>Specifies a range of operating conditions for creating the turbine’s performance map. This option is expected to be a dictionary where each key corresponds to a parameter (like inlet pressure, angular speed, etc.) and its value is a scalar or an array of possible values for that parameter. The code generates the complete set of operation points internally by calculating all possible combinations of operating conditions (i.e., taking the cartesian product of the ranges).</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-27" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-27">
+fluid_name</label><div class="sd-tab-content docutils">
+<p>Name of the working fluid.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-28" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-28">
+T0_in</label><div class="sd-tab-content docutils">
+<p>Stagnation temperature at the inlet. Unit [K].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-29" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-29">
+p0_in</label><div class="sd-tab-content docutils">
+<p>Stagnation pressure at the inlet. Unit [Pa].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-30" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-30">
+p_out</label><div class="sd-tab-content docutils">
+<p>Static pressure at the exit. Unit [Pa].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-31" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-31">
+omega</label><div class="sd-tab-content docutils">
+<p>Angular speed. Unit [rad/s].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-32" name="sd-tab-set-3" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-32">
+alpha_in</label><div class="sd-tab-content docutils">
+<p>Flow angle at the inlet. Unit [deg].</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-3" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-3">
+model_options</label><div class="sd-tab-content docutils">
+<p>Specifies the options related to the physical modeling of the problem</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-33" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-33">
+deviation_model</label><div class="sd-tab-content docutils">
+<p>Deviation model used to predict the exit flow angle at subsonic conditions.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">aungier</span></code>, <code class="docutils literal notranslate"><span class="pre">ainley_mathieson</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_deviation</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-34" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-34">
+blockage_model</label><div class="sd-tab-content docutils">
+<p>Model used to predict the blockage factor due to boundary layer displacement thickness.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>0.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">flat_plate_turbulent</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;numeric</span> <span class="pre">value&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-35" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-35">
+rel_step_fd</label><div class="sd-tab-content docutils">
+<p>Relative step size of the finite differences used to approximate the critical condition Jacobian.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>0.001</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-36" name="sd-tab-set-4" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-36">
+loss_model</label><div class="sd-tab-content docutils">
+<p>Specifies the options of the methods to estimate losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-37" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-37">
+model</label><div class="sd-tab-content docutils">
+<p>Name of the model used to calculate the losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">kacker_okapuu</span></code>, <code class="docutils literal notranslate"><span class="pre">moustapha</span></code>, <code class="docutils literal notranslate"><span class="pre">benner</span></code>, <code class="docutils literal notranslate"><span class="pre">isentropic</span></code>, <code class="docutils literal notranslate"><span class="pre">custom</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-38" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-38">
+loss_coefficient</label><div class="sd-tab-content docutils">
+<p>Definition of the loss coefficient used to characterize the losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">stagnation_pressure</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-39" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-39">
+inlet_displacement_thickness_height_ratio</label><div class="sd-tab-content docutils">
+<p>Ratio of the endwall boundary layer displacement thickness at the inlet of a cascade to the height of the blade. Used in the secondary loss calculations of the <cite>benner</cite> loss model.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>0.011</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-40" name="sd-tab-set-5" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-40">
+tuning_factors</label><div class="sd-tab-content docutils">
+<p>Specifies tuning factors to have control over the weight of the different loss components.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-41" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-41">
+profile</label><div class="sd-tab-content docutils">
+<p>Multiplicative factor for the profile losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-42" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-42">
+incidence</label><div class="sd-tab-content docutils">
+<p>Multiplicative factor for the incidence losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-43" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-43">
+secondary</label><div class="sd-tab-content docutils">
+<p>Multiplicative factor for the secondary losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-44" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-44">
+trailing</label><div class="sd-tab-content docutils">
+<p>Multiplicative factor for the trailing edge losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-45" name="sd-tab-set-6" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-45">
+clearance</label><div class="sd-tab-content docutils">
+<p>Multiplicative factor for the tip clearance losses.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-4" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-4">
+solver_options</label><div class="sd-tab-content docutils">
+<p>Specifies options related to the numerical methods used to solve the problem</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>{}</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-46" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-46">
+method</label><div class="sd-tab-content docutils">
+<p>Name of the numerical method used to solve the problem. Different methods may offer various advantages in terms of accuracy, speed, or stability, depending on the problem being solved</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>lm</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lm</span></code>, <code class="docutils literal notranslate"><span class="pre">hybr</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-47" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-47">
+tolerance</label><div class="sd-tab-content docutils">
+<p>Termination tolerance for the solver. This value determines the precision of the solution. Lower tolerance values increase the precision but may require more computational time.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>1e-08</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">float64</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-48" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-48">
+max_iterations</label><div class="sd-tab-content docutils">
+<p>Maximum number of solver iterations. This sets an upper limit on the number of iterations to prevent endless computation in cases where convergence is slow or not achievable.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>100</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-49" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-49">
+derivative_method</label><div class="sd-tab-content docutils">
+<p>Finite difference method used to calculate the problem Jacobian</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>2-point</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid options</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">2-point</span></code>, <code class="docutils literal notranslate"><span class="pre">3-point</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-50" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-50">
+derivative_rel_step</label><div class="sd-tab-content docutils">
+<p>Relative step size of the finite differences used to approximate the problem Jacobian. This step size is crucial in balancing the truncation error and round-off error. A larger step size may lead to higher truncation errors, whereas a very small step size can increase round-off errors due to the finite precision of floating point arithmetic. Choosing the appropriate step size is key to ensuring accuracy and stability in the derivative estimation process.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>0.0001</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">float</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<input id="sd-tab-item-51" name="sd-tab-set-7" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-51">
+display_progress</label><div class="sd-tab-content docutils">
+<p>Whether to print the convergence history to the console. Enabling this option helps in monitoring the solver’s progress and diagnosing convergence issues during the solution process.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>True</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<input id="sd-tab-item-5" name="sd-tab-set-0" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-5">
+general_settings</label><div class="sd-tab-content docutils">
+<p>Defines general settings controlling the behavior of the program.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dict</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="sd-tab-set docutils">
+<input checked="checked" id="sd-tab-item-52" name="sd-tab-set-8" type="radio">
+<label class="sd-tab-label" for="sd-tab-item-52">
+skip_validation</label><div class="sd-tab-content docutils">
+<p>Whether to skip the configuration validation or not.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Mandatory</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Default value</strong></p></td>
+<td><p>False</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Valid types</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

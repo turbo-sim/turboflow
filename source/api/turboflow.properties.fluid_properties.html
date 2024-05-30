@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>meanline_axial.properties.fluid_properties module &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PySolverView" href="turboflow.pysolver_view.html" />
+    <link rel="prev" title="Fluid properties functions" href="turboflow.properties.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.properties.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.html#module-turboflow.properties">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.properties.html">Fluid properties functions</a></li>
+      <li class="breadcrumb-item active">meanline_axial.properties.fluid_properties module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.properties.fluid_properties.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.properties.fluid_properties">
+<span id="meanline-axial-properties-fluid-properties-module"></span><h1>meanline_axial.properties.fluid_properties module<a class="headerlink" href="#module-turboflow.properties.fluid_properties" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">Fluid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'HEOS'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exceptions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">identifier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a fluid with various thermodynamic properties computed via CoolProp.</p>
+<p>This class provides a convenient interface to CoolProp for various fluid property calculations.</p>
+<p>Properties can be accessed directly as attributes (e.g., <cite>fluid.properties[“p”]</cite> for pressure)
+or through dictionary-like access (e.g., <cite>fluid.T</cite> for temperature).</p>
+<p>Critical and triple point properties are computed upon initialization and stored internally for convenience.</p>
+<p class="rubric">Examples</p>
+<p>Accessing properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>fluid.T - Retrieves temperature directly as an attribute.</p></li>
+<li><p>fluid.properties[‘p’] - Retrieves pressure through dictionary-like access.</p></li>
+</ul>
+</div></blockquote>
+<p>Accessing critical point properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>fluid.critical_point.p - Retrieves critical pressure.</p></li>
+<li><p>fluid.critical_point[‘T’] - Retrieves critical temperature.</p></li>
+</ul>
+</div></blockquote>
+<p>Accessing triple point properties:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>fluid.triple_point_liquid.h - Retrieves liquid enthalpy at the triple point.</p></li>
+<li><p>fluid.triple_point_vapor.s - Retrieves vapor entropy at the triple point.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Name of the fluid.</p>
+</dd>
+<dt><strong>backend</strong><span class="classifier">str</span></dt><dd><p>Backend used for CoolProp, default is ‘HEOS’.</p>
+</dd>
+<dt><strong>exceptions</strong><span class="classifier">bool</span></dt><dd><p>Determines if exceptions should be raised during state calculations. Default is True.</p>
+</dd>
+<dt><strong>converged_flag</strong><span class="classifier">bool</span></dt><dd><p>Flag indicating whether properties calculations converged.</p>
+</dd>
+<dt><strong>properties</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of various fluid properties. Accessible directly as attributes (e.g., <cite>fluid.p</cite> for pressure).</p>
+</dd>
+<dt><strong>critical_point</strong><span class="classifier">FluidState</span></dt><dd><p>Properties at the fluid’s critical point.</p>
+</dd>
+<dt><strong>triple_point_liquid</strong><span class="classifier">FluidState</span></dt><dd><p>Properties at the fluid’s triple point in the liquid state.</p>
+</dd>
+<dt><strong>triple_point_vapor</strong><span class="classifier">FluidState</span></dt><dd><p>Properties at the fluid’s triple point in the vapor state.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>set_state(input_type, prop_1, prop_2):</strong></p></td>
+<td><p>Set the thermodynamic state of the fluid using specified property inputs.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.compute_properties_1phase">
+<span class="sig-name descname"><span class="pre">compute_properties_1phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generalize_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.compute_properties_1phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.compute_properties_1phase" title="Link to this definition"></a></dt>
+<dd><p>Get single-phase properties from CoolProp low level interface</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.compute_properties_2phase">
+<span class="sig-name descname"><span class="pre">compute_properties_2phase</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.compute_properties_2phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.compute_properties_2phase" title="Link to this definition"></a></dt>
+<dd><p>Get two-phase properties from mixing rules and single-phase CoolProp properties</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.compute_properties_meanline">
+<span class="sig-name descname"><span class="pre">compute_properties_meanline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.compute_properties_meanline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.compute_properties_meanline" title="Link to this definition"></a></dt>
+<dd><p>Extract fluid properties for meanline model</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.compute_properties_metastable_rhoT">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_properties_metastable_rhoT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AS</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.compute_properties_metastable_rhoT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.compute_properties_metastable_rhoT" title="Link to this definition"></a></dt>
+<dd><p>Compute the thermodynamic properties of a fluid using the Helmholtz
+energy equation of state. All properties thermodynamic properties can
+be derived as combinations of the Helmholtz energy and its
+derivatives with respect to density and pressure.</p>
+<p>This function can be used to estimate metastable properties using the
+equation of state beyond the saturation lines.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.compute_sonic_state">
+<span class="sig-name descname"><span class="pre">compute_sonic_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.compute_sonic_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.compute_sonic_state" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.get_property">
+<span class="sig-name descname"><span class="pre">get_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">propname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.get_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.get_property" title="Link to this definition"></a></dt>
+<dd><p>Get the value of a single property</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.get_props">
+<span class="sig-name descname"><span class="pre">get_props</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generalize_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.get_props"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.get_props" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.plot_phase_diagram">
+<span class="sig-name descname"><span class="pre">plot_phase_diagram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'s'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'T'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_saturation_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_critical_point</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_triple_point_liquid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_triple_point_vapor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_spinodal_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spinodal_line_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spinodal_line_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.5,</span> <span class="pre">0.5,</span> <span class="pre">0.5])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spinodal_line_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.75</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_quality_isolines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_pseudocritical_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.4,</span> <span class="pre">0.5,</span> <span class="pre">0.6,</span> <span class="pre">0.7,</span> <span class="pre">0.8,</span> <span class="pre">0.9,</span> <span class="pre">1.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_in_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.plot_phase_diagram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.plot_phase_diagram" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.set_state">
+<span class="sig-name descname"><span class="pre">set_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generalize_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.set_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.set_state" title="Link to this definition"></a></dt>
+<dd><p>Set the thermodynamic state of the fluid based on input properties.</p>
+<p>This method updates the thermodynamic state of the fluid in the CoolProp <code class="docutils literal notranslate"><span class="pre">abstractstate</span></code> object
+using the given input properties. It then calculates either single-phase or two-phase
+properties based on the current phase of the fluid.</p>
+<p>If the calculation of properties fails, <cite>converged_flag</cite> is set to False, indicating an issue with
+the property calculation. Otherwise, it’s set to True.</p>
+<p>Aliases of the properties are also added to the <code class="docutils literal notranslate"><span class="pre">Fluid.properties</span></code> dictionary for convenience.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_type</strong><span class="classifier">str or int</span></dt><dd><p>The variable pair used to define the thermodynamic state. This should be one of the
+predefined input pairs in CoolProp, such as <code class="docutils literal notranslate"><span class="pre">PT_INPUTS</span></code> for pressure and temperature.
+For all available input pairs, refer to <span class="xref std std-ref">this list</span>.</p>
+</dd>
+<dt><strong>prop_1</strong><span class="classifier">float</span></dt><dd><p>The first property value corresponding to the input type (e.g., pressure in Pa if the input
+type is CP.PT_INPUTS).</p>
+</dd>
+<dt><strong>prop_2</strong><span class="classifier">float</span></dt><dd><p>The second property value corresponding to the input type (e.g., temperature in K if the input
+type is CP.PT_INPUTS).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary of computed properties for the current state of the fluid. This includes both the
+raw properties from CoolProp and any additional alias properties.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Exception</dt><dd><p>If <cite>throw_exceptions</cite> attribute is set to True and an error occurs during property calculation,
+the original exception is re-raised.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.set_state_metastable">
+<span class="sig-name descname"><span class="pre">set_state_metastable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T_guess</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.set_state_metastable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.set_state_metastable" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.Fluid.set_state_metastable_rhoT">
+<span class="sig-name descname"><span class="pre">set_state_metastable_rhoT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#Fluid.set_state_metastable_rhoT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.Fluid.set_state_metastable_rhoT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.FluidState">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">FluidState</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#FluidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.FluidState" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class representing the thermodynamic state of a fluid.</p>
+<p>This class is used to store and access the properties of a fluid state.
+Properties can be accessed directly as attributes (e.g., <cite>fluid_state.p</cite> for pressure)
+or through dictionary-like access (e.g., <cite>fluid_state[‘T’]</cite> for temperature).</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>to_dict():</strong></p></td>
+<td><p>Convert the FluidState properties to a dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>keys():</strong></p></td>
+<td><p>Return the keys of the FluidState properties.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>items():</strong></p></td>
+<td><p>Return the items (key-value pairs) of the FluidState properties.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.FluidState.items">
+<span class="sig-name descname"><span class="pre">items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#FluidState.items"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.FluidState.items" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.FluidState.keys">
+<span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#FluidState.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.FluidState.keys" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.FluidState.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#FluidState.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.FluidState.to_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.FluidState.values">
+<span class="sig-name descname"><span class="pre">values</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#FluidState.values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.FluidState.values" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.PropertyRoot">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">PropertyRoot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#PropertyRoot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.PropertyRoot" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></p>
+<p>Find the root for thermodynamic state by iterating on the density-temperature
+native inputs to the helmholtz energy equations of state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>prop_1</strong><span class="classifier">str</span></dt><dd><p>The first property to be compared.</p>
+</dd>
+<dt><strong>prop_1_value</strong><span class="classifier">float</span></dt><dd><p>The value of the first property.</p>
+</dd>
+<dt><strong>prop_2</strong><span class="classifier">str</span></dt><dd><p>The second property to be compared.</p>
+</dd>
+<dt><strong>prop_2_value</strong><span class="classifier">float</span></dt><dd><p>The value of the second property.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>An instance of the fluid class which has the helmholtz energy equations of state.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_values(x)</strong></p></td>
+<td><p>Calculates the residuals based on the given input values of density and temperature.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.PropertyRoot.get_values">
+<span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#PropertyRoot.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.PropertyRoot.get_values" title="Link to this definition"></a></dt>
+<dd><p>Compute the residuals for the given density and temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">list</span></dt><dd><p>List containing the values for density and temperature.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Array containing residuals (difference) for the two properties.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">SonicStateProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">property_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">residual</span></code>(x)</p></td>
+<td><p>Evaluate the system of equations for given decision variables.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_values</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem.get_values">
+<span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem.get_values" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">SonicStateProblem2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">property_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fitness</span></code>(x)</p></td>
+<td><p>Evaluate the objective function and constraints for given decision variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds" title="turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code></a>()</p></td>
+<td><p>Get the bounds for each decision variable (Pygmo format)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nec</span></code>()</p></td>
+<td><p>Return the number of equality constraints associated with the problem.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nic</span></code>()</p></td>
+<td><p>Return the number of inequality constraints associated with the problem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_values" title="turboflow.properties.fluid_properties.SonicStateProblem2.get_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_values</span></code></a>(x)</p></td>
+<td><p>Compute the residuals for the given density and temperature.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_n_eq</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_n_ineq</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds">
+<span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds" title="Link to this definition"></a></dt>
+<dd><p>Get the bounds for each decision variable (Pygmo format)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bounds</strong><span class="classifier">tuple of lists</span></dt><dd><p>A tuple of two items where the first item is the list of lower bounds and the second
+item of the list of upper bounds for the vector of decision variables. For example,
+([-2 -1], [2, 1]) indicates that the first decision variable has bounds between
+-2 and 2, and the second has bounds between -1 and 1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq">
+<span class="sig-name descname"><span class="pre">get_n_eq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_n_eq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq">
+<span class="sig-name descname"><span class="pre">get_n_ineq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_n_ineq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_values">
+<span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_values" title="Link to this definition"></a></dt>
+<dd><p>Compute the residuals for the given density and temperature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">list</span></dt><dd><p>List containing the values for density and temperature.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>Array containing residuals (difference) for the two properties.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.calculate_subcooling">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">calculate_subcooling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#calculate_subcooling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.calculate_subcooling" title="Link to this definition"></a></dt>
+<dd><p>Calculates the degree of subcooling for a given state and adds this information to the state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>state</strong><span class="classifier">dict</span></dt><dd><p>A dictionary representing the thermodynamic state, containing at least pressure (p), temperature (T),
+and enthalpy (h) of the fluid.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>An object representing the fluid with its properties, including methods to set state and critical point data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>The input state dictionary with an added field ‘subcooling’ representing the degree of subcooling.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.calculate_superheating">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">calculate_superheating</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#calculate_superheating"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.calculate_superheating" title="Link to this definition"></a></dt>
+<dd><p>Calculates the degree of superheating for a given state and adds this information to the state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>state</strong><span class="classifier">dict</span></dt><dd><p>A dictionary representing the thermodynamic state, containing at least pressure (p), temperature (T),
+and enthalpy (h) of the fluid.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>An object representing the fluid with its properties, including methods to set state and critical point data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>The input state dictionary with an added field ‘superheating’ representing the degree of superheating.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.compute_properties_meshgrid">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">compute_properties_meshgrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#compute_properties_meshgrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.compute_properties_meshgrid" title="Link to this definition"></a></dt>
+<dd><p>Compute fluid properties over a specified range and store them in a dictionary.</p>
+<p>This function creates a meshgrid of property values based on the specified ranges and input pair,
+computes the properties of the fluid at each point on the grid, and stores the results in a
+dictionary where each key corresponds to a fluid property.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fluid</strong><span class="classifier">Fluid object</span></dt><dd><p>An instance of the Fluid class.</p>
+</dd>
+<dt><strong>input_pair</strong><span class="classifier">tuple</span></dt><dd><p>The input pair specifying the property type (e.g., PT_INPUTS for pressure-temperature).</p>
+</dd>
+<dt><strong>range1</strong><span class="classifier">tuple</span></dt><dd><p>The range linspace(min, max, n) for the first property of the input pair.</p>
+</dd>
+<dt><strong>range2</strong><span class="classifier">tuple</span></dt><dd><p>The range linspace(min, max, n) for the second property of the input pair.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>properties_dict</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where keys are property names and values are 2D numpy arrays of computed properties.</p>
+</dd>
+<dt><strong>grid1, grid2</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The meshgrid arrays for the first and second properties.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.compute_pseudocritical_line">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">compute_pseudocritical_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#compute_pseudocritical_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.compute_pseudocritical_line" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.compute_quality_grid">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">compute_quality_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_levels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#compute_quality_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.compute_quality_grid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.compute_saturation_line">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">compute_saturation_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#compute_saturation_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.compute_saturation_line" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.compute_spinodal_line">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">compute_spinodal_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#compute_spinodal_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.compute_spinodal_line" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.states_to_dict">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">states_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">states</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#states_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.states_to_dict" title="Link to this definition"></a></dt>
+<dd><p>Convert a list of state objects into a dictionary.
+Each key is a field name of the state objects, and each value is a NumPy array of all the values for that field.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.states_to_dict_2d">
+<span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">states_to_dict_2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">states_grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#states_to_dict_2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.states_to_dict_2d" title="Link to this definition"></a></dt>
+<dd><p>Convert a 2D list (grid) of state objects into a dictionary.
+Each key is a field name of the state objects, and each value is a 2D NumPy array of all the values for that field.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>states_grid</strong><span class="classifier">list of list of objects</span></dt><dd><p>A 2D grid where each element is a state object with the same keys.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary where keys are field names and values are 2D arrays of field values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.properties.html" class="btn btn-neutral float-left" title="Fluid properties functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.pysolver_view.html" class="btn btn-neutral float-right" title="PySolverView" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

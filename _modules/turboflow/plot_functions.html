@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.plot_functions &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../source/api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.plot_functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.plot_functions</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+
+<div class="viewcode-block" id="load_data">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.load_data">[docs]</a>
+<span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load performance data from an Excel file.</span>
+
+<span class="sd">    This function imports an Excel file containing performance parameters. It reads the data into a dictionary</span>
+<span class="sd">    named &#39;performance_data&#39; where each key corresponds to a sheet name in the Excel file, and each value is</span>
+<span class="sd">    a pandas DataFrame containing the data from that sheet. The data is rounded to avoid precision loss when</span>
+<span class="sd">    loading from Excel.</span>
+
+<span class="sd">    The excel file must contain the following sheets:</span>
+
+<span class="sd">        - `operation point`</span>
+<span class="sd">        - `plane`</span>
+<span class="sd">        - `cascade`</span>
+<span class="sd">        - `overall`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        The name of the Excel file containing performance parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing performance data, where keys are sheet names and values are DataFrames.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Read excel file</span>
+    <span class="n">performance_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span>
+        <span class="n">filename</span><span class="p">,</span>
+        <span class="n">sheet_name</span><span class="o">=</span><span class="p">[</span>
+            <span class="s2">&quot;operation point&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;plane&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cascade&quot;</span><span class="p">,</span>
+            <span class="c1"># &quot;stage&quot;,</span>
+            <span class="s2">&quot;overall&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Round off to ignore precision loss by loading data from excel</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">performance_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">performance_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">performance_data</span></div>
+
+
+
+<div class="viewcode-block" id="plot_lines">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.plot_lines">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_lines</span><span class="p">(</span>
+    <span class="n">performance_data</span><span class="p">,</span>
+    <span class="n">x_key</span><span class="p">,</span>
+    <span class="n">y_keys</span><span class="p">,</span>
+    <span class="n">subsets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">fig</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;figures&quot;</span><span class="p">,</span>
+    <span class="n">stack</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">close_fig</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">save_formats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;.png&quot;</span><span class="p">],</span>
+    <span class="n">legend_loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot lines from performance data.</span>
+
+<span class="sd">    This function plots lines from performance data. It supports plotting multiple lines on the same axes</span>
+<span class="sd">    with customizable labels, colors, and linestyles. The resulting plot can be saved to a file if desired.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    performance_data : DataFrame</span>
+<span class="sd">        The performance data to plot.</span>
+<span class="sd">    x_key : str</span>
+<span class="sd">        Name of the column in performance_data to be used as x-axis values.</span>
+<span class="sd">    y_keys : list of str</span>
+<span class="sd">        Names of the columns in performance_data to be plotted.</span>
+<span class="sd">    subsets : list, optional</span>
+<span class="sd">        Name and value of subsets to plot from performance_data. First instance should be a string representing the column name, while the</span>
+<span class="sd">        remaining elemnts represet the values defining the subset. Default is None.</span>
+<span class="sd">    fig : matplotlib.figure.Figure, optional</span>
+<span class="sd">        An existing figure object. If None, a new figure is created.</span>
+<span class="sd">    ax : matplotlib.axes.Axes, optional</span>
+<span class="sd">        An existing axes object. If None, a new axes is created.</span>
+<span class="sd">    xlabel : str, optional</span>
+<span class="sd">        The label for the x-axis.</span>
+<span class="sd">    ylabel : str, optional</span>
+<span class="sd">        The label for the y-axis.</span>
+<span class="sd">    title : str, optional</span>
+<span class="sd">        The title of the plot.</span>
+<span class="sd">    labels : list of str, optional</span>
+<span class="sd">        Labels for the plotted lines. Default is None.</span>
+<span class="sd">    filename : str, optional</span>
+<span class="sd">        The filename for saving the figure. Default is None.</span>
+<span class="sd">    outdir : str, optional</span>
+<span class="sd">        The directory where figures should be saved. Default is &#39;figures&#39;.</span>
+<span class="sd">    stack : bool, optional</span>
+<span class="sd">        Whether to stack the plotted lines. Default is False.</span>
+<span class="sd">    color_map : str, optional</span>
+<span class="sd">        The colormap used for the lines. Default is &#39;viridis&#39;.</span>
+<span class="sd">    colors : list of str or colors, optional</span>
+<span class="sd">        Colors for the plotted lines. Default is None.</span>
+<span class="sd">    close_fig : bool, optional</span>
+<span class="sd">        Whether to close the figure after plotting. Default is False.</span>
+<span class="sd">    save_figs : bool, optional</span>
+<span class="sd">        Whether to save the figure. Default is False.</span>
+<span class="sd">    linestyles : list of str, optional</span>
+<span class="sd">        Linestyles for the plotted lines. Default is None.</span>
+<span class="sd">    save_formats : list of str, optional</span>
+<span class="sd">        File formats for saving the figure. Default is [&#39;.png&#39;].</span>
+<span class="sd">    legend_loc : str, optional</span>
+<span class="sd">        Location for the legend. Default is &#39;best&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The figure object.</span>
+<span class="sd">    matplotlib.axes.Axes</span>
+<span class="sd">        The axes object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create figure if not provided</span>
+    <span class="k">if</span> <span class="n">fig</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">6.4</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">))</span>
+
+    <span class="c1"># Specify title and axes labels</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">xlabel</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">ylabel</span><span class="p">)</span>
+
+    <span class="c1"># Get data</span>
+    <span class="k">if</span> <span class="n">subsets</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">x_key</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">y_keys</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">x_key</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">y_keys</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">)</span>
+
+    <span class="c1"># Get colors</span>
+    <span class="k">if</span> <span class="n">colors</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">color_map</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+
+    <span class="c1"># Get labels</span>
+    <span class="k">if</span> <span class="n">labels</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">subsets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">subsets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">subsets</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">subsets</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">y_keys</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">y_keys</span>
+
+    <span class="c1"># Get linestyles</span>
+    <span class="k">if</span> <span class="n">linestyles</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">linestyles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c1"># Plot figure</span>
+    <span class="k">if</span> <span class="n">stack</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">stackplot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">y_keys</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">colors</span><span class="p">)</span>
+
+        <span class="c1"># Add edges by overlaying lines</span>
+        <span class="n">y_arrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">series</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">series</span> <span class="ow">in</span> <span class="n">y</span><span class="p">]</span>
+        <span class="n">cumulative_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">y_arrays</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">series</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">y_arrays</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">series</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">cumulative_y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">subsets</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="n">linestyles</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># Set margins to zero</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">margins</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+
+    <span class="c1"># Add legend</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">w_pad</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">h_pad</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Create output directory if it does not exist</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+
+    <span class="c1"># Save figure</span>
+    <span class="k">if</span> <span class="n">save_figs</span><span class="p">:</span>
+        <span class="n">base_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="n">savefig_in_formats</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">base_filename</span><span class="p">,</span> <span class="n">formats</span><span class="o">=</span><span class="n">save_formats</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">close_fig</span><span class="p">:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="get_lines">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.get_lines">[docs]</a>
+<span class="k">def</span> <span class="nf">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve lines of data from the specified column in `performance_data`.</span>
+
+<span class="sd">    This function returns a list of array from the specified column(s) of the performance data.</span>
+<span class="sd">    If no subset is specified, it returns lines covering all rows in `performance_data`. If a subset</span>
+<span class="sd">    is specified, it returns lines covering only the rows that match the specified subset.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    performance_data : DataFrame</span>
+<span class="sd">        The DataFrame containing the performance data.</span>
+<span class="sd">    column_name : str or list of str</span>
+<span class="sd">        The name(s) of the column(s) from which to retrieve data.</span>
+<span class="sd">    subsets : list, optional</span>
+<span class="sd">        Name and value of subsets to get data from performance_data. First instance should be a string representing the column name, while the</span>
+<span class="sd">        remaining elemnts represet the values defining the subset. Default is None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        A list of arrays from the specified column(s) of performance_data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get lines covering all rows in performance_data</span>
+    <span class="k">if</span> <span class="n">subsets</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Get single line</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">get_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)</span>
+        <span class="c1"># Get several columns</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">column_name</span><span class="p">:</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">lines</span>
+
+    <span class="n">subsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">round</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">subsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+    <span class="c1"># Get lines covering given subset</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">subsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">get_subset</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">subsets</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)[</span><span class="n">indices</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">column_name</span><span class="p">:</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="n">get_subset</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">subsets</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column</span><span class="p">)[</span><span class="n">indices</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">lines</span></div>
+
+
+
+<div class="viewcode-block" id="find_column">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.find_column">[docs]</a>
+<span class="k">def</span> <span class="nf">find_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Find the sheet containing the specified column in `performance_data`.</span>
+
+<span class="sd">    This function searches through all sheets in `performance_data` to find the one containing the specified column.</span>
+<span class="sd">    If the column is found, it returns the name of the sheet. If the column is not found, it raises an exception.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    performance_data : dict</span>
+<span class="sd">        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.</span>
+<span class="sd">    column_name : str</span>
+<span class="sd">        The name of the column to find.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The name of the sheet containing the specified column.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    Exception</span>
+<span class="sd">        If the specified column is not found in any sheet of performance_data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">performance_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">element</span> <span class="o">==</span> <span class="n">column_name</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">performance_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">key</span>
+
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find column </span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="s2"> in performance_data&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_column">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.get_column">[docs]</a>
+<span class="k">def</span> <span class="nf">get_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve a column of data from `performance_data`.</span>
+
+<span class="sd">    This function retrieves the specified column of data from `performance_data` by finding the sheet containing</span>
+<span class="sd">    the column using the `find_column` function. It then returns the column as a pandas Series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    performance_data : dict</span>
+<span class="sd">        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.</span>
+<span class="sd">    column_name : str</span>
+<span class="sd">        The name of the column to retrieve.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.Series</span>
+<span class="sd">        The column of data corresponding to column_name.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sheet</span> <span class="o">=</span> <span class="n">find_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">performance_data</span><span class="p">[</span><span class="n">sheet</span><span class="p">][</span><span class="n">column_name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_subset">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.get_subset">[docs]</a>
+<span class="k">def</span> <span class="nf">get_subset</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">row_value</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve the index of rows in `performance_data` where `column_name` equals `row_value`.</span>
+
+<span class="sd">    This function retrieves the index of rows in `performance_data` where the specified column (`column_name`)</span>
+<span class="sd">    equals the specified value (`row_value`). It first finds the sheet containing the column using the</span>
+<span class="sd">    `find_column` function, then returns the index of rows where the column has the specified value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    performance_data : dict</span>
+<span class="sd">        A dictionary containing sheets of performance data, where keys are sheet names and values are DataFrames.</span>
+<span class="sd">    column_name : str</span>
+<span class="sd">        The name of the column to search for `row_value`.</span>
+<span class="sd">    row_value : object</span>
+<span class="sd">        The value to match in `column_name`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.Index</span>
+<span class="sd">        The index of rows where `column_name` equals `row_value`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sheet</span> <span class="o">=</span> <span class="n">find_column</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">column_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">performance_data</span><span class="p">[</span><span class="n">sheet</span><span class="p">][</span>
+        <span class="n">performance_data</span><span class="p">[</span><span class="n">sheet</span><span class="p">][</span><span class="n">column_name</span><span class="p">]</span> <span class="o">==</span> <span class="n">row_value</span>
+    <span class="p">]</span><span class="o">.</span><span class="n">index</span></div>
+
+
+
+<div class="viewcode-block" id="savefig_in_formats">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.savefig_in_formats">[docs]</a>
+<span class="k">def</span> <span class="nf">savefig_in_formats</span><span class="p">(</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">path_without_extension</span><span class="p">,</span> <span class="n">formats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;.png&quot;</span><span class="p">,</span> <span class="s2">&quot;.svg&quot;</span><span class="p">,</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.eps&quot;</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save a given matplotlib figure in multiple file formats.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fig : matplotlib.figure.Figure</span>
+<span class="sd">        The figure object to be saved.</span>
+<span class="sd">    path_without_extension : str</span>
+<span class="sd">        The full path to save the figure excluding the file extension.</span>
+<span class="sd">    formats : list of str, optional</span>
+<span class="sd">        A list of string file extensions to specify which formats the figure should be saved in.</span>
+<span class="sd">        Default is [&#39;.png&#39;, &#39;.svg&#39;, &#39;.pdf&#39;, &quot;.eps&quot;].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; fig, ax = plt.subplots()</span>
+<span class="sd">    &gt;&gt;&gt; ax.plot([0, 1], [0, 1])</span>
+<span class="sd">    &gt;&gt;&gt; save_fig_in_formats(fig, &quot;/path/to/figure/filename&quot;)</span>
+
+<span class="sd">    This will save the figure as &quot;filename.png&quot;, &quot;filename.svg&quot;, and &quot;filename.pdf&quot; in the &quot;/path/to/figure/&quot; directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">formats</span><span class="p">:</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path_without_extension</span><span class="si">}{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="plot_axial_radial_plane">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.plot_axial_radial_plane">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_axial_radial_plane</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot the turbine geometry in an axial-radial plane.</span>
+
+<span class="sd">    This function plots the turbine geometry in an axial-radial plane. It takes the turbine geometry data</span>
+<span class="sd">    as input, including the radii at the inner and outer hub and tip, the number of cascades, and the axial</span>
+<span class="sd">    chord lengths. It then constructs and displays the plot, which represents the turbine blades in the</span>
+<span class="sd">    axial-radial plane.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        A dictionary containing turbine geometry data including:</span>
+
+<span class="sd">        - `radius_hub_in` (array-like) : Inner hub radii at each cascade.</span>
+<span class="sd">        - `radius_hub_out` (array-like) : Outer hub radii at each cascade.</span>
+<span class="sd">        - `radius_tip_in` (array-like) : Inner tip radii at each cascade.</span>
+<span class="sd">        - `radius_tip_out` (array-like) : Outer tip radii at each cascade.</span>
+<span class="sd">        - `number_of_cascades` (int) : Number of cascades in the turbine.</span>
+<span class="sd">        - `axial_chord` (array-like) : Axial chord lengths at each cascade.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The generated figure.</span>
+<span class="sd">    matplotlib.axes.Axes</span>
+<span class="sd">        The generated axes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load data</span>
+    <span class="n">radius_hub_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
+    <span class="n">radius_hub_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_hub_out&quot;</span><span class="p">]</span>
+    <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
+    <span class="n">radius_tip_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_tip_out&quot;</span><span class="p">]</span>
+    <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">]</span>
+    <span class="n">axial_chord</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;axial_chord&quot;</span><span class="p">]</span>
+    <span class="n">tip_clearance</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Define unspecified geometrical parameters</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># Thickness of casing relative to maximum tip radius</span>
+    <span class="n">cl</span> <span class="o">=</span> <span class="mf">1.2</span>  <span class="c1"># Length of casing to turbine</span>
+    <span class="n">cs</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Axial spacing between cascades relative to max axial chord</span>
+
+    <span class="c1"># Get x-points</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">cs</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="n">axial_chord</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">axial_chord</span><span class="p">)):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axial_chord</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axial_chord</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">dx</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Get tip and hub points</span>
+    <span class="n">y_hub</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">radius_hub_in</span><span class="p">,</span> <span class="n">radius_hub_out</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">y_tip</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">radius_tip_in</span><span class="p">,</span> <span class="n">radius_tip_out</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Initialize figure and axis object</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="c1"># Plot upper casing</span>
+    <span class="n">tip_clearance_extended</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tip_clearance</span><span class="p">,</span> <span class="n">tip_clearance</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span>
+    <span class="p">)</span>  <span class="c1"># Extend tip clearance vector</span>
+    <span class="n">casing_thickness</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">y_tip</span><span class="p">)</span> <span class="o">*</span> <span class="n">ct</span>
+    <span class="n">x_casing</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">x_casing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">cl</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">x_casing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">cl</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">y_casing_lower</span> <span class="o">=</span> <span class="n">y_tip</span> <span class="o">+</span> <span class="n">tip_clearance_extended</span>
+    <span class="n">y_casing_lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">y_casing_lower</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">y_casing_lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_casing_lower</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">y_casing_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_casing</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">y_tip</span><span class="p">)</span> <span class="o">+</span> <span class="n">casing_thickness</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_casing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_casing</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">y_casing_lower</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_casing</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x_casing</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">y_casing_lower</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Plot lower casing</span>
+    <span class="n">tip_clearance_extended</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">val</span>
+            <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">tip_clearance</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">tip_clearance</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span>
+        <span class="p">]</span>
+    <span class="p">)</span>  <span class="c1"># Extend tip clearance vector</span>
+    <span class="n">y_casing_upper</span> <span class="o">=</span> <span class="n">y_hub</span> <span class="o">-</span> <span class="n">tip_clearance_extended</span>
+    <span class="n">y_casing_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">y_casing_upper</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">y_casing_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_casing_upper</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">y_casing_lower</span> <span class="o">=</span> <span class="n">y_casing_upper</span> <span class="o">-</span> <span class="n">casing_thickness</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_casing</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x_casing</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">y_casing_lower</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">x_casing</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x_casing</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">y_casing_lower</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_casing_upper</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span><span class="n">x_casing</span><span class="p">,</span> <span class="n">y_casing_lower</span><span class="p">,</span> <span class="n">y_casing_upper</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;0.5&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Plot cascades</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">):</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="n">y_tip</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>  <span class="c1"># Plot tip</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="n">y_hub</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>  <span class="c1"># Plot hub</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span>
+            <span class="p">[</span><span class="n">y_hub</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">y_tip</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Plot inlet vertical line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="p">[</span><span class="n">y_hub</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">y_tip</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span>
+            <span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Plot exit vertical line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">y_hub</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">y_tip</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Fill cascade with color</span>
+
+    <span class="c1"># Plot axis of rotation</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+        <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-|&gt;&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="s2">&quot;out&quot;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">which</span><span class="o">=</span><span class="s2">&quot;minor&quot;</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># ax.set_yticks([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;bottom&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># ax.spines[&#39;left&#39;].set_visible(False)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Axis of rotation&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Radius&quot;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_aspect</span><span class="p">(</span><span class="s2">&quot;equal&quot;</span><span class="p">)</span>
+    <span class="n">lims</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">lims</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+
+
+<div class="viewcode-block" id="plot_velocity_triangles">
+<a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.plot_velocity_triangles">[docs]</a>
+<span class="k">def</span> <span class="nf">plot_velocity_triangles</span><span class="p">(</span><span class="n">plane</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot velocity triangles for each stage of a turbine.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    plane : dict</span>
+<span class="sd">        A dictionary containing velocity components for each plane of the turbine.</span>
+<span class="sd">        The dictionary should have the following keys:</span>
+<span class="sd">        - &#39;v_m&#39;: Meridional velocities.</span>
+<span class="sd">        - &#39;v_t&#39;: Tangential velocities.</span>
+<span class="sd">        - &#39;w_m&#39;: Meridional velocities of relative motion.</span>
+<span class="sd">        - &#39;w_t&#39;: Tangential velocities of relative motion.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    matplotlib.figure.Figure</span>
+<span class="sd">        The matplotlib figure object containing the velocity triangle plot.</span>
+
+<span class="sd">    matplotlib.axes._subplots.AxesSubplot</span>
+<span class="sd">        The matplotlib axis object containing the velocity triangle plot.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load variables</span>
+    <span class="n">v_ms</span> <span class="o">=</span> <span class="n">plane</span><span class="p">[</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span>
+    <span class="n">v_ts</span> <span class="o">=</span> <span class="n">plane</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+    <span class="n">w_ms</span> <span class="o">=</span> <span class="n">plane</span><span class="p">[</span><span class="s2">&quot;w_m&quot;</span><span class="p">]</span>
+    <span class="n">w_ts</span> <span class="o">=</span> <span class="n">plane</span><span class="p">[</span><span class="s2">&quot;w_t&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Get maximum an minimum tangential velocities</span>
+    <span class="n">max_w_t</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">v_ts</span><span class="p">,</span> <span class="n">w_ts</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]))</span>
+    <span class="n">min_w_t</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">v_ts</span><span class="p">,</span> <span class="n">w_ts</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]))</span>
+
+    <span class="c1"># Nameing of planes (for marking)</span>
+    <span class="n">plane_name</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;inlet&quot;</span><span class="p">,</span> <span class="s2">&quot;exit&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Tuning options</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Spacing between triangles</span>
+    <span class="n">hs</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Horizontal spacing between line and symbol (absolute)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Starting point in y direction</span>
+    <span class="n">fontsize</span> <span class="o">=</span> <span class="mi">12</span>  <span class="c1"># Fontsize</span>
+
+    <span class="c1"># Get rotor indexes</span>
+    <span class="n">i_rotor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">val</span> <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">plane</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">],</span> <span class="n">plane</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">])</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">pair</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># initialize figure and axis</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+
+    <span class="c1"># Plot velocity triangles</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">plane</span><span class="p">)):</span>
+
+        <span class="n">v_m</span> <span class="o">=</span> <span class="n">v_ms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">v_t</span> <span class="o">=</span> <span class="n">v_ts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="n">w_m</span> <span class="o">=</span> <span class="n">w_ms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">w_t</span> <span class="o">=</span> <span class="n">w_ts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># Define cascade name</span>
+        <span class="n">cascade</span> <span class="o">=</span> <span class="s2">&quot;Stator&quot;</span>  <span class="c1"># Changed if rotor (see below)</span>
+
+        <span class="c1"># Plot absolute velocity</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span>
+        <span class="p">)</span>  <span class="c1"># Plot meridional velocity</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span>
+        <span class="p">)</span>  <span class="c1"># Plot tangntial velocity</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">v_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span><span class="p">],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>  <span class="c1"># Plot velocity</span>
+        <span class="n">x_mid</span> <span class="o">=</span> <span class="n">v_t</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">y_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+            <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_mid</span><span class="p">,</span> <span class="n">y_mid</span><span class="p">),</span>
+            <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span>
+            <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-|&gt;&quot;</span><span class="p">),</span>
+        <span class="p">)</span>  <span class="c1"># Arrow for absolute velocity</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">x_mid</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+            <span class="n">x_mid</span> <span class="o">+</span> <span class="n">hs</span> <span class="o">*</span> <span class="n">sign</span><span class="p">,</span>
+            <span class="n">y_mid</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;$v$&quot;</span><span class="p">,</span>
+            <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
+            <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+            <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Symbol for absolute velocity</span>
+
+        <span class="c1"># Plot relative velocity</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">i_rotor</span><span class="p">:</span>
+
+            <span class="n">cascade</span> <span class="o">=</span> <span class="s2">&quot;Rotor&quot;</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+                <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">w_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;:&quot;</span>
+            <span class="p">)</span>  <span class="c1"># Plot tangntial velocity</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="n">w_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>  <span class="c1"># Plot velocity</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">w_t</span><span class="p">,</span> <span class="n">v_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">],</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>  <span class="c1"># Plot blade speed</span>
+            <span class="n">x_mid</span> <span class="o">=</span> <span class="n">w_t</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">y_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_mid</span><span class="p">,</span> <span class="n">y_mid</span><span class="p">),</span>
+                <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span>
+                <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-|&gt;&quot;</span><span class="p">),</span>
+            <span class="p">)</span>  <span class="c1"># Arrow for relative velocity</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">x_mid</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">1</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">x_mid</span> <span class="o">+</span> <span class="n">hs</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">x_mid</span><span class="p">),</span>
+                <span class="n">y_mid</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;$w$&quot;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># Symbol for relative velocity</span>
+            <span class="n">x_mid</span> <span class="o">=</span> <span class="p">(</span><span class="n">w_t</span> <span class="o">+</span> <span class="n">v_t</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            <span class="n">y_mid</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span>
+                <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">x_mid</span><span class="p">,</span> <span class="n">y_mid</span><span class="p">),</span>
+                <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">w_t</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span><span class="p">),</span>
+                <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-|&gt;&quot;</span><span class="p">),</span>
+            <span class="p">)</span>  <span class="c1"># Arrow for blade speed</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">x_mid</span><span class="p">,</span>
+                <span class="n">y_mid</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;$u$&quot;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+            <span class="p">)</span>  <span class="c1"># Symbol for blade speed</span>
+
+        <span class="c1"># Add explanatory text</span>
+        <span class="k">if</span> <span class="n">w_t</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">max_w_t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cascade</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">plane_name</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="n">min_w_t</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">start</span> <span class="o">-</span> <span class="n">v_m</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cascade</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">plane_name</span><span class="p">[</span><span class="n">i</span><span class="o">%</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">fontsize</span><span class="o">=</span><span class="n">fontsize</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">va</span><span class="o">=</span><span class="s2">&quot;center&quot;</span><span class="p">,</span>
+                <span class="n">color</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Plot line diciding the different triangles</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">min_w_t</span><span class="p">,</span> <span class="n">max_w_t</span><span class="p">],</span> <span class="p">[</span><span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span> <span class="o">-</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">v_m</span><span class="p">,</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span> <span class="o">-</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">v_m</span><span class="p">],</span> <span class="s2">&quot;k:&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Update starting point for the next velocity triangle</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="n">w_m</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">v_m</span>
+
+    <span class="c1"># Set plot options</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;top&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;bottom&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;left&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

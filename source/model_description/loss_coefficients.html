@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loss coefficients &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Loss models" href="loss_models.html" />
+    <link rel="prev" title="Fluid properties" href="fluid_properties.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model description</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Loss coefficients</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#loss-model">Loss model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance_analysis.html">Performance analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../model_description.html">Model description</a></li>
+      <li class="breadcrumb-item active">Loss coefficients</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/model_description/loss_coefficients.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="loss-coefficients">
+<span id="id1"></span><h1>Loss coefficients<a class="headerlink" href="#loss-coefficients" title="Link to this heading"></a></h1>
+<section id="loss-model">
+<h2>Loss model<a class="headerlink" href="#loss-model" title="Link to this heading"></a></h2>
+<p>During the preliminary design phase, it is common to rely on empirical
+correlations to estimate the losses within the turbine. These sets of
+correlations are known as loss models. A loss can be interpreted as any
+mechanism that leads to entropy generation and reduces the power output of
+the turbine, such as viscous friction in boundary layers, wake mixing, or
+shock waves. The work of <span id="id2">[<a class="reference internal" href="../bibliography.html#id38" title="J. D. Denton. Loss mechanisms in turbomachines. Journal of Turbomachinery, 115(4):621–656, 1993. doi:10.1115/1.2929299.">Denton, 1993</a>]</span>  presents a detailed description of
+loss mechanisms in turbomachinery.</p>
+<p>Loss coefficient definitions</p>
+<p>The losses are characterized in terms of the loss coefficient
+This parameter has different possible definitions</p>
+<p>Perhaps, the most popular loss model for axial turbines is the one proposed
+by <span id="id3">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>, <a class="reference internal" href="../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span> and its subsequent refinements by
+<span id="id4">[<a class="reference internal" href="../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>
+and <span id="id5">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>. The Kacker–Okapuu loss model has been further refined to
+account for off-design performance by <span id="id6">[<a class="reference internal" href="../bibliography.html#id77" title="S. H. Moustapha, S. C. Kacker, and B. Tremblay. An improved incidence losses prediction method for turbine airfoils. Journal of Turbomachinery, 112(2):267–276, 1990. doi:10.1115/1.2927647.">Moustapha <em>et al.</em>, 1990</a>]</span> and by
+<span id="id7">[<a class="reference internal" href="../bibliography.html#id19" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. Influence of leading-edge geometry on profile losses in turbines at off-design incidence: experimental results and an improved correlation. Journal of Turbomachinery, 119(2):193–200, 1997. doi:10.1115/1.2841101.">Benner <em>et al.</em>, 1997</a>]</span>.
+One remarkable aspect of the Ainley–Mathieson family of loss methods is that
+it has been updated with new experimental data several times since the first
+version of the method was published. This was not the case for other loss
+prediction methods such as the ones proposed by <span id="id8">[<a class="reference internal" href="../bibliography.html#id14" title="O. E. Balje and R. L. Binsley. Axial turbine performance evaluation. Part B—optimization with and without constraints. Journal of Engineering for Power, 90(4):349–359, 1968. doi:10.1115/1.3609212.">Balje and Binsley, 1968</a>]</span>, <span id="id9">[<a class="reference internal" href="../bibliography.html#id34" title="H. R. M. Craig and H. J. A. Cox. Performance estimation of axial flow turbines. Proceedings of the Institution of Mechanical Engineers, 185(1):407–424, 1970. doi:10.1243/PIME_PROC_1970_185_048_02.">Craig and Cox, 1970</a>]</span>,
+<span id="id10">[<a class="reference internal" href="../bibliography.html#id102" title="Walter Traupel. Thermische Turbomaschinen. Klassiker der Technik. Springer, Berlin, Heidelberg, 4 edition, 2001. ISBN 978-3-642-62102-4 978-3-642-17469-8. doi:10.1007/978-3-642-17469-8.">Traupel, 2001</a>]</span>, or <span id="id11">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
+<p>In this work, the <span id="id12">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> loss model was adopted because of its
+popularity and maturity. The improvements of this loss model to account for
+off-design performance were not considered because the proposed methodology is
+aimed towards the optimization of the turbine performance at its design point.
+The Kacker–Okapuu loss model is described in detail in Appendix: KO-loss-model.
+The original formulation of the loss model has been adapted to the nomenclature
+and sign conventions used in this work for the convenience of the reader.</p>
+<p>As described by <span id="id13">[<a class="reference internal" href="../bibliography.html#id38" title="J. D. Denton. Loss mechanisms in turbomachines. Journal of Turbomachinery, 115(4):621–656, 1993. doi:10.1115/1.2929299.">Denton, 1993</a>]</span> and by <span id="id14">[<a class="reference internal" href="../bibliography.html#id36" title="Adrian N Dahlquist. Investigation of losses prediction methods in 1D for axial gas turbines. Master's thesis, Lund University, Lund, 2008. URL: https://www.lunduniversity.lu.se/lup/publication/1423748.">Dahlquist, 2008</a>]</span>, there are several
+possible definitions for the loss coefficient. In this work, the stagnation
+pressure loss coefficient was used because the Kacker–Okapuu loss model was
+developed based on this definition. This loss coefficient is meaningful for
+stator or rotor cascades with a constant mean radius and it is defined as the
+ratio of relative stagnation pressure drop across the cascade to relative
+dynamic pressure at the outlet of the cascade:</p>
+<div class="math notranslate nohighlight">
+\[Y =  \frac{p_{\mathrm{0rel,in}}-p_{\mathrm{0rel,out}}}
+{p_{\mathrm{0rel,out}}-p_{\mathrm{out}}}\]</div>
+<p>When the proposed axial turbine model is evaluated, the loss coefficient
+computed from its definition, as given above, and the loss coefficient
+computed using the loss model, as described in Appendix: KO-loss-model, may not
+have the same value. In the optimization problem section, the turbine design is
+formulated as an optimization problem that relies on equality constraints to
+ensure that the value of both loss coefficients are consistent for each
+cascade. Therefore, the loss coefficient error is given by</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{error}} =  Y_{\mathrm{definition}}  -
+Y_{\mathrm{loss\,model}}\]</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fluid_properties.html" class="btn btn-neutral float-left" title="Fluid properties" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="loss_models.html" class="btn btn-neutral float-right" title="Loss models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

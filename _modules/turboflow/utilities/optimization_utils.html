@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.utilities.optimization_utils &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.utilities.optimization_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.utilities.optimization_utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">numerics</span> <span class="k">as</span> <span class="n">num</span>
+
+
+<span class="c1"># TODO: @Lasse: We need some of these functions for the cycle optimization, and eventually also for turbomachinery optimization</span>
+<span class="c1"># TODO: We have to discuss how to handle &quot;rendered&quot; variables</span>
+
+
+<div class="viewcode-block" id="render_and_evaluate">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.render_and_evaluate">[docs]</a>
+<span class="k">def</span> <span class="nf">render_and_evaluate</span><span class="p">(</span><span class="n">expression</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Render variables prefixed with &#39;$&#39; in an expression and evaluate the resulting expression.</span>
+
+<span class="sd">    This function processes an input string `expr`, identifying all occurrences of variables</span>
+<span class="sd">    indicated by a leading &#39;$&#39; symbol. Each such variable is resolved to its value from the</span>
+<span class="sd">    provided `context` dictionary. The expression with all variables resolved is then evaluated</span>
+<span class="sd">    and the result is returned.</span>
+
+<span class="sd">    This function is useful to render strings defined in a YAML configuration file to values</span>
+<span class="sd">    that are calculated within the code and stored in a dicitonary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr : str</span>
+<span class="sd">        The expression string containing variables to be rendered. Variables in the</span>
+<span class="sd">        expression are expected to be prefixed with a &#39;$&#39; symbol.</span>
+<span class="sd">    data : dict</span>
+<span class="sd">        A dictionary containing variables and their corresponding values. These variables</span>
+<span class="sd">        are used to render values in the expression.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The result of evaluating the rendered expression. The type of the result depends on the</span>
+<span class="sd">    expression.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - `pattern`: A regular expression pattern used to identify variables within the expression.</span>
+<span class="sd">      Variables are expected to be in the format `$variableName`, potentially with dot-separated</span>
+<span class="sd">      sub-properties (e.g., `$variable.property`).</span>
+
+<span class="sd">    - `replace_with_value`: An inner function that takes a regex match object and returns</span>
+<span class="sd">      the value of the variable from `context`. `match.group(1)` returns the first captured</span>
+<span class="sd">      group from the matched text, which in this case is the variable name excluding the</span>
+<span class="sd">      leading &#39;$&#39; symbol. For example, in `$variableName`, `match.group(1)` would return</span>
+<span class="sd">      `variableName`.</span>
+
+<span class="sd">    - The function uses Python&#39;s `eval` for evaluation, which should be used cautiously as</span>
+<span class="sd">      it can execute arbitrary code. Ensure that the context and expressions are from a trusted</span>
+<span class="sd">      source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Pattern to find $variable expressions</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\$(\w+(\.\w+)*)&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Function to replace each match with its resolved value</span>
+    <span class="k">def</span> <span class="nf">replace_with_value</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+        <span class="n">nested_key</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">render_nested_value</span><span class="p">(</span><span class="n">nested_key</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;np.array(&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Variable &#39;</span><span class="si">{</span><span class="n">nested_key</span><span class="si">}</span><span class="s2">&#39; not found in the provided data context.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Replace all $variable with their actual values</span>
+        <span class="n">resolved_expr</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">replace_with_value</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span>
+
+        <span class="c1"># Check if any unresolved variables remain</span>
+        <span class="k">if</span> <span class="s2">&quot;$&quot;</span> <span class="ow">in</span> <span class="n">resolved_expr</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unresolved variable in expression: &#39;</span><span class="si">{</span><span class="n">resolved_expr</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Now evaluate the expression</span>
+        <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">resolved_expr</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">SyntaxError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Syntax error in &#39;</span><span class="si">{</span><span class="n">expression</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Enhanced error message</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Error evaluating expression &#39;</span><span class="si">{</span><span class="n">expression</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;If the expression is meant to use data from the configuration, &quot;</span>
+            <span class="s2">&quot;ensure each variable is prefixed with &#39;$&#39;. For example, use &#39;$variable_name&#39; &quot;</span>
+            <span class="s2">&quot;instead of &#39;variable_name&#39;.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="render_nested_value">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.render_nested_value">[docs]</a>
+<span class="k">def</span> <span class="nf">render_nested_value</span><span class="p">(</span><span class="n">nested_key</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves a value from a nested structure (dictionaries or objects with attributes) using a dot-separated key.</span>
+
+<span class="sd">    This function is designed to navigate through a combination of dictionaries and objects. For an object to be</span>
+<span class="sd">    compatible with this function, it must implement a `keys()` method that returns its attribute names.</span>
+
+<span class="sd">    This function is intended as a subroutine of the more genera ``render_expression``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nested_key : str</span>
+<span class="sd">        A dot-separated key string that specifies the path in the structure.</span>
+<span class="sd">        For example, &#39;level1.level2.key&#39; will retrieve data[&#39;level1&#39;][&#39;level2&#39;][&#39;key&#39;] if data is a dictionary,</span>
+<span class="sd">        or data.level1.level2.key if data is an object or a combination of dictionaries and objects.</span>
+
+<span class="sd">    data : dict or object</span>
+<span class="sd">        The starting dictionary or object from which to retrieve the value. This can be a nested structure</span>
+<span class="sd">        of dictionaries and objects.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    value</span>
+<span class="sd">        The value retrieved from the nested structure using the specified key.</span>
+<span class="sd">        The type of the value depends on what is stored at the specified key in the structure.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If the specified nested key is not found in the data structure. The error message includes the part</span>
+<span class="sd">        of the path that was successfully traversed and the available keys or attributes at the last valid level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="n">nested_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">data</span>
+    <span class="n">traversed_path</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Handle dictionary-like objects</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">traversed_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">valid_keys</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="n">traversed_path_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traversed_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">traversed_path</span> <span class="k">else</span> <span class="s2">&quot;root&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Nested key &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; not found at &#39;</span><span class="si">{</span><span class="n">traversed_path_str</span><span class="si">}</span><span class="s2">&#39;. Available keys: </span><span class="si">{</span><span class="n">valid_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="c1"># Handle objects with attributes</span>
+            <span class="n">traversed_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">traversed_path_str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">traversed_path</span><span class="p">)</span>
+            <span class="n">available_keys</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Key &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; not found in object at &#39;</span><span class="si">{</span><span class="n">traversed_path_str</span><span class="si">}</span><span class="s2">&#39;. Available keys: </span><span class="si">{</span><span class="n">available_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">num</span><span class="o">.</span><span class="n">is_numeric</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The key &#39;</span><span class="si">{</span><span class="n">nested_key</span><span class="si">}</span><span class="s2">&#39; is not numeric. Key value is: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">value</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_constraints">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.evaluate_constraints">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_constraints</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates the constraints based on the provided data and constraint definitions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">        A dictionary containing performance data against which the constraints will be evaluated.</span>
+<span class="sd">    constraints : list of dicts</span>
+<span class="sd">        A list of constraint definitions, where each constraint is defined as a dictionary.</span>
+<span class="sd">        Each dictionary must have &#39;variable&#39; (str), &#39;type&#39; (str, one of &#39;=&#39;, &#39;&gt;&#39;, &#39;&lt;&#39;), and &#39;value&#39; (numeric).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of numpy.ndarray</span>
+<span class="sd">        Returns two numpy arrays: the first is an array of equality constraints, and the second is an array of</span>
+<span class="sd">        inequality constraints. These arrays are flattened and concatenated from the evaluated constraint values.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an unknown constraint type is specified in the constraints list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Initialize constraint lists</span>
+    <span class="n">c_eq</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Equality constraints</span>
+    <span class="n">c_ineq</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Inequality constraints</span>
+
+    <span class="c1"># Loop over all constraint from configuration file</span>
+    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]</span>
+        <span class="n">constraint_type</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+        <span class="n">normalize</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;normalize&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Get the performance value for the given variable name</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">render_and_evaluate</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># Try to render variable when not a number</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">render_and_evaluate</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="c1"># Evaluate constraint</span>
+        <span class="c1"># mismatch = current - target</span>
+        <span class="n">mismatch</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">current</span>
+
+        <span class="c1"># Normalize constraint according to specifications</span>
+        <span class="n">normalize_factor</span> <span class="o">=</span> <span class="n">normalize</span> <span class="k">if</span> <span class="n">num</span><span class="o">.</span><span class="n">is_numeric</span><span class="p">(</span><span class="n">normalize</span><span class="p">)</span> <span class="k">else</span> <span class="n">target</span>
+        <span class="k">if</span> <span class="n">normalize</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">normalize_factor</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cannot normalize constraint &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">constraint_type</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39; because the normalization factor is &#39;</span><span class="si">{</span><span class="n">normalize_factor</span><span class="si">}</span><span class="s2">&#39; (division by zero).&quot;</span>
+                <span class="p">)</span>
+            <span class="n">mismatch</span> <span class="o">/=</span> <span class="n">normalize_factor</span>
+
+        <span class="c1"># Add constraints to lists</span>
+        <span class="k">if</span> <span class="n">constraint_type</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+            <span class="n">c_eq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mismatch</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">constraint_type</span> <span class="o">==</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
+            <span class="n">c_ineq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mismatch</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">constraint_type</span> <span class="o">==</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span>
+            <span class="c1"># Change sign because optimizer handles c_ineq &gt; 0</span>
+            <span class="n">c_ineq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">-</span><span class="n">mismatch</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown constraint type: </span><span class="si">{</span><span class="n">constraint_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Flatten and concatenate constraints</span>
+    <span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">c_eq</span><span class="p">])</span> <span class="k">if</span> <span class="n">c_eq</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="n">c_ineq</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">c_ineq</span><span class="p">])</span> <span class="k">if</span> <span class="n">c_ineq</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">c_eq</span><span class="p">,</span> <span class="n">c_ineq</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_objective_function">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.evaluate_objective_function">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_objective_function</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">objective_function</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluates the objective function based on the provided data and configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">        A dictionary containing performance data against which the objective function will be evaluated.</span>
+<span class="sd">    objective_function : dict</span>
+<span class="sd">        A dictionary defining the objective function. It must have &#39;variable&#39; (str)</span>
+<span class="sd">        and &#39;type&#39; (str, either &#39;minimize&#39; or &#39;maximize&#39;).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The value of the objective function, adjusted for optimization. Positive for minimization and</span>
+<span class="sd">        negative for maximization.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an unknown objective function type is specified in the configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Get the performance value for the given variable name</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">objective_function</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">objective_function</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">render_and_evaluate</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The objective function &#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; must be an scalar, but the value is: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;minimize&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown objective function type: </span><span class="si">{</span><span class="nb">type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
