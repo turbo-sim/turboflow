@@ -276,3 +276,6 @@ instructions for snopt DLLs
 
 bumpversion patch  # This increments the version, updates relevant files, commits the changes, and creates a new tag.
 git push origin main --tags  # This pushes the `main` branch and the new tag to the remote repository.
+
+
+git push origin main --tags

@@ -90,7 +90,7 @@ jobs:
     
     if: startsWith(github.ref, 'refs/tags/v')
 
-    needs: test_windows  # Ensure tests pass before deploying
+    needs: [test_windows]  # Ensure tests pass before deploying
 
     steps:
     - name: Checkout code
