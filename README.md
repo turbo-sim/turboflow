@@ -265,3 +265,4 @@ Additionally, in order to use snopt you have to define the environmental variabl
 
 You can do this in windows following this tutorial, or by addtion these lines to you bashrc file in linux or if using gitbash in windows
 
+instructions for snopt DLLs
