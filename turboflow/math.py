@@ -329,7 +329,7 @@ def all_non_negative(array):
 
 
 def sigmoid_hyperbolic(x, x0=0.5, alpha=1):
-    """
+    r"""
     Compute the sigmoid hyperbolic function.
 
     This function calculates a sigmoid function based on the hyperbolic tangent.
@@ -359,7 +359,7 @@ def sigmoid_hyperbolic(x, x0=0.5, alpha=1):
 
 
 def sigmoid_rational(x, n, m):
-    """
+    r"""
     Compute the sigmoid rational function.
 
     This function calculates a sigmoid function using an algebraic approach based on a rational function.

@@ -347,9 +347,10 @@ def compute_single_operation_point(
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
             # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
             # TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?
-            try:
-                solver.solve(problem.x0)
 
+            try: 
+                solver.solve(problem.x0)                
+                
             except Exception as e:
                 print(f" Error during solving: {e}")
                 solver.success = False

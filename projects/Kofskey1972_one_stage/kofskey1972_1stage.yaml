@@ -8,12 +8,12 @@ operation_points:
   alpha_in: 0
 
 simulation_options: # Optional
-  deviation_model : zero_deviation  # Optional
+  deviation_model : aungier  # Optional
   # blockage_model : 0.00  #flat_plate_turbulent  # Optional
-  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
+  choking_model : evaluate_cascade_critical # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
   # rel_step_fd: 1e-4  # Optional
   loss_model:  # Optional
-    model: kacker_okapuu  # Optional
+    model: benner  # Optional
     loss_coefficient: stagnation_pressure  # Optional
     # inlet_displacement_thickness_height_ratio: 0.011  # Optional
     # tuning_factors:  # Optional
@@ -28,7 +28,7 @@ performance_analysis :
     fluid_name: air 
     T0_in: 295.6
     p0_in: 13.8e4
-    p_out: 13.8e4/np.linspace(2.3, 2.4, 2)
+    p_out: 13.8e4/np.linspace(1.6, 4.5, 40)
     omega: 1627 
     alpha_in: 0 
   solver_options: # Optional
@@ -38,7 +38,7 @@ performance_analysis :
     derivative_method: "2-point"  # Optional
     derivative_abs_step: 1e-6  # Optional
     print_convergence: True
-    plot_convergence: True
+    plot_convergence: False
 
 geometry:
   cascade_type: ["stator", "rotor"]
