@@ -31,6 +31,7 @@ sphinx-rtd-theme = "^2.0.0"
 sphinxcontrib-bibtex = "^2.6.2"
 sphinxawesome-theme = "^5.1.5"
 sphinx-design = "^0.6.0"
+sphinx-togglebutton = "^0.3.2"
 bump2version = "^1.0.1"
 
 [build-system]

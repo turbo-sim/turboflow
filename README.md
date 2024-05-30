@@ -282,3 +282,7 @@ git push origin main --tags  # This pushes the `main` branch and the new tag to 
 
 
 git push origin main --tags
+
+
+
+Check the the last test passed and it triggered a single action and then it updates pypi to 0.1.4

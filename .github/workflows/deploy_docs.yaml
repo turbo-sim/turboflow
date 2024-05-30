@@ -1,0 +1,48 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'  
+
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: '3.11'  
+
+    - name: Create conda environment
+      run: |
+        conda env create -f environment.yaml
+
+    - name: Install dependencies
+      run: |
+        source "$(conda info --base)/etc/profile.d/conda.sh"
+        conda activate turboflow_env
+        pip install poetry
+        poetry install
+
+    - name: Build Sphinx documentation
+      run: |
+        cd docs
+        poetry run build_docs.py
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/_build/html
