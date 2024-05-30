@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turboflow"
-version = "0.1.2"
+version = "0.1.3"
 description = "A Python tool for meanline turbomachinery design and analysis."
 authors = ["Lasse Borg & Roberto Agromayor"]
 license = "MIT"
