@@ -43,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: regression-data
-        path: path/to/regression/data  # Adjust this to your actual data path
+        path: regression_data/**
