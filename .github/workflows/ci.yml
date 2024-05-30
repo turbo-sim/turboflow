@@ -5,10 +5,11 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches:
       - main
-
 
 jobs:
   test_ubuntu:
@@ -80,3 +81,35 @@ jobs:
         conda activate turboflow_env
         pytest
       shell: bash -l {0}
+
+
+
+
+  publish_to_pypi:
+    runs-on: ubuntu-latest
+    
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    needs: [test_windows]  # Ensure tests pass before deploying
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install --no-dev
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        poetry build
+        poetry publish --username $TWINE_USERNAME --password $TWINE_PASSWORD

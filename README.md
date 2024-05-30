@@ -266,3 +266,16 @@ Additionally, in order to use snopt you have to define the environmental variabl
 You can do this in windows following this tutorial, or by addtion these lines to you bashrc file in linux or if using gitbash in windows
 
 instructions for snopt DLLs
+
+
+
+
+
+
+## to create a new version and release to pypi
+
+bumpversion patch  # This increments the version, updates relevant files, commits the changes, and creates a new tag.
+git push origin main --tags  # This pushes the `main` branch and the new tag to the remote repository.
+
+
+git push origin main --tags
