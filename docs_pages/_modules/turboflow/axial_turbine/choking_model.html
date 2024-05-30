@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.axial_turbine.choking_model &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.axial_turbine.choking_model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.axial_turbine.choking_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">scipy.optimize._numdiff</span> <span class="kn">import</span> <span class="n">approx_derivative</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">interpolate</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">math</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">flow_model</span> <span class="k">as</span> <span class="n">fm</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">deviation_model</span> <span class="k">as</span> <span class="n">dm</span>
+
+<span class="n">CHOKING_MODELS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="evaluate_choking">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_choking">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_choking</span><span class="p">(</span>
+    <span class="n">choking_input</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">exit_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on selected choking model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    choking_input : dict</span>
+<span class="sd">        Dictionary containing necessary input parameters required for selected choking model. See each models documentation for specifics.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    exit_plane : dict</span>
+<span class="sd">        Dictionary containing data on the exit plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used to evaluate choking.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculation, including the reference mass flow rate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the residuals of choking model</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing state information on the critical conditions.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an invalid choking model is provided.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">critical_cascade_functions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">CHOKING_MODELS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">evaluate_cascade_critical</span><span class="p">,</span>
+        <span class="n">CHOKING_MODELS</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">evaluate_cascade_throat</span><span class="p">,</span>
+        <span class="n">CHOKING_MODELS</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">evaluate_cascade_isentropic_throat</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Evaluate loss model</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">critical_cascade_functions</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">critical_cascade_functions</span><span class="p">[</span><span class="n">model</span><span class="p">](</span>
+            <span class="n">choking_input</span><span class="p">,</span>
+            <span class="n">inlet_plane</span><span class="p">,</span>
+            <span class="n">exit_plane</span><span class="p">,</span>
+            <span class="n">fluid</span><span class="p">,</span>
+            <span class="n">geometry</span><span class="p">,</span>
+            <span class="n">angular_speed</span><span class="p">,</span>
+            <span class="n">model_options</span><span class="p">,</span>
+            <span class="n">reference_values</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">CHOKING_MODELS</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid critical cascade model &#39;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_cascade_throat">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_throat">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_cascade_throat</span><span class="p">(</span>
+    <span class="n">choking_input</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">exit_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the evaluate_cascade_throat choking model.</span>
+
+<span class="sd">    This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated</span>
+<span class="sd">    from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition,</span>
+<span class="sd">    and by ensuring that the mach at the throat equals the critical at supercritical conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    choking_input : dict</span>
+<span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
+
+<span class="sd">        - `w*_throat` : throat velocity.</span>
+<span class="sd">        - `s*_throat` : throat entropy.</span>
+<span class="sd">        - `beta*_throat` : throat relative flow angle.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    exit_plane : dict</span>
+<span class="sd">        Dictionary containing data on the exit plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used to evaluate choking.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculation, including the reference mass flow rate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the residuals of choking model:</span>
+
+<span class="sd">        - `m*`: Mass flow rate residual.</span>
+<span class="sd">        - `Y*`: Loss error residual.</span>
+<span class="sd">        - `beta*`: Residual of the flow angle.</span>
+<span class="sd">        - `choking`: Choking residual.</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing relevant information on the critical state and throat plane.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Rename variables</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">blockage</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;blockage_model&quot;</span><span class="p">]</span>
+    <span class="n">deviation_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;deviation_model&quot;</span><span class="p">]</span>
+    <span class="n">A_throat</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+    <span class="n">angle_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+    <span class="n">angle_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Evaluate throat</span>
+    <span class="n">cascade_throat_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span><span class="p">,</span>
+        <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span><span class="p">,</span>
+        <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;rothalpy&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">throat_plane</span><span class="p">,</span> <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">evaluate_cascade_throat</span><span class="p">(</span>
+        <span class="n">cascade_throat_input</span><span class="p">,</span>
+        <span class="n">fluid</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">,</span>
+        <span class="n">inlet_plane</span><span class="p">,</span>
+        <span class="n">angular_speed</span><span class="p">,</span>
+        <span class="n">blockage</span><span class="p">,</span>
+        <span class="n">loss_model</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate critical mach</span>
+    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">loss_dict</span><span class="p">[</span><span class="s2">&quot;loss_total&quot;</span><span class="p">]</span>
+    <span class="n">critical_mass_flux</span><span class="p">,</span> <span class="n">critical_mach</span> <span class="o">=</span> <span class="n">interpolate_critical_state</span><span class="p">(</span>
+        <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;p0_rel&quot;</span><span class="p">],</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;T0_rel&quot;</span><span class="p">],</span> <span class="n">Y_tot</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate residual flow angle</span>
+    <span class="n">beta_model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">dm</span><span class="o">.</span><span class="n">get_subsonic_deviation</span><span class="p">(</span>
+        <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">],</span> <span class="n">critical_mach</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">deviation_model</span>
+    <span class="p">)</span>
+    <span class="n">beta_residual</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_model</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Evaluate if flow cascade is choked or not an add choking residual</span>
+    <span class="k">if</span> <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">critical_mach</span><span class="p">:</span>
+        <span class="n">beta_model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">dm</span><span class="o">.</span><span class="n">get_subsonic_deviation</span><span class="p">(</span>
+            <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">],</span> <span class="n">critical_mach</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">deviation_model</span>
+        <span class="p">)</span>
+        <span class="c1"># Compute error of guessed beta and deviation model</span>
+        <span class="n">choking_residual</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_model</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">choking_residual</span> <span class="o">=</span> <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">critical_mach</span>
+
+    <span class="c1"># Evaluate resiudals</span>
+    <span class="n">residual_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">])</span>
+            <span class="o">/</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">],</span>
+            <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">],</span>
+            <span class="n">beta_residual</span><span class="p">,</span>
+            <span class="n">choking_residual</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">residual_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;m*&quot;</span><span class="p">,</span> <span class="s2">&quot;Y*&quot;</span><span class="p">,</span> <span class="s2">&quot;beta*&quot;</span><span class="p">,</span> <span class="s2">&quot;choking&quot;</span><span class="p">]</span>
+    <span class="n">residuals_critical</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">residual_keys</span><span class="p">,</span> <span class="n">residual_values</span><span class="p">))</span>
+
+    <span class="c1"># Define output values</span>
+    <span class="n">critical_state</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;critical_mach&quot;</span><span class="p">:</span> <span class="n">critical_mach</span><span class="p">,</span>
+        <span class="s2">&quot;critical_mass_flow_rate&quot;</span><span class="p">:</span> <span class="n">critical_mass_flux</span> <span class="o">*</span> <span class="n">A_throat</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">throat_plane</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_throat&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">throat_plane</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="n">residuals_critical</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">critical_state</span><span class="p">,</span> <span class="o">**</span><span class="n">throat_plane</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="interpolate_critical_state">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.interpolate_critical_state">[docs]</a>
+<span class="k">def</span> <span class="nf">interpolate_critical_state</span><span class="p">(</span><span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the critical mass flux and mach number from a correlation depending on the cascade inlet stagnation state and loss coefficient.</span>
+<span class="sd">    The correlation is made from linear regression analysis, and the regression coefficients are prescribed in the function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    p0_in : float</span>
+<span class="sd">        Cascade inlet stagnation pressure.</span>
+<span class="sd">    T0_in : float</span>
+<span class="sd">        Cascade inlet stagnation temperature.</span>
+<span class="sd">    Y : float</span>
+<span class="sd">        Cascade throat total loss coefficnet.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Critical mass flux.</span>
+<span class="sd">    float</span>
+<span class="sd">        Critical mach number.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="n">p0_in</span><span class="p">,</span>
+            <span class="n">T0_in</span><span class="p">,</span>
+            <span class="n">Y</span><span class="p">,</span>
+            <span class="n">p0_in</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">T0_in</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">Y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">p0_in</span> <span class="o">*</span> <span class="n">T0_in</span><span class="p">,</span>
+            <span class="n">p0_in</span> <span class="o">*</span> <span class="n">Y</span><span class="p">,</span>
+            <span class="n">T0_in</span> <span class="o">*</span> <span class="n">Y</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">coeff_mach_crit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="mf">9.97808878e-01</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">8.59556818e-09</span><span class="p">,</span>
+            <span class="mf">2.18283101e-05</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">3.38413836e-01</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">4.89469816e-14</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">5.99021408e-08</span><span class="p">,</span>
+            <span class="mf">9.93519991e-02</span><span class="p">,</span>
+            <span class="mf">7.71201115e-11</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">4.13346725e-09</span><span class="p">,</span>
+            <span class="mf">4.91317761e-06</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">coeff_phi_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="mf">9.81120337e01</span><span class="p">,</span>
+            <span class="mf">3.46299580e-03</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">6.34357717e-01</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">6.84234362e01</span><span class="p">,</span>
+            <span class="mf">1.05506996e-11</span><span class="p">,</span>
+            <span class="mf">1.04045797e-03</span><span class="p">,</span>
+            <span class="mf">3.36231786e01</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">3.81019918e-06</span><span class="p">,</span>
+            <span class="o">-</span><span class="mf">6.90348074e-04</span><span class="p">,</span>
+            <span class="mf">1.26692586e-01</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">mach_crit</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">coeff_mach_crit</span><span class="p">)</span>
+    <span class="n">phi_max</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">coeff_phi_max</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">phi_max</span><span class="p">,</span> <span class="n">mach_crit</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_cascade_critical">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_critical">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_cascade_critical</span><span class="p">(</span>
+    <span class="n">choking_input</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">exit_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_critical` choking model.</span>
+
+<span class="sd">    This choking model evaluate the critical state by optimizing the mass flow rate at the throat through the method of lagrange multipliers, and checks if the throat mach number exceed the critical. </span>
+<span class="sd">    The exit flow angle is calculated by the selected devaition model at subsonic condition, and from the critical mass flow rate at supersonic conditions. </span>
+
+<span class="sd">    Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass</span>
+<span class="sd">    conservation and loss computation equations at the throat.</span>
+
+<span class="sd">    The constrained optimization problem to maximize the mass flow rate can be converted to a set of equations through the method of lagrange multipliers. The method</span>
+<span class="sd">    utlize that at the optimal point, the gradient of the constraints are proportional to the gradient fo the objective function. Thus the solution to the optimization problem </span>
+<span class="sd">    eaulas the solution as the following set of equations: </span>
+<span class="sd">        </span>
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \nabla L = \begin{bmatrix}</span>
+<span class="sd">        \frac{\partial f}{\partial x_1} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_1} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_1} \\</span>
+<span class="sd">        \frac{\partial f}{\partial x_2} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_2} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_2} \\</span>
+<span class="sd">        \frac{\partial f}{\partial x_3} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_3} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_3} \\</span>
+<span class="sd">        g_1(x_1, x_2, x_3) \\</span>
+<span class="sd">        g_2(x_1, x_2, x_3) \\</span>
+<span class="sd">        \end{bmatrix} = 0</span>
+<span class="sd">        </span>
+<span class="sd">    This function returns the value of the three last equations in the set above, while the two first equations are used to </span>
+<span class="sd">    explicitly calculate the lagrange multipliers.</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        \lambda_1 = \frac{\frac{\partial g_2}{\partial x_2}\cdot\frac{-\partial f}{\partial x_1} - \frac{\partial g_2}{\partial x_1}\cdot-\frac{\partial f}{\partial x_2}} </span>
+<span class="sd">                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \\                     </span>
+<span class="sd">        \lambda_2 = \frac{\frac{\partial g_1}{\partial x_1}\cdot\frac{-\partial f}{\partial x_2} - \frac{\partial g_1}{\partial x_2}\cdot-\frac{\partial f}{\partial x_1}} </span>
+<span class="sd">                     {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} </span>
+
+<span class="sd">    By transforming the problem into a system of equations, this approach allows the evaluation of the critical</span>
+<span class="sd">    point without directly solving an optimization problem. One significant advantage of this</span>
+<span class="sd">    equation-oriented method is that it enables the coupling of these critical condition equations with the</span>
+<span class="sd">    other modeling equations. This integrated system of equations can then be efficiently solved using gradient-based</span>
+<span class="sd">    root finding algorithms (e.g., Newton-Raphson solvers).</span>
+
+<span class="sd">    Such a coupled solution strategy, as opposed to segregated approaches where nested systems are solved</span>
+<span class="sd">    sequentially and iteratively, offers superior computational efficiency. This method thus provides</span>
+<span class="sd">    a more direct and computationally effective way of determining the critical conditions in a cascade.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    critical_cascade_input : dict</span>
+<span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
+
+<span class="sd">        - `v*_in` : inlet velocity at critical state.  </span>
+<span class="sd">        - `w*_throat` : throat velocity at critical state. </span>
+<span class="sd">        - `s*_throat` : throat entropy at critical state.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    exit_plane : dict</span>
+<span class="sd">        Dictionary containing data on the exit plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used in the critical condition evaluation.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculation, including the reference mass flow rate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the residuals of choking model:</span>
+<span class="sd">        </span>
+<span class="sd">        - `m*`: Mass flow rate residual.</span>
+<span class="sd">        - `Y*`: Loss error residual.</span>
+<span class="sd">        - `L*`: Residual of the lagrange function.</span>
+<span class="sd">        - `choking`: Choking residual.</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing state information on the critical conditions at inlet and throat plane. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load reference values</span>
+    <span class="n">mass_flow_ref</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load model options</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">blockage</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;blockage_model&quot;</span><span class="p">]</span>
+    <span class="n">deviation_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;deviation_model&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Define critical state dictionary to store information</span>
+    <span class="n">critical_state</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Define array for inputs in compute critical values</span>
+    <span class="n">x_crit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;v*_in&quot;</span><span class="p">],</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">],</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate the current cascade at critical conditions</span>
+    <span class="n">f0</span> <span class="o">=</span> <span class="n">compute_critical_values</span><span class="p">(</span>
+        <span class="n">x_crit</span><span class="p">,</span>
+        <span class="n">inlet_plane</span><span class="p">,</span>
+        <span class="n">fluid</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">,</span>
+        <span class="n">angular_speed</span><span class="p">,</span>
+        <span class="n">critical_state</span><span class="p">,</span>
+        <span class="n">model_options</span><span class="p">,</span>
+        <span class="n">reference_values</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate the Jacobian of the evaluate_critical_cascade function</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">compute_critical_jacobian</span><span class="p">(</span>
+        <span class="n">x_crit</span><span class="p">,</span>
+        <span class="n">inlet_plane</span><span class="p">,</span>
+        <span class="n">fluid</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">,</span>
+        <span class="n">angular_speed</span><span class="p">,</span>
+        <span class="n">critical_state</span><span class="p">,</span>
+        <span class="n">model_options</span><span class="p">,</span>
+        <span class="n">reference_values</span><span class="p">,</span>
+        <span class="n">f0</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Rename gradients</span>
+    <span class="n">a11</span><span class="p">,</span> <span class="n">a12</span><span class="p">,</span> <span class="n">a21</span><span class="p">,</span> <span class="n">a22</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">J</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">J</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">J</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="n">J</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+        <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Calculate the Lagrange multipliers explicitly</span>
+    <span class="n">determinant</span> <span class="o">=</span> <span class="n">a11</span> <span class="o">*</span> <span class="n">a22</span> <span class="o">-</span> <span class="n">a12</span> <span class="o">*</span> <span class="n">a21</span>
+    <span class="n">l1_det</span> <span class="o">=</span> <span class="n">a22</span> <span class="o">*</span> <span class="n">b1</span> <span class="o">-</span> <span class="n">a12</span> <span class="o">*</span> <span class="n">b2</span>
+    <span class="n">l2_det</span> <span class="o">=</span> <span class="n">a11</span> <span class="o">*</span> <span class="n">b2</span> <span class="o">-</span> <span class="n">a21</span> <span class="o">*</span> <span class="n">b1</span>
+
+    <span class="c1"># Evaluate the last equation</span>
+    <span class="n">df</span><span class="p">,</span> <span class="n">dg1</span><span class="p">,</span> <span class="n">dg2</span> <span class="o">=</span> <span class="n">J</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">J</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="p">(</span><span class="n">determinant</span> <span class="o">*</span> <span class="n">df</span> <span class="o">+</span> <span class="n">l1_det</span> <span class="o">*</span> <span class="n">dg1</span> <span class="o">+</span> <span class="n">l2_det</span> <span class="o">*</span> <span class="n">dg2</span><span class="p">)</span> <span class="o">/</span> <span class="n">mass_flow_ref</span>
+
+    <span class="n">critical_mach</span> <span class="o">=</span> <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">][</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span>
+    <span class="n">critical_mass_flow</span> <span class="o">=</span> <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">critical_mach</span><span class="p">:</span>
+        <span class="n">beta_model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">dm</span><span class="o">.</span><span class="n">get_subsonic_deviation</span><span class="p">(</span>
+            <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">],</span> <span class="n">critical_mach</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">deviation_model</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">beta_model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span>
+            <span class="n">critical_mass_flow</span> <span class="o">/</span> <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;w&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">choking_residual</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_model</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Restructure critical state dictionary</span>
+    <span class="n">inlet_plane</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">&quot;critical_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_in&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">throat_plane</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="sa">f</span><span class="s2">&quot;critical_</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_throat&quot;</span><span class="p">:</span> <span class="n">val</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span>
+    <span class="n">critical_state</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">inlet_plane</span><span class="p">,</span> <span class="o">**</span><span class="n">throat_plane</span><span class="p">}</span>
+
+    <span class="c1"># Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">f0</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># The two constraints</span>
+    <span class="n">residual_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">g</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">grad</span><span class="p">,</span> <span class="n">choking_residual</span><span class="p">])))</span>
+    <span class="n">residual_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;m*&quot;</span><span class="p">,</span> <span class="s2">&quot;Y*&quot;</span><span class="p">,</span> <span class="s2">&quot;L*&quot;</span><span class="p">,</span> <span class="s2">&quot;choking&quot;</span><span class="p">]</span>
+    <span class="n">residuals_critical</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">residual_keys</span><span class="p">,</span> <span class="n">residual_values</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">residuals_critical</span><span class="p">,</span> <span class="n">critical_state</span></div>
+
+
+
+<div class="viewcode-block" id="compute_critical_values">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_values">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_critical_values</span><span class="p">(</span>
+    <span class="n">x_crit</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">critical_state</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute cascade performance at the critical conditions</span>
+
+<span class="sd">    This function evaluates the performance of a cascade at its critical operating point defined by:</span>
+
+<span class="sd">        1. Critical inlet absolute velocity,</span>
+<span class="sd">        2. Critical throat relative velocity,</span>
+<span class="sd">        3. Critical throat entropy.</span>
+
+<span class="sd">    Using these variables, the function calculates the critical mass flow rate and residuals of the mass balance and the loss model equations.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_crit : numpy.ndarray</span>
+<span class="sd">        Array containing scaled critical variables `[v_in*, w_throat*, s_throat*]`.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    critical_state : dict</span>
+<span class="sd">        Dictionary to store the critical state information.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used in the critical condition evaluation.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculations, including mass flow reference and other parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        An array containing the computed mass flow at the throat plane at critical state and the residuals</span>
+<span class="sd">        for mass conservation and loss coefficient error.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define model options</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load reference values</span>
+    <span class="n">mass_flow_ref</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load input for critical cascade</span>
+    <span class="n">s_in</span> <span class="o">=</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">alpha_in</span> <span class="o">=</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+    <span class="n">v_in</span><span class="p">,</span> <span class="n">w_throat</span><span class="p">,</span> <span class="n">s_throat</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">x_crit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="n">x_crit</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="n">x_crit</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate inlet plane</span>
+    <span class="n">critical_inlet_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;v&quot;</span><span class="p">:</span> <span class="n">v_in</span><span class="p">,</span>
+        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">s_in</span><span class="p">,</span>
+        <span class="s2">&quot;h0&quot;</span><span class="p">:</span> <span class="n">h0_in</span><span class="p">,</span>
+        <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="n">alpha_in</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">critical_inlet_plane</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">evaluate_cascade_inlet</span><span class="p">(</span>
+        <span class="n">critical_inlet_input</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">angular_speed</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate throat plane</span>
+    <span class="n">critical_throat_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">w_throat</span><span class="p">,</span>
+        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">s_throat</span><span class="p">,</span>
+        <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;gauging_angle&quot;</span><span class="p">])</span>
+        <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]),</span>
+        <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">critical_inlet_plane</span><span class="p">[</span><span class="s2">&quot;rothalpy&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="n">critical_throat_plane</span><span class="p">,</span> <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">evaluate_cascade_throat</span><span class="p">(</span>
+        <span class="n">critical_throat_input</span><span class="p">,</span>
+        <span class="n">fluid</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">,</span>
+        <span class="n">critical_inlet_plane</span><span class="p">,</span>
+        <span class="n">angular_speed</span><span class="p">,</span>
+        <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;blockage_model&quot;</span><span class="p">],</span>
+        <span class="n">loss_model</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Add residuals</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="n">critical_inlet_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">critical_throat_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">])</span>
+            <span class="o">/</span> <span class="n">mass_flow_ref</span><span class="p">,</span>
+            <span class="n">critical_throat_plane</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">],</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Update critical state dictionary</span>
+    <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">critical_inlet_plane</span>
+    <span class="n">critical_state</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">critical_throat_plane</span>
+
+    <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">residuals</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">critical_throat_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">output</span></div>
+
+
+
+<div class="viewcode-block" id="compute_critical_jacobian">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_jacobian">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_critical_jacobian</span><span class="p">(</span>
+    <span class="n">x</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">critical_state</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+    <span class="n">f0</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Jacobian matrix of the compute_critical_values function using finite differences.</span>
+
+<span class="sd">    This function approximates the Jacobian of a combined function that includes the mass flow rate value,</span>
+<span class="sd">    mass balance residual, and loss model evaluation residual at the critical point. It uses forward finite</span>
+<span class="sd">    difference to approximate the partial derivatives of the Jacobian matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : numpy.ndarray</span>
+<span class="sd">        Array of input variables for the `compute_critical_values` function.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    critical_state : dict</span>
+<span class="sd">        Dictionary to store the critical state information.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used in the critical condition evaluation.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculations, including mass flow reference and other parameters.</span>
+<span class="sd">    f0 : numpy.ndarray</span>
+<span class="sd">        The function value at x, used for finite difference approximation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        The approximated Jacobian matrix of the compute_critical_values function.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define finite difference relative step size</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;rel_step_fd&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">x</span>
+
+    <span class="c1"># Approximate problem Jacobian by finite differences</span>
+    <span class="n">jacobian</span> <span class="o">=</span> <span class="n">approx_derivative</span><span class="p">(</span>
+        <span class="n">compute_critical_values</span><span class="p">,</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;2-point&quot;</span><span class="p">,</span>
+        <span class="n">f0</span><span class="o">=</span><span class="n">f0</span><span class="p">,</span>
+        <span class="n">abs_step</span><span class="o">=</span><span class="n">eps</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">inlet_plane</span><span class="p">,</span>
+            <span class="n">fluid</span><span class="p">,</span>
+            <span class="n">geometry</span><span class="p">,</span>
+            <span class="n">angular_speed</span><span class="p">,</span>
+            <span class="n">critical_state</span><span class="p">,</span>
+            <span class="n">model_options</span><span class="p">,</span>
+            <span class="n">reference_values</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">jacobian</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_cascade_isentropic_throat">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_isentropic_throat">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_cascade_isentropic_throat</span><span class="p">(</span>
+    <span class="n">choking_input</span><span class="p">,</span>
+    <span class="n">inlet_plane</span><span class="p">,</span>
+    <span class="n">exit_plane</span><span class="p">,</span>
+    <span class="n">fluid</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">angular_speed</span><span class="p">,</span>
+    <span class="n">model_options</span><span class="p">,</span>
+    <span class="n">reference_values</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_isentropic_throat` choking model.</span>
+
+<span class="sd">    This choking model evaluates the cascade throat and checks if the throat mach number exceed unity. The throat is isentropic from inlet to throat.</span>
+<span class="sd">    The exit flow angle is determined by ensuring that the mach at throat mach number equals the exit for subconic condition, and unity for supersonic conditions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    choking_input : dict</span>
+<span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
+
+<span class="sd">        - `w*_throat` : throat velocity.</span>
+<span class="sd">    inlet_plane : dict</span>
+<span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
+<span class="sd">    exit_plane : dict</span>
+<span class="sd">        Dictionary containing data on the exit plane for the actual cascade operating condition.</span>
+<span class="sd">    fluid : object</span>
+<span class="sd">        A fluid object with methods for thermodynamic property calculations.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Geometric parameters of the cascade.</span>
+<span class="sd">    angular_speed : float</span>
+<span class="sd">        Angular speed of the cascade.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        Options for the model used to evaluate choking.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        Reference values used in the calculation, including the reference mass flow rate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing the residuals of choking model:</span>
+
+<span class="sd">        - `m*`: Mass flow rate residual.</span>
+<span class="sd">        - `choking`: Choking residual.</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary satisfying the required elements for critical state dict.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Rename variables</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">blockage</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;blockage_model&quot;</span><span class="p">]</span>
+    <span class="n">deviation_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;deviation_model&quot;</span><span class="p">]</span>
+    <span class="n">A_throat</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+    <span class="n">angle_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+    <span class="n">angle_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Evaluate throat</span>
+    <span class="n">cascade_throat_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
+        <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]),</span>
+        <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;rothalpy&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">throat_plane</span><span class="p">,</span> <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">evaluate_cascade_throat</span><span class="p">(</span>
+        <span class="n">cascade_throat_input</span><span class="p">,</span>
+        <span class="n">fluid</span><span class="p">,</span>
+        <span class="n">geometry</span><span class="p">,</span>
+        <span class="n">inlet_plane</span><span class="p">,</span>
+        <span class="n">angular_speed</span><span class="p">,</span>
+        <span class="n">blockage</span><span class="p">,</span>
+        <span class="n">loss_model</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Evaluate critical mach</span>
+    <span class="n">choking_residual</span> <span class="o">=</span> <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="nb">min</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Evaluate resiudals</span>
+    <span class="n">residual_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;mass_flow&quot;</span><span class="p">])</span>
+            <span class="o">/</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">],</span>
+            <span class="n">choking_residual</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">residual_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;m*&quot;</span><span class="p">,</span> <span class="s2">&quot;choking&quot;</span><span class="p">]</span>
+    <span class="n">residuals_critical</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">residual_keys</span><span class="p">,</span> <span class="n">residual_values</span><span class="p">))</span>
+
+    <span class="c1"># Define output values</span>
+    <span class="n">throat_plane</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_throat&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">throat_plane</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="n">residuals_critical</span><span class="p">,</span> <span class="n">throat_plane</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.axial_turbine.loss_model_moustapha &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.axial_turbine.loss_model_moustapha</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.axial_turbine.loss_model_moustapha</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">math</span>
+
+
+<div class="viewcode-block" id="compute_losses">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.compute_losses">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Evaluate loss coefficient according to :cite:`kacker_mean_1982` and :cite:`moustapha_improved_1990`.</span>
+
+<span class="sd">    This model split the total loss coefficient into profile, secondary, trailing edge, tip clearance and incidence.</span>
+<span class="sd">    The model adopt the incidence loss coefficient proposed by  :cite:`moustapha_improved_1990`, but is otherwise similar to the</span>
+<span class="sd">    model proposed by :cite:`kacker_mean_1982`.</span>
+<span class="sd">    The loss coefficient are combined through the following relation:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y_{tot}} = \mathrm{Y_{p}} + \mathrm{Y_{te}} + \mathrm{Y_{corr}}\mathrm{Y_{s}} + \mathrm{Y_{cl}} + \mathrm{Y_{inc}}</span>
+
+<span class="sd">    The function calls a function for each loss component:</span>
+
+<span class="sd">        - :math:`\mathrm{Y_{p}}` : `get_profile_loss`</span>
+<span class="sd">        - :math:`\mathrm{Y_{te}}` : `get_trailing_edge_loss`</span>
+<span class="sd">        - :math:`\mathrm{Y_{s}}` : `get_secondary_loss`</span>
+<span class="sd">        - :math:`\mathrm{Y_{cl}}` : `get_tip_clearance_loss`</span>
+<span class="sd">        - :math:`\mathrm{Y_{inc}}` : `get_incidence_loss`</span>
+<span class="sd">        - :math:`\mathrm{Y_{corr}}` : `get_secondary_loss_correction_factor`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_parameters : dict</span>
+<span class="sd">        A dictionary containing containing the keys, `flow`, `geometry` and `options`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary with the loss components.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load data</span>
+    <span class="n">flow_parameters</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;flow&quot;</span><span class="p">]</span>
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
+    <span class="n">beta_des</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Profile loss coefficient</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="n">get_profile_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Secondary loss coefficient</span>
+    <span class="n">Y_s</span> <span class="o">=</span> <span class="n">get_secondary_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Tip clearance loss coefficient</span>
+    <span class="n">Y_cl</span> <span class="o">=</span> <span class="n">get_tip_clearance_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Trailing edge loss coefficienct</span>
+    <span class="n">Y_te</span> <span class="o">=</span> <span class="n">get_trailing_edge_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">)</span>
+
+    <span class="c1"># Incidence loss for profile loss</span>
+    <span class="n">Y_inc</span> <span class="o">=</span> <span class="n">get_incidence_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">)</span>
+
+    <span class="c1"># Incidence correction factor for secondary loss coefficient</span>
+    <span class="n">Y_corr</span> <span class="o">=</span> <span class="n">get_secondary_loss_correction_factor</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">)</span>
+    <span class="n">Y_s</span> <span class="o">*=</span> <span class="n">Y_corr</span>
+
+    <span class="c1"># Calculate total pressure loss coefficient</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">Y_p</span> <span class="o">+</span> <span class="n">Y_s</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_te</span> <span class="o">+</span> <span class="n">Y_inc</span>
+
+    <span class="c1"># Return a dictionary of loss components</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;loss_profile&quot;</span><span class="p">:</span> <span class="n">Y_p</span><span class="p">,</span>
+        <span class="s2">&quot;loss_incidence&quot;</span><span class="p">:</span> <span class="n">Y_inc</span><span class="p">,</span>
+        <span class="s2">&quot;loss_trailing&quot;</span><span class="p">:</span> <span class="n">Y_te</span><span class="p">,</span>
+        <span class="s2">&quot;loss_secondary&quot;</span><span class="p">:</span> <span class="n">Y_s</span><span class="p">,</span>
+        <span class="s2">&quot;loss_clearance&quot;</span><span class="p">:</span> <span class="n">Y_cl</span><span class="p">,</span>
+        <span class="s2">&quot;loss_total&quot;</span><span class="p">:</span> <span class="n">Y_p</span> <span class="o">+</span> <span class="n">Y_te</span> <span class="o">+</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_s</span> <span class="o">+</span> <span class="n">Y_cl</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">losses</span></div>
+
+
+
+<div class="viewcode-block" id="get_profile_loss">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_profile_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">get_profile_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.</span>
+<span class="sd">    The equation for :math:`\mathrm{Y_p}` is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y_p} = \mathrm{Y_{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot</span>
+<span class="sd">        \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (\mathrm{Y_{impulse}} - \mathrm{Y_{reaction}})</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\mathrm{Y_{reaction}}` is the reaction loss coefficient computed using Aungier correlation.</span>
+<span class="sd">        - :math:`\mathrm{Y_{impulse}}` is the impulse loss coefficient computed using Aungier correlation.</span>
+<span class="sd">        - :math:`\theta_\mathrm{in}` is the inlet metal angle.</span>
+<span class="sd">        - :math:`\beta_\mathrm{out}` is the exit flow angle.</span>
+
+<span class="sd">    The function also applies various corrections based on flow parameters and geometry factors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Profile loss coefficient.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load data</span>
+    <span class="n">Re</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Re_out&quot;</span><span class="p">]</span>
+    <span class="n">Ma_rel_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_out&quot;</span><span class="p">]</span>
+    <span class="n">Ma_rel_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_in&quot;</span><span class="p">]</span>
+    <span class="n">p0rel_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;p0_rel_in&quot;</span><span class="p">]</span>
+    <span class="n">p_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;p_in&quot;</span><span class="p">]</span>
+    <span class="n">p0rel_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;p0_rel_out&quot;</span><span class="p">]</span>
+    <span class="n">p_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;p_out&quot;</span><span class="p">]</span>
+    <span class="n">beta_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span>
+
+    <span class="n">r_ht_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+    <span class="n">t_max</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;maximum_thickness&quot;</span><span class="p">]</span>
+    <span class="n">cascade_type</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Reynolds number correction factor</span>
+    <span class="n">f_Re</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">Re</span> <span class="o">/</span> <span class="mf">2e5</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.4</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Re</span> <span class="o">&lt;</span> <span class="mf">2e5</span><span class="p">)</span>
+        <span class="o">+</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">Re</span> <span class="o">&gt;=</span> <span class="mf">2e5</span> <span class="ow">and</span> <span class="n">Re</span> <span class="o">&lt;=</span> <span class="mf">1e6</span><span class="p">)</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">Re</span> <span class="o">/</span> <span class="mf">1e6</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Re</span> <span class="o">&gt;</span> <span class="mf">1e6</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Mach number correction factor</span>
+    <span class="n">f_Ma</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="mi">60</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ma_rel_out</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ma_rel_out</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Compute losses related to shock effects at the inlet of the cascade</span>
+    <span class="n">f_hub</span> <span class="o">=</span> <span class="n">get_hub_to_mean_mach_ratio</span><span class="p">(</span><span class="n">r_ht_in</span><span class="p">,</span> <span class="n">cascade_type</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">f_hub</span> <span class="o">*</span> <span class="n">Ma_rel_in</span> <span class="o">-</span> <span class="mf">0.4</span><span class="p">)</span>
+    <span class="n">Y_shock</span> <span class="o">=</span> <span class="mf">0.75</span> <span class="o">*</span> <span class="n">a</span><span class="o">**</span><span class="mf">1.75</span> <span class="o">*</span> <span class="n">r_ht_in</span> <span class="o">*</span> <span class="p">(</span><span class="n">p0rel_in</span> <span class="o">-</span> <span class="n">p_in</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">p0rel_out</span> <span class="o">-</span> <span class="n">p_out</span><span class="p">)</span>
+    <span class="n">Y_shock</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Y_shock</span><span class="p">)</span>
+
+    <span class="c1"># Compute compressible flow correction factors</span>
+    <span class="n">Kp</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">K1</span> <span class="o">=</span> <span class="n">get_compressible_correction_factors</span><span class="p">(</span><span class="n">Ma_rel_in</span><span class="p">,</span> <span class="n">Ma_rel_out</span><span class="p">)</span>
+
+    <span class="c1"># Yp_reaction and Yp_impulse according to Aungier correlation</span>
+    <span class="c1"># These formulas are valid for 40&lt;abs(angle_out)&lt;80</span>
+    <span class="c1"># Extrapolating outside of this limits might give completely wrong results</span>
+    <span class="c1"># If the optimization algorithm has upper and lower bounds for the outlet</span>
+    <span class="c1"># angle there is no need to worry about this problem</span>
+    <span class="c1"># angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg</span>
+    <span class="n">angle_out_bis</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">beta_out</span><span class="p">),</span> <span class="mi">40</span><span class="p">)</span>
+    <span class="n">Yp_reaction</span> <span class="o">=</span> <span class="n">nozzle_blades</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="n">c</span><span class="p">,</span> <span class="n">angle_out_bis</span><span class="p">)</span>
+    <span class="n">Yp_impulse</span> <span class="o">=</span> <span class="n">impulse_blades</span><span class="p">(</span><span class="n">s</span> <span class="o">/</span> <span class="n">c</span><span class="p">,</span> <span class="n">angle_out_bis</span><span class="p">)</span>
+
+    <span class="c1"># Formula according to Kacker-Okapuu</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="n">Yp_reaction</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">theta_in</span> <span class="o">/</span> <span class="n">beta_out</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">theta_in</span> <span class="o">/</span> <span class="n">beta_out</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">Yp_impulse</span> <span class="o">-</span> <span class="n">Yp_reaction</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Limit the extrapolation of the profile loss to avoid negative values for</span>
+    <span class="c1"># blade profiles with little deflection</span>
+    <span class="c1"># Low limit to 80% of the axial entry nozzle profile loss</span>
+    <span class="c1"># This value is completely arbitrary</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">Y_p</span><span class="p">,</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">Yp_reaction</span><span class="p">)</span>
+
+    <span class="c1"># Avoid unphysical effect on the thickness by defining the variable aa</span>
+    <span class="n">aa</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">theta_in</span> <span class="o">/</span> <span class="n">beta_out</span><span class="p">)</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="n">Y_p</span> <span class="o">*</span> <span class="p">((</span><span class="n">t_max</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">**</span> <span class="n">aa</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="mf">0.914</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">Y_p</span> <span class="o">*</span> <span class="n">Kp</span> <span class="o">+</span> <span class="n">Y_shock</span><span class="p">)</span>
+
+    <span class="c1"># Corrected profile loss coefficient</span>
+    <span class="n">Y_p</span> <span class="o">=</span> <span class="n">f_Re</span> <span class="o">*</span> <span class="n">f_Ma</span> <span class="o">*</span> <span class="n">Y_p</span>
+
+    <span class="k">return</span> <span class="n">Y_p</span></div>
+
+
+
+<div class="viewcode-block" id="get_secondary_loss">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">get_secondary_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The function calculates the secondary loss coefficient using the Kacker-Okapuu model.</span>
+<span class="sd">    The main equation for :math:`\mathrm{Y_s}` is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y_s} = 1.2 \cdot \mathrm{K_s} \cdot 0.0334 \cdot far \cdot Z \cdot \frac{\cos(\beta_{out})}{\cos(\theta_{in})}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`K_s` is a correction factor accounting for compressible flow effects.</span>
+<span class="sd">        - :math:`far` is a factor that account for the aspect ratio of the current cascade.</span>
+<span class="sd">        - :math:`Z` is a blade loading parameter.</span>
+<span class="sd">        - :math:`\beta_\mathrm{out}` is the exit flow angle.</span>
+<span class="sd">        - :math:`\theta_\mathrm{in}` is the inlet metal angle.</span>
+
+<span class="sd">    The correction factor :math:`\mathrm{K_s}` from a separate correction factor given from `get_compressible_correction_factors`.</span>
+<span class="sd">    `get_compressible_correction_factors` returns :math:`\mathrm{K_s}`, which is used to calculate :math:`\mathrm{K_s}`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{K_s} = 1 - \left(\frac{b}{H}\right)^2 (1-\mathrm{K_p})</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`b` is the axial chord.</span>
+<span class="sd">        - :math:`H` is the mean blade height.</span>
+
+<span class="sd">    The aspect ratio factor is calculated from the following correlation:</span>
+
+<span class="sd">    .. math:: </span>
+
+<span class="sd">        far = \begin{cases}</span>
+<span class="sd">                1 - \frac{0.25 \sqrt{|2-H/c|}}{H/c} &amp; \text{if } H/c &lt; 2.0 \\</span>
+<span class="sd">                c/H &amp; \text{if } H/c \geq 2.0</span>
+<span class="sd">                \end{cases}</span>
+
+<span class="sd">    where :math:`c` is the blade chord.</span>
+
+<span class="sd">    The loading parameters is caclualated from the following correlation:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Z = 4 (\tan(\beta_\mathrm{in}) - \tan(\beta_\mathrm{out}))^2\frac{\cos^2(\beta_\mathrm{out})}{\cos(\beta_m)} </span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\beta_\mathrm{in}` and :math:`\beta_\mathrm{out}` is the inlet and exit relative flow angle</span>
+<span class="sd">        - :math:`\beta_m = \tan^{-1}(0.5(\tan(\beta_\mathrm{in})-\tan(\beta_\mathrm{out})))` is the mean gas angle.</span>
+<span class="sd">           </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Secondary loss coefficient.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Ma_rel_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_out&quot;</span><span class="p">]</span>
+    <span class="n">Ma_rel_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_in&quot;</span><span class="p">]</span>
+    <span class="n">beta_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span>
+    <span class="n">beta_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_in&quot;</span><span class="p">]</span>
+
+    <span class="n">b</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;axial_chord&quot;</span><span class="p">]</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Compute compressible flow correction factors</span>
+    <span class="n">Kp</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">K1</span> <span class="o">=</span> <span class="n">get_compressible_correction_factors</span><span class="p">(</span><span class="n">Ma_rel_in</span><span class="p">,</span> <span class="n">Ma_rel_out</span><span class="p">)</span>
+
+    <span class="c1"># Secondary loss coefficient</span>
+    <span class="n">K3</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">/</span> <span class="n">H</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Ks</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">K3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Kp</span><span class="p">)</span>
+    <span class="n">Ks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">Ks</span><span class="p">)</span>
+    <span class="n">angle_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">((</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_out</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">4</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_out</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">angle_m</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">far</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="mi">2</span> <span class="o">-</span> <span class="n">H</span> <span class="o">/</span> <span class="n">c</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="n">H</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">H</span> <span class="o">/</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">H</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">H</span> <span class="o">/</span> <span class="n">c</span> <span class="o">&gt;=</span> <span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">Y_s</span> <span class="o">=</span> <span class="mf">1.2</span> <span class="o">*</span> <span class="n">Ks</span> <span class="o">*</span> <span class="mf">0.0334</span> <span class="o">*</span> <span class="n">far</span> <span class="o">*</span> <span class="n">Z</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Y_s</span></div>
+
+
+
+<div class="viewcode-block" id="get_trailing_edge_loss">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_trailing_edge_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">get_trailing_edge_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the trailing edge loss coefficient using the Kacker-Okapuu model.</span>
+<span class="sd">    The main equation for the kinetic-energy coefficient is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        d_{\phi^2} = d_{\phi^2_\mathrm{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot</span>
+<span class="sd">        \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (d_{\phi^2_\mathrm{impulse}} - d_{\phi^2_\mathrm{reaction}})</span>
+
+<span class="sd">    The kinetic-energy coefficient is converted to the total pressure loss coefficient by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y_{te}} = \frac{1}{{1 - \phi^2}} - 1</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`d_{\phi^2_\mathrm{reaction}}` and :math:`d_{\phi^2_\mathrm{impulse}}` are coefficients related to kinetic energy loss for reaction and impulse blades respectively, and are interpolated based on trailing edge to throat opening ratio.</span>
+<span class="sd">        - :math:`\beta_\mathrm{out}` is the exit flow angle.</span>
+<span class="sd">        - :math:`\theta_\mathrm{in}` is the inlet metal angle.</span>
+
+<span class="sd">    The function also applies various interpolations and computations based on flow parameters and geometry factors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Trailing edge loss coefficient.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">t_te</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;trailing_edge_thickness&quot;</span><span class="p">]</span>
+    <span class="n">o</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;opening&quot;</span><span class="p">]</span>
+    <span class="n">angle_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+    <span class="n">angle_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Range of trailing edge to throat opening ratio</span>
+    <span class="n">r_to_data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]</span>
+
+    <span class="c1"># Reacting blading</span>
+    <span class="n">phi_data_reaction</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.045</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">]</span>
+
+    <span class="c1"># Impulse blading</span>
+    <span class="n">phi_data_impulse</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.075</span><span class="p">]</span>
+
+    <span class="c1"># Numerical trick to avoid too big r_to&#39;s</span>
+    <span class="n">r_to</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">t_te</span> <span class="o">/</span> <span class="n">o</span><span class="p">)</span>
+
+    <span class="c1"># Interpolate data</span>
+    <span class="n">d_phi2_reaction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">r_to</span><span class="p">,</span> <span class="n">r_to_data</span><span class="p">,</span> <span class="n">phi_data_reaction</span><span class="p">)</span>
+    <span class="n">d_phi2_impulse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">r_to</span><span class="p">,</span> <span class="n">r_to_data</span><span class="p">,</span> <span class="n">phi_data_impulse</span><span class="p">)</span>
+
+    <span class="c1"># Compute kinetic energy loss coefficient</span>
+    <span class="n">d_phi2</span> <span class="o">=</span> <span class="n">d_phi2_reaction</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">angle_in</span> <span class="o">/</span> <span class="n">angle_out</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">angle_in</span> <span class="o">/</span> <span class="n">angle_out</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">d_phi2_impulse</span> <span class="o">-</span> <span class="n">d_phi2_reaction</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Limit the extrapolation of the trailing edge loss</span>
+    <span class="n">d_phi2</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">d_phi2</span><span class="p">,</span> <span class="n">d_phi2_impulse</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">Y_te</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d_phi2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">Y_te</span></div>
+
+
+
+<div class="viewcode-block" id="get_tip_clearance_loss">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_tip_clearance_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">get_tip_clearance_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the tip clearance loss coefficient for the current cascade using the Kacker and Okapuu loss model.</span>
+<span class="sd">    The equation for the tip clearance loss coefficent is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y_{cl}} = B \cdot Z \cdot \frac{c}{H} \cdot \left(\frac{t_\mathrm{cl}}{H}\right)^{0.78}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`B` is an empirical parameter that depends on the type of cascade (0 for stator, 0.37 for shrouded rotor).</span>
+<span class="sd">        - :math:`Z` is a blade loading parameter</span>
+<span class="sd">        - :math:`c` is the chord.</span>
+<span class="sd">        - :math:`H` is the mean blade height.</span>
+<span class="sd">        - :math:`t_\mathrm{cl}` is the tip clearance.</span>
+
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Tip clearance loss coefficient.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">beta_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span>
+    <span class="n">beta_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_in&quot;</span><span class="p">]</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;height&quot;</span><span class="p">]</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">t_cl</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+    <span class="n">cascade_type</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate blade loading parameter Z</span>
+    <span class="n">angle_m</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">((</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_out</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">4</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">beta_out</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">angle_m</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Empirical parameter (0 for stator, 0.37 for shrouded rotor)</span>
+    <span class="k">if</span> <span class="n">cascade_type</span> <span class="o">==</span> <span class="s2">&quot;stator&quot;</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">cascade_type</span> <span class="o">==</span> <span class="s2">&quot;rotor&quot;</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="mf">0.37</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Specify the type of cascade&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Tip clearance loss coefficient</span>
+    <span class="n">Y_cl</span> <span class="o">=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">Z</span> <span class="o">*</span> <span class="n">c</span> <span class="o">/</span> <span class="n">H</span> <span class="o">*</span> <span class="p">(</span><span class="n">t_cl</span> <span class="o">/</span> <span class="n">H</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.78</span>
+
+    <span class="k">return</span> <span class="n">Y_cl</span></div>
+
+
+
+<div class="viewcode-block" id="get_incidence_loss">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">get_incidence_loss</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the incidence loss coefficient according to the correlation proposed by :cite:`moustapha_improved_1990`.</span>
+<span class="sd">    </span>
+<span class="sd">    The model first computes the incidence parameter, :math:`\chi`. Based on this parameter, the kinetic-energy incidence </span>
+<span class="sd">    loss coefficient is calculated to match experimental data.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \Delta\phi^2_p = \begin{cases}</span>
+<span class="sd">                        -5.1734e^{-6}\chi + 7.6902e^{-9}\chi^2 &amp; \text{if } -800 \leq \chi \leq 0 \\</span>
+<span class="sd">                        0.778e^{-5}\chi + 0.56e^{-7}\chi^2 + 0.4e^{-10}\chi^3 + 2.054e^{-19}\chi^6 &amp; \text{if } 0 \leq \chi \leq 800</span>
+<span class="sd">                        \end{cases}</span>
+
+<span class="sd">    The kinetic-energy coefficient is converted to total pressure loss coefficient through the `convert_kinetic_energy_coefficient` function. </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+<span class="sd">    beta_des : float</span>
+<span class="sd">        Inlet flow angle for zero incidence losses (design).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Incidence loss coefficient.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    Warning</span>
+<span class="sd">        If incidence parameter (:math:`chi`) is out of range.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Ma_rel_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_out&quot;</span><span class="p">]</span>  <span class="c1"># Exit relative mach number</span>
+    <span class="n">beta_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_in&quot;</span><span class="p">]</span>  <span class="c1"># Inlet relativ flow angle</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;gamma_out&quot;</span><span class="p">]</span>  <span class="c1"># Specific heat ratio</span>
+
+    <span class="n">s</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span>  <span class="c1"># Pitch</span>
+    <span class="n">le</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">]</span>  <span class="c1"># Leading edge diameter</span>
+    <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>  <span class="c1"># Inlet metal angle</span>
+    <span class="n">theta_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>  <span class="c1"># Exit metal angle</span>
+
+    <span class="c1"># Compute incidence parameter</span>
+    <span class="n">chi</span> <span class="o">=</span> <span class="n">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">)</span>
+
+    <span class="c1"># Check if incidence parameter is within the range of the experimental data</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">chi</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">800</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Incidence parameter out of range: chi = </span><span class="si">{chi}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate kinetic-energy loss coefficient</span>
+    <span class="k">if</span> <span class="n">chi</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dPhi</span> <span class="o">=</span> <span class="mf">0.778e-5</span> <span class="o">*</span> <span class="n">chi</span> <span class="o">+</span> <span class="mf">0.56e-7</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.4e-10</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mf">2.054e-19</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">6</span>
+    <span class="k">elif</span> <span class="n">chi</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dPhi</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.1734e-6</span> <span class="o">*</span> <span class="n">chi</span> <span class="o">+</span> <span class="mf">7.6902e-9</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Convert kinetic-energy loss coefficient to total pressure loss coeffcient</span>
+    <span class="n">Y_inc</span> <span class="o">=</span> <span class="n">convert_kinetic_energy_coefficient</span><span class="p">(</span><span class="n">dPhi</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">Ma_rel_out</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Y_inc</span></div>
+
+
+
+<div class="viewcode-block" id="get_secondary_loss_correction_factor">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss_correction_factor">[docs]</a>
+<span class="k">def</span> <span class="nf">get_secondary_loss_correction_factor</span><span class="p">(</span><span class="n">flow_parameters</span><span class="p">,</span> <span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the correction factor for the secondary loss coefficient to account for incidence losses.</span>
+
+<span class="sd">    The correction factor is calculated based on the secondary flow incidence parameter (:math:`\chi`), which is determined using</span>
+<span class="sd">    geometrical and flow parameters.</span>
+
+<span class="sd">    The correction factor (:math:`Y_\mathrm{corr}`) is given by:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Y_\mathrm{corr} = \begin{cases}</span>
+<span class="sd">        e^{0.9\chi} + 13\chi^2 + 400\chi^4 &amp; \text{if } \chi \geq 0 \\</span>
+<span class="sd">        e^{0.9\chi} &amp; \text{if } \chi &lt; 0</span>
+<span class="sd">        \end{cases}</span>
+
+<span class="sd">    and the incidence paramter is calculated as:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi = \frac{\beta_\mathrm{in} - \theta_\mathrm{in}}{180 - (\theta_\mathrm{in} + \theta_\mathrm{out})}\left(\frac{\cos(\theta_\mathrm{in})}{\cos(\theta_\mathrm{out})}\right)^{-1.5}\left(\frac{\mathrm{d_{le}}}{c}\right)^{-0.3}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\chi` is the secondary flow incidence parameter.</span>
+<span class="sd">        - :math:`c` is the chord length.</span>
+<span class="sd">        - :math:`\mathrm{d_{le}}` is the leading edge diameter.</span>
+<span class="sd">        - :math:`\theta_\mathrm{in}` is the inlet metal angle.</span>
+<span class="sd">        - :math:`\theta_\mathrm{out}` is the exit metal angle.</span>
+<span class="sd">        - :math:`\beta_\mathrm{in}` is the inlet relative flow angle.</span>
+
+<span class="sd">    The function also checks if the secondary incidence parameter falls within the range of the experimental data used to </span>
+<span class="sd">    determine the correction factor.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flow_parameters : dict</span>
+<span class="sd">        Dictionary containing flow-related parameters.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        Dictionary with geometric parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Secondary loss correction factor.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">beta_in</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;beta_in&quot;</span><span class="p">]</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">le</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">]</span>
+    <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+    <span class="n">theta_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>
+
+    <span class="n">chi</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">theta_in</span><span class="p">))</span>
+        <span class="o">/</span> <span class="p">(</span><span class="mi">180</span> <span class="o">-</span> <span class="p">(</span><span class="n">theta_in</span> <span class="o">+</span> <span class="n">theta_out</span><span class="p">))</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span> <span class="o">**</span> <span class="o">-</span><span class="mf">1.5</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">le</span> <span class="o">/</span> <span class="n">c</span><span class="p">)</span> <span class="o">**</span> <span class="o">-</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.4</span> <span class="o">&lt;</span> <span class="n">chi</span> <span class="o">&lt;</span> <span class="mf">0.3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;Secondary incidence parameter out of range: chi = </span><span class="si">{chi}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">chi</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">Y_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="n">chi</span><span class="p">)</span> <span class="o">+</span> <span class="mi">13</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">400</span> <span class="o">*</span> <span class="n">chi</span><span class="o">**</span><span class="mi">4</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Y_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mf">0.9</span> <span class="o">*</span> <span class="n">chi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Y_corr</span></div>
+
+
+
+<div class="viewcode-block" id="nozzle_blades">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.nozzle_blades">[docs]</a>
+<span class="k">def</span> <span class="nf">nozzle_blades</span><span class="p">(</span><span class="n">r_sc</span><span class="p">,</span> <span class="n">angle_out</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use Aungier correlation to compute the pressure loss coefficient for nozzle blades :cite:`aungier_turbine_2006`.</span>
+
+<span class="sd">    This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,</span>
+<span class="sd">    and is a function of the pitch-to-chord ratio and exit relative flow angle. </span>
+
+<span class="sd">    The correlation uses the following equations:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        &amp; \beta_\mathrm{tan} = 90 - \beta_\mathrm{ax} \\</span>
+<span class="sd">        &amp; \left(\frac{s}{c}\right)_\mathrm{min} = \begin{cases}</span>
+<span class="sd">                                                    0.46 + \frac{\beta_\mathrm{tan}}{77} &amp;&amp; \text{if } \beta_\mathrm{tan} &lt; 30 \\</span>
+<span class="sd">                                                    0.614 + \frac{\beta_\mathrm{tan}}{130} &amp;&amp; \text{if } \beta_\mathrm{tan} \geq 30</span>
+<span class="sd">                                                \end{cases} \\</span>
+<span class="sd">        &amp; X = \left(\frac{s}{c}\right) - \left(\frac{s}{c}\right)_\mathrm{min} \\</span>
+<span class="sd">        &amp; A = \begin{cases}</span>
+<span class="sd">                0.025 + \frac{27 - \beta_\mathrm{tan}}{530} &amp;&amp; \text{if } \beta_\mathrm{tan} &lt; 27 \\</span>
+<span class="sd">                0.025 + \frac{27 - \beta_\mathrm{tan}}{3085} &amp;&amp; \text{if } \beta_\mathrm{tan} \geq 27</span>
+<span class="sd">              \end{cases} \\</span>
+<span class="sd">        &amp; B = 0.1583 - \frac{\beta_\mathrm{tan}}{1640} \\</span>
+<span class="sd">        &amp; C = 0.08\left(\frac{\beta_\mathrm{tan}}{30}\right)^2 -1 \\</span>
+<span class="sd">        &amp; n = 1 + \frac{\beta_\mathrm{tan}}{30} \\</span>
+<span class="sd">        &amp; \mathrm{Y_{p,reaction}} = \begin{cases}</span>
+<span class="sd">                A + BX^2 + CX^3 &amp;&amp; \text{if } \beta_\mathrm{tan} &lt; 30 \\</span>
+<span class="sd">                A + B |X|^n &amp;&amp; \text{if } \beta_\mathrm{tan} \geq 30</span>
+<span class="sd">              \end{cases}   </span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`s` is the pitch</span>
+<span class="sd">        - :math:`c` is the chord</span>
+<span class="sd">        - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. </span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r_sc : float</span>
+<span class="sd">        Pitch-to-chord ratio.</span>
+<span class="sd">    angle_out : float</span>
+<span class="sd">        Exit relative flow angle (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Pressure loss coefficient for impulse blades.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">phi</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">-</span> <span class="n">angle_out</span>
+    <span class="n">r_sc_min</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.46</span> <span class="o">+</span> <span class="n">phi</span> <span class="o">/</span> <span class="mi">77</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.614</span> <span class="o">+</span> <span class="n">phi</span> <span class="o">/</span> <span class="mi">130</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&gt;=</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">r_sc</span> <span class="o">-</span> <span class="n">r_sc_min</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.025</span> <span class="o">+</span> <span class="p">(</span><span class="mi">27</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">530</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&lt;</span> <span class="mi">27</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.025</span> <span class="o">+</span> <span class="p">(</span><span class="mi">27</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3085</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">phi</span> <span class="o">&gt;=</span> <span class="mi">27</span>
+    <span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="mf">0.1583</span> <span class="o">-</span> <span class="n">phi</span> <span class="o">/</span> <span class="mi">1640</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="mf">0.08</span> <span class="o">*</span> <span class="p">((</span><span class="n">phi</span> <span class="o">/</span> <span class="mi">30</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">phi</span> <span class="o">/</span> <span class="mi">30</span>
+    <span class="n">Yp_reaction</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">*</span> <span class="n">X</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">C</span> <span class="o">*</span> <span class="n">X</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">**</span> <span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">phi</span> <span class="o">&gt;=</span> <span class="mi">30</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Yp_reaction</span></div>
+
+
+
+<div class="viewcode-block" id="impulse_blades">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.impulse_blades">[docs]</a>
+<span class="k">def</span> <span class="nf">impulse_blades</span><span class="p">(</span><span class="n">r_sc</span><span class="p">,</span> <span class="n">angle_out</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Use Aungier correlation to compute the pressure loss coefficient for impulse blades :cite:`aungier_turbine_2006`.</span>
+
+<span class="sd">    This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,</span>
+<span class="sd">    and is a function of the pitch-to-chord ratio and exit relative flow angle. </span>
+
+<span class="sd">    The correlation uses the following equations:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        &amp; \beta_\mathrm{tan} = 90 - \beta_\mathrm{ax} \\</span>
+<span class="sd">        &amp; \left(\frac{s}{c}\right)_\mathrm{min} = 0.224 + 1.575\left(\frac{\beta_\mathrm{tan}}{90}\right) - \left(\frac{\beta_\mathrm{tan}}{90}\right)^2 \\</span>
+<span class="sd">        &amp; X = \left(\frac{s}{c}\right) - \left(\frac{s}{c}\right)_\mathrm{min} \\</span>
+<span class="sd">        &amp; A = 0.242 - \frac{\beta_\mathrm{tan}}{151} + \left(\frac{\beta_\mathrm{tan}}{127}\right)^2 \\</span>
+<span class="sd">        &amp; B = \begin{cases}</span>
+<span class="sd">                0.3 + \frac{30 - \beta_\mathrm{tan}}{50} &amp;&amp; \text{if } \beta_\mathrm{tan} &lt; 30 \\</span>
+<span class="sd">                0.3 + \frac{30 - \beta_\mathrm{tan}}{275} &amp;&amp; \text{if } \beta_\mathrm{tan} \geq 30</span>
+<span class="sd">              \end{cases} \\</span>
+<span class="sd">        &amp; C = 0.88 - \frac{\beta_\mathrm{tan}}{42.4} + \left(\frac{\beta_\mathrm{tan}}{72.8}\right)^2 \\</span>
+<span class="sd">        &amp; \mathrm{Y_{p,impulse}} = A + BX^2 - CX^3 </span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`s` is the pitch</span>
+<span class="sd">        - :math:`c` is the chord</span>
+<span class="sd">        - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. </span>
+<span class="sd">        </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r_sc : float</span>
+<span class="sd">        Pitch-to-chord ratio.</span>
+<span class="sd">    angle_out : float</span>
+<span class="sd">        Exit relative flow angle (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Pressure loss coefficient for impulse blades.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">phi</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">-</span> <span class="n">angle_out</span>
+    <span class="n">r_sc_min</span> <span class="o">=</span> <span class="mf">0.224</span> <span class="o">+</span> <span class="mf">1.575</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="mi">90</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="mi">90</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">r_sc</span> <span class="o">-</span> <span class="n">r_sc_min</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="mf">0.242</span> <span class="o">-</span> <span class="n">phi</span> <span class="o">/</span> <span class="mi">151</span> <span class="o">+</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="mi">127</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.3</span> <span class="o">+</span> <span class="p">(</span><span class="mi">30</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&lt;</span> <span class="mi">30</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.3</span> <span class="o">+</span> <span class="p">(</span><span class="mi">30</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">/</span> <span class="mi">275</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phi</span> <span class="o">&gt;=</span> <span class="mi">30</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="mf">0.88</span> <span class="o">-</span> <span class="n">phi</span> <span class="o">/</span> <span class="mf">42.4</span> <span class="o">+</span> <span class="p">(</span><span class="n">phi</span> <span class="o">/</span> <span class="mf">72.8</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Yp_impulse</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">*</span> <span class="n">X</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">C</span> <span class="o">*</span> <span class="n">X</span><span class="o">**</span><span class="mi">3</span>
+
+    <span class="k">return</span> <span class="n">Yp_impulse</span></div>
+
+
+
+<div class="viewcode-block" id="get_compressible_correction_factors">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_compressible_correction_factors">[docs]</a>
+<span class="k">def</span> <span class="nf">get_compressible_correction_factors</span><span class="p">(</span><span class="n">Ma_rel_in</span><span class="p">,</span> <span class="n">Ma_rel_out</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Compute compressible flow correction factor according to Kacker and Okapuu loss model :cite:`kacker_mean_1982`.</span>
+
+<span class="sd">    The correction factors :math:`\mathrm{K_1}`, :math:`\mathrm{K_2}` and :math:`\mathrm{K_p}` was introduced by :cite:`kacker_mean_1982` to correct previous correlation (:cite:`ainley_method_1951`)</span>
+<span class="sd">    for effect of higher mach number and channel acceleration. The correction factors reduces the losses at higher mach number. Their definition follows: </span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        &amp;\mathrm{K_1} = \begin{cases}</span>
+<span class="sd">                1 &amp; \text{if } \mathrm{Ma_{out}} &lt; 0.2 \\</span>
+<span class="sd">                1 - 1.25(\mathrm{Ma_{out}} - 0.2) &amp; \text{if } \mathrm{Ma_{out}} \geq 0.2</span>
+<span class="sd">              \end{cases} \\</span>
+<span class="sd">        &amp;\mathrm{K_2} = \left(\frac{\mathrm{Ma_{in}}}{\mathrm{Ma_{out}}}\right) \\</span>
+<span class="sd">        &amp;\mathrm{K_p} = 1 - \mathrm{K_2}(1-\mathrm{K_1})</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\mathrm{Ma_{in}}` is the relative mach number at the cascade inlet.</span>
+<span class="sd">        -  :math:`\mathrm{Ma_{out}}` is the relative mach number at the cascade exit.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ma_rel_in : float</span>
+<span class="sd">        Inlet relative mach number.</span>
+<span class="sd">    Ma_rel_out : float</span>
+<span class="sd">        Exit relative mach number.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Correction factor :math:`\mathrm{K_p}`.</span>
+<span class="sd">    float</span>
+<span class="sd">        Correction factor :math:`\mathrm{K_2}`.</span>
+<span class="sd">    float</span>
+<span class="sd">        Correction factor :math:`\mathrm{K_1}`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">K1</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ma_rel_out</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">1.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">Ma_rel_out</span> <span class="o">-</span> <span class="mf">0.2</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">Ma_rel_out</span> <span class="o">&gt;</span> <span class="mf">0.2</span> <span class="ow">and</span> <span class="n">Ma_rel_out</span> <span class="o">&lt;</span> <span class="mf">1.00</span>
+    <span class="p">)</span>
+    <span class="n">K2</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ma_rel_in</span> <span class="o">/</span> <span class="n">Ma_rel_out</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">Kp</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">K2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">K1</span><span class="p">)</span>
+    <span class="n">Kp</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">Kp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">Kp</span><span class="p">,</span> <span class="n">K2</span><span class="p">,</span> <span class="n">K1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_hub_to_mean_mach_ratio">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_hub_to_mean_mach_ratio">[docs]</a>
+<span class="k">def</span> <span class="nf">get_hub_to_mean_mach_ratio</span><span class="p">(</span><span class="n">r_ht</span><span class="p">,</span> <span class="n">cascade_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the ratio between Mach at the hub and mean span at the inlet of the current cascade.</span>
+
+<span class="sd">    Due to radial variation in gas conditions, Mach at the hub will always be higher than at the mean.</span>
+<span class="sd">    Thus, shock losses at the hub could occur even when the Mach is subsonic at the mean blade span.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    r_ht : float</span>
+<span class="sd">        Hub to tip ratio at the inlet of the current cascade.</span>
+<span class="sd">    cascade_type : str</span>
+<span class="sd">        Type of the current cascade, either &#39;stator&#39; or &#39;rotor&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Ratio between Mach at the hub and mean span at the inlet of the current cascade.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">r_ht</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="n">r_ht</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Numerical trick to prevent extrapolation</span>
+
+    <span class="n">r_ht_data</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+
+    <span class="c1"># Stator curve</span>
+    <span class="n">f_data_S</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.4</span><span class="p">,</span> <span class="mf">1.18</span><span class="p">,</span> <span class="mf">1.05</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+
+    <span class="c1"># Rotor curve</span>
+    <span class="n">f_data_R</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.15</span><span class="p">,</span> <span class="mf">1.7</span><span class="p">,</span> <span class="mf">1.35</span><span class="p">,</span> <span class="mf">1.12</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">cascade_type</span> <span class="o">==</span> <span class="s2">&quot;stator&quot;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">r_ht</span><span class="p">,</span> <span class="n">r_ht_data</span><span class="p">,</span> <span class="n">f_data_S</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cascade_type</span> <span class="o">==</span> <span class="s2">&quot;rotor&quot;</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">r_ht</span><span class="p">,</span> <span class="n">r_ht_data</span><span class="p">,</span> <span class="n">f_data_R</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Specify the type of cascade&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span></div>
+
+
+
+<div class="viewcode-block" id="get_incidence_parameter">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_parameter">[docs]</a>
+<span class="k">def</span> <span class="nf">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the incidence parameter according to the correlation proposed by :cite:`moustapha_improved_1990`.</span>
+
+<span class="sd">    The incidence parameter is used to calculate the increment in profile losses due to the effect of incidence according to function `get_incidence_loss`.</span>
+
+<span class="sd">    The quantity is calculated as:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \chi = \left(\frac{\mathrm{d_{le}}}{s}\right)^{-1.6}\left(\frac{\cos{\theta_\mathrm{in}}}{\cos{\theta_\mathrm{out}}}\right)^{-2}(\beta_\mathrm{in} - \beta_\mathrm{des})</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\mathrm{d_{le}}` is the leading edge diameter.</span>
+<span class="sd">        - :math:`s` is the pitch.</span>
+<span class="sd">        - :math:`\theta_\mathrm{in}` and :math:`\theta_\mathrm{out}` is the blade metal angle at the inlet and outlet respectively.</span>
+<span class="sd">        - :math:`\beta_\mathrm{in}` and :math:`\beta_\mathrm{des}` is the inlet relative flow angle at given and design conditions respectively.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    le : float</span>
+<span class="sd">        Leading edge diameter.</span>
+<span class="sd">    s : float</span>
+<span class="sd">        Pitch.</span>
+<span class="sd">    theta_in : float</span>
+<span class="sd">        Leading edge metal angle (in degrees).</span>
+<span class="sd">    theta_out : float</span>
+<span class="sd">        Trailing edge metal angle (in degrees).</span>
+<span class="sd">    beta_in : float</span>
+<span class="sd">        Inlet relative flow angle (in degrees).</span>
+<span class="sd">    beta_des : float</span>
+<span class="sd">        Inlet relative flow angle at design condition (in degrees).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Incidence parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: explain smoothing/blending tricks</span>
+
+    <span class="n">chi</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="n">le</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.6</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">beta_des</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">chi</span></div>
+
+
+
+<div class="viewcode-block" id="convert_kinetic_energy_coefficient">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.convert_kinetic_energy_coefficient">[docs]</a>
+<span class="k">def</span> <span class="nf">convert_kinetic_energy_coefficient</span><span class="p">(</span><span class="n">dPhi</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">Ma_rel_out</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">        - :math:`\gamma` is the specific heat ratio.</span>
+<span class="sd">        - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.</span>
+<span class="sd">        - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dPhi : float</span>
+<span class="sd">        Kinetic energy coefficient increment.</span>
+<span class="sd">    gamma : float</span>
+<span class="sd">        Heat capacity ratio.</span>
+<span class="sd">    Ma_rel_out : float</span>
+<span class="sd">        The cascade exit relative mach number.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The total pressure loss coefficient.</span>
+
+<span class="sd">    Warnings</span>
+<span class="sd">    --------</span>
+<span class="sd">    This conversion assumes that the fluid is a perfect gas.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">denom</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Ma_rel_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">numer</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Ma_rel_out</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">dPhi</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span>
+        <span class="o">-</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">numer</span> <span class="o">/</span> <span class="n">denom</span>
+
+    <span class="k">return</span> <span class="n">Y</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

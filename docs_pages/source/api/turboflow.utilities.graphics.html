@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>meanline_axial.utilities.graphics module &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="meanline_axial.utilities.numeric module" href="turboflow.utilities.numerics.html" />
+    <link rel="prev" title="meanline_axial.utilities.file_utils module" href="turboflow.utilities.file_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.utilities.html">Utilities</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.utilities.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.html#module-turboflow.utilities">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.utilities.html">Utilities</a></li>
+      <li class="breadcrumb-item active">meanline_axial.utilities.graphics module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.utilities.graphics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.utilities.graphics">
+<span id="meanline-axial-utilities-graphics-module"></span><h1>meanline_axial.utilities.graphics module<a class="headerlink" href="#module-turboflow.utilities.graphics" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.create_gif">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">create_gif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#create_gif"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.create_gif" title="Link to this definition"></a></dt>
+<dd><p>Create a GIF from a series of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>image_folder</strong><span class="classifier">str</span></dt><dd><p>The path to the folder containing the images.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>The path and filename of the output GIF.</p>
+</dd>
+<dt><strong>duration</strong><span class="classifier">float, optional</span></dt><dd><p>Duration of each frame in the GIF, by default 0.5 seconds.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.create_mp4">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">create_mp4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#create_mp4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.create_mp4" title="Link to this definition"></a></dt>
+<dd><p>Create an MP4 video from a series of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>image_folder</strong><span class="classifier">str</span></dt><dd><p>The path to the folder containing the images.</p>
+</dd>
+<dt><strong>output_file</strong><span class="classifier">str</span></dt><dd><p>The path and filename of the output MP4 video.</p>
+</dd>
+<dt><strong>fps</strong><span class="classifier">int, optional</span></dt><dd><p>Frames per second in the output video, by default 10.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.print_installed_fonts">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">print_installed_fonts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#print_installed_fonts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.print_installed_fonts" title="Link to this definition"></a></dt>
+<dd><p>Print the list of fonts installed on the system.</p>
+<p>This function identifies and prints all available fonts for use in Matplotlib.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.print_rc_parameters">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">print_rc_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#print_rc_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.print_rc_parameters" title="Link to this definition"></a></dt>
+<dd><p>Print the current rcParams used by Matplotlib or write to file if provided.</p>
+<p>This function provides a quick overview of the active configuration parameters within Matplotlib.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.savefig_in_formats">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">savefig_in_formats</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_without_extension</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#savefig_in_formats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.savefig_in_formats" title="Link to this definition"></a></dt>
+<dd><p>Save a given Matplotlib figure in multiple file formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The figure object to be saved.</p>
+</dd>
+<dt><strong>path_without_extension</strong><span class="classifier">str</span></dt><dd><p>The full path to save the figure excluding the file extension.</p>
+</dd>
+<dt><strong>formats</strong><span class="classifier">list of str, optional</span></dt><dd><p>A list of string file extensions to specify which formats the figure should be saved in.
+Supported formats are [‘.png’, ‘.svg’, ‘.pdf’, ‘.eps’].
+Default is [‘.png’, ‘.svg’].</p>
+</dd>
+<dt><strong>dpi</strong><span class="classifier">int, optional</span></dt><dd><p>The resolution in dots per inch with which to save the image. This parameter affects only PNG files.
+Default is 500.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">save_fig_in_formats</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="s2">&quot;/path/to/figure/filename&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will save the figure as “filename.png”, “filename.svg”, and “filename.pdf” in the “/path/to/figure/” directory.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.graphics.set_plot_options">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.graphics.</span></span><span class="sig-name descname"><span class="pre">set_plot_options</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">major_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minor_ticks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'matlab'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/graphics.html#set_plot_options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.graphics.set_plot_options" title="Link to this definition"></a></dt>
+<dd><p>Set options for creating publication-quality figures using Matplotlib.</p>
+<p>This function updates the internal Matplotlib settings to better align with standards for publication-quality figures.
+Features include improved font selections, tick marks, grid appearance, and color selections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fontsize</strong><span class="classifier">int, optional</span></dt><dd><p>Font size for text elements in the plot. Default is 13.</p>
+</dd>
+<dt><strong>grid</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show grid lines on the plot. Default is True.</p>
+</dd>
+<dt><strong>major_ticks</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show major ticks. Default is True.</p>
+</dd>
+<dt><strong>minor_ticks</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to show minor ticks. Default is True.</p>
+</dd>
+<dt><strong>margin</strong><span class="classifier">float, optional</span></dt><dd><p>Margin size for axes. Default is 0.05.</p>
+</dd>
+<dt><strong>color_order</strong><span class="classifier">str, optional</span></dt><dd><p>Color order to be used for plot lines. Options include “python” and “matlab”. Default is “matlab”.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.utilities.file_utils.html" class="btn btn-neutral float-left" title="meanline_axial.utilities.file_utils module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.utilities.numerics.html" class="btn btn-neutral float-right" title="meanline_axial.utilities.numeric module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

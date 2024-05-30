@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.pysolver_view.optimization_wrappers &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.pysolver_view.optimization_wrappers</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.pysolver_view.optimization_wrappers</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">minimize</span>
+
+<span class="c1"># Attempt to import pygmo and pygmo_plugins_nonfree</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pygmo</span> <span class="k">as</span> <span class="nn">pg</span>
+    <span class="kn">import</span> <span class="nn">pygmo_plugins_nonfree</span> <span class="k">as</span> <span class="nn">ppnf</span>
+
+    <span class="n">PYGMO_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">PYGMO_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">SCIPY_SOLVERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;nelder-mead&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;powell&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;newton-cg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;l-bfgs-b&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tnc&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cobyla&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;slsqp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trust-constr&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;dogleg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trust-ncg&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trust-krylov&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trust-exact&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;List of valid Scipy solvers&quot;&quot;&quot;</span>
+
+
+<span class="n">PYGMO_SOLVERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;ipopt&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;snopt&quot;</span><span class="p">,</span>
+    <span class="c1"># &quot;worhp&quot;,</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;List of valid Pygmo solvers&quot;&quot;&quot;</span>
+
+
+<span class="n">NLOPT_SOLVERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;auglag&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;auglag_eq&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;bobyqa&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ccsaq&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cobyla&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lbfgs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;mma&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;neldermead&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;newuoa&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;newuoa_bound&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;praxis&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sbplx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;slsqp&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tnewton&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tnewton_precond&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tnewton_precond_restart&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tnewton_restart&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;var1&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;var2&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;List of valid NLOpt solvers (interfaced through Pygmo)&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="minimize_scipy">
+<a class="viewcode-back" href="../../../source/api/turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_scipy">[docs]</a>
+<span class="k">def</span> <span class="nf">minimize_scipy</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimize a given problem using the specified SciPy method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    problem : OptimizationProblem</span>
+<span class="sd">        An object representing the problem.</span>
+<span class="sd">    x0 : array_like</span>
+<span class="sd">        Initial guess for the decision variables.</span>
+<span class="sd">    method : str</span>
+<span class="sd">        The name of the Scipy solver to use. Must be one of the solvers defined in the SCIPY_SOLVERS list.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        Configuration options for the solver. Options vary depending on the solver used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple (success, message) where &#39;success&#39; is a boolean indicating if the optimization was successful, and &#39;message&#39; is a string describing the outcome.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an invalid solver is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check if method is valid</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SCIPY_SOLVERS</span><span class="p">:</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid solver: &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. </span><span class="se">\n</span><span class="s2">Available options:</span><span class="se">\n</span><span class="s2">   - &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   - &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SCIPY_SOLVERS</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+    <span class="c1"># Define the options dictionary</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;bfgs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
+        <span class="s2">&quot;l-bfgs-b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ftol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
+        <span class="s2">&quot;slsqp&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ftol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
+        <span class="s2">&quot;trust-constr&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;xtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
+    <span class="p">}</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">default_options</span><span class="p">[</span><span class="n">method</span><span class="p">]</span> <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">default_options</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="p">{}</span>
+    <span class="p">)</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>  <span class="c1"># Merge defaults with input</span>
+
+    <span class="c1"># Convert bounds from Pygmo to Scipy convention</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">convert_pygmo_to_scipy_bounds</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">get_bounds</span><span class="p">)</span>
+
+    <span class="c1"># Define list of constraint dictionaries</span>
+    <span class="n">constr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_nec</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">constr</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;eq&quot;</span><span class="p">,</span> <span class="s2">&quot;fun&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="s2">&quot;jac&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">c_eq_jac</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_nic</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># Convert inequality constraint convention from Pygmo (c&lt;0) to SciPy (c&gt;0)</span>
+        <span class="n">c_ineq</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">problem</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">c_ineq_jac</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">problem</span><span class="o">.</span><span class="n">c_ineq_jac</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">constr</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ineq&quot;</span><span class="p">,</span> <span class="s2">&quot;fun&quot;</span><span class="p">:</span> <span class="n">c_ineq</span><span class="p">,</span> <span class="s2">&quot;jac&quot;</span><span class="p">:</span> <span class="n">c_ineq_jac</span><span class="p">})</span>
+
+    <span class="c1"># Solve the optimization problem</span>
+    <span class="n">solution</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">f</span><span class="p">,</span>
+        <span class="n">x0</span><span class="p">,</span>
+        <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span>
+        <span class="n">jac</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">f_jac</span><span class="p">,</span>
+        <span class="n">constraints</span><span class="o">=</span><span class="n">constr</span><span class="p">,</span>
+        <span class="n">bounds</span><span class="o">=</span><span class="n">bounds</span><span class="p">(),</span>
+        <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">=</span><span class="n">combined_options</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">success</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">message</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span></div>
+
+
+
+<div class="viewcode-block" id="minimize_pygmo">
+<a class="viewcode-back" href="../../../source/api/turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_pygmo">[docs]</a>
+<span class="k">def</span> <span class="nf">minimize_pygmo</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimize a given problem using the specified Pygmo optimization method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    problem : OptimizationProblem</span>
+<span class="sd">        An object representing the problem.</span>
+<span class="sd">    x0 : array_like</span>
+<span class="sd">        Initial guess for the decision variables.</span>
+<span class="sd">    method : str</span>
+<span class="sd">        The name of the Pygmo solver to use. Must be one of the solvers defined in the PYGMO_SOLVERS list.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        Configuration options for the solver. Options vary depending on the solver used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple (success, message) where &#39;success&#39; is a boolean indicating if the optimization was successful, and &#39;message&#39; is a string describing the outcome.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an invalid solver name is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check if pygmo is available</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">PYGMO_AVAILABLE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;To use the selected optimizer (</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">), you need to install &#39;pygmo&#39; via Conda.</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;   1. Activate the Conda virtual environment where &#39;turboflow&#39; is installed. For example:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;           conda activate turboflow_env</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;   2. Install &#39;pygmo&#39; and &#39;pygmo_plugins_nonfree&#39; by running the following command:</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="s2">&quot;           conda install --channel conda-forge pygmo pygmo_plugins_nonfree</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;snopt&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_minimize_pygmo_snopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;ipopt&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_minimize_pygmo_ipopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="c1"># elif method == &quot;worhp&quot;:</span>
+    <span class="c1">#     return _minimize_pygmo_worhp(problem, x0, options)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid solver: &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. </span><span class="se">\n</span><span class="s2">Available options:</span><span class="se">\n</span><span class="s2">   - &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   - &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PYGMO_SOLVERS</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_minimize_pygmo_ipopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to IPOPT&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define mapping from exit flag to status</span>
+    <span class="n">exitflag_mapping</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;Solve Succeeded&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Solved To Acceptable Level&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Infeasible Problem Detected&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Search Direction Becomes Too Small&quot;</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Diverging Iterates&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;User Requested Stop&quot;</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;Feasible Point Found&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Maximum Iterations Exceeded&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Restoration Failed&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Error In Step Computation&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Maximum CpuTime Exceeded&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Maximum WallTime Exceeded&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">10</span><span class="p">:</span> <span class="s2">&quot;Not Enough Degrees Of Freedom&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">11</span><span class="p">:</span> <span class="s2">&quot;Invalid Problem Definition&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">12</span><span class="p">:</span> <span class="s2">&quot;Invalid Option&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">13</span><span class="p">:</span> <span class="s2">&quot;Invalid Number Detected&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">100</span><span class="p">:</span> <span class="s2">&quot;Unrecoverable Exception&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">101</span><span class="p">:</span> <span class="s2">&quot;NonIpopt Exception Thrown&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">102</span><span class="p">:</span> <span class="s2">&quot;Insufficient Memory&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">199</span><span class="p">:</span> <span class="s2">&quot;Internal Error&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tol</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.</span><span class="se">\n</span><span class="s2">Consider relaxing the termination tolerance above 1e-3. Current tolerance: </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;print_level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># No output to the screen</span>
+        <span class="s2">&quot;sb&quot;</span><span class="p">:</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span>  <span class="c1"># Suppress banner</span>
+        <span class="s2">&quot;hessian_approximation&quot;</span><span class="p">:</span> <span class="s2">&quot;limited-memory&quot;</span><span class="p">,</span>  <span class="c1"># exact, limited-memory</span>
+        <span class="s2">&quot;limited_memory_update_type&quot;</span><span class="p">:</span> <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>  <span class="c1"># bfgs, sr1</span>
+        <span class="s2">&quot;line_search_method&quot;</span><span class="p">:</span> <span class="s2">&quot;cg-penalty&quot;</span><span class="p">,</span>  <span class="c1"># filter, cg-penalty, penalty</span>
+        <span class="s2">&quot;limited_memory_max_history&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>  <span class="c1"># bfgs</span>
+        <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_iter</span><span class="p">),</span>
+        <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+
+    <span class="c1"># Solve the problem</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">ipopt</span><span class="p">())</span>
+    <span class="n">algorithm_handle</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">ipopt</span><span class="p">)</span>
+    <span class="n">_set_pygmo_options</span><span class="p">(</span><span class="n">algorithm_handle</span><span class="p">,</span> <span class="n">combined_options</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">population</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">exitflag</span> <span class="o">=</span> <span class="n">algorithm_handle</span><span class="o">.</span><span class="n">get_last_opt_result</span><span class="p">()</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">exitflag_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exitflag</span><span class="p">,</span> <span class="s2">&quot;Unknown Status&quot;</span><span class="p">)</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">exitflag</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
+
+<span class="k">def</span> <span class="nf">_minimize_pygmo_snopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to SNOPT&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Major feasibility tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;Major optimality tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;Minor feasibility tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;Iterations limit&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_iter</span><span class="p">),</span>
+        <span class="s2">&quot;Major iterations limit&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span>
+        <span class="s2">&quot;Minor iterations limit&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span>
+        <span class="s2">&quot;Hessian updates&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+
+    <span class="c1"># Define SNOPT path</span>
+    <span class="n">lib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SNOPT_LIB&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lib</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;SNOPT library path not set in environment variables.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Solve the problem</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">ppnf</span><span class="o">.</span><span class="n">snopt7</span><span class="p">(</span><span class="n">library</span><span class="o">=</span><span class="n">lib</span><span class="p">,</span> <span class="n">minor_version</span><span class="o">=</span><span class="mi">7</span><span class="p">))</span>
+    <span class="n">algorithm_handle</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">ppnf</span><span class="o">.</span><span class="n">snopt7</span><span class="p">)</span>
+    <span class="n">_set_pygmo_options</span><span class="p">(</span><span class="n">algorithm_handle</span><span class="p">,</span> <span class="n">combined_options</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">population</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+
+    <span class="n">message</span> <span class="o">=</span> <span class="n">_extract_snopt_message</span><span class="p">(</span><span class="n">algorithm</span><span class="o">.</span><span class="n">get_extra_info</span><span class="p">())</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">message</span> <span class="o">==</span> <span class="s2">&quot;Finished successfully - optimality conditions satisfied&quot;</span>
+        <span class="k">else</span> <span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
+
+<span class="k">def</span> <span class="nf">_minimize_pygmo_worhp</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to WORHP&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Algorithm&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Set: 1 (SQP) or 2 (IP)</span>
+        <span class="s2">&quot;BFGSmethod&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Set 0 to use the classic dense BFGS method</span>
+        <span class="s2">&quot;TolOpti&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;TolFeas&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;MaxIter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+
+    <span class="c1"># Define WORHP path</span>
+    <span class="n">lib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;WORHP_LIB&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">lib</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WORHP library path not set in environment variables.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Solve the problem</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">ppnf</span><span class="o">.</span><span class="n">worhp</span><span class="p">(</span><span class="n">screen_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">library</span><span class="o">=</span><span class="n">lib</span><span class="p">))</span>
+    <span class="n">algorithm_handle</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">ppnf</span><span class="o">.</span><span class="n">worhp</span><span class="p">)</span>
+    <span class="n">_set_pygmo_options</span><span class="p">(</span><span class="n">algorithm_handle</span><span class="p">,</span> <span class="n">combined_options</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">population</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
+
+<div class="viewcode-block" id="minimize_nlopt">
+<a class="viewcode-back" href="../../../source/api/turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_nlopt">[docs]</a>
+<span class="k">def</span> <span class="nf">minimize_nlopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Optimize a given problem using the specified NLOpt optimization method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    problem : OptimizationProblem</span>
+<span class="sd">        An object representing the problem.</span>
+<span class="sd">    x0 : array_like</span>
+<span class="sd">        Initial guess for the decision variables.</span>
+<span class="sd">    method : str</span>
+<span class="sd">        The name of the Pygmo solver to use. Must be one of the solvers defined in the NLOPT_SOLVERS list.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        Configuration options for the solver. Options vary depending on the solver used.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A tuple (success, message) where &#39;success&#39; is a boolean indicating if the optimization was successful, and &#39;message&#39; is a string describing the outcome.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If an invalid solver name is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Check if method is valid</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NLOPT_SOLVERS</span><span class="p">:</span>
+        <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid solver: &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. </span><span class="se">\n</span><span class="s2">Available options:</span><span class="se">\n</span><span class="s2">   - &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   - &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">NLOPT_SOLVERS</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+    <span class="c1"># Define exit flag mapping</span>
+    <span class="n">exitflag_mapping</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Generic success return value.&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Optimization stopped because stop value was reached.&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Optimization stopped because relative or absolute tolerance on function value was reached.&quot;</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Optimization stopped because relative or absolute tolerance on x was reached.&quot;</span><span class="p">,</span>
+        <span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Optimization stopped because maximum evaluations limit was reached.&quot;</span><span class="p">,</span>
+        <span class="mi">6</span><span class="p">:</span> <span class="s2">&quot;Optimization stopped because maximum time limit was reached.&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;Generic failure code.&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;Invalid arguments (e.g., lower bounds are bigger than upper bounds, unknown algorithm specified, etc.).&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;Ran out of memory.&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;Halted due to roundoff errors limiting progress. Optimization might still return a useful result.&quot;</span><span class="p">,</span>
+        <span class="o">-</span><span class="mi">5</span><span class="p">:</span> <span class="s2">&quot;Optimization was forcibly stopped.&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">nlopt</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">method</span><span class="p">))</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">nlopt</span><span class="p">)</span>
+    <span class="n">handle</span><span class="o">.</span><span class="n">maxeval</span> <span class="o">=</span> <span class="n">max_iter</span>
+    <span class="n">handle</span><span class="o">.</span><span class="n">ftol_rel</span> <span class="o">=</span> <span class="n">tol</span>
+    <span class="n">handle</span><span class="o">.</span><span class="n">xtol_rel</span> <span class="o">=</span> <span class="n">tol</span>
+
+    <span class="c1"># Solve the problem</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">population</span><span class="o">.</span><span class="n">set_x</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x0</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">exitflag</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">get_last_opt_result</span><span class="p">()</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="n">exitflag_mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">exitflag</span><span class="p">,</span> <span class="s2">&quot;Unknown Status&quot;</span><span class="p">)</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">exitflag</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span></div>
+
+
+
+<div class="viewcode-block" id="convert_pygmo_to_scipy_bounds">
+<a class="viewcode-back" href="../../../source/api/turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.convert_pygmo_to_scipy_bounds">[docs]</a>
+<span class="k">def</span> <span class="nf">convert_pygmo_to_scipy_bounds</span><span class="p">(</span><span class="n">pygmo_bounds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a function that converts bounds from Pygmo format to SciPy format.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pygmo_method : callable</span>
+<span class="sd">        A method that, when called, returns a tuple containing two lists: the first list of lower bounds and the second of upper bounds (Pygmo convention).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    callable</span>
+<span class="sd">        A function that, when called, returns a list of tuples where each tuple contains the lower and upper bound for each decision variable (Scipy convention).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">converter</span><span class="p">():</span>
+        <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span> <span class="o">=</span> <span class="n">pygmo_bounds</span><span class="p">()</span>
+        <span class="n">scipy_bounds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">scipy_bounds</span>
+
+    <span class="k">return</span> <span class="n">converter</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_extract_snopt_message</span><span class="p">(</span><span class="n">info_str</span><span class="p">):</span>
+    <span class="c1"># Search for the start of the relevant message</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">info_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Last optimisation return code: &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Optimization return code not found.&quot;</span>
+
+    <span class="c1"># Adjust the start position to the actual start of the message</span>
+    <span class="n">start</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s2">&quot;Last optimisation return code: &quot;</span><span class="p">)</span>
+
+    <span class="c1"># Find the end of the line</span>
+    <span class="n">end</span> <span class="o">=</span> <span class="n">info_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">info_str</span><span class="p">)</span>
+
+    <span class="c1"># Extract and return the message</span>
+    <span class="k">return</span> <span class="n">info_str</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_set_pygmo_options</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets multiple options on a PyGMO solver handle based on the types of values provided in a dictionary.</span>
+
+<span class="sd">    This function supports various PyGMO solvers including IPOPT, WORHP, and SNOPT. It dynamically calls</span>
+<span class="sd">    the appropriate method to set each option (string, integer, or numeric) based on the type of each value</span>
+<span class="sd">    in the `options` dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    handle : object</span>
+<span class="sd">        The PyGMO solver handle. This object should have methods for setting options,</span>
+<span class="sd">        such as `set_string_option`, `set_integer_option`, and `set_numeric_option`.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        A dictionary where each key is the option name and each value is the option value.</span>
+<span class="sd">        The function determines the method to use based on the type of the value:</span>
+<span class="sd">        `str` for `set_string_option`, `int` for `set_integer_option`, and `float` for `set_numeric_option`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the value type is not supported (not an int, float, or str).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; algorithm = pg.algorithm(pg.ipopt())</span>
+<span class="sd">    &gt;&gt;&gt; handle = algorithm.extract(pg.ipopt)</span>
+<span class="sd">    &gt;&gt;&gt; options = {</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;sb&quot;: &quot;yes&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;print_level&quot;: 0,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;tol&quot;: 1e-6,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;max_iter&quot;: 1000</span>
+<span class="sd">    &gt;&gt;&gt; }</span>
+<span class="sd">    &gt;&gt;&gt; set_pygmo_options(handle, options)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">option_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">set_string_option</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">set_integer_option</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">set_numeric_option</span><span class="p">(</span><span class="n">option_name</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Unsupported option type: </span><span class="si">{}</span><span class="s2"> for option </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">option_name</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choking models &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Deviation models" href="deviation_models.html" />
+    <link rel="prev" title="Benner-Sjolander-Moustapha (2006)" href="loss_models/benner_sjolander_moustapha_2006.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model description</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loss_coefficients.html">Loss coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Choking models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#isentropic-throat-model">Isentropic throat model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculate-critical-state-model">Calculate critical state model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#evaluate-cascade-throat-model">Evaluate cascade throat model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance_analysis.html">Performance analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../model_description.html">Model description</a></li>
+      <li class="breadcrumb-item active">Choking models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/model_description/choking_models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="choking-models">
+<span id="id1"></span><h1>Choking models<a class="headerlink" href="#choking-models" title="Link to this heading"></a></h1>
+<p>The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following.</p>
+<section id="isentropic-throat-model">
+<h2>Isentropic throat model<a class="headerlink" href="#isentropic-throat-model" title="Link to this heading"></a></h2>
+<p>This model predict choked flow by evaluating the throat of the cascade, and set the mach number to be equal to the exit plane at subsonic conditions, and equal to one at supersonic conditions:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\mathrm{Ma_{throat}} = \begin{cases}
+                        \mathrm{Ma_{exit}} &amp; \text{if } \mathrm{Ma_{exit}}&lt;1 \\
+                        1  &amp; \text{if } \mathrm{Ma_{exit}} \geq 1
+                        \end{cases}\end{split}\]</div>
+<p>When the flow through a cascade is isentropic, the flow chokes when the mach reaches unity at the throat:</p>
+<div class="math notranslate nohighlight">
+\[\left(1-\text{Ma}^2\right)\frac{dv}{v} = -\frac{dA}{A} + \frac{1}{2}(1+G) \,\text{Ma}^2   \left[C_f \left(\frac{P_\text{w}}{A} \right) \,\text{d}x \right]\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathrm{Ma}\)</span> is the mach number.</p></li>
+<li><p><span class="math notranslate nohighlight">\(v\)</span> is the velocity.</p></li>
+<li><p><span class="math notranslate nohighlight">\(A\)</span> is the flow area.</p></li>
+<li><p><span class="math notranslate nohighlight">\(G\)</span> is the Grüneiser parameter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_\mathrm{w}\)</span> is the wetted peremiter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(C_f\)</span> is the skin friction.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x\)</span> is the cascade flow length.</p></li>
+</ul>
+</div></blockquote>
+<p>When the term to the right is zero (isentropic), the mach number is unity for an accelerating flow at the most narrow section (<span class="math notranslate nohighlight">\(dA = 0\)</span>). In order for this model to be consitent, the throat entropy must be set equal to
+the entropy at the inlet of the plane. However, when assuming an isentropic throat, the critical mass flow rate will be overestimated.</p>
+</section>
+<section id="calculate-critical-state-model">
+<h2>Calculate critical state model<a class="headerlink" href="#calculate-critical-state-model" title="Link to this heading"></a></h2>
+<p>This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat.
+When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\beta_\text{out} =
+\begin{cases}
+    \beta_\text{deviation model} &amp; \text{if } \text{Ma}_\text{out}&lt;\text{Ma}^* \\
+    \arccos{\left(\frac{\dot{m}^*}{\rho_\text{out} \, w_\text{out} \, A_\text{out}}\right)} &amp; \text{if } \text{Ma}_\text{out} \ge \text{Ma}^*.
+\end{cases}\end{split}\]</div>
+<p>where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\beta\)</span> is the relative flow angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{Ma}\)</span> is the relative mach number.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\dot{m}\)</span> is the mass flow rate.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\rho\)</span> is the fluid density.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w\)</span> is the relative velocity.</p></li>
+<li><p><span class="math notranslate nohighlight">\(A\)</span> is the flow area.</p></li>
+<li><p>Subscript <span class="math notranslate nohighlight">\(\mathrm{out}\)</span> refer to the exit plane.</p></li>
+<li><p>Superscript <span class="math notranslate nohighlight">\(^*\)</span> refer to the critical state.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="evaluate-cascade-throat-model">
+<h2>Evaluate cascade throat model<a class="headerlink" href="#evaluate-cascade-throat-model" title="Link to this heading"></a></h2>
+<p>This model predict choked flow by evaluating the throat of the cascade, and set the flow angle at the exit plane according to the deviation model at subsonic conditions, while at supersonic conditions the
+the throat mach number equals the critical mach number:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+    &amp; \beta_\text{out} = \beta_\text{deviation model} \text{    } &amp;&amp; \text{if } \text{Ma}_\text{out}&lt;\text{Ma}^* \\
+    &amp; \mathrm{Ma_{throat}} = \text{Ma}^* &amp;&amp; \text{if } \text{Ma}_\text{out} \ge \text{Ma}^*
+\end{align}\end{split}\]</div>
+<p>The critical mach number is calculated from a correlation for the critical mach number as a function of the loss coefficient. The correlation is developed using an algebraic nozzle model to calulate the critical mach
+number for different values of the loss coefficient, and use linear regression.</p>
+<div class="math notranslate nohighlight">
+\[\]</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="loss_models/benner_sjolander_moustapha_2006.html" class="btn btn-neutral float-left" title="Benner-Sjolander-Moustapha (2006)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="deviation_models.html" class="btn btn-neutral float-right" title="Deviation models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.axial_turbine.geometry_model &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.axial_turbine.geometry_model</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.axial_turbine.geometry_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">math</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="validate_turbine_geometry">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.validate_turbine_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">validate_turbine_geometry</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs validation of an axial turbine&#39;s geometry configuration.</span>
+
+<span class="sd">    - Ensures all required geometry parameters are specified in &#39;geom&#39;.</span>
+<span class="sd">    - Verifies that no parameters beyond the required set are included.</span>
+<span class="sd">    - Checks &#39;number_of_cascades&#39; is an integer and correctly dictates sizes of other parameters.</span>
+<span class="sd">    - Validates that all parameter arrays match the size of &#39;number_of_cascades&#39;.</span>
+<span class="sd">    - Asserts that all geometry parameter values are numeric (integers or floats).</span>
+<span class="sd">    - Ensures non-angle parameters contain only non-negative values.</span>
+<span class="sd">    - Angle parameters (&#39;leading_edge_angle&#39;, &#39;stagger_angle&#39;) can be negative.</span>
+
+<span class="sd">    This function is intended as a preliminary check before in-depth geometry analysis.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geom : dict</span>
+<span class="sd">        The geometry configuration parameters for the turbine as a dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if all validations pass, indicating a correctly structured geometry configuration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define the list of keys that must be defined in the configuration file</span>
+    <span class="n">required_keys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;cascade_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_in&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_out&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_in&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_out&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;pitch&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;chord&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;stagger_angle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;opening&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trailing_edge_thickness&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;tip_clearance&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;maximum_thickness&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Angular variables need not be non-negative</span>
+    <span class="n">angle_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;stagger_angle&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Check that there are no missing or extra variables</span>
+    <span class="n">utils</span><span class="o">.</span><span class="n">validate_keys</span><span class="p">(</span><span class="n">geom</span><span class="p">,</span> <span class="n">required_keys</span><span class="p">,</span> <span class="n">required_keys</span><span class="p">)</span>
+
+    <span class="c1"># Get the number of cascades</span>
+    <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Check if cascade_type is correctly defined</span>
+    <span class="n">valid_types</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">])</span>
+    <span class="n">invalid_types</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">][</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">],</span> <span class="n">valid_types</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">invalid_types</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">invalid_types_str</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">invalid_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid types in &#39;cascade_type&#39;: </span><span class="si">{</span><span class="n">invalid_types_str</span><span class="si">}</span><span class="s2">. Only &#39;stator&#39; and &#39;rotor&#39; are allowed.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check array size and values</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">geom</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Skip the cascade_type in the loop</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry_type&quot;</span><span class="p">]:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check that all variables are numpy arrays</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; must be a NumPy array.&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">number_of_cascades</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Size of &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; must be equal to number of cascades. Current value: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Check that values of parameters are numeric</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">all_numeric</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; must be an array of numeric types. Current value: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check that non-angle variables are not negative</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">angle_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">all_non_negative</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Parameter &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; must be an array of non-negative numbers. Current value: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The structure of the turbine geometry parameters is valid&quot;</span>
+    <span class="k">if</span> <span class="n">display</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">msg</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_throat_radius">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.calculate_throat_radius">[docs]</a>
+<span class="k">def</span> <span class="nf">calculate_throat_radius</span><span class="p">(</span><span class="n">radius_in</span><span class="p">,</span> <span class="n">radius_out</span><span class="p">,</span> <span class="n">throat_location_fraction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the throat radius as a weighted average of the inlet and outlet radii.</span>
+
+<span class="sd">    This approach to estimate the area at the throat is inspired by the method</span>
+<span class="sd">    described in Eq. (3) of :cite:`ainley_method_1951`. The throat radius is computed</span>
+<span class="sd">    as a linear combination of the inlet and outlet radii, weighted by the location of</span>
+<span class="sd">    the throat expressed as a fraction of the axial length of the cascade.</span>
+<span class="sd">    For instance, a `throat_location_fraction` of 5/6 would return the throat radius as:</span>
+<span class="sd">    (1/6)*radius_in + (5/6)*radius out.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    radius_in : np.array</span>
+<span class="sd">        The radius values at the inlet sections.</span>
+<span class="sd">    radius_out : np.array</span>
+<span class="sd">        The radius values at the outlet sections.</span>
+<span class="sd">    throat_location_fraction : float</span>
+<span class="sd">        The fraction used to weight the inlet and outlet radii in the calculation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.array</span>
+<span class="sd">        The calculated throat radius values, representing the weighted average of the</span>
+<span class="sd">        inlet and outlet radii based on the specified throat location.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="mi">1</span> <span class="o">-</span> <span class="n">throat_location_fraction</span>
+    <span class="p">)</span> <span class="o">*</span> <span class="n">radius_in</span> <span class="o">+</span> <span class="n">throat_location_fraction</span> <span class="o">*</span> <span class="n">radius_out</span></div>
+
+
+
+<div class="viewcode-block" id="prepare_geometry">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.prepare_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">prepare_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">radius_type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Convert the geometrical design variables to parameters suitable for turbine evaluation.</span>
+
+<span class="sd">    For design optimization, the geometrical design variables are defined as ratios, e.g. hub-to-tip radius and aspect ratio.</span>
+<span class="sd">    This function convert the set of geometrical design variables to a set which is suited for turbine evaluation.</span>
+<span class="sd">    The function utilize `radius_type` to decide if the given radius is constant for hub, mean or tip throughout the turbine.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        A dictionary with all necessary geometrical parameters.</span>
+<span class="sd">    radius_type : str</span>
+<span class="sd">        A string deciding if hub, mean or tip radius is constant throughout the turbine.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Set of geometry suited for turbine evaluation.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create a copy of the input dictionary to avoid mutating the original</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Get number of cascades</span>
+    <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Get number of stages</span>
+    <span class="k">if</span> <span class="n">number_of_cascades</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">is_even</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">):</span>
+            <span class="n">number_of_stages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_cascades</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">number_of_stages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">number_of_cascades</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">number_of_stages</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Extract initial</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span>
+    <span class="n">hub_to_tip_in</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">]</span>
+    <span class="n">hub_to_tip_out</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;hub_tip_ratio_out&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Compute radius at hub and tip</span>
+    <span class="k">if</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_mean&quot;</span><span class="p">:</span>
+        <span class="n">radius_mean</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius_mean</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_in</span><span class="p">)</span>
+        <span class="n">radius_tip_out</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius_mean</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_out</span><span class="p">)</span>
+        <span class="n">radius_hub_in</span> <span class="o">=</span> <span class="n">hub_to_tip_in</span> <span class="o">*</span> <span class="n">radius_tip_in</span>
+        <span class="n">radius_hub_out</span> <span class="o">=</span> <span class="n">hub_to_tip_out</span> <span class="o">*</span> <span class="n">radius_tip_out</span>
+        <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_in</span><span class="p">,</span> <span class="n">radius_mean</span><span class="p">)</span>
+        <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_out</span><span class="p">,</span> <span class="n">radius_mean</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_hub&quot;</span><span class="p">:</span>
+        <span class="n">radius_hub</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="n">radius_hub</span> <span class="o">/</span> <span class="n">hub_to_tip_in</span>
+        <span class="n">radius_tip_out</span> <span class="o">=</span> <span class="n">radius_hub</span> <span class="o">/</span> <span class="n">hub_to_tip_out</span>
+        <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_in</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="n">radius_tip_out</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_out</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">radius_hub_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_in</span><span class="p">,</span> <span class="n">radius_hub</span><span class="p">)</span>
+        <span class="n">radius_hub_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_out</span><span class="p">,</span> <span class="n">radius_hub</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_tip&quot;</span><span class="p">:</span>
+        <span class="n">radius_tip</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="n">radius_hub_in</span> <span class="o">=</span> <span class="n">hub_to_tip_in</span> <span class="o">*</span> <span class="n">radius_tip</span>
+        <span class="n">radius_hub_out</span> <span class="o">=</span> <span class="n">hub_to_tip_out</span> <span class="o">*</span> <span class="n">radius_tip</span>
+        <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_in</span><span class="p">,</span> <span class="n">radius_tip</span><span class="p">)</span>
+        <span class="n">radius_tip_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">hub_to_tip_out</span><span class="p">,</span> <span class="n">radius_tip</span><span class="p">)</span>
+        <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_in</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="n">radius_tip_out</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">hub_to_tip_out</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Compute throat radius</span>
+    <span class="n">radius_mean_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_mean_in</span><span class="p">,</span> <span class="n">radius_mean_out</span><span class="p">,</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">radius_hub_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_hub_in</span><span class="p">,</span> <span class="n">radius_hub_out</span><span class="p">,</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">radius_tip_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_tip_in</span><span class="p">,</span> <span class="n">radius_tip_out</span><span class="p">,</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute blade heights</span>
+    <span class="n">height_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">-</span> <span class="n">radius_hub_in</span>
+    <span class="n">height_throat</span> <span class="o">=</span> <span class="n">radius_tip_throat</span> <span class="o">-</span> <span class="n">radius_hub_throat</span>
+    <span class="n">height_out</span> <span class="o">=</span> <span class="n">radius_tip_out</span> <span class="o">-</span> <span class="n">radius_hub_out</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="p">(</span><span class="n">height_in</span> <span class="o">+</span> <span class="n">height_out</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Compute chord</span>
+    <span class="n">chord</span> <span class="o">=</span> <span class="n">height</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;aspect_ratio&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Compute pitch</span>
+    <span class="n">pitch</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;pitch_chord_ratio&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">chord</span>
+
+    <span class="c1"># Compute maximum thickness</span>
+    <span class="n">gauging_angle</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>
+    <span class="n">blade_camber</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">gauging_angle</span><span class="p">)</span>
+    <span class="n">maximum_thickness</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span>
+                <span class="mf">0.15</span> <span class="o">*</span> <span class="p">(</span><span class="n">blade_camber</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">40</span><span class="p">)</span>
+                <span class="o">+</span> <span class="p">(</span><span class="mf">0.15</span> <span class="o">+</span> <span class="mf">1.25e-3</span> <span class="o">*</span> <span class="p">(</span><span class="n">blade_camber</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="mi">40</span><span class="p">))</span>
+                <span class="o">*</span> <span class="p">(</span><span class="mi">40</span> <span class="o">&lt;</span> <span class="n">blade_camber</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">120</span><span class="p">)</span>
+                <span class="o">+</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">blade_camber</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="o">*</span> <span class="n">chord</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blade_camber</span><span class="p">))</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="c1"># Compute areas</span>
+    <span class="n">A_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_tip_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">radius_hub_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_tip_out</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">radius_hub_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">A_throat</span> <span class="o">=</span> <span class="n">A_out</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">gauging_angle</span><span class="p">)</span>
+
+    <span class="c1"># Compute opening</span>
+    <span class="n">opening</span> <span class="o">=</span> <span class="n">A_throat</span> <span class="o">*</span> <span class="n">pitch</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">radius_mean_throat</span> <span class="o">*</span> <span class="n">height_throat</span><span class="p">)</span>
+
+    <span class="c1"># Compute trailing edge thickness</span>
+    <span class="n">trailing_edge_thickness</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;trailing_edge_thickness_opening_ratio&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">opening</span>
+
+    <span class="c1"># Compute stagger angle</span>
+    <span class="n">stagger_angle</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">gauging_angle</span><span class="p">)</span>
+
+    <span class="c1"># Define new geometry dictionary</span>
+    <span class="n">new_geometry</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;radius_hub_in&quot;</span><span class="p">:</span> <span class="n">radius_hub_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_in&quot;</span><span class="p">:</span> <span class="n">radius_tip_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_out&quot;</span><span class="p">:</span> <span class="n">radius_hub_out</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_out&quot;</span><span class="p">:</span> <span class="n">radius_tip_out</span><span class="p">,</span>
+        <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
+        <span class="s2">&quot;chord&quot;</span><span class="p">:</span> <span class="n">chord</span><span class="p">,</span>
+        <span class="s2">&quot;opening&quot;</span><span class="p">:</span> <span class="n">opening</span><span class="p">,</span>
+        <span class="s2">&quot;maximum_thickness&quot;</span><span class="p">:</span> <span class="n">maximum_thickness</span><span class="p">,</span>
+        <span class="s2">&quot;cascade_type&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;gauging_angle&quot;</span><span class="p">:</span> <span class="n">gauging_angle</span><span class="p">,</span>
+        <span class="s2">&quot;stagger_angle&quot;</span><span class="p">:</span> <span class="n">stagger_angle</span><span class="p">,</span>
+        <span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;trailing_edge_thickness&quot;</span><span class="p">:</span> <span class="n">trailing_edge_thickness</span><span class="p">,</span>
+        <span class="s2">&quot;tip_clearance&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">:</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">new_geometry</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_full_geometry">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.calculate_full_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">calculate_full_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the complete geometry of an axial turbine based on input geometric parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        A dictionary containing the input geometry parameters</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary with both the original and newly computed geometry parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Create a copy of the input dictionary to avoid mutating the original</span>
+    <span class="n">geom</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Get number of cascades</span>
+    <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Get number of stages</span>
+    <span class="k">if</span> <span class="n">number_of_cascades</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">is_even</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">):</span>
+            <span class="n">number_of_stages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">number_of_cascades</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">number_of_stages</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">number_of_cascades</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">number_of_stages</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Get the location of the throat as a fraction of meridional length</span>
+    <span class="n">throat_frac</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Extract initial radii and compute throat values</span>
+    <span class="n">radius_hub_in</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
+    <span class="n">radius_hub_out</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;radius_hub_out&quot;</span><span class="p">]</span>
+    <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
+    <span class="n">radius_tip_out</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;radius_tip_out&quot;</span><span class="p">]</span>
+    <span class="n">radius_hub_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_hub_in</span><span class="p">,</span> <span class="n">radius_hub_out</span><span class="p">,</span> <span class="n">throat_frac</span>
+    <span class="p">)</span>
+    <span class="n">radius_tip_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_tip_in</span><span class="p">,</span> <span class="n">radius_tip_out</span><span class="p">,</span> <span class="n">throat_frac</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Calculate shroud radius by adding clearance to tip radius</span>
+    <span class="n">radius_shroud_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">+</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+    <span class="n">radius_shroud_out</span> <span class="o">=</span> <span class="n">radius_tip_out</span> <span class="o">+</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+    <span class="n">radius_shroud_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_shroud_in</span><span class="p">,</span> <span class="n">radius_shroud_out</span><span class="p">,</span> <span class="n">throat_frac</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Calculate the inner and outer radii for the mean section</span>
+    <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="p">(</span><span class="n">radius_tip_in</span> <span class="o">+</span> <span class="n">radius_hub_in</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">radius_tip_out</span> <span class="o">+</span> <span class="n">radius_hub_out</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">radius_mean_throat</span> <span class="o">=</span> <span class="n">calculate_throat_radius</span><span class="p">(</span>
+        <span class="n">radius_mean_in</span><span class="p">,</span> <span class="n">radius_mean_out</span><span class="p">,</span> <span class="n">throat_frac</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute hub to tip radius ratio</span>
+    <span class="n">hub_tip_ratio_in</span> <span class="o">=</span> <span class="n">radius_hub_in</span> <span class="o">/</span> <span class="n">radius_tip_in</span>
+    <span class="n">hub_tip_ratio_out</span> <span class="o">=</span> <span class="n">radius_hub_out</span> <span class="o">/</span> <span class="n">radius_tip_out</span>
+    <span class="n">hub_tip_ratio_throat</span> <span class="o">=</span> <span class="n">radius_hub_throat</span> <span class="o">/</span> <span class="n">radius_tip_throat</span>
+
+    <span class="c1"># Compute blade height at different sections</span>
+    <span class="n">height_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">-</span> <span class="n">radius_hub_in</span>
+    <span class="n">height_out</span> <span class="o">=</span> <span class="n">radius_tip_out</span> <span class="o">-</span> <span class="n">radius_hub_out</span>
+    <span class="n">height_throat</span> <span class="o">=</span> <span class="n">radius_tip_throat</span> <span class="o">-</span> <span class="n">radius_hub_throat</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="p">(</span><span class="n">height_in</span> <span class="o">+</span> <span class="n">height_out</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Compute areas for the full, in, out, and throat sections</span>
+    <span class="n">A_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_tip_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">radius_hub_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_tip_out</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">radius_hub_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">A_throat</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">radius_mean_throat</span> <span class="o">*</span> <span class="n">height_throat</span> <span class="o">*</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;opening&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Gauging angle</span>
+    <span class="n">gauging_angle</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)]</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute axial chord</span>
+    <span class="n">axial_chord</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">geom</span><span class="p">[</span><span class="s2">&quot;stagger_angle&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Compute flaring angle</span>
+    <span class="n">flaring_angle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">((</span><span class="n">height_out</span> <span class="o">-</span> <span class="n">height_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">axial_chord</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Compute geometric ratios</span>
+    <span class="n">aspect_ratio</span> <span class="o">=</span> <span class="n">height</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">pitch_chord_ratio</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">solidity</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">pitch_chord_ratio</span>
+    <span class="n">maximum_thickness_chord_ratio</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;maximum_thickness&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+    <span class="n">trailing_edge_thickness_opening_ratio</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;trailing_edge_thickness&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;opening&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tip_clearance_height</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">height</span>
+    <span class="n">leading_edge_diameter_chord_ratio</span> <span class="o">=</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geom</span><span class="p">[</span><span class="s2">&quot;chord&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Create a dictionary with the newly computed parameters</span>
+    <span class="n">new_parameters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;number_of_stages&quot;</span><span class="p">:</span> <span class="n">number_of_stages</span><span class="p">,</span>
+        <span class="s2">&quot;number_of_cascades&quot;</span><span class="p">:</span> <span class="n">number_of_cascades</span><span class="p">,</span>
+        <span class="s2">&quot;axial_chord&quot;</span><span class="p">:</span> <span class="n">axial_chord</span><span class="p">,</span>
+        <span class="s2">&quot;radius_mean_in&quot;</span><span class="p">:</span> <span class="n">radius_mean_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_mean_out&quot;</span><span class="p">:</span> <span class="n">radius_mean_out</span><span class="p">,</span>
+        <span class="s2">&quot;radius_mean_throat&quot;</span><span class="p">:</span> <span class="n">radius_mean_throat</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_in&quot;</span><span class="p">:</span> <span class="n">radius_hub_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_out&quot;</span><span class="p">:</span> <span class="n">radius_hub_out</span><span class="p">,</span>
+        <span class="s2">&quot;radius_hub_throat&quot;</span><span class="p">:</span> <span class="n">radius_hub_throat</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_in&quot;</span><span class="p">:</span> <span class="n">radius_tip_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_out&quot;</span><span class="p">:</span> <span class="n">radius_tip_out</span><span class="p">,</span>
+        <span class="s2">&quot;radius_tip_throat&quot;</span><span class="p">:</span> <span class="n">radius_tip_throat</span><span class="p">,</span>
+        <span class="s2">&quot;radius_shroud_in&quot;</span><span class="p">:</span> <span class="n">radius_shroud_in</span><span class="p">,</span>
+        <span class="s2">&quot;radius_shroud_out&quot;</span><span class="p">:</span> <span class="n">radius_shroud_out</span><span class="p">,</span>
+        <span class="s2">&quot;radius_shroud_throat&quot;</span><span class="p">:</span> <span class="n">radius_shroud_throat</span><span class="p">,</span>
+        <span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">:</span> <span class="n">hub_tip_ratio_in</span><span class="p">,</span>
+        <span class="s2">&quot;hub_tip_ratio_out&quot;</span><span class="p">:</span> <span class="n">hub_tip_ratio_out</span><span class="p">,</span>
+        <span class="s2">&quot;hub_tip_ratio_throat&quot;</span><span class="p">:</span> <span class="n">hub_tip_ratio_throat</span><span class="p">,</span>
+        <span class="s2">&quot;A_in&quot;</span><span class="p">:</span> <span class="n">A_in</span><span class="p">,</span>
+        <span class="s2">&quot;A_out&quot;</span><span class="p">:</span> <span class="n">A_out</span><span class="p">,</span>
+        <span class="s2">&quot;A_throat&quot;</span><span class="p">:</span> <span class="n">A_throat</span><span class="p">,</span>
+        <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="n">height</span><span class="p">,</span>
+        <span class="s2">&quot;height_in&quot;</span><span class="p">:</span> <span class="n">height_in</span><span class="p">,</span>
+        <span class="s2">&quot;height_throat&quot;</span><span class="p">:</span> <span class="n">height_throat</span><span class="p">,</span>
+        <span class="s2">&quot;height_out&quot;</span><span class="p">:</span> <span class="n">height_out</span><span class="p">,</span>
+        <span class="s2">&quot;flaring_angle&quot;</span><span class="p">:</span> <span class="n">flaring_angle</span><span class="p">,</span>
+        <span class="s2">&quot;aspect_ratio&quot;</span><span class="p">:</span> <span class="n">aspect_ratio</span><span class="p">,</span>
+        <span class="s2">&quot;pitch_chord_ratio&quot;</span><span class="p">:</span> <span class="n">pitch_chord_ratio</span><span class="p">,</span>
+        <span class="s2">&quot;solidity&quot;</span><span class="p">:</span> <span class="n">solidity</span><span class="p">,</span>
+        <span class="s2">&quot;maximum_thickness_chord_ratio&quot;</span><span class="p">:</span> <span class="n">maximum_thickness_chord_ratio</span><span class="p">,</span>
+        <span class="s2">&quot;trailing_edge_thickness_opening_ratio&quot;</span><span class="p">:</span> <span class="n">trailing_edge_thickness_opening_ratio</span><span class="p">,</span>
+        <span class="s2">&quot;tip_clearance_height_ratio&quot;</span><span class="p">:</span> <span class="n">tip_clearance_height</span><span class="p">,</span>
+        <span class="s2">&quot;leading_edge_diameter_chord_ratio&quot;</span><span class="p">:</span> <span class="n">leading_edge_diameter_chord_ratio</span><span class="p">,</span>
+        <span class="s2">&quot;gauging_angle&quot;</span><span class="p">:</span> <span class="n">gauging_angle</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">geometry</span><span class="p">,</span> <span class="o">**</span><span class="n">new_parameters</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="check_turbine_geometry">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.check_turbine_geometry">[docs]</a>
+<span class="k">def</span> <span class="nf">check_turbine_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">display</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if the geometrical parameters are within the predefined recommended ranges.</span>
+
+
+<span class="sd">    .. table:: Recommended Parameter Ranges and References</span>
+
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Variable                 | Lower Limit  | Upper Limit  | Reference(s)                                     |</span>
+<span class="sd">        +==========================+==============+==============+==================================================+</span>
+<span class="sd">        | Blade chord              | 5.0 mm       | inf          | Manufacturing                                    |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Blade height             | 5.0 mm       | inf          | Manufacturing                                    |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Blade maximum thickness  | 1.0 mm       | inf          | Manufacturing                                    |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Blade trailing edge      | 0.5 mm       | inf          | Manufacturing                                    |</span>
+<span class="sd">        | thickness                |              |              |                                                  |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Tip clearance            | 0.2 mm       | inf          | Manufacturing                                    |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Hub to tip radius ratio  | 0.50         | 0.95         | Figure (6) of :cite:`kacker_mean_1982`           |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Flaring angle            | -25 deg      | +25 deg      | Section (7) of :cite:`ainley_examination_1951`   |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Aspect ratio             | 0.80         | 5.00         | Section (7.3) of :cite:`saravanamuttoo_gas_2008` |</span>
+<span class="sd">        |                          |              |              | Figure (13) of :cite:`kacker_mean_1982`          |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Pitch to chord ratio     | 0.30         | 1.10         | Figure (4) of :cite:`ainley_method_1951`         |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Stagger angle            | -10 deg      | +70 deg      | Figure (5) of :cite:`kacker_mean_1982`           |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Leading edge metal angle | -60 deg      | +25 deg      | Figure (5) of :cite:`kacker_mean_1982`           |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Trailing edge metal angle| +40 deg      | +80 deg      | Figure (4) of :cite:`ainley_method_1951`         |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Leading wedge angle      | +10 deg      | +60 deg      | Figure (2) from :cite:`benner_influence_1997`    |</span>
+<span class="sd">        |                          |              |              | Figure (10) from :cite:`pritchard_eleven_1985`   |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Leading edge diameter to | 0.03         | 0.30         | Table (1) :cite:`moustapha_improved_1990`        |</span>
+<span class="sd">        | chord ratio              |              |              |                                                  |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Maximum thickness to     | 0.05         | 0.30         | Figure (4) of :cite:`kacker_mean_1982`           |</span>
+<span class="sd">        | chord ratio              |              |              |                                                  |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Trailing edge thickness  | 0.00         | 0.40         | Figure (14) of :cite:`kacker_mean_1982`          |</span>
+<span class="sd">        | to opening ratio         |              |              |                                                  |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Tip clearance to height  | 0.00         | 0.05         | Figure (7) of :cite:`dunham_improvements_1970`   |</span>
+<span class="sd">        | ratio                    |              |              |                                                  |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+<span class="sd">        | Throat location fraction | 0.50         | 1.00         | Equation (3) of :cite:`ainley_method_1951`       |</span>
+<span class="sd">        +--------------------------+--------------+--------------+--------------------------------------------------+</span>
+
+<span class="sd">    The ranges of metal angles and stagger angles are reversed for rotor cascades</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        A dictionary containing the computed geometry of the turbine.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        A list of messages with a summary of the checks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Define good practice ranges for each parameter</span>
+    <span class="n">recommended_ranges</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;chord&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">5e-3</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">},</span>
+        <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">5e-3</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">},</span>
+        <span class="s2">&quot;maximum_thickness&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">},</span>
+        <span class="s2">&quot;trailing_edge_thickness&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">5e-4</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">},</span>
+        <span class="s2">&quot;tip_clearance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">2e-4</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">},</span>
+        <span class="s2">&quot;hub_tip_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.50</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">},</span>
+        <span class="s2">&quot;aspect_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">},</span>
+        <span class="s2">&quot;pitch_chord_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">1.1</span><span class="p">},</span>
+        <span class="s2">&quot;stagger_angle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="o">+</span><span class="mi">70</span><span class="p">},</span>
+        <span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="o">+</span><span class="mi">25</span><span class="p">},</span>
+        <span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">},</span>
+        <span class="s2">&quot;leading_edge_diameter_chord_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.03</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.30</span><span class="p">},</span>
+        <span class="s2">&quot;maximum_thickness_chord_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.30</span><span class="p">},</span>
+        <span class="s2">&quot;trailing_edge_thickness_opening_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.00</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.40</span><span class="p">},</span>
+        <span class="s2">&quot;tip_clearance_height_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">},</span>
+        <span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="n">special_angles</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;stagger_angle&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Get the the type of cascade</span>
+    <span class="n">cascade_types</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Define report width</span>
+    <span class="n">report_width</span> <span class="o">=</span> <span class="mi">80</span>
+
+    <span class="c1"># Define report title</span>
+    <span class="n">msgs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="n">report_width</span><span class="p">)</span>  <span class="c1"># Horizontal line</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;Axial turbine geometry report&quot;</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">report_width</span><span class="p">))</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="n">report_width</span><span class="p">)</span>  <span class="c1"># Horizontal line</span>
+
+    <span class="c1"># Define table header with four columns</span>
+    <span class="n">table_header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Parameter&#39;</span><span class="si">:</span><span class="s2">&lt;34</span><span class="si">}{</span><span class="s1">&#39;Value&#39;</span><span class="si">:</span><span class="s2">&gt;8</span><span class="si">}{</span><span class="s1">&#39;Range&#39;</span><span class="si">:</span><span class="s2">&gt;20</span><span class="si">}{</span><span class="s1">&#39;In range?&#39;</span><span class="si">:</span><span class="s2">&gt;14</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_header</span><span class="p">)</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="n">report_width</span><span class="p">)</span>  <span class="c1"># Horizontal line</span>
+
+    <span class="c1"># Initialize a list to store variables outside the recommended range</span>
+    <span class="n">vars_outside_range</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Iterate over each good practice parameter and perform checks</span>
+    <span class="k">for</span> <span class="n">parameter</span><span class="p">,</span> <span class="n">limits</span> <span class="ow">in</span> <span class="n">recommended_ranges</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">parameter</span> <span class="o">==</span> <span class="s2">&quot;cascade_type&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># Skip the cascade_type entry</span>
+
+        <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">],</span> <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;max&quot;</span><span class="p">]</span>
+        <span class="n">value_array</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="n">parameter</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">value_array</span><span class="p">)):</span>
+            <span class="c1"># Determine cascade type for special cases</span>
+            <span class="n">blade_type</span> <span class="o">=</span> <span class="n">cascade_types</span><span class="p">[</span><span class="n">index</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">cascade_types</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">special_angles</span> <span class="ow">and</span> <span class="n">blade_type</span> <span class="o">==</span> <span class="s2">&quot;rotor&quot;</span><span class="p">:</span>
+                <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="o">-</span><span class="n">ub</span><span class="p">,</span> <span class="o">-</span><span class="n">lb</span>  <span class="c1"># Reverse limits for rotor blades</span>
+
+            <span class="k">if</span> <span class="n">parameter</span> <span class="o">==</span> <span class="s2">&quot;tip_clearance&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">blade_type</span> <span class="o">==</span> <span class="s2">&quot;stator&quot;</span><span class="p">:</span>
+                    <span class="n">lb</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="k">elif</span> <span class="n">blade_type</span> <span class="o">==</span> <span class="s2">&quot;rotor&quot;</span><span class="p">:</span>
+                    <span class="n">lb</span> <span class="o">=</span> <span class="n">limits</span><span class="p">[</span><span class="s2">&quot;min&quot;</span><span class="p">]</span>
+
+            <span class="c1"># Check if the value is within the recommended range</span>
+            <span class="n">in_range</span> <span class="o">=</span> <span class="n">lb</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;=</span> <span class="n">ub</span>
+
+            <span class="c1"># Create a formatted message in table format using f-strings</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">lb</span><span class="si">:</span><span class="s2">+0.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">ub</span><span class="si">:</span><span class="s2">+0.4f</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="n">formatted_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">parameter</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="si">:</span><span class="s2">&lt;32</span><span class="si">}{</span><span class="n">value</span><span class="si">:</span><span class="s2">&gt;+8.4f</span><span class="si">}{</span><span class="n">bounds</span><span class="si">:</span><span class="s2">&gt;24</span><span class="si">}{</span><span class="nb">str</span><span class="p">(</span><span class="n">in_range</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;12</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">formatted_message</span><span class="p">)</span>
+
+            <span class="c1"># Append variables outside the recommended range to the list</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">in_range</span><span class="p">:</span>
+                <span class="n">vars_outside_range</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Footer for the geometry report</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="n">report_width</span><span class="p">)</span>  <span class="c1"># Horizontal line</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vars_outside_range</span><span class="p">:</span>
+        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot; Geometry report summary: All parameters are within recommended ranges.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s2">&quot; Geometry report summary: Some parameters are outside recommended ranges.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">warning</span> <span class="ow">in</span> <span class="n">vars_outside_range</span><span class="p">:</span>
+            <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     - </span><span class="si">{</span><span class="n">warning</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Footer for the geometry report</span>
+    <span class="n">msgs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="n">report_width</span><span class="p">)</span>  <span class="c1"># Horizontal line</span>
+
+    <span class="c1"># Concatenate lines into single string</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msgs</span><span class="p">)</span>
+
+    <span class="c1"># Display the report</span>
+    <span class="k">if</span> <span class="n">display</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">msg</span></div>
+
+
+
+<span class="c1"># TODO: Check that this function behaves as intended</span>
+<span class="c1"># Make table of correct values and give reference to motivation</span>
+<span class="c1"># TODO angles are correct for rotor/statos</span>
+<span class="c1"># Tip clearance can be zero for rotor</span>
+<span class="c1"># TODO angles in degree</span>
+<span class="c1"># TODO flaring angle calculation</span>
+<span class="c1"># TODO throat area calculation correct in cascade_series</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

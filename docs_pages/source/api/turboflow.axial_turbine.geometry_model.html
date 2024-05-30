@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Geometry model &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Loss model" href="turboflow.axial_turbine.loss_model.html" />
+    <link rel="prev" title="Turbine flow model" href="turboflow.axial_turbine.flow_model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.axial_turbine.html">Axial turbines</a></li>
+      <li class="breadcrumb-item active">Geometry model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.axial_turbine.geometry_model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.axial_turbine.geometry_model">
+<span id="geometry-model"></span><h1>Geometry model<a class="headerlink" href="#module-turboflow.axial_turbine.geometry_model" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.geometry_model.calculate_full_geometry">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.geometry_model.</span></span><span class="sig-name descname"><span class="pre">calculate_full_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/geometry_model.html#calculate_full_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.geometry_model.calculate_full_geometry" title="Link to this definition"></a></dt>
+<dd><p>Computes the complete geometry of an axial turbine based on input geometric parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing the input geometry parameters</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary with both the original and newly computed geometry parameters.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.geometry_model.calculate_throat_radius">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.geometry_model.</span></span><span class="sig-name descname"><span class="pre">calculate_throat_radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">throat_location_fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/geometry_model.html#calculate_throat_radius"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.geometry_model.calculate_throat_radius" title="Link to this definition"></a></dt>
+<dd><p>Calculate the throat radius as a weighted average of the inlet and outlet radii.</p>
+<p>This approach to estimate the area at the throat is inspired by the method
+described in Eq. (3) of <span id="id1">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>. The throat radius is computed
+as a linear combination of the inlet and outlet radii, weighted by the location of
+the throat expressed as a fraction of the axial length of the cascade.
+For instance, a <cite>throat_location_fraction</cite> of 5/6 would return the throat radius as:
+(1/6)*radius_in + (5/6)*radius out.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>radius_in</strong><span class="classifier">np.array</span></dt><dd><p>The radius values at the inlet sections.</p>
+</dd>
+<dt><strong>radius_out</strong><span class="classifier">np.array</span></dt><dd><p>The radius values at the outlet sections.</p>
+</dd>
+<dt><strong>throat_location_fraction</strong><span class="classifier">float</span></dt><dd><p>The fraction used to weight the inlet and outlet radii in the calculation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.array</dt><dd><p>The calculated throat radius values, representing the weighted average of the
+inlet and outlet radii based on the specified throat location.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.geometry_model.check_turbine_geometry">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.geometry_model.</span></span><span class="sig-name descname"><span class="pre">check_turbine_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/geometry_model.html#check_turbine_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.geometry_model.check_turbine_geometry" title="Link to this definition"></a></dt>
+<dd><p>Checks if the geometrical parameters are within the predefined recommended ranges.</p>
+<table class="docutils align-default" id="id17">
+<caption><span class="caption-text">Recommended Parameter Ranges and References</span><a class="headerlink" href="#id17" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Lower Limit</p></th>
+<th class="head"><p>Upper Limit</p></th>
+<th class="head"><p>Reference(s)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Blade chord</p></td>
+<td><p>5.0 mm</p></td>
+<td><p>inf</p></td>
+<td><p>Manufacturing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Blade height</p></td>
+<td><p>5.0 mm</p></td>
+<td><p>inf</p></td>
+<td><p>Manufacturing</p></td>
+</tr>
+<tr class="row-even"><td><p>Blade maximum thickness</p></td>
+<td><p>1.0 mm</p></td>
+<td><p>inf</p></td>
+<td><p>Manufacturing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Blade trailing edge
+thickness</p></td>
+<td><p>0.5 mm</p></td>
+<td><p>inf</p></td>
+<td><p>Manufacturing</p></td>
+</tr>
+<tr class="row-even"><td><p>Tip clearance</p></td>
+<td><p>0.2 mm</p></td>
+<td><p>inf</p></td>
+<td><p>Manufacturing</p></td>
+</tr>
+<tr class="row-odd"><td><p>Hub to tip radius ratio</p></td>
+<td><p>0.50</p></td>
+<td><p>0.95</p></td>
+<td><p>Figure (6) of <span id="id2">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Flaring angle</p></td>
+<td><p>-25 deg</p></td>
+<td><p>+25 deg</p></td>
+<td><p>Section (7) of <span id="id3">[<a class="reference internal" href="../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Aspect ratio</p></td>
+<td><p>0.80</p></td>
+<td><p>5.00</p></td>
+<td><p>Section (7.3) of <span id="id4">[<a class="reference internal" href="../bibliography.html#id94" title="Saravanamuttoo, G. F. C. Rogers, H. Cohen, and P. V. Straznicky. Gas Turbine Theory. Pearson College Div, Harlow, England ; New York, 6th edition edition, 2008. ISBN 978-0-13-222437-6.">Saravanamuttoo <em>et al.</em>, 2008</a>]</span>
+Figure (13) of <span id="id5">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Pitch to chord ratio</p></td>
+<td><p>0.30</p></td>
+<td><p>1.10</p></td>
+<td><p>Figure (4) of <span id="id6">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Stagger angle</p></td>
+<td><p>-10 deg</p></td>
+<td><p>+70 deg</p></td>
+<td><p>Figure (5) of <span id="id7">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Leading edge metal angle</p></td>
+<td><p>-60 deg</p></td>
+<td><p>+25 deg</p></td>
+<td><p>Figure (5) of <span id="id8">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Trailing edge metal angle</p></td>
+<td><p>+40 deg</p></td>
+<td><p>+80 deg</p></td>
+<td><p>Figure (4) of <span id="id9">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Leading wedge angle</p></td>
+<td><p>+10 deg</p></td>
+<td><p>+60 deg</p></td>
+<td><p>Figure (2) from <span id="id10">[<a class="reference internal" href="../bibliography.html#id19" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. Influence of leading-edge geometry on profile losses in turbines at off-design incidence: experimental results and an improved correlation. Journal of Turbomachinery, 119(2):193–200, 1997. doi:10.1115/1.2841101.">Benner <em>et al.</em>, 1997</a>]</span>
+Figure (10) from <span id="id11">[<a class="reference internal" href="../bibliography.html#id85" title="L. J. Pritchard. An eleven parameter axial turbine airfoil geometry model. In ASME 1985 International Gas Turbine Conference and Exhibit. American Society of Mechanical Engineers Digital Collection, 1985. doi:10.1115/85-GT-219.">Pritchard, 1985</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Leading edge diameter to
+chord ratio</p></td>
+<td><p>0.03</p></td>
+<td><p>0.30</p></td>
+<td><p>Table (1) <span id="id12">[<a class="reference internal" href="../bibliography.html#id77" title="S. H. Moustapha, S. C. Kacker, and B. Tremblay. An improved incidence losses prediction method for turbine airfoils. Journal of Turbomachinery, 112(2):267–276, 1990. doi:10.1115/1.2927647.">Moustapha <em>et al.</em>, 1990</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Maximum thickness to
+chord ratio</p></td>
+<td><p>0.05</p></td>
+<td><p>0.30</p></td>
+<td><p>Figure (4) of <span id="id13">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Trailing edge thickness
+to opening ratio</p></td>
+<td><p>0.00</p></td>
+<td><p>0.40</p></td>
+<td><p>Figure (14) of <span id="id14">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Tip clearance to height
+ratio</p></td>
+<td><p>0.00</p></td>
+<td><p>0.05</p></td>
+<td><p>Figure (7) of <span id="id15">[<a class="reference internal" href="../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Throat location fraction</p></td>
+<td><p>0.50</p></td>
+<td><p>1.00</p></td>
+<td><p>Equation (3) of <span id="id16">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>The ranges of metal angles and stagger angles are reversed for rotor cascades</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing the computed geometry of the turbine.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list</dt><dd><p>A list of messages with a summary of the checks.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.geometry_model.prepare_geometry">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.geometry_model.</span></span><span class="sig-name descname"><span class="pre">prepare_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/geometry_model.html#prepare_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.geometry_model.prepare_geometry" title="Link to this definition"></a></dt>
+<dd><p>Convert the geometrical design variables to parameters suitable for turbine evaluation.</p>
+<p>For design optimization, the geometrical design variables are defined as ratios, e.g. hub-to-tip radius and aspect ratio.
+This function convert the set of geometrical design variables to a set which is suited for turbine evaluation.
+The function utilize <cite>radius_type</cite> to decide if the given radius is constant for hub, mean or tip throughout the turbine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>A dictionary with all necessary geometrical parameters.</p>
+</dd>
+<dt><strong>radius_type</strong><span class="classifier">str</span></dt><dd><p>A string deciding if hub, mean or tip radius is constant throughout the turbine.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Set of geometry suited for turbine evaluation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.geometry_model.validate_turbine_geometry">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.geometry_model.</span></span><span class="sig-name descname"><span class="pre">validate_turbine_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geom</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">display</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/geometry_model.html#validate_turbine_geometry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.geometry_model.validate_turbine_geometry" title="Link to this definition"></a></dt>
+<dd><p>Performs validation of an axial turbine’s geometry configuration.</p>
+<ul class="simple">
+<li><p>Ensures all required geometry parameters are specified in ‘geom’.</p></li>
+<li><p>Verifies that no parameters beyond the required set are included.</p></li>
+<li><p>Checks ‘number_of_cascades’ is an integer and correctly dictates sizes of other parameters.</p></li>
+<li><p>Validates that all parameter arrays match the size of ‘number_of_cascades’.</p></li>
+<li><p>Asserts that all geometry parameter values are numeric (integers or floats).</p></li>
+<li><p>Ensures non-angle parameters contain only non-negative values.</p></li>
+<li><p>Angle parameters (‘leading_edge_angle’, ‘stagger_angle’) can be negative.</p></li>
+</ul>
+<p>This function is intended as a preliminary check before in-depth geometry analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>geom</strong><span class="classifier">dict</span></dt><dd><p>The geometry configuration parameters for the turbine as a dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>bool</dt><dd><p>True if all validations pass, indicating a correctly structured geometry configuration.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.axial_turbine.flow_model.html" class="btn btn-neutral float-left" title="Turbine flow model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.axial_turbine.loss_model.html" class="btn btn-neutral float-right" title="Loss model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

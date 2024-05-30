@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.axial_turbine.design_optimization &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/configuration.html">Configuration options</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.axial_turbine.design_optimization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.axial_turbine.design_optimization</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">CoolProp</span> <span class="k">as</span> <span class="nn">cp</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">pysolver_view</span> <span class="k">as</span> <span class="n">psv</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">geometry_model</span> <span class="k">as</span> <span class="n">geom</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">flow_model</span> <span class="k">as</span> <span class="n">flow</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">properties</span> <span class="k">as</span> <span class="n">props</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">performance_analysis</span> <span class="k">as</span> <span class="n">pa</span>
+
+
+<span class="n">CONSTRAINTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">]</span>
+<span class="n">AVAILABLE_INEQ_CONSTRAINTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">]</span>
+<span class="n">OBJECTIVE_FUNCTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;efficiency_ts&quot;</span><span class="p">]</span>
+<span class="n">RADIUS_TYPE</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;constant_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_hub&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_tip&quot;</span><span class="p">]</span>
+<span class="n">ANGLE_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>
+<span class="n">INDEPENDENT_VARIABLES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;v_in&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;w_out&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;s_out&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;v*_in&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;beta*_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;w*_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;s*_throat&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">INDEXED_VARIABLES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hub_tip_ratio_out&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;aspect_ratio&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pitch_chord_ratio&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;trailing_edge_thickness_opening_ratio&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;gauging_angle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tip_clearance&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;cascade_type&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">VARIABLES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">INDEXED_VARIABLES</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">,</span> <span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">INDEPENDENT_VARIABLES</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="compute_optimal_turbine">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.compute_optimal_turbine">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_optimal_turbine</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">out_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the optimal turbine configuration based on the specified optimization problem.</span>
+
+<span class="sd">    The function checks the configuration file before performing design optimization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : dict</span>
+<span class="sd">        A dictionary containing necessary configuration options for computing optimal turbine.</span>
+<span class="sd">    initial_guess : None or dict</span>
+<span class="sd">        The initial guess of the design optimization. If None, a defualt initial guess is provided. If given, he initial guess must correspond</span>
+<span class="sd">        with the given set of design variables given in the configuration dictionary.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    solution : object</span>
+<span class="sd">        The solution object containing the results of the design optimization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Initialize problem object</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">CascadesOptimizationProblem</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="c1"># Perform initial function call to initialize problem</span>
+    <span class="c1"># This populates the arrays of equality and inequality constraints</span>
+    <span class="c1"># TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it</span>
+    <span class="n">problem</span><span class="o">.</span><span class="n">fitness</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">initial_guess</span><span class="p">)</span>
+
+    <span class="c1"># Load solver configuration</span>
+    <span class="n">solver_config</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Initialize solver object using keyword-argument dictionary unpacking</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">OptimizationSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_config</span><span class="p">)</span>
+
+    <span class="c1"># Solve optimization problem for initial guess x0</span>
+    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">initial_guess</span><span class="p">)</span>
+
+    <span class="n">dfs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;operation point&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;overall&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="s2">&quot;plane&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;plane&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;cascade&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;cascade&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;stage&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;stage&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;solver&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;completed&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="s2">&quot;grad_count&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;grad_count&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;func_count&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;func_count_total&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count_total&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;objective_value&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;objective_value&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;constraint_violation&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span>
+                    <span class="s2">&quot;constraint_violation&quot;</span>
+                <span class="p">],</span>
+                <span class="s2">&quot;norm_step&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;norm_step&quot;</span><span class="p">],</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;grad_count&quot;</span><span class="p">])),</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">export_results</span><span class="p">:</span>
+        <span class="c1"># Create a directory to save simulation results</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+
+        <span class="c1"># Define filename with unique date-time identifier</span>
+        <span class="k">if</span> <span class="n">out_filename</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+            <span class="n">out_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;design_optimization_</span><span class="si">{</span><span class="n">current_time</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Export simulation configuration as YAML file</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">}</span>  <span class="c1"># Filter empty entries</span>
+        <span class="n">config_data</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">convert_numpy_to_python</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="n">config_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_filename</span><span class="si">}</span><span class="s2">.yaml&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config_data</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Export optimal turbine in excel file</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_filename</span><span class="si">}</span><span class="s2">.xlsx&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;openpyxl&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sheet_name</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">dfs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">solver</span></div>
+
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem">[docs]</a>
+<span class="k">class</span> <span class="nc">CascadesOptimizationProblem</span><span class="p">(</span><span class="n">psv</span><span class="o">.</span><span class="n">OptimizationProblem</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class representing a turbine design optimization problem.</span>
+
+<span class="sd">    This class is designed for solving design optimization problems of axial turbines. It is initialized by providing a</span>
+<span class="sd">    dictionary containing information on design variables, objective function, constraints and bounds.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    config : dictionary</span>
+<span class="sd">        A dictionary containing necessary configuration options for computing optimal turbine.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fluid : FluidCoolProp_2Phase</span>
+<span class="sd">        An instance of the FluidCoolProp_2Phase class representing the fluid properties.</span>
+<span class="sd">    results : dict</span>
+<span class="sd">        A dictionary to store results.</span>
+<span class="sd">    boundary_conditions : dict</span>
+<span class="sd">        A dictionary containing boundary condition data.</span>
+<span class="sd">    geometry : dict</span>
+<span class="sd">        A dictionary containing geometry-related data.</span>
+<span class="sd">    model_options : dict</span>
+<span class="sd">        A dictionary containing options related to the analysis model.</span>
+<span class="sd">    reference_values : dict</span>
+<span class="sd">        A dictionary containing reference values for calculations.</span>
+<span class="sd">    design_variables_keys : list</span>
+<span class="sd">        A list of strings defining the selected design variables.</span>
+<span class="sd">    objective_function : str</span>
+<span class="sd">        A string defining the selected objective function for the design optimization problem.</span>
+<span class="sd">    eq_constraints : list</span>
+<span class="sd">        A list of strings containing the selected equaility constraints for the design optimization problem.</span>
+<span class="sd">    ineq_constraints : list</span>
+<span class="sd">        A list of strings containing the selected inequaility constraints for the design optimization problem.</span>
+<span class="sd">    bounds : list</span>
+<span class="sd">        A list of tuples on the form (lower bound, upper bound) defining the bounds for the design optimization problem.</span>
+<span class="sd">    radius_type : str</span>
+<span class="sd">        A string deciding what type of turbine geometry should be condidered (constant mean, hub or tip radius).</span>
+<span class="sd">    vars_scaled : dict</span>
+<span class="sd">        A dict containing the scaled flow design variables used to evaluate turbine performance.</span>
+
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    fitness(x)</span>
+<span class="sd">        Evaluate the objective function and constraints at a given point `x`.</span>
+<span class="sd">    get_bounds()</span>
+<span class="sd">        Provide the bounds for the design optimization problem.</span>
+<span class="sd">    get_n_eq()</span>
+<span class="sd">        Get the number of equality constraints.</span>
+<span class="sd">    get_n_ineq()</span>
+<span class="sd">        Get the number of oinequality constraints.</span>
+<span class="sd">    get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)</span>
+<span class="sd">        Convert specific speed to actual angular speed</span>
+<span class="sd">    extend_variables(variables)</span>
+<span class="sd">        Convert a dict containing lists or arrays to a dictionaries of only one element.</span>
+<span class="sd">    get_given_bounds(design_variable)</span>
+<span class="sd">        Retrieves the lower and upper bounds for the given design variables.</span>
+<span class="sd">    get_constraints(self, constraints):</span>
+<span class="sd">        Converts a list of constraints to equality and inequality constraints.</span>
+<span class="sd">    update_boundary_conditions(design_point)</span>
+<span class="sd">        Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.</span>
+<span class="sd">    convert_performance_analysis_results(performance_problem)</span>
+<span class="sd">        Generate a feasable set of initial guess from a solved performance analysis problem object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize a CascadesOptimizationProblem.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        config : dict</span>
+<span class="sd">            A dictionary containing case-specific data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Get list of design variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;objective_function&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;radius_type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_constraints</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;constraints&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Update design point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Initialize model options</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Adjust given variables according to choking model (remove excess variables)</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
+        <span class="p">):</span>
+            <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+
+        <span class="c1"># Separate fixed variables and design variables</span>
+        <span class="n">fixed_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">design_variables</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fixed_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="c1"># Initialize initial guess</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extend_variables</span><span class="p">(</span><span class="n">design_variables</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">design_variables_keys</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+        <span class="c1"># Extend fixed variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extend_variables</span><span class="p">(</span><span class="n">fixed_params</span><span class="p">)</span>
+
+        <span class="c1"># Initialize bounds</span>
+        <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_given_bounds</span><span class="p">(</span><span class="n">design_variables</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>
+
+        <span class="c1"># Adjust set of independent variables according to choking model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">key</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">INDEPENDENT_VARIABLES</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">var</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">elif</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">var</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.extend_variables">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">[docs]</a>
+    <span class="k">def</span> <span class="nf">extend_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Index the design variables for each cascade for the default initial guess.</span>
+
+<span class="sd">        The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.</span>
+<span class="sd">        This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.</span>
+<span class="sd">        for example `aspect_ratio_1` for first cascade and etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        variables : dict</span>
+<span class="sd">            A dictionary where each key maps to a dictionary containing at least a</span>
+<span class="sd">            &quot;value&quot; key. The &quot;value&quot; can be a list, numpy array, or float.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary where each list or numpy array in the original dictionary</span>
+<span class="sd">            is expanded into individual elements with keys formatted as &quot;key_index&quot;.</span>
+<span class="sd">            Float values are kept as is.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">variables_extended</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">])):</span>
+                    <span class="n">variables_extended</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">variables_extended</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">variables_extended</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_given_bounds">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_given_bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_given_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">design_variables</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the lower and upper bounds for the given design variables.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        design_variables : dict</span>
+<span class="sd">            A dictionary where each key maps to a dictionary containing a</span>
+<span class="sd">            &quot;value&quot; key, a &quot;lower_bound&quot; key, and an &quot;upper_bound&quot; key. The values</span>
+<span class="sd">            can be a list, numpy array, or float.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        lb : list</span>
+<span class="sd">            A list of lower bounds for the design variables.</span>
+<span class="sd">        ub : list</span>
+<span class="sd">            A list of upper bounds for the design variables.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">lb</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ub</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">design_variables</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">lb</span> <span class="o">+=</span> <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">]</span>
+                <span class="n">ub</span> <span class="o">+=</span> <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;upper_bound&quot;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">lb</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">])</span>
+                <span class="n">ub</span> <span class="o">+=</span> <span class="nb">list</span><span class="p">(</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;upper_bound&quot;</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">lb</span> <span class="o">+=</span> <span class="p">[</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">]]</span>
+                <span class="n">ub</span> <span class="o">+=</span> <span class="p">[</span><span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;upper_bound&quot;</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.fitness">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">[docs]</a>
+    <span class="k">def</span> <span class="nf">fitness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the objective function and constraints at a given pint `x`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Vector of design variables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            An array containg the value of the objective function and constraints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Rename reference values</span>
+        <span class="n">h0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
+        <span class="n">mass_flow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
+        <span class="n">h_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;h_out_s&quot;</span><span class="p">]</span>
+        <span class="n">d_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;d_out_s&quot;</span><span class="p">]</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+        <span class="n">angle_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+        <span class="n">angle_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Structure design variables to dictionary (Assume set of design variables)</span>
+        <span class="n">design_variables</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_variables_keys</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># Construct array with independent variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Contruct variables</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">design_variables</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">}</span>
+
+        <span class="c1"># Calculate angular speed</span>
+        <span class="n">specific_speed</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
+            <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate mean radius</span>
+        <span class="n">blade_jet_ratio</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span>
+        <span class="n">blade_speed</span> <span class="o">=</span> <span class="n">blade_jet_ratio</span> <span class="o">*</span> <span class="n">v0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blade_speed</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Assign geometry design variables to geometry attribute</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">INDEXED_VARIABLES</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ANGLE_KEYS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">prepare_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+
+        <span class="c1"># Evaluate turbine model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_axial_turbine</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Evaluate available objecitve functions</span>
+        <span class="n">objective_functions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;efficiency_ts&quot;</span><span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">][</span><span class="s2">&quot;efficiency_ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">objective_functions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">]</span>
+
+        <span class="c1"># Evaluate available equality constraints</span>
+        <span class="n">available_constraints</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s2">&quot;flaring&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;flaring_angle&quot;</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;residuals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">available_constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+                <span class="o">/</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">available_constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]])</span>
+                <span class="o">/</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="n">objective_and_constraints</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">combine_objective_and_constraints</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">objective_and_constraints</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_bounds">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide the bounds for the design optimization problem.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            List of toutples containg the lower and upper bound for each design variable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_nec">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nec">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of equality constraints.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of equality constraints.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">psv</span><span class="o">.</span><span class="n">count_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_nic">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of inequality constraints.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            Number of inequality constraints.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">psv</span><span class="o">.</span><span class="n">count_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_omega">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_omega">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert specific speed to actual angular speed</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        specific_speed : float</span>
+<span class="sd">            Given specific speed.</span>
+<span class="sd">        mass_flow : float</span>
+<span class="sd">            Given mass flow rate.</span>
+<span class="sd">        h0_in : float</span>
+<span class="sd">            Turbine inlet stagnation enthalpy.</span>
+<span class="sd">        d_is : float</span>
+<span class="sd">            Turbine exit density for an isentropic expansion.</span>
+<span class="sd">        h_is : float</span>
+<span class="sd">            Turbine exit enthalpy for an isentropic expansion.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Actual angular speed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">specific_speed</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_is</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">mass_flow</span> <span class="o">/</span> <span class="n">d_is</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.update_boundary_conditions">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.update_boundary_conditions">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_boundary_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">design_point</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.</span>
+
+<span class="sd">        This method updates the boundary conditions attributes used to evaluate the turbine performance.</span>
+<span class="sd">        It also initializes a Fluid object using the &#39;fluid_name&#39; specified in the operation point.</span>
+<span class="sd">        The method computes additional properties and reference values like stagnation properties at</span>
+<span class="sd">        the inlet, exit static properties, spouting velocity, and reference mass flow rate.</span>
+<span class="sd">        These are stored in the object&#39;s internal state for further use in calculations.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        design_point : dict</span>
+<span class="sd">            A dictionary containing the boundary conditions defining the operation point. It must include the following keys:</span>
+
+<span class="sd">            - `fluid_name` (str) : The name of the fluid to be used in the Fluid object.</span>
+<span class="sd">            - `T0_in` (float): The inlet temperature (in Kelvin).</span>
+<span class="sd">            - `p0_in` (float): The inlet pressure (in Pascals).</span>
+<span class="sd">            - `p_out` (float): The outlet pressure (in Pascals).</span>
+<span class="sd">            - `omega` (float): The rotational speed (in rad/s).</span>
+<span class="sd">            - `alpha_in` (float): The inlet flow angle (in degrees).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">            This method does not return a value but updates the attributes of the object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Define current operating point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span> <span class="o">=</span> <span class="n">design_point</span>
+
+        <span class="c1"># Initialize fluid object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">Fluid</span><span class="p">(</span><span class="n">design_point</span><span class="p">[</span><span class="s2">&quot;fluid_name&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Rename variables</span>
+        <span class="n">p0_in</span> <span class="o">=</span> <span class="n">design_point</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
+        <span class="n">T0_in</span> <span class="o">=</span> <span class="n">design_point</span><span class="p">[</span><span class="s2">&quot;T0_in&quot;</span><span class="p">]</span>
+        <span class="n">p_out</span> <span class="o">=</span> <span class="n">design_point</span><span class="p">[</span><span class="s2">&quot;p_out&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Compute stagnation properties at inlet</span>
+        <span class="n">state_in_stag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">)</span>
+        <span class="n">h0_in</span> <span class="o">=</span> <span class="n">state_in_stag</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">s_in</span> <span class="o">=</span> <span class="n">state_in_stag</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Store the inlet stagnation (h,s) for the first stage</span>
+        <span class="c1"># TODO: Improve logic of implementation?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h0_in</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;s_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s_in</span>
+
+        <span class="c1"># Calculate exit static properties for a isentropic expansion</span>
+        <span class="n">state_out_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+        <span class="n">h_isentropic</span> <span class="o">=</span> <span class="n">state_out_s</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">d_isentropic</span> <span class="o">=</span> <span class="n">state_out_s</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit static properties for a isenthalpic expansion</span>
+        <span class="n">state_out_h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassP_INPUTS</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">)</span>
+        <span class="n">s_isenthalpic</span> <span class="o">=</span> <span class="n">state_out_h</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+        <span class="c1"># Calculate spouting velocity</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_isentropic</span><span class="p">))</span>
+
+        <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Initialize mass_flow_rate to None</span>
+        <span class="c1"># Try to find mass_flow_rate from eq_constraints</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variable&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">:</span>
+                <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
+                <span class="k">break</span>
+
+        <span class="c1"># If mass_flow_rate not found, calculate using default formula</span>
+        <span class="k">if</span> <span class="n">mass_flow_rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">v0</span> <span class="o">*</span> <span class="n">d_isentropic</span>
+
+        <span class="c1"># Define reference_values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;s_range&quot;</span><span class="p">:</span> <span class="n">s_isenthalpic</span> <span class="o">-</span> <span class="n">s_in</span><span class="p">,</span>
+            <span class="s2">&quot;s_min&quot;</span><span class="p">:</span> <span class="n">s_in</span><span class="p">,</span>
+            <span class="s2">&quot;v0&quot;</span><span class="p">:</span> <span class="n">v0</span><span class="p">,</span>
+            <span class="s2">&quot;h_out_s&quot;</span><span class="p">:</span> <span class="n">h_isentropic</span><span class="p">,</span>
+            <span class="s2">&quot;d_out_s&quot;</span><span class="p">:</span> <span class="n">d_isentropic</span><span class="p">,</span>
+            <span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">:</span> <span class="n">mass_flow_rate</span><span class="p">,</span>
+            <span class="s2">&quot;angle_range&quot;</span><span class="p">:</span> <span class="mi">180</span><span class="p">,</span>
+            <span class="s2">&quot;angle_min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.convert_performance_analysis_results">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.convert_performance_analysis_results">[docs]</a>
+    <span class="k">def</span> <span class="nf">convert_performance_analysis_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">performance_problem</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a feasable set of initial guess from a solved performance analysis problem object.</span>
+
+<span class="sd">        The function adopt the vars_scaled attribute from the solved performance analysis problem, the geometry and</span>
+<span class="sd">        angular speed to generate an initial guess of correct form to be given to the design optimization problem.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Feasable initial guess.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">design_variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">design_variables_keys</span>
+        <span class="n">radius_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span>
+        <span class="n">mass_flow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
+
+        <span class="n">geometry</span> <span class="o">=</span> <span class="n">performance_problem</span><span class="o">.</span><span class="n">geometry</span>
+        <span class="n">overall</span> <span class="o">=</span> <span class="n">performance_problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">]</span>
+        <span class="n">vars_scaled</span> <span class="o">=</span> <span class="n">performance_problem</span><span class="o">.</span><span class="n">vars_scaled</span>
+
+        <span class="n">angle_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+        <span class="n">angle_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+        <span class="n">d_out_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;d_out_s&quot;</span><span class="p">]</span>
+        <span class="n">h0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
+        <span class="n">h_out_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;h_out_s&quot;</span><span class="p">]</span>
+
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">design_variable</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">design_variables</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span>
+            <span class="s2">&quot;specific_speed&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">if</span> <span class="s2">&quot;angle&quot;</span> <span class="ow">in</span> <span class="n">design_variable</span><span class="p">:</span>
+                <span class="n">added_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">design_variable</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="n">design_variable</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">angle_min</span><span class="p">)</span>
+                    <span class="o">/</span> <span class="n">angle_range</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="n">design_variable</span><span class="p">]))</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">added_dict</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">design_variable</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">geometry</span><span class="p">[</span><span class="n">design_variable</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="n">design_variable</span><span class="p">]))</span>
+                <span class="p">}</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">initial_guess</span><span class="p">,</span> <span class="o">**</span><span class="n">added_dict</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="s2">&quot;blade_jet_ratio&quot;</span> <span class="ow">in</span> <span class="n">design_variables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_mean&quot;</span><span class="p">:</span>
+                <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overall</span><span class="p">[</span>
+                    <span class="s2">&quot;blade_jet_ratio_mean&quot;</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_hub&quot;</span><span class="p">:</span>
+                <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overall</span><span class="p">[</span>
+                    <span class="s2">&quot;blade_jet_ratio_hub&quot;</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">radius_type</span> <span class="o">==</span> <span class="s2">&quot;constant_mean&quot;</span><span class="p">:</span>
+                <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overall</span><span class="p">[</span>
+                    <span class="s2">&quot;blade_jet_ratio_tip&quot;</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;specific_speed&quot;</span> <span class="ow">in</span> <span class="n">design_variables</span><span class="p">:</span>
+            <span class="n">angular_speed</span> <span class="o">=</span> <span class="n">overall</span><span class="p">[</span><span class="s2">&quot;angular_speed&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">angular_speed</span>
+                <span class="o">*</span> <span class="p">(</span><span class="n">mass_flow</span> <span class="o">/</span> <span class="n">d_out_s</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+                <span class="o">/</span> <span class="p">((</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_out_s</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.75</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">vars_scaled</span><span class="p">,</span> <span class="o">**</span><span class="n">initial_guess</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_constraints">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraints</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Converts a list of constraints to equality and inequality constraints.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        -----------</span>
+<span class="sd">        constraints : list of dict</span>
+<span class="sd">            List of constraints where each constraint is represented as a dictionary</span>
+<span class="sd">            with keys &quot;type&quot;, &quot;variable&quot;, &quot;value&quot;, and &quot;normalize&quot;. &quot;type&quot; represents</span>
+<span class="sd">            the type of constraint (&#39;=&#39;, &#39;&lt;&#39;, or &#39;&gt;&#39;). &quot;variable&quot; is the variable</span>
+<span class="sd">            involved in the constraint. &quot;value&quot; is the value of the constraint. &quot;normalize&quot;</span>
+<span class="sd">            specifies whether to normalize the constraint value.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">        --------</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            List of equality constraints, each represented as a dictionary with keys</span>
+<span class="sd">            &quot;variable&quot;, &quot;value&quot;, and &quot;scale&quot;. &quot;variable&quot; is the variable involved</span>
+<span class="sd">            in the constraint. &quot;value&quot; is the value of the constraint. &quot;scale&quot; is</span>
+<span class="sd">            the scaling factor applied to the value.</span>
+<span class="sd">        list of dict</span>
+<span class="sd">            List of inequality constraints, each represented as a dictionary with keys</span>
+<span class="sd">            &quot;variable&quot;, &quot;value&quot;, and &quot;scale&quot;. &quot;variable&quot; is the variable involved</span>
+<span class="sd">            in the constraint. &quot;value&quot; is the value of the constraint. &quot;scale&quot; is</span>
+<span class="sd">            the scaling factor applied to the value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">eq_constraints</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ineq_constraints</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+                    <span class="n">eq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">eq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+                    <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+                    <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
+                        <span class="p">{</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">]</span>
+        <span class="k">return</span> <span class="n">eq_constraints</span><span class="p">,</span> <span class="n">ineq_constraints</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

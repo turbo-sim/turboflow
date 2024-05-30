@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>meanline_axial.solver.optimization module &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="meanline_axial.solver.optimization_problems module" href="turboflow.pysolver_view.optimization_problems.html" />
+    <link rel="prev" title="turboflow.pysolver_view.nonlinear_system_problems module" href="turboflow.pysolver_view.nonlinear_system_problems.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.pysolver_view.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.html#module-turboflow.pysolver_view">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.pysolver_view.html">PySolverView</a></li>
+      <li class="breadcrumb-item active">meanline_axial.solver.optimization module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.pysolver_view.optimization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.pysolver_view.optimization">
+<span id="meanline-axial-solver-optimization-module"></span><h1>meanline_axial.solver.optimization module<a class="headerlink" href="#module-turboflow.pysolver_view.optimization" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationProblem</span></span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for optimization problems.</p>
+<p>Derived optimization problem objects must implement the following methods:</p>
+<ul class="simple">
+<li><p><cite>fitness</cite>: Evaluate the objective function and constraints for a given set of decision variables.</p></li>
+<li><p><cite>get_bounds</cite>: Get the bounds for each decision variable.</p></li>
+<li><p><cite>get_neq</cite>: Return the number of equality constraints associated with the problem.</p></li>
+<li><p><cite>get_nineq</cite>: Return the number of inequality constraints associated with the problem.</p></li>
+</ul>
+<p>Additionally, specific problem classes can define the <cite>gradient</cite> method to compute the Jacobians. If this method is not present in the derived class, the solver will revert to using forward finite differences for Jacobian calculations.</p>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>fitness(x)</strong></p></td>
+<td><p>Evaluate the objective function and constraints for a given set of decision variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_bounds()</strong></p></td>
+<td><p>Get the bounds for each decision variable.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_neq()</strong></p></td>
+<td><p>Return the number of equality constraints associated with the problem.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_nineq()</strong></p></td>
+<td><p>Return the number of inequality constraints associated with the problem.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationProblem.fitness">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationProblem.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationProblem.fitness" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the objective function and constraints for given decision variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of independent variables (i.e., degrees of freedom).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Vector containing the objective function, equality constraints, and inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationProblem.get_bounds">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationProblem.get_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationProblem.get_bounds" title="Link to this definition"></a></dt>
+<dd><p>Get the bounds for each decision variable (Pygmo format)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bounds</strong><span class="classifier">tuple of lists</span></dt><dd><p>A tuple of two items where the first item is the list of lower bounds and the second
+item of the list of upper bounds for the vector of decision variables. For example,
+([-2 -1], [2, 1]) indicates that the first decision variable has bounds between
+-2 and 2, and the second has bounds between -1 and 1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationProblem.get_nec">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_nec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationProblem.get_nec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationProblem.get_nec" title="Link to this definition"></a></dt>
+<dd><p>Return the number of equality constraints associated with the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>neq</strong><span class="classifier">int</span></dt><dd><p>Number of equality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationProblem.get_nic">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_nic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationProblem.get_nic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationProblem.get_nic" title="Link to this definition"></a></dt>
+<dd><p>Return the number of inequality constraints associated with the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>nineq</strong><span class="classifier">int</span></dt><dd><p>Number of inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">library</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scipy'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'slsqp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'2-point'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivative_abs_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_convergence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_convergence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scale_objective</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_scale_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gradient'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Solver class for general nonlinear programming problems.</p>
+<p>The solver is designed to handle constrained optimization problems of the form:</p>
+<p>Minimize:</p>
+<div class="math notranslate nohighlight">
+\[f(\mathbf{x}) \; \mathrm{with} \; \mathbf{x} \in \mathbb{R}^n\]</div>
+<p>Subject to:</p>
+<div class="math notranslate nohighlight">
+\[c_{\mathrm{eq}}(\mathbf{x}) = 0\]</div>
+<div class="math notranslate nohighlight">
+\[c_{\mathrm{in}}(\mathbf{x}) \leq 0\]</div>
+<div class="math notranslate nohighlight">
+\[\mathbf{x}_l \leq \mathbf{x} \leq \mathbf{x}_u\]</div>
+<p>where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathbf{x}\)</span> is the vector of decision variables (i.e., degree of freedom).</p></li>
+<li><p><span class="math notranslate nohighlight">\(f(\mathbf{x})\)</span> is the objective function to be minimized. Maximization problems can be casted into minimization problems by changing the sign of the objective function.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c_{\mathrm{eq}}(\mathbf{x})\)</span> are the equality constraints of the problem.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c_{\mathrm{in}}(\mathbf{x})\)</span> are the inequality constraints of the problem. Constraints of type <span class="math notranslate nohighlight">\(c_{\mathrm{in}}(\mathbf{x}) \leq 0\)</span> can be casted into <span class="math notranslate nohighlight">\(c_{\mathrm{in}}(\mathbf{x}) \geq 0\)</span> type by changing the sign of the constraint functions.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbf{x}_l\)</span> and <span class="math notranslate nohighlight">\(\mathbf{x}_u\)</span> are the lower and upper bounds on the decision variables.</p></li>
+</ul>
+<p>The class interfaces with various optimization methods provided by libraries such as <cite>scipy</cite> and <cite>pygmo</cite> to solve the problem and provides a structured framework for initialization, solution monitoring, and post-processing.</p>
+<p>This class employs a caching mechanism to avoid redundant evaluations. For a given set of independent variables, x, the optimizer requires the objective function, equality constraints, and inequality constraints to be provided separately. When working with complex models, these values are typically calculated all at once. If x hasn’t changed from a previous evaluation, the caching system ensures that previously computed values are used, preventing unnecessary recalculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>problem</strong><span class="classifier">OptimizationProblem</span></dt><dd><p>An instance of the optimization problem to be solved.</p>
+</dd>
+<dt><strong>library</strong><span class="classifier">str, optional</span></dt><dd><p>The library to use for solving the optimization problem (default is ‘scipy’).</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str, optional</span></dt><dd><p>The optimization method to use from the specified library (default is ‘slsqp’).</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Tolerance for termination. The selected minimization algorithm sets some relevant solver-specific tolerance(s) equal to tol. The termination tolerances can be fine-tuned through the <cite>options</cite> dictionary. (default is 1e-5).</p>
+</dd>
+<dt><strong>max_iter</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of iterations for the optimizer (default is 100).</p>
+</dd>
+<dt><strong>options</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary of solver-specific options that prevails over ‘tol’ and ‘max_iter’</p>
+</dd>
+<dt><strong>derivative_method</strong><span class="classifier">str, optional</span></dt><dd><p>Method to use for derivative calculation (default is ‘2-point’).</p>
+</dd>
+<dt><strong>derivative_abs_step</strong><span class="classifier">float, optional</span></dt><dd><p>Finite difference absolute step size to be used when the problem Jacobian is not provided. Defaults to 1e-6</p>
+</dd>
+<dt><strong>display</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, displays the convergence progress (default is True).</p>
+</dd>
+<dt><strong>plot</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, plots the convergence progress (default is False).</p>
+</dd>
+<dt><strong>plot_scale_objective</strong><span class="classifier">str, optional</span></dt><dd><p>Specifies the scale of the objective function axis in the convergence plot (default is ‘linear’).</p>
+</dd>
+<dt><strong>plot_scale_constraints</strong><span class="classifier">str, optional</span></dt><dd><p>Specifies the scale of the constraint violation axis in the convergence plot (default is ‘linear’).</p>
+</dd>
+<dt><strong>logger</strong><span class="classifier">logging.Logger, optional</span></dt><dd><p>Logger object to which logging messages will be directed. Logging is disabled if <cite>logger</cite> is None.</p>
+</dd>
+<dt><strong>update_on</strong><span class="classifier">str, optional</span></dt><dd><p>Specifies if the convergence report should be updated based on new function evaluations or gradient evaluations (default is ‘gradient’, alternative is ‘function’).</p>
+</dd>
+<dt><strong>callback_functions</strong><span class="classifier">list of callable or callable, optional</span></dt><dd><p>Optional list of callback functions to pass to the solver.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>solve(x0):</strong></p></td>
+<td><p>Solve the optimization problem using the specified initial guess <cite>x0</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>fitness(x):</strong></p></td>
+<td><p>Evaluates the optimization problem objective function and constraints at a given point <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>gradient(x):</strong></p></td>
+<td><p>Evaluates the Jacobians of the optimization problem at a given point <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>print_convergence_history():</strong></p></td>
+<td><p>Print the final result and convergence history of the optimization problem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>plot_convergence_history():</strong></p></td>
+<td><p>Plot the convergence history of the optimization problem.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver.fitness">
+<span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">called_from_grad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver.fitness" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the optimization problem values at a given point x.</p>
+<p>This method queries the <cite>fitness</cite> method of the OptimizationProblem class to
+compute the objective function value and constraint values. It first checks the cache
+to avoid redundant evaluations. If no matching cached result exists, it proceeds to
+evaluate the objective function and constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of independent variables (i.e., degrees of freedom).</p>
+</dd>
+<dt><strong>called_from_grad</strong><span class="classifier">bool, optional</span></dt><dd><p>Flag used to indicate if the method is called during gradient evaluation.
+This helps in preventing redundant increments in evaluation counts during
+finite-differences gradient calculations. Default is False.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fitness</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>A 1D array containing the objective function, equality constraints, and inequality constraints at <cite>x</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver.gradient">
+<span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver.gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver.gradient" title="Link to this definition"></a></dt>
+<dd><p>Evaluates the Jacobian matrix of the optimization problem at the given point x.</p>
+<p>This method utilizes the <cite>gradient</cite> method of the OptimizationProblem class if implemented.
+If the <cite>gradient</cite> method is not implemented, the Jacobian is approximated using forward finite differences.</p>
+<p>To prevent redundant calculations, cached results are checked first. If a matching
+cached result is found, it is returned; otherwise, a fresh calculation is performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of independent variables (i.e., degrees of freedom).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>A 2D array representing the Jacobian matrix of the optimization problem at <cite>x</cite>.
+The Jacobian matrix includes:
+- Gradient of the objective function
+- Jacobian of equality constraints
+- Jacobian of inequality constraints</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver.plot_convergence_history">
+<span class="sig-name descname"><span class="pre">plot_convergence_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver.plot_convergence_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver.plot_convergence_history" title="Link to this definition"></a></dt>
+<dd><p>Plot the convergence history of the problem.</p>
+<dl class="simple">
+<dt>This method plots the optimization progress against the number of iterations:</dt><dd><ul class="simple">
+<li><p>Objective function value (left y-axis)</p></li>
+<li><p>Maximum constraint violation (right y-axis)</p></li>
+</ul>
+</dd>
+</dl>
+<p>The constraint violation is only displayed if the problem has nonlinear constraints</p>
+<p>This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>savefile</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, the plot is saved to a file instead of being displayed. Default is False.</p>
+</dd>
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>The name of the file to save the plot to. If not specified, the filename is automatically generated
+using the problem name and the start datetime. The file extension is not required.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">str, optional</span></dt><dd><p>The directory where the plot file will be saved if savefile is True. Default is “output”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The Matplotlib figure object for the plot. This can be used for further customization or display.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If this method is called before the problem has been solved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver.print_convergence_history">
+<span class="sig-name descname"><span class="pre">print_convergence_history</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver.print_convergence_history"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver.print_convergence_history" title="Link to this definition"></a></dt>
+<dd><p>Print the convergence history of the problem.</p>
+<dl class="simple">
+<dt>The convergence history includes:</dt><dd><ul class="simple">
+<li><p>Number of function evaluations</p></li>
+<li><p>Number of gradient evaluations</p></li>
+<li><p>Objective function value</p></li>
+<li><p>Maximum constraint violation</p></li>
+<li><p>Two-norm of the update step</p></li>
+</ul>
+</dd>
+<dt>The method provides a detailed report on:</dt><dd><ul class="simple">
+<li><p>Exit message</p></li>
+<li><p>Success status</p></li>
+<li><p>Execution time</p></li>
+</ul>
+</dd>
+</dl>
+<p>This method should be called only after the optimization problem has been solved, as it relies on data generated by the solving process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>savefile</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, the convergence history will be saved to a file, otherwise printed to standard output. Default is False.</p>
+</dd>
+<dt><strong>filename</strong><span class="classifier">str, optional</span></dt><dd><p>The name of the file to save the convergence history. If not specified, the filename is automatically generated
+using the problem name and the start datetime. The file extension is not required.</p>
+</dd>
+<dt><strong>output_dir</strong><span class="classifier">str, optional</span></dt><dd><p>The directory where the plot file will be saved if savefile is True. Default is “output”.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If this method is called before the problem has been solved.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.OptimizationSolver.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#OptimizationSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.OptimizationSolver.solve" title="Link to this definition"></a></dt>
+<dd><p>Solve the optimization problem using the specified library and solver.</p>
+<p>This method initializes the optimization process, manages the flow of the optimization,
+and handles the results, utilizing the solver from a specified library such as scipy or pygmo.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x0</strong><span class="classifier">array-like, optional</span></dt><dd><p>Initial guess for the solution of the optimization problem.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>x_final</strong><span class="classifier">array-like</span></dt><dd><p>An array with the optimal vector of design variables</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.combine_objective_and_constraints">
+<span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization.</span></span><span class="sig-name descname"><span class="pre">combine_objective_and_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_eq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_ineq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#combine_objective_and_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.combine_objective_and_constraints" title="Link to this definition"></a></dt>
+<dd><p>Combine an objective function with its associated equality and inequality constraints.</p>
+<p>This function takes in an objective function value, a set of equality constraints,
+and a set of inequality constraints. It then returns a combined Numpy array of
+these values. The constraints can be given as a list, tuple, numpy array, or as
+individual values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>f</strong><span class="classifier">float</span></dt><dd><p>The value of the objective function.</p>
+</dd>
+<dt><strong>c_eq</strong><span class="classifier">float, list, tuple, np.ndarray, or None</span></dt><dd><p>The equality constraint(s). This can be a single value or a collection of values.
+If <cite>None</cite>, no equality constraints will be added.</p>
+</dd>
+<dt><strong>c_ineq</strong><span class="classifier">float, list, tuple, np.ndarray, or None</span></dt><dd><p>The inequality constraint(s). This can be a single value or a collection of values.
+If <cite>None</cite>, no inequality constraints will be added.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>np.ndarray</dt><dd><p>A numpy array consisting of the objective function value followed by equality and
+inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">combine_objective_and_constraints</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+<span class="go">array([1. , 0.5, 0.6, 0.7, 0.8])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">combine_objective_and_constraints</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">)</span>
+<span class="go">array([1. , 0.5, 0.7])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.pysolver_view.optimization.count_constraints">
+<span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization.</span></span><span class="sig-name descname"><span class="pre">count_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization.html#count_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization.count_constraints" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the number of constraints based on the provided input.</p>
+<p>This function returns the count of constraints based on the nature of the
+input:</p>
+<ul class="simple">
+<li><p><cite>None</cite> returns 0</p></li>
+<li><p>Scalar values return 1</p></li>
+<li><p>Array-like structures return their length</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>var</strong><span class="classifier">None, scalar, or array-like (list, tuple, np.ndarray)</span></dt><dd><p>The input representing the constraint(s). This can be <cite>None</cite>, a scalar value,
+or an array-like structure containing multiple constraints.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>int</dt><dd><p>The number of constraints:</p>
+<ul class="simple">
+<li><p>0 for <cite>None</cite></p></li>
+<li><p>1 for scalar values</p></li>
+<li><p>Length of the array-like for array-like inputs</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count_constraints</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count_constraints</span><span class="p">(</span><span class="mf">5.0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">count_constraints</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.pysolver_view.nonlinear_system_problems.html" class="btn btn-neutral float-left" title="turboflow.pysolver_view.nonlinear_system_problems module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.pysolver_view.optimization_problems.html" class="btn btn-neutral float-right" title="meanline_axial.solver.optimization_problems module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

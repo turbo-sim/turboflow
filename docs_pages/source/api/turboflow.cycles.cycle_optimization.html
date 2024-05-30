@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>meanline_axial.cycles.cycle_optimization module &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="turboflow.cycles.brayton_recuperated module" href="turboflow.cycles.brayton_recuperated.html" />
+    <link rel="prev" title="meanline_axial.cycles.components module" href="turboflow.cycles.components.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.cycles.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.cycles.html#module-turboflow.cycles">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+      <li class="breadcrumb-item active">meanline_axial.cycles.cycle_optimization module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.cycles.cycle_optimization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.cycles.cycle_optimization">
+<span id="meanline-axial-cycles-cycle-optimization-module"></span><h1>meanline_axial.cycles.cycle_optimization module<a class="headerlink" href="#module-turboflow.cycles.cycle_optimization" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.cycles.cycle_optimization.</span></span><span class="sig-name descname"><span class="pre">ThermodynamicCycleOptimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.create_animation" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.create_animation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_animation</span></code></a>()</p></td>
+<td><p>Creates an animation of the optimization history.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.generate_output_files" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.generate_output_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate_output_files</span></code></a>()</p></td>
+<td><p>Generates additional output files, such as Excel files or plots.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.load_config" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.load_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_config</span></code></a>(config_file)</p></td>
+<td><p>Loads configuration from a YAML file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.run_optimization" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.run_optimization"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_optimization</span></code></a>()</p></td>
+<td><p>Executes the optimization process.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.save_results" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.save_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_results</span></code></a>()</p></td>
+<td><p>Saves the results of the optimization, including configurations and output files.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_problem" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_problem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_problem</span></code></a>()</p></td>
+<td><p>Sets up the ThermodynamicCycleProblem based on the loaded configuration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_solver" title="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_solver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_solver</span></code></a>()</p></td>
+<td><p>Configures and returns the optimization solver.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.create_animation">
+<span class="sig-name descname"><span class="pre">create_animation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.create_animation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.create_animation" title="Link to this definition"></a></dt>
+<dd><p>Creates an animation of the optimization history.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.generate_output_files">
+<span class="sig-name descname"><span class="pre">generate_output_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.generate_output_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.generate_output_files" title="Link to this definition"></a></dt>
+<dd><p>Generates additional output files, such as Excel files or plots.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.load_config">
+<span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.load_config" title="Link to this definition"></a></dt>
+<dd><p>Loads configuration from a YAML file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.run_optimization">
+<span class="sig-name descname"><span class="pre">run_optimization</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.run_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.run_optimization" title="Link to this definition"></a></dt>
+<dd><p>Executes the optimization process.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.save_results">
+<span class="sig-name descname"><span class="pre">save_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.save_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.save_results" title="Link to this definition"></a></dt>
+<dd><p>Saves the results of the optimization, including configurations and output files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_problem">
+<span class="sig-name descname"><span class="pre">setup_problem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.setup_problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_problem" title="Link to this definition"></a></dt>
+<dd><p>Sets up the ThermodynamicCycleProblem based on the loaded configuration.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_solver">
+<span class="sig-name descname"><span class="pre">setup_solver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleOptimization.setup_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleOptimization.setup_solver" title="Link to this definition"></a></dt>
+<dd><p>Configures and returns the optimization solver.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.cycles.cycle_optimization.</span></span><span class="sig-name descname"><span class="pre">ThermodynamicCycleProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
+<p>A class to represent a thermodynamic cycle optimization problem.</p>
+<p>This class provides functionalities to load and update the configuration for
+the thermodynamic cycle, and to perform interactive plotting based on the current
+configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>plot_initialized</strong><span class="classifier">bool</span></dt><dd><p>Flag to indicate if the plot has been initialized.</p>
+</dd>
+<dt><strong>constraints</strong><span class="classifier">dict</span></dt><dd><p>Dictionary holding the constraints of the problem.</p>
+</dd>
+<dt><strong>fixed_parameters</strong><span class="classifier">dict</span></dt><dd><p>Dictionary holding the fixed parameters of the problem.</p>
+</dd>
+<dt><strong>design_variables</strong><span class="classifier">dict</span></dt><dd><p>Dictionary holding the current values of the design variables.</p>
+</dd>
+<dt><strong>lower_bounds</strong><span class="classifier">dict</span></dt><dd><p>Dictionary holding the lower bounds of the design variables.</p>
+</dd>
+<dt><strong>upper_bounds</strong><span class="classifier">dict</span></dt><dd><p>Dictionary holding the upper bounds of the design variables.</p>
+</dd>
+<dt><strong>keys</strong><span class="classifier">list</span></dt><dd><p>List of keys (names) of the design variables.</p>
+</dd>
+<dt><strong>x0</strong><span class="classifier">np.ndarray</span></dt><dd><p>Initial guess for the optimization problem.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>update_config(configuration):</strong></p></td>
+<td><p>Update the problem’s configuration based on the provided dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>load_config_from_file(configuration_file):</strong></p></td>
+<td><p>Load and update the problem’s configuration from a specified file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>plot_cycle_interactive(configuration_file, update_interval=0.20):</strong></p></td>
+<td><p>Perform interactive plotting, updating the plot based on the configuration file.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.fitness">
+<span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.fitness" title="Link to this definition"></a></dt>
+<dd><p>Evaluate optimization problem</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_bounds">
+<span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.get_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_bounds" title="Link to this definition"></a></dt>
+<dd><p>Get the bounds for each decision variable (Pygmo format)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bounds</strong><span class="classifier">tuple of lists</span></dt><dd><p>A tuple of two items where the first item is the list of lower bounds and the second
+item of the list of upper bounds for the vector of decision variables. For example,
+([-2 -1], [2, 1]) indicates that the first decision variable has bounds between
+-2 and 2, and the second has bounds between -1 and 1.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nec">
+<span class="sig-name descname"><span class="pre">get_nec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.get_nec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nec" title="Link to this definition"></a></dt>
+<dd><p>Return the number of equality constraints associated with the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>neq</strong><span class="classifier">int</span></dt><dd><p>Number of equality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nic">
+<span class="sig-name descname"><span class="pre">get_nic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.get_nic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.get_nic" title="Link to this definition"></a></dt>
+<dd><p>Return the number of inequality constraints associated with the problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>nineq</strong><span class="classifier">int</span></dt><dd><p>Number of inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.load_configuration_file">
+<span class="sig-name descname"><span class="pre">load_configuration_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.load_configuration_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.load_configuration_file" title="Link to this definition"></a></dt>
+<dd><p>Load and update the problem’s configuration from a specified file.</p>
+<p>Useful to plot the cycle according to the latest version of the configuration
+file in real time (interactive initial guess generation)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_file</strong><span class="classifier">str</span></dt><dd><p>Path to the configuration file.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle">
+<span class="sig-name descname"><span class="pre">plot_cycle</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.plot_cycle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle" title="Link to this definition"></a></dt>
+<dd><p>Plots or updates the thermodynamic cycle diagrams based on current settings,
+including the option to include a pinch point diagram.</p>
+<p>This function is capable of both creating new cycle diagrams and updating existing ones.
+It’s particularly useful in dynamic scenarios such as during optimization steps,
+where the plot needs to be refreshed continually with new data.
+The method also supports real-time updates based on the latest configuration settings.</p>
+<p>The function first determines the number of subplots required based on the cycle diagrams
+specified in the ‘plot_settings’ attribute and whether a pinch point diagram is included.
+It then either initializes a new figure and axes or updates existing ones.
+Each thermodynamic diagram (phase diagram and cycle components) and the optional pinch point
+diagram are plotted or updated accordingly.</p>
+<p>The method ensures that the plot reflects the current state of the cycle, including any
+changes during optimization or adjustments to configuration settings.</p>
+<p>The data of the plots can be updated interactively, but the subplot objects created can
+only be specified upon class initialization. For example, it is not possible to switch
+on and off the pinch point diagram or to add new thermodynamic diagrams. The class would
+have to be re-initialized upon those scenarios. The reason for this choice is that re-creating
+a figure would be too time consuming and not practical for the real-time updating of the plots</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_callback">
+<span class="sig-name descname"><span class="pre">plot_cycle_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.plot_cycle_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_callback" title="Link to this definition"></a></dt>
+<dd><p>Plot and save the thermodynamic cycle at different optimization iterations</p>
+<p>This function is intended to be passed as callback argument to the optimization solver</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_realtime">
+<span class="sig-name descname"><span class="pre">plot_cycle_realtime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.plot_cycle_realtime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.plot_cycle_realtime" title="Link to this definition"></a></dt>
+<dd><p>Perform interactive plotting, updating the plot based on the configuration file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config_file</strong><span class="classifier">str</span></dt><dd><p>Path to the configuration file.</p>
+</dd>
+<dt><strong>update_interval</strong><span class="classifier">float, optional</span></dt><dd><p>Time interval in seconds between plot updates (default is 0.1 seconds).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_config_callback">
+<span class="sig-name descname"><span class="pre">save_config_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.save_config_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_config_callback" title="Link to this definition"></a></dt>
+<dd><p>A callback function to save the current configuration during optimization iterations.</p>
+<p>Parameters:
+- x : The current solution vector from the optimizer.
+- iter : The current optimization iteration count.</p>
+<p>This function acts as a bridge between the optimizer callback requirements and the
+existing <cite>save_current_configuration</cite> function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_current_configuration">
+<span class="sig-name descname"><span class="pre">save_current_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.save_current_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.save_current_configuration" title="Link to this definition"></a></dt>
+<dd><p>Save the current configuration to a YAML file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.to_excel">
+<span class="sig-name descname"><span class="pre">to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'performance.xlsx'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.to_excel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.to_excel" title="Link to this definition"></a></dt>
+<dd><p>Exports the cycle performance data to Excel file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_configuration">
+<span class="sig-name descname"><span class="pre">update_configuration</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.update_configuration"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_configuration" title="Link to this definition"></a></dt>
+<dd><p>Update the problem’s configuration based on the provided dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing the new configuration for the thermodynamic cycle problem.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_variables">
+<span class="sig-name descname"><span class="pre">update_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/cycles/cycle_optimization.html#ThermodynamicCycleProblem.update_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.cycles.cycle_optimization.ThermodynamicCycleProblem.update_variables" title="Link to this definition"></a></dt>
+<dd><p>Update the problem variables based on the new values provided by the optimizer.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.cycles.components.html" class="btn btn-neutral float-left" title="meanline_axial.cycles.components module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.cycles.brayton_recuperated.html" class="btn btn-neutral float-right" title="turboflow.cycles.brayton_recuperated module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design optimization &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Deviation models" href="turboflow.axial_turbine.deviation_model.html" />
+    <link rel="prev" title="Choking models" href="turboflow.axial_turbine.choking_model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.axial_turbine.html">Axial turbines</a></li>
+      <li class="breadcrumb-item active">Design optimization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.axial_turbine.design_optimization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.axial_turbine.design_optimization">
+<span id="design-optimization"></span><h1>Design optimization<a class="headerlink" href="#module-turboflow.axial_turbine.design_optimization" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.design_optimization.</span></span><span class="sig-name descname"><span class="pre">CascadesOptimizationProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
+<p>A class representing a turbine design optimization problem.</p>
+<p>This class is designed for solving design optimization problems of axial turbines. It is initialized by providing a
+dictionary containing information on design variables, objective function, constraints and bounds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config</strong><span class="classifier">dictionary</span></dt><dd><p>A dictionary containing necessary configuration options for computing optimal turbine.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fluid</strong><span class="classifier">FluidCoolProp_2Phase</span></dt><dd><p>An instance of the FluidCoolProp_2Phase class representing the fluid properties.</p>
+</dd>
+<dt><strong>results</strong><span class="classifier">dict</span></dt><dd><p>A dictionary to store results.</p>
+</dd>
+<dt><strong>boundary_conditions</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing boundary condition data.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing geometry-related data.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing options related to the analysis model.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing reference values for calculations.</p>
+</dd>
+<dt><strong>design_variables_keys</strong><span class="classifier">list</span></dt><dd><p>A list of strings defining the selected design variables.</p>
+</dd>
+<dt><strong>objective_function</strong><span class="classifier">str</span></dt><dd><p>A string defining the selected objective function for the design optimization problem.</p>
+</dd>
+<dt><strong>eq_constraints</strong><span class="classifier">list</span></dt><dd><p>A list of strings containing the selected equaility constraints for the design optimization problem.</p>
+</dd>
+<dt><strong>ineq_constraints</strong><span class="classifier">list</span></dt><dd><p>A list of strings containing the selected inequaility constraints for the design optimization problem.</p>
+</dd>
+<dt><strong>bounds</strong><span class="classifier">list</span></dt><dd><p>A list of tuples on the form (lower bound, upper bound) defining the bounds for the design optimization problem.</p>
+</dd>
+<dt><strong>radius_type</strong><span class="classifier">str</span></dt><dd><p>A string deciding what type of turbine geometry should be condidered (constant mean, hub or tip radius).</p>
+</dd>
+<dt><strong>vars_scaled</strong><span class="classifier">dict</span></dt><dd><p>A dict containing the scaled flow design variables used to evaluate turbine performance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>fitness(x)</strong></p></td>
+<td><p>Evaluate the objective function and constraints at a given point <cite>x</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_bounds()</strong></p></td>
+<td><p>Provide the bounds for the design optimization problem.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_n_eq()</strong></p></td>
+<td><p>Get the number of equality constraints.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_n_ineq()</strong></p></td>
+<td><p>Get the number of oinequality constraints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)</strong></p></td>
+<td><p>Convert specific speed to actual angular speed</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>extend_variables(variables)</strong></p></td>
+<td><p>Convert a dict containing lists or arrays to a dictionaries of only one element.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_given_bounds(design_variable)</strong></p></td>
+<td><p>Retrieves the lower and upper bounds for the given design variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_constraints(self, constraints):</strong></p></td>
+<td><p>Converts a list of constraints to equality and inequality constraints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>update_boundary_conditions(design_point)</strong></p></td>
+<td><p>Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>convert_performance_analysis_results(performance_problem)</strong></p></td>
+<td><p>Generate a feasable set of initial guess from a solved performance analysis problem object.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.convert_performance_analysis_results">
+<span class="sig-name descname"><span class="pre">convert_performance_analysis_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_problem</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.convert_performance_analysis_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.convert_performance_analysis_results" title="Link to this definition"></a></dt>
+<dd><p>Generate a feasable set of initial guess from a solved performance analysis problem object.</p>
+<p>The function adopt the vars_scaled attribute from the solved performance analysis problem, the geometry and
+angular speed to generate an initial guess of correct form to be given to the design optimization problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>dict</dt><dd><p>Feasable initial guess.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">
+<span class="sig-name descname"><span class="pre">extend_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.extend_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables" title="Link to this definition"></a></dt>
+<dd><p>Index the design variables for each cascade for the default initial guess.</p>
+<p>The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.
+This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
+for example <cite>aspect_ratio_1</cite> for first cascade and etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>variables</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where each key maps to a dictionary containing at least a
+“value” key. The “value” can be a list, numpy array, or float.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary where each list or numpy array in the original dictionary
+is expanded into individual elements with keys formatted as “key_index”.
+Float values are kept as is.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">
+<span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the objective function and constraints at a given pint <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of design variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>An array containg the value of the objective function and constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_bounds">
+<span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_bounds" title="Link to this definition"></a></dt>
+<dd><p>Provide the bounds for the design optimization problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>list</dt><dd><p>List of toutples containg the lower and upper bound for each design variable.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints">
+<span class="sig-name descname"><span class="pre">get_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints" title="Link to this definition"></a></dt>
+<dd><p>Converts a list of constraints to equality and inequality constraints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_given_bounds">
+<span class="sig-name descname"><span class="pre">get_given_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">design_variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_given_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_given_bounds" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the lower and upper bounds for the given design variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>design_variables</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where each key maps to a dictionary containing a
+“value” key, a “lower_bound” key, and an “upper_bound” key. The values
+can be a list, numpy array, or float.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>lb</strong><span class="classifier">list</span></dt><dd><p>A list of lower bounds for the design variables.</p>
+</dd>
+<dt><strong>ub</strong><span class="classifier">list</span></dt><dd><p>A list of upper bounds for the design variables.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nec">
+<span class="sig-name descname"><span class="pre">get_nec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_nec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nec" title="Link to this definition"></a></dt>
+<dd><p>Get the number of equality constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Number of equality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic">
+<span class="sig-name descname"><span class="pre">get_nic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_nic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic" title="Link to this definition"></a></dt>
+<dd><p>Get the number of inequality constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>int</dt><dd><p>Number of inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_omega">
+<span class="sig-name descname"><span class="pre">get_omega</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">specific_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass_flow</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_is</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_is</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_omega"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_omega" title="Link to this definition"></a></dt>
+<dd><p>Convert specific speed to actual angular speed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>specific_speed</strong><span class="classifier">float</span></dt><dd><p>Given specific speed.</p>
+</dd>
+<dt><strong>mass_flow</strong><span class="classifier">float</span></dt><dd><p>Given mass flow rate.</p>
+</dd>
+<dt><strong>h0_in</strong><span class="classifier">float</span></dt><dd><p>Turbine inlet stagnation enthalpy.</p>
+</dd>
+<dt><strong>d_is</strong><span class="classifier">float</span></dt><dd><p>Turbine exit density for an isentropic expansion.</p>
+</dd>
+<dt><strong>h_is</strong><span class="classifier">float</span></dt><dd><p>Turbine exit enthalpy for an isentropic expansion.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Actual angular speed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.update_boundary_conditions">
+<span class="sig-name descname"><span class="pre">update_boundary_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">design_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.update_boundary_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.update_boundary_conditions" title="Link to this definition"></a></dt>
+<dd><p>Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.</p>
+<p>This method updates the boundary conditions attributes used to evaluate the turbine performance.
+It also initializes a Fluid object using the ‘fluid_name’ specified in the operation point.
+The method computes additional properties and reference values like stagnation properties at
+the inlet, exit static properties, spouting velocity, and reference mass flow rate.
+These are stored in the object’s internal state for further use in calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>design_point</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing the boundary conditions defining the operation point. It must include the following keys:</p>
+<ul class="simple">
+<li><p><cite>fluid_name</cite> (str) : The name of the fluid to be used in the Fluid object.</p></li>
+<li><p><cite>T0_in</cite> (float): The inlet temperature (in Kelvin).</p></li>
+<li><p><cite>p0_in</cite> (float): The inlet pressure (in Pascals).</p></li>
+<li><p><cite>p_out</cite> (float): The outlet pressure (in Pascals).</p></li>
+<li><p><cite>omega</cite> (float): The rotational speed (in rad/s).</p></li>
+<li><p><cite>alpha_in</cite> (float): The inlet flow angle (in degrees).</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>This method does not return a value but updates the attributes of the object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.compute_optimal_turbine">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.design_optimization.</span></span><span class="sig-name descname"><span class="pre">compute_optimal_turbine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#compute_optimal_turbine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.compute_optimal_turbine" title="Link to this definition"></a></dt>
+<dd><p>Calculate the optimal turbine configuration based on the specified optimization problem.</p>
+<p>The function checks the configuration file before performing design optimization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>config</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing necessary configuration options for computing optimal turbine.</p>
+</dd>
+<dt><strong>initial_guess</strong><span class="classifier">None or dict</span></dt><dd><p>The initial guess of the design optimization. If None, a defualt initial guess is provided. If given, he initial guess must correspond
+with the given set of design variables given in the configuration dictionary.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>solution</strong><span class="classifier">object</span></dt><dd><p>The solution object containing the results of the design optimization.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.axial_turbine.choking_model.html" class="btn btn-neutral float-left" title="Choking models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.axial_turbine.deviation_model.html" class="btn btn-neutral float-right" title="Deviation models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

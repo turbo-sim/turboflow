@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Plot function" href="turboflow.plot_functions.html" />
+    <link rel="prev" title="meanline_axial.config_validation module" href="turboflow.config_validation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.config_validation.html">meanline_axial.config_validation module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Math</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.all_non_negative"><code class="docutils literal notranslate"><span class="pre">all_non_negative()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.all_numeric"><code class="docutils literal notranslate"><span class="pre">all_numeric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arccosd"><code class="docutils literal notranslate"><span class="pre">arccosd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arcsind"><code class="docutils literal notranslate"><span class="pre">arcsind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arctand"><code class="docutils literal notranslate"><span class="pre">arctand()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.is_even"><code class="docutils literal notranslate"><span class="pre">is_even()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.is_odd"><code class="docutils literal notranslate"><span class="pre">is_odd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_hyperbolic"><code class="docutils literal notranslate"><span class="pre">sigmoid_hyperbolic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_rational"><code class="docutils literal notranslate"><span class="pre">sigmoid_rational()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_smootherstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smootherstep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_smoothstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smoothstep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_abs"><code class="docutils literal notranslate"><span class="pre">smooth_abs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_max"><code class="docutils literal notranslate"><span class="pre">smooth_max()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_min"><code class="docutils literal notranslate"><span class="pre">smooth_min()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.plot_functions.html">Plot function</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
+      <li class="breadcrumb-item active">Math</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.math.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.math">
+<span id="math"></span><h1>Math<a class="headerlink" href="#module-turboflow.math" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.all_non_negative">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">all_non_negative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#all_non_negative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.all_non_negative" title="Link to this definition"></a></dt>
+<dd><p>Check if all items in Numpy array are non-negative</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.all_numeric">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">all_numeric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#all_numeric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.all_numeric" title="Link to this definition"></a></dt>
+<dd><p>Check if all items in Numpy array are numeric (floats or ints)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.arccosd">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">arccosd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#arccosd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.arccosd" title="Link to this definition"></a></dt>
+<dd><p>Compute the arccosine of a value and return the result in degrees.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.arcsind">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">arcsind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#arcsind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.arcsind" title="Link to this definition"></a></dt>
+<dd><p>Compute the arcsine of a value and return the result in degrees.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.arctand">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">arctand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#arctand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.arctand" title="Link to this definition"></a></dt>
+<dd><p>Compute the arctangent of a value and return the result in degrees.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.cosd">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">cosd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#cosd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.cosd" title="Link to this definition"></a></dt>
+<dd><p>Compute the cosine of an angle given in degrees.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.is_even">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">is_even</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#is_even"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.is_even" title="Link to this definition"></a></dt>
+<dd><p>Check if a number is even. Returns True if the provided number is even, and False otherwise.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.is_odd">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">is_odd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#is_odd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.is_odd" title="Link to this definition"></a></dt>
+<dd><p>Check if a number is odd. Returns True if the provided number is odd, and False otherwise.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.sigmoid_hyperbolic">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">sigmoid_hyperbolic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#sigmoid_hyperbolic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.sigmoid_hyperbolic" title="Link to this definition"></a></dt>
+<dd><p>Compute the sigmoid hyperbolic function.</p>
+<p>This function calculates a sigmoid function based on the hyperbolic tangent.
+The formula is given by:</p>
+<div class="math notranslate nohighlight">
+\[\sigma(x) = \frac{1 + \tanh\left(\frac{x - x_0}{\alpha}\right)}{2}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>x0</strong><span class="classifier">float, optional</span></dt><dd><p>Center of the sigmoid function. Default is 0.5.</p>
+</dd>
+<dt><strong>alpha</strong><span class="classifier">float, optional</span></dt><dd><p>Scale parameter. Default is 0.1.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Output of the sigmoid hyperbolic function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.sigmoid_rational">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">sigmoid_rational</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#sigmoid_rational"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.sigmoid_rational" title="Link to this definition"></a></dt>
+<dd><p>Compute the sigmoid rational function.</p>
+<p>This function calculates a sigmoid function using an algebraic approach based on a rational function.
+The formula is given by:</p>
+<div class="math notranslate nohighlight">
+\[\sigma(x) = \frac{x^n}{x^n + (1-x)^m}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Power of the numerator.</p>
+</dd>
+<dt><strong>m</strong><span class="classifier">int</span></dt><dd><p>Power of the denominator.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Output of the sigmoid algebraic function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.sigmoid_smootherstep">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">sigmoid_smootherstep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#sigmoid_smootherstep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.sigmoid_smootherstep" title="Link to this definition"></a></dt>
+<dd><p>Compute the smoother step function.</p>
+<p>This function calculates a smoother step function with zero second-order
+derivatives at the endpoints. It is a modification of the smoothstep
+function to provide smoother transitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Output of the sigmoid smootherstep function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.sigmoid_smoothstep">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">sigmoid_smoothstep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#sigmoid_smoothstep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.sigmoid_smoothstep" title="Link to this definition"></a></dt>
+<dd><p>Compute the smooth step function.</p>
+<p>This function calculates a smooth step function with zero first-order
+derivatives at the endpoints. More information available at:
+<a class="reference external" href="https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/">https://resources.wolframcloud.com/FunctionRepository/resources/SmoothStep/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Output of the sigmoid smoothstep function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.sind">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">sind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#sind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.sind" title="Link to this definition"></a></dt>
+<dd><p>Compute the sine of an angle given in degrees.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.smooth_abs">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'quadratic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_abs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_abs" title="Link to this definition"></a></dt>
+<dd><p>Compute a smooth approximation of the absolute value function according to the specified method.</p>
+<ol class="arabic simple">
+<li><p>The quadratic approximation is given by <span id="id1">[<a class="reference internal" href="../bibliography.html#id87" title="Carlos Ramirez, Reinaldo Sanchez, Vladik Kreinovich, and Miguel Argaez. √(x² + μ) is the most computationally efficient smooth approximation to |x|: A proof. Departmental Technical Reports (CS), 2013. URL: https://scholarworks.utep.edu/cs_techrep/789.">Ramirez <em>et al.</em>, 2013</a>]</span>:</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[f_{\epsilon}(x) = \sqrt{x^2 + \epsilon}\]</div>
+<ol class="arabic simple" start="2">
+<li><p>The hyperbolic tangent approximation is given by <span id="id2">[<a class="reference internal" href="../bibliography.html#id11" title="Yogesh J. J Bagul. A smooth transcendental approximation to |x|. International Journal of Mathematical Sciences and Engineering Applications (IJMSEA), 11(2):213 – 217, 2017. URL: https://hal.science/hal-01713196.">Bagul, 2017</a>]</span>:</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[f_{\epsilon}(x) = \epsilon \tanh{x / \epsilon}\]</div>
+<ol class="arabic simple" start="3">
+<li><p>The log-cosh approximation is given by <span id="id3">[<a class="reference internal" href="../bibliography.html#id92" title="Resve A. Saleh and A. K. Md Ehsanes Saleh. Statistical properties of the log-cosh loss function used in machine learning. 2022. arXiv:2208.04564 [cs, stat]. doi:10.48550/arXiv.2208.04564.">Saleh and Saleh, 2022</a>]</span>:</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[f_{\epsilon}(x) = \epsilon \log\left(\cosh\left(\frac{x}{\epsilon}\right)\right)\]</div>
+<p>The quadratic method is the most computationally efficient, but also requires a smaller value of <span class="math notranslate nohighlight">\(\epsilon\)</span> to yield a good approximation.
+The transcendental methods give a better approximation to the absolute value function, at the expense of a higher computational time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">float or np.ndarray</span></dt><dd><p>Input value(s) for which the approximation is computed.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str, optional</span></dt><dd><p>The method of approximation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">quadratic</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">hyperbolic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logcosh</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>epsilon</strong><span class="classifier">float, optional</span></dt><dd><p>A small positive constant affecting the approximation. Default is 1e-5.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float or np.ndarray</dt><dd><p>Smooth approximation value(s) of the absolute function.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If an unsupported approximation method is provided.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.smooth_max">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepdims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_max" title="Link to this definition"></a></dt>
+<dd><p>Compute a smooth approximation to the maximum of an array using the specified method.</p>
+<p>The p-norm approximation to the maximum is given by <span id="id4">[<a class="reference internal" href="../bibliography.html#id105" title="Eric W. Weisstein. Vector norm. 2023. Publisher: Wolfram Research, Inc. URL: https://mathworld.wolfram.com/VectorNorm.html.">Weisstein, 2023</a>]</span>:</p>
+<div class="math notranslate nohighlight">
+\[f_{\alpha}(x) = \left( \sum_i x_i^\alpha \right)^{\frac{1}{\alpha}}\]</div>
+<p>The Boltzmann approximation is given by <span id="id5">[<a class="reference internal" href="../bibliography.html#id22" title="Pierre Blanchard, Desmond J Higham, and Nicholas J Higham. Accurately computing the log-sum-exp and softmax functions. IMA Journal of Numerical Analysis, 41(4):2311–2330, 2021. doi:10.1093/imanum/draa038.">Blanchard <em>et al.</em>, 2021</a>]</span>:</p>
+<div class="math notranslate nohighlight">
+\[f_{\alpha}(x) = \frac{1}{\alpha} \log \left( \sum_i e^{\alpha \,(x_i - \hat{x})} \right) + \hat{x}\]</div>
+<p>This LogSumExp approximation is given by <span id="id6">[<a class="reference internal" href="../bibliography.html#id22" title="Pierre Blanchard, Desmond J Higham, and Nicholas J Higham. Accurately computing the log-sum-exp and softmax functions. IMA Journal of Numerical Analysis, 41(4):2311–2330, 2021. doi:10.1093/imanum/draa038.">Blanchard <em>et al.</em>, 2021</a>]</span>:</p>
+<div class="math notranslate nohighlight">
+\[f_{\alpha}(x) = \frac{1}{\alpha} \log \left( \sum_i e^{\alpha \,(x_i - \hat{x})} \right) + \hat{x}\]</div>
+<p>where the shift <span class="math notranslate nohighlight">\(\hat{x}\)</span> is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\hat{x} = \text{sign}(\alpha) \cdot \max(\text{sign}(\alpha) \cdot x)\]</div>
+<p>Shifting <cite>x</cite> prevents numerical overflow due to the finite precision of floating-point operations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str, optional</span></dt><dd><p>Method to be used for the approximation. Supported methods are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boltzmann</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logsumexp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p-norm</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>alpha</strong><span class="classifier">float, optional</span></dt><dd><p>Sharpness parameter. Large values produce a tight approximation to the
+maximum function</p>
+</dd>
+<dt><strong>axis</strong><span class="classifier">None or int or tuple of ints, optional</span></dt><dd><p>Axis or axes along which to operate. By default, flattened input is
+used. If this is a tuple of ints, the maximum is selected over
+multiple axes, instead of a single axis or all the axes as before.</p>
+</dd>
+<dt><strong>keepdims</strong><span class="classifier">bool, optional</span></dt><dd><p>If this is set to True, the axes which are reduced are left
+in the result as dimensions with size one. With this option,
+the result will broadcast correctly against the input array.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>max_approx</strong><span class="classifier">ndarray or scalar</span></dt><dd><p>Approximate maximum of <cite>x</cite> using the specified method.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If an unsupported method is specified.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.smooth_min">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepdims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_min" title="Link to this definition"></a></dt>
+<dd><p>Compute a smooth approximation to the minimum of an array using the specified method.</p>
+<p>The smooth minimum approximation is equivalent to the smooth maximum with a
+negative value of the sharpness parameter <span class="math notranslate nohighlight">\(\alpha\)</span>. See documentation
+of the <code class="docutils literal notranslate"><span class="pre">`smooth_max()</span></code> function for more information about the approximation
+methods available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array_like</span></dt><dd><p>Input data.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str, optional</span></dt><dd><p>Method to be used for the approximation. Supported methods are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">boltzmann</span></code> (default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">logsumexp</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p-norm</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>alpha</strong><span class="classifier">float, optional</span></dt><dd><p>Sharpness parameter.Large values produce a tight approximation to the
+minimum function</p>
+</dd>
+<dt><strong>axis</strong><span class="classifier">None or int or tuple of ints, optional</span></dt><dd><p>Axis or axes along which to operate. By default, flattened input is
+used. If this is a tuple of ints, the minimum is selected over
+multiple axes, instead of a single axis or all the axes as before.</p>
+</dd>
+<dt><strong>keepdims</strong><span class="classifier">bool, optional</span></dt><dd><p>If this is set to True, the axes which are reduced are left
+in the result as dimensions with size one. With this option,
+the result will broadcast correctly against the input array.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>min_approx</strong><span class="classifier">ndarray or scalar</span></dt><dd><p>Approximate minimum of <cite>x</cite> using the specified method.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If an unsupported method is specified.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.math.tand">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">tand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#tand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.tand" title="Link to this definition"></a></dt>
+<dd><p>Compute the tangent of an angle given in degrees.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.config_validation.html" class="btn btn-neutral float-left" title="meanline_axial.config_validation module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.plot_functions.html" class="btn btn-neutral float-right" title="Plot function" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
