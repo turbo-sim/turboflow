@@ -1,0 +1,46 @@
+name: Generate Regression Data
+
+on:
+  workflow_dispatch:  # This allows you to trigger the workflow manually
+
+jobs:
+  generate-data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'  
+
+    - name: Set up Miniconda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: '3.11'  
+
+    - name: Create conda environment
+      run: |
+        conda env create -f environment.yaml
+
+    - name: Install dependencies
+      run: |
+        source "$(conda info --base)/etc/profile.d/conda.sh"
+        conda activate turboflow_env
+        pip install poetry
+        poetry install
+
+    - name: Generate regression data
+      run: |
+        source "$(conda info --base)/etc/profile.d/conda.sh"
+        conda activate turboflow_env
+        python tests/generate_regression_data.py  # Adjust this to your specific script
+
+    - name: Upload regression data
+      uses: actions/upload-artifact@v3
+      with:
+        name: regression-data
+        path: tests/regression_data/**
