@@ -19,7 +19,7 @@ DATA_DIR = "regression_data"
 CONFIG_DIR = "config_files"
 
 new_regression_PA = True
-new_regression_DO = False
+new_regression_DO = True
 
 def create_regression_data_PA(config_file, data_dir, config_dir, os_type):
     """Save performance analysis data to Excel files for regression tests"""
