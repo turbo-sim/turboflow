@@ -15,8 +15,11 @@ CONFIG_FILES_PERFORMANCE_ANALYSIS = [
 ]
 
 CONFIG_FILES_DESIGN_OPTIMIZATION = ["design_optimization.yaml"]
+TEST_FOLDER = "tests"
 DATA_DIR = "regression_data"
 CONFIG_DIR = "config_files"
+DATA_DIR = os.path.join(TEST_FOLDER, DATA_DIR)
+CONFIG_DIR = os.path.join(TEST_FOLDER, CONFIG_DIR)
 
 new_regression_PA = True
 new_regression_DO = True
