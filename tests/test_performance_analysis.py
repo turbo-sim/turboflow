@@ -9,9 +9,16 @@ import turboflow as tf
 import platform
 
 
+# Check OS type
+SUPPORTED_OS = ["Windows", "Linux"]
+os_name = platform.system()
+if os_name not in SUPPORTED_OS:
+    raise Exception("OS not supported")
+os_name = os_name.lower()
+
 # Define regression settings
 TEST_FOLDER = "tests"
-DATA_DIR = os.path.join(TEST_FOLDER, "regression_data")
+DATA_DIR = os.path.join(TEST_FOLDER, f"regression_data_{os_name}")
 CONFIG_DIR = os.path.join(TEST_FOLDER, "config_files")
 CONFIG_FILES = [
     "performance_analysis_evaluate_cascade_throat.yaml",
@@ -25,15 +32,6 @@ CONFIG_FILES = [
 
 # Define test settings
 DIGIT_TOLERANCE = 10
-
-# Check OS type
-os_name = platform.system()
-if os_name == 'Windows':
-    OS_TYPE = 'win'
-elif os_name == 'Linux':
-    OS_TYPE = 'linux'
-else:
-    OS_TYPE = 'unknown'
 
 # Helper function to check values
 def check_values(old_values, new_values, column, config_name, discrepancies):
@@ -121,7 +119,7 @@ def test_performance_analysis(compute_performance_from_config):
     config_name, _ = os.path.splitext(config_file)
 
     # Load saved convergence history from Excel file
-    filename = os.path.join(DATA_DIR, f"{config_name}_{OS_TYPE}.xlsx")
+    filename = os.path.join(DATA_DIR, f"{config_name}_{os_name}.xlsx")
     saved_df = pd.read_excel(filename, sheet_name=["solver", "overall"])
 
     # Loop over all operating points

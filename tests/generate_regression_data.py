@@ -4,6 +4,13 @@ import turboflow as tf
 import datetime
 import platform
 
+# Check OS type
+SUPPORTED_OS = ["Windows", "Linux"]
+os_name = platform.system()
+if os_name not in SUPPORTED_OS:
+    raise Exception("OS not supported")
+os_name = os_name.lower()
+
 CONFIG_FILES_PERFORMANCE_ANALYSIS = [
     "performance_analysis_evaluate_cascade_throat.yaml",
     "performance_analysis_evaluate_cascade_critical.yaml",
@@ -16,7 +23,7 @@ CONFIG_FILES_PERFORMANCE_ANALYSIS = [
 
 CONFIG_FILES_DESIGN_OPTIMIZATION = ["design_optimization.yaml"]
 TEST_FOLDER = "tests"
-DATA_DIR = "regression_data"
+DATA_DIR = f"regression_data_{os_name.lower()}"
 CONFIG_DIR = "config_files"
 DATA_DIR = os.path.join(TEST_FOLDER, DATA_DIR)
 CONFIG_DIR = os.path.join(TEST_FOLDER, CONFIG_DIR)
@@ -65,18 +72,6 @@ def create_regression_data_DO(config_file, data_dir, config_dir, os_type):
     solvers = tf.compute_optimal_turbine(config, out_dir = data_dir, out_filename= filename, export_results = True)
 
     print(f"Regression data set saved: {filename}")
-    
-def get_os_type():
-    os_name = platform.system()
-    if os_name == 'Windows':
-        return 'win'
-    elif os_name == 'Linux':
-        return 'linux'
-    else:
-        return 'unknown'
-    
-# Get OS type
-OS_TYPE = get_os_type()
 
 # Create a directory to save regression test data
 if not os.path.exists(DATA_DIR):
@@ -84,7 +79,7 @@ if not os.path.exists(DATA_DIR):
     
 if new_regression_PA:
     for config in CONFIG_FILES_PERFORMANCE_ANALYSIS:
-        create_regression_data_PA(config, DATA_DIR, CONFIG_DIR, OS_TYPE)
+        create_regression_data_PA(config, DATA_DIR, CONFIG_DIR, os_name)
 if new_regression_DO:
     for config in CONFIG_FILES_DESIGN_OPTIMIZATION:
-        create_regression_data_DO(config, DATA_DIR, CONFIG_DIR, OS_TYPE)
+        create_regression_data_DO(config, DATA_DIR, CONFIG_DIR, os_name)
