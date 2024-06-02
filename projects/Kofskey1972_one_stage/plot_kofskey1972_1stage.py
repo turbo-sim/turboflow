@@ -16,17 +16,17 @@ CONFIG_FILE = "kofskey1972_1stage.yaml"
 
 cascades_data = tf.load_config(CONFIG_FILE, print_summary = False)
 
-if isinstance(cascades_data["operation_points"], list):
+if isinstance(cascades_data["operation_points"], (list, np.ndarray)):
     design_point = cascades_data["operation_points"][0]
 else:
     design_point = cascades_data["operation_points"]
 
-Case = "pressure_line"  # performance_map/error_plot
+Case = "test"  # performance_map/error_plot
 # Get the name of the latest results file
-filename = tf.utils.find_latest_results_file(RESULTS_PATH)
-print(filename)
+# filename = tf.utils.find_latest_results_file(RESULTS_PATH)
+# print(filename)
 # filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
-# filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
+filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
 save_figs = False
 validation = True
@@ -85,9 +85,9 @@ if Case == "pressure_line":
     # Load performance data
     timestamp = tf.utils.extract_timestamp(filename)
     data = tf.plot_functions.load_data(filename)
-    indices = data["overall"].index[data["overall"]["angular_speed"] == 1627]
-    for key in data.keys():
-        data[key] = data[key].loc[indices]
+    # indices = data["overall"].index[data["overall"]["angular_speed"] == 1627]
+    # for key in data.keys():
+    #     data[key] = data[key].loc[indices]
 
     # Define plot settings
     color_map = "jet"
@@ -96,10 +96,12 @@ if Case == "pressure_line":
     # Plot mass flow rate
     title = "Mass flow rate"
     filename = title.lower().replace(" ", "_") + "_" + timestamp
+    subset = ["omega"] + [1627]
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
+        subsets = subset,
         xlabel="Total-to-static pressure ratio",
         ylabel="Mass flow rate [kg/s]",
         title=title,
@@ -617,15 +619,9 @@ elif Case == "error_plot":
 elif Case == "test":
 
     # Load performance data
-    timestamp = tf.utils.extract_timestamp(filename)
     data = tf.plot_functions.load_data(filename)
 
-    # Define plot settings
-    color_map = "Reds"
-    outdir = "figures"
-
-    # Plot angular speed lines
-    subsets = ["omega"] + list(np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"])
+    subsets = ["omega", 1627]
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         x_key="PR_ts",
@@ -633,53 +629,68 @@ elif Case == "test":
         subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        linestyles=["-", ":", "--", "-."],
-        color_map=color_map,
-        save_figs=save_figs,
+        colors='k',
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        save_figs=True,
     )
 
-    # Print design speed line
-    indices = data["overall"].index[data["overall"]["angular_speed"] == 1627]
-    for key in data.keys():
-        data[key] = data[key].loc[indices]
-    title = "Pressure"
-    filename = title.lower().replace(" ", "_") + "_" + timestamp
-    fig1, ax1 = tf.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["p_1", "p_2", "p_3", "p_4"],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Static pressure [kg/s]",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-    )
+    # Plot angular speed lines
+    # subsets = ["omega"] + list(np.array([0.7, 0.9, 1]) * design_point["omega"])
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["mass_flow_rate"],
+    #     subsets=subsets,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     linestyles=["-", ":", "--"],
+    #     colors = ['k'],
+    #     filename = 'design_speed_mass_flow_rate',
+    #     outdir = "figures",
+    #     save_figs=True,
+    # )
 
-    # Print stacked losses
-    title = "Total-to-static efficiency distribution"
-    filename = title.lower().replace(" ", "_") + "_" + timestamp
-    fig1, ax1 = tf.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=[
-            "loss_profile_4",
-            "loss_clearance_4",
-            "loss_secondary_4",
-            "loss_trailing_4",
-            "loss_incidence_4",
-        ],
-        xlabel="Total-to-static pressure ratio",
-        ylabel="Loss coefficient",
-        title=title,
-        filename=filename,
-        outdir=outdir,
-        color_map=color_map,
-        save_figs=save_figs,
-        stack=True,
-        legend_loc="best",
-    )
+    # # Print design speed line
+    # subset = ["omega", 1627] 
+    # labels = ["Stator inlet", "Stator exit", "Rotor inlet", "Rotor exit"]
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=["p_1", "p_2", "p_3", "p_4"],
+    #     subsets = subset,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Static pressure [Pa]",
+    #     linestyles=["-", ":", "--", "-."],
+    #     color_map='Reds',
+    #     labels = labels,
+    #     filename='static_pressure',
+    #     outdir = "figures",
+    #     save_figs=True,
+    # )
+
+    # # Print stacked losses
+    # labels = ["Profile losses", "Tip clearance losses", "Secondary flow losses", "Trailing edge losses", "Incidence losses"]
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data,
+    #     x_key="PR_ts",
+    #     y_keys=[
+    #         "loss_profile_4",
+    #         "loss_clearance_4",
+    #         "loss_secondary_4",
+    #         "loss_trailing_4",
+    #         "loss_incidence_4",
+    #     ],
+    #     subsets = subset,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Loss coefficient [-]", 
+    #     color_map='Reds',
+    #     labels = labels,
+    #     stack=True,
+    #     filename="loss_coefficients",
+    #     outdir="figures",
+    #     save_figs = True,
+    # )
 
 
 if show_figures:

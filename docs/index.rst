@@ -1,52 +1,49 @@
 
+=========================================================
+TurboFlow: Mean-Line Modelling of Axial Turbines
+=========================================================
 
-Welcome to Meanline Axial's documentation
-===========================================
+.. .. image:: https://example.com/logo.png
+..    :alt: TurboFlow Logo
+..    :align: center
+..    :scale: 50 %
 
-``meanline_axial`` is a Python package for mean-line modelling and simulation of axial turbines. It provides a systematic approach for performance analysis and design optimization of axial turbines:
+**Version:** 0.1.0  
+**Author:** Lasse Borg Anderson & Roberto Agromayor  
+**License:** MIT License
+
+Overview
+========
+
+TurboFlow is a Python package for mean-line modelling of axial turbines. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, 
+and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
+
+Features
+========
+
+.. - **Performance Prediction:** Accurately predict the performance of axial turbines based on various input parameters.
+.. - **Design Optimization:** Optimize preliminary turbine design to achieve optimal performance metrics.
+.. - **Flexible model:** The model should cover a wide range of axial-turbine geometries, and should give users the ability to choose from different options for submodels, including loss and deviation correlations.
+.. - **Easy-to-use:** Intuitive and easy setup of input parameters for rapid development and analysis. 
+.. - **Extensive Documentation:** Comprehensive guides and examples to help you get started quickly.
 
 
-- **Performance Analysis Mode**:
-
-  - Evaluate single operating points
-  - Produce performance maps
-
-- **Design Optimization Mode**:
-
-  - Single point optimization
-  - Multi-point optimization
-
-- **Problem formulation and solution**:
-
-  - Equation-oriented problem formulation for performance analysis and design optimization
-  - Consistency between both calculation modes is guaranteed by design
-  - Efficient solution with gradient-based root-finding and optimization solvers
-  - Multi-start strategies or derivative-free optimizers for global optimization
-
-- **Fluid Property Analysis**:
-
-  - Use CoolProp to determine real gas fluid properties.
-
-- **Design Flexibility**:
-
-  - Supports modelling with any number of turbine stages.
-  - Specify turbine geometry using main geometric parameters.
-
-- **Choking Calculations**:
-
-  - General computational strategy to evaluate cascade choking.
-  - Formulation autonomously identifies choked cascades for a set of operating conditions
-
-- **Loss Models**:
-
-  - Kacker Okapuu model.
-  - Benner model.
+- **Performance Prediction:** Accurately predict the performance of axial turbines based on various input parameters.
+- **Design Optimization:** Optimize preliminary turbine design to achieve optimal performance metrics.
+- **Equation-oriented problem formulation:** Equation-oriented problem formulation for performance analysis and design optimization.
+- **Model consitency:** The model is consistent for both performance prediction and design optimization.
+- **Efficient solution:** The model adopts gradient-based root-finding and optimization solver
+- **Real gas fluid property analysis:** Use CoolProp to determine thermohpysical properties.
+- **Flexible model:** The model offers options for submodels for loss, deviation and choking calculations
+- **General geometry:** Geometrical variables are defined to cover a wide range of axial turbine configurations, including multistage configurations.  
+- **Easy-to-use:** Intuitive and easy setup of input parameters for rapid development and analysis. 
+- **Extensive Documentation:** Comprehensive guides and examples to help you get started quickly.
 
 
 Contents:
 ==========
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    source/installation
    source/tutorials
@@ -56,7 +53,10 @@ Contents:
    source/glossary
    source/bibliography
    source/configuration
-   source/api/meanline_axial
+   source/api/turboflow
+
+.. note::
+  The package is for now constrained to axial-turbines, but is intended to cover other types of turbomachinery in future versions. 
 
 
 

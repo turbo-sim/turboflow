@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 4
+CASE = 3
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("R125.yaml")
@@ -40,4 +40,6 @@ elif CASE == 2:
     solvers = tf.compute_performance(operation_points, config, initial_guess=x0)
 
 elif CASE == 3:
-    solvers = tf.compute_optimal_turbine(config)
+    solver = tf.compute_optimal_turbine(config)
+    fig, ax = tf.plot_velocity_triangles(solver.problem.results["plane"])
+    fig, ax = tf.plot_axial_radial_plane(solver.problem.geometry)

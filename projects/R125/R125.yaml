@@ -9,13 +9,12 @@ operation_points:
 
 
 simulation_options:
-  choking_model : evaluate_cascade_critical
-  deviation_model : aungier
+  deviation_model : zero_deviation
   blockage_model : 0.00  #flat_plate_turbulent
-  choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
   loss_model:
-    model: benner
+    model: kacker_okapuu
     loss_coefficient: stagnation_pressure
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
@@ -147,9 +146,9 @@ design_optimization:
       normalize : True
   radius_type : "constant_mean" # Optional
   solver_options: # Optional
-    library: pygmo # Optional
-    method: ipopt # Optional
-    tolerance: 1e-3 # Optional
+    library: scipy # Optional
+    method: slsqp # Optional
+    tolerance: 1e-5 # Optional
     max_iterations: 100 # Optional
     derivative_method: 2-point # Optional
     derivative_abs_step: 1e-6 # Optional

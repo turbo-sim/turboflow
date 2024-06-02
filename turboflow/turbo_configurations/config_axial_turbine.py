@@ -751,7 +751,7 @@ class AxialTurbine(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     turbomachinery: Literal["axial_turbine"]
-    operation_points: OperationPoints
+    operation_points: Union[List[OperationPoints], OperationPoints]
     simulation_options: SimulationOptions
     geometry: GeometryPerformanceAnalysis = None
     performance_analysis: PerformanceAnalysis = PerformanceAnalysis()

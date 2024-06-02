@@ -1,11 +1,18 @@
 turbomachinery: axial_turbine
 operation_points: 
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 13.8e4
-  p_out : 13.8e4/2.298 #, 13.8e4/2.5]
-  omega: 1627
-  alpha_in: 0
+  - fluid_name: air
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out : 13.8e4/2.298 #, 13.8e4/2.5]
+    omega: 1627
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out : 13.8e4/2.298 #, 13.8e4/2.5]
+    omega: 1627
+    alpha_in: 0
+  
 
 simulation_options: # Optional
   deviation_model : aungier  # Optional

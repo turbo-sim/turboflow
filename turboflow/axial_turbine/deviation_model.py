@@ -60,7 +60,7 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     r"""
     Calculate the flow angle using the deviation model proposed by :cite:`aungier_turbine_2006`.
 
-    This model defines the gauing angle with respect to tangential axis:
+    This model defines the gauging angle with respect to tangential axis:
 
     .. math::
 
@@ -136,7 +136,7 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     r"""
     Calculate the flow angle using the deviation model proposed by :cite:`ainley_method_1951`.
 
-    This model defines the gauing angle with respect to axial direction:
+    This model defines the gauging angle with respect to axial direction:
 
     .. math::
         \beta_g = \cos^{-1}(A_\mathrm{throat} / A_\mathrm{out})

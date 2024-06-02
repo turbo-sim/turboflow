@@ -144,7 +144,7 @@ def compute_performance(
     if isinstance(operation_points, dict):
         # Convert ranges to a list of operation points
         operation_points = generate_operation_points(operation_points)
-    elif not isinstance(operation_points, list):
+    elif not isinstance(operation_points, (list, np.ndarray)):
         msg = "operation_points must be either list of dicts or a dict with ranges."
         raise TypeError(msg)
 

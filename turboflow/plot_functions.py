@@ -155,7 +155,7 @@ def plot_lines(
 
     # Get labels
     if labels == None:
-        if subsets is not None:
+        if subsets is not None and len(subsets) >2:
             labels = [f"{subsets[0]} = {subsets[i+1]}" for i in range(len(subsets) - 1)]
         elif len(y_keys) > 1:
             labels = [f"{y_keys[i]}" for i in range(len(y))]
@@ -167,24 +167,39 @@ def plot_lines(
         linestyles = ["-"] * len(y)
 
     # Plot figure
-    if stack == True:
-        ax.stackplot(x, y, labels=y_keys, colors=colors)
-
-        # Add edges by overlaying lines
-        y_arrays = [series.values for series in y]
-        cumulative_y = np.cumsum(y_arrays, axis=0)
-        for i, series in enumerate(y_arrays):
-            if i == 0:
-                ax.plot(x, series, color="black", linewidth=0.5)
-            ax.plot(x, cumulative_y[i], color="black", linewidth=0.5)
-    elif subsets is not None:
+    if subsets is not None and len(y_keys) == 1:
         for i in range(len(y)):
-            ax.plot(
-                x[i], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i]
-            )
+            ax.plot(x[i], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
+    elif subsets is not None and len(subsets) == 2:
+        if stack == True:
+            ax.stackplot(x[0], y, labels=labels, colors=colors)
+            # Add edges by overlaying lines
+            y_arrays = [series.values for series in y]
+            cumulative_y = np.cumsum(y_arrays, axis=0)
+            for i, series in enumerate(y_arrays):
+                if i == 0:
+                    ax.plot(x[0], series, color="black", linewidth=0.5)
+                ax.plot(x[0], cumulative_y[i], color="black", linewidth=0.5)
+        else:
+            for i in range(len(y)):
+                ax.plot(
+                    x[0], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i]
+                )
+    elif subsets is None:
+        if stack == True:
+            ax.stackplot(x, y, labels=y_keys, colors=colors)
+            # Add edges by overlaying lines
+            y_arrays = [series.values for series in y]
+            cumulative_y = np.cumsum(y_arrays, axis=0)
+            for i, series in enumerate(y_arrays):
+                if i == 0:
+                    ax.plot(x, series, color="black", linewidth=0.5)
+                ax.plot(x, cumulative_y[i], color="black", linewidth=0.5)
+        else:
+            for i in range(len(y)):
+                ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
     else:
-        for i in range(len(y)):
-            ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
+        raise Exception("x_keys and y_keys are not well defined")
 
     # Set margins to zero
     ax.margins(x=0.01, y=0.01)
@@ -665,7 +680,11 @@ def plot_velocity_triangles(plane):
             )  # Symbol for blade speed
 
         # Add explanatory text
-        if w_t < 0:
+        if abs(v_t) >= abs(w_t):
+            tangential_component = v_t
+        else:
+            tangential_component = w_t
+        if tangential_component < 0:
             ax.text(
                 max_w_t / 2,
                 start - v_m / 2,
