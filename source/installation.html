@@ -55,7 +55,18 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#user-installation-guide">User Installation Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-additional-solvers">Installing Additional Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#developer-installation-guide">Developer Installation Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ci-cd-pipeline">CI/CD Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automated-testing">Automated Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#package-publishing">Package Publishing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation-deployment">Documentation Deployment</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_description.html">Model description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_validation.html">Model validation</a></li>
@@ -92,45 +103,147 @@
              
   <section id="installation">
 <span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This is a temporary development solution. In the future the package will be installed via pip.</p>
-</div>
+<section id="user-installation-guide">
+<h2>User Installation Guide<a class="headerlink" href="#user-installation-guide" title="Link to this heading"></a></h2>
+<p>This guide will walk you through the process of installing <cite>Turboflow</cite> via <cite>pip</cite>. To isolate the Turboflow installation and avoid conflicts with other Python packages, it is recommended to create a dedicated Conda virtual environment.</p>
 <ol class="arabic">
-<li><p><strong>Install Conda</strong>:</p>
-<p>Before proceeding, ensure you have <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html">Conda</a> installed on your system.</p>
-</li>
-<li><p><strong>Create a virtual environment with dependencies</strong>:</p>
-<p>Run the following command in <a class="reference external" href="https://gitforwindows.org/">Bash</a> to set up a new virtual environment with all the required dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>--file<span class="w"> </span>environment.yaml
-</pre></div>
-</div>
-<p>This command will create a virtual environment named <code class="docutils literal notranslate"><span class="pre">meanline_env</span></code> and will install all the packages specified in the <code class="docutils literal notranslate"><span class="pre">environment.yaml</span></code> file.</p>
-</li>
-<li><p><strong>Activate the virtual environment</strong>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>meanline_env
+<li><p><a class="reference external" href="https://docs.anaconda.com/free/miniconda/miniconda-install/">Install Miniconda</a> if you don’t have it already.</p></li>
+<li><p>Open a terminal or command prompt and create a new virtual environment named <code class="docutils literal notranslate"><span class="pre">turboflow_env</span></code> with Python 3.11:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
 </pre></div>
 </div>
 </li>
-<li><p><strong>Installing additional packages (optional)</strong>:</p>
-<p>Packages can be installed using:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>&lt;name<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>package&gt;
-</pre></div>
-</div>
-<p>Alternatively, you can add package names directly to the <code class="docutils literal notranslate"><span class="pre">environment.yaml</span></code> file and then update the environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>update<span class="w"> </span>--file<span class="w"> </span>environment.yaml<span class="w"> </span>--prune
+<li><p>Activate the newly created virtual environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
 </pre></div>
 </div>
 </li>
-<li><p><strong>Setting up for local development</strong>:</p>
-<p>To ensure you can import the package for local development, add the package directory to the <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code> variable. A convenient script named <cite>install_local.py</cite> is provided for this.</p>
-<p>Run:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>install_local.py
+<li><p>Install Turboflow using pip within the activated virtual environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>turboflow
 </pre></div>
 </div>
-<p>This will append the current working directory (which should be the root of this repository) to your <code class="docutils literal notranslate"><span class="pre">PYTHONPATH</span></code>.</p>
+</li>
+<li><p>Verify the installation by running the following command in your terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import turboflow; turboflow.print_package_details()&quot;</span>
+</pre></div>
+</div>
+<p>If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.</p>
 </li>
 </ol>
+<p>Congratulations! You have now successfully installed Turboflow in its own Conda virtual environment using pip. You’re ready to start using Turboflow in your Python projects.</p>
+</section>
+<section id="installing-additional-solvers">
+<h2>Installing Additional Solvers<a class="headerlink" href="#installing-additional-solvers" title="Link to this heading"></a></h2>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">turboflow</span></code> can use the optimization solvers available in the <code class="docutils literal notranslate"><span class="pre">scipy</span></code> package. However, a wider range of solvers are available through the <code class="docutils literal notranslate"><span class="pre">pygmo</span></code> wrapper, including <a class="reference external" href="https://coin-or.github.io/Ipopt/">IPOPT</a> and <a class="reference external" href="https://ccom.ucsd.edu/~optimizers/docs/snopt/introduction.html">SNOPT</a>. Follow these steps to install additional solvers:</p>
+<ol class="arabic">
+<li><p>Activate your Turboflow Conda environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
+</pre></div>
+</div>
+</li>
+<li><p>Install the <code class="docutils literal notranslate"><span class="pre">pygmo</span></code> package via Conda (currently not available via pip):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>pygmo
+</pre></div>
+</div>
+</li>
+<li><p>To access the <code class="docutils literal notranslate"><span class="pre">SNOPT</span></code> solver through the pygmo wrapper, you need to install the <a class="reference external" href="https://ccom.ucsd.edu/~optimizers/solvers/snopt/">pygmo_plugins_nonfree</a> package. Additionally, you need a local installation of the solver and a valid license. Follow these steps to set it up:</p>
+<ul>
+<li><p>Install the <a class="reference external" href="https://esa.github.io/pagmo_plugins_nonfree/">pygmo_plugins_nonfree package</a> via Conda:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>pygmo_plugins_nonfree
+</pre></div>
+</div>
+</li>
+<li><p>Download the SNOPT solver from the <a class="reference external" href="https://ccom.ucsd.edu/~optimizers/solvers/snopt/">official source</a> and obtain a valid license.</p></li>
+<li><p>Extract the downloaded files to a directory of your choice.</p></li>
+<li><p>Open your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> file and add the following environment variables:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set SNOPT directory</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SNOPT_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/snopt/directory&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PATH</span><span class="s2">:</span><span class="nv">$SNOPT_DIR</span><span class="s2">&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SNOPT_LIB</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$SNOPT_DIR</span><span class="s2">/snopt7.dll&quot;</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">SNOPT_LICENSE</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$SNOPT_DIR</span><span class="s2">/snopt7.lic&quot;</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">/path/to/snopt/directory</span></code> with the actual path to your <code class="docutils literal notranslate"><span class="pre">SNOPT</span></code> directory.
+These environment variables allow SNOPT to locate the license file and Turboflow to find the <code class="docutils literal notranslate"><span class="pre">SNOPT</span></code> binary.</p>
+</li>
+<li><p>Save the changes to your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> file.</p></li>
+<li><p>Restart your terminal or run <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">~/.bashrc</span></code> to apply the changes to the environment variables.</p></li>
+<li><p>When installing SNOPT on Windows, your operating system may lack some “Dynamic Link Libraries” (DLLs) required by SNOPT. If this is the case, you can use the <a class="reference external" href="https://lucasg.github.io/Dependencies/">Dependencies</a> tool to identify which DLLs are missing. To resolve this issue:</p>
+<ol class="arabic simple">
+<li><p>Download the <a class="reference external" href="https://lucasg.github.io/Dependencies/">Dependencies</a> tool.</p></li>
+<li><p>Run the tool and open the <code class="docutils literal notranslate"><span class="pre">snopt7.dll</span></code> library file.</p></li>
+<li><p>The tool will display a list of missing DLLs, if any.</p></li>
+<li><p>Download the missing DLLs from a reliable source.</p></li>
+<li><p>Place the downloaded DLLs in the same directory as the <code class="docutils literal notranslate"><span class="pre">snopt7.dll</span></code> library.</p></li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+<p>By following these steps, you can install additional solvers like IPOPT and SNOPT through the pygmo wrapper, expanding the range of optimization algorithms available for solving performance analysis and optimization problems in turboflow.</p>
+</section>
+<section id="developer-installation-guide">
+<h2>Developer Installation Guide<a class="headerlink" href="#developer-installation-guide" title="Link to this heading"></a></h2>
+<p>This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
+<ol class="arabic">
+<li><p>Clone the Turboflow remote repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/turbo-sim/TurboFlow.git
+</pre></div>
+</div>
+</li>
+<li><p>Create a dedicated Conda virtual environment for Turboflow development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+</pre></div>
+</div>
+</li>
+<li><p>Activate the newly created virtual environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
+</pre></div>
+</div>
+</li>
+<li><p>Install Poetry to manage dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>poetry
+</pre></div>
+</div>
+<p>Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user’s intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project’s requirements.</p>
+</li>
+<li><p>Use Poetry to install the required dependencies for Turboflow development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
+</pre></div>
+</div>
+</li>
+<li><p>Verify the installation by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import turboflow; turboflow.print_package_details()&quot;</span>
+</pre></div>
+</div>
+<p>If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.</p>
+</li>
+</ol>
+</section>
+<section id="ci-cd-pipeline">
+<h2>CI/CD Pipeline<a class="headerlink" href="#ci-cd-pipeline" title="Link to this heading"></a></h2>
+<p>Turboflow uses GitHub Actions to automate its Continuous Integration and Continuous Deployment (CI/CD) processes.</p>
+<section id="automated-testing">
+<h3>Automated Testing<a class="headerlink" href="#automated-testing" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> action is triggered whenever a commit is pushed to the repository. This action runs the test suite on both Windows and Linux environments, ensuring the code’s compatibility and correctness across different platforms.</p>
+</section>
+<section id="package-publishing">
+<h3>Package Publishing<a class="headerlink" href="#package-publishing" title="Link to this heading"></a></h3>
+<p>Turboflow utilizes the <code class="docutils literal notranslate"><span class="pre">bumpversion</span></code> package to manage versioning and release control. To increment the version number, use the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bumpversion<span class="w"> </span>patch<span class="w">  </span><span class="c1"># or minor, major</span>
+</pre></div>
+</div>
+<p>After bumping the version, push the changes to the remote repository along with tags to signify the new version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--tags
+</pre></div>
+</div>
+<p>If the tests pass successfully, the package is automatically published to the Python Package Index (PyPI), making it readily available for users to install and use.</p>
+</section>
+<section id="documentation-deployment">
+<h3>Documentation Deployment<a class="headerlink" href="#documentation-deployment" title="Link to this heading"></a></h3>
+<p>Turboflow automates the deployment of documentation using the <code class="docutils literal notranslate"><span class="pre">deploy_docs</span></code> action. This action builds the Sphinx documentation of the project and publishes the HTML files to GitHub Pages each time that a new commit is pushed to the remote repository. By automating this process, Turboflow ensures that the project’s documentation remains up-to-date and easily accessible to users and contributors.</p>
+</section>
+</section>
 </section>
 
 
