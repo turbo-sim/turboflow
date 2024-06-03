@@ -80,13 +80,13 @@ By default, `turboflow` can use the optimization solvers available in the `scipy
 
 2. Install the `pygmo` package via Conda (currently not available via pip):
    ```
-   conda install pygmo
+   conda install -c conda-forge pygmo
    ```
 
 3. To access the `SNOPT` solver through the pygmo wrapper, you need to install the [`pygmo_plugins_nonfree`](https://ccom.ucsd.edu/~optimizers/solvers/snopt/) package. Additionally you need a local installation of the solver and a valid license. Follow these steps to set it up:
    - Install the [pygmo_plugins_nonfree package](https://esa.github.io/pagmo_plugins_nonfree/) via Conda:
       ```
-      conda install pygmo_plugins_nonfree
+      conda install -c conda-forge pygmo_plugins_nonfree
       ```
    - Download the SNOPT solver from the [official source](https://ccom.ucsd.edu/~optimizers/solvers/snopt/) and obtain a valid license.
    - Extract the downloaded files to a directory of your choice.
