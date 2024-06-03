@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>meanline_axial.utilities.file_utils module &mdash; turboflow v0.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -30,9 +30,7 @@
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="meanline_axial.utilities.graphics module" href="turboflow.utilities.graphics.html" />
-    <link rel="prev" title="Utilities" href="turboflow.utilities.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,32 +52,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">Axial turbines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.cycles.html">Thermodynamic cycles</a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">Fluid properties functions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">PySolverView</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="turboflow.utilities.html">Utilities</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="turboflow.utilities.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.html#module-turboflow.utilities">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.html">Subpackages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
 </ul>
 
         </div>
@@ -96,9 +80,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
-          <li class="breadcrumb-item"><a href="turboflow.utilities.html">Utilities</a></li>
-      <li class="breadcrumb-item active">meanline_axial.utilities.file_utils module</li>
+      <li class="breadcrumb-item active">&lt;no title&gt;</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/api/turboflow.utilities.file_utils.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -108,281 +90,38 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-turboflow.utilities.file_utils">
-<span id="meanline-axial-utilities-file-utils-module"></span><h1>meanline_axial.utilities.file_utils module<a class="headerlink" href="#module-turboflow.utilities.file_utils" title="Link to this heading"></a></h1>
-<dl class="py exception">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.DictionaryValidationError">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">DictionaryValidationError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#DictionaryValidationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.DictionaryValidationError" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Exception raised for errors in the configuration options.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.add_string_to_keys">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">add_string_to_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#add_string_to_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.add_string_to_keys" title="Link to this definition"></a></dt>
-<dd><p>Add a suffix to each key in the input dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>input_dict (dict): The input dictionary.</strong></dt><dd></dd>
-<dt><strong>suffix (str): The string to add to each key.</strong></dt><dd></dd>
+  <p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+turboflow.utilities.file_utils module
+======================================</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD:docs/source/api/turboflow.utilities.file_utils.rst
+.. automodule:: turboflow.utilities.file_utils
+========
+.. automodule:: turboflow.plot_functions
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e:docs/source/api/turboflow.plot_functions.rst
+=======
+turboflow.pysolver_view.optimization module
+============================================</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD:docs/source/api/turboflow.pysolver_view.optimization.rst
+.. automodule:: turboflow.pysolver_view.optimization
+========
+.. automodule:: turboflow.utilities.file_utils
+&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e:docs/source/api/turboflow.utilities.file_utils.rst
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</p>
+<blockquote>
+<div><dl class="field-list simple">
+<dt class="field-odd">members<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+<dt class="field-even">undoc-members<span class="colon">:</span></dt>
+<dd class="field-even"><p></p></dd>
+<dt class="field-odd">show-inheritance<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
 </dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict: A new dictionary with modified keys.</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="s1">&#39;_new&#39;</span><span class="p">)</span>
-<span class="go">{&#39;a_new&#39;: 1, &#39;b_new&#39;: 2, &#39;c_new&#39;: 3}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.check_for_unused_keys">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">check_for_unused_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dict_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_error</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#check_for_unused_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.check_for_unused_keys" title="Link to this definition"></a></dt>
-<dd><p>Checks for unused parameters in the given dictionaries and sub-dictionaries.
-If unused items are found, prints them in a tree-like structure and optionally raises an error.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>dict_in</strong><span class="classifier">dict</span></dt><dd><p>The dictionary of parameters to check.</p>
-</dd>
-<dt><strong>dict_name</strong><span class="classifier">str</span></dt><dd><p>The name of the dictionary variable.</p>
-</dd>
-<dt><strong>raise_error</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, raises an exception when unused items are found, otherwise just prints a warning.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>None</dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.compare_contents_or_files">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">compare_contents_or_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_or_content_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_or_content_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#compare_contents_or_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.compare_contents_or_files" title="Link to this definition"></a></dt>
-<dd><p>Compare the content of two inputs, which can be either file paths or strings.</p>
-<p>This function accepts two arguments. Each argument can be:
-1. A file path pointing to a file containing text content.
-2. A string containing text content directly.</p>
-<p>If the argument is a file path that exists, the function reads its content.
-If the argument is a string, it’s directly used for comparison.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_or_content1</strong><span class="classifier">str</span></dt><dd><p>First input which can be a file path or string content.</p>
-</dd>
-<dt><strong>file_or_content2</strong><span class="classifier">str</span></dt><dd><p>Second input which can be a file path or string content.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>bool</dt><dd><p>True if the contents of the two inputs are identical, False otherwise.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">content_same</span><span class="p">(</span><span class="s2">&quot;path/to/file1.txt&quot;</span><span class="p">,</span> <span class="s2">&quot;path/to/file2.txt&quot;</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">content_same</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">,</span> <span class="s2">&quot;path/to/file_with_hello_world_content.txt&quot;</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">content_same</span><span class="p">(</span><span class="s2">&quot;Hello, world!&quot;</span><span class="p">,</span> <span class="s2">&quot;Goodbye, world!&quot;</span><span class="p">)</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.convert_numpy_to_python">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">convert_numpy_to_python</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#convert_numpy_to_python"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.convert_numpy_to_python" title="Link to this definition"></a></dt>
-<dd><p>Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
-and rounds numerical values to the specified precision.</p>
-<p>Parameters:
-- data: The numpy data to convert.
-- precision: The decimal precision to which float values should be rounded.</p>
-<p>Returns:
-- The converted data with all numpy types replaced by native Python types and float values rounded.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.create_logger">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">create_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_datetime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#create_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.create_logger" title="Link to this definition"></a></dt>
-<dd><p>Creates and configures a logging object for recording logs during program execution.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>name</strong><span class="classifier">str</span></dt><dd><p>Name of the log file. Allows for differentiation when analyzing logs from different components or runs of a program.</p>
-</dd>
-<dt><strong>path</strong><span class="classifier">str, optional</span></dt><dd><p>Specifies the directory where the log files will be saved. By default, a directory named “logs”
-will be created in the current working directory (cwd).</p>
-</dd>
-<dt><strong>use_datetime</strong><span class="classifier">bool, optional</span></dt><dd><p>Determines whether the log filename should have a unique datetime identifier appended. Default is True.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>logger</strong><span class="classifier">object</span></dt><dd><p>Configured logger object.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<ul class="simple">
-<li><p>By default, the function sets the log level to <cite>INFO</cite>, which means the logger will handle
-messages of level <cite>INFO</cite> and above (like <cite>ERROR</cite>, <cite>WARNING</cite>, etc.). The log entries will contain
-the timestamp, log level, and the actual log message.</p></li>
-<li><p>When <cite>use_datetime=True</cite>, each log file will have a unique datetime identifier. This ensures
-traceability, avoids overwriting previous logs, allows chronological ordering of log files, and
-handles concurrency in multi-instance environments.</p></li>
-</ul>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.find_latest_results_file">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">find_latest_results_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'performance_analysis_'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#find_latest_results_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.find_latest_results_file" title="Link to this definition"></a></dt>
-<dd><p>Retrieve all files that match the given prefix and extension .xlsx</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.is_dict_empty">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">is_dict_empty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#is_dict_empty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.is_dict_empty" title="Link to this definition"></a></dt>
-<dd><p>Recursively checks if a dictionary and all its sub-dictionaries are empty.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>The dictionary to check.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>bool</dt><dd><p>True if the dictionary and all sub-dictionaries are empty, False otherwise.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.print_dict">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">print_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#print_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.print_dict" title="Link to this definition"></a></dt>
-<dd><p>Recursively prints nested dictionaries with indentation or returns the formatted string.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>The dictionary to print.</p>
-</dd>
-<dt><strong>indent</strong><span class="classifier">int, optional</span></dt><dd><p>The initial level of indentation for the keys of the dictionary, by default 0.</p>
-</dd>
-<dt><strong>return_output</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, returns the formatted string instead of printing it.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>str or None</dt><dd><p>The formatted string representation of the dictionary if return_output is True, otherwise None.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.print_object">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">print_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#print_object"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.print_object" title="Link to this definition"></a></dt>
-<dd><p>Prints all attributes and methods of an object, sorted alphabetically.</p>
-<ul class="simple">
-<li><p>Methods are identified as callable and printed with the prefix ‘Method: ‘.</p></li>
-<li><p>Attributes are identified as non-callable and printed with the prefix ‘Attribute: ‘.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>obj</strong><span class="classifier">object</span></dt><dd><p>The object whose attributes and methods are to be printed.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>None</dt><dd><p>This function does not return any value. It prints the attributes and methods of the given object.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.validate_keys">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">validate_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">checked_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#validate_keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.validate_keys" title="Link to this definition"></a></dt>
-<dd><p>Validate the presence of required keys and check for any unexpected keys in a dictionary.</p>
-<p>Give required keys and allowed keys to have complete control
-Give required keys twice to check that the list of keys is necessary and sufficient
-Give only required keys to allow all extra additional key</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>checked_dict</strong><span class="classifier">dict</span></dt><dd><p>The dictionary to be checked.</p>
-</dd>
-<dt><strong>required_keys</strong><span class="classifier">set</span></dt><dd><p>A set of keys that are required in the dictionary.</p>
-</dd>
-<dt><strong>allowed_keys</strong><span class="classifier">set</span></dt><dd><p>A set of keys that are allowed in the dictionary.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ConfigurationError</dt><dd><p>If either required keys are missing or unexpected keys are found.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="turboflow.utilities.file_utils.wait_for_file">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">wait_for_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll_interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#wait_for_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.wait_for_file" title="Link to this definition"></a></dt>
-<dd><p>Wait until the specified file is created.</p>
-<p>This function is used to wait until a file is created.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>file_path</strong><span class="classifier">str</span></dt><dd><p>Path to the file to wait for.</p>
-</dd>
-<dt><strong>timeout</strong><span class="classifier">float, optional</span></dt><dd><p>Maximum time to wait in seconds. If None, waits indefinitely.</p>
-</dd>
-<dt><strong>poll_interval</strong><span class="classifier">int, optional</span></dt><dd><p>Time interval between checks in seconds.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>bool</dt><dd><p>True if the file was found, False otherwise (only if timeout is set).</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
+</div></blockquote>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="turboflow.utilities.html" class="btn btn-neutral float-left" title="Utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="turboflow.utilities.graphics.html" class="btn btn-neutral float-right" title="meanline_axial.utilities.graphics module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

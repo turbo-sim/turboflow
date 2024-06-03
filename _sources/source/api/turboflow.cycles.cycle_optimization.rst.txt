@@ -1,5 +1,5 @@
-meanline\_axial.cycles.cycle\_optimization module
-=================================================
+turboflow.cycles.cycle\_optimization module
+===========================================
 
 .. automodule:: turboflow.cycles.cycle_optimization
    :members:

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance prediction &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Design optimization" href="design_optimization.html" />
+    <link rel="prev" title="Tutorials" href="../tutorials.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Performance prediction</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration-setup">Configuration setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-performance-at-a-single-point">Compute performance at a single point</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-performance-at-a-set-of-points">Compute performance at a set of points</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compute-performance-across-a-performance-map">Compute performance across a performance map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options-for-compute-performance">Options for compute_performance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotting-results">Plotting results</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#plot-single-line">Plot single line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plot-several-lines">Plot several lines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stacked-plots">Stacked plots</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">Subpackages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#module-turboflow">Module contents</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Performance prediction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/tutorials/performance_prediction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="performance-prediction">
+<span id="id1"></span><h1>Performance prediction<a class="headerlink" href="#performance-prediction" title="Link to this heading"></a></h1>
+<p>In this section, you will learn how to use TurboFlow to predict the performance of an axial turbine. This includes setting up the configuration file, running the analysis, and interpreting the results.
+Performance prediction is excecuted in three steps:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Load configuration file.</p></li>
+<li><p>Define operating points where the turbomachinery should be evaluated.</p></li>
+<li><p>Compute performance.</p></li>
+</ol>
+</div></blockquote>
+<p>Illustrated by a code example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span> <span class="c1"># Get absolute path of configuration file</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">]</span> <span class="c1"># Define operating points</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="c1"># Evaluate turbomachinery</span>
+</pre></div>
+</div>
+<p>This page describes the main functionalities and options available when simulating performance of turbomachinery:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#configuration-setup"><span class="std std-ref">Configuration setup</span></a></p></li>
+<li><p><a class="reference internal" href="#single-point"><span class="std std-ref">Compute performance at a single point</span></a></p></li>
+<li><p><a class="reference internal" href="#set-of-points"><span class="std std-ref">Compute performance at a set of points</span></a></p></li>
+<li><p><a class="reference internal" href="#performance-map"><span class="std std-ref">Compute performance across a performance map</span></a></p></li>
+<li><p><a class="reference internal" href="#options"><span class="std std-ref">Options for compute_performance</span></a></p></li>
+<li><p><a class="reference internal" href="#plotting"><span class="std std-ref">Plotting results</span></a></p></li>
+</ul>
+</div></blockquote>
+<section id="configuration-setup">
+<span id="id2"></span><h2>Configuration setup<a class="headerlink" href="#configuration-setup" title="Link to this heading"></a></h2>
+<p>The configuration must be setup in a yaml file, where certain sections are required, while others are optional, meaning that a default value is provided. In the example below, the
+full configuration for performance prediction is provided, where the required parts are marked with <cite># required</cite> and the optional parts are marked with <cite># optional</cite>. Note that
+to simulate performance across a perfomance map, the <cite>performance_map</cite> section is also required.</p>
+<p>In summary, these section are required:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>turbomachinery</cite> : specifies the turbomachinery configuration.</p></li>
+<li><p><cite>geometry</cite>: all necessary geometrical variables.</p></li>
+<li><p><cite>operation_points</cite>: operational points at which the turbomachinery should be evaluated.</p></li>
+</ul>
+</div></blockquote>
+<p>while the rest is optional. Here is an example of how the confiugration file could look for a one-stage axial turbine:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">turbomachinery</span><span class="p">:</span> <span class="n">axial_turbine</span> <span class="c1"># Required</span>
+<span class="n">operation_points</span><span class="p">:</span> <span class="c1"># Required</span>
+    <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># Required</span>
+    <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span> <span class="c1"># Required</span>
+    <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span> <span class="c1"># Required</span>
+    <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">2.298</span> <span class="c1"># Required</span>
+    <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span> <span class="c1"># Required</span>
+    <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span> <span class="c1"># Required</span>
+
+<span class="n">simulation_options</span><span class="p">:</span> <span class="c1"># Optional</span>
+<span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
+<span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
+<span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
+<span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
+    <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>  <span class="c1"># Optional</span>
+    <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="mf">0.011</span>  <span class="c1"># Optional</span>
+    <span class="n">tuning_factors</span><span class="p">:</span>  <span class="c1"># Optional</span>
+        <span class="n">profile</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+        <span class="n">incidence</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+        <span class="n">secondary</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+        <span class="n">trailing</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+        <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+
+<span class="n">performance_analysis</span> <span class="p">:</span> <span class="c1"># Optional</span>
+    <span class="n">performance_map</span><span class="p">:</span> <span class="c1"># Required if simulating performance across performance map</span>
+        <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span>
+        <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+        <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+        <span class="n">p_out</span><span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.6</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+        <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+        <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="n">solver_options</span><span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="n">method</span><span class="p">:</span> <span class="n">hybr</span>  <span class="c1"># Optional</span>
+        <span class="n">tolerance</span><span class="p">:</span> <span class="mf">1e-8</span>  <span class="c1"># Optional</span>
+        <span class="n">max_iterations</span><span class="p">:</span> <span class="mi">100</span>  <span class="c1"># Optional</span>
+        <span class="n">derivative_method</span><span class="p">:</span> <span class="s2">&quot;2-point&quot;</span>  <span class="c1"># Optional</span>
+        <span class="n">derivative_abs_step</span><span class="p">:</span> <span class="mf">1e-6</span>  <span class="c1"># Optional</span>
+        <span class="n">print_convergence</span><span class="p">:</span> <span class="kc">True</span> <span class="c1"># Optional</span>
+        <span class="n">plot_convergence</span><span class="p">:</span> <span class="kc">False</span> <span class="c1"># Optional</span>
+
+<span class="n">geometry</span><span class="p">:</span> <span class="c1"># Required</span>
+    <span class="n">cascade_type</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">radius_hub_in</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.084785</span><span class="p">,</span> <span class="mf">0.084785</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">radius_hub_out</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.084785</span><span class="p">,</span> <span class="mf">0.081875</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">radius_tip_in</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.118415</span><span class="p">,</span> <span class="mf">0.118415</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">radius_tip_out</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.118415</span><span class="p">,</span> <span class="mf">0.121325</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">pitch</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.8294e-2</span><span class="p">,</span> <span class="mf">1.524e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">chord</span><span class="p">:</span> <span class="p">[</span><span class="mf">2.616e-2</span><span class="p">,</span> <span class="mf">2.606e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">stagger_angle</span><span class="p">:</span> <span class="p">[</span><span class="o">+</span><span class="mf">43.03</span><span class="p">,</span> <span class="o">-</span><span class="mf">31.05</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">opening</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.747503242e-2</span><span class="p">,</span> <span class="mf">0.735223377e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">leading_edge_angle</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">29.60</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">leading_edge_wedge_angle</span> <span class="p">:</span> <span class="p">[</span><span class="mf">50.00</span><span class="p">,</span> <span class="mf">50.00</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">leading_edge_diameter</span> <span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="mf">0.127e-2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="mf">0.081e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">trailing_edge_thickness</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.050e-2</span><span class="p">,</span> <span class="mf">0.050e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">maximum_thickness</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.505e-2</span><span class="p">,</span> <span class="mf">0.447e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">tip_clearance</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">0.030e-2</span><span class="p">]</span> <span class="c1"># Required</span>
+    <span class="n">throat_location_fraction</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="c1"># Required</span>
+</pre></div>
+</div>
+<p>To load the configuration file, the absolute path must be provided to the <cite>load_config</cite> function inside the <cite>turboflow</cite> package:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span> <span class="c1"># Get absolute path of the configuration file</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The only current available option for turbomachinery is <cite>axial_turbine</cite>.</p>
+</div>
+</section>
+<section id="compute-performance-at-a-single-point">
+<span id="single-point"></span><h2>Compute performance at a single point<a class="headerlink" href="#compute-performance-at-a-single-point" title="Link to this heading"></a></h2>
+<p>To perform single-point performance prediction, the <cite>operation_points</cite> section in the configuration file should be defined in the follwoing way:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">operation_points</span><span class="p">:</span>
+    <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span>
+    <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+    <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+    <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">2.0</span>
+    <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+    <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>After loading the configuration file, the operation point is extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">]</span> <span class="c1"># Extract operation point</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="c1"># Compute performance at operation point</span>
+</pre></div>
+</div>
+</section>
+<section id="compute-performance-at-a-set-of-points">
+<span id="set-of-points"></span><h2>Compute performance at a set of points<a class="headerlink" href="#compute-performance-at-a-set-of-points" title="Link to this heading"></a></h2>
+<p>To perform performance prediction at a set of operation points, the <cite>operation_points</cite> section in the configuration file should be a list of points:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">operation_points</span><span class="p">:</span>
+    <span class="o">-</span> <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># First point</span>
+        <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+        <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+        <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">2.0</span>
+        <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+        <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="o">-</span> <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># Second point</span>
+        <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+        <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+        <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">3.0</span>
+        <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+        <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>After loading the configuration file, the operation points are extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">]</span> <span class="c1"># Extract operation points</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="c1"># Compute performance at operation points</span>
+</pre></div>
+</div>
+</section>
+<section id="compute-performance-across-a-performance-map">
+<span id="performance-map"></span><h2>Compute performance across a performance map<a class="headerlink" href="#compute-performance-across-a-performance-map" title="Link to this heading"></a></h2>
+<p>To perform performance prediction across a performance map, a <cite>perfomance_map</cite> section must be defined within the <cite>performance_analysis</cite> section:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">performance_analysis</span> <span class="p">:</span>
+  <span class="n">performance_map</span><span class="p">:</span>
+      <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span>
+      <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+      <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+      <span class="n">p_out</span><span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.6</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+      <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">])</span>
+      <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>The performance map is defined by setting either a value or ranges for each boundary conditions. The perfomance map is constructed by generating a list
+of every combination of the given ranges. In the example above, the performance will be simulated for a total-to-static pressure ratio between 1.6 and 4.5
+at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</p>
+<p>After loading the configuration file, the performance map is extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;perfomance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;perfomance_map&quot;</span><span class="p">]</span> <span class="c1"># Extract perfomance map</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="c1"># Compute performance at operation points</span>
+</pre></div>
+</div>
+</section>
+<section id="options-for-compute-performance">
+<span id="options"></span><h2>Options for compute_performance<a class="headerlink" href="#options-for-compute-performance" title="Link to this heading"></a></h2>
+<p>When calling <cite>turboflow.compute_performance()</cite>, there are some keyword arguments available:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
+    <span class="n">out_filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The <strong>initial_guess</strong> variable is used for the first operation point. If given, it must be a dictionary with the following keys:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>enthalpy_loss_fractions</cite>, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.</p></li>
+<li><p><cite>eta_ts</cite>, which is the assumed total-to-static efficiency.</p></li>
+<li><p><cite>eta_tt</cite>, which is the assumed total-to-total efficiency.</p></li>
+<li><p><cite>Ma_crit</cite>, which is the assumed critical mash number.</p></li>
+</ul>
+</div></blockquote>
+<p>It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This
+require care as the user must have a complete knowledge of the different variables, and setup, such that the initial guess
+corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value.
+For subsequent operation points, the function employs a strategy to use the closest previously computed operation point’s solution
+as the initial guess. This approach is based on the heuristic that similar operation points have similar
+performance characteristics, which can improve convergence speed and robustness of the solution process.
+If the solution fails to converge, a set of initial guesses is provided to try other guesses.</p>
+<p>If <strong>export_results</strong> is <cite>True</cite>, then the simulation data is exported as an excel file to either a gven or a defualt directory. The defualt directory (<strong>out_dir</strong>)
+is “output”, and the defualt filename (<strong>out_filename</strong>) is <cite>performance_analysis_{current_time}</cite>, where <cite>current_time</cite> is a string describing the current time on the form
+<cite>{year}_{month}_{day}_{hour}_{minute}_{second}</cite>.</p>
+<p>The <strong>stop_on_failure</strong> breaks the analysis if one of the operation points fails to converge.</p>
+</section>
+<section id="plotting-results">
+<span id="plotting"></span><h2>Plotting results<a class="headerlink" href="#plotting-results" title="Link to this heading"></a></h2>
+<p>By providing the excel file with the simulated data (exported by <cite>turboflow.compute_performance()</cite>), a plotting function is available to
+graphically illustrate the results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="c1"># datset</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span> <span class="c1"># x-axis key</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span> <span class="c1"># y-axis key</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio&quot;</span><span class="p">,</span> <span class="c1"># axis x-label</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span> <span class="c1"># axis y-label</span>
+    <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="c1"># axis title</span>
+    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>By provididing an <cite>x-key</cite> and a list of <cite>y_keys</cite>, which refer to column names in the excel file, the <cite>y_keys</cite> are plotted as a function of <cite>x-key</cite>.
+With this function we can plot different types of plots:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#single-line"><span class="std std-ref">Plot single line</span></a>, e.g. mass flow rate as a function of pressure ratio</p></li>
+<li><p><a class="reference internal" href="#plot-several-lines"><span class="std std-ref">Plot several lines</span></a>, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed</p></li>
+<li><p><a class="reference internal" href="#stacked-plots"><span class="std std-ref">Stacked plots</span></a>, e.g. stacked loss coefficients as a function of pressure ratio</p></li>
+</ul>
+</div></blockquote>
+<section id="plot-single-line">
+<span id="single-line"></span><h3>Plot single line<a class="headerlink" href="#plot-single-line" title="Link to this heading"></a></h3>
+<p>To plot a single line, simply provide one key in <cite>y_keys</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span> <span class="c1"># datset</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span> <span class="c1"># x-axis key</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span> <span class="c1"># y-axis key</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio&quot;</span><span class="p">,</span> <span class="c1"># axis x-label</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span> <span class="c1"># axis y-label</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Mass flow rate&quot;</span><span class="p">,</span> <span class="c1"># axis title</span>
+    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that if the excel file contain a whole performance map (e.g. a range of pressure ratios and
+angular speed), it is convenient to filter out a subset of this file (e.g. results at one specific angular speed). Here is an example, where
+the data is filtered based on a specific angular speed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="c1"># Plot mass flow rate</span>
+<span class="n">subsets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">,</span> <span class="mi">1627</span><span class="p">]</span>
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span>
+    <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio [$p_{0, \mathrm</span><span class="si">{in}</span><span class="s2">}/p_\mathrm</span><span class="si">{out}</span><span class="s2">$]&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span>
+    <span class="n">colors</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;design_speed_mass_flow_rate&#39;</span><span class="p">,</span>
+    <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The subset is constructed by first giving the key, refering to the value where you want to filter, and then give the values that sets the subset.
+This code would give the following figure:</p>
+<a class="reference internal image-reference" href="../../_images/design_speed_mass_flow_rate.png"><img alt="../../_images/design_speed_mass_flow_rate.png" src="../../_images/design_speed_mass_flow_rate.png" style="width: 465.45px; height: 343.2px;" /></a>
+</section>
+<section id="plot-several-lines">
+<span id="id3"></span><h3>Plot several lines<a class="headerlink" href="#plot-several-lines" title="Link to this heading"></a></h3>
+<p>To plot several lines, simply provide several keys in <cite>y_keys</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="c1"># Plot mass flow rate</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">,</span> <span class="mi">1627</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Stator inlet&quot;</span><span class="p">,</span> <span class="s2">&quot;Stator exit&quot;</span><span class="p">,</span> <span class="s2">&quot;Rotor inlet&quot;</span><span class="p">,</span> <span class="s2">&quot;Rotor exit&quot;</span><span class="p">]</span>
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;p_1&quot;</span><span class="p">,</span> <span class="s2">&quot;p_2&quot;</span><span class="p">,</span> <span class="s2">&quot;p_3&quot;</span><span class="p">,</span> <span class="s2">&quot;p_4&quot;</span><span class="p">],</span>
+    <span class="n">subsets</span> <span class="o">=</span> <span class="n">subset</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio [$p_{0, \mathrm</span><span class="si">{in}</span><span class="s2">}/p_\mathrm</span><span class="si">{out}</span><span class="s2">$]&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Static pressure [Pa]&quot;</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="s2">&quot;-.&quot;</span><span class="p">],</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">,</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;static_pressure&#39;</span><span class="p">,</span>
+    <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>which would give this figure:</p>
+<a class="reference internal image-reference" href="../../_images/static_pressure.png"><img alt="../../_images/static_pressure.png" src="../../_images/static_pressure.png" style="width: 465.59999999999997px; height: 343.2px;" /></a>
+<p>Similarly for the single point line, a subset can be defined. However, you can define several subset, such that you can plot a variable at different subsets. In this example, the mass flow
+rate is plotted as a function of total-to-static pressure ratio, at different subsets of angular speed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="c1"># Plot mass flow rate</span>
+<span class="n">subsets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mi">1627</span><span class="p">)</span>
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span>
+    <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio [$p_{0, \mathrm</span><span class="si">{in}</span><span class="s2">}/p_\mathrm</span><span class="si">{out}</span><span class="s2">$]&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span>
+    <span class="n">linestyles</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="s2">&quot;--&quot;</span><span class="p">],</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">,</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;mass_flow_rate&#39;</span><span class="p">,</span>
+    <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
+    <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>resulting in this figure:</p>
+<a class="reference internal image-reference" href="../../_images/mass_flow_rate.png"><img alt="../../_images/mass_flow_rate.png" src="../../_images/mass_flow_rate.png" style="width: 465.45px; height: 343.2px;" /></a>
+</section>
+<section id="stacked-plots">
+<span id="id4"></span><h3>Stacked plots<a class="headerlink" href="#stacked-plots" title="Link to this heading"></a></h3>
+<p>Stacked plots can be convenient to illustrate the different loss coefficients at different operating points.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+
+<span class="c1"># Plot mass flow rate</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">[</span><span class="mi">1627</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Profile losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Tip clearance losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Secondary flow losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Trailing edge losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Incidence losses&quot;</span><span class="p">]</span>
+<span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">x_key</span><span class="o">=</span><span class="s2">&quot;PR_ts&quot;</span><span class="p">,</span>
+    <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;loss_profile_4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;loss_clearance_4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;loss_secondary_4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;loss_trailing_4&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;loss_incidence_4&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">subsets</span> <span class="o">=</span> <span class="n">subset</span><span class="p">,</span>
+    <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio [$p_{0, \mathrm</span><span class="si">{in}</span><span class="s2">}/p_\mathrm</span><span class="si">{out}</span><span class="s2">$]&quot;</span><span class="p">,</span>
+    <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Loss coefficient [-]&quot;</span><span class="p">,</span>
+    <span class="n">color_map</span><span class="o">=</span><span class="s1">&#39;Reds&#39;</span><span class="p">,</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="p">,</span>
+    <span class="n">stack</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;loss_coefficients&quot;</span><span class="p">,</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;figures&quot;</span><span class="p">,</span>
+    <span class="n">save_figs</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>This would result in this figure:</p>
+<a class="reference internal image-reference" href="../../_images/loss_coefficients.png"><img alt="../../_images/loss_coefficients.png" src="../../_images/loss_coefficients.png" style="width: 465.59999999999997px; height: 343.34999999999997px;" /></a>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="design_optimization.html" class="btn btn-neutral float-right" title="Design optimization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

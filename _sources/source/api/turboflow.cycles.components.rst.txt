@@ -1,5 +1,5 @@
-meanline\_axial.cycles.components module
-========================================
+turboflow.cycles.components module
+==================================
 
 .. automodule:: turboflow.cycles.components
    :members:

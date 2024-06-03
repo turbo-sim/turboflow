@@ -5,17 +5,11 @@
 Tutorials
 ===============
 
-
-This section contains a series of tutorials demonstrating the functionality of the package
-
+Welcome to the TurboFlow Tutorial Guide. This guide provides step-by-step instructions to help you effectively use TurboFlow for mean-line modelling of axial turbines. The tutorials cover two main aspects of the software: performance prediction and design optimization.
 
 .. toctree::
    :maxdepth: 1
 
-   tutorials/performance_single_stage
-   tutorials/performance_multi_stage
-   tutorials/optimization_single_point
-   tutorials/optimization_multi_point
-
-
+   tutorials/performance_prediction
+   tutorials/design_optimization
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Meanline Axial’s documentation &mdash; turboflow v0.0 documentation</title>
+  <title>TurboFlow: Mean-Line Modelling of Axial Turbines &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
@@ -57,13 +57,15 @@
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="source/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source/model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/model_description.html">Model Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html">Subpackages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html#module-turboflow">Module contents</a></li>
 </ul>
 
         </div>
@@ -80,7 +82,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to Meanline Axial’s documentation</li>
+      <li class="breadcrumb-item active">TurboFlow: Mean-Line Modelling of Axial Turbines</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,106 +92,53 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="welcome-to-meanline-axial-s-documentation">
-<h1>Welcome to Meanline Axial’s documentation<a class="headerlink" href="#welcome-to-meanline-axial-s-documentation" title="Link to this heading"></a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">meanline_axial</span></code> is a Python package for mean-line modelling and simulation of axial turbines. It provides a systematic approach for performance analysis and design optimization of axial turbines:</p>
+  <section id="turboflow-mean-line-modelling-of-axial-turbines">
+<h1>TurboFlow: Mean-Line Modelling of Axial Turbines<a class="headerlink" href="#turboflow-mean-line-modelling-of-axial-turbines" title="Link to this heading"></a></h1>
+<p><strong>Version:</strong> 0.1.0
+<strong>Author:</strong> Lasse Borg Anderson &amp; Roberto Agromayor
+<strong>License:</strong> MIT License</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>TurboFlow is a Python package for mean-line modelling of axial turbines. It aims to offer flexible and reliable simulations for both performance prediction and design optimization,
+and should present a valuable resource for engineers and researchers working in the field of turbomachinery.</p>
+</section>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
 <ul class="simple">
-<li><p><strong>Performance Analysis Mode</strong>:</p>
-<ul>
-<li><p>Evaluate single operating points</p></li>
-<li><p>Produce performance maps</p></li>
-</ul>
-</li>
-<li><p><strong>Design Optimization Mode</strong>:</p>
-<ul>
-<li><p>Single point optimization</p></li>
-<li><p>Multi-point optimization</p></li>
-</ul>
-</li>
-<li><p><strong>Problem formulation and solution</strong>:</p>
-<ul>
-<li><p>Equation-oriented problem formulation for performance analysis and design optimization</p></li>
-<li><p>Consistency between both calculation modes is guaranteed by design</p></li>
-<li><p>Efficient solution with gradient-based root-finding and optimization solvers</p></li>
-<li><p>Multi-start strategies or derivative-free optimizers for global optimization</p></li>
-</ul>
-</li>
-<li><p><strong>Fluid Property Analysis</strong>:</p>
-<ul>
-<li><p>Use CoolProp to determine real gas fluid properties.</p></li>
-</ul>
-</li>
-<li><p><strong>Design Flexibility</strong>:</p>
-<ul>
-<li><p>Supports modelling with any number of turbine stages.</p></li>
-<li><p>Specify turbine geometry using main geometric parameters.</p></li>
-</ul>
-</li>
-<li><p><strong>Choking Calculations</strong>:</p>
-<ul>
-<li><p>General computational strategy to evaluate cascade choking.</p></li>
-<li><p>Formulation autonomously identifies choked cascades for a set of operating conditions</p></li>
-</ul>
-</li>
-<li><p><strong>Loss Models</strong>:</p>
-<ul>
-<li><p>Kacker Okapuu model.</p></li>
-<li><p>Benner model.</p></li>
-</ul>
-</li>
+<li><p><strong>Performance Prediction:</strong> Accurately predict the performance of axial turbines based on various input parameters.</p></li>
+<li><p><strong>Design Optimization:</strong> Optimize preliminary turbine design to achieve optimal performance metrics.</p></li>
+<li><p><strong>Equation-oriented problem formulation:</strong> Equation-oriented problem formulation for performance analysis and design optimization.</p></li>
+<li><p><strong>Model consitency:</strong> The model is consistent for both performance prediction and design optimization.</p></li>
+<li><p><strong>Efficient solution:</strong> The model adopts gradient-based root-finding and optimization solver</p></li>
+<li><p><strong>Real gas fluid property analysis:</strong> Use CoolProp to determine thermohpysical properties.</p></li>
+<li><p><strong>Flexible model:</strong> The model offers options for submodels for loss, deviation and choking calculations</p></li>
+<li><p><strong>General geometry:</strong> Geometrical variables are defined to cover a wide range of axial turbine configurations, including multistage configurations.</p></li>
+<li><p><strong>Easy-to-use:</strong> Intuitive and easy setup of input parameters for rapid development and analysis.</p></li>
+<li><p><strong>Extensive Documentation:</strong> Comprehensive guides and examples to help you get started quickly.</p></li>
 </ul>
 </section>
 <section id="contents">
-<h1>Contents:<a class="headerlink" href="#contents" title="Link to this heading"></a></h1>
+<h2>Contents:<a class="headerlink" href="#contents" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="source/installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/installation.html#user-installation-guide">User Installation Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/installation.html#installing-additional-solvers">Installing Additional Solvers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/installation.html#developer-installation-guide">Developer Installation Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/installation.html#ci-cd-pipeline">CI/CD Pipeline</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="source/tutorials.html">Tutorials</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/tutorials/performance_single_stage.html">Tutorial 1: Performance of a single-stage turbine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/tutorials/performance_multi_stage.html">Tutorial 2: Performance of a multi-stage turbine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/tutorials/optimization_single_point.html">Tutorial 3: Single-point design optimization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/tutorials/optimization_multi_point.html">Tutorial 4: Multi-point design optimization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="source/model_description.html">Model description</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/turbine_geometry.html">Turbine geometry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/velocity_triangles.html">Velocity triangles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/fluid_properties.html">Fluid properties</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/loss_coefficients.html">Loss coefficients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/loss_models.html">Loss models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/deviation_models.html">Deviation models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_description/design_optimization.html">Design optimization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="source/model_validation.html">Model validation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/model_validation/case_kofskey1972.html">Kofskey (1972)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/model_validation/case_kofskey1974.html">Kofskey (1974)</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/nomenclature.html">Nomenclature</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source/glossary.html">Glossary</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/glossary.html#axial-turbines">Axial turbines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/glossary.html#optimization">Optimization</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="source/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html">API Reference</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="source/api/turboflow.html#subpackages">Subpackages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="source/api/turboflow.html#module-turboflow">Module contents</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html">Subpackages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/api/turboflow.html#module-turboflow">Module contents</a></li>
 </ul>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The package is for now constrained to axial-turbines, but is intended to cover other types of turbomachinery in future versions.</p>
+</div>
+</section>
 </section>
 
 

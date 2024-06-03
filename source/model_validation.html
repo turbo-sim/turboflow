@@ -28,10 +28,11 @@
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script src="../_static/design-tabs.js?v=f930bc37"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Kofskey (1972)" href="model_validation/case_kofskey1972.html" />
+    <link rel="next" title="Nomenclature" href="nomenclature.html" />
     <link rel="prev" title="Design optimization" href="model_description/design_optimization.html" /> 
 </head>
 
@@ -57,17 +58,35 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model Description</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Model validation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="model_validation/case_kofskey1972.html">Kofskey (1972)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_validation/case_kofskey1974.html">Kofskey (1974)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#one-stage-choked-stator">One-stage choked stator</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#mass-flow-rate">Mass flow rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#torque">Torque</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#absolute-flow-angle">Absolute flow angle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#one-stage-choked-rotor">One-stage choked rotor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Mass flow rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Torque</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Absolute flow angle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#two-stage">Two-stage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id8">Mass flow rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Torque</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id10">Absolute flow angle</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api/turboflow.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/turboflow.html">Subpackages</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/turboflow.html#submodules">Submodules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/turboflow.html#module-turboflow">Module contents</a></li>
 </ul>
 
         </div>
@@ -96,13 +115,441 @@
              
   <section id="model-validation">
 <span id="validation"></span><h1>Model validation<a class="headerlink" href="#model-validation" title="Link to this heading"></a></h1>
-<p>To be completed</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="model_validation/case_kofskey1972.html">Kofskey (1972)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="model_validation/case_kofskey1974.html">Kofskey (1974)</a></li>
+<p>The purpose of this section is to demonstrate the accuracy and relibility in predicting axial turbines performance. For this purpose, three cases with qualitatively different behavior are selected.
+This includes two single-stage turbines, where one experiences choking in the stator (<span id="id1">[<a class="reference internal" href="bibliography.html#id67">Kofskey <em>et al.</em>, 1974</a>]</span>), and the other in the rotor (<span id="id2">[<a class="reference internal" href="bibliography.html#id66">Kofskey and Nusbaum, 1972</a>]</span>), and a two-stage turbine, to show the capability of the model to
+simulate multistage turbine configurations (<span id="id3">[<a class="reference internal" href="bibliography.html#id66">Kofskey and Nusbaum, 1972</a>]</span>):</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#choked-stator"><span class="std std-ref">One-stage choked stator</span></a></p></li>
+<li><p><a class="reference internal" href="#choked-rotor"><span class="std std-ref">One-stage choked rotor</span></a></p></li>
+<li><p><a class="reference internal" href="#two-stage"><span class="std std-ref">Two-stage</span></a></p></li>
 </ul>
+</div></blockquote>
+<p>The validation was perfomed in terms of simulating mass flow rate, torque and turbine exit absolute flow angle, at a range of total-to-static pressure ratios and angular speeds.
+For each parameter, the simulated value was compared to the measured value, and a table is presented for each parameter to quantify the fraction of point within different uncertainty limits.
+In addition, the simulated and experimental vlaues are compared graphically.</p>
+<p>The setup simulation and solver options used for the validation is reported below:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">simulation_options</span><span class="p">:</span>
+   <span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>
+   <span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span>
+   <span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>
+   <span class="n">loss_model</span><span class="p">:</span>
+      <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>
+      <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>
+
+<span class="n">performance_analysis</span> <span class="p">:</span>
+   <span class="n">solver_options</span><span class="p">:</span>
+      <span class="n">method</span><span class="p">:</span> <span class="n">hybr</span>
+      <span class="n">tolerance</span><span class="p">:</span> <span class="mf">1e-8</span>
+      <span class="n">max_iterations</span><span class="p">:</span> <span class="mi">100</span>
+      <span class="n">derivative_method</span><span class="p">:</span> <span class="s2">&quot;2-point&quot;</span>
+</pre></div>
 </div>
+<section id="one-stage-choked-stator">
+<span id="choked-stator"></span><h2>One-stage choked stator<a class="headerlink" href="#one-stage-choked-stator" title="Link to this heading"></a></h2>
+<section id="mass-flow-rate">
+<h3>Mass flow rate<a class="headerlink" href="#mass-flow-rate" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1974_mass_flow_rate.png"><img alt="../_images/1974_mass_flow_rate.png" class="align-center" src="../_images/1974_mass_flow_rate.png" style="width: 462.15px; height: 345.0px;" /></a>
+</section>
+<section id="torque">
+<h3>Torque<a class="headerlink" href="#torque" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>22.2%</p></td>
+<td><p>27.3%</p></td>
+<td><p>33.3%</p></td>
+<td><p>14.3%</p></td>
+<td><p>25.6%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>33.3%</p></td>
+<td><p>63.6%</p></td>
+<td><p>66.6%</p></td>
+<td><p>57.1%</p></td>
+<td><p>56.4%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>88.8%</p></td>
+<td><p>72.7%</p></td>
+<td><p>83.3%</p></td>
+<td><p>85.7%</p></td>
+<td><p>82.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1974_torque.png"><img alt="../_images/1974_torque.png" class="align-center" src="../_images/1974_torque.png" style="width: 474.0px; height: 349.5px;" /></a>
+</section>
+<section id="absolute-flow-angle">
+<h3>Absolute flow angle<a class="headerlink" href="#absolute-flow-angle" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>66.6%</p></td>
+<td><p>81.8%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>87.8%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>88.8%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>97.6%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1974_absolute_flow_angle.png"><img alt="../_images/1974_absolute_flow_angle.png" class="align-center" src="../_images/1974_absolute_flow_angle.png" style="width: 468.29999999999995px; height: 349.5px;" /></a>
+</section>
+</section>
+<section id="one-stage-choked-rotor">
+<span id="choked-rotor"></span><h2>One-stage choked rotor<a class="headerlink" href="#one-stage-choked-rotor" title="Link to this heading"></a></h2>
+<section id="id4">
+<h3>Mass flow rate<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_mass_flow_rate.png"><img alt="../_images/1972_mass_flow_rate.png" class="align-center" src="../_images/1972_mass_flow_rate.png" style="width: 462.15px; height: 346.65px;" /></a>
+</section>
+<section id="id5">
+<h3>Torque<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>27.3%</p></td>
+<td><p>76.9%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>77.1%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>72.7%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>93.8%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_torque.png"><img alt="../_images/1972_torque.png" class="align-center" src="../_images/1972_torque.png" style="width: 468.29999999999995px; height: 349.5px;" /></a>
+</section>
+<section id="id6">
+<h3>Absolute flow angle<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>60.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>40.0%</p></td>
+<td><p>74.4%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>80.0%</p></td>
+<td><p>94.9%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_absolute_flow_angle.png"><img alt="../_images/1972_absolute_flow_angle.png" class="align-center" src="../_images/1972_absolute_flow_angle.png" style="width: 468.29999999999995px; height: 345.15px;" /></a>
+</section>
+</section>
+<section id="two-stage">
+<span id="id7"></span><h2>Two-stage<a class="headerlink" href="#two-stage" title="Link to this heading"></a></h2>
+<section id="id8">
+<h3>Mass flow rate<a class="headerlink" href="#id8" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_2stage_mass_flow_rate.png"><img alt="../_images/1972_2stage_mass_flow_rate.png" class="align-center" src="../_images/1972_2stage_mass_flow_rate.png" style="width: 474.75px; height: 349.5px;" /></a>
+</section>
+<section id="id9">
+<h3>Torque<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>53.8%</p></td>
+<td><p>92.3%</p></td>
+<td><p>76.9%</p></td>
+<td><p>57.1%</p></td>
+<td><p>69.9%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_2stage_torque.png"><img alt="../_images/1972_2stage_torque.png" class="align-center" src="../_images/1972_2stage_torque.png" style="width: 468.29999999999995px; height: 349.5px;" /></a>
+</section>
+<section id="id10">
+<h3>Absolute flow angle<a class="headerlink" href="#id10" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+<col style="width: 16.7%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Error</p></td>
+<td><p>70% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>90% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>100% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>110% of <span class="math notranslate nohighlight">\(\omega_\mathrm{design}\)</span></p></td>
+<td><p>Overall</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;2.5%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>84.6%</p></td>
+<td><p>86.7%</p></td>
+<td><p>92.3%</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(&lt;5.0%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(&lt;10%\)</span></p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+<td><p>100.0%</p></td>
+</tr>
+</tbody>
+</table>
+<a class="reference internal image-reference" href="../_images/1972_2stage_absolute_flow_angle.png"><img alt="../_images/1972_2stage_absolute_flow_angle.png" class="align-center" src="../_images/1972_2stage_absolute_flow_angle.png" style="width: 468.29999999999995px; height: 349.5px;" /></a>
+</section>
+</section>
 </section>
 
 
@@ -110,7 +557,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="model_description/design_optimization.html" class="btn btn-neutral float-left" title="Design optimization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="model_validation/case_kofskey1972.html" class="btn btn-neutral float-right" title="Kofskey (1972)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="nomenclature.html" class="btn btn-neutral float-right" title="Nomenclature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
