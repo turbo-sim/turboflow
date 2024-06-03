@@ -5,8 +5,8 @@ import sys
 sys.path.insert(0, os.path.abspath(".."))
 
 # Define project metadata
-project = "meanline-axial"
-copyright = "2023, Lasse Borg Anderson and Roberto Agromayor"
+project = "turboflow"
+copyright = "2024, Lasse Borg Anderson and Roberto Agromayor"
 author = "Lasse Borg Anderson and Roberto Agromayor"
 release = "v0.0"
 
@@ -36,7 +36,10 @@ bibtex_reference_style = "author_year"
 
 # Exclude unnecessary files
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-# exclude_patterns.extend(["source/api/meanline_axial.rst"])
+
+exclude_patterns.extend(["source/api/meanline_axial.rst"
+                         "source/api/add_to_pythonpath.rst",
+                         "source/api/cyles.rst"])
 
 # Define theme
 # html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme

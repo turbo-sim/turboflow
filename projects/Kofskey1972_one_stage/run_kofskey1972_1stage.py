@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 1
+CASE = 10
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")

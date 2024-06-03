@@ -274,8 +274,15 @@ instructions for snopt DLLs
 
 ## to create a new version and release to pypi
 
-bumpversion patch  # This increments the version, updates relevant files, commits the changes, and creates a new tag.
+bumpversion patch  # or minor, major
+(this increments the version, updates relevant files, commits the changes, and creates a new tag.)
+
+
 git push origin main --tags  # This pushes the `main` branch and the new tag to the remote repository.
 
 
 git push origin main --tags
+
+
+
+Check the the last test passed and it triggered a single action and then it updates pypi to 0.1.4
