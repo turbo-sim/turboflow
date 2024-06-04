@@ -14,7 +14,7 @@ from . import performance_analysis as pa
 
 CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
 AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
-OBJECTIVE_FUNCTIONS = ["none", "efficiency_ts"]
+OBJECTIVE_FUNCTIONS = ["efficiency_ts", "none"]
 RADIUS_TYPE = ["constant_mean", "constant_hub", "constant_tip"]
 ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
 INDEPENDENT_VARIABLES = [
