@@ -7,6 +7,7 @@ from pydantic import (
     ConfigDict,
 )
 from typing import Optional, List, Union, Literal, Dict
+from enum import Enum
 from typing_extensions import Self
 from typing_extensions import Annotated
 from pydantic.functional_validators import AfterValidator, BeforeValidator
@@ -257,6 +258,8 @@ class TuningFactors(BaseModel):
     trailing: float = 1.00
     clearance: float = 1.00
 
+LossModelEnum = Enum('LossModels', dict(zip([model.upper() for model in LOSS_MODELS], LOSS_MODELS)))
+LossCoefficientEnum = Enum('LossCoefficients', dict(zip([model.upper() for model in LOSS_COEFFICIENTS], LOSS_COEFFICIENTS)))
 
 class LossModel(BaseModel):
     """
@@ -281,21 +284,15 @@ class LossModel(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    model: Annotated[
-        str,
-        AfterValidator(lambda input: check_string(input, "loss model", LOSS_MODELS)),
-    ]
-    loss_coefficient: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "loss coefficient", LOSS_COEFFICIENTS)
-        ),
-    ]
-    custom_value: Annotated[float, Field(ge=0)] = 0.1
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    model : LossModelEnum
+    loss_coefficient : LossCoefficientEnum
+    custom_value: Annotated[float, Field(ge=0)] = 0.0
     inlet_displacement_thickness_height_ratio: float = 0.011
     tuning_factors: TuningFactors = TuningFactors()
 
+DeviationModelEnum = Enum('DeviationModels', dict(zip([model.upper() for model in DEVIATION_MODELS], DEVIATION_MODELS)))
+ChokingModelEnum = Enum('ChokingModels', dict(zip([model.upper() for model in CHOKING_MODELS], CHOKING_MODELS)))
 
 class SimulationOptions(BaseModel):
     """
@@ -320,23 +317,15 @@ class SimulationOptions(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    deviation_model: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "deviation model", DEVIATION_MODELS)
-        ),
-    ]
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    deviation_model : DeviationModelEnum
     blockage_model: Union[str, float] = 0.00
-    choking_model: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "choking model", CHOKING_MODELS)
-        ),
-    ]
+    choking_model : ChokingModelEnum
     rel_step_fd: float = 1e-4
     loss_model: LossModel
 
+SolverOptionEnum = Enum('SolverOptions', dict(zip([model.upper() for model in SOLVER_OPTIONS], SOLVER_OPTIONS)))
+DerivativeMethodEnum = Enum('DerivativeMethods', dict(zip([model.upper() for model in DERIVATIVE_METHODS], DERIVATIVE_METHODS)))
 
 class SolverOptionsPerformanceAnalysis(BaseModel):
     """
@@ -365,27 +354,16 @@ class SolverOptionsPerformanceAnalysis(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    method: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "root solver", SOLVER_OPTIONS)
-        ),
-        Field(default="hybr"),
-    ]
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    method : SolverOptionEnum = SOLVER_OPTIONS[0]
     tolerance: float = 1e-8
     max_iterations: int = 100
-    derivative_method: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "derivative method", DERIVATIVE_METHODS)
-        ),
-        Field(default="2-point"),
-    ]
+    derivative_method : DerivativeMethodEnum = DERIVATIVE_METHODS[0]
     derivative_abs_step: float = 1e-6
     print_convergence: bool = True
     plot_convergence: bool = False
 
+CascadeTypeEnum = Enum('CascadeTypes', dict(zip([model.upper() for model in ["stator", "rotor"]], ["stator", "rotor"])))
 
 class GeometryPerformanceAnalysis(BaseModel):
     """
@@ -432,15 +410,8 @@ class GeometryPerformanceAnalysis(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    cascade_type: List[
-        Annotated[
-            str,
-            AfterValidator(
-                lambda input: check_string(input, "cascade type", ["stator", "rotor"])
-            ),
-        ]
-    ]
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    cascade_type: List[CascadeTypeEnum]
     radius_hub_in: List[Annotated[float, Field(gt=0)]]
     radius_hub_out: List[Annotated[float, Field(gt=0)]]
     radius_tip_in: List[Annotated[float, Field(gt=0)]]
@@ -464,6 +435,9 @@ class GeometryPerformanceAnalysis(BaseModel):
             raise ValueError("Geometry input is not of same length")
         return self
 
+LibraryEnum = Enum('LibraryOptions', dict(zip([model.upper() for model in VALID_LIBRARIES_AND_METHODS.keys()], VALID_LIBRARIES_AND_METHODS.keys())))
+MethodEnum = Enum('MethodOption', dict(zip([model.upper() for model in [x for xs in VALID_LIBRARIES_AND_METHODS.values() for x in xs]], [x for xs in VALID_LIBRARIES_AND_METHODS.values() for x in xs])))
+UpdateOnEnum = Enum('UpdateOns', dict(zip([model.upper() for model in ["gradient", "function"]], ["gradient", "function"])))
 
 class SolverOptionsOptimization(BaseModel):
     """
@@ -498,38 +472,16 @@ class SolverOptionsOptimization(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    library: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(
-                input, "optimization library", VALID_LIBRARIES_AND_METHODS.keys()
-            )
-        ),
-        Field(default="scipy"),
-    ]
-    method: str = "slsqp"
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    library: LibraryEnum = list(VALID_LIBRARIES_AND_METHODS.keys())[0]
+    method: MethodEnum = VALID_LIBRARIES_AND_METHODS[list(VALID_LIBRARIES_AND_METHODS.keys())[0]][0]
     tolerance: float = 1e-5
     max_iterations: int = 100
-    derivative_method: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "derivative method", DERIVATIVE_METHODS)
-        ),
-        Field(default="2-point"),
-    ]
+    derivative_method: DerivativeMethodEnum = DERIVATIVE_METHODS[0]
     derivative_abs_step: float = None
     print_convergence: bool = True
     plot_convergence: bool = False
-    update_on: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(
-                input, "update_on input", ["gradient", "function"]
-            )
-        ),
-        Field(default="gradient"),
-    ]
+    update_on: UpdateOnEnum = "gradient"
 
     @model_validator(mode="after")
     def check_solver_method(self) -> Self:
@@ -587,27 +539,8 @@ class Variable(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    value: Union[
-        float,
-        Annotated[
-            str,
-            AfterValidator(
-                lambda input: check_string(input, "cascade type", ["stator", "rotor"])
-            ),
-        ],
-        List[float],
-        List[
-            Annotated[
-                str,
-                AfterValidator(
-                    lambda input: check_string(
-                        input, "cascade type", ["stator", "rotor"]
-                    )
-                ),
-            ]
-        ],
-    ]
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    value : Union[float, CascadeTypeEnum, List[float], List[CascadeTypeEnum]]
     lower_bound: Union[float, List[float]] = None
     upper_bound: Union[float, List[float]] = None
 
@@ -648,6 +581,10 @@ class Constraint(BaseModel):
     value: float
     normalize: bool
 
+ObjectiveFunctionEnum = Enum('ObjectiveFunctions', dict(zip([model.upper() for model in OBJECTIVE_FUNCTIONS], OBJECTIVE_FUNCTIONS)))
+VariableEnum = Enum('Variables', dict(zip([model.upper() for model in VARIABLES], VARIABLES)))
+ConstraintEnum = Enum('Constraints', dict(zip([model.upper() for model in CONSTRAINTS], CONSTRAINTS)))
+RadiusTypeEnum = Enum('RadiusTypes', dict(zip([model.upper() for model in RADIUS_TYPE], RADIUS_TYPE)))
 
 class DesignOptimization(BaseModel):
     """
@@ -674,36 +611,18 @@ class DesignOptimization(BaseModel):
         Indicates that no extra input is allowed. Default is "forbid".
     """
 
-    model_config = ConfigDict(extra="forbid")
-    objective_function: Annotated[
-        str,
-        AfterValidator(
-            lambda input: check_string(input, "objective function", OBJECTIVE_FUNCTIONS)
-        ),
-        Field(default="efficiency_ts"),
-    ]
+    model_config = ConfigDict(extra="forbid", use_enum_values=True)
+    objective_function: ObjectiveFunctionEnum = OBJECTIVE_FUNCTIONS[0]
     variables: Dict[
-        Annotated[
-            str,
-            AfterValidator(lambda input: check_string(input, "variable", VARIABLES)),
-        ],
+        VariableEnum,
         Variable,
     ] = None
     constraints: Dict[
-        Annotated[
-            str,
-            AfterValidator(
-                lambda input: check_string(input, "constraint", CONSTRAINTS)
-            ),
-        ],
+        ConstraintEnum,
         Constraint,
     ] = None
     solver_options: SolverOptionsOptimization = SolverOptionsOptimization()
-    radius_type: Annotated[
-        str,
-        AfterValidator(lambda input: check_string(input, "radius type", RADIUS_TYPE)),
-        Field(default="constant_mean"),
-    ]
+    radius_type : RadiusTypeEnum = RADIUS_TYPE[0]
 
     # After validator to check variables holds all variables
     @field_validator("variables")

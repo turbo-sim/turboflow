@@ -5,6 +5,7 @@ import turboflow as tf
 
 # Import the options dictionary
 config_options = tf.CONFIGURATION_OPTIONS
+schema = tf.AxialTurbine.model_json_schema()
 
 # Define name map for nice visuals
 FIELD_MAP = {
