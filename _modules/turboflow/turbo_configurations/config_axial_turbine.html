@@ -100,6 +100,7 @@
     <span class="n">ConfigDict</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Self</span>
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Annotated</span>
 <span class="kn">from</span> <span class="nn">pydantic.functional_validators</span> <span class="kn">import</span> <span class="n">AfterValidator</span><span class="p">,</span> <span class="n">BeforeValidator</span>
@@ -362,6 +363,8 @@
     <span class="n">clearance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.00</span></div>
 
 
+<span class="n">LossModelEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;LossModels&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">LOSS_MODELS</span><span class="p">],</span> <span class="n">LOSS_MODELS</span><span class="p">)))</span>
+<span class="n">LossCoefficientEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;LossCoefficients&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">LOSS_COEFFICIENTS</span><span class="p">],</span> <span class="n">LOSS_COEFFICIENTS</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="LossModel">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.LossModel">[docs]</a>
@@ -388,22 +391,16 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span><span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;loss model&quot;</span><span class="p">,</span> <span class="n">LOSS_MODELS</span><span class="p">)),</span>
-    <span class="p">]</span>
-    <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;loss coefficient&quot;</span><span class="p">,</span> <span class="n">LOSS_COEFFICIENTS</span><span class="p">)</span>
-        <span class="p">),</span>
-    <span class="p">]</span>
-    <span class="n">custom_value</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.1</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">model</span> <span class="p">:</span> <span class="n">LossModelEnum</span>
+    <span class="n">loss_coefficient</span> <span class="p">:</span> <span class="n">LossCoefficientEnum</span>
+    <span class="n">custom_value</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
     <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.011</span>
     <span class="n">tuning_factors</span><span class="p">:</span> <span class="n">TuningFactors</span> <span class="o">=</span> <span class="n">TuningFactors</span><span class="p">()</span></div>
 
 
+<span class="n">DeviationModelEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;DeviationModels&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">DEVIATION_MODELS</span><span class="p">],</span> <span class="n">DEVIATION_MODELS</span><span class="p">)))</span>
+<span class="n">ChokingModelEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;ChokingModels&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">CHOKING_MODELS</span><span class="p">],</span> <span class="n">CHOKING_MODELS</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="SimulationOptions">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SimulationOptions">[docs]</a>
@@ -430,24 +427,16 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">deviation_model</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;deviation model&quot;</span><span class="p">,</span> <span class="n">DEVIATION_MODELS</span><span class="p">)</span>
-        <span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">deviation_model</span> <span class="p">:</span> <span class="n">DeviationModelEnum</span>
     <span class="n">blockage_model</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.00</span>
-    <span class="n">choking_model</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;choking model&quot;</span><span class="p">,</span> <span class="n">CHOKING_MODELS</span><span class="p">)</span>
-        <span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">choking_model</span> <span class="p">:</span> <span class="n">ChokingModelEnum</span>
     <span class="n">rel_step_fd</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
     <span class="n">loss_model</span><span class="p">:</span> <span class="n">LossModel</span></div>
 
 
+<span class="n">SolverOptionEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;SolverOptions&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">SOLVER_OPTIONS</span><span class="p">],</span> <span class="n">SOLVER_OPTIONS</span><span class="p">)))</span>
+<span class="n">DerivativeMethodEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;DerivativeMethods&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">],</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="SolverOptionsPerformanceAnalysis">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionsPerformanceAnalysis">[docs]</a>
@@ -478,28 +467,17 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;root solver&quot;</span><span class="p">,</span> <span class="n">SOLVER_OPTIONS</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;hybr&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">method</span> <span class="p">:</span> <span class="n">SolverOptionEnum</span> <span class="o">=</span> <span class="n">SOLVER_OPTIONS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
     <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="n">derivative_method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;derivative method&quot;</span><span class="p">,</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;2-point&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">derivative_method</span> <span class="p">:</span> <span class="n">DerivativeMethodEnum</span> <span class="o">=</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">derivative_abs_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
     <span class="n">print_convergence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">plot_convergence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
 
 
+<span class="n">CascadeTypeEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;CascadeTypes&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">])))</span>
 
 <div class="viewcode-block" id="GeometryPerformanceAnalysis">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.GeometryPerformanceAnalysis">[docs]</a>
@@ -548,15 +526,8 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">cascade_type</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
-        <span class="n">Annotated</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span>
-            <span class="n">AfterValidator</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;cascade type&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">])</span>
-            <span class="p">),</span>
-        <span class="p">]</span>
-    <span class="p">]</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">cascade_type</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CascadeTypeEnum</span><span class="p">]</span>
     <span class="n">radius_hub_in</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)]]</span>
     <span class="n">radius_hub_out</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)]]</span>
     <span class="n">radius_tip_in</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)]]</span>
@@ -584,6 +555,9 @@
 </div>
 
 
+<span class="n">LibraryEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;LibraryOptions&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">()],</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+<span class="n">MethodEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;MethodOption&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">xs</span> <span class="ow">in</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">]],</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">xs</span> <span class="ow">in</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xs</span><span class="p">])))</span>
+<span class="n">UpdateOnEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;UpdateOns&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">]],</span> <span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">])))</span>
 
 <div class="viewcode-block" id="SolverOptionsOptimization">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionsOptimization">[docs]</a>
@@ -620,38 +594,16 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">library</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span>
-                <span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;optimization library&quot;</span><span class="p">,</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-            <span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;scipy&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
-    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;slsqp&quot;</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">library</span><span class="p">:</span> <span class="n">LibraryEnum</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">MethodEnum</span> <span class="o">=</span> <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span>
     <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="n">derivative_method</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;derivative method&quot;</span><span class="p">,</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;2-point&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">derivative_method</span><span class="p">:</span> <span class="n">DerivativeMethodEnum</span> <span class="o">=</span> <span class="n">DERIVATIVE_METHODS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">derivative_abs_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">print_convergence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">plot_convergence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">update_on</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span>
-                <span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;update_on input&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span> <span class="s2">&quot;function&quot;</span><span class="p">]</span>
-            <span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;gradient&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">update_on</span><span class="p">:</span> <span class="n">UpdateOnEnum</span> <span class="o">=</span> <span class="s2">&quot;gradient&quot;</span>
 
 <div class="viewcode-block" id="SolverOptionsOptimization.check_solver_method">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionsOptimization.check_solver_method">[docs]</a>
@@ -718,27 +670,8 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
-        <span class="nb">float</span><span class="p">,</span>
-        <span class="n">Annotated</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span>
-            <span class="n">AfterValidator</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;cascade type&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">])</span>
-            <span class="p">),</span>
-        <span class="p">],</span>
-        <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
-        <span class="n">List</span><span class="p">[</span>
-            <span class="n">Annotated</span><span class="p">[</span>
-                <span class="nb">str</span><span class="p">,</span>
-                <span class="n">AfterValidator</span><span class="p">(</span>
-                    <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span>
-                        <span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;cascade type&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]</span>
-                    <span class="p">)</span>
-                <span class="p">),</span>
-            <span class="p">]</span>
-        <span class="p">],</span>
-    <span class="p">]</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">value</span> <span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">CascadeTypeEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">CascadeTypeEnum</span><span class="p">]]</span>
     <span class="n">lower_bound</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">upper_bound</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -786,6 +719,10 @@
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span></div>
 
 
+<span class="n">ObjectiveFunctionEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;ObjectiveFunctions&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">],</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">)))</span>
+<span class="n">VariableEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;Variables&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">VARIABLES</span><span class="p">],</span> <span class="n">VARIABLES</span><span class="p">)))</span>
+<span class="n">ConstraintEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;Constraints&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">CONSTRAINTS</span><span class="p">],</span> <span class="n">CONSTRAINTS</span><span class="p">)))</span>
+<span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;RadiusTypes&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">RADIUS_TYPE</span><span class="p">],</span> <span class="n">RADIUS_TYPE</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="DesignOptimization">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DesignOptimization">[docs]</a>
@@ -814,36 +751,18 @@
 <span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
-    <span class="n">objective_function</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span>
-            <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;objective function&quot;</span><span class="p">,</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;efficiency_ts&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">objective_function</span><span class="p">:</span> <span class="n">ObjectiveFunctionEnum</span> <span class="o">=</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="n">Annotated</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span>
-            <span class="n">AfterValidator</span><span class="p">(</span><span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;variable&quot;</span><span class="p">,</span> <span class="n">VARIABLES</span><span class="p">)),</span>
-        <span class="p">],</span>
+        <span class="n">VariableEnum</span><span class="p">,</span>
         <span class="n">Variable</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">constraints</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="n">Annotated</span><span class="p">[</span>
-            <span class="nb">str</span><span class="p">,</span>
-            <span class="n">AfterValidator</span><span class="p">(</span>
-                <span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;constraint&quot;</span><span class="p">,</span> <span class="n">CONSTRAINTS</span><span class="p">)</span>
-            <span class="p">),</span>
-        <span class="p">],</span>
+        <span class="n">ConstraintEnum</span><span class="p">,</span>
         <span class="n">Constraint</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">solver_options</span><span class="p">:</span> <span class="n">SolverOptionsOptimization</span> <span class="o">=</span> <span class="n">SolverOptionsOptimization</span><span class="p">()</span>
-    <span class="n">radius_type</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
-        <span class="nb">str</span><span class="p">,</span>
-        <span class="n">AfterValidator</span><span class="p">(</span><span class="k">lambda</span> <span class="nb">input</span><span class="p">:</span> <span class="n">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="s2">&quot;radius type&quot;</span><span class="p">,</span> <span class="n">RADIUS_TYPE</span><span class="p">)),</span>
-        <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;constant_mean&quot;</span><span class="p">),</span>
-    <span class="p">]</span>
+    <span class="n">radius_type</span> <span class="p">:</span> <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">RADIUS_TYPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># After validator to check variables holds all variables</span>
 <div class="viewcode-block" id="DesignOptimization.check_variables">
