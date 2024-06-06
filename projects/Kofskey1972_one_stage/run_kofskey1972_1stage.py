@@ -11,7 +11,12 @@ CASE = 10
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
-config = tf.load_config(CONFIG_FILE, print_summary=True)
+config = tf.load_config(CONFIG_FILE, print_summary=False)
+schema = config.model_dump()
+print(schema)
+
+# schema = tf.AxialTurbine.model_json_schema()
+# print(schema["$defs"]["Constraint"].keys())
 
 x0 = {
     "w_out_1": 244.42314206706558,

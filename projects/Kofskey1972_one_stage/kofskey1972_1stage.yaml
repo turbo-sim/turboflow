@@ -12,7 +12,6 @@ operation_points:
     p_out : 13.8e4/2.298 #, 13.8e4/2.5]
     omega: 1627
     alpha_in: 0
-  
 
 simulation_options: # Optional
   deviation_model : aungier  # Optional
@@ -42,7 +41,7 @@ performance_analysis :
     method: hybr  # Optional
     tolerance: 1e-8  # Optional
     max_iterations: 100  # Optional
-    derivative_method: "2-point"  # Optional
+    derivative_method: 2-point  # Optional
     derivative_abs_step: 1e-6  # Optional
     print_convergence: True
     plot_convergence: False
@@ -156,7 +155,8 @@ design_optimization:
       type : "="
       value : 1
       normalize : True
-  radius_type : "constant_mean" # Optional
+
+  radius_type : "constant_tip"
   solver_options: # Optional
     library: pygmo # Optional
     method: ipopt # Optional
