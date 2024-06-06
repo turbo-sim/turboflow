@@ -37,9 +37,8 @@ bibtex_reference_style = "author_year"
 # Exclude unnecessary files
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-exclude_patterns.extend(["source/api/meanline_axial.rst"
-                         "source/api/add_to_pythonpath.rst",
-                         "source/api/cyles.rst"])
+exclude_patterns.extend(["source/api/turboflow.add_to_pythonpath.rst",
+                         "source/api/turboflow.cyles.rst"])
 
 # Define theme
 # html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme
@@ -51,5 +50,3 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
-# Add mock imports
-# autodoc_mock_imports = ['meanline_axial.meanline']

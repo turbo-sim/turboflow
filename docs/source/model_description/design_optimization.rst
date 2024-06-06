@@ -14,6 +14,10 @@ Description of how to optimize the turbine geometry
 - Optimization with gradient based algorithms
 - Extension to multi-point optimization problems
 
+For design optimization, the same model is adopted, ensuring constency with performance analysis mode. However, a set of geometrical parameters are available 
+as design variables, together with the set :math:`x`. The residual equations are implemented as equality constraints, while an objective function is specified 
+(such as total-to-static efficiency) to obtain the optimal geometry of the turbine. 
+
 
 .. _design_optimization_single_point:
 

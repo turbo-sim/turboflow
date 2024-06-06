@@ -3,14 +3,6 @@
 Performance analysis
 ======================
 
+The performance analysis mode predicts turbine performance based on a set of inputs and simulation setup.
 
-
-Description of how to evaluate the turbine performance
-
-- Cascade modeling equations
-- Evaluation of inlet, throat, and outlet
-- Computation of critical Mach number (Lagrange multipliers)
-- Choking formulation is general and covers all cases
-- Formulation of the system of equations for a cascade (residuals)
-- Solution with a root finding algorithm
-- Multiple operating points to get the performance map
+For performance analysis the inputs are the boundary conditions, and the set described above (:math:`x`), and the residual equations are solved using root-finder algortihms.

@@ -1,7 +1,7 @@
-turboflow.axial\_turbine.loss\_model module
+turboflow.cycles.cycle\_optimization module
 ===========================================
 
-.. automodule:: turboflow.axial_turbine.loss_model
+.. automodule:: turboflow.cycles.cycle_optimization
    :members:
    :undoc-members:
    :show-inheritance:

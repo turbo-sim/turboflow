@@ -18,5 +18,5 @@ The TurboFlow meanline-model is designed to be flexible and offers a variety of 
    model_description/loss_models
    model_description/deviation_models
    model_description/choking_models
-   model_description/performance_analysis
-   model_description/design_optimization
+   model_description/equation_formulation
+
