@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Submodules &mdash; turboflow v0.0 documentation</title>
+  <title>turboflow.properties package &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -30,7 +30,9 @@
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="turboflow.properties.fluid_properties module" href="turboflow.properties.fluid_properties.html" />
+    <link rel="prev" title="turboflow.axial_turbine.performance_analysis module" href="turboflow.axial_turbine.performance_analysis.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,7 +54,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
@@ -60,10 +62,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">turboflow.properties package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-turboflow.properties">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.turbo_configurations.html">turboflow.turbo_configurations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -80,7 +94,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Submodules</li>
+          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">turboflow.properties package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/api/turboflow.properties.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,26 +105,75 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-turboflow.properties package
-============================
-=======
-Fluid properties functions
-==================================
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</p>
+  <section id="turboflow-properties-package">
+<h1>turboflow.properties package<a class="headerlink" href="#turboflow-properties-package" title="Link to this heading"></a></h1>
 <section id="submodules">
-<h1>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h1>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.properties.fluid_properties.html">turboflow.properties.fluid_properties module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid"><code class="docutils literal notranslate"><span class="pre">Fluid</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.compute_properties_1phase"><code class="docutils literal notranslate"><span class="pre">Fluid.compute_properties_1phase()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.compute_properties_2phase"><code class="docutils literal notranslate"><span class="pre">Fluid.compute_properties_2phase()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.compute_properties_meanline"><code class="docutils literal notranslate"><span class="pre">Fluid.compute_properties_meanline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.compute_properties_metastable_rhoT"><code class="docutils literal notranslate"><span class="pre">Fluid.compute_properties_metastable_rhoT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.compute_sonic_state"><code class="docutils literal notranslate"><span class="pre">Fluid.compute_sonic_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.get_property"><code class="docutils literal notranslate"><span class="pre">Fluid.get_property()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.get_props"><code class="docutils literal notranslate"><span class="pre">Fluid.get_props()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.plot_phase_diagram"><code class="docutils literal notranslate"><span class="pre">Fluid.plot_phase_diagram()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.set_state"><code class="docutils literal notranslate"><span class="pre">Fluid.set_state()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.set_state_metastable"><code class="docutils literal notranslate"><span class="pre">Fluid.set_state_metastable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid.set_state_metastable_rhoT"><code class="docutils literal notranslate"><span class="pre">Fluid.set_state_metastable_rhoT()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState"><code class="docutils literal notranslate"><span class="pre">FluidState</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState.items"><code class="docutils literal notranslate"><span class="pre">FluidState.items()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState.keys"><code class="docutils literal notranslate"><span class="pre">FluidState.keys()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState.to_dict"><code class="docutils literal notranslate"><span class="pre">FluidState.to_dict()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState.values"><code class="docutils literal notranslate"><span class="pre">FluidState.values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.PropertyRoot"><code class="docutils literal notranslate"><span class="pre">PropertyRoot</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.PropertyRoot.get_values"><code class="docutils literal notranslate"><span class="pre">PropertyRoot.get_values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem.get_values"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem.get_values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2.get_bounds()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2.get_n_eq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2.get_n_ineq()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_values"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2.get_values()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.calculate_subcooling"><code class="docutils literal notranslate"><span class="pre">calculate_subcooling()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.calculate_superheating"><code class="docutils literal notranslate"><span class="pre">calculate_superheating()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_properties_meshgrid"><code class="docutils literal notranslate"><span class="pre">compute_properties_meshgrid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_pseudocritical_line"><code class="docutils literal notranslate"><span class="pre">compute_pseudocritical_line()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_quality_grid"><code class="docutils literal notranslate"><span class="pre">compute_quality_grid()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_saturation_line"><code class="docutils literal notranslate"><span class="pre">compute_saturation_line()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_spinodal_line"><code class="docutils literal notranslate"><span class="pre">compute_spinodal_line()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.states_to_dict"><code class="docutils literal notranslate"><span class="pre">states_to_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.states_to_dict_2d"><code class="docutils literal notranslate"><span class="pre">states_to_dict_2d()</span></code></a></li>
+</ul>
+</li>
+</ul>
 </div>
 </section>
 <section id="module-turboflow.properties">
-<span id="module-contents"></span><h1>Module contents<a class="headerlink" href="#module-turboflow.properties" title="Link to this heading"></a></h1>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-turboflow.properties" title="Link to this heading"></a></h2>
+</section>
 </section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.axial_turbine.performance_analysis.html" class="btn btn-neutral float-left" title="turboflow.axial_turbine.performance_analysis module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.properties.fluid_properties.html" class="btn btn-neutral float-right" title="turboflow.properties.fluid_properties module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subpackages &mdash; turboflow v0.0 documentation</title>
+  <title>API Reference &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -31,9 +31,7 @@
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Submodules" href="turboflow.axial_turbine.html" />
-    <link rel="prev" title="Configuration options" href="../configuration.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -55,7 +53,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
@@ -63,21 +61,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Subpackages</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.html">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#submodules">Submodules</a><ul class="simple">
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="#module-turboflow">Module contents</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#turboflow.find_pyproject_toml"><code class="docutils literal notranslate"><span class="pre">find_pyproject_toml()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#turboflow.print_banner"><code class="docutils literal notranslate"><span class="pre">print_banner()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#turboflow.print_package_info"><code class="docutils literal notranslate"><span class="pre">print_package_info()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -94,7 +78,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Subpackages</li>
+      <li class="breadcrumb-item active">API Reference</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/api/turboflow.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -104,158 +88,351 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-turboflow package
-=================
-=======
-API Reference
-=======================
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</p>
+  <section id="api-reference">
+<h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading"></a></h1>
 <section id="subpackages">
-<h1>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h1>
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.axial_turbine.html">Submodules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html">turboflow.axial_turbine.choking_model module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_jacobian"><code class="docutils literal notranslate"><span class="pre">compute_critical_jacobian()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_values"><code class="docutils literal notranslate"><span class="pre">compute_critical_values()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_critical"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_critical()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_isentropic_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_isentropic_throat()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_throat()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_choking"><code class="docutils literal notranslate"><span class="pre">evaluate_choking()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.interpolate_critical_state"><code class="docutils literal notranslate"><span class="pre">interpolate_critical_state()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html">turboflow.axial_turbine.choking_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_jacobian"><code class="docutils literal notranslate"><span class="pre">compute_critical_jacobian()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.compute_critical_values"><code class="docutils literal notranslate"><span class="pre">compute_critical_values()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_critical"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_critical()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_isentropic_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_isentropic_throat()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_cascade_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_throat()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_choking"><code class="docutils literal notranslate"><span class="pre">evaluate_choking()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.interpolate_critical_state"><code class="docutils literal notranslate"><span class="pre">interpolate_critical_state()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.convert_performance_analysis_results"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.convert_performance_analysis_results()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.extend_variables()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.fitness()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_bounds"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_bounds()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_constraints()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_given_bounds"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_given_bounds()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nec"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_nec()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_nic()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_omega"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.get_omega()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.update_boundary_conditions"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem.update_boundary_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html">turboflow.axial_turbine.design_optimization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem"><code class="docutils literal notranslate"><span class="pre">CascadesOptimizationProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.compute_optimal_turbine"><code class="docutils literal notranslate"><span class="pre">compute_optimal_turbine()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.compute_optimal_turbine"><code class="docutils literal notranslate"><span class="pre">compute_optimal_turbine()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_ainley_mathieson()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_aungier"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_aungier()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_zero_deviation"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_zero_deviation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_subsonic_deviation"><code class="docutils literal notranslate"><span class="pre">get_subsonic_deviation()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html"><code class="docutils literal notranslate"><span class="pre">compute_blockage_boundary_layer()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_efficiency_breakdown"><code class="docutils literal notranslate"><span class="pre">compute_efficiency_breakdown()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_overall_performance"><code class="docutils literal notranslate"><span class="pre">compute_overall_performance()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_stage_performance"><code class="docutils literal notranslate"><span class="pre">compute_stage_performance()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_axial_turbine"><code class="docutils literal notranslate"><span class="pre">evaluate_axial_turbine()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_exit"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_exit()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_inlet"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_inlet()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_interspace"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_interspace()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_throat()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_velocity_triangle_in"><code class="docutils literal notranslate"><span class="pre">evaluate_velocity_triangle_in()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_velocity_triangle_out"><code class="docutils literal notranslate"><span class="pre">evaluate_velocity_triangle_out()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html"><code class="docutils literal notranslate"><span class="pre">calculate_full_geometry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.calculate_throat_radius"><code class="docutils literal notranslate"><span class="pre">calculate_throat_radius()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.check_turbine_geometry"><code class="docutils literal notranslate"><span class="pre">check_turbine_geometry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.prepare_geometry"><code class="docutils literal notranslate"><span class="pre">prepare_geometry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.validate_turbine_geometry"><code class="docutils literal notranslate"><span class="pre">validate_turbine_geometry()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html"><code class="docutils literal notranslate"><span class="pre">LOSS_COEFFICIENTS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.LOSS_MODELS"><code class="docutils literal notranslate"><span class="pre">LOSS_MODELS</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.apply_tuning_factors"><code class="docutils literal notranslate"><span class="pre">apply_tuning_factors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.evaluate_loss_model"><code class="docutils literal notranslate"><span class="pre">evaluate_loss_model()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html"><code class="docutils literal notranslate"><span class="pre">F_t()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.compute_losses"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.convert_kinetic_energy_coefficient"><code class="docutils literal notranslate"><span class="pre">convert_kinetic_energy_coefficient()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_loss"><code class="docutils literal notranslate"><span class="pre">get_incidence_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_parameter"><code class="docutils literal notranslate"><span class="pre">get_incidence_parameter()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_profile_loss_increment"><code class="docutils literal notranslate"><span class="pre">get_incidence_profile_loss_increment()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_penetration_depth"><code class="docutils literal notranslate"><span class="pre">get_penetration_depth()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.convert_kinetic_energy_coefficient"><code class="docutils literal notranslate"><span class="pre">convert_kinetic_energy_coefficient()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_loss"><code class="docutils literal notranslate"><span class="pre">get_incidence_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_parameter"><code class="docutils literal notranslate"><span class="pre">get_incidence_parameter()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss_correction_factor"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss_correction_factor()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem</span></code></a><ul>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.compute_heuristic_initial_guess"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem.compute_heuristic_initial_guess()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.get_initial_guess"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem.get_initial_guess()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.residual"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem.residual()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.scale_values"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem.scale_values()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.update_boundary_conditions"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem.update_boundary_conditions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html">turboflow.axial_turbine.deviation_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_ainley_mathieson"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_ainley_mathieson()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_aungier"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_aungier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_zero_deviation"><code class="docutils literal notranslate"><span class="pre">get_exit_flow_angle_zero_deviation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.deviation_model.html#turboflow.axial_turbine.deviation_model.get_subsonic_deviation"><code class="docutils literal notranslate"><span class="pre">get_subsonic_deviation()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.SOLVER_MAP"><code class="docutils literal notranslate"><span class="pre">SOLVER_MAP</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.compute_performance"><code class="docutils literal notranslate"><span class="pre">compute_performance()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.compute_single_operation_point"><code class="docutils literal notranslate"><span class="pre">compute_single_operation_point()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.find_closest_operation_point"><code class="docutils literal notranslate"><span class="pre">find_closest_operation_point()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.generate_operation_points"><code class="docutils literal notranslate"><span class="pre">generate_operation_points()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_heuristic_guess_input"><code class="docutils literal notranslate"><span class="pre">get_heuristic_guess_input()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_operation_point_distance"><code class="docutils literal notranslate"><span class="pre">get_operation_point_distance()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_boundary_conditions"><code class="docutils literal notranslate"><span class="pre">print_boundary_conditions()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_operation_points"><code class="docutils literal notranslate"><span class="pre">print_operation_points()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_simulation_summary"><code class="docutils literal notranslate"><span class="pre">print_simulation_summary()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.validate_operation_point"><code class="docutils literal notranslate"><span class="pre">validate_operation_point()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html">turboflow.axial_turbine.flow_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_blockage_boundary_layer"><code class="docutils literal notranslate"><span class="pre">compute_blockage_boundary_layer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_efficiency_breakdown"><code class="docutils literal notranslate"><span class="pre">compute_efficiency_breakdown()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_overall_performance"><code class="docutils literal notranslate"><span class="pre">compute_overall_performance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.compute_stage_performance"><code class="docutils literal notranslate"><span class="pre">compute_stage_performance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_axial_turbine"><code class="docutils literal notranslate"><span class="pre">evaluate_axial_turbine()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_exit"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_exit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_inlet"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_inlet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_interspace"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_interspace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_cascade_throat"><code class="docutils literal notranslate"><span class="pre">evaluate_cascade_throat()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_velocity_triangle_in"><code class="docutils literal notranslate"><span class="pre">evaluate_velocity_triangle_in()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.flow_model.html#turboflow.axial_turbine.flow_model.evaluate_velocity_triangle_out"><code class="docutils literal notranslate"><span class="pre">evaluate_velocity_triangle_out()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html">turboflow.axial_turbine.geometry_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.calculate_full_geometry"><code class="docutils literal notranslate"><span class="pre">calculate_full_geometry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.calculate_throat_radius"><code class="docutils literal notranslate"><span class="pre">calculate_throat_radius()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.check_turbine_geometry"><code class="docutils literal notranslate"><span class="pre">check_turbine_geometry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.prepare_geometry"><code class="docutils literal notranslate"><span class="pre">prepare_geometry()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.geometry_model.html#turboflow.axial_turbine.geometry_model.validate_turbine_geometry"><code class="docutils literal notranslate"><span class="pre">validate_turbine_geometry()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html">turboflow.axial_turbine.loss_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.LOSS_COEFFICIENTS"><code class="docutils literal notranslate"><span class="pre">LOSS_COEFFICIENTS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.LOSS_MODELS"><code class="docutils literal notranslate"><span class="pre">LOSS_MODELS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.apply_tuning_factors"><code class="docutils literal notranslate"><span class="pre">apply_tuning_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model.html#turboflow.axial_turbine.loss_model.evaluate_loss_model"><code class="docutils literal notranslate"><span class="pre">evaluate_loss_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html">turboflow.axial_turbine.loss_model_benner module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.F_t"><code class="docutils literal notranslate"><span class="pre">F_t()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.compute_losses"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.convert_kinetic_energy_coefficient"><code class="docutils literal notranslate"><span class="pre">convert_kinetic_energy_coefficient()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_loss"><code class="docutils literal notranslate"><span class="pre">get_incidence_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_parameter"><code class="docutils literal notranslate"><span class="pre">get_incidence_parameter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_profile_loss_increment"><code class="docutils literal notranslate"><span class="pre">get_incidence_profile_loss_increment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_penetration_depth"><code class="docutils literal notranslate"><span class="pre">get_penetration_depth()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html">turboflow.axial_turbine.loss_model_kacker_okapuu module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.compute_losses"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_kacker_okapuu.html#turboflow.axial_turbine.loss_model_kacker_okapuu.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html">turboflow.axial_turbine.loss_model_moustapha module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.compute_losses"><code class="docutils literal notranslate"><span class="pre">compute_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.convert_kinetic_energy_coefficient"><code class="docutils literal notranslate"><span class="pre">convert_kinetic_energy_coefficient()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_compressible_correction_factors"><code class="docutils literal notranslate"><span class="pre">get_compressible_correction_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_hub_to_mean_mach_ratio"><code class="docutils literal notranslate"><span class="pre">get_hub_to_mean_mach_ratio()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_loss"><code class="docutils literal notranslate"><span class="pre">get_incidence_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_incidence_parameter"><code class="docutils literal notranslate"><span class="pre">get_incidence_parameter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_profile_loss"><code class="docutils literal notranslate"><span class="pre">get_profile_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_secondary_loss_correction_factor"><code class="docutils literal notranslate"><span class="pre">get_secondary_loss_correction_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_tip_clearance_loss"><code class="docutils literal notranslate"><span class="pre">get_tip_clearance_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.get_trailing_edge_loss"><code class="docutils literal notranslate"><span class="pre">get_trailing_edge_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.impulse_blades"><code class="docutils literal notranslate"><span class="pre">impulse_blades()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.loss_model_moustapha.html#turboflow.axial_turbine.loss_model_moustapha.nozzle_blades"><code class="docutils literal notranslate"><span class="pre">nozzle_blades()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html">turboflow.axial_turbine.performance_analysis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem"><code class="docutils literal notranslate"><span class="pre">CascadesNonlinearSystemProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.SOLVER_MAP"><code class="docutils literal notranslate"><span class="pre">SOLVER_MAP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.compute_performance"><code class="docutils literal notranslate"><span class="pre">compute_performance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.compute_single_operation_point"><code class="docutils literal notranslate"><span class="pre">compute_single_operation_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.find_closest_operation_point"><code class="docutils literal notranslate"><span class="pre">find_closest_operation_point()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.generate_operation_points"><code class="docutils literal notranslate"><span class="pre">generate_operation_points()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_heuristic_guess_input"><code class="docutils literal notranslate"><span class="pre">get_heuristic_guess_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_operation_point_distance"><code class="docutils literal notranslate"><span class="pre">get_operation_point_distance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_boundary_conditions"><code class="docutils literal notranslate"><span class="pre">print_boundary_conditions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_operation_points"><code class="docutils literal notranslate"><span class="pre">print_operation_points()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_simulation_summary"><code class="docutils literal notranslate"><span class="pre">print_simulation_summary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.validate_operation_point"><code class="docutils literal notranslate"><span class="pre">validate_operation_point()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.properties.html">turboflow.properties package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.fluid_properties.html">turboflow.properties.fluid_properties module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.Fluid"><code class="docutils literal notranslate"><span class="pre">Fluid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.FluidState"><code class="docutils literal notranslate"><span class="pre">FluidState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.PropertyRoot"><code class="docutils literal notranslate"><span class="pre">PropertyRoot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2"><code class="docutils literal notranslate"><span class="pre">SonicStateProblem2</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.calculate_subcooling"><code class="docutils literal notranslate"><span class="pre">calculate_subcooling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.calculate_superheating"><code class="docutils literal notranslate"><span class="pre">calculate_superheating()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_properties_meshgrid"><code class="docutils literal notranslate"><span class="pre">compute_properties_meshgrid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_pseudocritical_line"><code class="docutils literal notranslate"><span class="pre">compute_pseudocritical_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_quality_grid"><code class="docutils literal notranslate"><span class="pre">compute_quality_grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_saturation_line"><code class="docutils literal notranslate"><span class="pre">compute_saturation_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.compute_spinodal_line"><code class="docutils literal notranslate"><span class="pre">compute_spinodal_line()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.states_to_dict"><code class="docutils literal notranslate"><span class="pre">states_to_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.states_to_dict_2d"><code class="docutils literal notranslate"><span class="pre">states_to_dict_2d()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.properties.html#module-turboflow.properties">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.pysolver_view.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html">turboflow.pysolver_view.nonlinear_system module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemSolver"><code class="docutils literal notranslate"><span class="pre">NonlinearSystemSolver</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.nonlinear_system_problems.html">turboflow.pysolver_view.nonlinear_system_problems module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.nonlinear_system_problems.html#turboflow.pysolver_view.nonlinear_system_problems.LorentzEquations"><code class="docutils literal notranslate"><span class="pre">LorentzEquations</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html">turboflow.pysolver_view.numerical_differentiation module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html#turboflow.pysolver_view.numerical_differentiation.approx_gradient"><code class="docutils literal notranslate"><span class="pre">approx_gradient()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html#turboflow.pysolver_view.numerical_differentiation.approx_jacobian_hessians"><code class="docutils literal notranslate"><span class="pre">approx_jacobian_hessians()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html#turboflow.pysolver_view.numerical_differentiation.central_finite_differences"><code class="docutils literal notranslate"><span class="pre">central_finite_differences()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html#turboflow.pysolver_view.numerical_differentiation.complex_step_derivative"><code class="docutils literal notranslate"><span class="pre">complex_step_derivative()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.numerical_differentiation.html#turboflow.pysolver_view.numerical_differentiation.forward_finite_differences"><code class="docutils literal notranslate"><span class="pre">forward_finite_differences()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.optimization.html">turboflow.pysolver_view.optimization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem"><code class="docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationSolver"><code class="docutils literal notranslate"><span class="pre">OptimizationSolver</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.combine_objective_and_constraints"><code class="docutils literal notranslate"><span class="pre">combine_objective_and_constraints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.count_constraints"><code class="docutils literal notranslate"><span class="pre">count_constraints()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.optimization_problems.html">turboflow.pysolver_view.optimization_problems module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_problems.html#turboflow.pysolver_view.optimization_problems.HS71Problem"><code class="docutils literal notranslate"><span class="pre">HS71Problem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_problems.html#turboflow.pysolver_view.optimization_problems.LorentzEquationsOpt"><code class="docutils literal notranslate"><span class="pre">LorentzEquationsOpt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_problems.html#turboflow.pysolver_view.optimization_problems.RosenbrockProblem"><code class="docutils literal notranslate"><span class="pre">RosenbrockProblem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_problems.html#turboflow.pysolver_view.optimization_problems.RosenbrockProblemConstrained"><code class="docutils literal notranslate"><span class="pre">RosenbrockProblemConstrained</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html">turboflow.pysolver_view.optimization_wrappers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.NLOPT_SOLVERS"><code class="docutils literal notranslate"><span class="pre">NLOPT_SOLVERS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.PYGMO_SOLVERS"><code class="docutils literal notranslate"><span class="pre">PYGMO_SOLVERS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.SCIPY_SOLVERS"><code class="docutils literal notranslate"><span class="pre">SCIPY_SOLVERS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.convert_pygmo_to_scipy_bounds"><code class="docutils literal notranslate"><span class="pre">convert_pygmo_to_scipy_bounds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_nlopt"><code class="docutils literal notranslate"><span class="pre">minimize_nlopt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_pygmo"><code class="docutils literal notranslate"><span class="pre">minimize_pygmo()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.optimization_wrappers.html#turboflow.pysolver_view.optimization_wrappers.minimize_scipy"><code class="docutils literal notranslate"><span class="pre">minimize_scipy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html">turboflow.pysolver_view.pysolver_utilities module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html#turboflow.pysolver_view.pysolver_utilities.create_logger"><code class="docutils literal notranslate"><span class="pre">create_logger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html#turboflow.pysolver_view.pysolver_utilities.print_installed_fonts"><code class="docutils literal notranslate"><span class="pre">print_installed_fonts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html#turboflow.pysolver_view.pysolver_utilities.print_rc_parameters"><code class="docutils literal notranslate"><span class="pre">print_rc_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html#turboflow.pysolver_view.pysolver_utilities.savefig_in_formats"><code class="docutils literal notranslate"><span class="pre">savefig_in_formats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.pysolver_utilities.html#turboflow.pysolver_view.pysolver_utilities.set_plot_options"><code class="docutils literal notranslate"><span class="pre">set_plot_options()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.pysolver_view.html#module-turboflow.pysolver_view">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.turbo_configurations.html">turboflow.turbo_configurations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.turbo_configurations.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html">turboflow.turbo_configurations.config_axial_turbine module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.AxialTurbine"><code class="docutils literal notranslate"><span class="pre">AxialTurbine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.CascadeTypeEnum"><code class="docutils literal notranslate"><span class="pre">CascadeTypeEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.ChokingModelEnum"><code class="docutils literal notranslate"><span class="pre">ChokingModelEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.ConstraintEnum"><code class="docutils literal notranslate"><span class="pre">ConstraintEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DEFAULT_VARIABLES"><code class="docutils literal notranslate"><span class="pre">DEFAULT_VARIABLES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DerivativeMethodEnum"><code class="docutils literal notranslate"><span class="pre">DerivativeMethodEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DesignOptimization"><code class="docutils literal notranslate"><span class="pre">DesignOptimization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DeviationModelEnum"><code class="docutils literal notranslate"><span class="pre">DeviationModelEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.GeometryPerformanceAnalysis"><code class="docutils literal notranslate"><span class="pre">GeometryPerformanceAnalysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.LibraryEnum"><code class="docutils literal notranslate"><span class="pre">LibraryEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.LossCoefficientEnum"><code class="docutils literal notranslate"><span class="pre">LossCoefficientEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.LossModel"><code class="docutils literal notranslate"><span class="pre">LossModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.LossModelEnum"><code class="docutils literal notranslate"><span class="pre">LossModelEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.MethodEnum"><code class="docutils literal notranslate"><span class="pre">MethodEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.ObjectiveFunctionEnum"><code class="docutils literal notranslate"><span class="pre">ObjectiveFunctionEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.OperationPoints"><code class="docutils literal notranslate"><span class="pre">OperationPoints</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.PerformanceAnalysis"><code class="docutils literal notranslate"><span class="pre">PerformanceAnalysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.PerformanceMap"><code class="docutils literal notranslate"><span class="pre">PerformanceMap</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.RadiusTypeEnum"><code class="docutils literal notranslate"><span class="pre">RadiusTypeEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SimulationOptions"><code class="docutils literal notranslate"><span class="pre">SimulationOptions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionEnum"><code class="docutils literal notranslate"><span class="pre">SolverOptionEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionsOptimization"><code class="docutils literal notranslate"><span class="pre">SolverOptionsOptimization</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.SolverOptionsPerformanceAnalysis"><code class="docutils literal notranslate"><span class="pre">SolverOptionsPerformanceAnalysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.TuningFactors"><code class="docutils literal notranslate"><span class="pre">TuningFactors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.UpdateOnEnum"><code class="docutils literal notranslate"><span class="pre">UpdateOnEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.Variable"><code class="docutils literal notranslate"><span class="pre">Variable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.VariableEnum"><code class="docutils literal notranslate"><span class="pre">VariableEnum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.check_string"><code class="docutils literal notranslate"><span class="pre">check_string()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.turbo_configurations.html#module-turboflow.turbo_configurations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.utilities.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.file_utils.html">turboflow.utilities.file_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.DictionaryValidationError"><code class="docutils literal notranslate"><span class="pre">DictionaryValidationError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.add_string_to_keys"><code class="docutils literal notranslate"><span class="pre">add_string_to_keys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.check_for_unused_keys"><code class="docutils literal notranslate"><span class="pre">check_for_unused_keys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.compare_contents_or_files"><code class="docutils literal notranslate"><span class="pre">compare_contents_or_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.convert_numpy_to_python"><code class="docutils literal notranslate"><span class="pre">convert_numpy_to_python()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.create_logger"><code class="docutils literal notranslate"><span class="pre">create_logger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.find_latest_results_file"><code class="docutils literal notranslate"><span class="pre">find_latest_results_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.is_dict_empty"><code class="docutils literal notranslate"><span class="pre">is_dict_empty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.print_dict"><code class="docutils literal notranslate"><span class="pre">print_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.print_object"><code class="docutils literal notranslate"><span class="pre">print_object()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.validate_keys"><code class="docutils literal notranslate"><span class="pre">validate_keys()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.wait_for_file"><code class="docutils literal notranslate"><span class="pre">wait_for_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.graphics.html">turboflow.utilities.graphics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.create_gif"><code class="docutils literal notranslate"><span class="pre">create_gif()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.create_mp4"><code class="docutils literal notranslate"><span class="pre">create_mp4()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.print_installed_fonts"><code class="docutils literal notranslate"><span class="pre">print_installed_fonts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.print_rc_parameters"><code class="docutils literal notranslate"><span class="pre">print_rc_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.savefig_in_formats"><code class="docutils literal notranslate"><span class="pre">savefig_in_formats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.graphics.html#turboflow.utilities.graphics.set_plot_options"><code class="docutils literal notranslate"><span class="pre">set_plot_options()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.numerics.html">turboflow.utilities.numerics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.check_lists_match"><code class="docutils literal notranslate"><span class="pre">check_lists_match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.ensure_iterable"><code class="docutils literal notranslate"><span class="pre">ensure_iterable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.extract_timestamp"><code class="docutils literal notranslate"><span class="pre">extract_timestamp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.fill_array_with_increment"><code class="docutils literal notranslate"><span class="pre">fill_array_with_increment()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.flatten_dataframe"><code class="docutils literal notranslate"><span class="pre">flatten_dataframe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.is_float"><code class="docutils literal notranslate"><span class="pre">is_float()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.is_numeric"><code class="docutils literal notranslate"><span class="pre">is_numeric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.numerics.html#turboflow.utilities.numerics.isclose_significant_digits"><code class="docutils literal notranslate"><span class="pre">isclose_significant_digits()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.optimization_utils.html">turboflow.utilities.optimization_utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.evaluate_constraints"><code class="docutils literal notranslate"><span class="pre">evaluate_constraints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.evaluate_objective_function"><code class="docutils literal notranslate"><span class="pre">evaluate_objective_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.render_and_evaluate"><code class="docutils literal notranslate"><span class="pre">render_and_evaluate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.utilities.optimization_utils.html#turboflow.utilities.optimization_utils.render_nested_value"><code class="docutils literal notranslate"><span class="pre">render_nested_value()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.utilities.html#module-turboflow.utilities">Module contents</a></li>
+</ul>
+</li>
 </ul>
 </div>
-<dl class="simple">
-<dt>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</dt><dd><p>turboflow.properties
-turboflow.pysolver_view
-turboflow.thermodynamic_cycles
-turboflow.turbo_configurations</p>
-</dd>
-</dl>
-<blockquote>
-<div><p>turboflow.pysolver_view</p>
-</div></blockquote>
-<dl class="simple">
-<dt>&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</dt><dd><p>turboflow.utilities</p>
-</dd>
-</dl>
 </section>
 <section id="submodules">
-<h1>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h1>
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.config_validation.html">turboflow.config_validation module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.config_validation.html#turboflow.config_validation.convert_configuration_options"><code class="docutils literal notranslate"><span class="pre">convert_configuration_options()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.config_validation.html#turboflow.config_validation.load_config"><code class="docutils literal notranslate"><span class="pre">load_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.config_validation.html#turboflow.config_validation.object_to_dict"><code class="docutils literal notranslate"><span class="pre">object_to_dict()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.config_validation.html#turboflow.config_validation.read_configuration_file"><code class="docutils literal notranslate"><span class="pre">read_configuration_file()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.math.html">turboflow.math module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.all_non_negative"><code class="docutils literal notranslate"><span class="pre">all_non_negative()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.all_numeric"><code class="docutils literal notranslate"><span class="pre">all_numeric()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.arccosd"><code class="docutils literal notranslate"><span class="pre">arccosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.arcsind"><code class="docutils literal notranslate"><span class="pre">arcsind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.arctand"><code class="docutils literal notranslate"><span class="pre">arctand()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.is_even"><code class="docutils literal notranslate"><span class="pre">is_even()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.is_odd"><code class="docutils literal notranslate"><span class="pre">is_odd()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.sigmoid_hyperbolic"><code class="docutils literal notranslate"><span class="pre">sigmoid_hyperbolic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.sigmoid_rational"><code class="docutils literal notranslate"><span class="pre">sigmoid_rational()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.sigmoid_smootherstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smootherstep()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.sigmoid_smoothstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smoothstep()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.smooth_abs"><code class="docutils literal notranslate"><span class="pre">smooth_abs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.smooth_max"><code class="docutils literal notranslate"><span class="pre">smooth_max()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.smooth_min"><code class="docutils literal notranslate"><span class="pre">smooth_min()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.math.html#turboflow.math.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.plot_functions.html">turboflow.plot_functions module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.find_column"><code class="docutils literal notranslate"><span class="pre">find_column()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.get_column"><code class="docutils literal notranslate"><span class="pre">get_column()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.get_lines"><code class="docutils literal notranslate"><span class="pre">get_lines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.get_subset"><code class="docutils literal notranslate"><span class="pre">get_subset()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.plot_axial_radial_plane"><code class="docutils literal notranslate"><span class="pre">plot_axial_radial_plane()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.plot_lines"><code class="docutils literal notranslate"><span class="pre">plot_lines()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.plot_velocity_triangles"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangles()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.plot_functions.html#turboflow.plot_functions.savefig_in_formats"><code class="docutils literal notranslate"><span class="pre">savefig_in_formats()</span></code></a></li>
+</ul>
+</li>
+</ul>
 </div>
-<dl class="simple">
-<dt>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</dt><dd><p>turboflow.add_to_pythonpath</p>
-</dd>
-</dl>
-<blockquote>
-<div><p>turboflow.math
-turboflow.plot_functions</p>
-</div></blockquote>
 </section>
 <section id="module-turboflow">
-<span id="module-contents"></span><h1>Module contents<a class="headerlink" href="#module-turboflow" title="Link to this heading"></a></h1>
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-turboflow" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.find_pyproject_toml">
 <span class="sig-prename descclassname"><span class="pre">turboflow.</span></span><span class="sig-name descname"><span class="pre">find_pyproject_toml</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow.html#find_pyproject_toml"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.find_pyproject_toml" title="Link to this definition"></a></dt>
@@ -275,14 +452,12 @@ turboflow.plot_functions</p>
 </dd></dl>
 
 </section>
+</section>
 
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../configuration.html" class="btn btn-neutral float-left" title="Configuration options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="turboflow.axial_turbine.html" class="btn btn-neutral float-right" title="Submodules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

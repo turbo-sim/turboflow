@@ -36,6 +36,9 @@ where:
 When the term to the right is zero (isentropic), the mach number is unity for an accelerating flow at the most narrow section (:math:`dA = 0`). In order for this model to be consitent, the throat entropy must be set equal to 
 the entropy at the inlet of the plane. However, when assuming an isentropic throat, the critical mass flow rate will be overestimated. 
 
+
+.. _evaluate_cascade_critical:
+
 Calculate critical state model
 ------------------------------
 

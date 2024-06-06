@@ -66,22 +66,19 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Loss models</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="loss_models/kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="loss_models/benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="loss_models/tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -111,11 +108,24 @@
              
   <section id="loss-models">
 <span id="id1"></span><h1>Loss models<a class="headerlink" href="#loss-models" title="Link to this heading"></a></h1>
-<p>This section contains a summary of the loss models implemented in this package.</p>
+<p>During the preliminary design phase, it is common to rely on empirical
+correlations to estimate the losses within the turbine. These sets of
+correlations are known as loss models.</p>
+<p>Perhaps, the most popular loss model for axial turbines is the one proposed
+by <span id="id2">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>, <a class="reference internal" href="../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span> and its subsequent refinements by
+<span id="id3">[<a class="reference internal" href="../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>
+and <span id="id4">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>. The Kacker–Okapuu loss model has been further refined to
+account for off-design performance by <span id="id5">[<a class="reference internal" href="../bibliography.html#id77" title="S. H. Moustapha, S. C. Kacker, and B. Tremblay. An improved incidence losses prediction method for turbine airfoils. Journal of Turbomachinery, 112(2):267–276, 1990. doi:10.1115/1.2927647.">Moustapha <em>et al.</em>, 1990</a>]</span>. The model was further improved in subsequent studies,
+culminating in enhanced loss correlations for profile losses at off-design incidence <span id="id6">[<a class="reference internal" href="../bibliography.html#id19" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. Influence of leading-edge geometry on profile losses in turbines at off-design incidence: experimental results and an improved correlation. Journal of Turbomachinery, 119(2):193–200, 1997. doi:10.1115/1.2841101.">Benner <em>et al.</em>, 1997</a>]</span>
+and endwall losses at design incidence <span id="id7">[<a class="reference internal" href="../bibliography.html#id20" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. The influence of leading-edge geometry on secondary losses in a turbine cascade at the design incidence. Journal of Turbomachinery, 126(2):277–287, 2004. doi:10.1115/1.1645533.">Benner <em>et al.</em>, 2004</a>]</span>. Furthermore, the authors introduced a
+new formulation for the total loss coefficient using the concept of penetration depth of secondary flows,
+aiming to enhance the prediction of endwall losses based on the underlying flow physics <span id="id8">[<a class="reference internal" href="../bibliography.html#id17" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. An empirical prediction method for secondary losses in turbines—Part II: A new secondary loss correlation. Journal of Turbomachinery, 128(2):281–291, 2006. doi:10.1115/1.2162594.">Benner <em>et al.</em>, 2006</a>]</span>.</p>
+<p>The loss models implemented in the meanline code is further described in each separate section:</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="loss_models/kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="loss_models/benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="loss_models/tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
 </ul>
 </div>
 </section>

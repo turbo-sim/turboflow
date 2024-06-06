@@ -1,5 +1,5 @@
-Thermodynamic cycles
-==============================
+turboflow.cycles package
+========================
 
 Submodules
 ----------
@@ -7,10 +7,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   turboflow.cycles.components
-   turboflow.cycles.cycle_optimization
    turboflow.cycles.brayton_recuperated
    turboflow.cycles.brayton_split_compression
+   turboflow.cycles.components
+   turboflow.cycles.cycle_optimization
+   turboflow.cycles.cycle_optimization_old
 
 Module contents
 ---------------

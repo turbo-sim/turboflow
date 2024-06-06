@@ -28,11 +28,10 @@
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script src="../../_static/design-tabs.js?v=f930bc37"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Model validation" href="../model_validation.html" />
-    <link rel="prev" title="Performance analysis" href="performance_analysis.html" /> 
+    <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -54,33 +53,15 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model Description</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
-<li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
-<li class="toctree-l2"><a class="reference internal" href="loss_coefficients.html">Loss coefficients</a></li>
-<li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Design optimization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#single-point-optimization">Single-point optimization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#multi-point-optimization">Multi-point optimization</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -97,7 +78,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../model_description.html">Model Description</a></li>
       <li class="breadcrumb-item active">Design optimization</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/model_description/design_optimization.rst.txt" rel="nofollow"> View page source</a>
@@ -121,6 +101,9 @@
 <li><p>Optimization with gradient based algorithms</p></li>
 <li><p>Extension to multi-point optimization problems</p></li>
 </ul>
+<p>For design optimization, the same model is adopted, ensuring constency with performance analysis mode. However, a set of geometrical parameters are available
+as design variables, together with the set <span class="math notranslate nohighlight">\(x\)</span>. The residual equations are implemented as equality constraints, while an objective function is specified
+(such as total-to-static efficiency) to obtain the optimal geometry of the turbine.</p>
 <section id="single-point-optimization">
 <span id="design-optimization-single-point"></span><h2>Single-point optimization<a class="headerlink" href="#single-point-optimization" title="Link to this heading"></a></h2>
 <p>To be completed.</p>
@@ -134,10 +117,7 @@
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="performance_analysis.html" class="btn btn-neutral float-left" title="Performance analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../model_validation.html" class="btn btn-neutral float-right" title="Model validation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Moustapha-Kacker-Tremblay (1990) &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Deviation models" href="../deviation_models.html" />
+    <link rel="prev" title="Benner-Sjolander-Moustapha (2006)" href="benner_sjolander_moustapha_2006.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../model_description.html">Model Description</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../velocity_triangles.html">Velocity triangles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fluid_properties.html">Fluid properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loss_coefficients.html">Loss coefficients</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../loss_models.html">Loss models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Moustapha-Kacker-Tremblay (1990)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview-of-the-method">Overview of the method</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#profile-loss-coefficient">Profile loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#secondary-loss-coefficient">Secondary loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tip-clearance-loss-coefficient">Tip clearance loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trailing-edge-loss-coefficient">Trailing edge loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#incidence-loss-coefficient">Incidence loss coefficient</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../deviation_models.html">Deviation models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../choking_models.html">Choking models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../equation_formulation.html">Equation formulation and solution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../model_description.html">Model Description</a></li>
+          <li class="breadcrumb-item"><a href="../loss_models.html">Loss models</a></li>
+      <li class="breadcrumb-item active">Moustapha-Kacker-Tremblay (1990)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../../_sources/source/model_description/loss_models/tremblay_moustapha_1997.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="moustapha-kacker-tremblay-1990">
+<span id="loss-model-mkt1990"></span><h1>Moustapha-Kacker-Tremblay (1990)<a class="headerlink" href="#moustapha-kacker-tremblay-1990" title="Link to this heading"></a></h1>
+<p>This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id103" title="B. Tremblay, S. A. Sjolander, and S. H. Moustapha. Off-design performance of a linear cascade of turbine blades. In Volume 1: Turbomachinery. American Society of Mechanical Engineers Digital Collection, 1990. doi:10.1115/90-GT-314.">Tremblay <em>et al.</em>, 1990</a>]</span> to compute aerodynamic losses in axial
+turbines.</p>
+<section id="overview-of-the-method">
+<h2>Overview of the method<a class="headerlink" href="#overview-of-the-method" title="Link to this heading"></a></h2>
+<p>The loss system by <span id="id2">[<a class="reference internal" href="../../bibliography.html#id103" title="B. Tremblay, S. A. Sjolander, and S. H. Moustapha. Off-design performance of a linear cascade of turbine blades. In Volume 1: Turbomachinery. American Society of Mechanical Engineers Digital Collection, 1990. doi:10.1115/90-GT-314.">Tremblay <em>et al.</em>, 1990</a>]</span>, builds on the previous loss models proposed
+by <span id="id3">[<a class="reference internal" href="../../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>, <a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>.</p>
+<p>The general form of the loss model is given by:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y_{tot}} = \mathrm{Y_{p}} + \mathrm{Y_{te}} + \mathrm{Y_{s}} + \mathrm{Y_{cl}} + \mathrm{Y_{inc}}\]</div>
+<p>The expressions used to compute each term as a function of the cascade geometry and flow variables
+are presented in the next sections.</p>
+</section>
+<section id="profile-loss-coefficient">
+<h2>Profile loss coefficient<a class="headerlink" href="#profile-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The profile loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{p}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#profile-loss-ko"><span class="std std-ref">Profile loss coefficient</span></a>.</p>
+</section>
+<section id="secondary-loss-coefficient">
+<h2>Secondary loss coefficient<a class="headerlink" href="#secondary-loss-coefficient" title="Link to this heading"></a></h2>
+<p><span id="id4">[<a class="reference internal" href="../../bibliography.html#id103" title="B. Tremblay, S. A. Sjolander, and S. H. Moustapha. Off-design performance of a linear cascade of turbine blades. In Volume 1: Turbomachinery. American Society of Mechanical Engineers Digital Collection, 1990. doi:10.1115/90-GT-314.">Tremblay <em>et al.</em>, 1990</a>]</span> introduced a correction factor  (<span class="math notranslate nohighlight">\(\mathrm{Y_{corr}}\)</span>) the secondary loss coefficient proposed by <span id="id5">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>,
+to correct for incidence. The corrrection factor depends on an incidence parameter calculated as:</p>
+<div class="math notranslate nohighlight">
+\[\chi = \frac{\beta_\mathrm{in} - \theta_\mathrm{in}}{180 - (\theta_\mathrm{in} + \theta_\mathrm{out})}\left(\frac{\cos(\theta_\mathrm{in})}{\cos(\theta_\mathrm{out})}\right)^{-1.5}\left(\frac{\mathrm{d_{le}}}{c}\right)^{-0.3}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\chi\)</span> is the secondary flow incidence parameter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c\)</span> is the chord length.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{d_{le}}\)</span> is the leading edge diameter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta_\mathrm{in}\)</span> is the inlet metal angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta_\mathrm{out}\)</span> is the exit metal angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{in}\)</span> is the inlet relative flow angle.</p></li>
+</ul>
+</div></blockquote>
+<p>From this parameter, the correction factor coefficient can be determined:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}Y_\mathrm{corr} = \begin{cases}
+e^{0.9\chi} + 13\chi^2 + 400\chi^4 &amp; \text{if } \chi \geq 0 \\
+e^{0.9\chi} &amp; \text{if } \chi &lt; 0
+\end{cases}\end{split}\]</div>
+<p>The total loss coefficient is then calculated as:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y_{s}} = \mathrm{Y_{corr}}\mathrm{Y_{s, KO}}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\mathrm{Y_{s, KO}}\)</span> is the secondary loss coefficient calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#secondary-loss-ko"><span class="std std-ref">Secondary loss coefficient</span></a>.</p>
+</section>
+<section id="tip-clearance-loss-coefficient">
+<h2>Tip clearance loss coefficient<a class="headerlink" href="#tip-clearance-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The tip clearance loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{cl}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#tip-clearance-ko"><span class="std std-ref">Tip clearance loss coefficient</span></a>.</p>
+</section>
+<section id="trailing-edge-loss-coefficient">
+<h2>Trailing edge loss coefficient<a class="headerlink" href="#trailing-edge-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The trailing edge loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{te}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#trailing-edge-ko"><span class="std std-ref">Trailing edge loss coefficient</span></a>.</p>
+</section>
+<section id="incidence-loss-coefficient">
+<h2>Incidence loss coefficient<a class="headerlink" href="#incidence-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The incidence loss coefficient (mathrm{Y_{inc}}) is based on the kinetic energy loss coefficient. The calculation
+involves to determine the increment in profile loss coefficient due to incidence.
+The increment in profile losses due to incidence is based on the incidence parameter <span class="math notranslate nohighlight">\(\chi\)</span>.
+The formula used to compute <span class="math notranslate nohighlight">\(\chi\)</span> is given by:</p>
+<div class="math notranslate nohighlight">
+\[\chi = \left(\frac{\mathrm{d_{le}}}{s}\right)^{-1.6}\left(\frac{\cos{\theta_\mathrm{in}}}{\cos{\theta_\mathrm{out}}}\right)^{-2}(\beta_\mathrm{in} - \beta_\mathrm{des})\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathrm{d_{le}}\)</span> is the leading edge diameter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> is the pitch.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta_\mathrm{in}\)</span> and <span class="math notranslate nohighlight">\(\theta_\mathrm{out}\)</span> is the blade metal angle at the inlet and outlet respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{in}\)</span> and <span class="math notranslate nohighlight">\(\beta_\mathrm{des}\)</span> is the inlet relative flow angle at given and design conditions respectively.</p></li>
+</ul>
+</div></blockquote>
+<p>Depending on the value of <span class="math notranslate nohighlight">\(\chi\)</span>, two equations are used for computing the increment in profile losses:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\Delta\phi^2_p = \begin{cases}
+                -5.1734e^{-6}\chi + 7.6902e^{-9}\chi^2 &amp; \text{if } -800 \leq \chi \leq 0 \\
+                0.778e^{-5}\chi + 0.56e^{-7}\chi^2 + 0.4e^{-10}\chi^3 + 2.054e^{-19}\chi^6 &amp; \text{if } 0 \leq \chi \leq 800
+                \end{cases}\end{split}\]</div>
+<p>Subsequently, the increment in profile loss coefficient, in terms of kinetic energy loss, is converted to the total pressue loss coefficient definition:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span> is the specific heat ratio.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{Ma_{out}}\)</span> is the cascade exit relative mach number.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Delta\phi^2_p\)</span> is the kinetic energy loss coefficient increment due to incidence.</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="benner_sjolander_moustapha_2006.html" class="btn btn-neutral float-left" title="Benner-Sjolander-Moustapha (2006)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../deviation_models.html" class="btn btn-neutral float-right" title="Deviation models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

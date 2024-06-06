@@ -32,7 +32,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Performance analysis" href="performance_analysis.html" />
+    <link rel="next" title="Equation formulation and solution" href="equation_formulation.html" />
     <link rel="prev" title="Deviation models" href="deviation_models.html" /> 
 </head>
 
@@ -71,18 +71,14 @@
 <li class="toctree-l3"><a class="reference internal" href="#evaluate-cascade-throat-model">Evaluate cascade throat model</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -140,7 +136,7 @@
 the entropy at the inlet of the plane. However, when assuming an isentropic throat, the critical mass flow rate will be overestimated.</p>
 </section>
 <section id="calculate-critical-state-model">
-<h2>Calculate critical state model<a class="headerlink" href="#calculate-critical-state-model" title="Link to this heading"></a></h2>
+<span id="evaluate-cascade-critical"></span><h2>Calculate critical state model<a class="headerlink" href="#calculate-critical-state-model" title="Link to this heading"></a></h2>
 <p>This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat.
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:</p>
 <div class="math notranslate nohighlight">
@@ -184,7 +180,7 @@ number for different values of the loss coefficient, and use linear regression.<
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="deviation_models.html" class="btn btn-neutral float-left" title="Deviation models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="performance_analysis.html" class="btn btn-neutral float-right" title="Performance analysis" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="equation_formulation.html" class="btn btn-neutral float-right" title="Equation formulation and solution" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

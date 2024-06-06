@@ -28,10 +28,11 @@
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="Deviation models" href="../deviation_models.html" />
+    <link rel="next" title="Moustapha-Kacker-Tremblay (1990)" href="tremblay_moustapha_1997.html" />
     <link rel="prev" title="Kacker-Okapuu (1982)" href="kacker_okapuu_1982.html" /> 
 </head>
 
@@ -64,23 +65,29 @@
 <li class="toctree-l2"><a class="reference internal" href="../loss_coefficients.html">Loss coefficients</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../loss_models.html">Loss models</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Benner-Sjolander-Moustapha (2006)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#overview-of-the-method">Overview of the method</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#profile-loss-coefficient">Profile loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#secondary-loss-coefficient">Secondary loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tip-clearance-loss-coefficient">Tip clearance loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#trailing-edge-loss-coefficient">Trailing edge loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#incidence-loss-coefficient">Incidence loss coefficient</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#penetration-depth">Penetration depth</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../design_optimization.html">Design optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -111,7 +118,136 @@
              
   <section id="benner-sjolander-moustapha-2006">
 <span id="loss-model-bsm2006"></span><h1>Benner-Sjolander-Moustapha (2006)<a class="headerlink" href="#benner-sjolander-moustapha-2006" title="Link to this heading"></a></h1>
-<p>To be completed.</p>
+<p>This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id19" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. Influence of leading-edge geometry on profile losses in turbines at off-design incidence: experimental results and an improved correlation. Journal of Turbomachinery, 119(2):193–200, 1997. doi:10.1115/1.2841101.">Benner <em>et al.</em>, 1997</a>, <a class="reference internal" href="../../bibliography.html#id17" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. An empirical prediction method for secondary losses in turbines—Part II: A new secondary loss correlation. Journal of Turbomachinery, 128(2):281–291, 2006. doi:10.1115/1.2162594.">Benner <em>et al.</em>, 2006</a>, <a class="reference internal" href="../../bibliography.html#id18" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. An empirical prediction method for secondary losses in turbines—Part I: A new loss breakdown scheme and penetration depth correlation. Journal of Turbomachinery, 128(2):273–280, 2006. doi:10.1115/1.2162593.">Benner <em>et al.</em>, 2006</a>]</span> to compute aerodynamic losses in axial
+turbines.</p>
+<section id="overview-of-the-method">
+<h2>Overview of the method<a class="headerlink" href="#overview-of-the-method" title="Link to this heading"></a></h2>
+<p>The loss system follows from a series of publications <span id="id2">[<a class="reference internal" href="../../bibliography.html#id19" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. Influence of leading-edge geometry on profile losses in turbines at off-design incidence: experimental results and an improved correlation. Journal of Turbomachinery, 119(2):193–200, 1997. doi:10.1115/1.2841101.">Benner <em>et al.</em>, 1997</a>, <a class="reference internal" href="../../bibliography.html#id17" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. An empirical prediction method for secondary losses in turbines—Part II: A new secondary loss correlation. Journal of Turbomachinery, 128(2):281–291, 2006. doi:10.1115/1.2162594.">Benner <em>et al.</em>, 2006</a>, <a class="reference internal" href="../../bibliography.html#id18" title="M. W. Benner, S. A. Sjolander, and S. H. Moustapha. An empirical prediction method for secondary losses in turbines—Part I: A new loss breakdown scheme and penetration depth correlation. Journal of Turbomachinery, 128(2):273–280, 2006. doi:10.1115/1.2162593.">Benner <em>et al.</em>, 2006</a>]</span>
+and builds on the previous loss models proposed by <span id="id3">[<a class="reference internal" href="../../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>, <a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>, <a class="reference internal" href="../../bibliography.html#id103" title="B. Tremblay, S. A. Sjolander, and S. H. Moustapha. Off-design performance of a linear cascade of turbine blades. In Volume 1: Turbomachinery. American Society of Mechanical Engineers Digital Collection, 1990. doi:10.1115/90-GT-314.">Tremblay <em>et al.</em>, 1990</a>]</span>.</p>
+<p>The general form of the loss model is given by:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y_{tot}} = (\mathrm{Y_{p}} + \mathrm{Y_{te}} + \mathrm{Y_{inc}})(1-Z/H) + \mathrm{Y_{s}} + \mathrm{Y_{cl}}\]</div>
+<p>The expressions used to compute each term as a function of the cascade geometry and flow variables
+are presented in the next sections.</p>
+</section>
+<section id="profile-loss-coefficient">
+<h2>Profile loss coefficient<a class="headerlink" href="#profile-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The profile loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{p}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#profile-loss-ko"><span class="std std-ref">Profile loss coefficient</span></a>.</p>
+</section>
+<section id="secondary-loss-coefficient">
+<h2>Secondary loss coefficient<a class="headerlink" href="#secondary-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The correlation for the secondary loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{s}}\)</span>) takes two different forms depending on the aspect ratio:</p>
+<p>If aspect ratio <span class="math notranslate nohighlight">\(\leq 2.0\)</span></p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y_{s}} = \frac{0.038 + 0.41 \tanh(1.20\delta^*/H)}{\sqrt{\cos(\xi)}CR(H/c)^{0.55}\frac{\cos(\beta_\mathrm{out})}{\cos(\xi)}^{0.55}}\]</div>
+<p>wheras if aspect ratio <span class="math notranslate nohighlight">\(&gt;2.0\)</span></p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y_{s}} = \frac{0.052 + 0.56 \tanh(1.20\delta^*/H)}{\sqrt{\cos(\xi)}CR(H/c)\frac{\cos(\beta_\mathrm{out})}{\cos(\xi)}^{0.55}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}\)</span> is the convergence ratio.</p></li>
+<li><p><span class="math notranslate nohighlight">\(H\)</span> is the mean height.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c\)</span> is the chord.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta^*\)</span> is the inlet endwall boundary layer displacement thickness.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\xi\)</span> is the stagger angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{out}\)</span> is the exit relative flow angle.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="tip-clearance-loss-coefficient">
+<h2>Tip clearance loss coefficient<a class="headerlink" href="#tip-clearance-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The tip clearance loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{cl}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#tip-clearance-ko"><span class="std std-ref">Tip clearance loss coefficient</span></a>.</p>
+</section>
+<section id="trailing-edge-loss-coefficient">
+<h2>Trailing edge loss coefficient<a class="headerlink" href="#trailing-edge-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The trailing edge loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{te}}\)</span>) is calculated as described in <a class="reference internal" href="kacker_okapuu_1982.html#trailing-edge-ko"><span class="std std-ref">Trailing edge loss coefficient</span></a>.</p>
+</section>
+<section id="incidence-loss-coefficient">
+<h2>Incidence loss coefficient<a class="headerlink" href="#incidence-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The incidence loss coefficient (<span class="math notranslate nohighlight">\(\mathrm{Y_{inc}}\)</span>) is based on the kinetic energy loss coefficient. The calculation
+involves to determine the increment in profile loss coefficient due to incidence.
+The increment in profile losses due to incidence is based on the incidence parameter <span class="math notranslate nohighlight">\(\chi\)</span>.
+The formula used to compute <span class="math notranslate nohighlight">\(\chi\)</span> is given by:</p>
+<div class="math notranslate nohighlight">
+\[\chi = \frac{\mathrm{d_{le}}}{s}^{-0.05}\mathrm{We_{le}}^{-0.2}\frac{\cos\theta_\mathrm{in}}{\cos\theta_\mathrm{out}}^{-1.4}(\beta_\mathrm{in} - \beta_\mathrm{des})\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathrm{d_{le}}\)</span> is the leading edge diameter.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> is the pitch.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{We_{le}}\)</span> is the leading edge wedge angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\theta_\mathrm{in}\)</span> and <span class="math notranslate nohighlight">\(\theta_\mathrm{out}\)</span> is the blade metal angle at the inlet and outlet respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{in}\)</span> and <span class="math notranslate nohighlight">\(\beta_\mathrm{des}\)</span> is the inlet relative flow angle at given and design conditions respectively.</p></li>
+</ul>
+</div></blockquote>
+<p>Depending on the value of <span class="math notranslate nohighlight">\(\chi\)</span>, two equations are used for computing the increment in profile losses:</p>
+<ol class="arabic simple">
+<li><p>For <span class="math notranslate nohighlight">\(\chi \geq 0\)</span>:</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\Delta \phi_{p}^2 = \sum_{i=1}^{8} a_i \, \chi^i\]</div>
+<p>with coefficients:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}a_1 = -6.149 \times 10^{-5}  \\
+a_2 = +1.327 \times 10^{-3}  \\
+a_3 = -2.506 \times 10^{-4}  \\
+a_4 = -1.542 \times 10^{-4}  \\
+a_5 = +9.017 \times 10^{-5}  \\
+a_6 = +1.106 \times 10^{-5}  \\
+a_7 = -5.318 \times 10^{-6}  \\
+a_8 = +3.711 \times 10^{-7}\end{split}\]</div>
+<ol class="arabic simple" start="2">
+<li><p>For <span class="math notranslate nohighlight">\(\chi &lt; 0\)</span>:</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\Delta \phi_{p}^2 = \sum_{i=1}^{2} b_i \, \chi^i\]</div>
+<p>with coefficients:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}b_1 = -8.720e-4 \times 10^{-4}  \\
+b_2 = +1.358e-4 \times 10^{-4}\end{split}\]</div>
+<p>Subsequently, the increment in profile loss coefficient, in terms of kinetic energy loss, is converted to the total pressue loss coefficient definition:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span> is the specific heat ratio.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathrm{Ma_{out}}\)</span> is the cascade exit relative mach number.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Delta\phi^2_p\)</span> is the kinetic energy loss coefficient increment due to incidence.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="penetration-depth">
+<h2>Penetration depth<a class="headerlink" href="#penetration-depth" title="Link to this heading"></a></h2>
+<p>The penetration depth (<span class="math notranslate nohighlight">\(Z\)</span>) refer to the spanwize penetration of the vortices originating from the cascade inlet endwall boundary layer. The penetration depth relative to hte mean
+blade height is calcluated by:</p>
+<div class="math notranslate nohighlight">
+\[\frac{\mathrm{Z_{te}}}{H} = \frac{0.10F_t^{0.79}}{\sqrt{CR}\left(\frac{H}{c}\right)^{0.55}} + 32.70\frac{\delta^*}{H}^2\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}\)</span> is the convergence ratio.</p></li>
+<li><p><span class="math notranslate nohighlight">\(H\)</span> is the mean height.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c\)</span> is the chord.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\delta^*\)</span> is the inlet endwall boundary layer displacement thickness.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{out}\)</span> is the exit relative flow angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(F_t\)</span> is the tangential loading coefficient.</p></li>
+</ul>
+</div></blockquote>
+<p>The tangiential loading coefficient is calculated by:</p>
+<div class="math notranslate nohighlight">
+\[F_t = 2\frac{s}{c_\mathrm{ax}}\cos^2(\beta_m)(\tan(\beta_\mathrm{in} - \beta_\mathrm{out}))\]</div>
+<p>where:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(s\)</span> is the pitch.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c_\mathrm{ax}\)</span> is the axial chord.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_m = \tan^{-1}(0.5(\tan(\beta_\mathrm{in}) + \tan(\beta_\mathrm{out})))\)</span> is the mean vector angle.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta_\mathrm{in}\)</span> and <span class="math notranslate nohighlight">\(\beta_\mathrm{out}\)</span> is the inlet and outlet relative flow angle.</p></li>
+</ul>
+</div></blockquote>
+</section>
 </section>
 
 
@@ -119,7 +255,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="kacker_okapuu_1982.html" class="btn btn-neutral float-left" title="Kacker-Okapuu (1982)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../deviation_models.html" class="btn btn-neutral float-right" title="Deviation models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tremblay_moustapha_1997.html" class="btn btn-neutral float-right" title="Moustapha-Kacker-Tremblay (1990)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

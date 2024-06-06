@@ -76,22 +76,19 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../performance_analysis.html">Performance analysis</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../design_optimization.html">Design optimization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_validation.html">Model validation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
 </ul>
 
         </div>
@@ -122,15 +119,15 @@
              
   <section id="kacker-okapuu-1982">
 <span id="loss-model-ko1982"></span><h1>Kacker-Okapuu (1982)<a class="headerlink" href="#kacker-okapuu-1982" title="Link to this heading"></a></h1>
-<p id="appendix-ko-loss-model">This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to compute aerodynamic losses in axial
+<p>This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to compute aerodynamic losses in axial
 turbines.</p>
 <section id="overview-of-the-method">
 <h2>Overview of the method<a class="headerlink" href="#overview-of-the-method" title="Link to this heading"></a></h2>
 <p>The <span id="id2">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> loss system is a refinement of the correlations proposed by
 <span id="id3">[<a class="reference internal" href="../../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>, <span id="id4">[<a class="reference internal" href="../../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span>, and by <span id="id5">[<a class="reference internal" href="../../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>.
 The general form of the loss model is given by:</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-general">
-<span class="eqno">(1)<a class="headerlink" href="#equation-eq-ko-general" title="Link to this equation"></a></span>\[Y = f_{\mathrm{Re}} \,  f_{\mathrm{Ma}} \, Y_{\mathrm{p}} + Y_{\mathrm{s}} + Y_{\mathrm{cl}} + Y_{\mathrm{te}}\]</div>
+<div class="math notranslate nohighlight">
+\[Y = f_{\mathrm{Re}} \,  f_{\mathrm{Ma}} \, Y_{\mathrm{p}} + Y_{\mathrm{s}} + Y_{\mathrm{cl}} + Y_{\mathrm{te}}\]</div>
 <p>The expressions used to compute each term as a function of the cascade geometry and flow variables
 are presented in the next sections. Some of the signs from the original correlations were modified
 to comply with the angle conventions used in this work. These modifications are explicitly mentioned in the text.</p>
@@ -138,148 +135,133 @@ to comply with the angle conventions used in this work. These modifications are 
 <section id="reynolds-number-correction-factor">
 <h2>Reynolds number correction factor<a class="headerlink" href="#reynolds-number-correction-factor" title="Link to this heading"></a></h2>
 <p>The term <span class="math notranslate nohighlight">\(f_{\mathrm{Re}}\)</span> accounts for the effects of the Reynolds number and it is computed
-according to <a class="reference internal" href="#equation-eq-ko-reynolds1">(2)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-reynolds1">
-<span class="eqno">(2)<a class="headerlink" href="#equation-eq-ko-reynolds1" title="Link to this equation"></a></span>\[\begin{split}f_{\mathrm{Re}} =
+according to the following equation:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f_{\mathrm{Re}} =
 \begin{cases}
 (\frac{\mathrm{Re}}{2 \cdot 10^5} )^{-0.40} &amp; {\text{for }} \mathrm{Re} &lt; 2 \cdot 10^5\\
 1 &amp; {\text{for }} 2 \cdot 10^5 &lt; \mathrm{Re} &lt; 1 \cdot 10^6\\
 ( \frac{\mathrm{Re}}{1 \cdot 10^6})^{-0.20}  &amp; {\text{for }} \mathrm{Re} &gt; 1 \cdot 10^6
 \end{cases}\end{split}\]</div>
-<p>The Reynolds number is given by <a class="reference internal" href="#equation-eq-def-reynolds">(3)</a> and it is defined in terms of the chord length
-and the density, viscosity, and relative velocity at the outlet of the cascade.</p>
-<div class="math notranslate nohighlight" id="equation-eq-def-reynolds">
-<span class="eqno">(3)<a class="headerlink" href="#equation-eq-def-reynolds" title="Link to this equation"></a></span>\[\mathrm{Re} = \frac{\rho_{\mathrm{out}} \, w_{\mathrm{out}} \, c}{\mu_{\mathrm{out}}}\]</div>
+<p>where the Reynolds number is given in terms of the chord length
+and the density, viscosity, and relative velocity at the outlet of the cascade:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Re} = \frac{\rho_{\mathrm{out}} \, w_{\mathrm{out}} \, c}{\mu_{\mathrm{out}}}\]</div>
 </section>
 <section id="mach-number-correction-factor">
 <h2>Mach number correction factor<a class="headerlink" href="#mach-number-correction-factor" title="Link to this heading"></a></h2>
-<dl class="simple">
-<dt>The term <span class="math notranslate nohighlight">\(f_{\mathrm{Ma}}\)</span> accounts for losses associated with supersonic flows at the trailing</dt><dd><p>edge of the blades and it is computed according to <a class="reference internal" href="#equation-eq-dc-mach">(4)</a>.</p>
-</dd>
-</dl>
-<div class="math notranslate nohighlight" id="equation-eq-dc-mach">
-<span class="eqno">(4)<a class="headerlink" href="#equation-eq-dc-mach" title="Link to this equation"></a></span>\[\begin{split}f_{\mathrm{Ma}} =
+<p>The term <span class="math notranslate nohighlight">\(f_{\mathrm{Ma}}\)</span> accounts for losses associated with supersonic flows at the trailing
+edge of the blades and it is computed by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f_{\mathrm{Ma}} =
 \begin{cases}
 1 &amp; {\text{for }}  \mathrm{Ma_{\,out}^{\, rel}} \leq 1 \\
 1+60\cdot(\mathrm{Ma_{\,out}^{\, rel}}-1)^2 &amp; {\text{for }} \mathrm{Ma_{\,out}^{\, rel}} &gt; 1
 \end{cases}\end{split}\]</div>
-<p>The Mach number is given by <a class="reference internal" href="#equation-eq-def-mach">(5)</a> and it is defined by the relative velocity and the speed
-of sound at the outlet of the cascade.</p>
-<div class="math notranslate nohighlight" id="equation-eq-def-mach">
-<span class="eqno">(5)<a class="headerlink" href="#equation-eq-def-mach" title="Link to this equation"></a></span>\[\mathrm{Ma_{\,out}^{\, rel}} =  w_{\mathrm{out}}/a_{\mathrm{out}}\]</div>
+<p>The Mach number is defined by the relative velocity and the speed
+of sound at the outlet of the cascade:</p>
+<div class="math notranslate nohighlight">
+\[\mathrm{Ma_{\,out}^{\, rel}} =  w_{\mathrm{out}}/a_{\mathrm{out}}\]</div>
 </section>
 <section id="profile-loss-coefficient">
-<h2>Profile loss coefficient<a class="headerlink" href="#profile-loss-coefficient" title="Link to this heading"></a></h2>
-<div class="admonition-todo admonition" id="id6">
-<p class="admonition-title">Todo</p>
-<p>Add polynomial curve fit from aungier</p>
-<p>Add figures showing the trend of the loss coefficient</p>
-<p>Add figure for the Mach number correction factor</p>
-</div>
-<p>The profile loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{p}}\)</span> is computed according to <a class="reference internal" href="#equation-eq-ko-profile">(6)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile">
-<span class="eqno">(6)<a class="headerlink" href="#equation-eq-ko-profile" title="Link to this equation"></a></span>\[Y_{\mathrm{p}} = 0.914 \cdot \left( \frac{2}{3} \cdot  Y_{\mathrm{p}}' \cdot K_{\mathrm{p}} + Y_{\mathrm{shock}} \right)\]</div>
-<p>The term <span class="math notranslate nohighlight">\(Y_{\mathrm{p}}'\)</span> is given by <a class="reference internal" href="#equation-eq-ko-profile1">(7)</a>, where the terms,
-<span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, reaction}}\)</span> and <span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, impulse}}\)</span> are be obtained
-from the graphical data reproduced in <code class="docutils literal notranslate"><span class="pre">Figures</span></code>.
+<span id="profile-loss-ko"></span><h2>Profile loss coefficient<a class="headerlink" href="#profile-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The profile loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{p}}\)</span> is computed according to:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{p}} = 0.914 \cdot \left( \frac{2}{3} \cdot  Y_{\mathrm{p}}' \cdot K_{\mathrm{p}} + Y_{\mathrm{shock}} \right).\]</div>
+<p>The term <span class="math notranslate nohighlight">\(Y_{\mathrm{p}}'\)</span> is given by:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{p}}' = \left[ Y_{\mathrm{p, \, reaction}} - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot (Y_{\mathrm{p, \, impulse}}- Y_{\mathrm{p, \, reaction}}) \right] \cdot \left(\frac{t_{\mathrm{max}}/c}{0.20}\right)^{-\frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}}}\]</div>
+<p>where the terms, <span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, reaction}}\)</span> and <span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, impulse}}\)</span> are be obtained
+from graphical data by <span id="id6">[<a class="reference internal" href="../../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.
 The subscript <em>reaction</em> refers to blades with zero inlet metal angle (i.e., axial entry) and the
 subscript <em>impulse</em> refers to blades that have an inlet metal angle with the same magnitude but
 opposite sign as the exit relative flow angle.</p>
-<p>The second term of the right-hand side of <a class="reference internal" href="#equation-eq-ko-profile1">(7)</a> is a correction factor that accounts
-for the effects of the maximum blade thickness. The sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> in
-<a class="reference internal" href="#equation-eq-ko-profile1">(7)</a> was changed with respect to the original work of Kacker–Okappu to comply
-with the angle convention used in this paper.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile1">
-<span class="eqno">(7)<a class="headerlink" href="#equation-eq-ko-profile1" title="Link to this equation"></a></span>\[Y_{\mathrm{p}}' = \left[ Y_{\mathrm{p, \, reaction}} - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot (Y_{\mathrm{p, \, impulse}}- Y_{\mathrm{p, \, reaction}}) \right] \cdot \left(\frac{t_{\mathrm{max}}/c}{0.20}\right)^{-\frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}}}\]</div>
-<p>The factor <span class="math notranslate nohighlight">\(K_{p}\)</span> from <a class="reference internal" href="#equation-eq-ko-profile">(6)</a> accounts for compressible flow effects when the Mach
+<p>The second term of the right-hand side is a correction factor that accounts
+for the effects of the maximum blade thickness. In this equation, the sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> was changed with
+respect to the original work of Kacker–Okappu to comply with the angle convention used in this work.</p>
+<p>The factor <span class="math notranslate nohighlight">\(K_{p}\)</span> accounts for compressible flow effects when the Mach
 number within the cascade is subsonic and approaches unity. These effects tend to accelerate the flow,
 make the boundary layers thinner, and decrease the profile losses. <span class="math notranslate nohighlight">\(K_{p}\)</span> is a function on the
-inlet and outlet relative Mach numbers and it is computed from <a class="reference internal" href="#equation-eq-ko-profile2">(8)</a> and <a class="reference internal" href="#equation-eq-ko-profile3">(9)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile2">
-<span class="eqno">(8)<a class="headerlink" href="#equation-eq-ko-profile2" title="Link to this equation"></a></span>\[K_{\mathrm{p}} = 1-K_{2} \cdot \left(1-K_{1} \right)\]</div>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile3">
-<span class="eqno">(9)<a class="headerlink" href="#equation-eq-ko-profile3" title="Link to this equation"></a></span>\[\begin{split}K_{1} =
+inlet and outlet relative Mach numbers and it is computed from the following set of equations:</p>
+<div class="math notranslate nohighlight">
+\[K_{\mathrm{p}} = 1-K_{2} \cdot \left(1-K_{1} \right)\]</div>
+<div class="math notranslate nohighlight">
+\[\begin{split}K_{1} =
 \begin{cases}
 1 &amp; \text{for } \mathrm{Ma_{\,out}^{\, rel}} &lt; 0.20 \\
 1-1.25 \cdot(\mathrm{Ma_{\,out}^{\, rel}}-0.20) &amp; \text{for } 0.20 &lt;\mathrm{Ma_{\,out}^{\, rel}} &lt; 1.00 \\
 0 &amp; \text{for } \mathrm{Ma_{\,out}^{\, rel}} &gt; 1.00 \\
 \end{cases}\end{split}\]</div>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile4">
-<span class="eqno">(10)<a class="headerlink" href="#equation-eq-ko-profile4" title="Link to this equation"></a></span>\[K_{2} = \left( \frac{\mathrm{Ma_{\,in}^{\, rel}}}{\mathrm{Ma_{\,out}^{\, rel}}} \right)^2\]</div>
-<p>The term <span class="math notranslate nohighlight">\(Y_{\mathrm{shock}}\)</span> from <a class="reference internal" href="#equation-eq-ko-profile">(6)</a> accounts for the relatively weak shock waves
+<div class="math notranslate nohighlight">
+\[K_{2} = \left( \frac{\mathrm{Ma_{\,in}^{\, rel}}}{\mathrm{Ma_{\,out}^{\, rel}}} \right)^2\]</div>
+<p>The term <span class="math notranslate nohighlight">\(Y_{\mathrm{shock}}\)</span> accounts for the relatively weak shock waves
 that may occur at the leading edge of the cascade due to the acceleration of the flow. After some algebra,
-the equations proposed in the Kacker–Okapuu method can be condensed as <a class="reference internal" href="#equation-eq-ko-profile5">(11)</a>, where
-<span class="math notranslate nohighlight">\(f_{\mathrm{hub}}\)</span> is given graphically in <code class="docutils literal notranslate"><span class="pre">Figure</span></code> and it is a function of the
-hub-to-tip ratio only.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-profile5">
-<span class="eqno">(11)<a class="headerlink" href="#equation-eq-ko-profile5" title="Link to this equation"></a></span>\[Y_{\mathrm{shock}}  = 0.75 \cdot \left(f_{\mathrm{hub}} \cdot\mathrm{Ma_{\,in}^{\, rel}} -0.40 \right)^{1.75} \cdot \left( \frac{r_{\mathrm{hub}}}{r_{\mathrm{tip}}} \right)_{\mathrm{in}} \cdot \left( \frac{p_{\mathrm{0rel,in}}-p_{\mathrm{in}}}{p_{\mathrm{0rel,out}}-p_{\mathrm{out}}} \right)\]</div>
+the equations proposed in the Kacker–Okapuu method can be condensed to:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{shock}}  = 0.75 \cdot \left(f_{\mathrm{hub}} \cdot\mathrm{Ma_{\,in}^{\, rel}} -0.40 \right)^{1.75} \cdot \left( \frac{r_{\mathrm{hub}}}{r_{\mathrm{tip}}} \right)_{\mathrm{in}} \cdot \left( \frac{p_{\mathrm{0rel,in}}-p_{\mathrm{in}}}{p_{\mathrm{0rel,out}}-p_{\mathrm{out}}} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(f_{\mathrm{hub}}\)</span> is given graphically in <span id="id7">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> and it is a function of the hub-to-tip ratio only.</p>
 </section>
 <section id="secondary-loss-coefficient">
-<h2>Secondary loss coefficient<a class="headerlink" href="#secondary-loss-coefficient" title="Link to this heading"></a></h2>
-<p>The secondary loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{s}}\)</span> is computed according to <a class="reference internal" href="#equation-eq-ko-secondary1">(12)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-secondary1">
-<span class="eqno">(12)<a class="headerlink" href="#equation-eq-ko-secondary1" title="Link to this equation"></a></span>\[Y_{\mathrm{s}} = 1.2 \cdot K_{\mathrm{s}} \cdot \left[0.0334 \cdot f_{\mathrm{AR}} \cdot Z \cdot \left( \frac{\cos(\beta_{\mathrm{out}})}{\cos(\theta_{\mathrm{in}})} \right) \right]\]</div>
+<span id="secondary-loss-ko"></span><h2>Secondary loss coefficient<a class="headerlink" href="#secondary-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The secondary loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{s}}\)</span> is computed according to:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{s}} = 1.2 \cdot K_{\mathrm{s}} \cdot \left[0.0334 \cdot f_{\mathrm{AR}} \cdot Z \cdot \left( \frac{\cos(\beta_{\mathrm{out}})}{\cos(\theta_{\mathrm{in}})} \right) \right]\]</div>
 <p>The factor 1.2 is included to correct the secondary loss for blades with zero trailing edge thickness.
 Trailing edge losses are accounted independently.</p>
 <p>The factor <span class="math notranslate nohighlight">\(K_{\mathrm{s}}\)</span> accounts for compressible flow effects present when the Mach number
 approaches unity. These effects tend to accelerate the flow, make the end wall boundary layers thinner,
-and decrease the secondary losses. <span class="math notranslate nohighlight">\(K_{\mathrm{s}}\)</span> is computed from <a class="reference internal" href="#equation-eq-ko-secondary2">(13)</a>,
-where <span class="math notranslate nohighlight">\(K_{\mathrm{p}}\)</span> is given by <a class="reference internal" href="#equation-eq-ko-profile2">(8)</a> and <span class="math notranslate nohighlight">\(K_{3}\)</span> is given by
-<a class="reference internal" href="#equation-eq-ko-secondary5">(14)</a>. <span class="math notranslate nohighlight">\(K_{3}\)</span> is a function of the axial aspect ratio <span class="math notranslate nohighlight">\(H/b\)</span> only.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-secondary2">
-<span class="eqno">(13)<a class="headerlink" href="#equation-eq-ko-secondary2" title="Link to this equation"></a></span>\[K_{\mathrm{s}} = 1-K_{3} \cdot \left(1-K_{\mathrm{p}} \right)\]</div>
-<div class="math notranslate nohighlight" id="equation-eq-ko-secondary5">
-<span class="eqno">(14)<a class="headerlink" href="#equation-eq-ko-secondary5" title="Link to this equation"></a></span>\[K_{3} = \left(\frac{1}{H/b}\right)^2\]</div>
-<p><span class="math notranslate nohighlight">\(f_{\mathrm{AR}}\)</span> accounts for the blade aspect ratio <span class="math notranslate nohighlight">\(H/c\)</span> and it is given by <a class="reference internal" href="#equation-eq-ko-secondary3">(15)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-secondary3">
-<span class="eqno">(15)<a class="headerlink" href="#equation-eq-ko-secondary3" title="Link to this equation"></a></span>\[\begin{split}f_{\mathrm{AR}} =
+and decrease the secondary losses. <span class="math notranslate nohighlight">\(K_{\mathrm{s}}\)</span> is computed from:</p>
+<div class="math notranslate nohighlight">
+\[K_{\mathrm{s}} = 1-K_{3} \cdot \left(1-K_{\mathrm{p}} \right)\]</div>
+<p>where <span class="math notranslate nohighlight">\(K_{\mathrm{p}}\)</span> is given similarly as described in <a class="reference internal" href="#profile-loss-ko"><span class="std std-ref">Profile loss coefficient</span></a> and <span class="math notranslate nohighlight">\(K_{3}\)</span> is given as
+a function of the axial aspect ratio <span class="math notranslate nohighlight">\(H/b\)</span> only:</p>
+<div class="math notranslate nohighlight">
+\[K_{3} = \left(\frac{1}{H/b}\right)^2\]</div>
+<p><span class="math notranslate nohighlight">\(f_{\mathrm{AR}}\)</span> accounts for the blade aspect ratio <span class="math notranslate nohighlight">\(H/c\)</span> and it is given by:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}f_{\mathrm{AR}} =
 \begin{cases}
 \frac{1-0.25\cdot \sqrt{2-H/c}}{H/c} &amp; \text{for } H/c &lt; 2\\
 \frac{1}{H/c} &amp; \text{for } H/c &gt; 2
 \end{cases}\end{split}\]</div>
-<p>The Ainley-Mathieson loading parameter <span class="math notranslate nohighlight">\(Z\)</span> is given by <a class="reference internal" href="#equation-eq-z-ainley1">(16)</a> through
-<a class="reference internal" href="#equation-eq-z-ainley3">(18)</a>, where the sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> was changed with respect
-to the original work of [kacker_mean_1982] to comply with the angle convention used in this paper.</p>
-<div class="math notranslate nohighlight" id="equation-eq-z-ainley1">
-<span class="eqno">(16)<a class="headerlink" href="#equation-eq-z-ainley1" title="Link to this equation"></a></span>\[Z = \left(\frac{C_{\mathrm{L}}}{s/c}\right)^2 \, \frac{\cos(\beta_{\mathrm{out}})^2}{\cos(\beta_{\mathrm{m}})^3}\]</div>
-<div class="math notranslate nohighlight" id="equation-eq-z-ainley2">
-<span class="eqno">(17)<a class="headerlink" href="#equation-eq-z-ainley2" title="Link to this equation"></a></span>\[\left(\frac{C_{\mathrm{L}}}{s/c}\right) = 2 \cos(\beta_{\mathrm{m}}) \, \left[\tan(\beta_{\mathrm{in}}) - \tan(\beta_{\mathrm{out}})\right]\]</div>
-<div class="math notranslate nohighlight" id="equation-eq-z-ainley3">
-<span class="eqno">(18)<a class="headerlink" href="#equation-eq-z-ainley3" title="Link to this equation"></a></span>\[\tan(\beta_{\mathrm{m}}) = \frac{1}{2}\left[\tan(\beta_{\mathrm{in}}) + \tan(\beta_{\mathrm{out}})\right]\]</div>
+<p>The Ainley-Mathieson loading parameter <span class="math notranslate nohighlight">\(Z\)</span> is given by the following set of equations:</p>
+<div class="math notranslate nohighlight">
+\[Z = \left(\frac{C_{\mathrm{L}}}{s/c}\right)^2 \, \frac{\cos(\beta_{\mathrm{out}})^2}{\cos(\beta_{\mathrm{m}})^3}\]</div>
+<div class="math notranslate nohighlight">
+\[\left(\frac{C_{\mathrm{L}}}{s/c}\right) = 2 \cos(\beta_{\mathrm{m}}) \, \left[\tan(\beta_{\mathrm{in}}) - \tan(\beta_{\mathrm{out}})\right]\]</div>
+<div class="math notranslate nohighlight">
+\[\tan(\beta_{\mathrm{m}}) = \frac{1}{2}\left[\tan(\beta_{\mathrm{in}}) + \tan(\beta_{\mathrm{out}})\right]\]</div>
+<p>where the sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> was changed with respect
+to the original work to comply with the angle convention used in this work.</p>
 </section>
 <section id="tip-clearance-loss-coefficient">
-<h2>Tip clearance loss coefficient<a class="headerlink" href="#tip-clearance-loss-coefficient" title="Link to this heading"></a></h2>
-<p>The clearance loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{cl}}\)</span> is computed according to <a class="reference internal" href="#equation-eq-ko-clearance">(19)</a>,
-where the influence of the number of seals is neglected.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-clearance">
-<span class="eqno">(19)<a class="headerlink" href="#equation-eq-ko-clearance" title="Link to this equation"></a></span>\[Y_{\mathrm{cl}} = B \cdot Z \cdot \left(\frac{c}{H}\right) \cdot \left( \frac{t_{\mathrm{cl}}}{H}\right)^{0.78}\]</div>
-<p>In this equation, <span class="math notranslate nohighlight">\(Z\)</span> is given by <a class="reference internal" href="#equation-eq-z-ainley1">(16)</a> through <a class="reference internal" href="#equation-eq-z-ainley3">(18)</a>.
+<span id="tip-clearance-ko"></span><h2>Tip clearance loss coefficient<a class="headerlink" href="#tip-clearance-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The tip clearance loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{cl}}\)</span> is computed according to:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{cl}} = B \cdot Z \cdot \left(\frac{c}{H}\right) \cdot \left( \frac{t_{\mathrm{cl}}}{H}\right)^{0.78}\]</div>
+<p>In this equation, <span class="math notranslate nohighlight">\(Z\)</span> is given similarly as decribed in <a class="reference internal" href="#secondary-loss-ko"><span class="std std-ref">Secondary loss coefficient</span></a>.
 The Kacker-Okapuu loss system proposes <span class="math notranslate nohighlight">\(B=0.37\)</span> for rotor blades with shrouded tips,
 and <span class="math notranslate nohighlight">\(B=0.00\)</span> for stator blades. In addition, Kacker and Okapuu warn that using <span class="math notranslate nohighlight">\(B=0.47\)</span>,
-as suggested by [dunham_improvements_1970], over-predicts the loss for rotor blades with plain tips.</p>
+as suggested by <span id="id8">[<a class="reference internal" href="../../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>, over-predicts the loss for rotor blades with plain tips.</p>
 </section>
 <section id="trailing-edge-loss-coefficient">
-<h2>Trailing edge loss coefficient<a class="headerlink" href="#trailing-edge-loss-coefficient" title="Link to this heading"></a></h2>
-<div class="admonition-todo admonition" id="id7">
-<p class="admonition-title">Todo</p>
-<p>Add figure of trailing edge losses</p>
-</div>
-<p>The trailing edge loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{te}}\)</span> is computed according to <a class="reference internal" href="#equation-eq-ko-trailing1">(20)</a>.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-trailing1">
-<span class="eqno">(20)<a class="headerlink" href="#equation-eq-ko-trailing1" title="Link to this equation"></a></span>\[Y_{\mathrm{te}} \approx \zeta = \frac{1}{\phi^2}-1 = \frac{1}{1-\Delta \phi^2}-1\]</div>
+<span id="trailing-edge-ko"></span><h2>Trailing edge loss coefficient<a class="headerlink" href="#trailing-edge-loss-coefficient" title="Link to this heading"></a></h2>
+<p>The trailing edge loss coefficient <span class="math notranslate nohighlight">\(Y_{\mathrm{te}}\)</span> is computed according to:</p>
+<div class="math notranslate nohighlight">
+\[Y_{\mathrm{te}} \approx \zeta = \frac{1}{\phi^2}-1 = \frac{1}{1-\Delta \phi^2}-1\]</div>
 <p>Where the pressure loss coefficient <span class="math notranslate nohighlight">\(Y\)</span> was approximated by the enthalpy loss coefficient
 <span class="math notranslate nohighlight">\(\zeta\)</span> and then related to the kinetic energy loss coefficients <span class="math notranslate nohighlight">\(\phi^2\)</span> and
-<span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>. See the work by [Dahlquist2008] for details about the definitions of the
+<span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>. See the work by <span id="id9">[<a class="reference internal" href="../../bibliography.html#id36" title="Adrian N Dahlquist. Investigation of losses prediction methods in 1D for axial gas turbines. Master's thesis, Lund University, Lund, 2008. URL: https://www.lunduniversity.lu.se/lup/publication/1423748.">Dahlquist, 2008</a>]</span> for details about the definitions of the
 different loss coefficients and the relations among them. The parameter <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>
-is computed by interpolation of impulse and reaction blades according to <a class="reference internal" href="#equation-eq-ko-trailing2">(21)</a>.
-The sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> in <a class="reference internal" href="#equation-eq-ko-trailing2">(21)</a> was changed with respect to
-the original work of Kacker–Okappu to comply with the angle convention used in this paper.</p>
-<div class="math notranslate nohighlight" id="equation-eq-ko-trailing2">
-<span class="eqno">(21)<a class="headerlink" href="#equation-eq-ko-trailing2" title="Link to this equation"></a></span>\[\Delta \phi^2 = \Delta \phi_{\mathrm{reaction}}^2 - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot ( \Delta \phi_{\mathrm{impulse}}^2 -\Delta \phi_{\mathrm{reaction}}^2)\]</div>
-<p><span class="math notranslate nohighlight">\(\Delta \phi_{\mathrm{reaction}}^2\)</span> and <span class="math notranslate nohighlight">\(\Delta \phi_{\mathrm{impulse}}^2\)</span> are the kinetic
+is computed by interpolation of impulse and reaction blades according to:</p>
+<div class="math notranslate nohighlight">
+\[\Delta \phi^2 = \Delta \phi_{\mathrm{reaction}}^2 - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot ( \Delta \phi_{\mathrm{impulse}}^2 -\Delta \phi_{\mathrm{reaction}}^2)\]</div>
+<p>The sign of <span class="math notranslate nohighlight">\(\beta_{\mathrm{out}}\)</span> was changed with respect to
+the original work of Kacker–Okappu to comply with the angle convention used in this work.
+<span class="math notranslate nohighlight">\(\Delta \phi_{\mathrm{reaction}}^2\)</span> and <span class="math notranslate nohighlight">\(\Delta \phi_{\mathrm{impulse}}^2\)</span> are the kinetic
 energy loss coefficients of reaction and impulse blades and they are a function of the trailing edge
 thickness to opening ratio <span class="math notranslate nohighlight">\(t_{\mathrm{te}}/o\)</span> only. The functional relation was published in
-graphical form, and it is reproduced in <code class="docutils literal notranslate"><span class="pre">Figure</span></code></p>
+graphical form.</p>
 </section>
 <section id="final-remarks">
 <h2>Final remarks<a class="headerlink" href="#final-remarks" title="Link to this heading"></a></h2>

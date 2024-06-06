@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; turboflow v0.0 documentation</title>
+  <title>turboflow.pysolver_view.optimization_problems module &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -31,7 +31,9 @@
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="turboflow.pysolver_view.optimization_wrappers module" href="turboflow.pysolver_view.optimization_wrappers.html" />
+    <link rel="prev" title="turboflow.pysolver_view.optimization module" href="turboflow.pysolver_view.optimization.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,7 +55,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
@@ -61,10 +63,22 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">turboflow.properties package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="turboflow.pysolver_view.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="turboflow.pysolver_view.html#module-turboflow.pysolver_view">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.turbo_configurations.html">turboflow.turbo_configurations package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a></li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -81,7 +95,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a></li>
+      <li class="breadcrumb-item active">turboflow.pysolver_view.optimization_problems module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/api/turboflow.pysolver_view.optimization_problems.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -91,17 +107,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-turboflow.pysolver_view.optimization_problems module
-======================================================
-=======
-meanline_axial.solver.optimization_problems module
-====================================================
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</p>
-<span class="target" id="module-turboflow.pysolver_view.optimization_problems"></span><dl class="py class">
+  <section id="module-turboflow.pysolver_view.optimization_problems">
+<span id="turboflow-pysolver-view-optimization-problems-module"></span><h1>turboflow.pysolver_view.optimization_problems module<a class="headerlink" href="#module-turboflow.pysolver_view.optimization_problems" title="Link to this heading"></a></h1>
+<dl class="py class">
 <dt class="sig sig-object py" id="turboflow.pysolver_view.optimization_problems.HS71Problem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization_problems.</span></span><span class="sig-name descname"><span class="pre">HS71Problem</span></span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization_problems.html#HS71Problem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization_problems.HS71Problem" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
 <p>Implementation of the Hock Schittkowski problem No.71.</p>
 <p>This class implements the following optimization problem:</p>
 <div class="math notranslate nohighlight">
@@ -205,7 +216,7 @@ item of the list of upper bounds for the vector of decision variables. For examp
 <dl class="py class">
 <dt class="sig sig-object py" id="turboflow.pysolver_view.optimization_problems.LorentzEquationsOpt">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization_problems.</span></span><span class="sig-name descname"><span class="pre">LorentzEquationsOpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization_problems.html#LorentzEquationsOpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization_problems.LorentzEquationsOpt" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
 <p>Implementation of the Lorentz System of Nonlinear Equations as an optimization problem</p>
 <p>This class implements the following system of algebraic nonlinear equations:</p>
 <div class="math notranslate nohighlight">
@@ -314,7 +325,7 @@ item of the list of upper bounds for the vector of decision variables. For examp
 <dl class="py class">
 <dt class="sig sig-object py" id="turboflow.pysolver_view.optimization_problems.RosenbrockProblem">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization_problems.</span></span><span class="sig-name descname"><span class="pre">RosenbrockProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization_problems.html#RosenbrockProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization_problems.RosenbrockProblem" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
 <p>Implementation of the Rosenbrock problem.</p>
 <p>The Rosenbrock problem, also known as Rosenbrock’s valley or banana function,
 is defined as:</p>
@@ -407,7 +418,7 @@ item of the list of upper bounds for the vector of decision variables. For examp
 <dl class="py class">
 <dt class="sig sig-object py" id="turboflow.pysolver_view.optimization_problems.RosenbrockProblemConstrained">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.pysolver_view.optimization_problems.</span></span><span class="sig-name descname"><span class="pre">RosenbrockProblemConstrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/pysolver_view/optimization_problems.html#RosenbrockProblemConstrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.pysolver_view.optimization_problems.RosenbrockProblemConstrained" title="Link to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></p>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
 <p>Implementation of the Chained Rosenbrock function with trigonometric-exponential constraints.</p>
 <p>This problem is also referred to as Example 5.1 in the report by Luksan and Vlcek. The optimization problem is described as:</p>
 <div class="math notranslate nohighlight">
@@ -515,11 +526,15 @@ item of the list of upper bounds for the vector of decision variables. For examp
 
 </dd></dl>
 
+</section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.pysolver_view.optimization.html" class="btn btn-neutral float-left" title="turboflow.pysolver_view.optimization module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.pysolver_view.optimization_wrappers.html" class="btn btn-neutral float-right" title="turboflow.pysolver_view.optimization_wrappers module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

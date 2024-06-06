@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; turboflow v0.0 documentation</title>
+  <title>turboflow.math module &mdash; turboflow v0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -31,7 +31,9 @@
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" /> 
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="turboflow.plot_functions module" href="turboflow.plot_functions.html" />
+    <link rel="prev" title="turboflow.config_validation module" href="turboflow.config_validation.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,7 +55,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
@@ -61,10 +63,35 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../configuration.html">Configuration options</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html">Subpackages</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="turboflow.html#module-turboflow">Module contents</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="turboflow.config_validation.html">turboflow.config_validation module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">turboflow.math module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.all_non_negative"><code class="docutils literal notranslate"><span class="pre">all_non_negative()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.all_numeric"><code class="docutils literal notranslate"><span class="pre">all_numeric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arccosd"><code class="docutils literal notranslate"><span class="pre">arccosd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arcsind"><code class="docutils literal notranslate"><span class="pre">arcsind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.arctand"><code class="docutils literal notranslate"><span class="pre">arctand()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.cosd"><code class="docutils literal notranslate"><span class="pre">cosd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.is_even"><code class="docutils literal notranslate"><span class="pre">is_even()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.is_odd"><code class="docutils literal notranslate"><span class="pre">is_odd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_hyperbolic"><code class="docutils literal notranslate"><span class="pre">sigmoid_hyperbolic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_rational"><code class="docutils literal notranslate"><span class="pre">sigmoid_rational()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_smootherstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smootherstep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_smoothstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smoothstep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_abs"><code class="docutils literal notranslate"><span class="pre">smooth_abs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_max"><code class="docutils literal notranslate"><span class="pre">smooth_max()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_min"><code class="docutils literal notranslate"><span class="pre">smooth_min()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="turboflow.plot_functions.html">turboflow.plot_functions module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 
         </div>
@@ -81,7 +108,8 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">&lt;no title&gt;</li>
+          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">turboflow.math module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/api/turboflow.math.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -91,14 +119,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-turboflow.math module
-=====================
-=======
-Math
-===========================
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; bf55a7c3bc88c603e8a08685c83b0dc30a57d92e</p>
-<span class="target" id="module-turboflow.math"></span><dl class="py function">
+  <section id="module-turboflow.math">
+<span id="turboflow-math-module"></span><h1>turboflow.math module<a class="headerlink" href="#module-turboflow.math" title="Link to this heading"></a></h1>
+<dl class="py function">
 <dt class="sig sig-object py" id="turboflow.math.all_non_negative">
 <span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">all_non_negative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#all_non_negative"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.all_non_negative" title="Link to this definition"></a></dt>
 <dd><p>Check if all items in Numpy array are non-negative</p>
@@ -417,11 +440,15 @@ the result will broadcast correctly against the input array.</p>
 <dd><p>Compute the tangent of an angle given in degrees.</p>
 </dd></dl>
 
+</section>
 
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="turboflow.config_validation.html" class="btn btn-neutral float-left" title="turboflow.config_validation module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="turboflow.plot_functions.html" class="btn btn-neutral float-right" title="turboflow.plot_functions module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
