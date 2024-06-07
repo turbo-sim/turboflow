@@ -187,7 +187,7 @@ def plot_lines(
                 )
     elif subsets is None:
         if stack == True:
-            ax.stackplot(x, y, labels=y_keys, colors=colors)
+            ax.stackplot(x, y, labels=labels, colors=colors)
             # Add edges by overlaying lines
             y_arrays = [series.values for series in y]
             cumulative_y = np.cumsum(y_arrays, axis=0)
