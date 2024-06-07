@@ -58,18 +58,12 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#user-installation-guide">User Installation Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installing-additional-solvers">Installing Additional Solvers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#developer-installation-guide">Developer Installation Guide</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#ci-cd-pipeline">CI/CD Pipeline</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#automated-testing">Automated Testing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#package-publishing">Package Publishing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#documentation-deployment">Documentation Deployment</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_description.html">Model Description</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developer_guidlines.html">Developer guidlines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
@@ -180,68 +174,6 @@ These environment variables allow SNOPT to locate the license file and Turboflow
 </li>
 </ol>
 <p>By following these steps, you can install additional solvers like IPOPT and SNOPT through the pygmo wrapper, expanding the range of optimization algorithms available for solving performance analysis and optimization problems in turboflow.</p>
-</section>
-<section id="developer-installation-guide">
-<h2>Developer Installation Guide<a class="headerlink" href="#developer-installation-guide" title="Link to this heading"></a></h2>
-<p>This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
-<ol class="arabic">
-<li><p>Clone the Turboflow remote repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/turbo-sim/TurboFlow.git
-</pre></div>
-</div>
-</li>
-<li><p>Create a dedicated Conda virtual environment for Turboflow development:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
-</pre></div>
-</div>
-</li>
-<li><p>Activate the newly created virtual environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
-</pre></div>
-</div>
-</li>
-<li><p>Install Poetry to manage dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>poetry
-</pre></div>
-</div>
-<p>Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user’s intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project’s requirements.</p>
-</li>
-<li><p>Use Poetry to install the required dependencies for Turboflow development:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
-</pre></div>
-</div>
-</li>
-<li><p>Verify the installation by running the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import turboflow; turboflow.print_package_details()&quot;</span>
-</pre></div>
-</div>
-<p>If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.</p>
-</li>
-</ol>
-</section>
-<section id="ci-cd-pipeline">
-<h2>CI/CD Pipeline<a class="headerlink" href="#ci-cd-pipeline" title="Link to this heading"></a></h2>
-<p>Turboflow uses GitHub Actions to automate its Continuous Integration and Continuous Deployment (CI/CD) processes.</p>
-<section id="automated-testing">
-<h3>Automated Testing<a class="headerlink" href="#automated-testing" title="Link to this heading"></a></h3>
-<p>The <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> action is triggered whenever a commit is pushed to the repository. This action runs the test suite on both Windows and Linux environments, ensuring the code’s compatibility and correctness across different platforms.</p>
-</section>
-<section id="package-publishing">
-<h3>Package Publishing<a class="headerlink" href="#package-publishing" title="Link to this heading"></a></h3>
-<p>Turboflow utilizes the <code class="docutils literal notranslate"><span class="pre">bumpversion</span></code> package to manage versioning and release control. To increment the version number, use the following command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bumpversion<span class="w"> </span>patch<span class="w">  </span><span class="c1"># or minor, major</span>
-</pre></div>
-</div>
-<p>After bumping the version, push the changes to the remote repository along with tags to signify the new version:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--tags
-</pre></div>
-</div>
-<p>If the tests pass successfully, the package is automatically published to the Python Package Index (PyPI), making it readily available for users to install and use.</p>
-</section>
-<section id="documentation-deployment">
-<h3>Documentation Deployment<a class="headerlink" href="#documentation-deployment" title="Link to this heading"></a></h3>
-<p>Turboflow automates the deployment of documentation using the <code class="docutils literal notranslate"><span class="pre">deploy_docs</span></code> action. This action builds the Sphinx documentation of the project and publishes the HTML files to GitHub Pages each time that a new commit is pushed to the remote repository. By automating this process, Turboflow ensures that the project’s documentation remains up-to-date and easily accessible to users and contributors.</p>
-</section>
 </section>
 </section>
 

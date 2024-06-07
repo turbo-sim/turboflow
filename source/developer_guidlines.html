@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Developer guidlines &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Nomenclature" href="nomenclature.html" />
+    <link rel="prev" title="Model validation" href="model_validation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_validation.html">Model validation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guidlines</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#developer-installation-guide">Developer Installation Guide</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-request-guidelines">Pull request guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-guidlines">Testing guidlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-issue">Reporting issue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ci-cd-pipeline">CI/CD Pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automated-testing">Automated Testing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#package-publishing">Package Publishing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation-deployment">Documentation Deployment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Developer guidlines</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/developer_guidlines.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="developer-guidlines">
+<span id="developer-guide"></span><h1>Developer guidlines<a class="headerlink" href="#developer-guidlines" title="Link to this heading"></a></h1>
+<p>Thank you for considering contributing to this project! Here are some guidelines to help you get started:</p>
+<section id="developer-installation-guide">
+<h2>Developer Installation Guide<a class="headerlink" href="#developer-installation-guide" title="Link to this heading"></a></h2>
+<p>This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
+<ol class="arabic">
+<li><p>Clone the Turboflow remote repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/turbo-sim/TurboFlow.git
+</pre></div>
+</div>
+</li>
+<li><p>Create a dedicated Conda virtual environment for Turboflow development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
+</pre></div>
+</div>
+</li>
+<li><p>Activate the newly created virtual environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
+</pre></div>
+</div>
+</li>
+<li><p>Install Poetry to manage dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>poetry
+</pre></div>
+</div>
+<p>Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user’s intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project’s requirements.</p>
+</li>
+<li><p>Use Poetry to install the required dependencies for Turboflow development:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
+</pre></div>
+</div>
+</li>
+<li><p>Verify the installation by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import turboflow; turboflow.print_package_details()&quot;</span>
+</pre></div>
+</div>
+<p>If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.</p>
+</li>
+</ol>
+</section>
+<section id="pull-request-guidelines">
+<h2>Pull request guidelines<a class="headerlink" href="#pull-request-guidelines" title="Link to this heading"></a></h2>
+<p>Please follow these steps to submit a pull request.</p>
+<ol class="arabic simple">
+<li><p><strong>Fork the repository</strong>: Click the “Fork” button on the top right of this page.</p></li>
+<li><p><strong>Clone your fork</strong>: <cite>git clone https://github.com/turbo-sim/TurboFlow</cite></p></li>
+<li><p><strong>Create a branch</strong>: <cite>git checkout -b feature-name</cite></p></li>
+<li><p><strong>Make your changes</strong>: Implement your feature or bugfix.</p></li>
+<li><p><strong>Commit your changes</strong>: <cite>git commit -m “Description of changes”</cite></p></li>
+<li><p><strong>Push to your fork</strong>: <cite>git push origin feature-name</cite></p></li>
+<li><p><strong>Open a pull request</strong>: Go to your fork on GitHub and click the “New pull request” button.</p></li>
+</ol>
+</section>
+<section id="testing-guidlines">
+<h2>Testing guidlines<a class="headerlink" href="#testing-guidlines" title="Link to this heading"></a></h2>
+<p>When implementing new features or adding new submodels, you should aim to create unit tests that verifies the functionality of what you are adding.
+TurboFlow adopt <cite>pytest</cite> testing framework, and the folder <cite>tests</cite> in the root repository host the test files. Here you can find the test files:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>test_performance_analysis</cite></p></li>
+<li><p><cite>test_performance_analysis</cite></p></li>
+</ul>
+</div></blockquote>
+<p>Both these function fetch configuration files from <cite>config_files</cite> folder inside to either conduct perfromance analysis or design optimization.
+The output of these tests are compared with regression data contained in <cite>regression_data_linux</cite> or <cite>regression_data_windows</cite>, depending on the OS where the
+code runs on.</p>
+<p>With this testing structure, follow these steps to add tests:</p>
+<ol class="arabic simple">
+<li><p>Add configuration file of the test you want to add to <cite>config_files</cite>.</p></li>
+<li><p>Add configuration file of the test in <cite>CONFIG_FILES</cite> in either or both <cite>test_performance_analysis</cite> or <cite>test_performance_analysis</cite>.</p></li>
+<li><p>Generate regression data and add files to both <cite>regression_data_linux</cite> and <cite>regression_data_linux</cite>.</p></li>
+</ol>
+<p>To add regression data, use the <cite>generate_regression_data</cite> script. Here you can define the <cite>CONFIG_FILES_PERFORMANCE_ANALYSIS</cite> and
+<cite>CONFIG_FILES_DESIGN_OPTIMIZATION</cite> which are list of configuration files for which you want to generate regression data.
+To add regression data for a linux based OS, you can run the <cite>generate_regression_data_ubuntu</cite> workflow from Github Actions.
+This stores the regression data files as artifacts, which can be downloaded and inserted in the regression data folder manually.</p>
+<p>Otherwise, a independent tests can be added in the <cite>tests</cite> folder.</p>
+<p>To run the test suite, simply run the following command from the root of the repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>pytest
+</pre></div>
+</div>
+</section>
+<section id="reporting-issue">
+<h2>Reporting issue<a class="headerlink" href="#reporting-issue" title="Link to this heading"></a></h2>
+<p>If you find a bug or have a feature request, please open an issue and follow the provided templates.</p>
+</section>
+<section id="ci-cd-pipeline">
+<h2>CI/CD Pipeline<a class="headerlink" href="#ci-cd-pipeline" title="Link to this heading"></a></h2>
+<p>Turboflow uses GitHub Actions to automate its Continuous Integration and Continuous Deployment (CI/CD) processes.</p>
+<section id="automated-testing">
+<h3>Automated Testing<a class="headerlink" href="#automated-testing" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">ci.yml</span></code> action is triggered whenever a commit is pushed to the repository. This action runs the test suite on both Windows and Linux environments, ensuring the code’s compatibility and correctness across different platforms.</p>
+</section>
+<section id="package-publishing">
+<h3>Package Publishing<a class="headerlink" href="#package-publishing" title="Link to this heading"></a></h3>
+<p>Turboflow utilizes the <code class="docutils literal notranslate"><span class="pre">bumpversion</span></code> package to manage versioning and release control. To increment the version number, use the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bumpversion<span class="w"> </span>patch<span class="w">  </span><span class="c1"># or minor, major</span>
+</pre></div>
+</div>
+<p>After bumping the version, push the changes to the remote repository along with tags to signify the new version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>--tags
+</pre></div>
+</div>
+<p>If the tests pass successfully, the package is automatically published to the Python Package Index (PyPI), making it readily available for users to install and use.</p>
+</section>
+<section id="documentation-deployment">
+<h3>Documentation Deployment<a class="headerlink" href="#documentation-deployment" title="Link to this heading"></a></h3>
+<p>Turboflow automates the deployment of documentation using the <code class="docutils literal notranslate"><span class="pre">deploy_docs</span></code> action. This action builds the Sphinx documentation of the project and publishes the HTML files to GitHub Pages each time that a new commit is pushed to the remote repository. By automating this process, Turboflow ensures that the project’s documentation remains up-to-date and easily accessible to users and contributors.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model_validation.html" class="btn btn-neutral float-left" title="Model validation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="nomenclature.html" class="btn btn-neutral float-right" title="Nomenclature" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
