@@ -39,7 +39,7 @@ This extensive resource ensures that users can easily learn how to use the packa
 Additionally, the package includes preconfigured examples that demonstrate performance analysis and design optimization. These examples serve as practical guides and starting points for users to 
 apply TurboFlow to their specific turbine projects. 
 
-An automated test suite is included, which tests the functionality of performance analysis and design optimization, as well as all submodels, on both Windows and Linux operating systems. It enables continuous integration, 
+The package can be found in a [github repository](https://github.com/turbo-sim/TurboFlow) [$turboflow]. Through Github Actions, an automated test suite is included, which tests the functionality of performance analysis and design optimization, as well as all submodels, on both Windows and Linux operating systems. It enables continuous integration, 
 ensuring that code changes are systematically tested and validated. This comprehensive testing framework provides confidence that the code works as expected, maintaining the reliability of 
 the package with each update.
 
