@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration Options &mdash; turboflow v0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=90b5f367"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model Description" href="../model_description.html" />
+    <link rel="prev" title="Design optimization" href="design_optimization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="performance_prediction.html">Performance prediction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration Options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_validation.html">Model validation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guidlines.html">Developer guidlines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Configuration Options</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/tutorials/configuration_options_short.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration-options">
+<span id="configuration-options-short"></span><h1>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading"></a></h1>
+<p>This section describes the different configuration options available for various submodels and simulations in the project.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Loss Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>simulation_options.loss_model.model</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>benner</cite>: see <a class="reference internal" href="../model_description/loss_models/benner_sjolander_moustapha_2006.html#loss-model-bsm2006"><span class="std std-ref">Benner-Sjolander-Moustapha (2006)</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>kacker_okapuu</cite>: see <a class="reference internal" href="../model_description/loss_models/kacker_okapuu_1982.html#loss-model-ko1982"><span class="std std-ref">Kacker-Okapuu (1982)</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>moustapha</cite>: see <a class="reference internal" href="../model_description/loss_models/tremblay_moustapha_1997.html#loss-model-mkt1990"><span class="std std-ref">Moustapha-Kacker-Tremblay (1990)</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>isentropic</cite>: Ensures that the loss coefficient is zero.</p></li>
+<li><p class="sd-card-text"><cite>custom</cite>: Implies a constant loss coefficent, specified through <cite>custom_value</cite> input in configuration file.</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Deviation Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>aungier</cite>: see <a class="reference internal" href="../model_description/deviation_models.html#aungier"><span class="std std-ref">Aungier</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>ainley_mathieson</cite>:  see <a class="reference internal" href="../model_description/deviation_models.html#ainley-mathieson"><span class="std std-ref">Ainley and Mathieson</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>zero_deviation</cite>: see <a class="reference internal" href="../model_description/deviation_models.html#zero-deviation"><span class="std std-ref">Zero deviation</span></a> for model details.</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Choking Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>evaluate_cascade_critical</cite>: see <a class="reference internal" href="../model_description/choking_models.html#evaluate-cascade-critical"><span class="std std-ref">Calculate critical state model</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>evaluate_cascade_throat</cite>: see <a class="reference internal" href="../model_description/choking_models.html#evaluate-throat"><span class="std std-ref">Evaluate cascade throat model</span></a> for model details.</p></li>
+<li><p class="sd-card-text"><cite>evaluate_cascade_isentropic_throat</cite>: see <a class="reference internal" href="../model_description/choking_models.html#isentropic-throat"><span class="std std-ref">Isentropic throat model</span></a> for model details.</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Objective Functions</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>efficieny_ts</cite>: Total-to-static efficiency.</p></li>
+<li><p class="sd-card-text"><cite>none</cite>: Returns 0 as objective function. Will simply attempt to satisfy constraints</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Constraints</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>design_optimization.constraints</cite>. Remember to add
+type (<cite>&lt;</cite>, <cite>&gt;</cite> or <cite>=</cite>), <cite>lower_bound</cite> and <cite>upper_bound</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>mass_flow_rate</cite>: Mass flow rate.</p></li>
+<li><p class="sd-card-text"><cite>interstage_flaring</cite>: Inlet area to ext area ratio inbetween cascades.</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Radius Types</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">These inputs are valid for <cite>design_optimization.radius_type</cite>:</p>
+<ul class="simple">
+<li><p class="sd-card-text"><cite>constant_hub</cite>: Generates turbine with constant hub radius.</p></li>
+<li><p class="sd-card-text"><cite>constant_mean</cite>: Generates turbine with constant mean radius.</p></li>
+<li><p class="sd-card-text"><cite>constant_tip</cite>: Generates turbine with constant tip radius.</p></li>
+</ul>
+</div>
+</details></section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="design_optimization.html" class="btn btn-neutral float-left" title="Design optimization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../model_description.html" class="btn btn-neutral float-right" title="Model Description" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
