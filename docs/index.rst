@@ -49,7 +49,7 @@ Contents:
    source/api_reference
 
 .. note::
-  The package is for now constrained to axial-turbines, but is intended to cover other types of turbomachinery in future versions. 
+  The package is for now limited to axial-turbines, but is intended to cover other types of turbomachinery in future versions. 
 
 
 

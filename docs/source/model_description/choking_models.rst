@@ -5,6 +5,8 @@ Choking models
 
 The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following. 
 
+.. _isentropic_throat:
+
 Isentropic throat model
 ------------------------------
 
@@ -63,6 +65,8 @@ where
     - :math:`A` is the flow area.
     - Subscript :math:`\mathrm{out}` refer to the exit plane.
     - Superscript :math:`^*` refer to the critical state. 
+
+.. _evaluate_throat:
 
 Evaluate cascade throat model
 ------------------------------

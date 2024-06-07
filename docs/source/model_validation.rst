@@ -4,8 +4,8 @@ Model validation
 ==============================
 
 The purpose of this section is to demonstrate the accuracy and relibility in predicting axial turbines performance. For this purpose, three cases with qualitatively different behavior are selected. 
-This includes two single-stage turbines, where one experiences choking in the stator (:cite:`kofskey_turbine_1974`), and the other in the rotor (:cite:`kofskey_design_1972`), and a two-stage turbine, to show the capability of the model to
-simulate multistage turbine configurations (:cite:`kofskey_design_1972`):
+This includes two single-stage turbines, where one experiences choking in the stator :cite:`kofskey_turbine_1974`, and the other in the rotor :cite:`kofskey_design_1972`, and a two-stage turbine, to show the capability of the model to
+simulate multistage turbine configurations :cite:`kofskey_design_1972`:
 
    - :ref:`choked_stator`
    - :ref:`choked_rotor`
