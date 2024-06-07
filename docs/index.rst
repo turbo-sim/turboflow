@@ -21,13 +21,6 @@ and should present a valuable resource for engineers and researchers working in 
 Features
 ========
 
-.. - **Performance Prediction:** Accurately predict the performance of axial turbines based on various input parameters.
-.. - **Design Optimization:** Optimize preliminary turbine design to achieve optimal performance metrics.
-.. - **Flexible model:** The model should cover a wide range of axial-turbine geometries, and should give users the ability to choose from different options for submodels, including loss and deviation correlations.
-.. - **Easy-to-use:** Intuitive and easy setup of input parameters for rapid development and analysis. 
-.. - **Extensive Documentation:** Comprehensive guides and examples to help you get started quickly.
-
-
 - **Performance Prediction:** Accurately predict the performance of axial turbines based on various input parameters.
 - **Design Optimization:** Optimize preliminary turbine design to achieve optimal performance metrics.
 - **Equation-oriented problem formulation:** Equation-oriented problem formulation for performance analysis and design optimization.
@@ -49,6 +42,7 @@ Contents:
    source/tutorials
    source/model_description
    source/model_validation
+   source/developer_guidlines
    source/nomenclature
    source/glossary
    source/bibliography
