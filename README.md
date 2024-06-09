@@ -44,7 +44,7 @@ This guide will walk you through the process of installing `Turboflow` via `pip`
 
 5. Verify the installation by running the following command in your terminal:
    ```
-   python -c "import turboflow; turboflow.print_package_details()"
+   python -c "import turboflow; turboflow.print_package_info()"
    ```
 
    If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.
