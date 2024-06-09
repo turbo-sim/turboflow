@@ -7,11 +7,13 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 1
+CASE = 10
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
+
+tf.print_package_info()
 
 # schema = tf.AxialTurbine.model_json_schema()
 # print(schema["$defs"]["Constraint"].keys())
