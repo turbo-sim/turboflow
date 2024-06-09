@@ -11,6 +11,7 @@ if os_name not in SUPPORTED_OS:
     raise Exception("OS not supported")
 os_name = os_name.lower()
 
+# Define configuration files for generation of regression data
 CONFIG_FILES_PERFORMANCE_ANALYSIS = [
     "performance_analysis_evaluate_cascade_throat.yaml",
     "performance_analysis_evaluate_cascade_critical.yaml",
@@ -20,8 +21,8 @@ CONFIG_FILES_PERFORMANCE_ANALYSIS = [
     "performance_analysis_zero_deviation.yaml",
     "performance_analysis_ainley_mathieson.yaml",
 ]
-
 CONFIG_FILES_DESIGN_OPTIMIZATION = ["design_optimization.yaml"]
+
 TEST_FOLDER = "tests"
 DATA_DIR = f"regression_data_{os_name.lower()}"
 CONFIG_DIR = "config_files"
