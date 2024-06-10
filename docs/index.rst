@@ -41,7 +41,6 @@ Contents:
    source/installation
    source/tutorials
    source/model_description
-   source/model_validation
    source/developer_guidlines
    source/nomenclature
    source/glossary
