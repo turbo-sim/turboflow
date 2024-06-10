@@ -1,4 +1,4 @@
----
+<!-- ---
 title: 'TurboFlow: Meanline Modelling of Axial Turbines'
 tags:
   - python
@@ -23,7 +23,7 @@ affiliations:
     index: 2
 
 date: 6 June 2024
-bibliography: paper.bib
+bibliography: paper.bib -->
 
 # Summary
 
@@ -34,12 +34,12 @@ select and combine different models for calculating losses, deviation, and choki
 which provides advanced equations of state for real-gas fluid analysis. The model accuracy and computational robustness have been demonstrated through comprehensive validation 
 against experimental data. 
 
-TurboFlow comes with comprehensive documentation, including installation guides, tutorials, detailed model descriptions and validation data. 
+TurboFlow comes with comprehensive documentation, including installation guides, tutorials and detailed model descriptions. 
 This extensive resource ensures that users can easily learn how to use the package and apply it effectively in their projects. For more details, visit the [documentation pages](https://turbo-sim.github.io/TurboFlow/).
 Additionally, the package includes preconfigured examples that demonstrate performance analysis and design optimization. These examples serve as practical guides and starting points for users to 
 apply TurboFlow to their specific turbine projects. 
 
-The package can be found in a [github repository](https://github.com/turbo-sim/TurboFlow) [$turboflow]. Through Github Actions, an automated test suite is included, which tests the functionality of performance analysis and design optimization, as well as all submodels, on both Windows and Linux operating systems. It enables continuous integration, 
+The package can be found in a [github repository](https://github.com/turbo-sim/TurboFlow) [@turboflow]. Through Github Actions, an automated test suite is included, which tests the functionality of performance analysis and design optimization, as well as all submodels, on both Windows and Linux operating systems. It enables continuous integration, 
 ensuring that code changes are systematically tested and validated. This comprehensive testing framework provides confidence that the code works as expected, maintaining the reliability of 
 the package with each update.
 
@@ -54,7 +54,7 @@ Furthermore, meanline models offers a method to quickly but accurately predict p
 off-design performance prediction, the meanline model presents an invaluable tool for prediction of turbomachinery performance in power plants, especially as the importance of flexibility and 
 part-load operation increases due to the growing interest in power production from renewable resources [@rua_optimal_2020].
 
-Despite their importance, there is no established reference tool for turbomachinery modeling. There are several commercial tools are available:
+Despite their importance, there is no established reference tool for turbomachinery modeling. There are several commercial tools available:
 
 - [Cfturbo](https://cfturbo.com/)
 - [AxSTREAM](https://www.softinway.com/software/)
@@ -67,20 +67,20 @@ Several meanline models developed in academic settings also suffer from being cl
 
 - zTurbo from TU-delft [@pini_preliminary_2013]
 - axTur from Politecnico di Milano [@macchi_organic_2017]
-- OTAC from Nasa Glenn research Center [@{hendricks_meanline_2016]
+- OTAC from Nasa Glenn research Center [@hendricks_meanline_2016]
 
 The few open-source meanline models that do exist come with significant limitations in terms of programming language and restricted functionality. 
 The opens source meanline models and their limitation are summarized in the following table: 
-+------------------------------------+------+--------------------------------------------------+
+
 | Reference                          | Year | Limitation                                       |
-+:==================================:+:====:+:================================================:+
+|------------------------------------|------|--------------------------------------------------|
 | [@genrup_reduced-order_2005]       | 2005 | Based on proprietary language (MATLAB)           |
 | [@denton_multallopen_2017]         | 2017 | Based on legacy programming language (FORTRAN77) |
 | [@agromayor_preliminary_2019]      | 2019 | Only design optimization                         |
-+------------------------------------+------+--------------------------------------------------+
 
-Existing models also typically use a sequential model formulation, solving model equations through multiple nested iterations. This approach can lead to unreliable convergence and high execution 
-times due to the numerous iterations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency.
+
+Existing models also typically use a sequential model formulation, solving sets of equations sequentially through multiple nested iterations. This approach can lead to unreliable convergence and prolonged execution 
+times due to the numerous equation evaluations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency.
 
 TurboFlow addresses these gaps with a robust, open-source framework for meanline turbomachinery modeling. It combines performance analysis and design optimization within a flexible, modular 
 architecture, accommodating various submodels seamlessly. This flexibility allows for the integration of new submodels, giving users the options to tailor the analysis for their application. 
