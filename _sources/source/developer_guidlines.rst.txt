@@ -46,7 +46,7 @@ This guide is intended for developers who wish to contribute to or modify the Tu
 
    .. code-block:: bash
 
-      python -c "import turboflow; turboflow.print_package_details()"
+      python -c "import turboflow; turboflow.print_package_info()"
 
    If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.
 
