@@ -1,29 +1,34 @@
-<!-- ---
+---
 title: 'TurboFlow: Meanline Modelling of Axial Turbines'
 tags:
   - python
   - turbomachinery
-  - [Roberto: Meanline modeling]
-  - preliminary design [Roberto: I think design optimization sounds better]
+  - meanline modeling
+  - design optimization
   - performance analysis
 authors:
   - name: Lasse B. Anderson
     orcid: 0009-0001-2293-9954
+    corresponding: true
     affiliation: 1
   - name: Roberto Agromayor
-    orcid: [Roberto: 0009-0009-9289-1130]
+    orcid: 0009-0009-9289-1130
     affiliation: 2
   - name: Lars O. Nord
     orcid: 
     affiliation: 1
+  - name: Fredrik Haglind
+    orcid: 
+    affiliation: 2
 affiliations:
   - name: Department of Energy and Process Engineering, Norwegian University of Science and Technology, Trondheim, Norway
     index : 1
-  - name: Department of Civil and Mechanical Engineering, Technical University of Denmarj, Kgs. Lyngby, Denmark
+  - name: Department of Civil and Mechanical Engineering, Technical University of Denmark, Kgs. Lyngby, Denmark
     index: 2
 
-date: 6 June 2024
-bibliography: paper.bib -->
+date: 10 June 2024
+bibliography: paper.bib
+---
 
 # Summary
 
@@ -77,7 +82,6 @@ The opens source meanline models and their limitation are summarized in the foll
 | [@genrup_reduced-order_2005]       | 2005 | Based on proprietary language (MATLAB)           |
 | [@denton_multallopen_2017]         | 2017 | Based on legacy programming language (FORTRAN77) |
 | [@agromayor_preliminary_2019]      | 2019 | Only design optimization                         |
-
 
 Existing models also typically use a sequential model formulation, solving sets of equations sequentially through multiple nested iterations. This approach can lead to unreliable convergence and prolonged execution 
 times due to the numerous equation evaluations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency.
