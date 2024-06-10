@@ -50,41 +50,20 @@ def print_banner():
     print(banner)
 
 __version__ = "0.1.10"
+URL_GITHUB = "https://github.com/turbo-sim/TurboFlow"
+URL_DOCS = "https://turbo-sim.github.io/TurboFlow/"
 
 def print_package_info():
     """Prints package information with predefined values."""
 
-    info = f""" Version:       {__version__}"""
+    info = f""" Version:       {__version__}
+ Repository:    {URL_GITHUB}
+ Documentation: {URL_DOCS}"""
     
     # Assuming print_banner and BREAKLINE are defined elsewhere in your code
     print_banner()
     print(BREAKLINE)
     print(info)
 
-# def print_package_info():
-#     """Prints package information."""
-#     try:
-#         pyproject_path = find_pyproject_toml()
-#         with open(pyproject_path, "r") as f:
-#             pyproject = toml.load(f)
-
-#         poetry_config = pyproject.get("tool", {}).get("poetry", {})
-#         info = f""" Version:       {poetry_config.get("version")}
-#  Repository:    {poetry_config.get("repository")}
-#  Documentation: {poetry_config.get("documentation")}"""
-#         print_banner()
-#         print(BREAKLINE)
-#         print(info)
-#     except FileNotFoundError:
-#         print("Error: pyproject.toml file not found.")
-
-
-# def find_pyproject_toml():
-#     """Finds the path to the pyproject.toml file."""
-#     current_script_path = os.path.abspath(__file__)
-#     current_script_dir = os.path.dirname(current_script_path)
-#     project_root_dir = os.path.dirname(current_script_dir)
-#     pyproject_path = os.path.join(project_root_dir, "pyproject.toml")
-#     return pyproject_path
 
 
