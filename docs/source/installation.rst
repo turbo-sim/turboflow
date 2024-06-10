@@ -10,7 +10,15 @@ User Installation Guide
 
 This guide will walk you through the process of installing `Turboflow` via `pip`. To isolate the Turboflow installation and avoid conflicts with other Python packages, it is recommended to create a dedicated Conda virtual environment.
 
-1. `Install Miniconda <https://docs.anaconda.com/free/miniconda/miniconda-install/>`_ if you don't have it already.
+1. Ensure conda is installed:
+
+   - Check if conda is installed in your terminal:
+
+   .. code-block:: bash
+
+      conda list
+
+   - If installed packages do not appear, `install conda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
 
 2. Open a terminal or command prompt and create a new virtual environment named ``turboflow_env`` with Python 3.11:
 
