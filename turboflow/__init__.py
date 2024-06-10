@@ -49,7 +49,7 @@ def print_banner():
     print(BREAKLINE)
     print(banner)
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 def print_package_info():
     """Prints package information with predefined values."""
