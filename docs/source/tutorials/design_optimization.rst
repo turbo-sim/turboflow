@@ -7,7 +7,7 @@ This section guides you through the process of optimizing the design of an axial
 Design optimization is excecuted in two steps:
 
     1. Load configuration file.
-    3. Compute optimal turbine.
+    2. Compute optimal turbine.
 
 Illustrated by a code example:
 
