@@ -10,25 +10,49 @@ Developer Installation Guide
 
 This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.
 
-1. Clone the Turboflow remote repository:
+1. **Fork the repository:**
+
+   - Navigate to the `project's GitHub page <https://github.com/turbo-sim/TurboFlow>`_.
+   - Click the "Fork" button in the upper right corner of the repository page to create a copy of the repository under your own GitHub account.
+
+
+2. **Clone the forked repository:**
+
+   - Open your terminal.
+   - Run the following command, replacing `<your-username>` with your GitHub username:
 
    .. code-block:: bash
 
-      git clone https://github.com/turbo-sim/TurboFlow.git
+      git clone https://github.com/<your-username>/<repository-name>.git
 
-2. Create a dedicated Conda virtual environment for Turboflow development:
+   - Navigate into the cloned repository:
+
+   .. code-block:: bash
+
+      cd <repository-name>
+
+3. **Create a dedicated Conda virtual environment for Turboflow development**:
+
+   - Check that conda is installed:
+
+   .. code-block:: bash
+
+      conda list
+
+   - If not conda is installed, `install conda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
+   - Create dedicated vitrual environment for turboflow package:
 
    .. code-block:: bash
 
       conda create --name turboflow_env python=3.11
 
-3. Activate the newly created virtual environment:
+4. **Activate the newly created virtual environment**:
 
    .. code-block:: bash
 
       conda activate turboflow_env
 
-4. Install Poetry to manage dependencies:
+5. **Install Poetry to manage dependencies**:
 
    .. code-block:: bash
 
@@ -36,13 +60,13 @@ This guide is intended for developers who wish to contribute to or modify the Tu
 
    Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user's intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project's requirements.
 
-5. Use Poetry to install the required dependencies for Turboflow development:
+6. **Use Poetry to install the required dependencies for Turboflow development**:
 
    .. code-block:: bash
 
       poetry install
 
-6. Verify the installation by running the following command:
+7. **Verify the installation by running the following command**:
 
    .. code-block:: bash
 
@@ -55,13 +79,35 @@ Pull request guidelines
 
 Please follow these steps to submit a pull request.
 
-1. **Fork the repository**: Click the "Fork" button on the top right of this page.
-2. **Clone your fork**: `git clone https://github.com/turbo-sim/TurboFlow`
-3. **Create a branch**: `git checkout -b feature-name`
-4. **Make your changes**: Implement your feature or bugfix.
-5. **Commit your changes**: `git commit -m "Description of changes"`
-6. **Push to your fork**: `git push origin feature-name`
-7. **Open a pull request**: Go to your fork on GitHub and click the "New pull request" button.
+1. **Create a branch in your forked repository**:
+
+   - Open your terminal in the projects root.
+   - Create branch:
+
+   .. code-block:: bash
+
+      git checkout -b <feature-name>
+
+2. **Make your changes**:
+
+   - Implement your feature or bugfix.
+
+
+3. **Commit your changes**:
+
+   .. code-block:: bash 
+
+      git commit -m "Description of changes"
+
+4. **Push to your fork**: 
+
+   .. code-block:: bash
+
+      git push origin feature-name
+
+5. **Open a pull request**: 
+
+   - Go to your fork on GitHub and click the "New pull request" button.
 
 Testing guidlines
 -------------------

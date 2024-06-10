@@ -109,33 +109,59 @@
 <h2>Developer Installation Guide<a class="headerlink" href="#developer-installation-guide" title="Link to this heading"></a></h2>
 <p>This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
 <ol class="arabic">
-<li><p>Clone the Turboflow remote repository:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/turbo-sim/TurboFlow.git
+<li><p><strong>Fork the repository:</strong></p>
+<ul class="simple">
+<li><p>Navigate to the <a class="reference external" href="https://github.com/turbo-sim/TurboFlow">project’s GitHub page</a>.</p></li>
+<li><p>Click the “Fork” button in the upper right corner of the repository page to create a copy of the repository under your own GitHub account.</p></li>
+</ul>
+</li>
+<li><p><strong>Clone the forked repository:</strong></p>
+<ul class="simple">
+<li><p>Open your terminal.</p></li>
+<li><p>Run the following command, replacing <cite>&lt;your-username&gt;</cite> with your GitHub username:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;your-username&gt;/&lt;repository-name&gt;.git
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Navigate into the cloned repository:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>&lt;repository-name&gt;
 </pre></div>
 </div>
 </li>
-<li><p>Create a dedicated Conda virtual environment for Turboflow development:</p>
+<li><p><strong>Create a dedicated Conda virtual environment for Turboflow development</strong>:</p>
+<ul class="simple">
+<li><p>Check that conda is installed:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>list
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If not conda is installed, <a class="reference external" href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html">install conda</a>.</p></li>
+<li><p>Create dedicated vitrual environment for turboflow package:</p></li>
+</ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
 </pre></div>
 </div>
 </li>
-<li><p>Activate the newly created virtual environment:</p>
+<li><p><strong>Activate the newly created virtual environment</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>turboflow_env
 </pre></div>
 </div>
 </li>
-<li><p>Install Poetry to manage dependencies:</p>
+<li><p><strong>Install Poetry to manage dependencies</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>poetry
 </pre></div>
 </div>
 <p>Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user’s intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project’s requirements.</p>
 </li>
-<li><p>Use Poetry to install the required dependencies for Turboflow development:</p>
+<li><p><strong>Use Poetry to install the required dependencies for Turboflow development</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
 </pre></div>
 </div>
 </li>
-<li><p>Verify the installation by running the following command:</p>
+<li><p><strong>Verify the installation by running the following command</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import turboflow; turboflow.print_package_info()&quot;</span>
 </pre></div>
 </div>
@@ -146,14 +172,36 @@
 <section id="pull-request-guidelines">
 <h2>Pull request guidelines<a class="headerlink" href="#pull-request-guidelines" title="Link to this heading"></a></h2>
 <p>Please follow these steps to submit a pull request.</p>
-<ol class="arabic simple">
-<li><p><strong>Fork the repository</strong>: Click the “Fork” button on the top right of this page.</p></li>
-<li><p><strong>Clone your fork</strong>: <cite>git clone https://github.com/turbo-sim/TurboFlow</cite></p></li>
-<li><p><strong>Create a branch</strong>: <cite>git checkout -b feature-name</cite></p></li>
-<li><p><strong>Make your changes</strong>: Implement your feature or bugfix.</p></li>
-<li><p><strong>Commit your changes</strong>: <cite>git commit -m “Description of changes”</cite></p></li>
-<li><p><strong>Push to your fork</strong>: <cite>git push origin feature-name</cite></p></li>
-<li><p><strong>Open a pull request</strong>: Go to your fork on GitHub and click the “New pull request” button.</p></li>
+<ol class="arabic">
+<li><p><strong>Create a branch in your forked repository</strong>:</p>
+<ul class="simple">
+<li><p>Open your terminal in the projects root.</p></li>
+<li><p>Create branch:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>&lt;feature-name&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Make your changes</strong>:</p>
+<ul class="simple">
+<li><p>Implement your feature or bugfix.</p></li>
+</ul>
+</li>
+<li><p><strong>Commit your changes</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Description of changes&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Push to your fork</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>feature-name
+</pre></div>
+</div>
+</li>
+<li><p><strong>Open a pull request</strong>:</p>
+<ul class="simple">
+<li><p>Go to your fork on GitHub and click the “New pull request” button.</p></li>
+</ul>
+</li>
 </ol>
 </section>
 <section id="testing-guidlines">
