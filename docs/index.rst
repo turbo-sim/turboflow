@@ -8,7 +8,7 @@ TurboFlow: Mean-Line Modelling of Axial Turbines
 ..    :align: center
 ..    :scale: 50 %
 
-**Version:** 0.1.0  
+**Version:** 0.1.10  
 **Author:** Lasse Borg Anderson & Roberto Agromayor  
 **License:** MIT License
 
