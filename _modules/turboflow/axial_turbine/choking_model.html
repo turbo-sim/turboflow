@@ -102,6 +102,9 @@
     <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
+<span class="n">REGRESSION_COEFFICIENTS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;air&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.999984354</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.368037583</span><span class="p">,</span> <span class="mf">0.202442269</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.096333086</span><span class="p">,</span> <span class="mf">0.023783628</span><span class="p">],</span>
+                           <span class="s1">&#39;R125&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.999983586</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.319079827</span><span class="p">,</span> <span class="mf">0.165487456</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.078246564</span><span class="p">,</span> <span class="mf">0.01996359</span><span class="p">]}</span>
+
 
 <div class="viewcode-block" id="evaluate_choking">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.evaluate_choking">[docs]</a>
@@ -176,7 +179,6 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Invalid critical cascade model &#39;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span></div>
-
 
 
 <div class="viewcode-block" id="evaluate_cascade_throat">
@@ -267,9 +269,7 @@
 
     <span class="c1"># Evaluate critical mach</span>
     <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">loss_dict</span><span class="p">[</span><span class="s2">&quot;loss_total&quot;</span><span class="p">]</span>
-    <span class="n">critical_mass_flux</span><span class="p">,</span> <span class="n">critical_mach</span> <span class="o">=</span> <span class="n">interpolate_critical_state</span><span class="p">(</span>
-        <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;p0_rel&quot;</span><span class="p">],</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;T0_rel&quot;</span><span class="p">],</span> <span class="n">Y_tot</span>
-    <span class="p">)</span>
+    <span class="n">critical_mach</span> <span class="o">=</span> <span class="n">get_critical_mach</span><span class="p">(</span><span class="n">fluid</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">Y_tot</span><span class="p">)</span>
 
     <span class="c1"># Evaluate residual flow angle</span>
     <span class="n">beta_model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">throat_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">dm</span><span class="o">.</span><span class="n">get_subsonic_deviation</span><span class="p">(</span>
@@ -303,89 +303,49 @@
     <span class="c1"># Define output values</span>
     <span class="n">critical_state</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;critical_mach&quot;</span><span class="p">:</span> <span class="n">critical_mach</span><span class="p">,</span>
-        <span class="s2">&quot;critical_mass_flow_rate&quot;</span><span class="p">:</span> <span class="n">critical_mass_flux</span> <span class="o">*</span> <span class="n">A_throat</span><span class="p">,</span>
+        <span class="c1"># &quot;critical_mass_flow_rate&quot;: critical_mass_flux * A_throat,</span>
     <span class="p">}</span>
     <span class="n">throat_plane</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_throat&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">throat_plane</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
     <span class="k">return</span> <span class="n">residuals_critical</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">critical_state</span><span class="p">,</span> <span class="o">**</span><span class="n">throat_plane</span><span class="p">}</span></div>
 
 
-
-<div class="viewcode-block" id="interpolate_critical_state">
-<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.interpolate_critical_state">[docs]</a>
-<span class="k">def</span> <span class="nf">interpolate_critical_state</span><span class="p">(</span><span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
+<div class="viewcode-block" id="get_critical_mach">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.get_critical_mach">[docs]</a>
+<span class="k">def</span> <span class="nf">get_critical_mach</span><span class="p">(</span><span class="n">fluid_name</span><span class="p">,</span> <span class="n">Y</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute the critical mass flux and mach number from a correlation depending on the cascade inlet stagnation state and loss coefficient.</span>
-<span class="sd">    The correlation is made from linear regression analysis, and the regression coefficients are prescribed in the function.</span>
+<span class="sd">    Compute the critical Mach number based on a correlation that depends on the total loss coefficient and the type of fluid used.</span>
+<span class="sd">    The function uses a polynomial regression model where the degree and coefficients of the polynomial</span>
+<span class="sd">    are specific to the fluid type. The coefficients are applied in ascending order of polynomial degree.</span>
+<span class="sd">    Regression coefficients are stored in `REGRESSION_COEFFICIENTS`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    p0_in : float</span>
-<span class="sd">        Cascade inlet stagnation pressure.</span>
-<span class="sd">    T0_in : float</span>
-<span class="sd">        Cascade inlet stagnation temperature.</span>
+<span class="sd">    fluid_name : str</span>
+<span class="sd">        The name of the fluid for which the critical Mach number is to be computed. Must be a key in `REGRESSION_COEFFICIENTS`.</span>
 <span class="sd">    Y : float</span>
-<span class="sd">        Cascade throat total loss coefficnet.</span>
+<span class="sd">        The total loss coefficient.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
-<span class="sd">        Critical mass flux.</span>
-<span class="sd">    float</span>
-<span class="sd">        Critical mach number.</span>
+<span class="sd">        The computed critical Mach number for the given fluid and total loss coefficient.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no regression coefficients are found for the given fluid.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="mi">1</span><span class="p">,</span>
-            <span class="n">p0_in</span><span class="p">,</span>
-            <span class="n">T0_in</span><span class="p">,</span>
-            <span class="n">Y</span><span class="p">,</span>
-            <span class="n">p0_in</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">T0_in</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">Y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">p0_in</span> <span class="o">*</span> <span class="n">T0_in</span><span class="p">,</span>
-            <span class="n">p0_in</span> <span class="o">*</span> <span class="n">Y</span><span class="p">,</span>
-            <span class="n">T0_in</span> <span class="o">*</span> <span class="n">Y</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">fluid_name</span> <span class="ow">in</span> <span class="n">REGRESSION_COEFFICIENTS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">coefficients</span> <span class="o">=</span> <span class="n">REGRESSION_COEFFICIENTS</span><span class="p">[</span><span class="n">fluid_name</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No regression coefficients found for fluid: </span><span class="si">{</span><span class="n">fluid_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="n">coeff_mach_crit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="mf">9.97808878e-01</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">8.59556818e-09</span><span class="p">,</span>
-            <span class="mf">2.18283101e-05</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">3.38413836e-01</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">4.89469816e-14</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">5.99021408e-08</span><span class="p">,</span>
-            <span class="mf">9.93519991e-02</span><span class="p">,</span>
-            <span class="mf">7.71201115e-11</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">4.13346725e-09</span><span class="p">,</span>
-            <span class="mf">4.91317761e-06</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
+    <span class="n">mach_crit</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">coefficients</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">Y</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">))])</span>
 
-    <span class="n">coeff_phi_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="mf">9.81120337e01</span><span class="p">,</span>
-            <span class="mf">3.46299580e-03</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">6.34357717e-01</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">6.84234362e01</span><span class="p">,</span>
-            <span class="mf">1.05506996e-11</span><span class="p">,</span>
-            <span class="mf">1.04045797e-03</span><span class="p">,</span>
-            <span class="mf">3.36231786e01</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">3.81019918e-06</span><span class="p">,</span>
-            <span class="o">-</span><span class="mf">6.90348074e-04</span><span class="p">,</span>
-            <span class="mf">1.26692586e-01</span><span class="p">,</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-
-    <span class="n">mach_crit</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">coeff_mach_crit</span><span class="p">)</span>
-    <span class="n">phi_max</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">coeff_phi_max</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">phi_max</span><span class="p">,</span> <span class="n">mach_crit</span></div>
-
+    <span class="k">return</span> <span class="n">mach_crit</span></div>
 
 
 <div class="viewcode-block" id="evaluate_cascade_critical">

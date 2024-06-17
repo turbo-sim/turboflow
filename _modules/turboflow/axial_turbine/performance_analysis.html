@@ -438,28 +438,27 @@
             <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">x0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_initial_guess</span><span class="p">(</span>
                 <span class="n">initial_guess</span>
-            <span class="p">)</span>  <span class="c1"># TODO: Roberto_17.05.2023: It seems we are not using this value. Why take it as output then?</span>
+            <span class="p">)</span> 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Trying to solve the problem using </span><span class="si">{</span><span class="n">SOLVER_MAP</span><span class="p">[</span><span class="n">method</span><span class="p">]</span><span class="si">}</span><span class="s2"> method&quot;</span><span class="p">)</span>
             <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
 
             <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
             <span class="c1"># TODO: Roberto: add the option to use optimizers as solver depending on the method specified?</span>
-            <span class="c1"># TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?</span>
 
             <span class="k">try</span><span class="p">:</span> 
-                <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span>                
-                
+                <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">func_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span> 
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Error during solving: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">solver</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-
             <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
                 <span class="k">break</span>
         <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
             <span class="k">break</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; WARNING: All attempts failed to converge&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: All attempts failed to converge&quot;</span><span class="p">)</span>
         <span class="c1"># TODO: Add messages to Log file</span>
 
     <span class="k">return</span> <span class="n">solver</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">results</span></div>
