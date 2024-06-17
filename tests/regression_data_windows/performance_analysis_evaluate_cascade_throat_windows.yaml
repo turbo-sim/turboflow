@@ -14,7 +14,7 @@ simulation_options:
   loss_model:
     model: benner
     loss_coefficient: stagnation_pressure
-    custom_value: 0.1
+    custom_value: 0.0
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
       profile: 1.0
@@ -95,7 +95,7 @@ design_optimization:
   constraints: null
   solver_options:
     library: scipy
-    method: slsqp
+    method: nelder-mead
     tolerance: 1.0e-05
     max_iterations: 100
     derivative_method: 2-point
