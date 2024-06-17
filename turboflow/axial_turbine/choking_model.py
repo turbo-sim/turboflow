@@ -12,6 +12,9 @@ CHOKING_MODELS = [
     "evaluate_cascade_isentropic_throat",
 ]
 
+REGRESSION_COEFFICIENTS = {'air' : [0.999984354, -0.368037583, 0.202442269, -0.096333086, 0.023783628],
+                           'R125' : [0.999983586, -0.319079827, 0.165487456, -0.078246564, 0.01996359]}
+
 
 def evaluate_choking(
     choking_input,
@@ -84,7 +87,6 @@ def evaluate_choking(
         raise ValueError(
             f"Invalid critical cascade model '{model}'. Available options: {options}"
         )
-
 
 def evaluate_cascade_throat(
     choking_input,
@@ -172,9 +174,7 @@ def evaluate_cascade_throat(
 
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
-    critical_mass_flux, critical_mach = interpolate_critical_state(
-        inlet_plane["p0_rel"], inlet_plane["T0_rel"], Y_tot
-    )
+    critical_mach = get_critical_mach(fluid.name, Y_tot)
 
     # Evaluate residual flow angle
     beta_model = np.sign(throat_plane["beta"]) * dm.get_subsonic_deviation(
@@ -208,86 +208,46 @@ def evaluate_cascade_throat(
     # Define output values
     critical_state = {
         "critical_mach": critical_mach,
-        "critical_mass_flow_rate": critical_mass_flux * A_throat,
+        # "critical_mass_flow_rate": critical_mass_flux * A_throat,
     }
     throat_plane = {f"{key}_throat": val for key, val in throat_plane.items()}
 
     return residuals_critical, {**critical_state, **throat_plane}
 
-
-def interpolate_critical_state(p0_in, T0_in, Y):
+def get_critical_mach(fluid_name, Y):
     r"""
-    Compute the critical mass flux and mach number from a correlation depending on the cascade inlet stagnation state and loss coefficient.
-    The correlation is made from linear regression analysis, and the regression coefficients are prescribed in the function.
+    Compute the critical Mach number based on a correlation that depends on the total loss coefficient and the type of fluid used.
+    The function uses a polynomial regression model where the degree and coefficients of the polynomial
+    are specific to the fluid type. The coefficients are applied in ascending order of polynomial degree.
+    Regression coefficients are stored in `REGRESSION_COEFFICIENTS`.
 
     Parameters
     ----------
-    p0_in : float
-        Cascade inlet stagnation pressure.
-    T0_in : float
-        Cascade inlet stagnation temperature.
+    fluid_name : str
+        The name of the fluid for which the critical Mach number is to be computed. Must be a key in `REGRESSION_COEFFICIENTS`.
     Y : float
-        Cascade throat total loss coefficnet.
+        The total loss coefficient.
 
     Returns
     -------
     float
-        Critical mass flux.
-    float
-        Critical mach number.
+        The computed critical Mach number for the given fluid and total loss coefficient.
+
+    Raises
+    ------
+    ValueError
+        If no regression coefficients are found for the given fluid.
 
     """
 
-    x = np.array(
-        [
-            1,
-            p0_in,
-            T0_in,
-            Y,
-            p0_in**2,
-            T0_in**2,
-            Y**2,
-            p0_in * T0_in,
-            p0_in * Y,
-            T0_in * Y,
-        ]
-    )
+    if fluid_name in REGRESSION_COEFFICIENTS.keys():
+        coefficients = REGRESSION_COEFFICIENTS[fluid_name]
+    else:
+        raise ValueError(f"No regression coefficients found for fluid: {fluid_name}")
 
-    coeff_mach_crit = np.array(
-        [
-            9.97808878e-01,
-            -8.59556818e-09,
-            2.18283101e-05,
-            -3.38413836e-01,
-            -4.89469816e-14,
-            -5.99021408e-08,
-            9.93519991e-02,
-            7.71201115e-11,
-            -4.13346725e-09,
-            4.91317761e-06,
-        ]
-    )
+    mach_crit = sum([coefficients[i]*Y**i for i in range(len(coefficients))])
 
-    coeff_phi_max = np.array(
-        [
-            9.81120337e01,
-            3.46299580e-03,
-            -6.34357717e-01,
-            -6.84234362e01,
-            1.05506996e-11,
-            1.04045797e-03,
-            3.36231786e01,
-            -3.81019918e-06,
-            -6.90348074e-04,
-            1.26692586e-01,
-        ]
-    )
-
-    mach_crit = sum(x * coeff_mach_crit)
-    phi_max = sum(x * coeff_phi_max)
-
-    return phi_max, mach_crit
-
+    return mach_crit
 
 def evaluate_cascade_critical(
     choking_input,
