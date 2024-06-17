@@ -340,28 +340,27 @@ def compute_single_operation_point(
             success = False
             x0 = problem.get_initial_guess(
                 initial_guess
-            )  # TODO: Roberto_17.05.2023: It seems we are not using this value. Why take it as output then?
+            ) 
             print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
             solver_options["method"] = method
 
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
             # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
-            # TODO: Roberto: at some point in the past we tried to solve the system of equations with SLSQP, right?
 
             try: 
-                solver.solve(problem.x0)                
-                
+                solver.solve(problem.x0)
             except Exception as e:
+                if solver.func_count == 0:
+                    raise e 
                 print(f" Error during solving: {e}")
                 solver.success = False
-
             if solver.success:
                 break
         if solver.success:
             break
 
     if not solver.success:
-        print(" WARNING: All attempts failed to converge")
+        print("WARNING: All attempts failed to converge")
         # TODO: Add messages to Log file
 
     return solver, problem.results
