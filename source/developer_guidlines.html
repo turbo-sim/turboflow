@@ -206,28 +206,75 @@
 <section id="testing-guidlines">
 <h2>Testing guidlines<a class="headerlink" href="#testing-guidlines" title="Link to this heading"></a></h2>
 <p>When implementing new features or adding new submodels, you should aim to create unit tests that verifies the functionality of what you are adding.
-TurboFlow adopt <cite>pytest</cite> testing framework, and the folder <cite>tests</cite> in the root repository host the test files. Here you can find the test files:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>test_performance_analysis</cite></p></li>
-<li><p><cite>test_performance_analysis</cite></p></li>
-</ul>
-</div></blockquote>
-<p>Both these function fetch configuration files from <cite>config_files</cite> folder inside to either conduct perfromance analysis or design optimization.
-The output of these tests are compared with regression data contained in <cite>regression_data_linux</cite> or <cite>regression_data_windows</cite>, depending on the OS where the
-code runs on.</p>
-<p>With this testing structure, follow these steps to add tests:</p>
-<ol class="arabic simple">
-<li><p>Add configuration file of the test you want to add to <cite>config_files</cite>.</p></li>
-<li><p>Add configuration file of the test in <cite>CONFIG_FILES</cite> in either or both <cite>test_performance_analysis</cite> or <cite>test_performance_analysis</cite>.</p></li>
-<li><p>Generate regression data and add files to both <cite>regression_data_linux</cite> and <cite>regression_data_linux</cite>.</p></li>
+This testing framework is designed to streamline the process of testing and validating your Python code using a script that centralizes the test management.
+The framework includes functions for running tests and generating regression data, and are contained in the <cite>tests</cite> folder:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tests/
+├── config_files/       # Configuration files for tests
+│   ├── performance_analysis_ainley_mathieson.yaml
+│   ├── design_optimization.yaml
+│   └── ...
+│
+├── regression_data_linux/ # Regression data for tests in linux based os
+│   ├── performance_analysis_ainley_mathieson_linux.xlsx
+│   ├── design_optimization_linux.xlsx
+│   └── ...
+├── regression_data_windows/ # Regression data for tests in windows
+│   ├── performance_analysis_ainley_mathieson_windows.xlsx
+│   ├── design_optimization_windows.xlsx
+│   └── ...
+│
+├── __init__.py                    # Make &#39;tests&#39; a package
+|── tests_manager.py               # Centralized test management
+├── generate_regression_data.py    # Script to generate regression data
+├── test_performance_analysis.py   # Test function for performance analysis
+├── test_design_optimization.py    # Test function for design optimization
+└── ....
+</pre></div>
+</div>
+<p>The principle of the framwork is that <cite>test_performance_analysis</cite> and <cite>test_design_optimization</cite> runs performance analysis and design optimization for a subset of the configuration files
+in <cite>config_files</cite>. The outcome of these tests are compared to the respective data in <cite>regression_data_windows</cite> and <cite>regression_data_linux</cite>, depending on the OS the code is executed from.
+The subset of configuration files used for performance analysis and design optimization is determined in <cite>tests_manager</cite>, through the dictionary <cite>TEST_CONFIGS</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
+     <span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_ainley_mathieson.yaml&quot;</span><span class="p">],</span>
+     <span class="s1">&#39;design_optimization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;design_optimization.yaml&quot;</span><span class="p">],</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+<p>To <strong>add new tests</strong>, follow thes steps:</p>
+<ol class="arabic">
+<li><p><strong>Add Configuration Files:</strong></p>
+<p>Place the new configuration file in the <cite>config_files</cite> folder.</p>
+</li>
+<li><p><strong>Update `config_manager.py`:</strong></p>
+<p>Map your new configuration file with its respective test function in <cite>TEST_CONFIGS</cite> in <cite>tests_manager.py</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
+   <span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_ainley_mathieson.yaml&quot;</span><span class="p">,</span>
+                           <span class="s2">&quot;performance_analysis_new_test.yaml&quot;</span><span class="p">],</span>
+   <span class="s1">&#39;design_optimization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;design_optimization.yaml&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;design_optimization_new_test.yaml&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Generate Regression Data (if needed):</strong></p>
+<p>If the new test requires regression data, update <cite>REGRESSION_CONFIGS</cite> in <cite>tests_manager.py</cite> to include the new configuration files:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">REGRESSION_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
+<span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_new_test.yaml&quot;</span><span class="p">],</span>
+<span class="s1">&#39;design_optimization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;design_optimization_new_test.yaml&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then open your terminal in the root directory and execute the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tests/generate_regression_data.py
+</pre></div>
+</div>
+<p>The new regression data should now be within its respective <cite>regression_data</cite> folder.
+The new regression data must be added to both <cite>regression_data_linux</cite> and <cite>regression_data_windows</cite>. For the OS you do not have access to,
+you can use github actions workflow to generate regression data for other OS. See <cite>Generate Regression Data</cite> workflow in
+<a class="reference external" href="https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml">gitub repository</a>.</p>
+</li>
 </ol>
-<p>To add regression data, use the <cite>generate_regression_data</cite> script. Here you can define the <cite>CONFIG_FILES_PERFORMANCE_ANALYSIS</cite> and
-<cite>CONFIG_FILES_DESIGN_OPTIMIZATION</cite> which are list of configuration files for which you want to generate regression data.
-To add regression data for a linux based OS, you can run the <cite>generate_regression_data_ubuntu</cite> workflow from Github Actions.
-This stores the regression data files as artifacts, which can be downloaded and inserted in the regression data folder manually.</p>
-<p>Otherwise, a independent tests can be added in the <cite>tests</cite> folder.</p>
-<p>To run the test suite, simply run the following command from the root of the repository:</p>
+<p>To check that the tests behave appropriately, run the tests from the root directory:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>pytest
 </pre></div>
 </div>
