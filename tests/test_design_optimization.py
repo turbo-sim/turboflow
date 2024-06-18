@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 import turboflow as tf
 import platform
+from . import get_config_files, REGRESSION_CONFIG_DIR
 
 # Check OS type
 os_name = platform.system()
@@ -14,14 +15,6 @@ SUPPORTED_OS = ["Windows", "Linux"]
 if os_name not in SUPPORTED_OS:
     raise Exception("OS not supported")
 os_name = os_name.lower()
-
-# Define regression settings
-TEST_FOLDER = "tests"
-DATA_DIR = os.path.join(TEST_FOLDER, f"regression_data_{os_name}")
-CONFIG_DIR = os.path.join(TEST_FOLDER, "config_files")
-CONFIG_FILES = [
-    "design_optimization.yaml",
-]
 
 # Define test settings
 DIGIT_TOLERANCE = 10
@@ -58,7 +51,7 @@ def check_value(old_value, new_value, column, config_name, discrepancies):
 
 
 # Fixture to compute solver performance
-@pytest.fixture(scope="session", params=CONFIG_FILES)
+@pytest.fixture(scope="session", params=get_config_files("test_design_optimization"))
 def compute_optimal_turbine_from_config(request):
     """
     Compute solver performance for cases specified in the configuration file.
@@ -80,8 +73,8 @@ def compute_optimal_turbine_from_config(request):
     This fixture is parameterized over CONFIG_FILES and runs once for each configuration file.
     """
     print()
-    config_file = request.param
-    config_path = os.path.join(CONFIG_DIR, config_file)
+    config_path = request.param
+    config_file = os.path.basename(config_path)
     config = tf.load_config(config_path)
     solvers = tf.compute_optimal_turbine(config, export_results=False)
     return solvers, config_file
@@ -108,7 +101,7 @@ def test_design_optimization(compute_optimal_turbine_from_config):
     config_name, _ = os.path.splitext(config_file)
 
     # Load saved convergence history from Excel file
-    filename = os.path.join(DATA_DIR, f"{config_name}_{os_name}.xlsx")
+    filename = os.path.join(REGRESSION_CONFIG_DIR, f"{config_name}_{os_name}.xlsx")
     saved_df = pd.read_excel(filename, sheet_name=["solver", "overall"])
 
     # Loop over all operating points

@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 import turboflow as tf
 import platform
-
+from . import get_config_files, REGRESSION_CONFIG_DIR
 
 # Check OS type
 SUPPORTED_OS = ["Windows", "Linux"]
@@ -15,20 +15,6 @@ os_name = platform.system()
 if os_name not in SUPPORTED_OS:
     raise Exception("OS not supported")
 os_name = os_name.lower()
-
-# Define regression settings
-TEST_FOLDER = "tests"
-DATA_DIR = os.path.join(TEST_FOLDER, f"regression_data_{os_name}")
-CONFIG_DIR = os.path.join(TEST_FOLDER, "config_files")
-CONFIG_FILES = [
-    "performance_analysis_evaluate_cascade_throat.yaml",
-    "performance_analysis_evaluate_cascade_critical.yaml",
-    "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
-    "performance_analysis_kacker_okapuu.yaml",
-    "performance_analysis_moustapha.yaml",
-    "performance_analysis_zero_deviation.yaml",
-    "performance_analysis_ainley_mathieson.yaml",
-]
 
 # Define test settings
 DIGIT_TOLERANCE = 10
@@ -66,7 +52,7 @@ def check_values(old_values, new_values, column, config_name, discrepancies):
 
 
 # Fixture to compute solver performance
-@pytest.fixture(scope="session", params=CONFIG_FILES)
+@pytest.fixture(scope="session", params=get_config_files('test_performance_analysis'))
 def compute_performance_from_config(request):
     """
     Compute solver performance for cases specified in the configuration file.
@@ -88,8 +74,8 @@ def compute_performance_from_config(request):
     This fixture is parameterized over CONFIG_FILES and runs once for each configuration file.
     """
     print()
-    config_file = request.param
-    config_path = os.path.join(CONFIG_DIR, config_file)
+    config_path = request.param
+    config_file = os.path.basename(config_path)
     config = tf.load_config(
         config_path,
     )
@@ -119,7 +105,7 @@ def test_performance_analysis(compute_performance_from_config):
     config_name, _ = os.path.splitext(config_file)
 
     # Load saved convergence history from Excel file
-    filename = os.path.join(DATA_DIR, f"{config_name}_{os_name}.xlsx")
+    filename = os.path.join(REGRESSION_CONFIG_DIR, f"{config_name}_{os_name}.xlsx")
     saved_df = pd.read_excel(filename, sheet_name=["solver", "overall"])
 
     # Loop over all operating points
