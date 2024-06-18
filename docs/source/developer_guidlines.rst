@@ -113,29 +113,86 @@ Testing guidlines
 -------------------
 
 When implementing new features or adding new submodels, you should aim to create unit tests that verifies the functionality of what you are adding. 
-TurboFlow adopt `pytest` testing framework, and the folder `tests` in the root repository host the test files. Here you can find the test files:
+This testing framework is designed to streamline the process of testing and validating your Python code using a script that centralizes the test management. 
+The framework includes functions for running tests and generating regression data, and are contained in the `tests` folder:
 
-   - `test_performance_analysis`
-   - `test_performance_analysis`
+.. code-block:: text
 
-Both these function fetch configuration files from `config_files` folder inside to either conduct perfromance analysis or design optimization.
-The output of these tests are compared with regression data contained in `regression_data_linux` or `regression_data_windows`, depending on the OS where the
-code runs on. 
+    tests/
+    ├── config_files/       # Configuration files for tests
+    │   ├── performance_analysis_ainley_mathieson.yaml
+    │   ├── design_optimization.yaml
+    │   └── ...
+    │
+    ├── regression_data_linux/ # Regression data for tests in linux based os
+    │   ├── performance_analysis_ainley_mathieson_linux.xlsx
+    │   ├── design_optimization_linux.xlsx
+    │   └── ...
+    ├── regression_data_windows/ # Regression data for tests in windows
+    │   ├── performance_analysis_ainley_mathieson_windows.xlsx
+    │   ├── design_optimization_windows.xlsx
+    │   └── ...
+    │
+    ├── __init__.py                    # Make 'tests' a package
+    |── tests_manager.py               # Centralized test management
+    ├── generate_regression_data.py    # Script to generate regression data
+    ├── test_performance_analysis.py   # Test function for performance analysis
+    ├── test_design_optimization.py    # Test function for design optimization
+    └── ....                         
 
-With this testing structure, follow these steps to add tests:
+The principle of the framwork is that `test_performance_analysis` and `test_design_optimization` runs performance analysis and design optimization for a subset of the configuration files 
+in `config_files`. The outcome of these tests are compared to the respective data in `regression_data_windows` and `regression_data_linux`, depending on the OS the code is executed from. 
+The subset of configuration files used for performance analysis and design optimization is determined in `tests_manager`, through the dictionary `TEST_CONFIGS`:
 
-1. Add configuration file of the test you want to add to `config_files`.  
-2. Add configuration file of the test in `CONFIG_FILES` in either or both `test_performance_analysis` or `test_performance_analysis`.
-3. Generate regression data and add files to both `regression_data_linux` and `regression_data_linux`.
+.. code-block:: python
 
-To add regression data, use the `generate_regression_data` script. Here you can define the `CONFIG_FILES_PERFORMANCE_ANALYSIS` and 
-`CONFIG_FILES_DESIGN_OPTIMIZATION` which are list of configuration files for which you want to generate regression data. 
-To add regression data for a linux based OS, you can run the `generate_regression_data_ubuntu` workflow from Github Actions. 
-This stores the regression data files as artifacts, which can be downloaded and inserted in the regression data folder manually. 
+   TEST_CONFIGS = {
+        'performance_analysis': ["performance_analysis_ainley_mathieson.yaml"],
+        'design_optimization': ["design_optimization.yaml"],
+    }
 
-Otherwise, a independent tests can be added in the `tests` folder. 
+To **add new tests**, follow thes steps:
 
-To run the test suite, simply run the following command from the root of the repository:
+1. **Add Configuration Files:**
+
+   Place the new configuration file in the `config_files` folder.
+
+2. **Update `config_manager.py`:**
+
+   Map your new configuration file with its respective test function in `TEST_CONFIGS` in `tests_manager.py`:
+   
+   .. code-block:: python
+
+      TEST_CONFIGS = {
+         'performance_analysis': ["performance_analysis_ainley_mathieson.yaml",
+                                 "performance_analysis_new_test.yaml"],
+         'design_optimization': ["design_optimization.yaml",
+                              "design_optimization_new_test.yaml"],
+      }
+
+3. **Generate Regression Data (if needed):**
+
+   If the new test requires regression data, update `REGRESSION_CONFIGS` in `tests_manager.py` to include the new configuration files:
+
+   .. code-block:: python
+
+      REGRESSION_CONFIGS = {
+      'performance_analysis': ["performance_analysis_new_test.yaml"],
+      'design_optimization': ["design_optimization_new_test.yaml"],
+      }
+
+   Then open your terminal in the root directory and execute the following command:
+
+   .. code-block:: bash 
+
+      python tests/generate_regression_data.py
+
+   The new regression data should now be within its respective `regression_data` folder. 
+   The new regression data must be added to both `regression_data_linux` and `regression_data_windows`. For the OS you do not have access to, 
+   you can use github actions workflow to generate regression data for other OS. See `Generate Regression Data` workflow in 
+   `gitub repository <https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml>`_.
+
+To check that the tests behave appropriately, run the tests from the root directory:
 
 .. code-block:: bash
 
