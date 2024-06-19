@@ -35,7 +35,10 @@ performance_analysis :
     plot_convergence: True
 
 design_optimization:
-  objective_function: efficiency_ts
+  objective_function: 
+    variable : overall.efficiency_ts
+    scale : 10
+    type : maximize
   radius_type : constant_mean
   variables :
     v_in :
@@ -117,11 +120,11 @@ design_optimization:
     cascade_type : 
       value : ["stator", "rotor"]
   constraints :
-    mass_flow_rate :
+    overall.mass_flow_rate :
       type : "="
       value : 10.66
       normalize : True 
-    interstage_flaring :
+    additional_constraints.interspace_area_ratio :
       type : "="
       value : 1
       normalize : True
