@@ -17,7 +17,7 @@ CASE = 3
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("R125.yaml")
-config = tf.load_config(CONFIG_FILE)
+config = tf.load_config(CONFIG_FILE, print_summary = False)
 
 # Run calculations
 if CASE == 1:

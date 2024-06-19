@@ -55,7 +55,10 @@ geometry:
   throat_location_fraction: [1, 1]
 
 design_optimization:
-  objective_function: efficiency_ts
+  objective_function: 
+    variable : overall.efficiency_ts
+    scale : 10
+    type : maximize
   variables :
     specific_speed :
       value : 1.2
@@ -136,11 +139,11 @@ design_optimization:
     cascade_type : 
       value : ["stator", "rotor"]
   constraints : # Optional
-    mass_flow_rate :
+    overall.mass_flow_rate :
       type : "="
       value : 10.66
       normalize : True 
-    interstage_flaring :
+    additional_constraints.interspace_area_ratio :
       type : "="
       value : 1
       normalize : True
