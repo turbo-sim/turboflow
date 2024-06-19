@@ -12,9 +12,6 @@ from .. import properties as props
 from . import performance_analysis as pa
 
 
-CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
-AVAILABLE_INEQ_CONSTRAINTS = ["mass_flow_rate", "interstage_flaring"]
-OBJECTIVE_FUNCTIONS = ["efficiency_ts", "none"]
 RADIUS_TYPE = ["constant_mean", "constant_hub", "constant_tip"]
 ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
 INDEPENDENT_VARIABLES = [
@@ -207,7 +204,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.
     convert_performance_analysis_results(performance_problem)
         Generate a feasable set of initial guess from a solved performance analysis problem object.
-
+    evaluate_constraints:
+        Evaluate constraints
+    get_objective_function:
+        Change scale for the objective function depending on its type.
+    get_nested_value:
+        Get values from a dictionary of Dataframes
     """
 
     def __init__(self, config):
@@ -222,14 +224,19 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         # Get list of design variables
-        self.obj_func = config["design_optimization"]["objective_function"]
+        # self.obj_func = config["design_optimization"]["objective_function"]
+        self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
             config["design_optimization"]["constraints"]
         )
 
-        # Update design point
-        self.update_boundary_conditions(config["operation_points"])
+        # Update design point 
+        # TODO: Differ between operation-points and design point? 
+        if isinstance(config["operation_points"], (list, np.ndarray)):
+            self.update_boundary_conditions(config["operation_points"][0])
+        else:
+            self.update_boundary_conditions(config["operation_points"])
 
         # Initialize model options
         self.model_options = config["simulation_options"]
@@ -311,74 +318,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 )
             ]
 
-    def extend_variables(self, variables):
-        """
-        Index the design variables for each cascade for the default initial guess.
-
-        The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.
-        This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
-        for example `aspect_ratio_1` for first cascade and etc.
-
-        Parameters
-        ----------
-        variables : dict
-            A dictionary where each key maps to a dictionary containing at least a
-            "value" key. The "value" can be a list, numpy array, or float.
-
-        Returns
-        -------
-        dict
-            A dictionary where each list or numpy array in the original dictionary
-            is expanded into individual elements with keys formatted as "key_index".
-            Float values are kept as is.
-
-        """
-
-        variables_extended = {}
-        for key in variables.keys():
-            if isinstance(variables[key]["value"], (list, np.ndarray)):
-                for i in range(len(variables[key]["value"])):
-                    variables_extended[f"{key}_{i+1}"] = variables[key]["value"][i]
-            elif isinstance(variables[key]["value"], float):
-                variables_extended[key] = variables[key]["value"]
-
-        return variables_extended
-
-    def get_given_bounds(self, design_variables):
-        """
-        Retrieves the lower and upper bounds for the given design variables.
-
-        Parameters
-        ----------
-        design_variables : dict
-            A dictionary where each key maps to a dictionary containing a
-            "value" key, a "lower_bound" key, and an "upper_bound" key. The values
-            can be a list, numpy array, or float.
-
-        Returns
-        -------
-        lb : list
-            A list of lower bounds for the design variables.
-        ub : list
-            A list of upper bounds for the design variables.
-
-        """
-
-        lb = []
-        ub = []
-        for key in design_variables.keys():
-            if isinstance(design_variables[key]["value"], list):
-                lb += design_variables[key]["lower_bound"]
-                ub += design_variables[key]["upper_bound"]
-            elif isinstance(design_variables[key]["value"], np.ndarray):
-                lb += list(design_variables[key]["lower_bound"])
-                ub += list(design_variables[key]["upper_bound"])
-            elif isinstance(design_variables[key]["value"], float):
-                lb += [design_variables[key]["lower_bound"]]
-                ub += [design_variables[key]["upper_bound"]]
-
-        return lb, ub
-
     def fitness(self, x):
         r"""
         Evaluate the objective function and constraints at a given pint `x`.
@@ -447,41 +386,145 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.reference_values,
         )
 
-        # Evaluate available objecitve functions
-        objective_functions = {
-            "none": 0,
-            "efficiency_ts": -self.results["overall"]["efficiency_ts"].values[0] / 10,
-        }
-        self.f = objective_functions[self.obj_func]
+        # Evaluate objective function
+        self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "section.param"
 
-        # Evaluate available equality constraints
-        available_constraints = {
-            "mass_flow_rate": self.results["overall"]["mass_flow_rate"].values[0],
-            "interstage_flaring": self.geometry["A_in"][1:]
-            / self.geometry["A_out"][0:-1],
-            "flaring": self.geometry["flaring_angle"],
-        }
+        # Evaluate additional constraints
+        self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
+            / self.geometry["A_out"][0:-1]})
+        
+        # Evaluate constraints
         self.c_eq = np.array(list(self.results["residuals"].values()))
-        self.c_ineq = np.array([])
-        for constraint in self.eq_constraints:
-            self.c_eq = np.append(
-                self.c_eq,
-                (available_constraints[constraint["variable"]] - constraint["value"])
-                / constraint["scale"],
-            )
+        self.c_eq = np.append(self.c_eq, self.evaluate_constraints(self.eq_constraints))
+        self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
 
-        for constraint in self.ineq_constraints:
-            self.c_ineq = np.append(
-                self.c_ineq,
-                (constraint["value"] - available_constraints[constraint["variable"]])
-                / constraint["scale"],
-            )
-
+        # Combine objective functions and constraint
         objective_and_constraints = psv.combine_objective_and_constraints(
             self.f, self.c_eq, self.c_ineq
         )
 
         return objective_and_constraints
+
+    def get_objective_function(self, objective):
+        """
+        Change scale for the objective function depending on its type.
+        If objective function should be maximized, the sign of the scale is changed. 
+
+        Parameters
+        -----------
+        objective : dict
+            dictionary containing variable name, type and scale of the objective function.
+
+        Returns 
+        --------
+        dict
+            dictionary containing modified scale of the objective function
+        """
+
+        if objective["type"] == "maximize":
+            objective["scale"] *= -1
+
+        return objective
+
+    def extend_variables(self, variables):
+        """
+        Index the design variables for each cascade for the default initial guess.
+
+        The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.
+        This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
+        for example `aspect_ratio_1` for first cascade and etc.
+
+        Parameters
+        ----------
+        variables : dict
+            A dictionary where each key maps to a dictionary containing at least a
+            "value" key. The "value" can be a list, numpy array, or float.
+
+        Returns
+        -------
+        dict
+            A dictionary where each list or numpy array in the original dictionary
+            is expanded into individual elements with keys formatted as "key_index".
+            Float values are kept as is.
+
+        """
+
+        variables_extended = {}
+        for key in variables.keys():
+            if isinstance(variables[key]["value"], (list, np.ndarray)):
+                for i in range(len(variables[key]["value"])):
+                    variables_extended[f"{key}_{i+1}"] = variables[key]["value"][i]
+            elif isinstance(variables[key]["value"], float):
+                variables_extended[key] = variables[key]["value"]
+
+        return variables_extended
+
+    def get_given_bounds(self, design_variables):
+        """
+        Retrieves the lower and upper bounds for the given design variables.
+
+        Parameters
+        ----------
+        design_variables : dict
+            A dictionary where each key maps to a dictionary containing a
+            "value" key, a "lower_bound" key, and an "upper_bound" key. The values
+            can be a list, numpy array, or float.
+
+        Returns
+        -------
+        lb : list
+            A list of lower bounds for the design variables.
+        ub : list
+            A list of upper bounds for the design variables.
+
+        """
+
+        lb = []
+        ub = []
+        for key in design_variables.keys():
+            if isinstance(design_variables[key]["value"], list):
+                lb += design_variables[key]["lower_bound"]
+                ub += design_variables[key]["upper_bound"]
+            elif isinstance(design_variables[key]["value"], np.ndarray):
+                lb += list(design_variables[key]["lower_bound"])
+                ub += list(design_variables[key]["upper_bound"])
+            elif isinstance(design_variables[key]["value"], float):
+                lb += [design_variables[key]["lower_bound"]]
+                ub += [design_variables[key]["upper_bound"]]
+
+        return lb, ub
+    
+    def get_nested_value(self, d, path):
+        """
+        Get values from a dictionary of Dataframes. 
+        Path is on the form `dataframe.column`, and returns `d[dataframe][column]`
+
+        Parameters
+        -----------
+        d : dict
+            Dictionary of DataFrames
+        path : str
+            String giving the path of the DataFrame values
+
+        Return
+        --------
+        numpy.ndarray  
+           Array of specified values 
+        """
+
+        keys = path.split('.')
+        return d[keys[0]][keys[1]].values
+    
+    def evaluate_constraints(self, constraints_list):
+        constraints = np.array([])
+        for constraint in constraints_list:
+            constraints = np.append(
+                constraints,
+                (self.get_nested_value(self.results, constraint["variable"]) - constraint["value"])
+                / constraint["scale"],
+            )
+        return constraints
+
 
     def get_bounds(self):
         r"""
@@ -610,7 +653,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         mass_flow_rate = None  # Initialize mass_flow_rate to None
         # Try to find mass_flow_rate from eq_constraints
         for constraint in self.eq_constraints:
-            if constraint.get("variable") == "mass_flow_rate":
+            if constraint.get("variable") == "overall.mass_flow_rate":
                 mass_flow_rate = constraint.get("value")
                 break
 

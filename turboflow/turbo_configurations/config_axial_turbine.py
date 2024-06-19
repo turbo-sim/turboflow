@@ -17,8 +17,6 @@ from ..axial_turbine import (
     LOSS_COEFFICIENTS,
     CHOKING_MODELS,
     DEVIATION_MODELS,
-    OBJECTIVE_FUNCTIONS,
-    CONSTRAINTS,
     RADIUS_TYPE,
 )
 from ..pysolver_view import (
@@ -126,38 +124,6 @@ DEFAULT_VARIABLES = {
 """
 Default set of variables for design optimization.
 """
-
-
-def check_string(input: str, input_type, options) -> str:
-    """
-    Check if a string is within a list of options.
-
-    This function checks whether the provided string is present in the list of options.
-    It raises an AssertionError if the string is not found in the options list.
-
-    Parameters
-    ----------
-    input : str
-        The string to check.
-    input_type : str
-        The type of the input, used for error message formatting.
-    options : list
-        List of valid options.
-
-    Returns
-    -------
-    str
-        The input string if it is found in the options list.
-
-    Configurations
-    --------------
-    extra : str, optional
-        Indicates that no extra input is allowed. Default is "forbid".
-    """
-    assert (
-        input in options
-    ), f"Invalid {input_type}: '{input}'. Available options: {options}"
-    return input
 
 
 class OperationPoints(BaseModel):
@@ -581,10 +547,32 @@ class Constraint(BaseModel):
     value: float
     normalize: bool
 
-ObjectiveFunctionEnum = Enum('ObjectiveFunctions', dict(zip([model.upper() for model in OBJECTIVE_FUNCTIONS], OBJECTIVE_FUNCTIONS)))
 VariableEnum = Enum('Variables', dict(zip([model.upper() for model in VARIABLES], VARIABLES)))
-ConstraintEnum = Enum('Constraints', dict(zip([model.upper() for model in CONSTRAINTS], CONSTRAINTS)))
 RadiusTypeEnum = Enum('RadiusTypes', dict(zip([model.upper() for model in RADIUS_TYPE], RADIUS_TYPE)))
+
+class ObjectiveFunction(BaseModel):
+    """
+    Model describing the objective function of a optimization problem.
+
+    Attributes
+    ----------
+    variable : str
+        Defines the objective function variable. Must be contained in the `results` structure of the problem and be on the form 'section.parameter', e.g. 'overall.efficiency_ts'.
+    type : str
+        Whether the objective function should be maxmized or minimized.
+    scale : float
+        Value to scale the objective function.
+
+    Configurations
+    --------------
+    extra : str, optional
+        Indicates that no extra input is allowed. Default is "forbid".
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    variable : str = 'overall.efficieny_ts'
+    type: Literal["maximize", "minimize"] = 'maximize'
+    scale: float = 1
 
 class DesignOptimization(BaseModel):
     """
@@ -612,14 +600,14 @@ class DesignOptimization(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
-    objective_function: ObjectiveFunctionEnum = OBJECTIVE_FUNCTIONS[0]
+    objective_function : ObjectiveFunction = ObjectiveFunction()
     variables: Dict[
         VariableEnum,
         Variable,
     ] = None
     constraints: Dict[
-        ConstraintEnum,
-        Constraint,
+    str,
+    Constraint,
     ] = None
     solver_options: SolverOptionsOptimization = SolverOptionsOptimization()
     radius_type : RadiusTypeEnum = RADIUS_TYPE[0]
