@@ -169,7 +169,10 @@ full configuration for design optimization is provided, where the required parts
         <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
 
 <span class="n">design_optimization</span><span class="p">:</span> <span class="c1"># Optional</span>
-    <span class="n">objective_function</span><span class="p">:</span> <span class="n">efficiency_ts</span> <span class="c1"># Optional</span>
+    <span class="n">objective_function</span><span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="n">variable</span> <span class="p">:</span> <span class="n">overall</span><span class="o">.</span><span class="n">efficiency_ts</span> <span class="c1"># Optional</span>
+        <span class="n">scale</span> <span class="p">:</span> <span class="mi">10</span> <span class="c1"># Optional</span>
+        <span class="nb">type</span> <span class="p">:</span> <span class="n">maximize</span> <span class="c1"># Optional</span>
     <span class="n">variables</span> <span class="p">:</span> <span class="c1"># Optional</span>
         <span class="n">specific_speed</span> <span class="p">:</span> <span class="c1"># Optional</span>
             <span class="n">value</span> <span class="p">:</span> <span class="mf">1.2</span>
@@ -250,11 +253,11 @@ full configuration for design optimization is provided, where the required parts
         <span class="n">cascade_type</span> <span class="p">:</span> <span class="c1"># Optional</span>
             <span class="n">value</span> <span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]</span>
     <span class="n">constraints</span> <span class="p">:</span> <span class="c1"># Optional</span>
-        <span class="n">mass_flow_rate</span> <span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="n">overall</span><span class="o">.</span><span class="n">mass_flow_rate</span> <span class="p">:</span> <span class="c1"># Optional</span>
             <span class="nb">type</span> <span class="p">:</span> <span class="s2">&quot;=&quot;</span>
             <span class="n">value</span> <span class="p">:</span> <span class="mf">2.5</span>
             <span class="n">normalize</span> <span class="p">:</span> <span class="kc">True</span>
-        <span class="n">interstage_flaring</span> <span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="n">additional_constraints</span><span class="o">.</span><span class="n">interstage_flaring</span> <span class="p">:</span> <span class="c1"># Optional</span>
             <span class="nb">type</span> <span class="p">:</span> <span class="s2">&quot;=&quot;</span>
             <span class="n">value</span> <span class="p">:</span> <span class="mi">1</span>
             <span class="n">normalize</span> <span class="p">:</span> <span class="kc">True</span>
@@ -271,9 +274,11 @@ full configuration for design optimization is provided, where the required parts
         <span class="n">update_on</span><span class="p">:</span> <span class="s2">&quot;gradient&quot;</span> <span class="c1"># Optional</span>
 </pre></div>
 </div>
-<p>The <cite>design_optimization</cite> section contains information on the objective function, constraints and design variables. The design variables are defined in <cite>variables</cite>, by
+<p>The <cite>design_optimization</cite> section contains information on the objective function, constraints and design variables. The objective function is defined by specifying a variable, type and scale, while the constraints
+are defined by specifying variable, value, type and if the constraint should be normalized or not. The design variables are defined in <cite>variables</cite>, by
 specifying a set of bounds in addition to the value. Note that all variables in the example must be provided, otherwise a default set of variables will be provided. Note also that
-velocities (<cite>v</cite> and <cite>w</cite>), entropies (<cite>s</cite>) and flow angles (<cite>beta</cite>) must be design variables. The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should be constant for the turbine.</p>
+velocities (<cite>v</cite> and <cite>w</cite>), entropies (<cite>s</cite>) and flow angles (<cite>beta</cite>) must be design variables.
+The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should be constant for the turbine. See <a class="reference internal" href="configuration_options_short.html#configuration-options-short"><span class="std std-ref">Configuration Options</span></a> for more information regarding the available inputs.</p>
 <p>To load the configuration file, the absolute path must be provided to the <cite>load_config</cite> function inside the <cite>turboflow</cite> package:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>

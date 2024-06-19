@@ -133,21 +133,30 @@
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Objective Functions</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<p class="sd-card-text">The objective function is defined by specifying a variable, type and scale. The objective function is fetched from the <cite>results</cite> dictionary that stores all calculated variables, and
+the variable name must be on the form <cite>key.column</cite>, where <cite>key</cite> is a key in <cite>results</cite>, and <cite>column</cite> is the column header in the DataFrame contained in <cite>results[key]</cite>. With <cite>overall</cite> as key, you can access the most
+common objective functions such as:</p>
 <ul class="simple">
-<li><p class="sd-card-text"><cite>efficieny_ts</cite>: Total-to-static efficiency.</p></li>
-<li><p class="sd-card-text"><cite>none</cite>: Returns 0 as objective function. Will simply attempt to satisfy constraints</p></li>
+<li><p class="sd-card-text"><cite>efficiency_ts</cite></p></li>
+<li><p class="sd-card-text"><cite>efficiency_tt</cite></p></li>
+<li><p class="sd-card-text"><cite>power</cite></p></li>
 </ul>
+<p class="sd-card-text">The scale is simply a nonzero float or integer, and is used to scale the objective function. This gives the user to tune the behaviour of the optimization algortihm.
+The type must be either <cite>maximize</cite> or <cite>minimize</cite>. If the type is <cite>maxmimize</cite>, the sign of the scale changes to ensure that the objective function is in fact maximized.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Constraints</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>design_optimization.constraints</cite>. Remember to add
-type (<cite>&lt;</cite>, <cite>&gt;</cite> or <cite>=</cite>), <cite>lower_bound</cite> and <cite>upper_bound</cite>:</p>
+<p class="sd-card-text">The constraints are defined by specifying variable name, value, type and normalize. Similar as for objective function, the constraints are fetched from the <cite>results</cite> dictionary that stores all calculated variables, and
+the variable name must be on the form <cite>key.column</cite>, where <cite>key</cite> is a key in <cite>results</cite>, and <cite>column</cite> is the column header in the DataFrame contained in <cite>results[key]</cite>. Here are some example of valid keys:</p>
 <ul class="simple">
-<li><p class="sd-card-text"><cite>mass_flow_rate</cite>: Mass flow rate.</p></li>
-<li><p class="sd-card-text"><cite>interstage_flaring</cite>: Inlet area to ext area ratio inbetween cascades.</p></li>
+<li><p class="sd-card-text"><cite>overall</cite> to access variables such as mass flow rate (<cite>overall.mass_flow_rate</cite>)</p></li>
+<li><p class="sd-card-text"><cite>geometry</cite> to access geometrical variables such as flaring angle (<cite>geometry.flaring_angle</cite>).</p></li>
+<li><p class="sd-card-text"><cite>plane</cite> to access variables such as relative mach number or reynolds number (<cite>plane.Ma_rel</cite> or <cite>plane.Re</cite>)</p></li>
+<li><p class="sd-card-text"><cite>additional_constraints</cite> to access additional variable such as interspace area ratio (<cite>additional_constraints.interspace_area_ratio</cite>)</p></li>
 </ul>
+<p class="sd-card-text">Type specifies if the constraint is an equaility or inequality constraint, and must be either <cite>&lt;</cite>, <cite>&gt;</cite> or <cite>=</cite>.
+Value specifies the value that the variables should be equal to, less than or greater then, and normalize specifies if the constraint be normalized with the value or not.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">

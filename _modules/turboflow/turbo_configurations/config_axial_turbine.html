@@ -107,8 +107,6 @@
     <span class="n">LOSS_COEFFICIENTS</span><span class="p">,</span>
     <span class="n">CHOKING_MODELS</span><span class="p">,</span>
     <span class="n">DEVIATION_MODELS</span><span class="p">,</span>
-    <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">,</span>
-    <span class="n">CONSTRAINTS</span><span class="p">,</span>
     <span class="n">RADIUS_TYPE</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..pysolver_view</span> <span class="kn">import</span> <span class="p">(</span>
@@ -216,41 +214,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Default set of variables for design optimization.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
-
-<div class="viewcode-block" id="check_string">
-<a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.check_string">[docs]</a>
-<span class="k">def</span> <span class="nf">check_string</span><span class="p">(</span><span class="nb">input</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">input_type</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check if a string is within a list of options.</span>
-
-<span class="sd">    This function checks whether the provided string is present in the list of options.</span>
-<span class="sd">    It raises an AssertionError if the string is not found in the options list.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    input : str</span>
-<span class="sd">        The string to check.</span>
-<span class="sd">    input_type : str</span>
-<span class="sd">        The type of the input, used for error message formatting.</span>
-<span class="sd">    options : list</span>
-<span class="sd">        List of valid options.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        The input string if it is found in the options list.</span>
-
-<span class="sd">    Configurations</span>
-<span class="sd">    --------------</span>
-<span class="sd">    extra : str, optional</span>
-<span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">assert</span> <span class="p">(</span>
-        <span class="nb">input</span> <span class="ow">in</span> <span class="n">options</span>
-    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Invalid </span><span class="si">{</span><span class="n">input_type</span><span class="si">}</span><span class="s2">: &#39;</span><span class="si">{</span><span class="nb">input</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="k">return</span> <span class="nb">input</span></div>
-
 
 
 <div class="viewcode-block" id="OperationPoints">
@@ -716,10 +679,35 @@
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span></div>
 
 
-<span class="n">ObjectiveFunctionEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;ObjectiveFunctions&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">],</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">)))</span>
 <span class="n">VariableEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;Variables&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">VARIABLES</span><span class="p">],</span> <span class="n">VARIABLES</span><span class="p">)))</span>
-<span class="n">ConstraintEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;Constraints&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">CONSTRAINTS</span><span class="p">],</span> <span class="n">CONSTRAINTS</span><span class="p">)))</span>
 <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;RadiusTypes&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">RADIUS_TYPE</span><span class="p">],</span> <span class="n">RADIUS_TYPE</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="ObjectiveFunction">
+<a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.ObjectiveFunction">[docs]</a>
+<span class="k">class</span> <span class="nc">ObjectiveFunction</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Model describing the objective function of a optimization problem.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    variable : str</span>
+<span class="sd">        Defines the objective function variable. Must be contained in the `results` structure of the problem and be on the form &#39;section.parameter&#39;, e.g. &#39;overall.efficiency_ts&#39;.</span>
+<span class="sd">    type : str</span>
+<span class="sd">        Whether the objective function should be maxmized or minimized.</span>
+<span class="sd">    scale : float</span>
+<span class="sd">        Value to scale the objective function.</span>
+
+<span class="sd">    Configurations</span>
+<span class="sd">    --------------</span>
+<span class="sd">    extra : str, optional</span>
+<span class="sd">        Indicates that no extra input is allowed. Default is &quot;forbid&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">variable</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;overall.efficieny_ts&#39;</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span> <span class="s2">&quot;minimize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span></div>
+
 
 <div class="viewcode-block" id="DesignOptimization">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DesignOptimization">[docs]</a>
@@ -749,14 +737,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">objective_function</span><span class="p">:</span> <span class="n">ObjectiveFunctionEnum</span> <span class="o">=</span> <span class="n">OBJECTIVE_FUNCTIONS</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">objective_function</span> <span class="p">:</span> <span class="n">ObjectiveFunction</span> <span class="o">=</span> <span class="n">ObjectiveFunction</span><span class="p">()</span>
     <span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
         <span class="n">VariableEnum</span><span class="p">,</span>
         <span class="n">Variable</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">constraints</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="n">ConstraintEnum</span><span class="p">,</span>
-        <span class="n">Constraint</span><span class="p">,</span>
+    <span class="nb">str</span><span class="p">,</span>
+    <span class="n">Constraint</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">solver_options</span><span class="p">:</span> <span class="n">SolverOptionsOptimization</span> <span class="o">=</span> <span class="n">SolverOptionsOptimization</span><span class="p">()</span>
     <span class="n">radius_type</span> <span class="p">:</span> <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">RADIUS_TYPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>

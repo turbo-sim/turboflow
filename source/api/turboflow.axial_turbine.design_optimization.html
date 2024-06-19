@@ -186,6 +186,15 @@ dictionary containing information on design variables, objective function, const
 <tr class="row-even"><td><p><strong>convert_performance_analysis_results(performance_problem)</strong></p></td>
 <td><p>Generate a feasable set of initial guess from a solved performance analysis problem object.</p></td>
 </tr>
+<tr class="row-odd"><td><p><strong>evaluate_constraints:</strong></p></td>
+<td><p>Evaluate constraints</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_objective_function:</strong></p></td>
+<td><p>Change scale for the objective function depending on its type.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>get_nested_value:</strong></p></td>
+<td><p>Get values from a dictionary of Dataframes</p></td>
+</tr>
 </tbody>
 </table>
 <dl class="py method">
@@ -203,6 +212,11 @@ angular speed to generate an initial guess of correct form to be given to the de
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints">
+<span class="sig-name descname"><span class="pre">evaluate_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraints_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.evaluate_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">
@@ -309,6 +323,23 @@ can be a list, numpy array, or float.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nested_value">
+<span class="sig-name descname"><span class="pre">get_nested_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_nested_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nested_value" title="Link to this definition"></a></dt>
+<dd><p>Get values from a dictionary of Dataframes. 
+Path is on the form <cite>dataframe.column</cite>, and returns <cite>d[dataframe][column]</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>d</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of DataFrames</p>
+</dd>
+<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>String giving the path of the DataFrame values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic">
 <span class="sig-name descname"><span class="pre">get_nic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_nic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nic" title="Link to this definition"></a></dt>
 <dd><p>Get the number of inequality constraints.</p>
@@ -316,6 +347,27 @@ can be a list, numpy array, or float.</p>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>int</dt><dd><p>Number of inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_objective_function">
+<span class="sig-name descname"><span class="pre">get_objective_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">objective</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_objective_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_objective_function" title="Link to this definition"></a></dt>
+<dd><p>Change scale for the objective function depending on its type.
+If objective function should be maximized, the sign of the scale is changed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>objective</strong><span class="classifier">dict</span></dt><dd><p>dictionary containing variable name, type and scale of the objective function.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>dictionary containing modified scale of the objective function</p>
 </dd>
 </dl>
 </dd>

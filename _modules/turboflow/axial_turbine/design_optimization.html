@@ -102,9 +102,6 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">performance_analysis</span> <span class="k">as</span> <span class="n">pa</span>
 
 
-<span class="n">CONSTRAINTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">]</span>
-<span class="n">AVAILABLE_INEQ_CONSTRAINTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">]</span>
-<span class="n">OBJECTIVE_FUNCTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_ts&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">]</span>
 <span class="n">RADIUS_TYPE</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;constant_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_hub&quot;</span><span class="p">,</span> <span class="s2">&quot;constant_tip&quot;</span><span class="p">]</span>
 <span class="n">ANGLE_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">,</span> <span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>
 <span class="n">INDEPENDENT_VARIABLES</span> <span class="o">=</span> <span class="p">[</span>
@@ -302,7 +299,12 @@
 <span class="sd">        Update the boundary conditions of the turbine analysis problem with the design point of the design optimization problem.</span>
 <span class="sd">    convert_performance_analysis_results(performance_problem)</span>
 <span class="sd">        Generate a feasable set of initial guess from a solved performance analysis problem object.</span>
-
+<span class="sd">    evaluate_constraints:</span>
+<span class="sd">        Evaluate constraints</span>
+<span class="sd">    get_objective_function:</span>
+<span class="sd">        Change scale for the objective function depending on its type.</span>
+<span class="sd">    get_nested_value:</span>
+<span class="sd">        Get values from a dictionary of Dataframes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
@@ -317,14 +319,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Get list of design variables</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;objective_function&quot;</span><span class="p">]</span>
+        <span class="c1"># self.obj_func = config[&quot;design_optimization&quot;][&quot;objective_function&quot;]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_objective_function</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;objective_function&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;radius_type&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_constraints</span><span class="p">(</span>
             <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;constraints&quot;</span><span class="p">]</span>
         <span class="p">)</span>
 
-        <span class="c1"># Update design point</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">])</span>
+        <span class="c1"># Update design point </span>
+        <span class="c1"># TODO: Differ between operation-points and design point? </span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">])</span>
 
         <span class="c1"># Initialize model options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">]</span>
@@ -406,6 +413,120 @@
                 <span class="p">)</span>
             <span class="p">]</span>
 
+<div class="viewcode-block" id="CascadesOptimizationProblem.fitness">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">[docs]</a>
+    <span class="k">def</span> <span class="nf">fitness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate the objective function and constraints at a given pint `x`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array-like</span>
+<span class="sd">            Vector of design variables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            An array containg the value of the objective function and constraints.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Rename reference values</span>
+        <span class="n">h0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
+        <span class="n">mass_flow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
+        <span class="n">h_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;h_out_s&quot;</span><span class="p">]</span>
+        <span class="n">d_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;d_out_s&quot;</span><span class="p">]</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+        <span class="n">angle_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+        <span class="n">angle_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Structure design variables to dictionary (Assume set of design variables)</span>
+        <span class="n">design_variables</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_variables_keys</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># Construct array with independent variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Contruct variables</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">design_variables</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">}</span>
+
+        <span class="c1"># Calculate angular speed</span>
+        <span class="n">specific_speed</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
+            <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Calculate mean radius</span>
+        <span class="n">blade_jet_ratio</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span>
+        <span class="n">blade_speed</span> <span class="o">=</span> <span class="n">blade_jet_ratio</span> <span class="o">*</span> <span class="n">v0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blade_speed</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Assign geometry design variables to geometry attribute</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">INDEXED_VARIABLES</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ANGLE_KEYS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">prepare_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+
+        <span class="c1"># Evaluate turbine model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_axial_turbine</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Evaluate objective function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="c1"># self.obj.func on the form &quot;section.param&quot;</span>
+
+        <span class="c1"># Evaluate additional constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;additional_constraints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;interspace_area_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
+        
+        <span class="c1"># Evaluate constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;residuals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span><span class="p">)</span>
+
+        <span class="c1"># Combine objective functions and constraint</span>
+        <span class="n">objective_and_constraints</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">combine_objective_and_constraints</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">objective_and_constraints</span></div>
+
+
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_objective_function">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_objective_function">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_objective_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">objective</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change scale for the objective function depending on its type.</span>
+<span class="sd">        If objective function should be maximized, the sign of the scale is changed. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        objective : dict</span>
+<span class="sd">            dictionary containing variable name, type and scale of the objective function.</span>
+
+<span class="sd">        Returns </span>
+<span class="sd">        --------</span>
+<span class="sd">        dict</span>
+<span class="sd">            dictionary containing modified scale of the objective function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">objective</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;maximize&quot;</span><span class="p">:</span>
+            <span class="n">objective</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">objective</span></div>
+
+
 <div class="viewcode-block" id="CascadesOptimizationProblem.extend_variables">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">[docs]</a>
     <span class="k">def</span> <span class="nf">extend_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">):</span>
@@ -479,112 +600,43 @@
 
         <span class="k">return</span> <span class="n">lb</span><span class="p">,</span> <span class="n">ub</span></div>
 
-
-<div class="viewcode-block" id="CascadesOptimizationProblem.fitness">
-<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">[docs]</a>
-    <span class="k">def</span> <span class="nf">fitness</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Evaluate the objective function and constraints at a given pint `x`.</span>
+    
+<div class="viewcode-block" id="CascadesOptimizationProblem.get_nested_value">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_nested_value">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get values from a dictionary of Dataframes. </span>
+<span class="sd">        Path is on the form `dataframe.column`, and returns `d[dataframe][column]`</span>
 
 <span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : array-like</span>
-<span class="sd">            Vector of design variables.</span>
+<span class="sd">        -----------</span>
+<span class="sd">        d : dict</span>
+<span class="sd">            Dictionary of DataFrames</span>
+<span class="sd">        path : str</span>
+<span class="sd">            String giving the path of the DataFrame values</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        numpy.ndarray</span>
-<span class="sd">            An array containg the value of the objective function and constraints.</span>
+<span class="sd">        Return</span>
+<span class="sd">        --------</span>
+<span class="sd">        numpy.ndarray  </span>
+<span class="sd">           Array of specified values </span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="c1"># Rename reference values</span>
-        <span class="n">h0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
-        <span class="n">mass_flow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;mass_flow_ref&quot;</span><span class="p">]</span>
-        <span class="n">h_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;h_out_s&quot;</span><span class="p">]</span>
-        <span class="n">d_is</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;d_out_s&quot;</span><span class="p">]</span>
-        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
-        <span class="n">angle_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
-        <span class="n">angle_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span><span class="p">[</span><span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">keys</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span></div>
 
-        <span class="c1"># Structure design variables to dictionary (Assume set of design variables)</span>
-        <span class="n">design_variables</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">design_variables_keys</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
-
-        <span class="c1"># Construct array with independent variables</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="n">key</span><span class="p">:</span> <span class="n">design_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
-        <span class="p">}</span>
-
-        <span class="c1"># Contruct variables</span>
-        <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">design_variables</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">fixed_params</span><span class="p">}</span>
-
-        <span class="c1"># Calculate angular speed</span>
-        <span class="n">specific_speed</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
-            <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Calculate mean radius</span>
-        <span class="n">blade_jet_ratio</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span>
-        <span class="n">blade_speed</span> <span class="o">=</span> <span class="n">blade_jet_ratio</span> <span class="o">*</span> <span class="n">v0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blade_speed</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
-
-        <span class="c1"># Assign geometry design variables to geometry attribute</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">INDEXED_VARIABLES</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ANGLE_KEYS</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">prepare_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
-
-        <span class="c1"># Evaluate turbine model</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_axial_turbine</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="c1"># Evaluate available objecitve functions</span>
-        <span class="n">objective_functions</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;none&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-            <span class="s2">&quot;efficiency_ts&quot;</span><span class="p">:</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">][</span><span class="s2">&quot;efficiency_ts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">objective_functions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">]</span>
-
-        <span class="c1"># Evaluate available equality constraints</span>
-        <span class="n">available_constraints</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="s2">&quot;interstage_flaring&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
-            <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-            <span class="s2">&quot;flaring&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;flaring_angle&quot;</span><span class="p">],</span>
-        <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;residuals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">available_constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]]</span> <span class="o">-</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
+    
+<div class="viewcode-block" id="CascadesOptimizationProblem.evaluate_constraints">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints">[docs]</a>
+    <span class="k">def</span> <span class="nf">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraints_list</span><span class="p">):</span>
+        <span class="n">constraints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints_list</span><span class="p">:</span>
+            <span class="n">constraints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">constraints</span><span class="p">,</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])</span> <span class="o">-</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">])</span>
                 <span class="o">/</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span>
             <span class="p">)</span>
+        <span class="k">return</span> <span class="n">constraints</span></div>
 
-        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">,</span>
-                <span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">available_constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">]])</span>
-                <span class="o">/</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span>
-            <span class="p">)</span>
-
-        <span class="n">objective_and_constraints</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">combine_objective_and_constraints</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span>
-        <span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">objective_and_constraints</span></div>
 
 
 <div class="viewcode-block" id="CascadesOptimizationProblem.get_bounds">
@@ -728,7 +780,7 @@
         <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Initialize mass_flow_rate to None</span>
         <span class="c1"># Try to find mass_flow_rate from eq_constraints</span>
         <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variable&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;variable&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;overall.mass_flow_rate&quot;</span><span class="p">:</span>
                 <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
                 <span class="k">break</span>
 
