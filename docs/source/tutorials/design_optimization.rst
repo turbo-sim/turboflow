@@ -69,7 +69,10 @@ while the rest is optional. Here is an example of how the confiugration file cou
             clearance: 1.00  # Optional
     
     design_optimization: # Optional
-        objective_function: efficiency_ts # Optional
+        objective_function: # Optional
+            variable : overall.efficiency_ts # Optional 
+            scale : 10 # Optional
+            type : maximize # Optional
         variables : # Optional
             specific_speed : # Optional
                 value : 1.2  
@@ -150,11 +153,11 @@ while the rest is optional. Here is an example of how the confiugration file cou
             cascade_type : # Optional
                 value : ["stator", "rotor"]
         constraints : # Optional
-            mass_flow_rate : # Optional
+            overall.mass_flow_rate : # Optional
                 type : "="
                 value : 2.5
                 normalize : True 
-            interstage_flaring : # Optional
+            additional_constraints.interstage_flaring : # Optional
                 type : "="
                 value : 1
                 normalize : True
@@ -170,9 +173,11 @@ while the rest is optional. Here is an example of how the confiugration file cou
             plot_convergence: True # Optional
             update_on: "gradient" # Optional
 
-The `design_optimization` section contains information on the objective function, constraints and design variables. The design variables are defined in `variables`, by
+The `design_optimization` section contains information on the objective function, constraints and design variables. The objective function is defined by specifying a variable, type and scale, while the constraints
+are defined by specifying variable, value, type and if the constraint should be normalized or not. The design variables are defined in `variables`, by
 specifying a set of bounds in addition to the value. Note that all variables in the example must be provided, otherwise a default set of variables will be provided. Note also that
-velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. The `radius_type` defines which radius (hub, mean or tip) that should be constant for the turbine.
+velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
+The `radius_type` defines which radius (hub, mean or tip) that should be constant for the turbine. See :ref:`configuration_options_short` for more information regarding the available inputs. 
 
 To load the configuration file, the absolute path must be provided to the `load_config` function inside the `turboflow` package:
 

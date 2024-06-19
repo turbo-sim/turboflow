@@ -43,19 +43,30 @@ This section describes the different configuration options available for various
 .. dropdown:: Objective Functions
     :animate: fade-in-slide-down
 
-    These inputs are valid for `simulation_options.deviation_model`:
+    The objective function is defined by specifying a variable, type and scale. The objective function is fetched from the `results` dictionary that stores all calculated variables, and 
+    the variable name must be on the form `key.column`, where `key` is a key in `results`, and `column` is the column header in the DataFrame contained in `results[key]`. With `overall` as key, you can access the most 
+    common objective functions such as:
+    
+    - `efficiency_ts`
+    - `efficiency_tt`
+    - `power`
 
-    - `efficieny_ts`: Total-to-static efficiency.
-    - `none`: Returns 0 as objective function. Will simply attempt to satisfy constraints
+    The scale is simply a nonzero float or integer, and is used to scale the objective function. This gives the user to tune the behaviour of the optimization algortihm.
+    The type must be either `maximize` or `minimize`. If the type is `maxmimize`, the sign of the scale changes to ensure that the objective function is in fact maximized. 
 
 .. dropdown:: Constraints
     :animate: fade-in-slide-down
 
-    These inputs are valid for `design_optimization.constraints`. Remember to add
-    type (`<`, `>` or `=`), `lower_bound` and `upper_bound`:
+    The constraints are defined by specifying variable name, value, type and normalize. Similar as for objective function, the constraints are fetched from the `results` dictionary that stores all calculated variables, and 
+    the variable name must be on the form `key.column`, where `key` is a key in `results`, and `column` is the column header in the DataFrame contained in `results[key]`. Here are some example of valid keys:
 
-    - `mass_flow_rate`: Mass flow rate.
-    - `interstage_flaring`: Inlet area to ext area ratio inbetween cascades.
+    - `overall` to access variables such as mass flow rate (`overall.mass_flow_rate`)
+    - `geometry` to access geometrical variables such as flaring angle (`geometry.flaring_angle`).
+    - `plane` to access variables such as relative mach number or reynolds number (`plane.Ma_rel` or `plane.Re`)
+    - `additional_constraints` to access additional variable such as interspace area ratio (`additional_constraints.interspace_area_ratio`)
+
+    Type specifies if the constraint is an equaility or inequality constraint, and must be either `<`, `>` or `=`. 
+    Value specifies the value that the variables should be equal to, less than or greater then, and normalize specifies if the constraint be normalized with the value or not. 
 
 .. dropdown:: Radius Types
     :animate: fade-in-slide-down
