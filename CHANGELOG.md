@@ -1,5 +1,20 @@
 # Changelog
 
+## 20.05.2024
+- The `variables` entries in the configuraion files have gotten default values. If the user now only give a partly set of variables, the remaining ones are given with a default value. 
+
+## 19.04.2024
+- Update implementation of objective function in configuration file. The objective funciton is now defined by providing the variable, scale, and type (minimize/maximize). Based on the type, the sign of the scal might change. 
+- The objective function is now fetched from the `results` structure. The variable must be on the form `key.column`, where `key` refer to a key in `results` (e.g. `overall`), and the column, refer to a column in the DataFrame contained in 
+- `results[key]` (e.g. `efficiency_ts`). The column will be an array, and the first element is used (for `overall`, all columns has one entry).
+- Update implementation of constraints. Similarly as for the objective function, the constraint variable are now fethced from `results`, with the name `key.column`. An additional key is added to results: `additional_constraints`.
+- This can contain variables that does not fit anywhere else in the results structure.
+- A future idea is to restructure `results` to be an object, to have more control over the variables.  
+
+## 18.05.2024
+- Centralize testing structure. To manage which configuratoin files that should be included in the different tests, and for which configuration files that there should be made new regression data for is now managed through 
+- `tests_manager.py`
+
 
 ## 29.05.2024
 - Make repository public
