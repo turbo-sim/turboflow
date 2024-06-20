@@ -12,7 +12,6 @@ from typing_extensions import Self
 from typing_extensions import Annotated
 from pydantic.functional_validators import AfterValidator, BeforeValidator
 from ..axial_turbine import (
-    VARIABLES,
     LOSS_MODELS,
     LOSS_COEFFICIENTS,
     CHOKING_MODELS,
@@ -24,107 +23,6 @@ from ..pysolver_view import (
     VALID_LIBRARIES_AND_METHODS,
     DERIVATIVE_METHODS,
 )
-
-DEFAULT_VARIABLES = {
-    "v_in": {"value": 0.1, "lower_bound": 0.001, "upper_bound": 0.5},
-    "w_out": {
-        "value": [0.65, 0.65],
-        "lower_bound": [0.1, 0.1],
-        "upper_bound": [1.0, 1.0],
-    },
-    "s_out": {
-        "value": [0.15, 0.15],
-        "lower_bound": [0.0, 0.0],
-        "upper_bound": [0.32, 0.32],
-    },
-    "beta_out": {
-        "value": [0.83, 0.17],
-        "lower_bound": [0.72, 0.06],
-        "upper_bound": [0.94, 0.28],
-    },
-    "v*_in": {
-        "value": [0.4, 0.4],
-        "lower_bound": [0.1, 0.1],
-        "upper_bound": [1.0, 1.0],
-    },
-    "beta*_throat": {
-        "value": [0.83, 0.17],
-        "lower_bound": [0.72, 0.06],
-        "upper_bound": [0.94, 0.28],
-    },
-    "w*_throat": {
-        "value": [0.65, 0.65],
-        "lower_bound": [0.1, 0.1],
-        "upper_bound": [1.0, 1.0],
-    },
-    "s*_throat": {
-        "value": [0.15, 0.15],
-        "lower_bound": [0.0, 0.0],
-        "upper_bound": [0.32, 0.32],
-    },
-    "specific_speed": {"value": 1.2, "lower_bound": 0.01, "upper_bound": 10},
-    "blade_jet_ratio": {"value": 0.5, "lower_bound": 0.1, "upper_bound": 0.9},
-    "hub_tip_ratio_in": {
-        "value": [0.6, 0.6],
-        "lower_bound": [0.6, 0.6],
-        "upper_bound": [0.9, 0.9],
-    },
-    "hub_tip_ratio_out": {
-        "value": [0.6, 0.6],
-        "lower_bound": [0.6, 0.6],
-        "upper_bound": [0.9, 0.9],
-    },
-    "aspect_ratio": {
-        "value": [1.5, 1.5],
-        "lower_bound": [1.0, 1.0],
-        "upper_bound": [2.0, 2.0],
-    },
-    "pitch_chord_ratio": {
-        "value": [0.9, 0.9],
-        "lower_bound": [0.75, 0.75],
-        "upper_bound": [1.10, 1.10],
-    },
-    "trailing_edge_thickness_opening_ratio": {
-        "value": [0.1, 0.1],
-        "lower_bound": [0.05, 0.05],
-        "upper_bound": [0.4, 0.4],
-    },
-    "leading_edge_angle": {
-        "value": [0.41, 0.5],
-        "lower_bound": [0.41, 0.08],
-        "upper_bound": [0.92, 0.58],
-    },
-    "gauging_angle": {
-        "value": [0.17, 0.94],
-        "lower_bound": [0.06, 0.72],
-        "upper_bound": [0.28, 0.94],
-    },
-    "throat_location_fraction": {
-        "value": [1.0, 1.0],
-        "lower_bound": None,
-        "upper_bound": None,
-    },
-    "leading_edge_diameter": {
-        "value": [2 * 0.00600448, 2 * 0.00600448],
-        "lower_bound": None,
-        "upper_bound": None,
-    },
-    "leading_edge_wedge_angle": {
-        "value": [45.00, 45.00],
-        "lower_bound": None,
-        "upper_bound": None,
-    },
-    "tip_clearance": {"value": [0.00, 5e-4], "lower_bound": None, "upper_bound": None},
-    "cascade_type": {
-        "value": ["stator", "rotor"],
-        "lower_bound": None,
-        "upper_bound": None,
-    },
-}
-"""
-Default set of variables for design optimization.
-"""
-
 
 class OperationPoints(BaseModel):
     """
@@ -547,7 +445,6 @@ class Constraint(BaseModel):
     value: float
     normalize: bool
 
-VariableEnum = Enum('Variables', dict(zip([model.upper() for model in VARIABLES], VARIABLES)))
 RadiusTypeEnum = Enum('RadiusTypes', dict(zip([model.upper() for model in RADIUS_TYPE], RADIUS_TYPE)))
 
 class ObjectiveFunction(BaseModel):
@@ -573,6 +470,34 @@ class ObjectiveFunction(BaseModel):
     variable : str = 'overall.efficieny_ts'
     type: Literal["maximize", "minimize"] = 'maximize'
     scale: float = 1
+
+class Variables(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+    v_in : Variable = Variable(value = 0.1, lower_bound = 0.001, upper_bound=0.5)
+    w_out : Variable = Variable(value = [0.65, 0.65], lower_bound = [0.1, 0.1], upper_bound=[1.0, 1.0])
+    s_out : Variable = Variable(value = [0.15, 0.15], lower_bound = [0.0, 0.0], upper_bound=[0.32, 0.32])
+    beta_out : Variable = Variable(value = [0.83, 0.17], lower_bound = [0.72, 0.06], upper_bound=[0.94, 0.28])
+    v_crit_in : Variable = Variable(value = [0.4, 0.4], lower_bound = [0.1, 0.1], upper_bound=[1.0, 1.0])
+    beta_crit_throat : Variable = Variable(value = [0.83, 0.17], lower_bound = [0.72, 0.06], upper_bound=[0.94, 0.28])
+    w_crit_throat : Variable = Variable(value = [0.65, 0.65], lower_bound = [0.1, 0.1], upper_bound=[1.0, 1.0])
+    s_crit_throat : Variable = Variable(value = [0.15, 0.15], lower_bound = [0.0, 0.0], upper_bound=[0.32, 0.32])
+    specific_speed : Variable = Variable(value = 1.2, lower_bound=0.01, upper_bound=10)
+    blade_jet_ratio : Variable = Variable(value = 0.5)
+    hub_tip_ratio_in : Variable = Variable(value = [0.6, 0.6])
+    hub_tip_ratio_out : Variable = Variable(value = [0.6, 0.6])
+    aspect_ratio : Variable = Variable(value = [1.5, 1.5])
+    pitch_chord_ratio : Variable = Variable(value = [0.9, 0.9])
+    trailing_edge_thickness_opening_ratio : Variable = Variable(value = [0.1, 0.1])
+    leading_edge_angle : Variable = Variable(value = [0.41, 0.5])
+    gauging_angle : Variable = Variable(value = [0.17, 0.94])
+    throat_location_fraction : Variable = Variable(value = [1.0, 1.0])
+    leading_edge_diameter : Variable = Variable(value = [2*0.00600448, 2*0.00600448])
+    leading_edge_wedge_angle : Variable = Variable(value = [45.00, 45.00] )
+    tip_clearance : Variable = Variable(value = [0.00, 5e-4])
+    cascade_type : Variable = Variable(value = ["stator", "rotor"])
+
+    
 
 class DesignOptimization(BaseModel):
     """
@@ -601,10 +526,7 @@ class DesignOptimization(BaseModel):
 
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
     objective_function : ObjectiveFunction = ObjectiveFunction()
-    variables: Dict[
-        VariableEnum,
-        Variable,
-    ] = None
+    variables : Variables = Variables()
     constraints: Dict[
     str,
     Constraint,
@@ -612,23 +534,6 @@ class DesignOptimization(BaseModel):
     solver_options: SolverOptionsOptimization = SolverOptionsOptimization()
     radius_type : RadiusTypeEnum = RADIUS_TYPE[0]
 
-    # After validator to check variables holds all variables
-    @field_validator("variables")
-    def check_variables(cls, v: Dict) -> Dict:
-        if v == None:
-            # Give completely default turbine
-            v = DEFAULT_VARIABLES
-            print(
-                "Design optimization variables are not provided. Defualt set of variables are used."
-            )
-        lacking_keys = set(VARIABLES) - set(v.keys())
-        if len(lacking_keys) > 0:
-            # Fill in lacking keys
-            v = DEFAULT_VARIABLES
-            print(
-                f"Design optimization variables are missing: {lacking_keys}. Defualt set of variables are used."
-            )
-        return v
 
 
 class AxialTurbine(BaseModel):

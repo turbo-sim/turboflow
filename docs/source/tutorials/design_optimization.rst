@@ -175,8 +175,8 @@ while the rest is optional. Here is an example of how the confiugration file cou
 
 The `design_optimization` section contains information on the objective function, constraints and design variables. The objective function is defined by specifying a variable, type and scale, while the constraints
 are defined by specifying variable, value, type and if the constraint should be normalized or not. The design variables are defined in `variables`, by
-specifying a set of bounds in addition to the value. Note that all variables in the example must be provided, otherwise a default set of variables will be provided. Note also that
-velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
+specifying a set of bounds in addition to the value. All variables have a defualt value, and some have default set of bounds, such that if the user does not provide the full set, the defualt value will be used.
+Note that velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
 The `radius_type` defines which radius (hub, mean or tip) that should be constant for the turbine. See :ref:`configuration_options_short` for more information regarding the available inputs. 
 
 To load the configuration file, the absolute path must be provided to the `load_config` function inside the `turboflow` package:
@@ -193,10 +193,6 @@ To load the configuration file, the absolute path must be provided to the `load_
 .. warning::
 
     The only current available option for turbomachinery is `axial_turbine`.
-
-.. warning::
-
-    All variables in the `variables` section in the example configuration must be provided, otherwise a default set will be provided.
 
 .. warning::
 

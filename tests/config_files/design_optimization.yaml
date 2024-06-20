@@ -57,19 +57,19 @@ design_optimization:
       value : [0.83, 0.17]
       lower_bound : [0.72, 0.06]
       upper_bound : [0.94, 0.28]
-    v*_in : 
+    v_crit_in : 
       value : [0.4, 0.4]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
-    beta*_throat : 
+    beta_crit_throat : 
       value : [0.83, 0.17]
       lower_bound : [0.72, 0.06]
       upper_bound : [0.94, 0.28]
-    w*_throat : 
+    w_crit_throat : 
       value : [0.65, 0.65]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
-    s*_throat : 
+    s_crit_throat : 
       value : [0.15, 0.15]
       lower_bound : [0.0, 0.0]
       upper_bound : [0.32, 0.32]
