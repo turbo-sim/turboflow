@@ -109,10 +109,10 @@
     <span class="s2">&quot;w_out&quot;</span><span class="p">,</span>
     <span class="s2">&quot;s_out&quot;</span><span class="p">,</span>
     <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;v*_in&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;beta*_throat&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;w*_throat&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;s*_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;v_crit_in&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;s_crit_throat&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 <span class="n">INDEXED_VARIABLES</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">,</span>
@@ -128,10 +128,6 @@
     <span class="s2">&quot;tip_clearance&quot;</span><span class="p">,</span>
     <span class="s2">&quot;cascade_type&quot;</span><span class="p">,</span>
 <span class="p">]</span>
-<span class="n">VARIABLES</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">INDEXED_VARIABLES</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">,</span> <span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">INDEPENDENT_VARIABLES</span>
-<span class="p">)</span>
-
 
 <div class="viewcode-block" id="compute_optimal_turbine">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.compute_optimal_turbine">[docs]</a>
@@ -319,7 +315,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Get list of design variables</span>
-        <span class="c1"># self.obj_func = config[&quot;design_optimization&quot;][&quot;objective_function&quot;]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_objective_function</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;objective_function&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;radius_type&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_constraints</span><span class="p">(</span>
@@ -342,13 +337,13 @@
             <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
             <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
@@ -357,9 +352,9 @@
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">}</span>
 
@@ -392,13 +387,13 @@
         <span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+                <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">var</span>
                 <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="k">elif</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
@@ -407,9 +402,9 @@
                 <span class="n">var</span>
                 <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">]</span>
 
@@ -484,7 +479,7 @@
         <span class="p">)</span>
 
         <span class="c1"># Evaluate objective function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="c1"># self.obj.func on the form &quot;section.param&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="c1"># self.obj.func on the form &quot;key.column&quot;</span>
 
         <span class="c1"># Evaluate additional constraints</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;additional_constraints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;interspace_area_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>

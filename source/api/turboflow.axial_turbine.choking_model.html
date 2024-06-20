@@ -231,9 +231,9 @@ a more direct and computationally effective way of determining the critical cond
 <dd class="field-odd"><dl class="simple">
 <dt><strong>critical_cascade_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
 <ul class="simple">
-<li><p><cite>v*_in</cite> : inlet velocity at critical state.</p></li>
-<li><p><cite>w*_throat</cite> : throat velocity at critical state.</p></li>
-<li><p><cite>s*_throat</cite> : throat entropy at critical state.</p></li>
+<li><p><cite>v_crit_in</cite> : inlet velocity at critical state.</p></li>
+<li><p><cite>w_crit_throat</cite> : throat velocity at critical state.</p></li>
+<li><p><cite>s_crit_throat</cite> : throat entropy at critical state.</p></li>
 </ul>
 </dd>
 <dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
@@ -280,7 +280,7 @@ The exit flow angle is determined by ensuring that the mach at throat mach numbe
 <dd class="field-odd"><dl class="simple">
 <dt><strong>choking_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
 <ul class="simple">
-<li><p><cite>w*_throat</cite> : throat velocity.</p></li>
+<li><p><cite>w_crit_throat</cite> : throat velocity.</p></li>
 </ul>
 </dd>
 <dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
@@ -326,9 +326,9 @@ and by ensuring that the mach at the throat equals the critical at supercritical
 <dd class="field-odd"><dl class="simple">
 <dt><strong>choking_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
 <ul class="simple">
-<li><p><cite>w*_throat</cite> : throat velocity.</p></li>
-<li><p><cite>s*_throat</cite> : throat entropy.</p></li>
-<li><p><cite>beta*_throat</cite> : throat relative flow angle.</p></li>
+<li><p><cite>w_crit_throat</cite> : throat velocity.</p></li>
+<li><p><cite>s_crit_throat</cite> : throat entropy.</p></li>
+<li><p><cite>beta_crit_throat</cite> : throat relative flow angle.</p></li>
 </ul>
 </dd>
 <dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>

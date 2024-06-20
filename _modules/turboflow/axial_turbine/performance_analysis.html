@@ -379,7 +379,6 @@
     <span class="k">return</span> <span class="n">solver_container</span></div>
 
 
-
 <div class="viewcode-block" id="compute_single_operation_point">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.compute_single_operation_point">[docs]</a>
 <span class="k">def</span> <span class="nf">compute_single_operation_point</span><span class="p">(</span>
@@ -909,9 +908,9 @@
                 <span class="s2">&quot;w_out&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;s_out&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;v*_in&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;w*_throat&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;s*_throat&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;v_crit_in&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;s_crit_throat&quot;</span><span class="p">,</span>
             <span class="p">]</span>
             <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -919,15 +918,15 @@
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
             <span class="p">]</span>
             <span class="n">valid_keys_3</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
-            <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;beta*_throat_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)]</span>
+                <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+            <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;beta_crit_throat_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)]</span>
             <span class="n">valid_keys_4</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">key</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">]</span>
 
@@ -1049,13 +1048,13 @@
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
@@ -1064,9 +1063,9 @@
                 <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v*_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">)</span>
+                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">}</span>
 
@@ -1264,11 +1263,11 @@
                     <span class="s2">&quot;s_out&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
                     <span class="s2">&quot;beta_out&quot;</span>
                     <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">),</span>
-                    <span class="s2">&quot;v*_in&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">v_in_crit</span><span class="p">,</span>
-                    <span class="s2">&quot;beta*_throat&quot;</span>
+                    <span class="s2">&quot;v_crit_in&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">v_in_crit</span><span class="p">,</span>
+                    <span class="s2">&quot;beta_crit_throat&quot;</span>
                     <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">),</span>
-                    <span class="s2">&quot;w*_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_throat_crit</span><span class="p">,</span>
-                    <span class="s2">&quot;s*_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_throat</span><span class="p">,</span>
+                    <span class="s2">&quot;w_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_throat_crit</span><span class="p">,</span>
+                    <span class="s2">&quot;s_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_throat</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">)</span>
 

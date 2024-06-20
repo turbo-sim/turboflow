@@ -102,7 +102,6 @@
 <span class="kn">from</span> <span class="nn">typing_extensions</span> <span class="kn">import</span> <span class="n">Annotated</span>
 <span class="kn">from</span> <span class="nn">pydantic.functional_validators</span> <span class="kn">import</span> <span class="n">AfterValidator</span><span class="p">,</span> <span class="n">BeforeValidator</span>
 <span class="kn">from</span> <span class="nn">..axial_turbine</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">VARIABLES</span><span class="p">,</span>
     <span class="n">LOSS_MODELS</span><span class="p">,</span>
     <span class="n">LOSS_COEFFICIENTS</span><span class="p">,</span>
     <span class="n">CHOKING_MODELS</span><span class="p">,</span>
@@ -114,107 +113,6 @@
     <span class="n">VALID_LIBRARIES_AND_METHODS</span><span class="p">,</span>
     <span class="n">DERIVATIVE_METHODS</span><span class="p">,</span>
 <span class="p">)</span>
-
-<span class="n">DEFAULT_VARIABLES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;v_in&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span> <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">},</span>
-    <span class="s2">&quot;w_out&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;s_out&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.32</span><span class="p">,</span> <span class="mf">0.32</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;beta_out&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.83</span><span class="p">,</span> <span class="mf">0.17</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.72</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.94</span><span class="p">,</span> <span class="mf">0.28</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;v*_in&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;beta*_throat&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.83</span><span class="p">,</span> <span class="mf">0.17</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.72</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.94</span><span class="p">,</span> <span class="mf">0.28</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;w*_throat&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;s*_throat&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.32</span><span class="p">,</span> <span class="mf">0.32</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;specific_speed&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span> <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span> <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">},</span>
-    <span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span> <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">},</span>
-    <span class="s2">&quot;hub_tip_ratio_in&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;hub_tip_ratio_out&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;aspect_ratio&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;pitch_chord_ratio&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.10</span><span class="p">,</span> <span class="mf">1.10</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;trailing_edge_thickness_opening_ratio&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.41</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.41</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.92</span><span class="p">,</span> <span class="mf">0.58</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;gauging_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.94</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.06</span><span class="p">,</span> <span class="mf">0.72</span><span class="p">],</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.28</span><span class="p">,</span> <span class="mf">0.94</span><span class="p">],</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;throat_location_fraction&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">0.00600448</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="mf">0.00600448</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">45.00</span><span class="p">,</span> <span class="mf">45.00</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">},</span>
-    <span class="s2">&quot;tip_clearance&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">5e-4</span><span class="p">],</span> <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-    <span class="s2">&quot;cascade_type&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">},</span>
-<span class="p">}</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Default set of variables for design optimization.</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
 
 <div class="viewcode-block" id="OperationPoints">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.OperationPoints">[docs]</a>
@@ -679,7 +577,6 @@
     <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span></div>
 
 
-<span class="n">VariableEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;Variables&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">VARIABLES</span><span class="p">],</span> <span class="n">VARIABLES</span><span class="p">)))</span>
 <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;RadiusTypes&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">([</span><span class="n">model</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">RADIUS_TYPE</span><span class="p">],</span> <span class="n">RADIUS_TYPE</span><span class="p">)))</span>
 
 <div class="viewcode-block" id="ObjectiveFunction">
@@ -708,6 +605,37 @@
     <span class="nb">type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;maximize&quot;</span><span class="p">,</span> <span class="s2">&quot;minimize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;maximize&#39;</span>
     <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span></div>
 
+
+<div class="viewcode-block" id="Variables">
+<a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.Variables">[docs]</a>
+<span class="k">class</span> <span class="nc">Variables</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">)</span>
+    <span class="n">v_in</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="mf">0.001</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">w_out</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">s_out</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">0.32</span><span class="p">,</span> <span class="mf">0.32</span><span class="p">])</span>
+    <span class="n">beta_out</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.83</span><span class="p">,</span> <span class="mf">0.17</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.72</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">0.94</span><span class="p">,</span> <span class="mf">0.28</span><span class="p">])</span>
+    <span class="n">v_crit_in</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">beta_crit_throat</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.83</span><span class="p">,</span> <span class="mf">0.17</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.72</span><span class="p">,</span> <span class="mf">0.06</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">0.94</span><span class="p">,</span> <span class="mf">0.28</span><span class="p">])</span>
+    <span class="n">w_crit_throat</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.65</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">s_crit_throat</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">],</span> <span class="n">lower_bound</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">upper_bound</span><span class="o">=</span><span class="p">[</span><span class="mf">0.32</span><span class="p">,</span> <span class="mf">0.32</span><span class="p">])</span>
+    <span class="n">specific_speed</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">blade_jet_ratio</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">hub_tip_ratio_in</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+    <span class="n">hub_tip_ratio_out</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+    <span class="n">aspect_ratio</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span>
+    <span class="n">pitch_chord_ratio</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">])</span>
+    <span class="n">trailing_edge_thickness_opening_ratio</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">])</span>
+    <span class="n">leading_edge_angle</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.41</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+    <span class="n">gauging_angle</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.17</span><span class="p">,</span> <span class="mf">0.94</span><span class="p">])</span>
+    <span class="n">throat_location_fraction</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">leading_edge_diameter</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="mf">0.00600448</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="mf">0.00600448</span><span class="p">])</span>
+    <span class="n">leading_edge_wedge_angle</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">45.00</span><span class="p">,</span> <span class="mf">45.00</span><span class="p">]</span> <span class="p">)</span>
+    <span class="n">tip_clearance</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.00</span><span class="p">,</span> <span class="mf">5e-4</span><span class="p">])</span>
+    <span class="n">cascade_type</span> <span class="p">:</span> <span class="n">Variable</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">])</span></div>
+
+
+    
 
 <div class="viewcode-block" id="DesignOptimization">
 <a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DesignOptimization">[docs]</a>
@@ -738,37 +666,14 @@
 
     <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">extra</span><span class="o">=</span><span class="s2">&quot;forbid&quot;</span><span class="p">,</span> <span class="n">use_enum_values</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">objective_function</span> <span class="p">:</span> <span class="n">ObjectiveFunction</span> <span class="o">=</span> <span class="n">ObjectiveFunction</span><span class="p">()</span>
-    <span class="n">variables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
-        <span class="n">VariableEnum</span><span class="p">,</span>
-        <span class="n">Variable</span><span class="p">,</span>
-    <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">variables</span> <span class="p">:</span> <span class="n">Variables</span> <span class="o">=</span> <span class="n">Variables</span><span class="p">()</span>
     <span class="n">constraints</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span>
     <span class="nb">str</span><span class="p">,</span>
     <span class="n">Constraint</span><span class="p">,</span>
     <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">solver_options</span><span class="p">:</span> <span class="n">SolverOptionsOptimization</span> <span class="o">=</span> <span class="n">SolverOptionsOptimization</span><span class="p">()</span>
-    <span class="n">radius_type</span> <span class="p">:</span> <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">RADIUS_TYPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">radius_type</span> <span class="p">:</span> <span class="n">RadiusTypeEnum</span> <span class="o">=</span> <span class="n">RADIUS_TYPE</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
-    <span class="c1"># After validator to check variables holds all variables</span>
-<div class="viewcode-block" id="DesignOptimization.check_variables">
-<a class="viewcode-back" href="../../../source/api/turboflow.turbo_configurations.config_axial_turbine.html#turboflow.turbo_configurations.config_axial_turbine.DesignOptimization.check_variables">[docs]</a>
-    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;variables&quot;</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">check_variables</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Give completely default turbine</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">DEFAULT_VARIABLES</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;Design optimization variables are not provided. Defualt set of variables are used.&quot;</span>
-            <span class="p">)</span>
-        <span class="n">lacking_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">VARIABLES</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lacking_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="c1"># Fill in lacking keys</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">DEFAULT_VARIABLES</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Design optimization variables are missing: </span><span class="si">{</span><span class="n">lacking_keys</span><span class="si">}</span><span class="s2">. Defualt set of variables are used.&quot;</span>
-            <span class="p">)</span>
-        <span class="k">return</span> <span class="n">v</span></div>
-</div>
 
 
 

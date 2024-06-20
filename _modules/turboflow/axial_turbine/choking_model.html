@@ -206,9 +206,9 @@
 <span class="sd">    choking_input : dict</span>
 <span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
 
-<span class="sd">        - `w*_throat` : throat velocity.</span>
-<span class="sd">        - `s*_throat` : throat entropy.</span>
-<span class="sd">        - `beta*_throat` : throat relative flow angle.</span>
+<span class="sd">        - `w_crit_throat` : throat velocity.</span>
+<span class="sd">        - `s_crit_throat` : throat entropy.</span>
+<span class="sd">        - `beta_crit_throat` : throat relative flow angle.</span>
 <span class="sd">    inlet_plane : dict</span>
 <span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
 <span class="sd">    exit_plane : dict</span>
@@ -252,9 +252,9 @@
 
     <span class="c1"># Evaluate throat</span>
     <span class="n">cascade_throat_input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
-        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span><span class="p">,</span>
-        <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;beta*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span><span class="p">,</span>
+        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w_crit_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span><span class="p">,</span>
+        <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span><span class="p">,</span>
         <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;rothalpy&quot;</span><span class="p">],</span>
     <span class="p">}</span>
     <span class="n">throat_plane</span><span class="p">,</span> <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">fm</span><span class="o">.</span><span class="n">evaluate_cascade_throat</span><span class="p">(</span>
@@ -408,9 +408,9 @@
 <span class="sd">    critical_cascade_input : dict</span>
 <span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
 
-<span class="sd">        - `v*_in` : inlet velocity at critical state.  </span>
-<span class="sd">        - `w*_throat` : throat velocity at critical state. </span>
-<span class="sd">        - `s*_throat` : throat entropy at critical state.</span>
+<span class="sd">        - `v_crit_in` : inlet velocity at critical state.  </span>
+<span class="sd">        - `w_crit_throat` : throat velocity at critical state. </span>
+<span class="sd">        - `s_crit_throat` : throat entropy at critical state.</span>
 <span class="sd">    inlet_plane : dict</span>
 <span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
 <span class="sd">    exit_plane : dict</span>
@@ -454,9 +454,9 @@
     <span class="c1"># Define array for inputs in compute critical values</span>
     <span class="n">x_crit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
         <span class="p">[</span>
-            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;v*_in&quot;</span><span class="p">],</span>
-            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">],</span>
-            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s*_throat&quot;</span><span class="p">],</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">],</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w_crit_throat&quot;</span><span class="p">],</span>
+            <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">],</span>
         <span class="p">]</span>
     <span class="p">)</span>
 
@@ -751,7 +751,7 @@
 <span class="sd">    choking_input : dict</span>
 <span class="sd">        Dictionary containing scaled input parameters required for selected choking model. Required items are:</span>
 
-<span class="sd">        - `w*_throat` : throat velocity.</span>
+<span class="sd">        - `w_crit_throat` : throat velocity.</span>
 <span class="sd">    inlet_plane : dict</span>
 <span class="sd">        Dictionary containing data on the inlet plane for the actual cascade operating condition.</span>
 <span class="sd">    exit_plane : dict</span>
@@ -791,7 +791,7 @@
 
     <span class="c1"># Evaluate throat</span>
     <span class="n">cascade_throat_input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w*_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
+        <span class="s2">&quot;w&quot;</span><span class="p">:</span> <span class="n">choking_input</span><span class="p">[</span><span class="s2">&quot;w_crit_throat&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">v0</span><span class="p">,</span>
         <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">],</span>
         <span class="s2">&quot;beta&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">])</span>
         <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]),</span>
