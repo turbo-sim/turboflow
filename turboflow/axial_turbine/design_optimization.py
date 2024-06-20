@@ -19,10 +19,10 @@ INDEPENDENT_VARIABLES = [
     "w_out",
     "s_out",
     "beta_out",
-    "v*_in",
-    "beta*_throat",
-    "w*_throat",
-    "s*_throat",
+    "v_crit_in",
+    "beta_crit_throat",
+    "w_crit_throat",
+    "s_crit_throat",
 ]
 INDEXED_VARIABLES = [
     "hub_tip_ratio_in",
@@ -38,10 +38,6 @@ INDEXED_VARIABLES = [
     "tip_clearance",
     "cascade_type",
 ]
-VARIABLES = (
-    INDEXED_VARIABLES + ["specific_speed", "blade_jet_ratio"] + INDEPENDENT_VARIABLES
-)
-
 
 def compute_optimal_turbine(
     config,
@@ -224,7 +220,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         # Get list of design variables
-        # self.obj_func = config["design_optimization"]["objective_function"]
         self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
@@ -247,13 +242,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             variables = {
                 key: var
                 for key, var in variables.items()
-                if not key.startswith("v*_in")
+                if not key.startswith("v_crit_in")
             }
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
             variables = {
                 key: var
                 for key, var in variables.items()
-                if not key.startswith("beta*_throat")
+                if not key.startswith("beta_crit_throat")
             }
         elif (
             self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
@@ -262,9 +257,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 key: var
                 for key, var in variables.items()
                 if not (
-                    key.startswith("v*_in")
-                    or key.startswith("s*_throat")
-                    or key.startswith("beta*_throat")
+                    key.startswith("v_crit_in")
+                    or key.startswith("s_crit_throat")
+                    or key.startswith("beta_crit_throat")
                 )
             }
 
@@ -297,13 +292,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         ]
         if self.model_options["choking_model"] == "evaluate_cascade_throat":
             self.independent_variables = [
-                var for var in self.independent_variables if not var.startswith("v*_in")
+                var for var in self.independent_variables if not var.startswith("v_crit_in")
             ]
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
             self.independent_variables = [
                 var
                 for var in self.independent_variables
-                if not var.startswith("beta*_throat")
+                if not var.startswith("beta_crit_throat")
             ]
         elif (
             self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
@@ -312,9 +307,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 var
                 for var in self.independent_variables
                 if not (
-                    var.startswith("v*_in")
-                    or var.startswith("s*_throat")
-                    or var.startswith("beta*_throat")
+                    var.startswith("v_crit_in")
+                    or var.startswith("s_crit_throat")
+                    or var.startswith("beta_crit_throat")
                 )
             ]
 
@@ -387,7 +382,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         # Evaluate objective function
-        self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "section.param"
+        self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
 
         # Evaluate additional constraints
         self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]

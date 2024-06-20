@@ -105,7 +105,7 @@ def evaluate_axial_turbine(
         geometry_cascade = {
             key: values[i]
             for key, values in geometry.items()
-            if key not in ["number_of_cascades", "number_of_stages"]
+            if key not in ["number_of_cascades", "number_of_stages", "interspace_area_ratio"]
         }
 
         # Rename variables
@@ -130,7 +130,7 @@ def evaluate_axial_turbine(
         choking_input = {
             key.replace(cascade, ""): val
             for key, val in variables.items()
-            if ("*" and cascade in key) or key == "v*_in"
+            if ("crit" and cascade in key) or key == "v_crit_in"
         }
 
         cascade_residuals = evaluate_cascade(

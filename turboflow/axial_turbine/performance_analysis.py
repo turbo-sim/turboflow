@@ -283,7 +283,6 @@ def compute_performance(
 
     return solver_container
 
-
 def compute_single_operation_point(
     operating_point,
     initial_guess,
@@ -785,9 +784,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 "w_out",
                 "s_out",
                 "beta_out",
-                "v*_in",
-                "w*_throat",
-                "s*_throat",
+                "v_crit_in",
+                "w_crit_throat",
+                "s_crit_throat",
             ]
             valid_keys_2 = ["v_in"] + [
                 f"{key}_{i+1}"
@@ -795,15 +794,15 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 for key in valid_keys_2
             ]
             valid_keys_3 = [
-                key for key in valid_keys_2 if not key.startswith("v*_in")
-            ] + [f"beta*_throat_{i+1}" for i in range(number_of_cascades)]
+                key for key in valid_keys_2 if not key.startswith("v_crit_in")
+            ] + [f"beta_crit_throat_{i+1}" for i in range(number_of_cascades)]
             valid_keys_4 = [
                 key
                 for key in valid_keys_2
                 if not (
-                    key.startswith("v*_in")
-                    or key.startswith("s*_throat")
-                    or key.startswith("beta*_throat")
+                    key.startswith("v_crit_in")
+                    or key.startswith("s_crit_throat")
+                    or key.startswith("beta_crit_throat")
                 )
             ]
 
@@ -925,13 +924,13 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             initial_guess = {
                 key: val
                 for key, val in initial_guess.items()
-                if not key.startswith("v*_in")
+                if not key.startswith("v_crit_in")
             }
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
             initial_guess = {
                 key: val
                 for key, val in initial_guess.items()
-                if not key.startswith("beta*_throat")
+                if not key.startswith("beta_crit_throat")
             }
         elif (
             self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
@@ -940,9 +939,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 key: val
                 for key, val in initial_guess.items()
                 if not (
-                    key.startswith("v*_in")
-                    or key.startswith("s*_throat")
-                    or key.startswith("beta*_throat")
+                    key.startswith("v_crit_in")
+                    or key.startswith("s_crit_throat")
+                    or key.startswith("beta_crit_throat")
                 )
             }
 
@@ -1137,11 +1136,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                     "s_out" + index: s_out,
                     "beta_out"
                     + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
-                    "v*_in" + index: v_in_crit,
-                    "beta*_throat"
+                    "v_crit_in" + index: v_in_crit,
+                    "beta_crit_throat"
                     + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
-                    "w*_throat" + index: w_throat_crit,
-                    "s*_throat" + index: s_throat,
+                    "w_crit_throat" + index: w_throat_crit,
+                    "s_crit_throat" + index: s_throat,
                 }
             )
 

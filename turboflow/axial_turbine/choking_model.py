@@ -111,9 +111,9 @@ def evaluate_cascade_throat(
     choking_input : dict
         Dictionary containing scaled input parameters required for selected choking model. Required items are:
 
-        - `w*_throat` : throat velocity.
-        - `s*_throat` : throat entropy.
-        - `beta*_throat` : throat relative flow angle.
+        - `w_crit_throat` : throat velocity.
+        - `s_crit_throat` : throat entropy.
+        - `beta_crit_throat` : throat relative flow angle.
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -157,9 +157,9 @@ def evaluate_cascade_throat(
 
     # Evaluate throat
     cascade_throat_input = {
-        "w": choking_input["w*_throat"] * v0,
-        "s": choking_input["s*_throat"] * s_range + s_min,
-        "beta": choking_input["beta*_throat"] * angle_range + angle_min,
+        "w": choking_input["w_crit_throat"] * v0,
+        "s": choking_input["s_crit_throat"] * s_range + s_min,
+        "beta": choking_input["beta_crit_throat"] * angle_range + angle_min,
         "rothalpy": inlet_plane["rothalpy"],
     }
     throat_plane, loss_dict = fm.evaluate_cascade_throat(
@@ -307,9 +307,9 @@ def evaluate_cascade_critical(
     critical_cascade_input : dict
         Dictionary containing scaled input parameters required for selected choking model. Required items are:
 
-        - `v*_in` : inlet velocity at critical state.  
-        - `w*_throat` : throat velocity at critical state. 
-        - `s*_throat` : throat entropy at critical state.
+        - `v_crit_in` : inlet velocity at critical state.  
+        - `w_crit_throat` : throat velocity at critical state. 
+        - `s_crit_throat` : throat entropy at critical state.
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -353,9 +353,9 @@ def evaluate_cascade_critical(
     # Define array for inputs in compute critical values
     x_crit = np.array(
         [
-            choking_input["v*_in"],
-            choking_input["w*_throat"],
-            choking_input["s*_throat"],
+            choking_input["v_crit_in"],
+            choking_input["w_crit_throat"],
+            choking_input["s_crit_throat"],
         ]
     )
 
@@ -641,7 +641,7 @@ def evaluate_cascade_isentropic_throat(
     choking_input : dict
         Dictionary containing scaled input parameters required for selected choking model. Required items are:
 
-        - `w*_throat` : throat velocity.
+        - `w_crit_throat` : throat velocity.
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
     exit_plane : dict
@@ -681,7 +681,7 @@ def evaluate_cascade_isentropic_throat(
 
     # Evaluate throat
     cascade_throat_input = {
-        "w": choking_input["w*_throat"] * v0,
+        "w": choking_input["w_crit_throat"] * v0,
         "s": inlet_plane["s"],
         "beta": np.sign(exit_plane["beta"])
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
