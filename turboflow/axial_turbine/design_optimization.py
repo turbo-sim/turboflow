@@ -406,12 +406,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         If objective function should be maximized, the sign of the scale is changed. 
 
         Parameters
-        -----------
+        ----------
         objective : dict
             dictionary containing variable name, type and scale of the objective function.
 
         Returns 
-        --------
+        -------
         dict
             dictionary containing modified scale of the objective function
         """
@@ -495,14 +495,14 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Path is on the form `dataframe.column`, and returns `d[dataframe][column]`
 
         Parameters
-        -----------
+        ----------
         d : dict
             Dictionary of DataFrames
         path : str
             String giving the path of the DataFrame values
 
-        Return
-        --------
+        Returns
+        -------
         numpy.ndarray  
            Array of specified values 
         """
@@ -744,8 +744,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
         Converts a list of constraints to equality and inequality constraints.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         constraints : list of dict
             List of constraints where each constraint is represented as a dictionary
             with keys "type", "variable", "value", and "normalize". "type" represents
@@ -753,8 +753,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             involved in the constraint. "value" is the value of the constraint. "normalize"
             specifies whether to normalize the constraint value.
 
-        Returns:
-        --------
+        Returns
+        -------
         list of dict
             List of equality constraints, each represented as a dictionary with keys
             "variable", "value", and "scale". "variable" is the variable involved
