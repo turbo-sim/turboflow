@@ -347,7 +347,6 @@ class Fluid:
         input_type : str or int
             The variable pair used to define the thermodynamic state. This should be one of the
             predefined input pairs in CoolProp, such as ``PT_INPUTS`` for pressure and temperature.
-            For all available input pairs, refer to :ref:`this list <module-input-pairs-table>`.
         prop_1 : float
             The first property value corresponding to the input type (e.g., pressure in Pa if the input
             type is CP.PT_INPUTS).
@@ -1078,124 +1077,124 @@ class PropertyRoot(NonlinearSystemProblem):
         return residual
 
 
-class SonicStateProblem(NonlinearSystemProblem):
-    """ """
+# class SonicStateProblem(NonlinearSystemProblem):
+#     """ """
 
-    def __init__(self, fluid, property_pair, prop_1, prop_2):
-        # Calculate the thermodynamic state
-        self.fluid = fluid
-        self.state = fluid.set_state(property_pair, prop_1, prop_2)
+#     def __init__(self, fluid, property_pair, prop_1, prop_2):
+#         # Calculate the thermodynamic state
+#         self.fluid = fluid
+#         self.state = fluid.set_state(property_pair, prop_1, prop_2)
 
-        # Initial guess based in input sstate
-        self.initial_guess = [self.state.d, self.state.T]
+#         # Initial guess based in input sstate
+#         self.initial_guess = [self.state.d, self.state.T]
 
-        # # Initial guess based on perfect gass relations
-        # gamma = self.state.gamma
-        # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho
-        # T_star =  (2/(gamma + 1)) * self.state.T
-        # self.initial_guess = [d_star, T_star]
+#         # # Initial guess based on perfect gass relations
+#         # gamma = self.state.gamma
+#         # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho
+#         # T_star =  (2/(gamma + 1)) * self.state.T
+#         # self.initial_guess = [d_star, T_star]
 
-    def get_values(self, x):
-        # Ensure x can be indexed and contains exactly two elements
-        if not hasattr(x, "__getitem__") or len(x) != 2:
-            raise ValueError(
-                "Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature."
-            )
+#     def get_values(self, x):
+#         # Ensure x can be indexed and contains exactly two elements
+#         if not hasattr(x, "__getitem__") or len(x) != 2:
+#             raise ValueError(
+#                 "Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature."
+#             )
 
-        # Calculate state for the current density-temperature pair
-        crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])
+#         # Calculate state for the current density-temperature pair
+#         crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])
 
-        # Calculate the sonic state residual
-        residual = np.asarray(
-            [
-                1.0 - (crit_state.h + 0.5 * crit_state.a**2) / self.state.h,
-                1.0 - crit_state.s / self.state.s,
-            ]
-        )
+#         # Calculate the sonic state residual
+#         residual = np.asarray(
+#             [
+#                 1.0 - (crit_state.h + 0.5 * crit_state.a**2) / self.state.h,
+#                 1.0 - crit_state.s / self.state.s,
+#             ]
+#         )
 
-        return residual
+#         return residual
 
 
-class SonicStateProblem2(OptimizationProblem):
-    """ """
+# class SonicStateProblem2(OptimizationProblem):
+#     """ """
 
-    def __init__(self, fluid, property_pair, prop_1, prop_2):
-        # Calculate the thermodynamic state
-        self.fluid = fluid
-        self.state = fluid.set_state(property_pair, prop_1, prop_2)
+#     def __init__(self, fluid, property_pair, prop_1, prop_2):
+#         # Calculate the thermodynamic state
+#         self.fluid = fluid
+#         self.state = fluid.set_state(property_pair, prop_1, prop_2)
 
-        # Initial guess based in input sstate
-        self.initial_guess = [self.state.d, self.state.T * 0.9]
+#         # Initial guess based in input sstate
+#         self.initial_guess = [self.state.d, self.state.T * 0.9]
 
-        # # Initial guess based on perfect gass relations
-        # gamma = self.state.gamma
-        # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho
-        # T_star =  (2/(gamma + 1)) * self.state.T
-        # self.initial_guess = [d_star, T_star]
+#         # # Initial guess based on perfect gass relations
+#         # gamma = self.state.gamma
+#         # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho
+#         # T_star =  (2/(gamma + 1)) * self.state.T
+#         # self.initial_guess = [d_star, T_star]
 
-    def get_values(self, x):
-        """
-        Compute the residuals for the given density and temperature.
+#     def get_values(self, x):
+#         """
+#         Compute the residuals for the given density and temperature.
 
-        Parameters
-        ----------
-        x : list
-            List containing the values for density and temperature.
+#         Parameters
+#         ----------
+#         x : list
+#             List containing the values for density and temperature.
 
-        Returns
-        -------
-        np.ndarray
-            Array containing residuals (difference) for the two properties.
-        """
+#         Returns
+#         -------
+#         np.ndarray
+#             Array containing residuals (difference) for the two properties.
+#         """
 
-        # Ensure x can be indexed and contains exactly two elements
-        if not hasattr(x, "__getitem__") or len(x) != 2:
-            raise ValueError(
-                "Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature."
-            )
+#         # Ensure x can be indexed and contains exactly two elements
+#         if not hasattr(x, "__getitem__") or len(x) != 2:
+#             raise ValueError(
+#                 "Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature."
+#             )
 
-        # Calculate state for the current density-temperature pair
-        crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])
+#         # Calculate state for the current density-temperature pair
+#         crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])
 
-        # Calculate the sonic state residual
-        residual = [
-            1.0 - crit_state.s / self.state.s,
-        ]
+#         # Calculate the sonic state residual
+#         residual = [
+#             1.0 - crit_state.s / self.state.s,
+#         ]
 
-        # Objective function
-        self.f = crit_state.d**2 * (self.state.h - crit_state.h)
-        self.f = -self.f / (self.state.d * self.state.a) ** 2
+#         # Objective function
+#         self.f = crit_state.d**2 * (self.state.h - crit_state.h)
+#         self.f = -self.f / (self.state.d * self.state.a) ** 2
 
-        # Equality constraints
-        self.c_eq = residual
+#         # Equality constraints
+#         self.c_eq = residual
 
-        # No inequality constraints given for this problem
-        self.c_ineq = []
+#         # No inequality constraints given for this problem
+#         self.c_ineq = []
 
-        # Combine objective function and constraints
-        objective_and_constraints = self.merge_objective_and_constraints(
-            self.f, self.c_eq, self.c_ineq
-        )
+#         # Combine objective function and constraints
+#         objective_and_constraints = self.merge_objective_and_constraints(
+#             self.f, self.c_eq, self.c_ineq
+#         )
 
-        return objective_and_constraints
+#         return objective_and_constraints
 
-    def get_bounds(self):
-        bound_density = (
-            self.fluid.triple_point_vapor.d * 1.5,
-            self.fluid.critical_point.d * 3,
-        )
-        bound_temperature = (
-            self.fluid.triple_point_vapor.T * 1,
-            self.fluid.critical_point.T * 3,
-        )
-        # return [bound_density, bound_temperature]
-        return None
+#     def get_bounds(self):
+#         bound_density = (
+#             self.fluid.triple_point_vapor.d * 1.5,
+#             self.fluid.critical_point.d * 3,
+#         )
+#         bound_temperature = (
+#             self.fluid.triple_point_vapor.T * 1,
+#             self.fluid.critical_point.T * 3,
+#         )
+#         # return [bound_density, bound_temperature]
+#         return None
 
-    def get_n_eq(self):
-        return self.get_number_of_constraints(self.c_eq)
+#     def get_n_eq(self):
+#         return self.get_number_of_constraints(self.c_eq)
 
-    def get_n_ineq(self):
-        return self.get_number_of_constraints(self.c_ineq)
+#     def get_n_ineq(self):
+#         return self.get_number_of_constraints(self.c_ineq)
 
 
 def calculate_superheating(state, fluid):
