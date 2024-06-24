@@ -3,7 +3,7 @@
 Performance prediction
 =====================================================
 
-In this section, you will learn how to use TurboFlow to predict the performance of an axial turbine. This includes setting up the configuration file, running the analysis, and interpreting the results.
+In this section, you will learn how to use TurboFlow to predict the performance of turbomachinery. This includes setting up the configuration file, running the analysis, and interpreting the results.
 Performance prediction is excecuted in three steps:
 
     1. Load configuration file.
@@ -66,19 +66,19 @@ while the rest is optional. Here is an example of how the confiugration file cou
         alpha_in: 0 # Required
 
     simulation_options: # Optional
-    deviation_model : aungier  # Optional
-    choking_model : evaluate_cascade_critical # Optional
-    rel_step_fd: 1e-4  # Optional
-    loss_model:  # Optional
-        model: benner  # Optional
-        loss_coefficient: stagnation_pressure  # Optional
-        inlet_displacement_thickness_height_ratio: 0.011  # Optional
-        tuning_factors:  # Optional
-            profile: 1.00  # Optional
-            incidence: 1.00  # Optional
-            secondary: 1.00  # Optional
-            trailing: 1.00  # Optional
-            clearance: 1.00  # Optional
+        deviation_model : aungier  # Optional
+        choking_model : evaluate_cascade_critical # Optional
+        rel_step_fd: 1e-4  # Optional
+        loss_model:  # Optional
+            model: benner  # Optional
+            loss_coefficient: stagnation_pressure  # Optional
+            inlet_displacement_thickness_height_ratio: 0.011  # Optional
+            tuning_factors:  # Optional
+                profile: 1.00  # Optional
+                incidence: 1.00  # Optional
+                secondary: 1.00  # Optional
+                trailing: 1.00  # Optional
+                clearance: 1.00  # Optional
     
     performance_analysis : # Optional
         performance_map: # Required if simulating performance across performance map
@@ -116,7 +116,7 @@ while the rest is optional. Here is an example of how the confiugration file cou
         throat_location_fraction: [1, 1] # Required
 
   
-To load the configuration file, the absolute path must be provided to the `load_config` function inside the `turboflow` package:
+To load the configuration file, the absolute path must be provided to `turboflow.load_config`:
 
 .. code-block:: python
     
@@ -135,7 +135,7 @@ To load the configuration file, the absolute path must be provided to the `load_
 
 Compute performance at a single point
 --------------------------------------
-To perform single-point performance prediction, the `operation_points` section in the configuration file should be defined in the follwoing way:
+To perform single-point performance prediction, the `operation_points` section in the configuration file should be defined in the following way:
 
 .. code-block:: python
 
@@ -147,7 +147,7 @@ To perform single-point performance prediction, the `operation_points` section i
         omega: 1627
         alpha_in: 0
 
-After loading the configuration file, the operation point is extracted from the configuration file, and provided to the function computing the turbine performance:
+After loading the configuration file, the operation point is extracted from the configuration file, and provided to `turboflow.compute_performance`:
 
 .. code:: python
 
@@ -170,7 +170,7 @@ After loading the configuration file, the operation point is extracted from the 
 
 Compute performance at a set of points 
 -----------------------------------------
-To perform performance prediction at a set of operation points, the `operation_points` section in the configuration file should be a list of points:
+To perform performance prediction at a set of operation points, the `operation_points` section in the configuration file should be a list of operating points:
 
 .. code-block:: python
 
@@ -188,7 +188,7 @@ To perform performance prediction at a set of operation points, the `operation_p
             omega: 1627
             alpha_in: 0
 
-After loading the configuration file, the operation points are extracted from the configuration file, and provided to the function computing the turbine performance:
+After loading the configuration file, the operation points are extracted from the configuration file, and provided to `turboflow.compute_performance`:
 
 .. code:: python
 
@@ -226,11 +226,11 @@ To perform performance prediction across a performance map, a `perfomance_map` s
         omega: 1627*np.array([0.9, 1.0, 1.1])
         alpha_in: 0 
 
-The performance map is defined by setting either a value or ranges for each boundary conditions. The perfomance map is constructed by generating a list
-of every combination of the given ranges. In the example above, the performance will be simulated for a total-to-static pressure ratio between 1.6 and 4.5 
+The performance map is defined by setting either a value or a range for each boundary condition. The perfomance map is constructed by generating a list
+of every combination of the given values/ranges. In the example above, the performance will be simulated for a total-to-static pressure ratio between 1.6 and 4.5 
 at 90%, 100% and 110% of the design angular speed (`omega` = 1627).
 
-After loading the configuration file, the performance map is extracted from the configuration file, and provided to the function computing the turbine performance:
+After loading the configuration file, the performance map is extracted from the configuration file, and provided to `turboflow.compute_performance`:
 
 .. code-block:: python
 
@@ -269,22 +269,22 @@ When calling `turboflow.compute_performance()`, there are some keyword arguments
 
 The **initial_guess** variable is used for the first operation point. If given, it must be a dictionary with the following keys:
 
-        - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
-        - `eta_ts`, which is the assumed total-to-static efficiency.
-        - `eta_tt`, which is the assumed total-to-total efficiency.
-        - `Ma_crit`, which is the assumed critical mash number.
+        - `enthalpy_loss_fractions`: a list of assumed fractions of enthalpy loss that occurs for each cascade.
+        - `eta_ts`: the assumed total-to-static efficiency.
+        - `eta_tt`: the assumed total-to-total efficiency.
+        - `Ma_crit`: the assumed critical mash number.
 
-It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This
-require care as the user must have a complete knowledge of the different variables, and setup, such that the initial guess 
-corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value.
-For subsequent operation points, the function employs a strategy to use the closest previously computed operation point's solution
-as the initial guess. This approach is based on the heuristic that similar operation points have similar
-performance characteristics, which can improve convergence speed and robustness of the solution process.
-If the solution fails to converge, a set of initial guesses is provided to try other guesses.
+Alternatively, it can be a comprehensive dictionary with the full set of initial guesses directly supplied to the solver. 
+This requires careful attention to ensure the initial guess aligns with the entire configuration file, necessitating a 
+thorough understanding of the various variables and setup. If an initial guess is not provided, a default guess will be 
+used. For subsequent operation points, the function leverages the solution from the nearest previously computed operation 
+point as the initial guess. This strategy is based on the heuristic that similar operation points tend to exhibit similar 
+performance characteristics, thereby enhancing the speed and robustness of the convergence process.In cases where the 
+solution fails to converge, a range of initial guesses is utilized to attempt alternative solutions.
 
-If **export_results** is `True`, then the simulation data is exported as an excel file to either a gven or a defualt directory. The defualt directory (**out_dir**)
-is "output", and the defualt filename (**out_filename**) is `performance_analysis_{current_time}`, where `current_time` is a string describing the current time on the form 
-`{year}_{month}_{day}_{hour}_{minute}_{second}`.  
+If **export_results** is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
+specified directory (**out_dir**) or to the default directory “output”. The default filename (**out_filename**) is `performance_analysis_{current_time}`, 
+where current_time is a string formatted as `{year}{month}{day}{hour}{minute}_{second}`.
 
 The **stop_on_failure** breaks the analysis if one of the operation points fails to converge. 
 
@@ -293,8 +293,13 @@ The **stop_on_failure** breaks the analysis if one of the operation points fails
 Plotting results
 ------------------
 
-By providing the excel file with the simulated data (exported by `turboflow.compute_performance()`), a plotting function is available to 
-graphically illustrate the results:
+A plotting function is provided to graphically illustrate the simulated data. It supports various types of plots, including:
+
+    - :ref:`single_line`, e.g. mass flow rate as a function of pressure ratio
+    - :ref:`plot_several_lines`, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed
+    - :ref:`stacked_plots`, e.g. stacked loss coefficients as a function of pressure ratio
+
+The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (`x_key` and `y_key`):
 
 .. code-block:: python
 
@@ -315,19 +320,14 @@ graphically illustrate the results:
         save_figs=True,
     )
 
-By provididing an `x-key` and a list of `y_keys`, which refer to column names in the excel file, the `y_keys` are plotted as a function of `x-key`.
-With this function we can plot different types of plots:
-
-    - :ref:`single_line`, e.g. mass flow rate as a function of pressure ratio
-    - :ref:`plot_several_lines`, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed
-    - :ref:`stacked_plots`, e.g. stacked loss coefficients as a function of pressure ratio
+The subsequent subsections gives a more detailed description of how to setup up the various plots. 
 
 .. _single_line:
 
 Plot single line
 ^^^^^^^^^^^^^^^^^^
 
-To plot a single line, simply provide one key in `y_keys`:
+To plot a single line, simply specify the list `y_keys` with one key:
 
 .. code-block:: python
 
@@ -374,8 +374,11 @@ the data is filtered based on a specific angular speed:
         save_figs=True,
     )
 
-The subset is constructed by first giving the key, refering to the value where you want to filter, and then give the values that sets the subset. 
-This code would give the following figure:
+`subsets` is used to filter a subset of the original dataset. It is constructed as a list, where the first element is 
+a string that specifies the parameter you want to use to filter the data. The subsequent elements are the values of the selected
+parameter that you want to include in your subset. 
+
+The example above would give the following figure:
 
 .. image:: ../images/design_speed_mass_flow_rate.png
     :scale: 15%
@@ -385,7 +388,7 @@ This code would give the following figure:
 Plot several lines
 ^^^^^^^^^^^^^^^^^^^
 
-To plot several lines, simply provide several keys in `y_keys`:
+To plot several lines, To plot a single line, simply specify the list `y_keys` with several keys:
 
 .. code-block:: python
 
@@ -412,12 +415,13 @@ To plot several lines, simply provide several keys in `y_keys`:
         save_figs=True,
     )
 
-which would give this figure:
+This example would give the following figure:
 
 .. image:: ../images/static_pressure.png
     :scale: 15%
 
-Similarly for the single point line, a subset can be defined. However, you can define several subset, such that you can plot a variable at different subsets. In this example, the mass flow 
+Similarly for the single point line, a subset can be defined. However, you can define several subsets, by specifying more 
+values for the selected parameter. In this example, the mass flow 
 rate is plotted as a function of total-to-static pressure ratio, at different subsets of angular speed:
 
 .. code-block:: python
@@ -453,7 +457,8 @@ resulting in this figure:
 Stacked plots
 ^^^^^^^^^^^^^^
 
-Stacked plots can be convenient to illustrate the different loss coefficients at different operating points. 
+Stacked plots can be convenient to illustrate the different loss coefficients at different operating points. Stacked plots
+are made by specifying `stack = True`
 
 .. code-block:: python
 

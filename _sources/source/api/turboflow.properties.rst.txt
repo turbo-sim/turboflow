@@ -1,6 +1,11 @@
 turboflow.properties package
 ============================
 
+.. automodule:: turboflow.properties
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -8,11 +13,3 @@ Submodules
    :maxdepth: 4
 
    turboflow.properties.fluid_properties
-
-Module contents
----------------
-
-.. automodule:: turboflow.properties
-   :members:
-   :undoc-members:
-   :show-inheritance:

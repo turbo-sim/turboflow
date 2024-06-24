@@ -110,7 +110,7 @@
              
   <section id="performance-prediction">
 <span id="id1"></span><h1>Performance prediction<a class="headerlink" href="#performance-prediction" title="Link to this heading"></a></h1>
-<p>In this section, you will learn how to use TurboFlow to predict the performance of an axial turbine. This includes setting up the configuration file, running the analysis, and interpreting the results.
+<p>In this section, you will learn how to use TurboFlow to predict the performance of turbomachinery. This includes setting up the configuration file, running the analysis, and interpreting the results.
 Performance prediction is excecuted in three steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -171,19 +171,19 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
     <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span> <span class="c1"># Required</span>
 
 <span class="n">simulation_options</span><span class="p">:</span> <span class="c1"># Optional</span>
-<span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
-<span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
-<span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
-<span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
-    <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>  <span class="c1"># Optional</span>
-    <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="mf">0.011</span>  <span class="c1"># Optional</span>
-    <span class="n">tuning_factors</span><span class="p">:</span>  <span class="c1"># Optional</span>
-        <span class="n">profile</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">incidence</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">secondary</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">trailing</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+    <span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
+    <span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
+    <span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
+    <span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
+        <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>  <span class="c1"># Optional</span>
+        <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="mf">0.011</span>  <span class="c1"># Optional</span>
+        <span class="n">tuning_factors</span><span class="p">:</span>  <span class="c1"># Optional</span>
+            <span class="n">profile</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">incidence</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">secondary</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">trailing</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
 
 <span class="n">performance_analysis</span> <span class="p">:</span> <span class="c1"># Optional</span>
     <span class="n">performance_map</span><span class="p">:</span> <span class="c1"># Required if simulating performance across performance map</span>
@@ -221,7 +221,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
     <span class="n">throat_location_fraction</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="c1"># Required</span>
 </pre></div>
 </div>
-<p>To load the configuration file, the absolute path must be provided to the <cite>load_config</cite> function inside the <cite>turboflow</cite> package:</p>
+<p>To load the configuration file, the absolute path must be provided to <cite>turboflow.load_config</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -237,7 +237,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 </section>
 <section id="compute-performance-at-a-single-point">
 <span id="single-point"></span><h2>Compute performance at a single point<a class="headerlink" href="#compute-performance-at-a-single-point" title="Link to this heading"></a></h2>
-<p>To perform single-point performance prediction, the <cite>operation_points</cite> section in the configuration file should be defined in the follwoing way:</p>
+<p>To perform single-point performance prediction, the <cite>operation_points</cite> section in the configuration file should be defined in the following way:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">operation_points</span><span class="p">:</span>
     <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span>
     <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
@@ -247,7 +247,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
     <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
 </pre></div>
 </div>
-<p>After loading the configuration file, the operation point is extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<p>After loading the configuration file, the operation point is extracted from the configuration file, and provided to <cite>turboflow.compute_performance</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -267,7 +267,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 </section>
 <section id="compute-performance-at-a-set-of-points">
 <span id="set-of-points"></span><h2>Compute performance at a set of points<a class="headerlink" href="#compute-performance-at-a-set-of-points" title="Link to this heading"></a></h2>
-<p>To perform performance prediction at a set of operation points, the <cite>operation_points</cite> section in the configuration file should be a list of points:</p>
+<p>To perform performance prediction at a set of operation points, the <cite>operation_points</cite> section in the configuration file should be a list of operating points:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">operation_points</span><span class="p">:</span>
     <span class="o">-</span> <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># First point</span>
         <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
@@ -283,7 +283,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
         <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
 </pre></div>
 </div>
-<p>After loading the configuration file, the operation points are extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<p>After loading the configuration file, the operation points are extracted from the configuration file, and provided to <cite>turboflow.compute_performance</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -314,10 +314,10 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
       <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
 </pre></div>
 </div>
-<p>The performance map is defined by setting either a value or ranges for each boundary conditions. The perfomance map is constructed by generating a list
-of every combination of the given ranges. In the example above, the performance will be simulated for a total-to-static pressure ratio between 1.6 and 4.5
+<p>The performance map is defined by setting either a value or a range for each boundary condition. The perfomance map is constructed by generating a list
+of every combination of the given values/ranges. In the example above, the performance will be simulated for a total-to-static pressure ratio between 1.6 and 4.5
 at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</p>
-<p>After loading the configuration file, the performance map is extracted from the configuration file, and provided to the function computing the turbine performance:</p>
+<p>After loading the configuration file, the performance map is extracted from the configuration file, and provided to <cite>turboflow.compute_performance</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -352,28 +352,35 @@ at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</
 <p>The <strong>initial_guess</strong> variable is used for the first operation point. If given, it must be a dictionary with the following keys:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><cite>enthalpy_loss_fractions</cite>, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.</p></li>
-<li><p><cite>eta_ts</cite>, which is the assumed total-to-static efficiency.</p></li>
-<li><p><cite>eta_tt</cite>, which is the assumed total-to-total efficiency.</p></li>
-<li><p><cite>Ma_crit</cite>, which is the assumed critical mash number.</p></li>
+<li><p><cite>enthalpy_loss_fractions</cite>: a list of assumed fractions of enthalpy loss that occurs for each cascade.</p></li>
+<li><p><cite>eta_ts</cite>: the assumed total-to-static efficiency.</p></li>
+<li><p><cite>eta_tt</cite>: the assumed total-to-total efficiency.</p></li>
+<li><p><cite>Ma_crit</cite>: the assumed critical mash number.</p></li>
 </ul>
 </div></blockquote>
-<p>It can also be a dictionary containing the full set of initial guess that is provided directly to the solver. This
-require care as the user must have a complete knowledge of the different variables, and setup, such that the initial guess
-corresponds with the rest of the configuration file. If the initial guess is not given, it is set to a default value.
-For subsequent operation points, the function employs a strategy to use the closest previously computed operation point’s solution
-as the initial guess. This approach is based on the heuristic that similar operation points have similar
-performance characteristics, which can improve convergence speed and robustness of the solution process.
-If the solution fails to converge, a set of initial guesses is provided to try other guesses.</p>
-<p>If <strong>export_results</strong> is <cite>True</cite>, then the simulation data is exported as an excel file to either a gven or a defualt directory. The defualt directory (<strong>out_dir</strong>)
-is “output”, and the defualt filename (<strong>out_filename</strong>) is <cite>performance_analysis_{current_time}</cite>, where <cite>current_time</cite> is a string describing the current time on the form
-<cite>{year}_{month}_{day}_{hour}_{minute}_{second}</cite>.</p>
+<p>Alternatively, it can be a comprehensive dictionary with the full set of initial guesses directly supplied to the solver.
+This requires careful attention to ensure the initial guess aligns with the entire configuration file, necessitating a
+thorough understanding of the various variables and setup. If an initial guess is not provided, a default guess will be
+used. For subsequent operation points, the function leverages the solution from the nearest previously computed operation
+point as the initial guess. This strategy is based on the heuristic that similar operation points tend to exhibit similar
+performance characteristics, thereby enhancing the speed and robustness of the convergence process.In cases where the
+solution fails to converge, a range of initial guesses is utilized to attempt alternative solutions.</p>
+<p>If <strong>export_results</strong> is set to True, the simulation data is exported as an Excel file. The file is saved either to a
+specified directory (<strong>out_dir</strong>) or to the default directory “output”. The default filename (<strong>out_filename</strong>) is <cite>performance_analysis_{current_time}</cite>,
+where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minute}_{second}</cite>.</p>
 <p>The <strong>stop_on_failure</strong> breaks the analysis if one of the operation points fails to converge.</p>
 </section>
 <section id="plotting-results">
 <span id="plotting"></span><h2>Plotting results<a class="headerlink" href="#plotting-results" title="Link to this heading"></a></h2>
-<p>By providing the excel file with the simulated data (exported by <cite>turboflow.compute_performance()</cite>), a plotting function is available to
-graphically illustrate the results:</p>
+<p>A plotting function is provided to graphically illustrate the simulated data. It supports various types of plots, including:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#single-line"><span class="std std-ref">Plot single line</span></a>, e.g. mass flow rate as a function of pressure ratio</p></li>
+<li><p><a class="reference internal" href="#plot-several-lines"><span class="std std-ref">Plot several lines</span></a>, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed</p></li>
+<li><p><a class="reference internal" href="#stacked-plots"><span class="std std-ref">Stacked plots</span></a>, e.g. stacked loss coefficients as a function of pressure ratio</p></li>
+</ul>
+</div></blockquote>
+<p>The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (<cite>x_key</cite> and <cite>y_key</cite>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
@@ -392,18 +399,10 @@ graphically illustrate the results:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>By provididing an <cite>x-key</cite> and a list of <cite>y_keys</cite>, which refer to column names in the excel file, the <cite>y_keys</cite> are plotted as a function of <cite>x-key</cite>.
-With this function we can plot different types of plots:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference internal" href="#single-line"><span class="std std-ref">Plot single line</span></a>, e.g. mass flow rate as a function of pressure ratio</p></li>
-<li><p><a class="reference internal" href="#plot-several-lines"><span class="std std-ref">Plot several lines</span></a>, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed</p></li>
-<li><p><a class="reference internal" href="#stacked-plots"><span class="std std-ref">Stacked plots</span></a>, e.g. stacked loss coefficients as a function of pressure ratio</p></li>
-</ul>
-</div></blockquote>
+<p>The subsequent subsections gives a more detailed description of how to setup up the various plots.</p>
 <section id="plot-single-line">
 <span id="single-line"></span><h3>Plot single line<a class="headerlink" href="#plot-single-line" title="Link to this heading"></a></h3>
-<p>To plot a single line, simply provide one key in <cite>y_keys</cite>:</p>
+<p>To plot a single line, simply specify the list <cite>y_keys</cite> with one key:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
@@ -446,13 +445,15 @@ the data is filtered based on a specific angular speed:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The subset is constructed by first giving the key, refering to the value where you want to filter, and then give the values that sets the subset.
-This code would give the following figure:</p>
+<p><cite>subsets</cite> is used to filter a subset of the original dataset. It is constructed as a list, where the first element is
+a string that specifies the parameter you want to use to filter the data. The subsequent elements are the values of the selected
+parameter that you want to include in your subset.</p>
+<p>The example above would give the following figure:</p>
 <a class="reference internal image-reference" href="../../_images/design_speed_mass_flow_rate.png"><img alt="../../_images/design_speed_mass_flow_rate.png" src="../../_images/design_speed_mass_flow_rate.png" style="width: 465.45px; height: 343.2px;" /></a>
 </section>
 <section id="plot-several-lines">
 <span id="id3"></span><h3>Plot several lines<a class="headerlink" href="#plot-several-lines" title="Link to this heading"></a></h3>
-<p>To plot several lines, simply provide several keys in <cite>y_keys</cite>:</p>
+<p>To plot several lines, To plot a single line, simply specify the list <cite>y_keys</cite> with several keys:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
@@ -477,9 +478,10 @@ This code would give the following figure:</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>which would give this figure:</p>
+<p>This example would give the following figure:</p>
 <a class="reference internal image-reference" href="../../_images/static_pressure.png"><img alt="../../_images/static_pressure.png" src="../../_images/static_pressure.png" style="width: 465.59999999999997px; height: 343.2px;" /></a>
-<p>Similarly for the single point line, a subset can be defined. However, you can define several subset, such that you can plot a variable at different subsets. In this example, the mass flow
+<p>Similarly for the single point line, a subset can be defined. However, you can define several subsets, by specifying more
+values for the selected parameter. In this example, the mass flow
 rate is plotted as a function of total-to-static pressure ratio, at different subsets of angular speed:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -508,7 +510,8 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
 </section>
 <section id="stacked-plots">
 <span id="id4"></span><h3>Stacked plots<a class="headerlink" href="#stacked-plots" title="Link to this heading"></a></h3>
-<p>Stacked plots can be convenient to illustrate the different loss coefficients at different operating points.</p>
+<p>Stacked plots can be convenient to illustrate the different loss coefficients at different operating points. Stacked plots
+are made by specifying <cite>stack = True</cite></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>

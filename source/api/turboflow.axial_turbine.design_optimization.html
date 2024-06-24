@@ -66,12 +66,10 @@
 <li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="turboflow.axial_turbine.html#module-turboflow.axial_turbine">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.properties.html">turboflow.properties package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.turbo_configurations.html">turboflow.turbo_configurations package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
 </ul>
 </li>
@@ -282,6 +280,32 @@ Float values are kept as is.</p>
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints">
 <span class="sig-name descname"><span class="pre">get_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraints</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.get_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.get_constraints" title="Link to this definition"></a></dt>
 <dd><p>Converts a list of constraints to equality and inequality constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constraints</strong><span class="classifier">list of dict</span></dt><dd><p>List of constraints where each constraint is represented as a dictionary
+with keys “type”, “variable”, “value”, and “normalize”. “type” represents
+the type of constraint (‘=’, ‘&lt;’, or ‘&gt;’). “variable” is the variable
+involved in the constraint. “value” is the value of the constraint. “normalize”
+specifies whether to normalize the constraint value.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list of dict</dt><dd><p>List of equality constraints, each represented as a dictionary with keys
+“variable”, “value”, and “scale”. “variable” is the variable involved
+in the constraint. “value” is the value of the constraint. “scale” is
+the scaling factor applied to the value.</p>
+</dd>
+<dt>list of dict</dt><dd><p>List of inequality constraints, each represented as a dictionary with keys
+“variable”, “value”, and “scale”. “variable” is the variable involved
+in the constraint. “value” is the value of the constraint. “scale” is
+the scaling factor applied to the value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -333,6 +357,12 @@ Path is on the form <cite>dataframe.column</cite>, and returns <cite>d[dataframe
 <dt><strong>d</strong><span class="classifier">dict</span></dt><dd><p>Dictionary of DataFrames</p>
 </dd>
 <dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>String giving the path of the DataFrame values</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Array of specified values</p>
 </dd>
 </dl>
 </dd>

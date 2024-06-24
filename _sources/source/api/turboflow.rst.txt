@@ -1,5 +1,10 @@
-API Reference
+turboflow package
 =================
+
+.. automodule:: turboflow
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Subpackages
 -----------
@@ -10,7 +15,6 @@ Subpackages
    turboflow.axial_turbine
    turboflow.properties
    turboflow.pysolver_view
-   turboflow.turbo_configurations
    turboflow.utilities
 
 Submodules
@@ -22,11 +26,3 @@ Submodules
    turboflow.config_validation
    turboflow.math
    turboflow.plot_functions
-
-Module contents
----------------
-
-.. automodule:: turboflow
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -97,11 +97,11 @@
              
   <section id="configuration-options">
 <span id="configuration-options-short"></span><h1>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading"></a></h1>
-<p>This section describes the different configuration options available for various submodels and simulations in the project.</p>
+<p>This section describes the different configuration options available in TurboFlow.</p>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Loss Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>simulation_options.loss_model.model</cite>:</p>
+<p class="sd-card-text">These are the valid loss model options:</p>
 <ul class="simple">
 <li><p class="sd-card-text"><cite>benner</cite>: see <a class="reference internal" href="../model_description/loss_models/benner_sjolander_moustapha_2006.html#loss-model-bsm2006"><span class="std std-ref">Benner-Sjolander-Moustapha (2006)</span></a> for model details.</p></li>
 <li><p class="sd-card-text"><cite>kacker_okapuu</cite>: see <a class="reference internal" href="../model_description/loss_models/kacker_okapuu_1982.html#loss-model-ko1982"><span class="std std-ref">Kacker-Okapuu (1982)</span></a> for model details.</p></li>
@@ -113,7 +113,7 @@
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Deviation Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<p class="sd-card-text">These are the valid deviation model options:</p>
 <ul class="simple">
 <li><p class="sd-card-text"><cite>aungier</cite>: see <a class="reference internal" href="../model_description/deviation_models.html#aungier"><span class="std std-ref">Aungier</span></a> for model details.</p></li>
 <li><p class="sd-card-text"><cite>ainley_mathieson</cite>:  see <a class="reference internal" href="../model_description/deviation_models.html#ainley-mathieson"><span class="std std-ref">Ainley and Mathieson</span></a> for model details.</p></li>
@@ -123,7 +123,7 @@
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Choking Models</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>simulation_options.deviation_model</cite>:</p>
+<p class="sd-card-text">These are the valid choking model options:</p>
 <ul class="simple">
 <li><p class="sd-card-text"><cite>evaluate_cascade_critical</cite>: see <a class="reference internal" href="../model_description/choking_models.html#evaluate-cascade-critical"><span class="std std-ref">Calculate critical state model</span></a> for model details.</p></li>
 <li><p class="sd-card-text"><cite>evaluate_cascade_throat</cite>: see <a class="reference internal" href="../model_description/choking_models.html#evaluate-throat"><span class="std std-ref">Evaluate cascade throat model</span></a> for model details.</p></li>
@@ -141,27 +141,29 @@ common objective functions such as:</p>
 <li><p class="sd-card-text"><cite>efficiency_tt</cite></p></li>
 <li><p class="sd-card-text"><cite>power</cite></p></li>
 </ul>
-<p class="sd-card-text">The scale is simply a nonzero float or integer, and is used to scale the objective function. This gives the user to tune the behaviour of the optimization algortihm.
+<p class="sd-card-text">The scale is simply a nonzero float or integer, and is used to scale the objective function. This gives the user control to tune the behaviour of the optimization algorithm.
 The type must be either <cite>maximize</cite> or <cite>minimize</cite>. If the type is <cite>maxmimize</cite>, the sign of the scale changes to ensure that the objective function is in fact maximized.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Constraints</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">The constraints are defined by specifying variable name, value, type and normalize. Similar as for objective function, the constraints are fetched from the <cite>results</cite> dictionary that stores all calculated variables, and
+<p class="sd-card-text">Each constraint is defined by specifying variable name, value, type and normalize. Similar as for objective function, the constraints are fetched from the <cite>results</cite> dictionary that stores all calculated variables, and
 the variable name must be on the form <cite>key.column</cite>, where <cite>key</cite> is a key in <cite>results</cite>, and <cite>column</cite> is the column header in the DataFrame contained in <cite>results[key]</cite>. Here are some example of valid keys:</p>
 <ul class="simple">
 <li><p class="sd-card-text"><cite>overall</cite> to access variables such as mass flow rate (<cite>overall.mass_flow_rate</cite>)</p></li>
 <li><p class="sd-card-text"><cite>geometry</cite> to access geometrical variables such as flaring angle (<cite>geometry.flaring_angle</cite>).</p></li>
-<li><p class="sd-card-text"><cite>plane</cite> to access variables such as relative mach number or reynolds number (<cite>plane.Ma_rel</cite> or <cite>plane.Re</cite>)</p></li>
-<li><p class="sd-card-text"><cite>additional_constraints</cite> to access additional variable such as interspace area ratio (<cite>additional_constraints.interspace_area_ratio</cite>)</p></li>
+<li><p class="sd-card-text"><cite>plane</cite> to access variables such as relative mach number (<cite>plane.Ma_rel</cite>)</p></li>
+<li><p class="sd-card-text"><cite>additional_constraints</cite> to access additional variables such as interspace area ratio (<cite>additional_constraints.interspace_area_ratio</cite>)</p></li>
 </ul>
 <p class="sd-card-text">Type specifies if the constraint is an equaility or inequality constraint, and must be either <cite>&lt;</cite>, <cite>&gt;</cite> or <cite>=</cite>.
-Value specifies the value that the variables should be equal to, less than or greater then, and normalize specifies if the constraint be normalized with the value or not.</p>
+Value specifies the value that the variables should be equal to, less than or greater then, and normalize specifies if the constraint should be normalized with the value or not.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3 sd-fade-in-slide-down">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">Radius Types</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">These inputs are valid for <cite>design_optimization.radius_type</cite>:</p>
+<blockquote>
+<div><p class="sd-card-text">These are the valid radius types:</p>
+</div></blockquote>
 <ul class="simple">
 <li><p class="sd-card-text"><cite>constant_hub</cite>: Generates turbine with constant hub radius.</p></li>
 <li><p class="sd-card-text"><cite>constant_mean</cite>: Generates turbine with constant mean radius.</p></li>

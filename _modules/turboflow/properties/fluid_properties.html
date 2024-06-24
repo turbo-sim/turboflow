@@ -465,7 +465,6 @@
 <span class="sd">        input_type : str or int</span>
 <span class="sd">            The variable pair used to define the thermodynamic state. This should be one of the</span>
 <span class="sd">            predefined input pairs in CoolProp, such as ``PT_INPUTS`` for pressure and temperature.</span>
-<span class="sd">            For all available input pairs, refer to :ref:`this list &lt;module-input-pairs-table&gt;`.</span>
 <span class="sd">        prop_1 : float</span>
 <span class="sd">            The first property value corresponding to the input type (e.g., pressure in Pa if the input</span>
 <span class="sd">            type is CP.PT_INPUTS).</span>
@@ -1246,145 +1245,124 @@
 
 
 
-<div class="viewcode-block" id="SonicStateProblem">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem">[docs]</a>
-<span class="k">class</span> <span class="nc">SonicStateProblem</span><span class="p">(</span><span class="n">NonlinearSystemProblem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+<span class="c1"># class SonicStateProblem(NonlinearSystemProblem):</span>
+<span class="c1">#     &quot;&quot;&quot; &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">property_pair</span><span class="p">,</span> <span class="n">prop_1</span><span class="p">,</span> <span class="n">prop_2</span><span class="p">):</span>
-        <span class="c1"># Calculate the thermodynamic state</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">fluid</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">property_pair</span><span class="p">,</span> <span class="n">prop_1</span><span class="p">,</span> <span class="n">prop_2</span><span class="p">)</span>
+<span class="c1">#     def __init__(self, fluid, property_pair, prop_1, prop_2):</span>
+<span class="c1">#         # Calculate the thermodynamic state</span>
+<span class="c1">#         self.fluid = fluid</span>
+<span class="c1">#         self.state = fluid.set_state(property_pair, prop_1, prop_2)</span>
 
-        <span class="c1"># Initial guess based in input sstate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">initial_guess</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">T</span><span class="p">]</span>
+<span class="c1">#         # Initial guess based in input sstate</span>
+<span class="c1">#         self.initial_guess = [self.state.d, self.state.T]</span>
 
-        <span class="c1"># # Initial guess based on perfect gass relations</span>
-        <span class="c1"># gamma = self.state.gamma</span>
-        <span class="c1"># d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho</span>
-        <span class="c1"># T_star =  (2/(gamma + 1)) * self.state.T</span>
-        <span class="c1"># self.initial_guess = [d_star, T_star]</span>
+<span class="c1">#         # # Initial guess based on perfect gass relations</span>
+<span class="c1">#         # gamma = self.state.gamma</span>
+<span class="c1">#         # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho</span>
+<span class="c1">#         # T_star =  (2/(gamma + 1)) * self.state.T</span>
+<span class="c1">#         # self.initial_guess = [d_star, T_star]</span>
 
-<div class="viewcode-block" id="SonicStateProblem.get_values">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem.get_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="c1"># Ensure x can be indexed and contains exactly two elements</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;__getitem__&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature.&quot;</span>
-            <span class="p">)</span>
+<span class="c1">#     def get_values(self, x):</span>
+<span class="c1">#         # Ensure x can be indexed and contains exactly two elements</span>
+<span class="c1">#         if not hasattr(x, &quot;__getitem__&quot;) or len(x) != 2:</span>
+<span class="c1">#             raise ValueError(</span>
+<span class="c1">#                 &quot;Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature.&quot;</span>
+<span class="c1">#             )</span>
 
-        <span class="c1"># Calculate state for the current density-temperature pair</span>
-        <span class="n">crit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">DmassT_INPUTS</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1">#         # Calculate state for the current density-temperature pair</span>
+<span class="c1">#         crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])</span>
 
-        <span class="c1"># Calculate the sonic state residual</span>
-        <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="n">crit_state</span><span class="o">.</span><span class="n">h</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">crit_state</span><span class="o">.</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">h</span><span class="p">,</span>
-                <span class="mf">1.0</span> <span class="o">-</span> <span class="n">crit_state</span><span class="o">.</span><span class="n">s</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
-            <span class="p">]</span>
-        <span class="p">)</span>
+<span class="c1">#         # Calculate the sonic state residual</span>
+<span class="c1">#         residual = np.asarray(</span>
+<span class="c1">#             [</span>
+<span class="c1">#                 1.0 - (crit_state.h + 0.5 * crit_state.a**2) / self.state.h,</span>
+<span class="c1">#                 1.0 - crit_state.s / self.state.s,</span>
+<span class="c1">#             ]</span>
+<span class="c1">#         )</span>
 
-        <span class="k">return</span> <span class="n">residual</span></div>
-</div>
+<span class="c1">#         return residual</span>
 
 
+<span class="c1"># class SonicStateProblem2(OptimizationProblem):</span>
+<span class="c1">#     &quot;&quot;&quot; &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SonicStateProblem2">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2">[docs]</a>
-<span class="k">class</span> <span class="nc">SonicStateProblem2</span><span class="p">(</span><span class="n">OptimizationProblem</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; &quot;&quot;&quot;</span>
+<span class="c1">#     def __init__(self, fluid, property_pair, prop_1, prop_2):</span>
+<span class="c1">#         # Calculate the thermodynamic state</span>
+<span class="c1">#         self.fluid = fluid</span>
+<span class="c1">#         self.state = fluid.set_state(property_pair, prop_1, prop_2)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">property_pair</span><span class="p">,</span> <span class="n">prop_1</span><span class="p">,</span> <span class="n">prop_2</span><span class="p">):</span>
-        <span class="c1"># Calculate the thermodynamic state</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">fluid</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">property_pair</span><span class="p">,</span> <span class="n">prop_1</span><span class="p">,</span> <span class="n">prop_2</span><span class="p">)</span>
+<span class="c1">#         # Initial guess based in input sstate</span>
+<span class="c1">#         self.initial_guess = [self.state.d, self.state.T * 0.9]</span>
 
-        <span class="c1"># Initial guess based in input sstate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">initial_guess</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="mf">0.9</span><span class="p">]</span>
+<span class="c1">#         # # Initial guess based on perfect gass relations</span>
+<span class="c1">#         # gamma = self.state.gamma</span>
+<span class="c1">#         # d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho</span>
+<span class="c1">#         # T_star =  (2/(gamma + 1)) * self.state.T</span>
+<span class="c1">#         # self.initial_guess = [d_star, T_star]</span>
 
-        <span class="c1"># # Initial guess based on perfect gass relations</span>
-        <span class="c1"># gamma = self.state.gamma</span>
-        <span class="c1"># d_star = (2/(gamma + 1)) ** (1/(gamma-1)) * self.state.rho</span>
-        <span class="c1"># T_star =  (2/(gamma + 1)) * self.state.T</span>
-        <span class="c1"># self.initial_guess = [d_star, T_star]</span>
+<span class="c1">#     def get_values(self, x):</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         Compute the residuals for the given density and temperature.</span>
 
-<div class="viewcode-block" id="SonicStateProblem2.get_values">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_values">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the residuals for the given density and temperature.</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         x : list</span>
+<span class="c1">#             List containing the values for density and temperature.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        x : list</span>
-<span class="sd">            List containing the values for density and temperature.</span>
+<span class="c1">#         Returns</span>
+<span class="c1">#         -------</span>
+<span class="c1">#         np.ndarray</span>
+<span class="c1">#             Array containing residuals (difference) for the two properties.</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        np.ndarray</span>
-<span class="sd">            Array containing residuals (difference) for the two properties.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="c1">#         # Ensure x can be indexed and contains exactly two elements</span>
+<span class="c1">#         if not hasattr(x, &quot;__getitem__&quot;) or len(x) != 2:</span>
+<span class="c1">#             raise ValueError(</span>
+<span class="c1">#                 &quot;Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature.&quot;</span>
+<span class="c1">#             )</span>
 
-        <span class="c1"># Ensure x can be indexed and contains exactly two elements</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;__getitem__&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Input x must be a list, tuple or numpy array containing exactly two elements: density and temperature.&quot;</span>
-            <span class="p">)</span>
+<span class="c1">#         # Calculate state for the current density-temperature pair</span>
+<span class="c1">#         crit_state = self.fluid.set_state(DmassT_INPUTS, x[0], x[1])</span>
 
-        <span class="c1"># Calculate state for the current density-temperature pair</span>
-        <span class="n">crit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">DmassT_INPUTS</span><span class="p">,</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1">#         # Calculate the sonic state residual</span>
+<span class="c1">#         residual = [</span>
+<span class="c1">#             1.0 - crit_state.s / self.state.s,</span>
+<span class="c1">#         ]</span>
 
-        <span class="c1"># Calculate the sonic state residual</span>
-        <span class="n">residual</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="mf">1.0</span> <span class="o">-</span> <span class="n">crit_state</span><span class="o">.</span><span class="n">s</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">s</span><span class="p">,</span>
-        <span class="p">]</span>
+<span class="c1">#         # Objective function</span>
+<span class="c1">#         self.f = crit_state.d**2 * (self.state.h - crit_state.h)</span>
+<span class="c1">#         self.f = -self.f / (self.state.d * self.state.a) ** 2</span>
 
-        <span class="c1"># Objective function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">crit_state</span><span class="o">.</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">h</span> <span class="o">-</span> <span class="n">crit_state</span><span class="o">.</span><span class="n">h</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="c1">#         # Equality constraints</span>
+<span class="c1">#         self.c_eq = residual</span>
 
-        <span class="c1"># Equality constraints</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="n">residual</span>
+<span class="c1">#         # No inequality constraints given for this problem</span>
+<span class="c1">#         self.c_ineq = []</span>
 
-        <span class="c1"># No inequality constraints given for this problem</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="c1">#         # Combine objective function and constraints</span>
+<span class="c1">#         objective_and_constraints = self.merge_objective_and_constraints(</span>
+<span class="c1">#             self.f, self.c_eq, self.c_ineq</span>
+<span class="c1">#         )</span>
 
-        <span class="c1"># Combine objective function and constraints</span>
-        <span class="n">objective_and_constraints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_objective_and_constraints</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span>
-        <span class="p">)</span>
+<span class="c1">#         return objective_and_constraints</span>
 
-        <span class="k">return</span> <span class="n">objective_and_constraints</span></div>
+<span class="c1">#     def get_bounds(self):</span>
+<span class="c1">#         bound_density = (</span>
+<span class="c1">#             self.fluid.triple_point_vapor.d * 1.5,</span>
+<span class="c1">#             self.fluid.critical_point.d * 3,</span>
+<span class="c1">#         )</span>
+<span class="c1">#         bound_temperature = (</span>
+<span class="c1">#             self.fluid.triple_point_vapor.T * 1,</span>
+<span class="c1">#             self.fluid.critical_point.T * 3,</span>
+<span class="c1">#         )</span>
+<span class="c1">#         # return [bound_density, bound_temperature]</span>
+<span class="c1">#         return None</span>
 
+<span class="c1">#     def get_n_eq(self):</span>
+<span class="c1">#         return self.get_number_of_constraints(self.c_eq)</span>
 
-<div class="viewcode-block" id="SonicStateProblem2.get_bounds">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">bound_density</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">triple_point_vapor</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">critical_point</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="n">bound_temperature</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">triple_point_vapor</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">critical_point</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="c1"># return [bound_density, bound_temperature]</span>
-        <span class="k">return</span> <span class="kc">None</span></div>
-
-
-<div class="viewcode-block" id="SonicStateProblem2.get_n_eq">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_n_eq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="SonicStateProblem2.get_n_ineq">
-<a class="viewcode-back" href="../../../source/api/turboflow.properties.fluid_properties.html#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_n_ineq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_number_of_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span><span class="p">)</span></div>
-</div>
-
+<span class="c1">#     def get_n_ineq(self):</span>
+<span class="c1">#         return self.get_number_of_constraints(self.c_ineq)</span>
 
 
 <div class="viewcode-block" id="calculate_superheating">

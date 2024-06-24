@@ -106,12 +106,12 @@
              
   <section id="design-optimization">
 <span id="id1"></span><h1>Design optimization<a class="headerlink" href="#design-optimization" title="Link to this heading"></a></h1>
-<p>This section guides you through the process of optimizing the design of an axial turbine using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
+<p>This section guides you through the process of optimizing the design of turbomachinery using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
 Design optimization is excecuted in two steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Load configuration file.</p></li>
-<li><p>Compute optimal turbine.</p></li>
+<li><p>Compute optimal turbomahcinery.</p></li>
 </ol>
 </div></blockquote>
 <p>Illustrated by a code example:</p>
@@ -140,10 +140,10 @@ full configuration for design optimization is provided, where the required parts
 <blockquote>
 <div><ul class="simple">
 <li><p><cite>turbomachinery</cite> : specifies the turbomachinery configuration.</p></li>
-<li><p><cite>operation_points</cite>: operational points at which the turbomachinery should be evaluated.</p></li>
+<li><p><cite>operation_points</cite>: specifies the design point. If a list is provided, the first point is used.</p></li>
 </ul>
 </div></blockquote>
-<p>while the rest is optional. Here is an example of how the confiugration file could look for a one-stage axial turbine:</p>
+<p>The remaining input is optional. Here is an example of how the configuration file could look for a one-stage axial turbine:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">turbomachinery</span><span class="p">:</span> <span class="n">axial_turbine</span> <span class="c1"># Required</span>
 <span class="n">operation_points</span><span class="p">:</span> <span class="c1"># Required</span>
     <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># Required</span>
@@ -154,19 +154,19 @@ full configuration for design optimization is provided, where the required parts
     <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span> <span class="c1"># Required</span>
 
 <span class="n">simulation_options</span><span class="p">:</span> <span class="c1"># Optional</span>
-<span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
-<span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
-<span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
-<span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
-    <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>  <span class="c1"># Optional</span>
-    <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="mf">0.011</span>  <span class="c1"># Optional</span>
-    <span class="n">tuning_factors</span><span class="p">:</span>  <span class="c1"># Optional</span>
-        <span class="n">profile</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">incidence</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">secondary</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">trailing</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
-        <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+    <span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
+    <span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
+    <span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
+    <span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
+        <span class="n">loss_coefficient</span><span class="p">:</span> <span class="n">stagnation_pressure</span>  <span class="c1"># Optional</span>
+        <span class="n">inlet_displacement_thickness_height_ratio</span><span class="p">:</span> <span class="mf">0.011</span>  <span class="c1"># Optional</span>
+        <span class="n">tuning_factors</span><span class="p">:</span>  <span class="c1"># Optional</span>
+            <span class="n">profile</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">incidence</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">secondary</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">trailing</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
+            <span class="n">clearance</span><span class="p">:</span> <span class="mf">1.00</span>  <span class="c1"># Optional</span>
 
 <span class="n">design_optimization</span><span class="p">:</span> <span class="c1"># Optional</span>
     <span class="n">objective_function</span><span class="p">:</span> <span class="c1"># Optional</span>
@@ -274,12 +274,17 @@ full configuration for design optimization is provided, where the required parts
         <span class="n">update_on</span><span class="p">:</span> <span class="s2">&quot;gradient&quot;</span> <span class="c1"># Optional</span>
 </pre></div>
 </div>
-<p>The <cite>design_optimization</cite> section contains information on the objective function, constraints and design variables. The objective function is defined by specifying a variable, type and scale, while the constraints
-are defined by specifying variable, value, type and if the constraint should be normalized or not. The design variables are defined in <cite>variables</cite>, by
-specifying a set of bounds in addition to the value. All variables have a defualt value, and some have default set of bounds, such that if the user does not provide the full set, the defualt value will be used.
-Note that velocities (<cite>v</cite> and <cite>w</cite>), entropies (<cite>s</cite>) and flow angles (<cite>beta</cite>) must be design variables.
-The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should be constant for the turbine. See <a class="reference internal" href="configuration_options_short.html#configuration-options-short"><span class="std std-ref">Configuration Options</span></a> for more information regarding the available inputs.</p>
-<p>To load the configuration file, the absolute path must be provided to the <cite>load_config</cite> function inside the <cite>turboflow</cite> package:</p>
+<p>The <cite>design_optimization</cite> section contains information on the objective function, constraints and design variables:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>objective_function</cite>: defined by specifying variable, type and scale.</p></li>
+<li><p><cite>constraints</cite>: each constraint is defined by specifying the variable name, type, value and if the constraint should be normalized or not.</p></li>
+<li><p><cite>variables</cite>: set of variables required for design optimization. The variable is considered a design variable if bounds are provided. All variables have a default value, and some have defualt bounds. Note that velocities (<cite>v</cite> and <cite>w</cite>), entropies (<cite>s</cite>) and flow angles (<cite>beta</cite>) must be design variables.</p></li>
+</ul>
+</div></blockquote>
+<p>The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should remain constant through the turbine.
+See <a class="reference internal" href="configuration_options_short.html#configuration-options-short"><span class="std std-ref">Configuration Options</span></a> for more information regarding the available inputs.</p>
+<p>To load the configuration file, the absolute path must be provided to <cite>turboflow.load_config</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -314,13 +319,13 @@ The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should
 <span class="p">):</span>
 </pre></div>
 </div>
-<p>If <cite>export_results</cite> is <cite>True</cite>, the optimal turbine, along with performance at design point and convergence history of the optimization algortihm, is exported as an excel file to
-<cite>out_dir</cite> under the name <cite>out_filename</cite>.</p>
+<p>If <cite>export_results</cite> is set to True, the simulation data is exported as an Excel file. The file is saved either to a
+specified directory (<cite>out_dir</cite>) or to the default directory “output”. The default filename (<cite>out_filename</cite>) is <cite>design_optimization_{current_time}</cite>,
+where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minute}_{second}</cite>.</p>
 </section>
 <section id="plotting-results">
 <span id="plotting-turbine"></span><h2>Plotting results<a class="headerlink" href="#plotting-results" title="Link to this heading"></a></h2>
-<p>By providing the output from the design optimization (exported by <cite>turboflow.compute_optimal_turbine()</cite>), plotting functions are available to
-graphically illustrate the results:</p>
+<p>Plotting functions are provided to graphically illustrate the simulated data:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#plot-velocity-triangles"><span class="std std-ref">Plot velocity triangles</span></a>: <cite>turboflow.plot_velocity_triangles</cite></p></li>
@@ -329,7 +334,8 @@ graphically illustrate the results:</p>
 </div></blockquote>
 <section id="plot-velocity-triangles">
 <span id="id3"></span><h3>Plot velocity triangles<a class="headerlink" href="#plot-velocity-triangles" title="Link to this heading"></a></h3>
-<p>From the plane specific results, the velocity triangles at each plane of the turbine can be plotted:</p>
+<p>This function plots the velocity triangles at each plane of the turbomahcinery. The plot is initialized by providing the plane specific data
+from the solution of optimization problem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -345,12 +351,13 @@ graphically illustrate the results:</p>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_velocity_triangles</span><span class="p">(</span><span class="n">solvers</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;plane&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>An example of how the velocity triangle plots should look:</p>
+<p>Here is an example of how the velocity triangle plots looks:</p>
 <a class="reference internal image-reference" href="../../_images/plot_velocity_triangles.png"><img alt="../../_images/plot_velocity_triangles.png" src="../../_images/plot_velocity_triangles.png" style="width: 480.0px; height: 360.0px;" /></a>
 </section>
 <section id="plot-axial-radial-plane">
 <span id="id4"></span><h3>Plot axial-radial plane<a class="headerlink" href="#plot-axial-radial-plane" title="Link to this heading"></a></h3>
-<p>From the geometry of the optimized turbine, the turbine geometry in the axial-radial plane can be plotted:</p>
+<p>This function plots the geometry of an axial-turbine in the axial-radial plane. The plot is initialized by providing the geometry
+from the solution of the optimization problem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
@@ -366,7 +373,7 @@ graphically illustrate the results:</p>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_axial_radial_plane</span><span class="p">(</span><span class="n">solvers</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here is an example of how the plot should look:</p>
+<p>Here is an example of how the plot look:</p>
 <a class="reference internal image-reference" href="../../_images/plot_axial_radial_plane.png"><img alt="../../_images/plot_axial_radial_plane.png" src="../../_images/plot_axial_radial_plane.png" style="width: 480.0px; height: 360.0px;" /></a>
 </section>
 </section>

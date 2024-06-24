@@ -3,11 +3,11 @@
 Design optimization
 =========================================================
 
-This section guides you through the process of optimizing the design of an axial turbine using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
+This section guides you through the process of optimizing the design of turbomachinery using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
 Design optimization is excecuted in two steps:
 
     1. Load configuration file.
-    2. Compute optimal turbine.
+    2. Compute optimal turbomahcinery.
 
 Illustrated by a code example:
 
@@ -38,9 +38,9 @@ full configuration for design optimization is provided, where the required parts
 In summary, these section are required:
 
     - `turbomachinery` : specifies the turbomachinery configuration.
-    - `operation_points`: operational points at which the turbomachinery should be evaluated.
+    - `operation_points`: specifies the design point. If a list is provided, the first point is used. 
 
-while the rest is optional. Here is an example of how the confiugration file could look for a one-stage axial turbine:
+The remaining input is optional. Here is an example of how the configuration file could look for a one-stage axial turbine:
 
 .. code-block:: python
 
@@ -54,19 +54,19 @@ while the rest is optional. Here is an example of how the confiugration file cou
         alpha_in: 0 # Required
 
     simulation_options: # Optional
-    deviation_model : aungier  # Optional
-    choking_model : evaluate_cascade_critical # Optional
-    rel_step_fd: 1e-4  # Optional
-    loss_model:  # Optional
-        model: benner  # Optional
-        loss_coefficient: stagnation_pressure  # Optional
-        inlet_displacement_thickness_height_ratio: 0.011  # Optional
-        tuning_factors:  # Optional
-            profile: 1.00  # Optional
-            incidence: 1.00  # Optional
-            secondary: 1.00  # Optional
-            trailing: 1.00  # Optional
-            clearance: 1.00  # Optional
+        deviation_model : aungier  # Optional
+        choking_model : evaluate_cascade_critical # Optional
+        rel_step_fd: 1e-4  # Optional
+        loss_model:  # Optional
+            model: benner  # Optional
+            loss_coefficient: stagnation_pressure  # Optional
+            inlet_displacement_thickness_height_ratio: 0.011  # Optional
+            tuning_factors:  # Optional
+                profile: 1.00  # Optional
+                incidence: 1.00  # Optional
+                secondary: 1.00  # Optional
+                trailing: 1.00  # Optional
+                clearance: 1.00  # Optional
     
     design_optimization: # Optional
         objective_function: # Optional
@@ -173,13 +173,16 @@ while the rest is optional. Here is an example of how the confiugration file cou
             plot_convergence: True # Optional
             update_on: "gradient" # Optional
 
-The `design_optimization` section contains information on the objective function, constraints and design variables. The objective function is defined by specifying a variable, type and scale, while the constraints
-are defined by specifying variable, value, type and if the constraint should be normalized or not. The design variables are defined in `variables`, by
-specifying a set of bounds in addition to the value. All variables have a defualt value, and some have default set of bounds, such that if the user does not provide the full set, the defualt value will be used.
-Note that velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
-The `radius_type` defines which radius (hub, mean or tip) that should be constant for the turbine. See :ref:`configuration_options_short` for more information regarding the available inputs. 
+The `design_optimization` section contains information on the objective function, constraints and design variables:
 
-To load the configuration file, the absolute path must be provided to the `load_config` function inside the `turboflow` package:
+    - `objective_function`: defined by specifying variable, type and scale. 
+    - `constraints`: each constraint is defined by specifying the variable name, type, value and if the constraint should be normalized or not. 
+    - `variables`: set of variables required for design optimization. The variable is considered a design variable if bounds are provided. All variables have a default value, and some have defualt bounds. Note that velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
+
+The `radius_type` defines which radius (hub, mean or tip) that should remain constant through the turbine. 
+See :ref:`configuration_options_short` for more information regarding the available inputs. 
+
+To load the configuration file, the absolute path must be provided to `turboflow.load_config`:
 
 .. code-block:: python
     
@@ -219,16 +222,16 @@ To compute the optimal turbine, simply provide the configuration file to the fun
         export_results=True,
     ):
 
-If `export_results` is `True`, the optimal turbine, along with performance at design point and convergence history of the optimization algortihm, is exported as an excel file to 
-`out_dir` under the name `out_filename`.
+If `export_results` is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
+specified directory (`out_dir`) or to the default directory "output". The default filename (`out_filename`) is `design_optimization_{current_time}`, 
+where current_time is a string formatted as `{year}{month}{day}{hour}{minute}_{second}`.
 
 .. _plotting_turbine:
 
 Plotting results
 ---------------------------------------------------
 
-By providing the output from the design optimization (exported by `turboflow.compute_optimal_turbine()`), plotting functions are available to 
-graphically illustrate the results:
+Plotting functions are provided to graphically illustrate the simulated data:
 
     - :ref:`plot_velocity_triangles`: `turboflow.plot_velocity_triangles`
     - :ref:`plot_axial_radial_plane`: `turboflow.plot_axial_radial_plane`
@@ -238,7 +241,8 @@ graphically illustrate the results:
 Plot velocity triangles
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-From the plane specific results, the velocity triangles at each plane of the turbine can be plotted:
+This function plots the velocity triangles at each plane of the turbomahcinery. The plot is initialized by providing the plane specific data
+from the solution of optimization problem:
 
 .. code-block:: python
 
@@ -256,7 +260,7 @@ From the plane specific results, the velocity triangles at each plane of the tur
     
     fig, ax = tf.plot_functions.plot_velocity_triangles(solvers.problem.results["plane"])
 
-An example of how the velocity triangle plots should look:
+Here is an example of how the velocity triangle plots looks:
 
 .. image:: ../images/plot_velocity_triangles.png
     :scale: 15%
@@ -267,7 +271,8 @@ An example of how the velocity triangle plots should look:
 Plot axial-radial plane
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-From the geometry of the optimized turbine, the turbine geometry in the axial-radial plane can be plotted:
+This function plots the geometry of an axial-turbine in the axial-radial plane. The plot is initialized by providing the geometry 
+from the solution of the optimization problem:
 
 .. code-block:: python
 
@@ -285,7 +290,7 @@ From the geometry of the optimized turbine, the turbine geometry in the axial-ra
 
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
-Here is an example of how the plot should look:
+Here is an example of how the plot look:
 
 .. image:: ../images/plot_axial_radial_plane.png
     :scale: 15%

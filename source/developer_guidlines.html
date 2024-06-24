@@ -61,7 +61,12 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guidlines</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#developer-installation-guide">Developer Installation Guide</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pull-request-guidelines">Pull request guidelines</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#testing-guidlines">Testing guidlines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-guidlines">Testing guidlines</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#add-new-tests">Add new tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate-regression-data">Generate regression data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#run-tests">Run tests</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#reporting-issue">Reporting issue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#ci-cd-pipeline">CI/CD Pipeline</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#automated-testing">Automated Testing</a></li>
@@ -106,7 +111,7 @@
 <p>Thank you for considering contributing to this project! Here are some guidelines to help you get started:</p>
 <section id="developer-installation-guide">
 <h2>Developer Installation Guide<a class="headerlink" href="#developer-installation-guide" title="Link to this heading"></a></h2>
-<p>This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
+<p>This installation guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.</p>
 <ol class="arabic">
 <li><p><strong>Fork the repository:</strong></p>
 <ul class="simple">
@@ -129,7 +134,7 @@
 </pre></div>
 </div>
 </li>
-<li><p><strong>Create a dedicated Conda virtual environment for Turboflow development</strong>:</p>
+<li><p><strong>Create a dedicated Conda virtual environment for TurboFlow development</strong>:</p>
 <ul class="simple">
 <li><p>Check that conda is installed:</p></li>
 </ul>
@@ -138,7 +143,7 @@
 </div>
 <ul class="simple">
 <li><p>If not conda is installed, <a class="reference external" href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html">install conda</a>.</p></li>
-<li><p>Create dedicated vitrual environment for turboflow package:</p></li>
+<li><p>Create dedicated virtual environment for turboflow package:</p></li>
 </ul>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>turboflow_env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.11
 </pre></div>
@@ -155,7 +160,7 @@
 </div>
 <p>Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user’s intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project’s requirements.</p>
 </li>
-<li><p><strong>Use Poetry to install the required dependencies for Turboflow development</strong>:</p>
+<li><p><strong>Use Poetry to install the required dependencies for TurboFlow development</strong>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>poetry<span class="w"> </span>install
 </pre></div>
 </div>
@@ -206,7 +211,7 @@
 <section id="testing-guidlines">
 <h2>Testing guidlines<a class="headerlink" href="#testing-guidlines" title="Link to this heading"></a></h2>
 <p>When implementing new features or adding new submodels, you should aim to create unit tests that verifies the functionality of what you are adding.
-This testing framework is designed to streamline the process of testing and validating your Python code using a script that centralizes the test management.
+This testing framework is designed to streamline the process of testing and validating the project using a centralized script to manage tests.
 The framework includes functions for running tests and generating regression data, and are contained in the <cite>tests</cite> folder:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>tests/
 ├── config_files/       # Configuration files for tests
@@ -232,21 +237,23 @@ The framework includes functions for running tests and generating regression dat
 </pre></div>
 </div>
 <p>The principle of the framwork is that <cite>test_performance_analysis</cite> and <cite>test_design_optimization</cite> runs performance analysis and design optimization for a subset of the configuration files
-in <cite>config_files</cite>. The outcome of these tests are compared to the respective data in <cite>regression_data_windows</cite> and <cite>regression_data_linux</cite>, depending on the OS the code is executed from.
-The subset of configuration files used for performance analysis and design optimization is determined in <cite>tests_manager</cite>, through the dictionary <cite>TEST_CONFIGS</cite>:</p>
+in <cite>config_files</cite>. The outcome of these simulations are compared to the respective data in <cite>regression_data_windows</cite> and <cite>regression_data_linux</cite>, depending on the OS the code is executed from.
+The configuration files used for performance analysis and design optimization tests are determined in <cite>tests_manager</cite>, through the dictionary <cite>TEST_CONFIGS</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
      <span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_ainley_mathieson.yaml&quot;</span><span class="p">],</span>
      <span class="s1">&#39;design_optimization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;design_optimization.yaml&quot;</span><span class="p">],</span>
  <span class="p">}</span>
 </pre></div>
 </div>
-<p>To <strong>add new tests</strong>, follow thes steps:</p>
+<section id="add-new-tests">
+<h3>Add new tests<a class="headerlink" href="#add-new-tests" title="Link to this heading"></a></h3>
+<p>To add new tests, follow these steps:</p>
 <ol class="arabic">
 <li><p><strong>Add Configuration Files:</strong></p>
 <p>Place the new configuration file in the <cite>config_files</cite> folder.</p>
 </li>
 <li><p><strong>Update `config_manager.py`:</strong></p>
-<p>Map your new configuration file with its respective test function in <cite>TEST_CONFIGS</cite> in <cite>tests_manager.py</cite>:</p>
+<p>Add your new configuration file with its respective test function in <cite>TEST_CONFIGS</cite> in <cite>tests_manager.py</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">TEST_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
    <span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_ainley_mathieson.yaml&quot;</span><span class="p">,</span>
                            <span class="s2">&quot;performance_analysis_new_test.yaml&quot;</span><span class="p">],</span>
@@ -256,32 +263,55 @@ The subset of configuration files used for performance analysis and design optim
 </pre></div>
 </div>
 </li>
-<li><p><strong>Generate Regression Data (if needed):</strong></p>
-<p>If the new test requires regression data, update <cite>REGRESSION_CONFIGS</cite> in <cite>tests_manager.py</cite> to include the new configuration files:</p>
+<li><p><strong>Generate Regression Data:</strong></p>
+<p>Generate regression data according to <a class="reference internal" href="#generate-regression-data">these steps</a>.</p>
+</li>
+<li><p><strong>Check that the tests pass</strong></p>
+<p>Check that the test pass by following <a class="reference internal" href="#run-tests">these steps</a>.</p>
+</li>
+</ol>
+</section>
+<section id="generate-regression-data">
+<span id="id1"></span><h3>Generate regression data<a class="headerlink" href="#generate-regression-data" title="Link to this heading"></a></h3>
+<p>When adding new tests, or making code changes that affect the output of existing tests, new regression files must be generated.
+Follow these steps to add regression data.</p>
+<ol class="arabic">
+<li><p><strong>Update `REGRESSION_CONFIGS` in `tests_manager.py:</strong></p>
+<p>Include the configuration files for which you want to generate new regression data:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">REGRESSION_CONFIGS</span> <span class="o">=</span> <span class="p">{</span>
 <span class="s1">&#39;performance_analysis&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;performance_analysis_new_test.yaml&quot;</span><span class="p">],</span>
 <span class="s1">&#39;design_optimization&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;design_optimization_new_test.yaml&quot;</span><span class="p">],</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Then open your terminal in the root directory and execute the following command:</p>
+</li>
+<li><p><strong>Generate regression data:</strong></p>
+<p>Run the following command in the root directory of the project:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>tests/generate_regression_data.py
 </pre></div>
 </div>
+</li>
+</ol>
 <p>The new regression data should now be within its respective <cite>regression_data</cite> folder.
 The new regression data must be added to both <cite>regression_data_linux</cite> and <cite>regression_data_windows</cite>. For the OS you do not have access to,
 you can use github actions workflow to generate regression data for other OS. See <cite>Generate Regression Data</cite> workflow in
-<a class="reference external" href="https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml">gitub repository</a>.</p>
-</li>
-</ol>
-<p>To check that the tests behave appropriately, run the tests from the root directory:</p>
+<a class="reference external" href="https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml">gitub repository</a>. The output of this workflow
+is saved as a github artifact and must be downloaded and added to the respective regression data folder manually.</p>
+<p>Make sure that the new tests pass with the new regression files by following <a class="reference internal" href="#run-tests">these steps</a>.</p>
+</section>
+<section id="run-tests">
+<span id="id2"></span><h3>Run tests<a class="headerlink" href="#run-tests" title="Link to this heading"></a></h3>
+<p>The tests are executed locally using pytest. To run the tests, open the terminal in the root directory of the project and run the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>pytest
 </pre></div>
 </div>
+<p>This command will run all scripts starting with <cite>test_</cite> in the <cite>tests</cite> folder, with the corresponding configuration files specified in <cite>test_manager.py</cite>.
+A summary of the tests will be printed, and show if the tests passed or not.</p>
+</section>
 </section>
 <section id="reporting-issue">
 <h2>Reporting issue<a class="headerlink" href="#reporting-issue" title="Link to this heading"></a></h2>
-<p>If you find a bug or have a feature request, please open an issue and follow the provided templates.</p>
+<p>If you find a bug or have a feature request, please open an issue in the Github project page and follow the provided templates.</p>
 </section>
 <section id="ci-cd-pipeline">
 <h2>CI/CD Pipeline<a class="headerlink" href="#ci-cd-pipeline" title="Link to this heading"></a></h2>

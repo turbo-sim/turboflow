@@ -108,6 +108,8 @@
 </dd>
 <dt id="term-Angle-incidence">Angle, incidence<a class="headerlink" href="#term-Angle-incidence" title="Link to this term"></a></dt><dd><p>Difference between the relative inlet flow angle and the metal angle at the leading edge.</p>
 </dd>
+<dt id="term-Angle-metal">Angle, metal<a class="headerlink" href="#term-Angle-metal" title="Link to this term"></a></dt><dd><p>Angle formed by the blade surface of a blade relative to a reference direction.</p>
+</dd>
 <dt id="term-Annulus">Annulus<a class="headerlink" href="#term-Annulus" title="Link to this term"></a></dt><dd><p>Annular duct defined by the shroud and the hub surfaces.</p>
 </dd>
 <dt id="term-Blade">Blade<a class="headerlink" href="#term-Blade" title="Link to this term"></a></dt><dd><p>Aerodynamic profile used in turbomachines to change the velocity and direction of the working fluid. Depending its function, a blade can either be stationary (stator blades) or rotate (rotor blades).</p>
@@ -138,7 +140,7 @@
 </dd>
 <dt id="term-Blade-Leading-edge">Blade, Leading edge<a class="headerlink" href="#term-Blade-Leading-edge" title="Link to this term"></a></dt><dd><p>The foremost point where the suction and pressure surfaces of the blade meet.</p>
 </dd>
-<dt id="term-Blade-Pitch">Blade, Pitch<a class="headerlink" href="#term-Blade-Pitch" title="Link to this term"></a></dt><dd><p>Same as <a class="reference internal" href="#term-Blade-Spacing"><span class="xref std std-term">blade spacing</span></a></p>
+<dt id="term-Blade-Pitch">Blade, Pitch<a class="headerlink" href="#term-Blade-Pitch" title="Link to this term"></a></dt><dd><p>Same as <a class="reference internal" href="#term-Blade-spacing"><span class="xref std std-term">blade spacing</span></a></p>
 </dd>
 <dt id="term-Blade-Pitch-to-chord-ratio">Blade, Pitch-to-chord ratio<a class="headerlink" href="#term-Blade-Pitch-to-chord-ratio" title="Link to this term"></a></dt><dd><p>Dimensionless ratio comparing the blade spacing to the chord length of a blade. This parameter has a string influence on the profile losses within a cascade.</p>
 </dd>
@@ -153,7 +155,7 @@ Rotor blades are also known as buckets.</p>
 </dd>
 <dt id="term-Blade-Solidity">Blade, Solidity<a class="headerlink" href="#term-Blade-Solidity" title="Link to this term"></a></dt><dd><p>The reciprocal of the <a class="reference internal" href="#term-Blade-Pitch-to-chord-ratio"><span class="xref std std-term">pitch-to-chord ratio</span></a></p>
 </dd>
-<dt id="term-Blade-Spacing">Blade, Spacing<a class="headerlink" href="#term-Blade-Spacing" title="Link to this term"></a></dt><dd><p>The circumferential distance separating corresponding points on consecutive blades within a cascade.</p>
+<dt id="term-Blade-spacing">Blade, spacing<a class="headerlink" href="#term-Blade-spacing" title="Link to this term"></a></dt><dd><p>The circumferential distance separating corresponding points on consecutive blades within a cascade.</p>
 </dd>
 <dt id="term-Blade-Stagger-angle">Blade, Stagger angle<a class="headerlink" href="#term-Blade-Stagger-angle" title="Link to this term"></a></dt><dd><p>Angle formed between the chord line and the axial direction. It relates the actual and axial chord lengths, such that the cosine of this angle equals the ratio of the axial chord to the actual chord length.
 Angle between the chord line and the turbine axial direction. The cosine of the stagger angle is equal to the ratio of axial chord to true chord.</p>
@@ -208,57 +210,41 @@ Stator blades are also know as vanes or nozzles.</p>
 <section id="optimization">
 <span id="glossary-optimization"></span><h2>Optimization<a class="headerlink" href="#optimization" title="Link to this heading"></a></h2>
 <dl class="simple glossary">
-<dt id="term-Algorithm-Interior-Point-IP">Algorithm, Interior Point (IP)<a class="headerlink" href="#term-Algorithm-Interior-Point-IP" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Degrees-of-freedom">Degrees of freedom<a class="headerlink" href="#term-Degrees-of-freedom" title="Link to this term"></a></dt><dd><p>The number of independent parameters that can vary in a system or optimization problem. It represents the number of independent directions in which the system can move.</p>
 </dd>
-<dt id="term-Algorithm-Levenberg-Marquardt-LM">Algorithm, Levenberg-Marquardt (LM)<a class="headerlink" href="#term-Algorithm-Levenberg-Marquardt-LM" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Design-variables">Design variables<a class="headerlink" href="#term-Design-variables" title="Link to this term"></a></dt><dd><p>Another term for independent variables, specifically in the context of design optimization. These are the parameters that can be modified to achieve the optimal design.</p>
 </dd>
-<dt id="term-Algorithm-Sequential-Quadratic-Programming-SQP">Algorithm, Sequential Quadratic Programming (SQP)<a class="headerlink" href="#term-Algorithm-Sequential-Quadratic-Programming-SQP" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Equality-constraint">Equality constraint<a class="headerlink" href="#term-Equality-constraint" title="Link to this term"></a></dt><dd><p>A type of constraint in an optimization problem that requires a specific condition to be exactly met. It is typically represented as ( g(x) = 0 ).</p>
 </dd>
-<dt id="term-Algorithm-Trust-region-dogleg">Algorithm, Trust-region dogleg<a class="headerlink" href="#term-Algorithm-Trust-region-dogleg" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Feasibility">Feasibility<a class="headerlink" href="#term-Feasibility" title="Link to this term"></a></dt><dd><p>The condition of satisfying all constraints in an optimization problem. A feasible solution meets all equality and inequality constraints.</p>
 </dd>
-<dt id="term-Convergence-rate">Convergence rate<a class="headerlink" href="#term-Convergence-rate" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Finite-differences">Finite differences<a class="headerlink" href="#term-Finite-differences" title="Link to this term"></a></dt><dd><p>A numerical method used to approximate the derivatives of a function by using the differences in function values at specific points. It is commonly used in gradient-free optimization methods.</p>
 </dd>
-<dt id="term-Degrees-of-freedom">Degrees of freedom<a class="headerlink" href="#term-Degrees-of-freedom" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Gradient-vector">Gradient vector<a class="headerlink" href="#term-Gradient-vector" title="Link to this term"></a></dt><dd><p>A vector that contains the partial derivatives of the objective function with respect to all the design variables. It points in the direction of the steepest ascent or descent.</p>
 </dd>
-<dt id="term-Design-variables">Design variables<a class="headerlink" href="#term-Design-variables" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Gradient-based-optimization">Gradient-based optimization<a class="headerlink" href="#term-Gradient-based-optimization" title="Link to this term"></a></dt><dd><p>An optimization method that uses the gradient of the objective function to guide the search for the minimum or maximum. It typically involves iterative steps in the direction of the negative gradient for minimization problems.</p>
 </dd>
-<dt id="term-Direction-Newton">Direction, Newton<a class="headerlink" href="#term-Direction-Newton" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Gradient-free-optimization">Gradient-free optimization<a class="headerlink" href="#term-Gradient-free-optimization" title="Link to this term"></a></dt><dd><p>An optimization method that does not require the gradient of the objective function. These methods are useful for problems where the gradient is not available or difficult to compute. Examples include genetic algorithms, simulated annealing, and particle swarm optimization.</p>
 </dd>
-<dt id="term-Direction-Steepest-descent">Direction, Steepest descent<a class="headerlink" href="#term-Direction-Steepest-descent" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Hessian-matrix">Hessian matrix<a class="headerlink" href="#term-Hessian-matrix" title="Link to this term"></a></dt><dd><p>A square matrix of second-order partial derivatives of a scalar-valued function. It describes the local curvature of the objective function and is used in second-order optimization methods.</p>
 </dd>
-<dt id="term-Equality-constraint">Equality constraint<a class="headerlink" href="#term-Equality-constraint" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Independent-variables">Independent variables<a class="headerlink" href="#term-Independent-variables" title="Link to this term"></a></dt><dd><p>The variables in an optimization problem that can be adjusted or controlled in order to find the optimal solution. They are also known as decision variables.</p>
 </dd>
-<dt id="term-Feasibility">Feasibility<a class="headerlink" href="#term-Feasibility" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Inequality-constraint">Inequality constraint<a class="headerlink" href="#term-Inequality-constraint" title="Link to this term"></a></dt><dd><p>A type of constraint that restricts the values of the variables to a certain range, typically represented as ( h(x) leq 0 ) or ( h(x) geq 0 ).</p>
 </dd>
-<dt id="term-Finite-differences">Finite differences<a class="headerlink" href="#term-Finite-differences" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Jacobian-matrix">Jacobian matrix<a class="headerlink" href="#term-Jacobian-matrix" title="Link to this term"></a></dt><dd><p>A matrix of all first-order partial derivatives of a vector-valued function. In optimization, it represents the gradients of the constraints with respect to the design variables.</p>
 </dd>
-<dt id="term-Gradient-vector">Gradient vector<a class="headerlink" href="#term-Gradient-vector" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Lagrangian-function">Lagrangian function<a class="headerlink" href="#term-Lagrangian-function" title="Link to this term"></a></dt><dd><p>A function used in constrained optimization problems that combines the objective function and the constraints using Lagrange multipliers. It is used to convert a constrained problem into an unconstrained one.</p>
 </dd>
-<dt id="term-Gradient-based-optimization">Gradient-based optimization<a class="headerlink" href="#term-Gradient-based-optimization" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Line-search">Line search<a class="headerlink" href="#term-Line-search" title="Link to this term"></a></dt><dd><p>An iterative optimization technique that involves moving along a search direction to find an acceptable step size that reduces the objective function.</p>
 </dd>
-<dt id="term-Gradient-free-optimization">Gradient-free optimization<a class="headerlink" href="#term-Gradient-free-optimization" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Objective-function">Objective function<a class="headerlink" href="#term-Objective-function" title="Link to this term"></a></dt><dd><p>The function that is being optimized, which can be either minimized or maximized. It represents the goal of the optimization process.</p>
 </dd>
-<dt id="term-Hessian-Matrix">Hessian Matrix<a class="headerlink" href="#term-Hessian-Matrix" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Optimization-bounds">Optimization bounds<a class="headerlink" href="#term-Optimization-bounds" title="Link to this term"></a></dt><dd><p>The constraints that define the minimum and maximum values that the design variables can take. These bounds limit the search space for the optimization process.</p>
 </dd>
-<dt id="term-Independent-variables">Independent variables<a class="headerlink" href="#term-Independent-variables" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Step-size">Step size<a class="headerlink" href="#term-Step-size" title="Link to this term"></a></dt><dd><p>The magnitude of the change applied to the design variables in each iteration of an optimization algorithm. It determines how far the variables move in the search space during each iteration.</p>
 </dd>
-<dt id="term-Inequality-constraint">Inequality constraint<a class="headerlink" href="#term-Inequality-constraint" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Jacobian-matrix">Jacobian matrix<a class="headerlink" href="#term-Jacobian-matrix" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Lagrangian-function">Lagrangian function<a class="headerlink" href="#term-Lagrangian-function" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Line-search">Line search<a class="headerlink" href="#term-Line-search" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Machine-epsilon">Machine epsilon<a class="headerlink" href="#term-Machine-epsilon" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Objective-function">Objective function<a class="headerlink" href="#term-Objective-function" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Optimization-bounds">Optimization bounds<a class="headerlink" href="#term-Optimization-bounds" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Step-size">Step size<a class="headerlink" href="#term-Step-size" title="Link to this term"></a></dt><dd><p>To be completed</p>
-</dd>
-<dt id="term-Trust-region">Trust region<a class="headerlink" href="#term-Trust-region" title="Link to this term"></a></dt><dd><p>To be completed</p>
+<dt id="term-Trust-region">Trust region<a class="headerlink" href="#term-Trust-region" title="Link to this term"></a></dt><dd><p>An optimization technique where the search for the optimal solution is restricted to a region around the current point, and this region is adjusted based on the success of the optimization steps.</p>
 </dd>
 </dl>
 </section>

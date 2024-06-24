@@ -66,7 +66,7 @@ Axial turbines
     Blade, thickness
         Distance between the pressure and suction surfaces, measured perpendicular to the camber line.
 
-    Blade, Spacing
+    Blade, spacing
         The circumferential distance separating corresponding points on consecutive blades within a cascade.
 
     Blade, Pitch
@@ -115,7 +115,6 @@ Axial turbines
     Cascade, Rotor
         Row of rotating blades that extracts energy from the fluid and transforms it into mechanical work.
 
-
     Stage
         A unit in a turbine that consists of a stator cascade followed by a rotor cascade.
 
@@ -130,7 +129,6 @@ Axial turbines
 
     Stage, Spacing
         Axial distance between the outlet of the stator stage and the inlet of the rotor stage.
-
 
     Angle, flow
         Angle between the absolute or relative velocity vector at a flow station and the axial direction.
@@ -147,6 +145,8 @@ Axial turbines
     Angle, flaring
         Angle defined by the increase of blade height in the axial
 
+    Angle, metal 
+        Angle formed by the blade surface of a blade relative to a reference direction.
 
     Turbine
         Machine that extracts energy from a fluid flow and converts it into useful work.
@@ -162,7 +162,6 @@ Axial turbines
 
     Turbine, mixed-flow
         Turbine in which the flow is deflected from the radial to the axial direction.
-
 
     Casing
         Stationary part of the turbine that contains the rest of the components.
@@ -181,9 +180,6 @@ Axial turbines
 .. Sweep angle, lean angle, dihedral. Relation to the axis of blade stacking in axial turbines
 
 
-
-
-
 .. _glossary_optimization:
 
 
@@ -194,80 +190,58 @@ Optimization
     :sorted:
 
     Gradient-based optimization
-        To be completed
+        An optimization method that uses the gradient of the objective function to guide the search for the minimum or maximum. It typically involves iterative steps in the direction of the negative gradient for minimization problems.
 
     Gradient-free optimization
-        To be completed
+        An optimization method that does not require the gradient of the objective function. These methods are useful for problems where the gradient is not available or difficult to compute. Examples include genetic algorithms, simulated annealing, and particle swarm optimization.
 
     Objective function
-        To be completed
+        The function that is being optimized, which can be either minimized or maximized. It represents the goal of the optimization process.
 
     Equality constraint
-        To be completed
+        A type of constraint in an optimization problem that requires a specific condition to be exactly met. It is typically represented as \( g(x) = 0 \).
 
     Inequality constraint
-        To be completed
+        A type of constraint that restricts the values of the variables to a certain range, typically represented as \( h(x) \leq 0 \) or \( h(x) \geq 0 \).
 
     Lagrangian function
-        To be completed
+        A function used in constrained optimization problems that combines the objective function and the constraints using Lagrange multipliers. It is used to convert a constrained problem into an unconstrained one.
 
     Independent variables
-        To be completed
+        The variables in an optimization problem that can be adjusted or controlled in order to find the optimal solution. They are also known as decision variables.
 
     Design variables
-        To be completed
+        Another term for independent variables, specifically in the context of design optimization. These are the parameters that can be modified to achieve the optimal design.
 
     Degrees of freedom
-        To be completed
+        The number of independent parameters that can vary in a system or optimization problem. It represents the number of independent directions in which the system can move.
 
     Optimization bounds
-        To be completed
+        The constraints that define the minimum and maximum values that the design variables can take. These bounds limit the search space for the optimization process.
 
     Gradient vector
-        To be completed
+        A vector that contains the partial derivatives of the objective function with respect to all the design variables. It points in the direction of the steepest ascent or descent.
 
     Jacobian matrix
-        To be completed
+        A matrix of all first-order partial derivatives of a vector-valued function. In optimization, it represents the gradients of the constraints with respect to the design variables.
 
-    Hessian Matrix
-        To be completed
+    Hessian matrix
+        A square matrix of second-order partial derivatives of a scalar-valued function. It describes the local curvature of the objective function and is used in second-order optimization methods.
 
     Line search
-        To be completed
+        An iterative optimization technique that involves moving along a search direction to find an acceptable step size that reduces the objective function.
 
     Trust region
-        To be completed
+        An optimization technique where the search for the optimal solution is restricted to a region around the current point, and this region is adjusted based on the success of the optimization steps.
 
     Feasibility
-        To be completed
+        The condition of satisfying all constraints in an optimization problem. A feasible solution meets all equality and inequality constraints.
 
     Finite differences
-        To be completed
-
-    Convergence rate
-        To be completed
-
-    Machine epsilon
-        To be completed
+        A numerical method used to approximate the derivatives of a function by using the differences in function values at specific points. It is commonly used in gradient-free optimization methods.
 
     Step size
-        To be completed
+        The magnitude of the change applied to the design variables in each iteration of an optimization algorithm. It determines how far the variables move in the search space during each iteration.
 
-    Direction, Steepest descent
-        To be completed
 
-    Direction, Newton
-        To be completed
-
-    Algorithm, Levenberg-Marquardt (LM)
-        To be completed
-
-    Algorithm, Trust-region dogleg
-        To be completed
-
-    Algorithm, Interior Point (IP)
-        To be completed
-
-    Algorithm, Sequential Quadratic Programming (SQP)
-        To be completed
 

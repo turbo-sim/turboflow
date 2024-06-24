@@ -10,7 +10,6 @@ Subpackages
    api/turboflow.axial_turbine
    api/turboflow.properties
    api/turboflow.pysolver_view
-   api/turboflow.turbo_configurations
    api/turboflow.utilities
 
 Submodules

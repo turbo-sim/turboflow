@@ -67,11 +67,9 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
 <li class="toctree-l3 current"><a class="reference internal" href="turboflow.properties.html">turboflow.properties package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="turboflow.properties.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="turboflow.properties.html#module-turboflow.properties">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.pysolver_view.html">turboflow.pysolver_view package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="turboflow.turbo_configurations.html">turboflow.turbo_configurations package</a></li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
 </ul>
 </li>
@@ -233,8 +231,7 @@ the property calculation. Otherwise, it’s set to True.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>input_type</strong><span class="classifier">str or int</span></dt><dd><p>The variable pair used to define the thermodynamic state. This should be one of the
-predefined input pairs in CoolProp, such as <code class="docutils literal notranslate"><span class="pre">PT_INPUTS</span></code> for pressure and temperature.
-For all available input pairs, refer to <span class="xref std std-ref">this list</span>.</p>
+predefined input pairs in CoolProp, such as <code class="docutils literal notranslate"><span class="pre">PT_INPUTS</span></code> for pressure and temperature.</p>
 </dd>
 <dt><strong>prop_1</strong><span class="classifier">float</span></dt><dd><p>The first property value corresponding to the input type (e.g., pressure in Pa if the input
 type is CP.PT_INPUTS).</p>
@@ -350,115 +347,6 @@ native inputs to the helmholtz energy equations of state.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.properties.fluid_properties.PropertyRoot.get_values">
 <span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#PropertyRoot.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.PropertyRoot.get_values" title="Link to this definition"></a></dt>
-<dd><p>Compute the residuals for the given density and temperature.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">list</span></dt><dd><p>List containing the values for density and temperature.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>np.ndarray</dt><dd><p>Array containing residuals (difference) for the two properties.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">SonicStateProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">property_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></p>
-<p class="rubric">Methods</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">residual</span></code>(x)</p></td>
-<td><p>Evaluate the system of equations for given decision variables.</p></td>
-</tr>
-</tbody>
-</table>
-<table class="docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><strong>get_values</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem.get_values">
-<span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem.get_values" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.properties.fluid_properties.</span></span><span class="sig-name descname"><span class="pre">SonicStateProblem2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">property_pair</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop_2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.optimization.html#turboflow.pysolver_view.optimization.OptimizationProblem" title="turboflow.pysolver_view.optimization.OptimizationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationProblem</span></code></a></p>
-<p class="rubric">Methods</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fitness</span></code>(x)</p></td>
-<td><p>Evaluate the objective function and constraints for given decision variables.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds" title="turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_bounds</span></code></a>()</p></td>
-<td><p>Get the bounds for each decision variable (Pygmo format)</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nec</span></code>()</p></td>
-<td><p>Return the number of equality constraints associated with the problem.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_nic</span></code>()</p></td>
-<td><p>Return the number of inequality constraints associated with the problem.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_values" title="turboflow.properties.fluid_properties.SonicStateProblem2.get_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_values</span></code></a>(x)</p></td>
-<td><p>Compute the residuals for the given density and temperature.</p></td>
-</tr>
-</tbody>
-</table>
-<table class="docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><strong>get_n_eq</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>get_n_ineq</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds">
-<span class="sig-name descname"><span class="pre">get_bounds</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_bounds" title="Link to this definition"></a></dt>
-<dd><p>Get the bounds for each decision variable (Pygmo format)</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>bounds</strong><span class="classifier">tuple of lists</span></dt><dd><p>A tuple of two items where the first item is the list of lower bounds and the second
-item of the list of upper bounds for the vector of decision variables. For example,
-([-2 -1], [2, 1]) indicates that the first decision variable has bounds between
--2 and 2, and the second has bounds between -1 and 1.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq">
-<span class="sig-name descname"><span class="pre">get_n_eq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_n_eq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_eq" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq">
-<span class="sig-name descname"><span class="pre">get_n_ineq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_n_ineq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_n_ineq" title="Link to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.properties.fluid_properties.SonicStateProblem2.get_values">
-<span class="sig-name descname"><span class="pre">get_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/properties/fluid_properties.html#SonicStateProblem2.get_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.properties.fluid_properties.SonicStateProblem2.get_values" title="Link to this definition"></a></dt>
 <dd><p>Compute the residuals for the given density and temperature.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
