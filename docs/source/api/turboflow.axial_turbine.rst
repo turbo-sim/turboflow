@@ -1,6 +1,11 @@
 turboflow.axial\_turbine package
 ================================
 
+.. automodule:: turboflow.axial_turbine
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -17,11 +22,3 @@ Submodules
    turboflow.axial_turbine.loss_model_kacker_okapuu
    turboflow.axial_turbine.loss_model_moustapha
    turboflow.axial_turbine.performance_analysis
-
-Module contents
----------------
-
-.. automodule:: turboflow.axial_turbine
-   :members:
-   :undoc-members:
-   :show-inheritance:

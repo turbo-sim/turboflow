@@ -1,6 +1,11 @@
 turboflow.utilities package
 ===========================
 
+.. automodule:: turboflow.utilities
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -11,11 +16,3 @@ Submodules
    turboflow.utilities.graphics
    turboflow.utilities.numerics
    turboflow.utilities.optimization_utils
-
-Module contents
----------------
-
-.. automodule:: turboflow.utilities
-   :members:
-   :undoc-members:
-   :show-inheritance:
