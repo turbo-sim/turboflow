@@ -25,9 +25,9 @@ Features
 - **Design Optimization:** Optimize preliminary turbine design to achieve optimal performance metrics.
 - **Equation-oriented problem formulation:** Equation-oriented problem formulation for performance analysis and design optimization.
 - **Model consitency:** The model is consistent for both performance prediction and design optimization.
-- **Efficient solution:** The model adopts gradient-based root-finding and optimization solver
-- **Real gas fluid property analysis:** Use CoolProp to determine thermohpysical properties.
-- **Flexible model:** The model offers options for submodels for loss, deviation and choking calculations
+- **Efficient solution:** The model adopts gradient-based root-finding and optimization solver.
+- **Real gas fluid property analysis:** CoolProp is used to determine thermohpysical properties.
+- **Flexible model:** The model offers options for submodels for loss, deviation and choking calculations.
 - **General geometry:** Geometrical variables are defined to cover a wide range of axial turbine configurations, including multistage configurations.  
 - **Easy-to-use:** Intuitive and easy setup of input parameters for rapid development and analysis. 
 - **Extensive Documentation:** Comprehensive guides and examples to help you get started quickly.

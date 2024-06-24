@@ -38,7 +38,9 @@ bibtex_reference_style = "author_year"
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 exclude_patterns.extend(["source/api/turboflow.add_to_pythonpath.rst",
-                         "source/api/turboflow.cyles.rst"])
+                         "source/api/turboflow.cycles.rst",
+                         "source/api/turboflow.turbo_configurations.rst",
+                         "source/api/turboflow.turboflow.turbo_configurations.config_axial_turbine.rst"])
 
 # Define theme
 # html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme

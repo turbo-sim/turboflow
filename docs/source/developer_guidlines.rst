@@ -8,7 +8,7 @@ Thank you for considering contributing to this project! Here are some guidelines
 Developer Installation Guide
 ----------------------------
 
-This guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.
+This installation guide is intended for developers who wish to contribute to or modify the Turboflow source code. It assumes that the developer is using a Linux distribution or Windows with Git Bash terminal to have access to Git and Linux-like commands.
 
 1. **Fork the repository:**
 
@@ -31,7 +31,7 @@ This guide is intended for developers who wish to contribute to or modify the Tu
 
       cd <repository-name>
 
-3. **Create a dedicated Conda virtual environment for Turboflow development**:
+3. **Create a dedicated Conda virtual environment for TurboFlow development**:
 
    - Check that conda is installed:
 
@@ -40,7 +40,7 @@ This guide is intended for developers who wish to contribute to or modify the Tu
       conda list
 
    - If not conda is installed, `install conda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_.
-   - Create dedicated vitrual environment for turboflow package:
+   - Create dedicated virtual environment for turboflow package:
 
    .. code-block:: bash
 
@@ -60,7 +60,7 @@ This guide is intended for developers who wish to contribute to or modify the Tu
 
    Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user's intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project's requirements.
 
-6. **Use Poetry to install the required dependencies for Turboflow development**:
+6. **Use Poetry to install the required dependencies for TurboFlow development**:
 
    .. code-block:: bash
 
@@ -113,7 +113,7 @@ Testing guidlines
 -------------------
 
 When implementing new features or adding new submodels, you should aim to create unit tests that verifies the functionality of what you are adding. 
-This testing framework is designed to streamline the process of testing and validating your Python code using a script that centralizes the test management. 
+This testing framework is designed to streamline the process of testing and validating the project using a centralized script to manage tests. 
 The framework includes functions for running tests and generating regression data, and are contained in the `tests` folder:
 
 .. code-block:: text
@@ -141,8 +141,8 @@ The framework includes functions for running tests and generating regression dat
     └── ....                         
 
 The principle of the framwork is that `test_performance_analysis` and `test_design_optimization` runs performance analysis and design optimization for a subset of the configuration files 
-in `config_files`. The outcome of these tests are compared to the respective data in `regression_data_windows` and `regression_data_linux`, depending on the OS the code is executed from. 
-The subset of configuration files used for performance analysis and design optimization is determined in `tests_manager`, through the dictionary `TEST_CONFIGS`:
+in `config_files`. The outcome of these simulations are compared to the respective data in `regression_data_windows` and `regression_data_linux`, depending on the OS the code is executed from. 
+The configuration files used for performance analysis and design optimization tests are determined in `tests_manager`, through the dictionary `TEST_CONFIGS`:
 
 .. code-block:: python
 
@@ -151,7 +151,10 @@ The subset of configuration files used for performance analysis and design optim
         'design_optimization': ["design_optimization.yaml"],
     }
 
-To **add new tests**, follow thes steps:
+Add new tests
+^^^^^^^^^^^^^^
+
+To add new tests, follow these steps:
 
 1. **Add Configuration Files:**
 
@@ -159,7 +162,7 @@ To **add new tests**, follow thes steps:
 
 2. **Update `config_manager.py`:**
 
-   Map your new configuration file with its respective test function in `TEST_CONFIGS` in `tests_manager.py`:
+   Add your new configuration file with its respective test function in `TEST_CONFIGS` in `tests_manager.py`:
    
    .. code-block:: python
 
@@ -170,9 +173,24 @@ To **add new tests**, follow thes steps:
                               "design_optimization_new_test.yaml"],
       }
 
-3. **Generate Regression Data (if needed):**
+3. **Generate Regression Data:**
 
-   If the new test requires regression data, update `REGRESSION_CONFIGS` in `tests_manager.py` to include the new configuration files:
+   Generate regression data according to `these steps <generate_regression_data_>`_.
+
+4. **Check that the tests pass**
+
+   Check that the test pass by following `these steps <run_tests_>`_.
+
+.. _generate_regression_data:
+
+Generate regression data
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+When adding new tests, or making code changes that affect the output of existing tests, new regression files must be generated. 
+Follow these steps to add regression data.
+
+1. **Update `REGRESSION_CONFIGS` in `tests_manager.py:**
+
+   Include the configuration files for which you want to generate new regression data:
 
    .. code-block:: python
 
@@ -181,28 +199,42 @@ To **add new tests**, follow thes steps:
       'design_optimization': ["design_optimization_new_test.yaml"],
       }
 
-   Then open your terminal in the root directory and execute the following command:
+2. **Generate regression data:**
 
+   Run the following command in the root directory of the project:
+   
    .. code-block:: bash 
 
       python tests/generate_regression_data.py
 
-   The new regression data should now be within its respective `regression_data` folder. 
-   The new regression data must be added to both `regression_data_linux` and `regression_data_windows`. For the OS you do not have access to, 
-   you can use github actions workflow to generate regression data for other OS. See `Generate Regression Data` workflow in 
-   `gitub repository <https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml>`_.
 
-To check that the tests behave appropriately, run the tests from the root directory:
+The new regression data should now be within its respective `regression_data` folder. 
+The new regression data must be added to both `regression_data_linux` and `regression_data_windows`. For the OS you do not have access to, 
+you can use github actions workflow to generate regression data for other OS. See `Generate Regression Data` workflow in 
+`gitub repository <https://github.com/turbo-sim/TurboFlow/actions/workflows/generate_regression_data_ubuntu.yaml>`_. The output of this workflow
+is saved as a github artifact and must be downloaded and added to the respective regression data folder manually. 
+
+Make sure that the new tests pass with the new regression files by following `these steps <run_tests_>`_.
+
+.. _run_tests:
+
+Run tests
+^^^^^^^^^^
+
+The tests are executed locally using pytest. To run the tests, open the terminal in the root directory of the project and run the following command:
 
 .. code-block:: bash
 
    python pytest
 
+This command will run all scripts starting with `test_` in the `tests` folder, with the corresponding configuration files specified in `test_manager.py`.
+A summary of the tests will be printed, and show if the tests passed or not. 
+
+
 Reporting issue
 ----------------
 
-If you find a bug or have a feature request, please open an issue and follow the provided templates.
-
+If you find a bug or have a feature request, please open an issue in the Github project page and follow the provided templates.
 
 CI/CD Pipeline
 --------------
