@@ -9,6 +9,14 @@ This section describes the different configuration options available in TurboFlo
     :local:
     :depth: 1
 
+.. dropdown:: Turbomachinery
+    :animate: fade-in-slide-down
+
+    These are the valid turbomachinery options:
+
+    - `axial_turbine`
+
+
 .. dropdown:: Loss Models
     :animate: fade-in-slide-down
 

@@ -7,7 +7,7 @@ This section guides you through the process of optimizing the design of turbomac
 Design optimization is excecuted in two steps:
 
     1. Load configuration file.
-    2. Compute optimal turbomahcinery.
+    2. Compute optimal turbomachinery.
 
 Illustrated by a code example:
 
@@ -179,7 +179,6 @@ The `design_optimization` section contains information on the objective function
     - `constraints`: each constraint is defined by specifying the variable name, type, value and if the constraint should be normalized or not. 
     - `variables`: set of variables required for design optimization. The variable is considered a design variable if bounds are provided. All variables have a default value, and some have defualt bounds. Note that velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) must be design variables. 
 
-The `radius_type` defines which radius (hub, mean or tip) that should remain constant through the turbine. 
 See :ref:`configuration_options_short` for more information regarding the available inputs. 
 
 To load the configuration file, the absolute path must be provided to `turboflow.load_config`:
