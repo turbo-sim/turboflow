@@ -49,7 +49,7 @@ With these features, TurboFlow should present a reliable and flexible tool for r
 Meanline models are essential for simulation of turbomachinery [@dixon_fluid_2014]. For design processes, they enable rapid evaluation of design concepts
 and are used to establish key geometrical parameters. The preliminary design forms the basis for subsequent refined design steps, and is crucial for achieving high-efficiency turbomachinery [@macchi_organic_2017]. Furthermore, meanline models offer a method to quickly, yet accurately, predict performance, making them well-suited for system-level analyses involving turbomachines, both at design and off-design conditions.
 
-Despite the importance of these models, there is no established reference meanline tool for turbomachinery modeling available. Altough, there are several commercial tools available:
+Despite the importance of these models, there is no established reference meanline tool for turbomachinery modeling available. Altough there are several commercial tools available:
 
 - CFturbo [@noauthor_cfturbo_nodate]
 - AxSTREAM [@noauthor_axstream_nodate]
@@ -71,7 +71,7 @@ The few open-source meanline models that do exist come with significant limitati
 | [@genrup_reduced-order_2005]       | 2005 | MATLAB (proprietary) | Sequential            | Performance analysis |
 | [@denton_multallopen_2017]         | 2017 | FORTRAN77 (legacy)   | Lack of documentation | Design optimization  |
 | [@agromayor_preliminary_2019]      | 2019 | MATLAB (proprietary) | Equation-oriented     | Design optimization  |
-| [@brind_turbigen_nodate]           | 2024 | Python               | Equation-oriented     | Design optimization  |
+| [@brind_turbigen_2024]             | 2024 | Python               | Equation-oriented     | Design optimization  |
 
 The use of diverse programming languages, such as MATLAB and FORTRAN77, presents accessibility and compatibility issues. MATLAB-based models are proprietary, which limit their accessibility to those with MATLAB licenses.
 While legacy languages like FORTRAN77 might be more accessible, they fall short in terms of modern features and extensive community support. Consequently, models developed with these languages are less efficient to develop and less attractive to potential contributors, hampering development and collaboration. Furthermore, models adopting a sequential model formulation, solve sets of model equations sequentially through multiple nested iterations. This approach can lead to unreliable convergence and prolonged execution times due to the high number of model equations evaluations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency. Lastly, the functionalities provided by existing models differ, with some focusing solely on performance analysis and others on design optimization, yet no single open-source model offers a comprehensive solution for both. 
