@@ -3,8 +3,8 @@
 Deviation models
 ======================
 
-Accurately predicting exit flow angles is essential for turbine performance analysis because they have a significant
-influence on the velocity triangles and work output from the turbine. In general, the relative flow angle at the exit of a
+Accurately predicting flow angles is essential for performance analysis because they have a significant
+influence on the velocity triangles and work output or consumption of the turbomachinery. In general, the relative flow angle at the exit of a
 cascade is not exactly equal to the metal angle because the blades cannot guide the flow perfectly. This discrepancy is
 known as the deviation angle, which is formally defined as the difference between a reference geometric angle (:math:`\beta_g`) and the
 relative flow angle (:math:`\beta`) at the exit of the cascade:
@@ -13,16 +13,14 @@ relative flow angle (:math:`\beta`) at the exit of the cascade:
 
     \delta = \beta_g - \beta 
 
-The follwoing approaches to model deviation are presented here:
-
-    - :ref:`zero_deviation`
-    - :ref:`ainley_mathieson`
-    - :ref:`aungier`
+Axial turbines
+---------------
+For axial turbines, three deviation models are implemtented, varying in complexity. 
 
 .. _zero_deviation:
 
 Zero deviation
-------------------------------
+^^^^^^^^^^^^^^^^
 
 The simplest way to model deviation is to assume zero deviation:
 
@@ -33,7 +31,7 @@ The simplest way to model deviation is to assume zero deviation:
 .. _ainley_mathieson:     
 
 Ainley and Mathieson
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 The deviation model presented by Ainley and Mathieson (:cite:`ainley_method_1951`) assumes constant deviation at low speed (mach :math:`<` 0.5), and a linear 
 deviation between mach = 0.5 and mach = 1.0 (critical point). This result in sharp edges at the points where mach = 0.5 and mach = 1.0. In addition, the model
@@ -69,7 +67,7 @@ The flow angle (:math:`\beta`) is then computed based on the deviation and the g
 .. _aungier:
 
 Aungier
-------------------------------
+^^^^^^^^
 
 The deviation model presented by Aungier (:cite:`aungier_turbine_2006`) assumes constant deviation at low speed (Mach :math:`<` 0.5), 
 and a fifth order polynomial between mach = 0.5 and mach = 1.0 (critical point). This ensures a smooth evolution of the flow angle with the mach number. 

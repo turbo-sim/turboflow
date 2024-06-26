@@ -28,6 +28,13 @@ This section describes the different configuration options available in TurboFlo
     - `isentropic`: Ensures that the loss coefficient is zero.
     - `custom`: Implies a constant loss coefficent, specified through `custom_value` input in configuration file.
 
+.. dropdown:: Loss Coefficients
+    :animate: fade-in-slide-down
+
+    These are the valid loss coefficient options:
+
+    - `stagnation_pressure`: see :ref:`loss_coefficients` for details.
+
 .. dropdown:: Deviation Models
     :animate: fade-in-slide-down
 

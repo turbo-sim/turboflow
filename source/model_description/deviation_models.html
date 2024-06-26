@@ -59,19 +59,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model Description</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loss_coefficients.html">Loss coefficients</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Deviation models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#zero-deviation">Zero deviation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ainley-and-mathieson">Ainley and Mathieson</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#aungier">Aungier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#axial-turbines">Axial turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#zero-deviation">Zero deviation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ainley-and-mathieson">Ainley and Mathieson</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#aungier">Aungier</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guidlines.html">Developer guidlines</a></li>
@@ -108,29 +110,24 @@
              
   <section id="deviation-models">
 <span id="id1"></span><h1>Deviation models<a class="headerlink" href="#deviation-models" title="Link to this heading"></a></h1>
-<p>Accurately predicting exit flow angles is essential for turbine performance analysis because they have a significant
-influence on the velocity triangles and work output from the turbine. In general, the relative flow angle at the exit of a
+<p>Accurately predicting flow angles is essential for performance analysis because they have a significant
+influence on the velocity triangles and work output or consumption of the turbomachinery. In general, the relative flow angle at the exit of a
 cascade is not exactly equal to the metal angle because the blades cannot guide the flow perfectly. This discrepancy is
 known as the deviation angle, which is formally defined as the difference between a reference geometric angle (<span class="math notranslate nohighlight">\(\beta_g\)</span>) and the
 relative flow angle (<span class="math notranslate nohighlight">\(\beta\)</span>) at the exit of the cascade:</p>
 <div class="math notranslate nohighlight">
 \[\delta = \beta_g - \beta\]</div>
-<p>The follwoing approaches to model deviation are presented here:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference internal" href="#zero-deviation"><span class="std std-ref">Zero deviation</span></a></p></li>
-<li><p><a class="reference internal" href="#ainley-mathieson"><span class="std std-ref">Ainley and Mathieson</span></a></p></li>
-<li><p><a class="reference internal" href="#aungier"><span class="std std-ref">Aungier</span></a></p></li>
-</ul>
-</div></blockquote>
+<section id="axial-turbines">
+<h2>Axial turbines<a class="headerlink" href="#axial-turbines" title="Link to this heading"></a></h2>
+<p>For axial turbines, three deviation models are implemtented, varying in complexity.</p>
 <section id="zero-deviation">
-<span id="id2"></span><h2>Zero deviation<a class="headerlink" href="#zero-deviation" title="Link to this heading"></a></h2>
+<span id="id2"></span><h3>Zero deviation<a class="headerlink" href="#zero-deviation" title="Link to this heading"></a></h3>
 <p>The simplest way to model deviation is to assume zero deviation:</p>
 <div class="math notranslate nohighlight">
 \[\beta = \beta_g\]</div>
 </section>
 <section id="ainley-and-mathieson">
-<span id="ainley-mathieson"></span><h2>Ainley and Mathieson<a class="headerlink" href="#ainley-and-mathieson" title="Link to this heading"></a></h2>
+<span id="ainley-mathieson"></span><h3>Ainley and Mathieson<a class="headerlink" href="#ainley-and-mathieson" title="Link to this heading"></a></h3>
 <p>The deviation model presented by Ainley and Mathieson (<span id="id3">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>) assumes constant deviation at low speed (mach <span class="math notranslate nohighlight">\(&lt;\)</span> 0.5), and a linear
 deviation between mach = 0.5 and mach = 1.0 (critical point). This result in sharp edges at the points where mach = 0.5 and mach = 1.0. In addition, the model
 assumes that the critical state occur when mach = 1.0 at the throat, which can lead to unphysical behaviour of the simulated performance (<span id="id4">[<a class="reference internal" href="../bibliography.html#id7" title="Lasse Borg Anderson, Roberto Agromayor, and Lars O. Nord. Method for mean-line design and performance prediction of one-stage axial turbines. In Proceedings of the 63rd International Conference of Scandinavian Simulation Society. Linköping University Electronic Press, 2022. URL: https://hdl.handle.net/11250/3047450.">Anderson <em>et al.</em>, 2022</a>]</span>).
@@ -162,7 +159,7 @@ To correct for this behaviour, the model is adjusted to be interpolated between 
 \[\beta = \beta_g - \delta\]</div>
 </section>
 <section id="aungier">
-<span id="id5"></span><h2>Aungier<a class="headerlink" href="#aungier" title="Link to this heading"></a></h2>
+<span id="id5"></span><h3>Aungier<a class="headerlink" href="#aungier" title="Link to this heading"></a></h3>
 <p>The deviation model presented by Aungier (<span id="id6">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>) assumes constant deviation at low speed (Mach <span class="math notranslate nohighlight">\(&lt;\)</span> 0.5),
 and a fifth order polynomial between mach = 0.5 and mach = 1.0 (critical point). This ensures a smooth evolution of the flow angle with the mach number.
 However, also this model assumes that the critical state occur when mach = 1.0 at the throat. To correct this behaviour, the model is adjusted to be interpolated
@@ -191,6 +188,7 @@ X &amp;= \frac{2\cdot Ma_\mathrm{exit}-1}{2\cdot Ma_\mathrm{crit}-1} \\
 <p>The flow angle (<span class="math notranslate nohighlight">\(\beta\)</span>) is then computed based on the deviation and the gauging angle:</p>
 <div class="math notranslate nohighlight">
 \[\beta = 90 - \beta_g - \delta\]</div>
+</section>
 </section>
 </section>
 

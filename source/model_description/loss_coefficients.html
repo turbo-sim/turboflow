@@ -59,14 +59,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model Description</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Loss coefficients</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guidlines.html">Developer guidlines</a></li>
@@ -103,33 +102,51 @@
              
   <section id="loss-coefficients">
 <span id="id1"></span><h1>Loss coefficients<a class="headerlink" href="#loss-coefficients" title="Link to this heading"></a></h1>
-<p>A loss can be interpreted as any  mechanism that leads to entropy generation and reduces the power output of
-the turbine, such as viscous friction in boundary layers, wake mixing, or
+<p>A loss can be interpreted as any  mechanism that leads to entropy generation and reduces/increases the power output/consumption of
+the turbomahcinery, such as viscous friction in boundary layers, wake mixing, or
 shock waves (<span id="id2">[<a class="reference internal" href="../bibliography.html#id38" title="J. D. Denton. Loss mechanisms in turbomachines. Journal of Turbomachinery, 115(4):621–656, 1993. doi:10.1115/1.2929299.">Denton, 1993</a>]</span>). In meanline analysis, the losses are characterized in terms of a loss coefficient.
 This parameter has different possible definitions, which are provided here for reference.</p>
-<p>The <strong>stagnation pressure loss coefficient</strong> is defined as the reduction in stagnation pressure from inlet to outlet relative to the dynamic pressure at the cascade’s exit:</p>
+<p>The <strong>stagnation pressure loss coefficient</strong> is defined as the reduction in stagnation pressure from inlet to outlet relative to a reference dynamic pressure. For
+compressor blades, the inlet conditions are used for reference, while the exit conditions are used for turbine blades:</p>
 <div class="math notranslate nohighlight">
-\[\mathrm{Y}=\frac{p_{0, \mathrm{in}}-p_{0, \mathrm{out}}}{p_{0, \mathrm{out}} - p_\mathrm{out}}\]</div>
-<p>where subscript <cite>0</cite> refer to the stagnation property in the relative frame of reference.</p>
-<p>The <strong>kinetic energy loss coefficient</strong> is the ratio of the enthalpy increase due to irreversibility to the isentropic total-to-static enthalpy change:</p>
+\[\begin{split}\mathrm{Y}=
+\begin{cases}
+   \frac{p_{0, \mathrm{in}}-p_{0, \mathrm{out}}}{p_{0, \mathrm{in}} - p_\mathrm{in}}, &amp; \text{for compressor blades} \\
+   \frac{p_{0, \mathrm{in}}-p_{0, \mathrm{out}}}{p_{0, \mathrm{out}} - p_\mathrm{out}}, &amp; \text{for turbine blades}.
+\end{cases}\end{split}\]</div>
+<p>Subscript <cite>0</cite> refer to the stagnation property in the relative frame of reference.</p>
+<p>The <strong>kinetic energy loss coefficient</strong> is the ratio of the enthalpy increase due to irreversibility to the isentropic total-to-static enthalpy change.
+Also for this loss coefficient, the inlet conditions ar used for reference for compressore blades, and exit conditions for turbine blades:</p>
 <div class="math notranslate nohighlight">
-\[\Delta \phi^2  =  \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out},s}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out},s}^2} =1 - \left(\frac{v_{\mathrm{out}}}{v_{\mathrm{out},s}}\right)^2 =  1- \phi^2.\]</div>
+\[\begin{split}\Delta \phi^2  =
+\begin{cases}
+   \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{in}}-h_{\mathrm{in},s}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{in},s}^2} =1 - \left(\frac{v_{\mathrm{out}}}{v_{\mathrm{in},s}}\right)^2 =  1- \phi^2, &amp; \text{for compressor blades} \\
+   \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out},s}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out},s}^2} =1 - \left(\frac{v_{\mathrm{out}}}{v_{\mathrm{out},s}}\right)^2 =  1- \phi^2, &amp; \text{for turbine blades}.
+\end{cases}\end{split}\]</div>
 <p>Here, <span class="math notranslate nohighlight">\(\phi^2\)</span> is the ratio of actual to ideal kinetic energy at the cascade’s exit, commonly interpreted as the efficiency of the cascade.</p>
 <p>The <strong>enthalpy loss coefficient</strong> is analogously defined, but it utilizes the actual total-to-static enthalpy change in the denominator:</p>
 <div class="math notranslate nohighlight">
-\[\zeta=\frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out}}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out}}^2} = \left(\frac{v_{\mathrm{out},s}}{v_{\mathrm{out}}  }\right)^2 - 1 = \frac{1}{\phi^2}-1\]</div>
+\[\begin{split}\zeta=
+\begin{cases}
+   \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{in}}-h_{\mathrm{in}}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{in}}^2} = \left(\frac{v_{\mathrm{out},s}}{v_{\mathrm{in}}  }\right)^2 - 1 = \frac{1}{\phi^2}-1, &amp; \text{for compressor blades} \\
+   \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out}}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out}}^2} = \left(\frac{v_{\mathrm{out},s}}{v_{\mathrm{out}}  }\right)^2 - 1 = \frac{1}{\phi^2}-1, &amp; \text{for turbine blades}.
+\end{cases}\end{split}\]</div>
 <p>The <strong>entropy loss coefficient</strong> is the product of exit temperature and the entropy increase across the cascade, divided by the kinetic energy at the cascade’s exit:</p>
 <div class="math notranslate nohighlight">
-\[\varsigma  = \frac{T_\mathrm{out}(s_{\mathrm{out}}-s_{\mathrm{in}})}{\frac{1}{2}v_{\mathrm{out}}^2}\]</div>
-<p>When the proposed axial turbine model is evaluated, the loss coefficient
+\[\begin{split}\varsigma  =
+\begin{cases}
+   \frac{T_\mathrm{out}(s_{\mathrm{out}}-s_{\mathrm{in}})}{\frac{1}{2}v_{\mathrm{in}}^2}, &amp; \text{for compressor blades} \\
+   \frac{T_\mathrm{out}(s_{\mathrm{out}}-s_{\mathrm{in}})}{\frac{1}{2}v_{\mathrm{out}}^2}, &amp; \text{for turbine blades}.
+\end{cases}\end{split}\]</div>
+<p>When the proposed model is evaluated, the loss coefficient
 computed from its definition, as given above, and the loss coefficient
 computed using the loss model, as described in <a class="reference internal" href="loss_models.html#loss-models"><span class="std std-ref">Loss models</span></a>, may not
 have the same value. Therefore, the loss coefficient error is given by</p>
 <div class="math notranslate nohighlight">
 \[Y_{\mathrm{error}} =  Y_{\mathrm{definition}}  -
 Y_{\mathrm{loss\,model}}\]</div>
-<p>The evaluation of the turbine model involves measures to ensure that the loss coefficient error is zero. For performance analysis, this is ensured by
-thr root-solver algrotuhm, whike for design optimization this is implemented as an equality constraint for the same purpose.</p>
+<p>The evaluation of the model involves measures to ensure that the loss coefficient error is zero. For performance analysis, this is ensured by
+thr root-solver algorithm, while for design optimization this is implemented as an equality constraint for the same purpose.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Only the stagnation pressure loss coefficient is implemented in the current version of the code.</p>

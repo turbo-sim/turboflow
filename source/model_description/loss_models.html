@@ -59,19 +59,21 @@
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../model_description.html">Model Description</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="turbine_geometry.html">Turbine geometry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html">Geometry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="velocity_triangles.html">Velocity triangles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fluid_properties.html">Fluid properties</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loss_coefficients.html">Loss coefficients</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Loss models</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="loss_models/kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="loss_models/benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
-<li class="toctree-l3"><a class="reference internal" href="loss_models/tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#axial-turbines">Axial turbines</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="loss_models/kacker_okapuu_1982.html">Kacker-Okapuu (1982)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loss_models/benner_sjolander_moustapha_2006.html">Benner-Sjolander-Moustapha (2006)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="loss_models/tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choking_models.html">Choking models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="equation_formulation.html">Equation formulation and solution</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guidlines.html">Developer guidlines</a></li>
@@ -108,9 +110,12 @@
              
   <section id="loss-models">
 <span id="id1"></span><h1>Loss models<a class="headerlink" href="#loss-models" title="Link to this heading"></a></h1>
-<p>During the preliminary design phase, it is common to rely on empirical
-correlations to estimate the losses within the turbine. These sets of
-correlations are known as loss models.</p>
+<p>For meanline modelling, it is common to rely on empirical
+correlations to estimate the losses within the turbomachinery. These sets of
+correlations are known as loss models. This section presents the implemented loss models
+for each turbomachinery configuration.</p>
+<section id="axial-turbines">
+<h2>Axial turbines<a class="headerlink" href="#axial-turbines" title="Link to this heading"></a></h2>
 <p>Perhaps, the most popular loss model for axial turbines is the one proposed
 by <span id="id2">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>, <a class="reference internal" href="../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span> and its subsequent refinements by
 <span id="id3">[<a class="reference internal" href="../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>
@@ -128,6 +133,7 @@ aiming to enhance the prediction of endwall losses based on the underlying flow 
 <li class="toctree-l1"><a class="reference internal" href="loss_models/tremblay_moustapha_1997.html">Moustapha-Kacker-Tremblay (1990)</a></li>
 </ul>
 </div>
+</section>
 </section>
 
 

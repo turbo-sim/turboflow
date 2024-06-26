@@ -192,11 +192,11 @@ To load the configuration file, the absolute path must be provided to `turboflow
     CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
     config = tf.load_config(CONFIG_FILE) # Load configuration file 
 
-.. warning::
+.. note::
 
     The only current available option for turbomachinery is `axial_turbine`.
 
-.. warning::
+.. note::
 
     Velocities (`v` and `w`), entropies (`s`) and flow angles (`beta`) in the `variables` section must be provided with bounds (as design variables).
 

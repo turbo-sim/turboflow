@@ -4,9 +4,13 @@
 Loss models
 ===============
 
-During the preliminary design phase, it is common to rely on empirical 
-correlations to estimate the losses within the turbine. These sets of 
-correlations are known as loss models.
+For meanline modelling, it is common to rely on empirical 
+correlations to estimate the losses within the turbomachinery. These sets of 
+correlations are known as loss models. This section presents the implemented loss models
+for each turbomachinery configuration. 
+
+Axial turbines
+---------------
 
 Perhaps, the most popular loss model for axial turbines is the one proposed 
 by :cite:`ainley_method_1951,ainley_examination_1951` and its subsequent refinements by 
