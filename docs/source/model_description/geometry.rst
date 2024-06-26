@@ -1,9 +1,13 @@
-.. _turbine_geometry:
+.. _geometry:
 
-Turbine geometry
+Geometry
 ===================
 
 Meanline models are based on a simplified geometric representation of the turbine, focusing on the parameters defining the flow areas at the inlet, throat, and exit of the cascades, along with several variables necessary for the evaluation of the loss correlations. 
+
+Axial Turbine
+--------------
+This section gives a description of the geometry used in simulations of axial turbines. 
 To evaluate the turbine model, the following geometrical variables are required for each cascade:
 
     - Inlet radius at hub, :math:`r_\mathrm{in, hub}`
@@ -86,6 +90,5 @@ The geometry is illustrated below, both in axial-radial direction (left) and for
    :alt: Geometry of cascade profiles.
    :scale: 60%
 
-.. note::
-    The stagger angle and maximum thickness is for now required as an input variable for the performance prediction mode, while calculated for design optimization.
-    This causes a slight inconsistency between the two modes, which could/should be fixed. 
+..     The stagger angle and maximum thickness is for now required as an input variable for the performance prediction mode, while calculated for design optimization.
+..     This causes a slight inconsistency between the two modes, which could/should be fixed. 

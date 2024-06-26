@@ -11,12 +11,11 @@ The TurboFlow meanline-model is designed to be flexible and offers a variety of 
 .. toctree::
    :maxdepth: 1
 
-   model_description/turbine_geometry
+   model_description/geometry
    model_description/velocity_triangles
    model_description/fluid_properties
    model_description/loss_coefficients
    model_description/loss_models
    model_description/deviation_models
    model_description/choking_models
-   model_description/equation_formulation
 
