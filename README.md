@@ -1,5 +1,5 @@
 
-# TurboFlow: Mean-Line Modelling of Turbomachinery
+# TurboFlow: Meanline Modelling of Turbomachinery
 
 **TurboFlow** is a Python package for mean-line modelling of turbomachinery. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
 

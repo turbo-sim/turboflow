@@ -1,6 +1,6 @@
 
 =========================================================
-TurboFlow: Mean-Line Modelling of Turbomachinery
+TurboFlow: Meanline Modelling of Turbomachinery
 =========================================================
 
 .. .. image:: https://example.com/logo.png
