@@ -32,7 +32,6 @@ TEST_CONFIGS = {
 REGRESSION_CONFIGS = {
     'performance_analysis': None,
     'design_optimization': None,
-    # Add more configurations as needed
 }
 
 def get_config_files(test_name):

@@ -7,16 +7,11 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 10
+CASE = 4
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
-
-tf.print_package_info()
-
-# schema = tf.AxialTurbine.model_json_schema()
-# print(schema["$defs"]["Constraint"].keys())
 
 x0 = {
     "w_out_1": 244.42314206706558,
@@ -52,7 +47,6 @@ x0 = {
 if CASE == 1:
     # Compute performance map according to config file
     operation_points = config["operation_points"]
-    print(type(operation_points))
     solvers = tf.compute_performance(
         operation_points,
         config,
@@ -61,11 +55,12 @@ if CASE == 1:
         stop_on_failure=True,
     )
 
+    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
-    omega_frac = np.asarray(1.00)
-    operation_points["omega"] = operation_points["omega"]*omega_frac
     solvers = tf.compute_performance(operation_points, config, export_results=True)
 
 
@@ -104,11 +99,8 @@ elif CASE == 3:
 
 elif CASE == 4:
     operation_points = config["operation_points"]
-
-    # solvers = ml.compute_performance(operation_points, config, initial_guess = None, export_results=None, stop_on_failure=True)
-
     solvers = tf.compute_optimal_turbine(config, export_results=True)
-    fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots
 # plt.show()

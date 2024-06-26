@@ -21,12 +21,12 @@ if isinstance(cascades_data["operation_points"], (list, np.ndarray)):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = "test"  # performance_map/error_plot
+Case = "pressure_line"  # performance_map/error_plot
 # Get the name of the latest results file
-# filename = tf.utils.find_latest_results_file(RESULTS_PATH)
+filename = tf.utils.find_latest_results_file(RESULTS_PATH)
 # print(filename)
 # filename = "output/performance_analysis_2024-03-14_01-52-41.xlsx" # Experimental points
-filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
+# filename = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Perfromance map
 
 save_figs = False
 validation = True
@@ -119,8 +119,6 @@ if Case == "pressure_line":
         y_keys=[
             "Ma_rel_4",
             "Ma_rel_2",
-            "critical_Ma_rel_throat_1",
-            "critical_Ma_rel_throat_2",
         ],
         xlabel="Total-to-static pressure ratio",
         ylabel="Mach [-]",
