@@ -111,7 +111,7 @@ Design optimization is excecuted in two steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Load configuration file.</p></li>
-<li><p>Compute optimal turbomahcinery.</p></li>
+<li><p>Compute optimal turbomachinery.</p></li>
 </ol>
 </div></blockquote>
 <p>Illustrated by a code example:</p>
@@ -282,8 +282,7 @@ full configuration for design optimization is provided, where the required parts
 <li><p><cite>variables</cite>: set of variables required for design optimization. The variable is considered a design variable if bounds are provided. All variables have a default value, and some have defualt bounds. Note that velocities (<cite>v</cite> and <cite>w</cite>), entropies (<cite>s</cite>) and flow angles (<cite>beta</cite>) must be design variables.</p></li>
 </ul>
 </div></blockquote>
-<p>The <cite>radius_type</cite> defines which radius (hub, mean or tip) that should remain constant through the turbine.
-See <a class="reference internal" href="configuration_options_short.html#configuration-options-short"><span class="std std-ref">Configuration Options</span></a> for more information regarding the available inputs.</p>
+<p>See <a class="reference internal" href="configuration_options_short.html#configuration-options-short"><span class="std std-ref">Configuration Options</span></a> for more information regarding the available inputs.</p>
 <p>To load the configuration file, the absolute path must be provided to <cite>turboflow.load_config</cite>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
