@@ -120,7 +120,7 @@ def compute_performance(
         A dictionary containing necessary configuration options for computing performance at each operation point.
     initial_guess : optional
         A dictionary with the required elements to generate an initial guess (see description above).
-    out_file : str, optional
+    out_filename : str, optional
         The name for the output Excel file. If not provided, a default name with a timestamp is generated.
     out_dir : str, optional
         The directory where the Excel file will be saved. Defaults to 'output'.
