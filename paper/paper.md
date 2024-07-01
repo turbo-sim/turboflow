@@ -14,12 +14,12 @@ authors:
   - name: Roberto Agromayor
     orcid: 0009-0009-9289-1130
     affiliation: 2
-  - name: Lars O. Nord
-    orcid: 0000-0002-2734-5821
-    affiliation: 1
   - name: Fredrik Haglind
     orcid: 0000-0003-4086-8325
     affiliation: 2
+  - name: Lars O. Nord
+    orcid: 0000-0002-2734-5821
+    affiliation: 1
 affiliations:
   - name: Department of Energy and Process Engineering, NTNU - Norwegian University of Science and Technology, Trondheim, Norway
     index : 1
