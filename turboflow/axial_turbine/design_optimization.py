@@ -511,6 +511,24 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return d[keys[0]][keys[1]].values
     
     def evaluate_constraints(self, constraints_list):
+        r"""
+        Evaluate constraints. 
+
+        This function evaluates the constraints from the information in `constraints_list`.
+        Constraints are defined to be less than 0. 
+
+        `constraints_list` is a list of dictionaries, where each dictionary have a `variable`, `scale` and `value` key. 
+
+        Parameters
+        ----------
+        constraints_list : list
+            List of dictionaries with constraint information
+
+        Returns
+        -------
+        numpy.ndarray
+            Array with constraint values
+        """
         constraints = np.array([])
         for constraint in constraints_list:
             constraints = np.append(
