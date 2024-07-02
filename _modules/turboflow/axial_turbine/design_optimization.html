@@ -623,6 +623,24 @@
 <div class="viewcode-block" id="CascadesOptimizationProblem.evaluate_constraints">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints">[docs]</a>
     <span class="k">def</span> <span class="nf">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">constraints_list</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate constraints. </span>
+
+<span class="sd">        This function evaluates the constraints from the information in `constraints_list`.</span>
+<span class="sd">        Constraints are defined to be less than 0. </span>
+
+<span class="sd">        `constraints_list` is a list of dictionaries, where each dictionary have a `variable`, `scale` and `value` key. </span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        constraints_list : list</span>
+<span class="sd">            List of dictionaries with constraint information</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Array with constraint values</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">constraints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
         <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints_list</span><span class="p">:</span>
             <span class="n">constraints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>

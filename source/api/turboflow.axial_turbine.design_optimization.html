@@ -214,7 +214,25 @@ angular speed to generate an initial guess of correct form to be given to the de
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints">
 <span class="sig-name descname"><span class="pre">evaluate_constraints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraints_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.evaluate_constraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.evaluate_constraints" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate constraints.</p>
+<p>This function evaluates the constraints from the information in <cite>constraints_list</cite>.
+Constraints are defined to be less than 0.</p>
+<p><cite>constraints_list</cite> is a list of dictionaries, where each dictionary have a <cite>variable</cite>, <cite>scale</cite> and <cite>value</cite> key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>constraints_list</strong><span class="classifier">list</span></dt><dd><p>List of dictionaries with constraint information</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>Array with constraint values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">
