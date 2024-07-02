@@ -208,7 +208,6 @@ def evaluate_cascade_throat(
     # Define output values
     critical_state = {
         "critical_mach": critical_mach,
-        # "critical_mass_flow_rate": critical_mass_flux * A_throat,
     }
     throat_plane = {f"{key}_throat": val for key, val in throat_plane.items()}
 
