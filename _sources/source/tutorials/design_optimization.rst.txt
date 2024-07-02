@@ -153,11 +153,11 @@ The remaining input is optional. Here is an example of how the configuration fil
             cascade_type : # Optional
                 value : ["stator", "rotor"]
         constraints : # Optional
-            overall.mass_flow_rate : # Optional
+            - variable : overall.mass_flow_rate  # Optional
                 type : "="
                 value : 2.5
                 normalize : True 
-            additional_constraints.interstage_flaring : # Optional
+            - variable : additional_constraints.interstage_flaring  # Optional
                 type : "="
                 value : 1
                 normalize : True

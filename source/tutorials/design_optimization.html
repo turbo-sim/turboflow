@@ -253,11 +253,11 @@ full configuration for design optimization is provided, where the required parts
         <span class="n">cascade_type</span> <span class="p">:</span> <span class="c1"># Optional</span>
             <span class="n">value</span> <span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]</span>
     <span class="n">constraints</span> <span class="p">:</span> <span class="c1"># Optional</span>
-        <span class="n">overall</span><span class="o">.</span><span class="n">mass_flow_rate</span> <span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="o">-</span> <span class="n">variable</span> <span class="p">:</span> <span class="n">overall</span><span class="o">.</span><span class="n">mass_flow_rate</span>  <span class="c1"># Optional</span>
             <span class="nb">type</span> <span class="p">:</span> <span class="s2">&quot;=&quot;</span>
             <span class="n">value</span> <span class="p">:</span> <span class="mf">2.5</span>
             <span class="n">normalize</span> <span class="p">:</span> <span class="kc">True</span>
-        <span class="n">additional_constraints</span><span class="o">.</span><span class="n">interstage_flaring</span> <span class="p">:</span> <span class="c1"># Optional</span>
+        <span class="o">-</span> <span class="n">variable</span> <span class="p">:</span> <span class="n">additional_constraints</span><span class="o">.</span><span class="n">interstage_flaring</span>  <span class="c1"># Optional</span>
             <span class="nb">type</span> <span class="p">:</span> <span class="s2">&quot;=&quot;</span>
             <span class="n">value</span> <span class="p">:</span> <span class="mi">1</span>
             <span class="n">normalize</span> <span class="p">:</span> <span class="kc">True</span>

@@ -902,57 +902,57 @@
 
         <span class="n">eq_constraints</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ineq_constraints</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
                     <span class="n">eq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">eq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
                             <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
 
-            <span class="k">elif</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+            <span class="k">elif</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&lt;&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
                     <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
                             <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
 
-            <span class="k">elif</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
+            <span class="k">elif</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;normalize&quot;</span><span class="p">]:</span>
                     <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
-                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]),</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">ineq_constraints</span> <span class="o">+=</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">,</span>
-                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraints</span><span class="p">[</span><span class="n">constraint</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;variable&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">constraint</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
                             <span class="s2">&quot;scale&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
