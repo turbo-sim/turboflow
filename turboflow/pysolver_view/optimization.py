@@ -488,7 +488,7 @@ class OptimizationSolver:
         # Compute the maximun constraint violation
         c_eq = self.cache["c_eq"]
         c_ineq = self.cache["c_ineq"]
-        violation_all = np.concatenate((c_eq, np.minimum(c_ineq, 0)))
+        violation_all = np.concatenate((c_eq, np.maximum(c_ineq, 0)))
         violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
 
         # Store convergence status
