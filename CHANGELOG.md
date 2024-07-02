@@ -1,9 +1,13 @@
 # Changelog
 
-## 20.05.2024
+## 02.07.2024
+- Change calculation of violation of inequality constraints: in pygmo (and TurboFlow), constraints are defined to be less than zero. The violation hade to be change to be np.maximum(c_ineq, 0) from np.minimum(c_ineq, 0).
+- Change definition of constraints in configuration file. To define an uppar and lower bound for a constraint, two constraints must be defined in the configuration file. However, if the constraints are a dictionary, where the key is the variable name, only one of the two constraints will be registered. The constraints must be defined as a list of dictionaries, where a key is the variable of the constraint. 
+
+## 20.06.2024
 - The `variables` entries in the configuraion files have gotten default values. If the user now only give a partly set of variables, the remaining ones are given with a default value. 
 
-## 19.04.2024
+## 19.06.2024
 - Update implementation of objective function in configuration file. The objective funciton is now defined by providing the variable, scale, and type (minimize/maximize). Based on the type, the sign of the scal might change. 
 - The objective function is now fetched from the `results` structure. The variable must be on the form `key.column`, where `key` refer to a key in `results` (e.g. `overall`), and the column, refer to a column in the DataFrame contained in 
 - `results[key]` (e.g. `efficiency_ts`). The column will be an array, and the first element is used (for `overall`, all columns has one entry).
@@ -11,7 +15,7 @@
 - This can contain variables that does not fit anywhere else in the results structure.
 - A future idea is to restructure `results` to be an object, to have more control over the variables.  
 
-## 18.05.2024
+## 18.06.2024
 - Centralize testing structure. To manage which configuratoin files that should be included in the different tests, and for which configuration files that there should be made new regression data for is now managed through 
 - `tests_manager.py`
 
