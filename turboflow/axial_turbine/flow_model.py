@@ -196,7 +196,7 @@ def evaluate_axial_turbine(
         for key, value in geometry.items()
         if len(utils.ensure_iterable(value)) == number_of_cascades
     }
-    results["geometry"] = pd.DataFrame([geom_cascades])
+    results["geometry"] = pd.DataFrame(geom_cascades)
 
     return results
 
