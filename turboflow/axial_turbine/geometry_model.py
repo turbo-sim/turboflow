@@ -362,7 +362,7 @@ def calculate_full_geometry(geometry):
     axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
 
     # Compute flaring angle
-    flaring_angle = np.arctan((height_out - height_in) / axial_chord / 2)
+    flaring_angle = math.arctand((height_out - height_in) / axial_chord / 2)
 
     # Compute geometric ratios
     aspect_ratio = height / geom["chord"]
