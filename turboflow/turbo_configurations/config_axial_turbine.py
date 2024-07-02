@@ -441,6 +441,7 @@ class Constraint(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+    variable : str
     type: Literal["<", "=", ">"]
     value: float
     normalize: bool
@@ -497,8 +498,6 @@ class Variables(BaseModel):
     tip_clearance : Variable = Variable(value = [0.00, 5e-4])
     cascade_type : Variable = Variable(value = ["stator", "rotor"])
 
-    
-
 class DesignOptimization(BaseModel):
     """
     Model describing design optimization parameters.
@@ -527,10 +526,7 @@ class DesignOptimization(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
     objective_function : ObjectiveFunction = ObjectiveFunction()
     variables : Variables = Variables()
-    constraints: Dict[
-    str,
-    Constraint,
-    ] = None
+    constraints : List[Constraint] = None
     solver_options: SolverOptionsOptimization = SolverOptionsOptimization()
     radius_type : RadiusTypeEnum = RADIUS_TYPE[0]
 

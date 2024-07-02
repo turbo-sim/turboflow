@@ -120,11 +120,11 @@ design_optimization:
     cascade_type : 
       value : ["stator", "rotor"]
   constraints :
-    overall.mass_flow_rate :
+    - variable : overall.mass_flow_rate 
       type : "="
       value : 10.66
       normalize : True 
-    additional_constraints.interspace_area_ratio :
+    - variable : additional_constraints.interspace_area_ratio 
       type : "="
       value : 1
       normalize : True

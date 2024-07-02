@@ -769,57 +769,57 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         eq_constraints = []
         ineq_constraints = []
-        for constraint in constraints.keys():
-            if constraints[constraint]["type"] == "=":
-                if constraints[constraint]["normalize"]:
+        for constraint in constraints:
+            if constraint["type"] == "=":
+                if constraint["normalize"]:
                     eq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
-                            "scale": constraints[constraint]["value"],
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
+                            "scale": abs(constraint["value"]),
                         }
                     ]
                 else:
                     eq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
                             "scale": 1,
                         }
                     ]
 
-            elif constraints[constraint]["type"] == "<":
-                if constraints[constraint]["normalize"]:
+            elif constraint["type"] == "<":
+                if constraint["normalize"]:
                     ineq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
-                            "scale": abs(constraints[constraint]["value"]),
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
+                            "scale": abs(constraint["value"]),
                         }
                     ]
                 else:
                     ineq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
                             "scale": 1,
                         }
                     ]
 
-            elif constraints[constraint]["type"] == ">":
-                if constraints[constraint]["normalize"]:
+            elif constraint["type"] == ">":
+                if constraint["normalize"]:
                     ineq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
-                            "scale": -1 * abs(constraints[constraint]["value"]),
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
+                            "scale": -1 * abs(constraint["value"]),
                         }
                     ]
                 else:
                     ineq_constraints += [
                         {
-                            "variable": constraint,
-                            "value": constraints[constraint]["value"],
+                            "variable": constraint["variable"],
+                            "value": constraint["value"],
                             "scale": -1,
                         }
                     ]
