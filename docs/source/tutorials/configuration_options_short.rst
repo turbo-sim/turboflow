@@ -79,7 +79,7 @@ This section describes the different configuration options available in TurboFlo
     - `plane` to access variables such as relative mach number (`plane.Ma_rel`)
     - `additional_constraints` to access additional variables such as interspace area ratio (`additional_constraints.interspace_area_ratio`)
 
-    Type specifies if the constraint is an equaility or inequality constraint, and must be either `<`, `>` or `=`. 
+    Type specifies if the constraint is an equaility or inequality constraint, and must be either `<`, `>` or `=`. The constraints are defined such that the parameter must be `<` or `>` than the given value. 
     Value specifies the value that the variables should be equal to, less than or greater then, and normalize specifies if the constraint should be normalized with the value or not. 
 
 .. dropdown:: Radius Types
