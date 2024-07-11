@@ -30,16 +30,8 @@ TEST_CONFIGS = {
 
 # Dictionary of configuration files for regression data generation
 REGRESSION_CONFIGS = {
-    'performance_analysis': [
-                                "performance_analysis_evaluate_cascade_throat.yaml",
-                                "performance_analysis_evaluate_cascade_critical.yaml",
-                                "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
-                                "performance_analysis_kacker_okapuu.yaml",
-                                "performance_analysis_moustapha.yaml",
-                                "performance_analysis_zero_deviation.yaml",
-                                "performance_analysis_ainley_mathieson.yaml",
-                            ],
-    'design_optimization': ["design_optimization.yaml"],
+    'performance_analysis': None,
+    'design_optimization': None,
 }
 
 def get_config_files(test_name):
