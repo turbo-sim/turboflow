@@ -494,6 +494,9 @@ def evaluate_cascade_exit(
     Re = rho * w * chord / mu
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
+    # Calculate state for isentropic expansion
+    relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w_m * area * (1 - blockage_factor)
@@ -515,6 +518,7 @@ def evaluate_cascade_exit(
             "Re_in": max(min_val, inlet_plane["Re"]),
             "Re_out": max(min_val, Re),
             "gamma_out": static_properties["gamma"],
+            "p0_rel_is" : relative_stagnation_isentropic_properties["p"],
         },
     }
 
@@ -627,6 +631,9 @@ def evaluate_cascade_throat(
     Re = rho * w * chord / mu
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
+    # Calculate state for isentropic expansion
+    relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
     mass_flow = rho * w * area * (1 - blockage_factor)
@@ -648,6 +655,7 @@ def evaluate_cascade_throat(
             "Re_in": max(min_val, inlet_plane["Re"]),
             "Re_out": max(min_val, Re),
             "gamma_out": static_properties["gamma"],
+            "p0_rel_is" : relative_stagnation_isentropic_properties["p"],
         },
     }
 

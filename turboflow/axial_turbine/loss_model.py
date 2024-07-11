@@ -100,9 +100,11 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     if loss_coeff == "stagnation_pressure":
         # TODO add other loss coefficient definitions
         p0rel_in = input_parameters["flow"]["p0_rel_in"]
+        p0_rel_is = input_parameters["flow"]["p0_rel_is"]
         p0rel_out = input_parameters["flow"]["p0_rel_out"]
         p_out = input_parameters["flow"]["p_out"]
-        Y_definition = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
+        # Y_definition = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
+        Y_definition = (p0_rel_is - p0rel_out) / (p0rel_out - p_out)
 
     else:
         options = ", ".join(f"'{k}'" for k in LOSS_COEFFICIENTS)

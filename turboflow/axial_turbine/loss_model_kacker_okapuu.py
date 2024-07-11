@@ -102,6 +102,7 @@ def get_profile_loss(flow_parameters, geometry):
     Ma_rel_out = flow_parameters["Ma_rel_out"]
     Ma_rel_in = flow_parameters["Ma_rel_in"]
     p0rel_in = flow_parameters["p0_rel_in"]
+    p0rel_is = flow_parameters["p0_rel_is"]
     p_in = flow_parameters["p_in"]
     p0rel_out = flow_parameters["p0_rel_out"]
     p_out = flow_parameters["p_out"]
@@ -129,7 +130,8 @@ def get_profile_loss(flow_parameters, geometry):
     # Compute losses related to shock effects at the inlet of the cascade
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
     a = max(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
-    Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_in - p_in) / (p0rel_out - p_out)
+    # Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_in - p_in) / (p0rel_out - p_out)
+    Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
     Y_shock = max(0, Y_shock)  # TODO: smoothing
 
     # Compute compressible flow correction factors
