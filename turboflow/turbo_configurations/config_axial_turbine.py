@@ -443,7 +443,7 @@ class Constraint(BaseModel):
     model_config = ConfigDict(extra="forbid")
     variable : str
     type: Literal["<", "=", ">"]
-    value: float
+    value: Union[float, List[float]]
     normalize: bool
 
 RadiusTypeEnum = Enum('RadiusTypes', dict(zip([model.upper() for model in RADIUS_TYPE], RADIUS_TYPE)))
