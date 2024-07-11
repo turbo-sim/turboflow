@@ -14,7 +14,7 @@ simulation_options:
   loss_model:
     model: moustapha
     loss_coefficient: stagnation_pressure
-    custom_value: 0.1
+    custom_value: 0.0
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
       profile: 1.0
@@ -90,12 +90,169 @@ performance_analysis:
     print_convergence: true
     plot_convergence: false
 design_optimization:
-  objective_function: efficiency_ts
-  variables: null
+  objective_function:
+    variable: overall.efficieny_ts
+    type: maximize
+    scale: 1
+  variables:
+    v_in:
+      value: 0.1
+      lower_bound: 0.001
+      upper_bound: 0.5
+    w_out:
+      value:
+      - 0.65
+      - 0.65
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s_out:
+      value:
+      - 0.15
+      - 0.15
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    beta_out:
+      value:
+      - 0.83
+      - 0.17
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    v_crit_in:
+      value:
+      - 0.4
+      - 0.4
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    beta_crit_throat:
+      value:
+      - 0.83
+      - 0.17
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    w_crit_throat:
+      value:
+      - 0.65
+      - 0.65
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s_crit_throat:
+      value:
+      - 0.15
+      - 0.15
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    specific_speed:
+      value: 1.2
+      lower_bound: 0.01
+      upper_bound: 10.0
+    blade_jet_ratio:
+      value: 0.5
+      lower_bound: null
+      upper_bound: null
+    hub_tip_ratio_in:
+      value:
+      - 0.6
+      - 0.6
+      lower_bound: null
+      upper_bound: null
+    hub_tip_ratio_out:
+      value:
+      - 0.6
+      - 0.6
+      lower_bound: null
+      upper_bound: null
+    aspect_ratio:
+      value:
+      - 1.5
+      - 1.5
+      lower_bound: null
+      upper_bound: null
+    pitch_chord_ratio:
+      value:
+      - 0.9
+      - 0.9
+      lower_bound: null
+      upper_bound: null
+    trailing_edge_thickness_opening_ratio:
+      value:
+      - 0.1
+      - 0.1
+      lower_bound: null
+      upper_bound: null
+    leading_edge_angle:
+      value:
+      - 0.41
+      - 0.5
+      lower_bound: null
+      upper_bound: null
+    gauging_angle:
+      value:
+      - 0.17
+      - 0.94
+      lower_bound: null
+      upper_bound: null
+    throat_location_fraction:
+      value:
+      - 1.0
+      - 1.0
+      lower_bound: null
+      upper_bound: null
+    leading_edge_diameter:
+      value:
+      - 0.01200896
+      - 0.01200896
+      lower_bound: null
+      upper_bound: null
+    leading_edge_wedge_angle:
+      value:
+      - 45.0
+      - 45.0
+      lower_bound: null
+      upper_bound: null
+    tip_clearance:
+      value:
+      - 0.0
+      - 0.0005
+      lower_bound: null
+      upper_bound: null
+    cascade_type:
+      value:
+      - stator
+      - rotor
+      lower_bound: null
+      upper_bound: null
   constraints: null
   solver_options:
     library: scipy
-    method: slsqp
+    method: nelder-mead
     tolerance: 1.0e-05
     max_iterations: 100
     derivative_method: 2-point

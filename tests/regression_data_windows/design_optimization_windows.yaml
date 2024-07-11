@@ -4,7 +4,7 @@ operation_points:
   T0_in: 463.15
   p0_in: 3620000.0
   p_out: 1585000.0
-  omega: 3977.764947514536
+  omega: 3979.75886308017
   alpha_in: 0.0
   h0_in: 497686.3106530505
   s_in: 1837.707528152813
@@ -16,7 +16,7 @@ simulation_options:
   loss_model:
     model: kacker_okapuu
     loss_coefficient: stagnation_pressure
-    custom_value: 0.1
+    custom_value: 0.0
     inlet_displacement_thickness_height_ratio: 0.011
     tuning_factors:
       profile: 1.0
@@ -35,7 +35,10 @@ performance_analysis:
     print_convergence: true
     plot_convergence: true
 design_optimization:
-  objective_function: efficiency_ts
+  objective_function:
+    variable: overall.efficiency_ts
+    type: maximize
+    scale: -10.0
   variables:
     v_in:
       value: 0.1
@@ -71,7 +74,7 @@ design_optimization:
       upper_bound:
       - 0.94
       - 0.28
-    v*_in:
+    v_crit_in:
       value:
       - 0.4
       - 0.4
@@ -81,7 +84,7 @@ design_optimization:
       upper_bound:
       - 1.0
       - 1.0
-    beta*_throat:
+    beta_crit_throat:
       value:
       - 0.83
       - 0.17
@@ -91,7 +94,7 @@ design_optimization:
       upper_bound:
       - 0.94
       - 0.28
-    w*_throat:
+    w_crit_throat:
       value:
       - 0.65
       - 0.65
@@ -101,7 +104,7 @@ design_optimization:
       upper_bound:
       - 1.0
       - 1.0
-    s*_throat:
+    s_crit_throat:
       value:
       - 0.15
       - 0.15
@@ -220,14 +223,14 @@ design_optimization:
       lower_bound: null
       upper_bound: null
   constraints:
-    mass_flow_rate:
-      type: '='
-      value: 10.66
-      normalize: true
-    interstage_flaring:
-      type: '='
-      value: 1.0
-      normalize: true
+  - variable: overall.mass_flow_rate
+    type: '='
+    value: 10.66
+    normalize: true
+  - variable: additional_constraints.interspace_area_ratio
+    type: '='
+    value: 1.0
+    normalize: true
   solver_options:
     library: scipy
     method: slsqp
