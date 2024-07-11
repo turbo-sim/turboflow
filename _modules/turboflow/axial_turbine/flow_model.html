@@ -595,6 +595,9 @@
     <span class="n">Re</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="n">chord</span> <span class="o">/</span> <span class="n">mu</span>
     <span class="n">rothalpy</span> <span class="o">=</span> <span class="n">h0_rel</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">blade_speed</span><span class="o">**</span><span class="mi">2</span>
 
+    <span class="c1"># Calculate state for isentropic expansion</span>
+    <span class="n">relative_stagnation_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+
     <span class="c1"># Compute mass flow rate</span>
     <span class="n">blockage_factor</span> <span class="o">=</span> <span class="n">compute_blockage_boundary_layer</span><span class="p">(</span><span class="n">blockage</span><span class="p">,</span> <span class="n">Re</span><span class="p">,</span> <span class="n">chord</span><span class="p">,</span> <span class="n">opening</span><span class="p">)</span>
     <span class="n">mass_flow</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">w_m</span> <span class="o">*</span> <span class="n">area</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">blockage_factor</span><span class="p">)</span>
@@ -616,6 +619,7 @@
             <span class="s2">&quot;Re_in&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;Re&quot;</span><span class="p">]),</span>
             <span class="s2">&quot;Re_out&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">Re</span><span class="p">),</span>
             <span class="s2">&quot;gamma_out&quot;</span><span class="p">:</span> <span class="n">static_properties</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;p0_rel_is&quot;</span> <span class="p">:</span> <span class="n">relative_stagnation_isentropic_properties</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span>
         <span class="p">},</span>
     <span class="p">}</span>
 
@@ -731,6 +735,9 @@
     <span class="n">Re</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="n">chord</span> <span class="o">/</span> <span class="n">mu</span>
     <span class="n">rothalpy</span> <span class="o">=</span> <span class="n">h0_rel</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">blade_speed</span><span class="o">**</span><span class="mi">2</span>
 
+    <span class="c1"># Calculate state for isentropic expansion</span>
+    <span class="n">relative_stagnation_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+
     <span class="c1"># Compute mass flow rate</span>
     <span class="n">blockage_factor</span> <span class="o">=</span> <span class="n">compute_blockage_boundary_layer</span><span class="p">(</span><span class="n">blockage</span><span class="p">,</span> <span class="n">Re</span><span class="p">,</span> <span class="n">chord</span><span class="p">,</span> <span class="n">opening</span><span class="p">)</span>
     <span class="n">mass_flow</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="n">area</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">blockage_factor</span><span class="p">)</span>
@@ -752,6 +759,7 @@
             <span class="s2">&quot;Re_in&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;Re&quot;</span><span class="p">]),</span>
             <span class="s2">&quot;Re_out&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="n">min_val</span><span class="p">,</span> <span class="n">Re</span><span class="p">),</span>
             <span class="s2">&quot;gamma_out&quot;</span><span class="p">:</span> <span class="n">static_properties</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;p0_rel_is&quot;</span> <span class="p">:</span> <span class="n">relative_stagnation_isentropic_properties</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span>
         <span class="p">},</span>
     <span class="p">}</span>
 
