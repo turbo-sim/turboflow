@@ -245,7 +245,7 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">get_lines</span><span class="p">(</span><span class="n">performance_data</span><span class="p">,</span> <span class="n">y_keys</span><span class="p">,</span> <span class="n">subsets</span><span class="o">=</span><span class="n">subsets</span><span class="p">)</span>
 
     <span class="c1"># Get colors</span>
-    <span class="k">if</span> <span class="n">colors</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">colors</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
         <span class="n">colors</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="n">color_map</span><span class="p">)(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
 
     <span class="c1"># Get labels</span>

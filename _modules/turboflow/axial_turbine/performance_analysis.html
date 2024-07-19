@@ -918,8 +918,7 @@
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
             <span class="p">]</span>
             <span class="n">valid_keys_3</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
-            <span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;beta_crit_throat_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)]</span>
+                <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)]</span>
             <span class="n">valid_keys_4</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">key</span>
                 <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
@@ -1048,7 +1047,9 @@
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
+                        <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">))</span>
+
             <span class="p">}</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>

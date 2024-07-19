@@ -67,6 +67,3 @@ have the same value. Therefore, the loss coefficient error is given by
 
 The evaluation of the model involves measures to ensure that the loss coefficient error is zero. For performance analysis, this is ensured by 
 thr root-solver algorithm, while for design optimization this is implemented as an equality constraint for the same purpose. 
-
-.. warning::
-   Only the stagnation pressure loss coefficient is implemented in the current version of the code. 
