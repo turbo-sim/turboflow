@@ -30,7 +30,7 @@ TEST_CONFIGS = {
 
 # Dictionary of configuration files for regression data generation
 REGRESSION_CONFIGS = {
-    'performance_analysis': None,
+    'performance_analysis': ["performance_analysis_evaluate_cascade_throat.yaml"],
     'design_optimization': None,
 }
 
