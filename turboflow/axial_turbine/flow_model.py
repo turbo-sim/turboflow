@@ -496,6 +496,7 @@ def evaluate_cascade_exit(
 
     # Calculate state for isentropic expansion
     relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, inlet_plane["s"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -511,7 +512,9 @@ def evaluate_cascade_exit(
             "p0_rel_out": relative_stagnation_properties["p0_rel"],
             "p_in": inlet_plane["p"],
             "p_out": static_properties["p"],
+            "h_out": static_properties["h"],
             "beta_out": beta,
+            "w_out" : w,
             "beta_in": inlet_plane["beta"],
             "Ma_rel_in": max(min_val, inlet_plane["Ma_rel"]),
             "Ma_rel_out": max(min_val, Ma_rel),
@@ -519,6 +522,7 @@ def evaluate_cascade_exit(
             "Re_out": max(min_val, Re),
             "gamma_out": static_properties["gamma"],
             "p0_rel_is" : relative_stagnation_isentropic_properties["p"],
+            "h_is" : relative_static_isentropic_properties["h"],
         },
     }
 
@@ -633,6 +637,7 @@ def evaluate_cascade_throat(
 
     # Calculate state for isentropic expansion
     relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, inlet_plane["s"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -648,7 +653,9 @@ def evaluate_cascade_throat(
             "p0_rel_out": relative_stagnation_properties["p0_rel"],
             "p_in": inlet_plane["p"],
             "p_out": static_properties["p"],
+            "h_out": static_properties["h"],
             "beta_out": beta,
+            "w_out" : w,
             "beta_in": inlet_plane["beta"],
             "Ma_rel_in": max(min_val, inlet_plane["Ma_rel"]),
             "Ma_rel_out": max(min_val, Ma_rel),
@@ -656,6 +663,7 @@ def evaluate_cascade_throat(
             "Re_out": max(min_val, Re),
             "gamma_out": static_properties["gamma"],
             "p0_rel_is" : relative_stagnation_isentropic_properties["p"],
+            "h_is" : relative_static_isentropic_properties["h"],
         },
     }
 

@@ -17,6 +17,7 @@ Available loss models.
 
 LOSS_COEFFICIENTS = [
     "stagnation_pressure",
+    "kinetic_energy",
 ]
 """
 Available loss coefficients.
@@ -105,6 +106,12 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         p_out = input_parameters["flow"]["p_out"]
         # Y_definition = (p0rel_in - p0rel_out) / (p0rel_out - p_out)
         Y_definition = (p0_rel_is - p0rel_out) / (p0rel_out - p_out)
+
+    elif loss_coeff == "kinetic_energy":
+        w = input_parameters["flow"]["w_out"]
+        h = input_parameters["flow"]["h_out"]
+        h_is = input_parameters["flow"]["h_is"]
+        Y_definition = (h-h_is)/(0.5*w**2)
 
     else:
         options = ", ".join(f"'{k}'" for k in LOSS_COEFFICIENTS)
