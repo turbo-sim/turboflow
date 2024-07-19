@@ -150,7 +150,7 @@ def plot_lines(
         y = get_lines(performance_data, y_keys, subsets=subsets)
 
     # Get colors
-    if colors == None:
+    if not isinstance(colors, (list,np.ndarray)):
         colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y)))
 
     # Get labels
