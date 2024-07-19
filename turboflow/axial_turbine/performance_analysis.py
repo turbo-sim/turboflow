@@ -794,8 +794,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 for key in valid_keys_2
             ]
             valid_keys_3 = [
-                key for key in valid_keys_2 if not key.startswith("v_crit_in")
-            ] + [f"beta_crit_throat_{i+1}" for i in range(number_of_cascades)]
+                key for key in valid_keys_2 if not key.startswith("v_crit_in")]
             valid_keys_4 = [
                 key
                 for key in valid_keys_2
@@ -924,7 +923,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             initial_guess = {
                 key: val
                 for key, val in initial_guess.items()
-                if not key.startswith("v_crit_in")
+                if not (key.startswith("v_crit_in")
+                        or key.startswith("beta_crit_throat"))
+
             }
         elif self.model_options["choking_model"] == "evaluate_cascade_critical":
             initial_guess = {

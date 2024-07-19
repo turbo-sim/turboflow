@@ -159,7 +159,7 @@ def evaluate_cascade_throat(
     cascade_throat_input = {
         "w": choking_input["w_crit_throat"] * v0,
         "s": choking_input["s_crit_throat"] * s_range + s_min,
-        "beta": choking_input["beta_crit_throat"] * angle_range + angle_min,
+        "beta" : geometry["gauging_angle"],
         "rothalpy": inlet_plane["rothalpy"],
     }
     throat_plane, loss_dict = fm.evaluate_cascade_throat(
@@ -175,12 +175,6 @@ def evaluate_cascade_throat(
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
     critical_mach = get_critical_mach(fluid.name, Y_tot)
-
-    # Evaluate residual flow angle
-    beta_model = np.sign(throat_plane["beta"]) * dm.get_subsonic_deviation(
-        throat_plane["Ma_rel"], critical_mach, geometry, deviation_model
-    )
-    beta_residual = math.cosd(beta_model) - math.cosd(throat_plane["beta"])
 
     # Evaluate if flow cascade is choked or not an add choking residual
     if exit_plane["Ma_rel"] <= critical_mach:
@@ -198,7 +192,6 @@ def evaluate_cascade_throat(
             (inlet_plane["mass_flow"] - throat_plane["mass_flow"])
             / reference_values["mass_flow_ref"],
             throat_plane["loss_error"],
-            beta_residual,
             choking_residual,
         ]
     )
