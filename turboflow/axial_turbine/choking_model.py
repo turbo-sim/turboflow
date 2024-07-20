@@ -159,7 +159,8 @@ def evaluate_cascade_throat(
     cascade_throat_input = {
         "w": choking_input["w_crit_throat"] * v0,
         "s": choking_input["s_crit_throat"] * s_range + s_min,
-        "beta" : geometry["gauging_angle"],
+        "beta" : np.sign(exit_plane["beta"])
+        * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
     }
     throat_plane, loss_dict = fm.evaluate_cascade_throat(
@@ -174,13 +175,15 @@ def evaluate_cascade_throat(
 
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
-    critical_mach = get_critical_mach(fluid.name, Y_tot)
+    eta = (throat_plane["h0_rel"]-throat_plane["h"])/(throat_plane["h0_rel"]-throat_plane["h_is"])
+    critical_mach = get_mach_crit(throat_plane["gamma"], eta)
 
     # Evaluate if flow cascade is choked or not an add choking residual
     if exit_plane["Ma_rel"] <= critical_mach:
         beta_model = np.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
         )
+
         # Compute error of guessed beta and deviation model
         choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
     else:
@@ -206,40 +209,45 @@ def evaluate_cascade_throat(
 
     return residuals_critical, {**critical_state, **throat_plane}
 
-def get_critical_mach(fluid_name, Y):
-    r"""
-    Compute the critical Mach number based on a correlation that depends on the total loss coefficient and the type of fluid used.
-    The function uses a polynomial regression model where the degree and coefficients of the polynomial
-    are specific to the fluid type. The coefficients are applied in ascending order of polynomial degree.
-    Regression coefficients are stored in `REGRESSION_COEFFICIENTS`.
-
+def get_mach_crit(gamma, eta):
+    """
+    Compute the critical Mach number for non-isentropic flow in a nozzle.
+ 
+    This function calculates the critical Mach number ($\text{Ma}_\text{crit}$) using the
+    given specific heat ratio (\$gamma$) and nozzle efficiency ($\eta$).
+   
+    .. math::
+        \text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
+        = \left(\frac{2}{\gamma-1}\right)\left[\frac{4 \alpha-2}{(2 \alpha+\eta-3) + \sqrt{(1+\eta)^{2}+4 \alpha(1+\alpha-3 \eta)}} - 1\right]
+ 
+    where:
+ 
+    .. math::
+        \alpha = \frac{\gamma}{\gamma-1}
+ 
+    and
+ 
+    .. math::
+        \eta = 1 - \Delta \phi^2
+ 
+    Here, $\Delta \phi^2$ is the kinetic energy loss coefficient.
+       
     Parameters
     ----------
-    fluid_name : str
-        The name of the fluid for which the critical Mach number is to be computed. Must be a key in `REGRESSION_COEFFICIENTS`.
-    Y : float
-        The total loss coefficient.
-
+    gamma : float
+        Specific heat ratio of the gas.
+    eta : float
+        Nozzle efficiency, related to the kinetic energy loss coefficient.
+ 
     Returns
     -------
     float
-        The computed critical Mach number for the given fluid and total loss coefficient.
-
-    Raises
-    ------
-    ValueError
-        If no regression coefficients are found for the given fluid.
-
+        Critical Mach number (\text{Ma}_\text{crit}).
     """
-
-    if fluid_name in REGRESSION_COEFFICIENTS.keys():
-        coefficients = REGRESSION_COEFFICIENTS[fluid_name]
-    else:
-        raise ValueError(f"No regression coefficients found for fluid: {fluid_name}")
-
-    mach_crit = sum([coefficients[i]*Y**i for i in range(len(coefficients))])
-
-    return mach_crit
+    alpha = gamma / (gamma - 1)
+    T_hat_crit = (2*alpha + eta - 3 + np.sqrt((1+eta)**2 + 4*alpha*(1+alpha-3*eta))) / (4*alpha - 2)
+    Ma_crit = np.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
+    return Ma_crit
 
 def evaluate_cascade_critical(
     choking_input,
