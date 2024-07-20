@@ -1,8 +1,7 @@
 import os
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import turboflow as tf
+import turboflow.axial_turbine.loss_model_benner as tf
 
 if __name__ == "__main__":
     # Define the distance parameter
