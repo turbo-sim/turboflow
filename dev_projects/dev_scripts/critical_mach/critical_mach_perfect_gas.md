@@ -82,7 +82,6 @@ The variation of the dimensionless mass flow function against the Mach number at
 
 <div style="text-align:center;">
     <img src="figures/mass_flow_vs_mach.svg" style="width:50%;">
-
 </div>
 
 
