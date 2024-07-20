@@ -45,6 +45,7 @@ def set_plot_options(
     minor_ticks=True,
     margin=0.05,
     color_order="matlab",
+    linewidth=1.25,
 ):
     """
     Set options for creating publication-quality figures using Matplotlib.
@@ -117,9 +118,9 @@ def set_plot_options(
         "legend.handletextpad": 0.8,
         "legend.markerscale": 1.0,
         "legend.numpoints": 1,
-        "lines.linewidth": 1.25,
-        "lines.markersize": 5,
-        "lines.markeredgewidth": 1.25,
+        "lines.linewidth": linewidth,
+        "lines.markersize": 4.5,
+        "lines.markeredgewidth": linewidth,
         "lines.markerfacecolor": "white",
         "xtick.direction": "in",
         "xtick.labelsize": fontsize - 1,

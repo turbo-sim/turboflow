@@ -56,4 +56,6 @@ for j in range(len(Y)):
     ax1.plot(Ma, s, label=f"{Y[j]}")
 
 ax.legend()
+
+plt.show()
 # ax.set_xlim([0.5, 1.2])

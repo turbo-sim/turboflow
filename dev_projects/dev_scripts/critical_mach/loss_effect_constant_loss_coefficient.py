@@ -124,3 +124,5 @@ if export_results:
     df = pd.DataFrame(data)
     with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
         df.to_excel(writer, index=False)
+
+
