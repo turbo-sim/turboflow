@@ -175,8 +175,8 @@ def evaluate_axial_turbine(
     residuals["p_out"] = p_error
 
     # Additional calculations
-    loss_fractions = compute_efficiency_breakdown(results)
-    results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
+    # loss_fractions = compute_efficiency_breakdown(results)
+    # results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
 
     # Compute stage performance
     results["stage"] = pd.DataFrame(compute_stage_performance(results))
@@ -496,7 +496,7 @@ def evaluate_cascade_exit(
 
     # Calculate state for isentropic expansion
     relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
-    relative_static_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -542,6 +542,7 @@ def evaluate_cascade_exit(
         "mass_flow": mass_flow,
         "rothalpy": rothalpy,
         "blockage": blockage_factor,
+        "h_is" : relative_static_isentropic_properties["h"],
     }
     return plane, loss_dict
 
@@ -637,7 +638,7 @@ def evaluate_cascade_throat(
 
     # Calculate state for isentropic expansion
     relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
-    relative_static_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -683,6 +684,7 @@ def evaluate_cascade_throat(
         "mass_flow": mass_flow,
         "rothalpy": rothalpy,
         "blockage": blockage_factor,
+        "h_is" : relative_static_isentropic_properties["h"],
     }
     return plane, loss_dict
 
