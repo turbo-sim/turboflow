@@ -405,30 +405,50 @@ and by ensuring that the mach at the throat equals the critical at supercritical
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_critical_mach">
-<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_critical_mach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fluid_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_critical_mach"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_critical_mach" title="Link to this definition"></a></dt>
-<dd><p>Compute the critical Mach number based on a correlation that depends on the total loss coefficient and the type of fluid used.
-The function uses a polynomial regression model where the degree and coefficients of the polynomial
-are specific to the fluid type. The coefficients are applied in ascending order of polynomial degree.
-Regression coefficients are stored in <cite>REGRESSION_COEFFICIENTS</cite>.</p>
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_mach_crit">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_mach_crit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_mach_crit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_mach_crit" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Compute the critical Mach number for non-isentropic flow in a nozzle.</p>
+<p>This function calculates the critical Mach number ($        ext{Ma}_        ext{crit}$) using the
+given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
+<div class="math notranslate nohighlight">
+\[ext{Ma}_        ext{crit}^{2} = \left(\]</div>
+</div></blockquote>
+<p>rac{2}{gamma-1}
+ight)left(
+rac{1}{hat{T}_     ext{crit}}-1
+ight)</p>
+<blockquote>
+<div><p>= left(</p>
+</div></blockquote>
+<p>rac{2}{gamma-1}
+ight)left[
+rac{4 lpha-2}{(2 lpha+eta-3) + sqrt{(1+eta)^{2}+4 lpha(1+lpha-3 eta)}} - 1
+ight]</p>
+<blockquote>
+<div><p>where:</p>
+<div class="math notranslate nohighlight">
+\[lpha = \]</div>
+</div></blockquote>
+<p>rac{gamma}{gamma-1}</p>
+<blockquote>
+<div><p>and</p>
+<div class="math notranslate nohighlight">
+\[\eta = 1 - \Delta \phi^2\]</div>
+<p>Here, $Delta phi^2$ is the kinetic energy loss coefficient.</p>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>fluid_name</strong><span class="classifier">str</span></dt><dd><p>The name of the fluid for which the critical Mach number is to be computed. Must be a key in <cite>REGRESSION_COEFFICIENTS</cite>.</p>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>Specific heat ratio of the gas.</p>
 </dd>
-<dt><strong>Y</strong><span class="classifier">float</span></dt><dd><p>The total loss coefficient.</p>
+<dt><strong>eta</strong><span class="classifier">float</span></dt><dd><p>Nozzle efficiency, related to the kinetic energy loss coefficient.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>The computed critical Mach number for the given fluid and total loss coefficient.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If no regression coefficients are found for the given fluid.</p>
+<dt>float</dt><dd><p>Critical Mach number (  ext{Ma}_        ext{crit}).</p>
 </dd>
 </dl>
 </dd>

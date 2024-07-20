@@ -267,8 +267,8 @@
     <span class="n">residuals</span><span class="p">[</span><span class="s2">&quot;p_out&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_error</span>
 
     <span class="c1"># Additional calculations</span>
-    <span class="n">loss_fractions</span> <span class="o">=</span> <span class="n">compute_efficiency_breakdown</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-    <span class="n">results</span><span class="p">[</span><span class="s2">&quot;cascade&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;cascade&quot;</span><span class="p">],</span> <span class="n">loss_fractions</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># loss_fractions = compute_efficiency_breakdown(results)</span>
+    <span class="c1"># results[&quot;cascade&quot;] = pd.concat([results[&quot;cascade&quot;], loss_fractions], axis=1)</span>
 
     <span class="c1"># Compute stage performance</span>
     <span class="n">results</span><span class="p">[</span><span class="s2">&quot;stage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">compute_stage_performance</span><span class="p">(</span><span class="n">results</span><span class="p">))</span>
@@ -597,7 +597,7 @@
 
     <span class="c1"># Calculate state for isentropic expansion</span>
     <span class="n">relative_stagnation_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
-    <span class="n">relative_static_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+    <span class="n">relative_static_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
 
     <span class="c1"># Compute mass flow rate</span>
     <span class="n">blockage_factor</span> <span class="o">=</span> <span class="n">compute_blockage_boundary_layer</span><span class="p">(</span><span class="n">blockage</span><span class="p">,</span> <span class="n">Re</span><span class="p">,</span> <span class="n">chord</span><span class="p">,</span> <span class="n">opening</span><span class="p">)</span>
@@ -643,6 +643,7 @@
         <span class="s2">&quot;mass_flow&quot;</span><span class="p">:</span> <span class="n">mass_flow</span><span class="p">,</span>
         <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">rothalpy</span><span class="p">,</span>
         <span class="s2">&quot;blockage&quot;</span><span class="p">:</span> <span class="n">blockage_factor</span><span class="p">,</span>
+        <span class="s2">&quot;h_is&quot;</span> <span class="p">:</span> <span class="n">relative_static_isentropic_properties</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">plane</span><span class="p">,</span> <span class="n">loss_dict</span></div>
 
@@ -741,7 +742,7 @@
 
     <span class="c1"># Calculate state for isentropic expansion</span>
     <span class="n">relative_stagnation_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
-    <span class="n">relative_static_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
+    <span class="n">relative_static_isentropic_properties</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">inlet_plane</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">])</span>
 
     <span class="c1"># Compute mass flow rate</span>
     <span class="n">blockage_factor</span> <span class="o">=</span> <span class="n">compute_blockage_boundary_layer</span><span class="p">(</span><span class="n">blockage</span><span class="p">,</span> <span class="n">Re</span><span class="p">,</span> <span class="n">chord</span><span class="p">,</span> <span class="n">opening</span><span class="p">)</span>
@@ -787,6 +788,7 @@
         <span class="s2">&quot;mass_flow&quot;</span><span class="p">:</span> <span class="n">mass_flow</span><span class="p">,</span>
         <span class="s2">&quot;rothalpy&quot;</span><span class="p">:</span> <span class="n">rothalpy</span><span class="p">,</span>
         <span class="s2">&quot;blockage&quot;</span><span class="p">:</span> <span class="n">blockage_factor</span><span class="p">,</span>
+        <span class="s2">&quot;h_is&quot;</span> <span class="p">:</span> <span class="n">relative_static_isentropic_properties</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">plane</span><span class="p">,</span> <span class="n">loss_dict</span></div>
 
