@@ -21,12 +21,12 @@ if isinstance(cascades_data["operation_points"], list):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = "pressure_line"  # performance_map/error_plot
+Case = "test"  # performance_map/error_plot
 # Get the name of the latest results file
-# filename = ml.utils.find_latest_results_file(RESULTS_PATH)
-filename = (
-    "output\performance_analysis_2024-03-16_20-10-25.xlsx"  # performance map, 1963 REVS
-)
+filename = tf.utils.find_latest_results_file(RESULTS_PATH)
+# filename = 'output\performance_analysis_2024-07-11_11-43-46.xlsx' # New loss coefficient, performance_map
+# filename = 'output\performance_analysis_2024-07-11_20-00-05.xlsx' # New loss coefficient, error_plot
+# filename = "output\performance_analysis_2024-03-16_20-10-25.xlsx"  # performance map, 1963 REVS
 # filename = 'output\performance_analysis_2024-03-16_20-20-51.xlsx' # experimental points 1963 REVS
 
 save_figs = False
@@ -98,24 +98,42 @@ if Case == "pressure_line":
     outdir = "figures"
 
     # Plot mass flow rate
-    # title = "Mass flow rate"
-    # filename = title.lower().replace(" ", "_") + '_' + timestamp
-    # fig1, ax1 = ml.plot_functions.plot_lines(
-    #     data,
-    #     x_key="PR_ts",
-    #     y_keys=["mass_flow_rate"],
-    #     xlabel="Total-to-static pressure ratio",
-    #     ylabel="Mass flow rate [kg/s]",
-    #     title=title,
-    #     filename=filename,
-    #     outdir=outdir,
-    #     color_map=color_map,
-    #     save_figs=save_figs,
-    # )
+    title = "Mass flow rate"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["mass_flow_rate"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Mass flow rate [kg/s]",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+
+    title = "Entropy"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["s_1", "s_throat_1", "s_2"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Entropy",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
 
     # Plot mach
     title = "Mach number"
-    linstyles = ["-", "--"]
+    linstyles = ["-", "--"]*2
+    color_map_1 = plt.get_cmap("Reds")(np.linspace(0.2, 1.0, 4))
+    color_map_2 = plt.get_cmap("Blues")(np.linspace(0.2, 1.0, 4))
+    colors = np.concatenate((color_map_1[1:3], color_map_2[1:3]))
     filename = title.lower().replace(" ", "_") + "_" + timestamp
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
@@ -125,24 +143,7 @@ if Case == "pressure_line":
         ylabel="Cascade exit relative mach number [-]",
         filename=filename,
         outdir=outdir,
-        color_map=color_map,
-        linestyles=linstyles,
-        save_figs=save_figs,
-    )
-
-    title = "Mach number"
-    filename = title.lower().replace(" ", "_") + "_" + timestamp
-    fig1, ax1 = tf.plot_functions.plot_lines(
-        data,
-        x_key="PR_ts",
-        y_keys=["Ma_crit_throat_1", "Ma_crit_throat_2"],
-        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-        ylabel="Cascade exit relative mach number [-]",
-        filename=filename,
-        fig=fig1,
-        ax=ax1,
-        outdir=outdir,
-        color_map="Blues",
+        colors=colors,
         linestyles=linstyles,
         save_figs=save_figs,
     )
@@ -152,10 +153,17 @@ if Case == "pressure_line":
     labels = ["Stator actual", "Rotor actual", "Stator critical", "Rotor critical"]
     ax1.legend(labels=labels, ncols=2, loc="lower right")
 
-    ax1.plot([2.43, 2.43], [0.35, 0.978], "k--")
+    ax1.plot([2.54, 2.54], [0.35, 0.978], "k--")
     ax1.plot([3.16, 3.16], [0.35, 0.94], "k--")
-    ax1.text(2.48, 0.65, "Stator\nchokes", verticalalignment="center")
+    ax1.text(2.61, 0.65, "Stator\nchokes", verticalalignment="center")
     ax1.text(3.21, 0.65, "Rotor\nchokes", verticalalignment="center")
+
+    if save_figs:
+        formats=[".png", ".eps"]
+
+        tf.plot_functions.savefig_in_formats(
+            fig1, "figures/1974_mach_new_Y", formats=formats
+        ) 
 
     # Plot pressure
     # title = "Rotor pressure"
@@ -226,101 +234,107 @@ if Case == "pressure_line":
 elif Case == "performance_map":
     timestamp = tf.utils.extract_timestamp(filename)
     data = tf.plot_functions.load_data(filename)
-
+    color_map = 'Reds'
     # Plot mass flow rate at different angular speed
     subsets = ["omega"] + list(np.array([0.7, 0.9, 1, 1.05]) * design_point["omega"])
-    fig1, ax1 = tf.plot_functions.plot_subsets(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "mass_flow_rate",
+        ["mass_flow_rate"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map,
     )
 
     # Plot total-to-static efficiency at different angular speeds
-    fig2, ax2 = tf.plot_functions.plot_subsets(
+    fig2, ax2 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "efficiency_ts",
+        ["efficiency_ts"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Total-to-static efficiency [%]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map,
     )
 
     # Plot relative flow angle as different angular speed
-    fig3, ax3 = tf.plot_functions.plot_subsets(
+    fig3, ax3 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "beta_4",
+        ["beta_4"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit relative flow angle [deg]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map,
     )
 
     # Plot absolute flow angle as different angular speed
-    fig4, ax4 = tf.plot_functions.plot_subsets(
+    fig4, ax4 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "alpha_4",
+        ["alpha_4"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit absolute flow angle [deg]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map
     )
 
     # Plot torque as different angular speed
-    fig5, ax5 = tf.plot_functions.plot_subsets(
+    fig5, ax5 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "torque",
+        ["torque"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Torque [Nm]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map,
     )
 
     # Plot rotor inlet total pressure as different angular speed
-    fig6, ax6 = tf.plot_functions.plot_subsets(
+    fig6, ax6 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "p0_rel_3",
+        ["Ma_rel_4"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Total pressure rotor inlet [Nm]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map = color_map,
     )
 
-    fig7, ax7 = tf.plot_functions.plot_subsets(
-        data,
-        "PR_ts",
-        "mass_flow_crit_throat_2",
-        subsets,
-        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-        ylabel="Critical mass flow rate rotor [Nm]",
-        linestyles=["-", ":", "--", "-."],
-        close_fig=False,
-    )
+    # fig7, ax7 = tf.plot_functions.plot_subsets(
+    #     data,
+    #     "PR_ts",
+    #     "mass_flow_crit_throat_2",
+    #     subsets,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Critical mass flow rate rotor [Nm]",
+    #     linestyles=["-", ":", "--", "-."],
+    #     close_fig=False,
+    # )
 
-    fig8, ax8 = tf.plot_functions.plot_subsets(
-        data,
-        "PR_ts",
-        "Y_crit_throat_2",
-        subsets,
-        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-        ylabel="Critical total loss coefficient [Nm]",
-        linestyles=["-", ":", "--", "-."],
-        close_fig=False,
-    )
+    # fig8, ax8 = tf.plot_functions.plot_subsets(
+    #     data,
+    #     "PR_ts",
+    #     "Y_crit_throat_2",
+    #     subsets,
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Critical total loss coefficient [Nm]",
+    #     linestyles=["-", ":", "--", "-."],
+    #     close_fig=False,
+    # )
 
     # # Plot stacked losses at stator on subset
     # subset = ["omega", design_point["omega"]]
@@ -491,16 +505,18 @@ elif Case == "performance_map":
     ax5.set_yticks(range(tick_limits[0], tick_limits[1] + 1, tick_interval))
 
     if save_figs:
+        formats=[".png", ".eps"]
+
         tf.plot_functions.savefig_in_formats(
-            fig1, "figures/1974_mass_flow_rate", formats=[".eps"]
+            fig1, "figures/1974_mass_flow_rate_new_Y", formats=formats
         )
         # ml.plot_functions.savefig_in_formats(fig2, "figures/1974_efficiency", formats = [".eps"])
         # ml.plot_functions.savefig_in_formats(fig3, "figures/1974_relative_flow_angle", formats = [".eps"])
         tf.plot_functions.savefig_in_formats(
-            fig4, "figures/1974_absolute_flow_angle", formats=[".eps"]
+            fig4, "figures/1974_absolute_flow_angle_new_Y", formats=formats
         )
         tf.plot_functions.savefig_in_formats(
-            fig5, "figures/1974_torque", formats=[".eps"]
+            fig5, "figures/1974_torque_new_Y", formats=formats
         )
 
 elif Case == "error_plot":
@@ -510,7 +526,6 @@ elif Case == "error_plot":
     speed_percent = np.flip([105, 100, 90, 70])
     data_sim = pd.read_excel(filename, sheet_name=["overall"])
     data_sim = data_sim["overall"]
-    print(data_sim)
 
     data_exp = pd.read_excel(filename_exp, sheet_name="Interpolated pr_ts")
     data_exp = data_exp[data_exp["speed_percent"].isin(speed_percent)]
@@ -533,14 +548,13 @@ elif Case == "error_plot":
         ].index
         torque_indices = data_exp_temp.loc[~data_exp_temp["torque"].isna()].index
         alpha_indices = data_exp_temp.loc[~data_exp_temp["alpha"].isna()].index
-        fig1, ax1 = tf.plot_functions.plot_error(
+        ax1.plot(
             data_exp.loc[mass_flow_rate_indices, "mass_flow_rate"].values,
             data_sim.loc[mass_flow_rate_indices, "mass_flow_rate"].values,
-            fig=fig1,
-            ax=ax1,
             color=color,
             marker=marker,
             label=str(speed),
+            linestyle = 'none',
         )
 
         # fig2, ax2 = ml.plot_functions.plot_error(
@@ -553,24 +567,22 @@ elif Case == "error_plot":
         #     label = str(speed),
         # )
 
-        fig3, ax3 = tf.plot_functions.plot_error(
+        ax3.plot(
             data_exp.loc[torque_indices, "torque"].values,
             data_sim.loc[torque_indices, "torque"].values,
-            fig=fig3,
-            ax=ax3,
             color=color,
             marker=marker,
             label=str(speed),
+            linestyle = 'none',
         )
 
-        fig4, ax4 = tf.plot_functions.plot_error(
+        ax4.plot(
             data_exp.loc[alpha_indices, "alpha"].values,
             data_sim.loc[alpha_indices, "exit_flow_angle"].values,
-            fig=fig4,
-            ax=ax4,
             color=color,
             marker=marker,
             label=str(speed),
+            linestyle = 'none',
         )
 
         # fig5, ax5 = ml.plot_functions.plot_error(
@@ -612,9 +624,9 @@ elif Case == "error_plot":
     )
 
     # Add lines to efficiency plot
-    eta_error = 5
-    ax2.plot([minima, maxima], [minima - eta_error, maxima - eta_error], "k--")
-    ax2.plot([minima, maxima], [minima + eta_error, maxima + eta_error], "k--")
+    # eta_error = 5
+    # ax2.plot([minima, maxima], [minima - eta_error, maxima - eta_error], "k--")
+    # ax2.plot([minima, maxima], [minima + eta_error, maxima + eta_error], "k--")
 
     # Add lines to angle plot
     delta_deg = 5
@@ -685,17 +697,81 @@ elif Case == "error_plot":
     # ax5.set_xlim(ax5_lims)
 
     if save_figs:
+        formats=[".png", ".eps"]
         tf.plot_functions.savefig_in_formats(
-            fig1, "figures/error_1974_mass_flow_rate_error", formats=[".eps"]
+            fig1, "figures/error_1974_mass_flow_rate_error_new_Y", formats=formats
         )
         # ml.plot_functions.savefig_in_formats(fig2, "figures/error_1974_efficiency_error", formats = [".eps"])
         tf.plot_functions.savefig_in_formats(
-            fig3, "figures/error_1974_torque_error", formats=[".eps"]
+            fig3, "figures/error_1974_torque_error_new_Y", formats=formats
         )
         tf.plot_functions.savefig_in_formats(
-            fig4, "figures/error_1974_absolute_flow_angle_error", formats=[".eps"]
+            fig4, "figures/error_1974_absolute_flow_angle_error_new_Y", formats=formats
         )
 
+elif Case == "test":
+
+    # Load performance data
+    filename_1 = "output/performance_analysis_2024-03-16_20-10-25.xlsx" # Lagrange, 5/6
+    filename_2 = "output/performance_analysis_2024-07-20_20-09-13.xlsx" # Critical mach, Madrid correlation, 5/6
+    # filename_1 = "output/performance_analysis_2024-07-20_21-07-30.xlsx" # Lagrange, 1.0
+    # filename_2 = "output/performance_analysis_2024-07-20_21-01-37.xlsx" # Critical mach, Madrid correlation, 1.0
+
+    data_1 = tf.plot_functions.load_data(filename_1)
+    sheets = data_1.keys()
+    filtered_indices = data_1["overall"][data_1["overall"]["angular_speed"] == 1963].index
+    for sheet in sheets:
+        data_1[sheet] = data_1[sheet].loc[filtered_indices, :]
+    data_2 = tf.plot_functions.load_data(filename_2)
+    # data_3 = tf.plot_functions.load_data(filename_3)
+
+    subsets = ["omega", 1627]
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data_1,
+        x_key="PR_ts",
+        y_keys=["mass_flow_rate"],
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        colors='k',
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        save_figs=True,
+    )
+
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data_2,
+        x_key="PR_ts",
+        y_keys=["mass_flow_rate"],
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        colors=['r'],
+        fig = fig1,
+        ax = ax1, 
+        linestyles = ["--"],
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        save_figs=True,
+    )
+
+    ax1.legend(labels = ["Maxmized mass flow rate", "Critical mach"], loc = "lower right")
+    ax1.set_ylim([1.8, 2.4])
+    ax1.set_title("Kofskey 1974")
+    fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
+
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data_3,
+    #     x_key="PR_ts",
+    #     y_keys=["mass_flow_rate"],
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Mass flow rate [kg/s]",
+    #     colors=['r'],
+    #     fig = fig1,
+    #     ax = ax1, 
+    #     linestyles = ["--"],
+    #     filename = 'mass_flow_rate',
+    #     outdir = "figures",
+    #     save_figs=True,
+    # )
 
 if show_figures:
     plt.show()

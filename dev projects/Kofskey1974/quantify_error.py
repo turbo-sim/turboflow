@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 filename_exp = "./experimental_data_kofskey1974_raw.xlsx"
-filename_sim = "output\performance_analysis_2024-03-16_20-20-51.xlsx"
+# filename_sim = "output\performance_analysis_2024-03-16_20-20-51.xlsx"
+filename_sim = "output\performance_analysis_2024-07-11_20-00-05.xlsx"
 
 limits = [2.5, 5, 10]
 
@@ -78,6 +79,15 @@ for speed in speed_percent:
         count(alpha_error[speed], limits[2]),
     ]
 
+print("\n")
+print("Mass flow rate")
+print(mass_flow_rate_count)
+print("\n")
+print("Torque")
+print(torque_count)
+print("\n")
+print("Flow angle")
+print(alpha_count)
 
 # Count overall error
 print(
