@@ -1,6 +1,6 @@
 .. _developer_guide:
 
-Developer guidlines
+Developer guide
 =======================
 
 Thank you for considering contributing to this project! Here are some guidelines to help you get started:
@@ -73,6 +73,7 @@ This installation guide is intended for developers who wish to contribute to or 
       python -c "import turboflow; turboflow.print_package_info()"
 
    If the installation was successful, you should see the Turboflow banner and package information displayed in the console output.
+
 
 Pull request guidelines
 -------------------------
