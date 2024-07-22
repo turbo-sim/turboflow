@@ -30,7 +30,7 @@ Case = "performance_map"  # performance_map/error_plot
 # filename = "output/performance_analysis_2024-03-14_01-27-29.xlsx" # experimental point
 filename = "output/performance_analysis_2024-03-14_00-30-26.xlsx"  # perfromance map
 
-save_figs = False
+save_figs = True
 validation = True
 show_figures = True
 
@@ -285,65 +285,72 @@ elif Case == "performance_map":
     timestamp = tf.utils.extract_timestamp(filename)
     data = tf.plot_functions.load_data(filename)
 
+    color_map = "Reds"
+
     # Plot mass flow rate at different angular speed
     subsets = ["omega"] + list(np.array([0.7, 0.9, 1, 1.1]) * design_point["omega"])
-    fig1, ax1 = tf.plot_functions.plot_subsets(
+    fig1, ax1 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "mass_flow_rate",
+        ["mass_flow_rate"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map=color_map,
     )
 
     # Plot total-to-static efficiency at different angular speeds
-    fig2, ax2 = tf.plot_functions.plot_subsets(
+    fig2, ax2 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "efficiency_ts",
+        ["efficiency_ts"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Total-to-static efficiency [%]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map=color_map,
     )
 
     # Plot relative flow angle as different angular speed
-    fig3, ax3 = tf.plot_functions.plot_subsets(
+    fig3, ax3 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "beta_8",
+        ["beta_8"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit relative flow angle [deg]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map=color_map,
     )
 
     # Plot absolute flow angle as different angular speed
-    fig4, ax4 = tf.plot_functions.plot_subsets(
+    fig4, ax4 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "alpha_8",
+        ["alpha_8"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Rotor exit absolute flow angle [deg]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map=color_map,
     )
 
     # Plot torque as different angular speed
-    fig5, ax5 = tf.plot_functions.plot_subsets(
+    fig5, ax5 = tf.plot_functions.plot_lines(
         data,
         "PR_ts",
-        "torque",
+        ["torque"],
         subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Torque [Nm]",
         linestyles=["-", ":", "--", "-."],
         close_fig=False,
+        color_map=color_map,
     )
 
     # Validation plots
@@ -390,12 +397,12 @@ elif Case == "performance_map":
             ]
             ax1.plot(PR, m, marker=markers[i], color=colors[i], linestyle="none")
             labels = [str(val) for val in speed_percent] * 2
-            # legend_1 = plt.legend(
-            #     labels=labels,
-            #     ncols = 2,
-            #     title=legend_title,
-            #     loc = "lower right"
-            # )
+            ax1.legend(
+                labels=labels,
+                ncols = 2,
+                title=legend_title,
+                loc = "lower right"
+            )
 
             # Total-to-static efficiency
             eta_ts = validation_data[
@@ -471,16 +478,16 @@ elif Case == "performance_map":
 
     if save_figs:
         tf.plot_functions.savefig_in_formats(
-            fig1, "figures/1972_2stage_mass_flow_rate", formats=[".eps"]
+            fig1, "figures/1972_2stage_mass_flow_rate", formats=[".png", ".eps"]
         )
         # tf.plot_functions.savefig_in_formats(fig2, "figures/1972_2stage_efficiency", formats = [".eps"])
         # tf.plot_functions.savefig_in_formats(fig3, "figures/1972_2stage_relative_flow_angle", formats = [".eps"])
-        tf.plot_functions.savefig_in_formats(
-            fig4, "figures/1972_2stage_absolute_flow_angle", formats=[".eps"]
-        )
-        tf.plot_functions.savefig_in_formats(
-            fig5, "figures/1972_2stage_torque", formats=[".eps"]
-        )
+        # tf.plot_functions.savefig_in_formats(
+        #     fig4, "figures/1972_2stage_absolute_flow_angle", formats=[".eps"]
+        # )
+        # tf.plot_functions.savefig_in_formats(
+        #     fig5, "figures/1972_2stage_torque", formats=[".eps"]
+        # )
 
 elif Case == "error_plot":
 

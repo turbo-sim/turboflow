@@ -20,49 +20,8 @@ CASE = 2
 CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
 config = tf.load_config(CONFIG_FILE)
 
-# ml.print_dict(config)
 
-# x0 = {'w_out_1': 292.75732924292544,
-#       's_out_1': 3906.8301664035716,
-#       'beta_out_1': 66.56929660739203,
-#       'v*_in_1': 81.05328920719423,
-#       'w*_throat_1': 316.9752020941576,
-#       's*_throat_1': 3907.6621528324263,
-#       'w*_out_1': 314.7785100385781,
-#       'beta*_out_1': 66.68318694304452,
-#       's*_out_1': 3907.58720497623,
-#       'w_out_2': 216.39698251484728,
-#       's_out_2': 3910.52550561793,
-#       'beta_out_2': -53.532811170977446,
-#       'v*_in_2': 309.3855796783943,
-#       'w*_throat_2': 294.37748650567227,
-#       's*_throat_2': 3915.6362223186775,
-#       'w*_out_2': 285.3733617222365,
-#       'beta*_out_2': -55.22476996918425,
-#       's*_out_2': 3915.1452936545506,
-#       'v_in': 80.85998313469258}
-
-x0 = {
-    "w_out_1": 293.49185257504075,
-    "s_out_1": 3906.855371623767,
-    "beta_out_1": 66.57475889317183,
-    "v*_in_1": 81.05328919923672,
-    "w*_throat_1": 316.97520064515345,
-    "s*_throat_1": 3907.6621527854477,
-    #   'w*_out_1': 316.9745088244802,
-    #   'beta*_out_1': 66.68474646782406,
-    #   's*_out_1': 3907.662129216508,
-    "w_out_2": 215.6943694051554,
-    "s_out_2": 3910.5547628080762,
-    "beta_out_2": -53.38524787065875,
-    "v*_in_2": 309.451331757237,
-    "w*_throat_2": 294.36179468837173,
-    "s*_throat_2": 3915.6702302392605,
-    #  'w*_out_2': 294.3615408522683,
-    #  'beta*_out_2': -55.26921939501282,
-    #  's*_out_2': 3915.670216330829,
-    "v_in": 80.87654970689081,
-}
+x0 = {'w_out_1': 302.34152618268644, 's_out_1': 3907.4582642372093, 'beta_out_1': 68.2353652893051, 'w_crit_throat_1': 305.3268020186889, 's_crit_throat_1': 3907.5663389138763, 'w_out_2': 202.5739869228336, 's_out_2': 3914.239812962878, 'beta_out_2': -53.39832785308828, 'w_crit_throat_2': 348.2994050296265, 's_crit_throat_2': 3931.0657896251896, 'v_in': 75.3926819503091}
 
 
 # Run calculations
@@ -72,17 +31,19 @@ if CASE == 1:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=x0,
+        # initial_guess=x0,
         export_results=False,
         stop_on_failure=True,
     )
 
+    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+    print(solvers[0].problem.vars_real)
+
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
-    omega_frac = np.asarray(1.00)
-    operation_points["omega"] = operation_points["omega"] * omega_frac
-    tf.compute_performance(operation_points, config, initial_guess=x0)
+    tf.compute_performance(operation_points, config, initial_guess=None)
 
 elif CASE == 3:
 

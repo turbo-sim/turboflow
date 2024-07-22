@@ -21,7 +21,7 @@ if isinstance(cascades_data["operation_points"], (list, np.ndarray)):
 else:
     design_point = cascades_data["operation_points"]
 
-Case = "pressure_line"  # performance_map/error_plot
+Case = "test"  # performance_map/error_plot
 # Get the name of the latest results file
 filename = tf.utils.find_latest_results_file(RESULTS_PATH)
 # print(filename)
@@ -101,7 +101,6 @@ if Case == "pressure_line":
         data,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
-        subsets = subset,
         xlabel="Total-to-static pressure ratio",
         ylabel="Mass flow rate [kg/s]",
         title=title,
@@ -119,6 +118,8 @@ if Case == "pressure_line":
         y_keys=[
             "Ma_rel_4",
             "Ma_rel_2",
+            "Ma_rel_throat_1",
+            "Ma_rel_throat_2"
         ],
         xlabel="Total-to-static pressure ratio",
         ylabel="Mach [-]",
@@ -158,7 +159,36 @@ if Case == "pressure_line":
         color_map=color_map,
         save_figs=save_figs,
     )
-        
+
+    title = "Entropy"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=["s_2", "s_throat_1"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Entropy",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    )
+
+    title = "Entropy"
+    filename = title.lower().replace(" ", "_") + '_' + timestamp
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data,
+        x_key="PR_ts",
+        y_keys=[ "s_4", "s_throat_2"],
+        xlabel="Total-to-static pressure ratio",
+        ylabel="Entropy",
+        title=title,
+        filename=filename,
+        outdir=outdir,
+        color_map=color_map,
+        save_figs=save_figs,
+    ) 
         
     # Group up the losses
     # df = data["cascade"]
@@ -617,14 +647,24 @@ elif Case == "error_plot":
 elif Case == "test":
 
     # Load performance data
-    data = tf.plot_functions.load_data(filename)
+    # filename_1 = "output/performance_analysis_2024-07-20_12-24-44.xlsx" 
+    # filename_2 = "output/performance_analysis_2024-07-19_14-44-28.xlsx"
+    # filename_1 = "output/performance_analysis_2024-07-20_17-39-40.xlsx" # Lagrange, 5/6
+    # filename_2 = "output/performance_analysis_2024-07-20_17-33-26.xlsx" # Critical mach, Madrid correlation, 5/6
+    # filename_3 = "output/performance_analysis_2024-07-20_17-47-54.xlsx" # Critical mach, Lasse correlation, 5/6
+    filename_1 = "output/performance_analysis_2024-07-20_20-01-58.xlsx" # Lagrange, 1.0
+    # filename_2 = "output/performance_analysis_2024-07-20_19-57-29.xlsx" # Critical mach, Lasse correlation, 1.0
+    filename_2 = "output/performance_analysis_2024-07-20_20-05-38.xlsx" # Critical mach, Madrid correlation, 1.0
+
+    data_1 = tf.plot_functions.load_data(filename_1)
+    data_2 = tf.plot_functions.load_data(filename_2)
+    # data_3 = tf.plot_functions.load_data(filename_3)
 
     subsets = ["omega", 1627]
     fig1, ax1 = tf.plot_functions.plot_lines(
-        data,
+        data_1,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
-        subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
         colors='k',
@@ -633,61 +673,100 @@ elif Case == "test":
         save_figs=True,
     )
 
-    # Plot angular speed lines
-    # subsets = ["omega"] + list(np.array([0.7, 0.9, 1]) * design_point["omega"])
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data_2,
+        x_key="PR_ts",
+        y_keys=["mass_flow_rate"],
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        colors=['r'],
+        fig = fig1,
+        ax = ax1, 
+        linestyles = ["--"],
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        save_figs=True,
+    )
+
     # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data,
+    #     data_3,
     #     x_key="PR_ts",
     #     y_keys=["mass_flow_rate"],
-    #     subsets=subsets,
     #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
     #     ylabel="Mass flow rate [kg/s]",
-    #     linestyles=["-", ":", "--"],
-    #     colors = ['k'],
-    #     filename = 'design_speed_mass_flow_rate',
+    #     colors=['r'],
+    #     fig = fig1,
+    #     ax = ax1, 
+    #     linestyles = ["--"],
+    #     filename = 'mass_flow_rate',
     #     outdir = "figures",
     #     save_figs=True,
     # )
 
-    # # Print design speed line
-    # subset = ["omega", 1627] 
-    # labels = ["Stator inlet", "Stator exit", "Rotor inlet", "Rotor exit"]
+    ax1.legend(labels = ["Maxmized mass flow rate", "Critical mach"], loc = "lower right")
+    ax1.set_title("Kofskey 1972 one stage")
+    ax1.set_ylim([2.55, 2.8])
+    fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
     # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data,
+    #     data_1,
     #     x_key="PR_ts",
-    #     y_keys=["p_1", "p_2", "p_3", "p_4"],
-    #     subsets = subset,
+    #     y_keys=["beta_4"],
     #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Static pressure [Pa]",
-    #     linestyles=["-", ":", "--", "-."],
-    #     color_map='Reds',
-    #     labels = labels,
-    #     filename='static_pressure',
+    #     ylabel="Relative flow angle",
+    #     colors=['k'],
+    #     filename = 'mass_flow_rate',
     #     outdir = "figures",
     #     save_figs=True,
     # )
 
-    # # Print stacked losses
-    # labels = ["Profile losses", "Tip clearance losses", "Secondary flow losses", "Trailing edge losses", "Incidence losses"]
     # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data,
+    #     data_2,
     #     x_key="PR_ts",
-    #     y_keys=[
-    #         "loss_profile_4",
-    #         "loss_clearance_4",
-    #         "loss_secondary_4",
-    #         "loss_trailing_4",
-    #         "loss_incidence_4",
-    #     ],
-    #     subsets = subset,
+    #     y_keys=["beta_4"],
     #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Loss coefficient [-]", 
-    #     color_map='Reds',
-    #     labels = labels,
-    #     stack=True,
-    #     filename="loss_coefficients",
-    #     outdir="figures",
-    #     save_figs = True,
+    #     ylabel="Relative flow angle",
+    #     colors=['r'],
+    #     fig = fig1,
+    #     ax = ax1, 
+    #     linestyles = ["--"],
+    #     filename = 'mass_flow_rate',
+    #     outdir = "figures",
+        
+    #     save_figs=True,
+    # )
+
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data_1,
+    #     x_key="PR_ts",
+    #     y_keys=["s_3", "s_throat_2", "s_4"],
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Entropy",
+    #     filename = 'mass_flow_rate',
+    #     outdir = "figures",
+    #     save_figs=True,
+    # )
+
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data_1,
+    #     x_key="PR_ts",
+    #     y_keys=["beta_4", "beta_throat_2"],
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Entropy",
+    #     filename = 'mass_flow_rate',
+    #     outdir = "figures",
+    #     save_figs=True,
+    # )
+
+    # fig1, ax1 = tf.plot_functions.plot_lines(
+    #     data_2,
+    #     x_key="PR_ts",
+    #     y_keys=["s_3", "s_throat_2", "s_4"],
+    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+    #     ylabel="Entropy",
+    #     filename = 'mass_flow_rate',
+    #     outdir = "figures",
+        
+    #     save_figs=True,
     # )
 
 
