@@ -8,9 +8,9 @@ TurboFlow: Meanline Modelling of Turbomachinery
 ..    :align: center
 ..    :scale: 50 %
 
-**Version:** 0.1.11  
-**Author:** Lasse Borg Anderson & Roberto Agromayor  
-**License:** MIT License
+.. **Version:** 0.1.11  
+.. **Author:** Lasse Borg Anderson & Roberto Agromayor  
+.. **License:** MIT License
 
 Overview
 ========
