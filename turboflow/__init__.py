@@ -49,7 +49,7 @@ def print_banner():
     print(BREAKLINE)
     print(banner)
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 URL_GITHUB = "https://github.com/turbo-sim/TurboFlow"
 URL_DOCS = "https://turbo-sim.github.io/TurboFlow/"
 
