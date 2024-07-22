@@ -28,7 +28,6 @@ extensions = [
 
 todo_include_todos = True
 
-
 # Add bibliography file
 bibtex_bibfiles = ["source/bibliography.bib"]
 bibtex_default_style = "alpha"

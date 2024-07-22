@@ -1,4 +1,4 @@
-turboflow package
+API Reference
 =================
 
 .. automodule:: turboflow

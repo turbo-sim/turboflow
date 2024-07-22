@@ -31,11 +31,14 @@ from .axial_turbine.design_optimization import *
 set_plot_options()
 
 
+# Package info
 __version__ = "0.1.12"
 PACKAGE_NAME = "turboflow"
 URL_GITHUB = "https://github.com/turbo-sim/turboflow"
 URL_DOCS = "https://turbo-sim.github.io/turboflow/"
+URL_DTU = "https://thermalpower.dtu.dk/"
 BREAKLINE = 80 * "-"
+
 
 def print_banner():
     """Prints a banner."""
@@ -48,6 +51,9 @@ def print_banner():
     """
     print(BREAKLINE)
     print(banner)
+    print(BREAKLINE)
+    # https://manytools.org/hacker-tools/ascii-banner/
+    # Style: Sland
 
 
 def print_package_info():
