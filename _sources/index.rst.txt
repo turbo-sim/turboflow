@@ -41,12 +41,11 @@ Contents:
    source/installation
    source/tutorials
    source/model_description
-   source/developer_guidlines
    source/nomenclature
    source/glossary
    source/bibliography
    source/api_reference
-
+   source/developer_guide
 
 
 

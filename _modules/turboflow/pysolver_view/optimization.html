@@ -55,11 +55,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model Description</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/developer_guidlines.html">Developer guidlines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/developer_guide.html">Developer guide</a></li>
 </ul>
 
         </div>
@@ -186,6 +186,8 @@
 <span class="sd">        Specifies if the convergence report should be updated based on new function evaluations or gradient evaluations (default is &#39;gradient&#39;, alternative is &#39;function&#39;).</span>
 <span class="sd">    callback_functions : list of callable or callable, optional</span>
 <span class="sd">        Optional list of callback functions to pass to the solver.</span>
+<span class="sd">    plot_improvement_only : bool, optional</span>
+<span class="sd">        If True, plots only display iterations that improve the objective function value (useful for gradient-free optimizers) (default is False).</span>
 
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
@@ -218,6 +220,7 @@
         <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">update_on</span><span class="o">=</span><span class="s2">&quot;gradient&quot;</span><span class="p">,</span>
         <span class="n">callback_functions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plot_improvement_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="c1"># Initialize class variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
@@ -232,6 +235,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">derivative_abs_step</span> <span class="o">=</span> <span class="n">derivative_abs_step</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback_functions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_callback</span><span class="p">(</span><span class="n">callback_functions</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback_function_call_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_improvement_only</span> <span class="o">=</span> <span class="n">plot_improvement_only</span>
 
         <span class="c1"># # Validate library and method</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_library_and_method</span><span class="p">()</span>
@@ -716,6 +720,14 @@
         <span class="p">)</span>
         <span class="n">objective_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;objective_value&quot;</span><span class="p">]</span>
         <span class="n">constraint_violation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;constraint_violation&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Iterate through the objective_function values to create the new series</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_improvement_only</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">objective_function</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">objective_function</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">objective_function</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">objective_function</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">objective_function</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c1"># Update graphic objects data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">obj_line_1</span><span class="o">.</span><span class="n">set_xdata</span><span class="p">(</span><span class="n">iteration</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">obj_line_1</span><span class="o">.</span><span class="n">set_ydata</span><span class="p">(</span><span class="n">objective_function</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_eq</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">N_ineq</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
