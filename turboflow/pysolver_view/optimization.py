@@ -94,6 +94,8 @@ class OptimizationSolver:
         Specifies if the convergence report should be updated based on new function evaluations or gradient evaluations (default is 'gradient', alternative is 'function').
     callback_functions : list of callable or callable, optional
         Optional list of callback functions to pass to the solver.
+    plot_improvement_only : bool, optional
+        If True, plots only display iterations that improve the objective function value (useful for gradient-free optimizers) (default is False).
 
     Methods
     -------
@@ -126,6 +128,7 @@ class OptimizationSolver:
         logger=None,
         update_on="gradient",
         callback_functions=None,
+        plot_improvement_only=False,
     ):
         # Initialize class variables
         self.problem = problem
@@ -140,6 +143,7 @@ class OptimizationSolver:
         self.derivative_abs_step = derivative_abs_step
         self.callback_functions = self._validate_callback(callback_functions)
         self.callback_function_call_count = 0
+        self.plot_improvement_only = plot_improvement_only
 
         # # Validate library and method
         self._validate_library_and_method()
@@ -615,6 +619,14 @@ class OptimizationSolver:
         )
         objective_function = self.convergence_history["objective_value"]
         constraint_violation = self.convergence_history["constraint_violation"]
+
+        # Iterate through the objective_function values to create the new series
+        if self.plot_improvement_only:
+            for i in range(1, len(objective_function)):
+                if objective_function[i] > objective_function[i - 1]:
+                    objective_function[i] = objective_function[i - 1]
+
+        # Update graphic objects data
         self.obj_line_1.set_xdata(iteration)
         self.obj_line_1.set_ydata(objective_function)
         if self.N_eq > 0 or self.N_ineq > 0:

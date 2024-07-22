@@ -18,3 +18,8 @@ from .optimization_problems import *
 from .optimization_wrappers import *
 from .nonlinear_system import *
 from .nonlinear_system_problems import *
+
+
+__version__ = "0.1.0"
+URL_GITHUB = "https://github.com/turbo-sim/pysolver_view"
+URL_DOCS = "https://turbo-sim.github.io/pysolver_view/"
