@@ -79,7 +79,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/turboflow.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
 </ul>
 
@@ -130,7 +130,7 @@ relative flow angle (<span class="math notranslate nohighlight">\(\beta\)</span>
 <span id="ainley-mathieson"></span><h3>Ainley and Mathieson<a class="headerlink" href="#ainley-and-mathieson" title="Link to this heading"></a></h3>
 <p>The deviation model presented by Ainley and Mathieson (<span id="id3">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>) assumes constant deviation at low speed (mach <span class="math notranslate nohighlight">\(&lt;\)</span> 0.5), and a linear
 deviation between mach = 0.5 and mach = 1.0 (critical point). This result in sharp edges at the points where mach = 0.5 and mach = 1.0. In addition, the model
-assumes that the critical state occur when mach = 1.0 at the throat, which can lead to unphysical behaviour of the simulated performance (<span id="id4">[<a class="reference internal" href="../bibliography.html#id7" title="Lasse Borg Anderson, Roberto Agromayor, and Lars O. Nord. Method for mean-line design and performance prediction of one-stage axial turbines. In Proceedings of the 63rd International Conference of Scandinavian Simulation Society. Linköping University Electronic Press, 2022. URL: https://hdl.handle.net/11250/3047450.">Anderson <em>et al.</em>, 2022</a>]</span>).
+assumes that the critical state occur when mach = 1.0 at the throat, which can lead to unphysical behaviour of the simulated performance (<span id="id4">[<a class="reference internal" href="../bibliography.html#id8" title="Lasse Borg Anderson, Roberto Agromayor, and Lars O. Nord. Method for mean-line design and performance prediction of one-stage axial turbines. In Proceedings of the 63rd International Conference of Scandinavian Simulation Society. Linköping University Electronic Press, 2022. URL: https://hdl.handle.net/11250/3047450.">Anderson <em>et al.</em>, 2022</a>]</span>).
 To correct for this behaviour, the model is adjusted to be interpolated between mach = 0.5 and the critical mach number.</p>
 <p>Note that his model defines the gauing angle with respect to axial direction:</p>
 <div class="math notranslate nohighlight">
@@ -160,7 +160,7 @@ To correct for this behaviour, the model is adjusted to be interpolated between 
 </section>
 <section id="aungier">
 <span id="id5"></span><h3>Aungier<a class="headerlink" href="#aungier" title="Link to this heading"></a></h3>
-<p>The deviation model presented by Aungier (<span id="id6">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>) assumes constant deviation at low speed (Mach <span class="math notranslate nohighlight">\(&lt;\)</span> 0.5),
+<p>The deviation model presented by Aungier (<span id="id6">[<a class="reference internal" href="../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>) assumes constant deviation at low speed (Mach <span class="math notranslate nohighlight">\(&lt;\)</span> 0.5),
 and a fifth order polynomial between mach = 0.5 and mach = 1.0 (critical point). This ensures a smooth evolution of the flow angle with the mach number.
 However, also this model assumes that the critical state occur when mach = 1.0 at the throat. To correct this behaviour, the model is adjusted to be interpolated
 between mach = 0.5 and the critical mach number.</p>

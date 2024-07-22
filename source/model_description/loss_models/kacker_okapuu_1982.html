@@ -79,7 +79,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/turboflow.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../developer_guide.html">Developer guide</a></li>
 </ul>
 
@@ -111,12 +111,12 @@
              
   <section id="kacker-okapuu-1982">
 <span id="loss-model-ko1982"></span><h1>Kacker-Okapuu (1982)<a class="headerlink" href="#kacker-okapuu-1982" title="Link to this heading"></a></h1>
-<p>This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to compute aerodynamic losses in axial
+<p>This section describes the loss model proposed by <span id="id1">[<a class="reference internal" href="../../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to compute aerodynamic losses in axial
 turbines.</p>
 <section id="overview-of-the-method">
 <h2>Overview of the method<a class="headerlink" href="#overview-of-the-method" title="Link to this heading"></a></h2>
-<p>The <span id="id2">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> loss system is a refinement of the correlations proposed by
-<span id="id3">[<a class="reference internal" href="../../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>, <span id="id4">[<a class="reference internal" href="../../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span>, and by <span id="id5">[<a class="reference internal" href="../../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>.
+<p>The <span id="id2">[<a class="reference internal" href="../../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> loss system is a refinement of the correlations proposed by
+<span id="id3">[<a class="reference internal" href="../../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>, <span id="id4">[<a class="reference internal" href="../../bibliography.html#id4" title="D. G. Ainley and G. C. R. Mathieson. An examination of the flow and pressure losses in blade rows of axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2891, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3451.">Ainley and Mathieson, 1951</a>]</span>, and by <span id="id5">[<a class="reference internal" href="../../bibliography.html#id48" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>.
 The general form of the loss model is given by:</p>
 <div class="math notranslate nohighlight">
 \[Y = f_{\mathrm{Re}} \,  f_{\mathrm{Ma}} \, Y_{\mathrm{p}} + Y_{\mathrm{s}} + Y_{\mathrm{cl}} + Y_{\mathrm{te}}\]</div>
@@ -164,7 +164,7 @@ of sound at the outlet of the cascade:</p>
 <div class="math notranslate nohighlight">
 \[Y_{\mathrm{p}}' = \left[ Y_{\mathrm{p, \, reaction}} - \left( \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right)  \left| \frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}} \right| \cdot (Y_{\mathrm{p, \, impulse}}- Y_{\mathrm{p, \, reaction}}) \right] \cdot \left(\frac{t_{\mathrm{max}}/c}{0.20}\right)^{-\frac{\theta_{\mathrm{in}}}{\beta_{\mathrm{out}}}}\]</div>
 <p>where the terms, <span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, reaction}}\)</span> and <span class="math notranslate nohighlight">\(Y_{\mathrm{p, \, impulse}}\)</span> are be obtained
-from graphical data by <span id="id6">[<a class="reference internal" href="../../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.
+from graphical data by <span id="id6">[<a class="reference internal" href="../../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.
 The subscript <em>reaction</em> refers to blades with zero inlet metal angle (i.e., axial entry) and the
 subscript <em>impulse</em> refers to blades that have an inlet metal angle with the same magnitude but
 opposite sign as the exit relative flow angle.</p>
@@ -191,7 +191,7 @@ that may occur at the leading edge of the cascade due to the acceleration of the
 the equations proposed in the Kacker–Okapuu method can be condensed to:</p>
 <div class="math notranslate nohighlight">
 \[Y_{\mathrm{shock}}  = 0.75 \cdot \left(f_{\mathrm{hub}} \cdot\mathrm{Ma_{\,in}^{\, rel}} -0.40 \right)^{1.75} \cdot \left( \frac{r_{\mathrm{hub}}}{r_{\mathrm{tip}}} \right)_{\mathrm{in}} \cdot \left( \frac{p_{\mathrm{0rel,in}}-p_{\mathrm{in}}}{p_{\mathrm{0rel,out}}-p_{\mathrm{out}}} \right)\]</div>
-<p>where <span class="math notranslate nohighlight">\(f_{\mathrm{hub}}\)</span> is given graphically in <span id="id7">[<a class="reference internal" href="../../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> and it is a function of the hub-to-tip ratio only.</p>
+<p>where <span class="math notranslate nohighlight">\(f_{\mathrm{hub}}\)</span> is given graphically in <span id="id7">[<a class="reference internal" href="../../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> and it is a function of the hub-to-tip ratio only.</p>
 </section>
 <section id="secondary-loss-coefficient">
 <span id="secondary-loss-ko"></span><h2>Secondary loss coefficient<a class="headerlink" href="#secondary-loss-coefficient" title="Link to this heading"></a></h2>
@@ -234,7 +234,7 @@ to the original work to comply with the angle convention used in this work.</p>
 <p>In this equation, <span class="math notranslate nohighlight">\(Z\)</span> is given similarly as decribed in <a class="reference internal" href="#secondary-loss-ko"><span class="std std-ref">Secondary loss coefficient</span></a>.
 The Kacker-Okapuu loss system proposes <span class="math notranslate nohighlight">\(B=0.37\)</span> for rotor blades with shrouded tips,
 and <span class="math notranslate nohighlight">\(B=0.00\)</span> for stator blades. In addition, Kacker and Okapuu warn that using <span class="math notranslate nohighlight">\(B=0.47\)</span>,
-as suggested by <span id="id8">[<a class="reference internal" href="../../bibliography.html#id44" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>, over-predicts the loss for rotor blades with plain tips.</p>
+as suggested by <span id="id8">[<a class="reference internal" href="../../bibliography.html#id48" title="J. Dunham and P. M. Came. Improvements to the Ainley-Mathieson method of turbine performance prediction. Journal of Engineering for Power, 92(3):252–256, 1970. doi:10.1115/1.3445349.">Dunham and Came, 1970</a>]</span>, over-predicts the loss for rotor blades with plain tips.</p>
 </section>
 <section id="trailing-edge-loss-coefficient">
 <span id="trailing-edge-ko"></span><h2>Trailing edge loss coefficient<a class="headerlink" href="#trailing-edge-loss-coefficient" title="Link to this heading"></a></h2>
@@ -243,7 +243,7 @@ as suggested by <span id="id8">[<a class="reference internal" href="../../biblio
 \[Y_{\mathrm{te}} \approx \zeta = \frac{1}{\phi^2}-1 = \frac{1}{1-\Delta \phi^2}-1\]</div>
 <p>Where the pressure loss coefficient <span class="math notranslate nohighlight">\(Y\)</span> was approximated by the enthalpy loss coefficient
 <span class="math notranslate nohighlight">\(\zeta\)</span> and then related to the kinetic energy loss coefficients <span class="math notranslate nohighlight">\(\phi^2\)</span> and
-<span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>. See the work by <span id="id9">[<a class="reference internal" href="../../bibliography.html#id36" title="Adrian N Dahlquist. Investigation of losses prediction methods in 1D for axial gas turbines. Master's thesis, Lund University, Lund, 2008. URL: https://www.lunduniversity.lu.se/lup/publication/1423748.">Dahlquist, 2008</a>]</span> for details about the definitions of the
+<span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>. See the work by <span id="id9">[<a class="reference internal" href="../../bibliography.html#id40" title="Adrian N Dahlquist. Investigation of losses prediction methods in 1D for axial gas turbines. Master's thesis, Lund University, Lund, 2008. URL: https://www.lunduniversity.lu.se/lup/publication/1423748.">Dahlquist, 2008</a>]</span> for details about the definitions of the
 different loss coefficients and the relations among them. The parameter <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span>
 is computed by interpolation of impulse and reaction blades according to:</p>
 <div class="math notranslate nohighlight">

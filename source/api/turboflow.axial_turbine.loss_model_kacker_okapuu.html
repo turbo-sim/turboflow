@@ -62,8 +62,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.add_package_to_pythonpath"><code class="docutils literal notranslate"><span class="pre">add_package_to_pythonpath()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_banner"><code class="docutils literal notranslate"><span class="pre">print_banner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_package_info"><code class="docutils literal notranslate"><span class="pre">print_package_info()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
 </ul>
@@ -73,7 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
@@ -93,7 +96,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
           <li class="breadcrumb-item"><a href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
       <li class="breadcrumb-item active">turboflow.axial_turbine.loss_model_kacker_okapuu module</li>
       <li class="wy-breadcrumbs-aside">
@@ -110,7 +113,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.loss_model_kacker_okapuu.compute_losses">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.loss_model_kacker_okapuu.</span></span><span class="sig-name descname"><span class="pre">compute_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/loss_model_kacker_okapuu.html#compute_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.loss_model_kacker_okapuu.compute_losses" title="Link to this definition"></a></dt>
-<dd><p>Evaluate loss coefficient according to <span id="id1">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>.</p>
+<dd><p>Evaluate loss coefficient according to <span id="id1">[<a class="reference internal" href="../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>.</p>
 <p>This model split the total loss coefficient into profile, secondary, trailing edge and tip clearance.
 The loss coefficient are combined through the following relation:</p>
 <div class="math notranslate nohighlight">
@@ -143,8 +146,8 @@ The loss coefficient are combined through the following relation:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.loss_model_kacker_okapuu.get_compressible_correction_factors">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.loss_model_kacker_okapuu.</span></span><span class="sig-name descname"><span class="pre">get_compressible_correction_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ma_rel_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ma_rel_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/loss_model_kacker_okapuu.html#get_compressible_correction_factors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.loss_model_kacker_okapuu.get_compressible_correction_factors" title="Link to this definition"></a></dt>
-<dd><p>Compute compressible flow correction factor according to Kacker and Okapuu loss model <span id="id2">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>.</p>
-<p>The correction factors <span class="math notranslate nohighlight">\(\mathrm{K_1}\)</span>, <span class="math notranslate nohighlight">\(\mathrm{K_2}\)</span> and <span class="math notranslate nohighlight">\(\mathrm{K_p}\)</span> was introduced by <span id="id3">[<a class="reference internal" href="../bibliography.html#id60" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to correct previous correlation (<span id="id4">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>)
+<dd><p>Compute compressible flow correction factor according to Kacker and Okapuu loss model <span id="id2">[<a class="reference internal" href="../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span>.</p>
+<p>The correction factors <span class="math notranslate nohighlight">\(\mathrm{K_1}\)</span>, <span class="math notranslate nohighlight">\(\mathrm{K_2}\)</span> and <span class="math notranslate nohighlight">\(\mathrm{K_p}\)</span> was introduced by <span id="id3">[<a class="reference internal" href="../bibliography.html#id65" title="S. C. Kacker and U. Okapuu. A mean line prediction method for axial flow turbine efficiency. Journal of Engineering for Power, 104(1):111–119, 1982. doi:10.1115/1.3227240.">Kacker and Okapuu, 1982</a>]</span> to correct previous correlation (<span id="id4">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>)
 for effect of higher mach number and channel acceleration. The correction factors reduces the losses at higher mach number. Their definition follows:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}&amp;\mathrm{K_1} = \begin{cases}
@@ -381,7 +384,7 @@ The main equation for the kinetic-energy coefficient is given by:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.loss_model_kacker_okapuu.impulse_blades">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.loss_model_kacker_okapuu.</span></span><span class="sig-name descname"><span class="pre">impulse_blades</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_sc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/loss_model_kacker_okapuu.html#impulse_blades"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.loss_model_kacker_okapuu.impulse_blades" title="Link to this definition"></a></dt>
-<dd><p>Use Aungier correlation to compute the pressure loss coefficient for impulse blades <span id="id5">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
+<dd><p>Use Aungier correlation to compute the pressure loss coefficient for impulse blades <span id="id5">[<a class="reference internal" href="../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
 <p>This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures <span id="id6">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>,
 and is a function of the pitch-to-chord ratio and exit relative flow angle.</p>
 <p>The correlation uses the following equations:</p>
@@ -425,7 +428,7 @@ and is a function of the pitch-to-chord ratio and exit relative flow angle.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.loss_model_kacker_okapuu.nozzle_blades">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.loss_model_kacker_okapuu.</span></span><span class="sig-name descname"><span class="pre">nozzle_blades</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_sc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/loss_model_kacker_okapuu.html#nozzle_blades"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.loss_model_kacker_okapuu.nozzle_blades" title="Link to this definition"></a></dt>
-<dd><p>Use Aungier correlation to compute the pressure loss coefficient for nozzle blades <span id="id7">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
+<dd><p>Use Aungier correlation to compute the pressure loss coefficient for nozzle blades <span id="id7">[<a class="reference internal" href="../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
 <p>This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures <span id="id8">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>,
 and is a function of the pitch-to-chord ratio and exit relative flow angle.</p>
 <p>The correlation uses the following equations:</p>

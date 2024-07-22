@@ -62,8 +62,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.add_package_to_pythonpath"><code class="docutils literal notranslate"><span class="pre">add_package_to_pythonpath()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_banner"><code class="docutils literal notranslate"><span class="pre">print_banner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_package_info"><code class="docutils literal notranslate"><span class="pre">print_package_info()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
 </ul>
@@ -73,7 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
@@ -93,7 +96,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
           <li class="breadcrumb-item"><a href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
       <li class="breadcrumb-item active">turboflow.axial_turbine.choking_model module</li>
       <li class="wy-breadcrumbs-aside">
@@ -405,38 +408,57 @@ and by ensuring that the mach at the throat equals the critical at supercritical
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_mach_crit">
-<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_mach_crit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_mach_crit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_mach_crit" title="Link to this definition"></a></dt>
-<dd><blockquote>
-<div><p>Compute the critical Mach number for non-isentropic flow in a nozzle.</p>
-<p>This function calculates the critical Mach number ($        ext{Ma}_        ext{crit}$) using the
-given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_flow_capacity">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_flow_capacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_flow_capacity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_flow_capacity" title="Link to this definition"></a></dt>
+<dd><p>Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.</p>
+<p>This function calculates the dimensionless mass flow rate ($Phi$) using the 
+given Mach number ($text{Ma}$), specific heat ratio ($gamma$), and efficiency ($eta$).</p>
 <div class="math notranslate nohighlight">
-\[ext{Ma}_        ext{crit}^{2} = \left(\]</div>
-</div></blockquote>
-<p>rac{2}{gamma-1}
-ight)left(
-rac{1}{hat{T}_     ext{crit}}-1
-ight)</p>
-<blockquote>
-<div><p>= left(</p>
-</div></blockquote>
-<p>rac{2}{gamma-1}
-ight)left[
-rac{4 lpha-2}{(2 lpha+eta-3) + sqrt{(1+eta)^{2}+4 lpha(1+lpha-3 eta)}} - 1
-ight]</p>
-<blockquote>
-<div><p>where:</p>
+\[\Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}
+\left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}\]</div>
+<p>where:</p>
 <div class="math notranslate nohighlight">
-\[lpha = \]</div>
-</div></blockquote>
-<p>rac{gamma}{gamma-1}</p>
-<blockquote>
-<div><p>and</p>
+\[\hat{T} = \left(\frac{T}{T_{0}}\right)\]</div>
+<p>and</p>
 <div class="math notranslate nohighlight">
 \[\eta = 1 - \Delta \phi^2\]</div>
 <p>Here, $Delta phi^2$ is the kinetic energy loss coefficient.</p>
-</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Ma</strong><span class="classifier">float</span></dt><dd><p>Mach number of the flow.</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>Specific heat ratio of the gas.</p>
+</dd>
+<dt><strong>eta</strong><span class="classifier">float</span></dt><dd><p>Nozzle efficiency, related to the kinetic energy loss coefficient.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Dimensionless mass flow rate (Phi).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_mach_crit">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_mach_crit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_mach_crit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_mach_crit" title="Link to this definition"></a></dt>
+<dd><p>Compute the critical Mach number for non-isentropic flow in a nozzle.</p>
+<p>This function calculates the critical Mach number ($text{Ma}_text{crit}$) using the
+given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
+<div class="math notranslate nohighlight">
+\[\text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
+= \left(\frac{2}{\gamma-1}\right)\left[\frac{4 \alpha-2}{(2 \alpha+\eta-3) + \sqrt{(1+\eta)^{2}+4 \alpha(1+\alpha-3 \eta)}} - 1\right]\]</div>
+<p>where:</p>
+<div class="math notranslate nohighlight">
+\[\alpha = \frac{\gamma}{\gamma-1}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\eta = 1 - \Delta \phi^2\]</div>
+<p>Here, $Delta phi^2$ is the kinetic energy loss coefficient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -448,7 +470,7 @@ ight]</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>Critical Mach number (  ext{Ma}_        ext{crit}).</p>
+<dt>float</dt><dd><p>Critical Mach number (text{Ma}_text{crit}).</p>
 </dd>
 </dl>
 </dd>

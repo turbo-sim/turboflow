@@ -58,7 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../source/nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source/bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../source/api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/api/turboflow.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source/developer_guide.html">Developer guide</a></li>
 </ul>
 
@@ -87,7 +87,10 @@
            <div itemprop="articleBody">
              
   <h1>Source code for turboflow</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Highlight exception messages</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="c1"># Highlight exception messages</span>
 <span class="c1"># https://stackoverflow.com/questions/25109105/how-to-colorize-the-output-of-python-errors-in-the-gnome-terminal/52797444#52797444</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">IPython.core.ultratb</span>
@@ -95,11 +98,8 @@
     <span class="c1"># No IPython. Use default exception printing.</span>
     <span class="k">pass</span>
 <span class="k">else</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">sys</span>
-
     <span class="n">sys</span><span class="o">.</span><span class="n">excepthook</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">ultratb</span><span class="o">.</span><span class="n">ColorTB</span><span class="p">()</span>
 
-<span class="kn">import</span> <span class="nn">toml</span>
 
 <span class="c1"># Import submodules</span>
 <span class="kn">from</span> <span class="nn">.math</span> <span class="kn">import</span> <span class="o">*</span>
@@ -120,9 +120,12 @@
 <span class="n">set_plot_options</span><span class="p">()</span>
 
 
-<span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">toml</span>
-
+<span class="c1"># Package info</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.12&quot;</span>
+<span class="n">PACKAGE_NAME</span> <span class="o">=</span> <span class="s2">&quot;turboflow&quot;</span>
+<span class="n">URL_GITHUB</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/turbo-sim/turboflow&quot;</span>
+<span class="n">URL_DOCS</span> <span class="o">=</span> <span class="s2">&quot;https://turbo-sim.github.io/turboflow/&quot;</span>
+<span class="n">URL_DTU</span> <span class="o">=</span> <span class="s2">&quot;https://thermalpower.dtu.dk/&quot;</span>
 <span class="n">BREAKLINE</span> <span class="o">=</span> <span class="mi">80</span> <span class="o">*</span> <span class="s2">&quot;-&quot;</span>
 
 
@@ -138,12 +141,12 @@
 <span class="s2">      /_/   \____//_/ |_|/_____/ \____//_/    /_____/\____/  |__/|__/  </span>
 <span class="s2">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">BREAKLINE</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">banner</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="n">banner</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">BREAKLINE</span><span class="p">)</span></div>
 
+    <span class="c1"># https://manytools.org/hacker-tools/ascii-banner/</span>
+    <span class="c1"># Style: Sland</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.1.12&quot;</span>
-<span class="n">URL_GITHUB</span> <span class="o">=</span> <span class="s2">&quot;https://github.com/turbo-sim/TurboFlow&quot;</span>
-<span class="n">URL_DOCS</span> <span class="o">=</span> <span class="s2">&quot;https://turbo-sim.github.io/TurboFlow/&quot;</span>
 
 <div class="viewcode-block" id="print_package_info">
 <a class="viewcode-back" href="../source/api/turboflow.html#turboflow.print_package_info">[docs]</a>
@@ -153,14 +156,53 @@
     <span class="n">info</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot; Version:       </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span>
 <span class="s2"> Repository:    </span><span class="si">{</span><span class="n">URL_GITHUB</span><span class="si">}</span>
 <span class="s2"> Documentation: </span><span class="si">{</span><span class="n">URL_DOCS</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-    
-    <span class="c1"># Assuming print_banner and BREAKLINE are defined elsewhere in your code</span>
     <span class="n">print_banner</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">BREAKLINE</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">)</span></div>
+    <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">BREAKLINE</span><span class="p">)</span></div>
 
 
 
+<div class="viewcode-block" id="add_package_to_pythonpath">
+<a class="viewcode-back" href="../source/api/turboflow.html#turboflow.add_package_to_pythonpath">[docs]</a>
+<span class="k">def</span> <span class="nf">add_package_to_pythonpath</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append package containing this __file__ to the PYTHONPATH environment variable&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define bash command to append cwd to PYTHONPATH</span>
+    <span class="c1"># PACKAGE_PATH = os.getcwd()</span>
+    <span class="c1"># PACKAGE_PATH = os.path.dirname(os.getcwd())</span>
+    <span class="n">PACKAGE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+    <span class="n">bashrc_header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;# Append </span><span class="si">{</span><span class="n">PACKAGE_NAME</span><span class="si">}</span><span class="s2"> package to PYTHONPATH&quot;</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>  <span class="c1"># Windows</span>
+        <span class="n">bashrc_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;export PYTHONPATH=$PYTHONPATH\;&quot;</span><span class="si">{</span><span class="n">PACKAGE_PATH</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Linux or MacOS</span>
+        <span class="n">bashrc_line</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;export PYTHONPATH=$PYTHONPATH:&quot;</span><span class="si">{</span><span class="n">PACKAGE_PATH</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
+
+    <span class="c1"># Locate the .bashrc file</span>
+    <span class="n">bashrc_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~/.bashrc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Ask for user confirmation with default set to no</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Do you want to add the </span><span class="si">{</span><span class="n">PACKAGE_NAME</span><span class="si">}</span><span class="s2"> path to your .bashrc? [yes/NO]: &quot;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Check if the line already exists in the .bashrc</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">bashrc_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">bashrc_line</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;.bashrc already contains the </span><span class="si">{</span><span class="n">PACKAGE_NAME</span><span class="si">}</span><span class="s2"> path.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">bashrc_path</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_append</span><span class="p">:</span>
+                        <span class="n">file_append</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">bashrc_header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">file_append</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">bashrc_line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Path to </span><span class="si">{</span><span class="n">PACKAGE_NAME</span><span class="si">}</span><span class="s2"> package added to .bashrc&quot;</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Restart the terminal or run &#39;source ~/.bashrc&#39; for the changes to take effect.&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An error occurred: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Operation aborted by user.&quot;</span><span class="p">)</span></div>
 
 </pre></div>
 

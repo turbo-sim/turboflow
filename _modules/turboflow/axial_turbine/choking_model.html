@@ -58,7 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../source/api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/api/turboflow.html">API Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/developer_guide.html">Developer guide</a></li>
 </ul>
 
@@ -305,10 +305,11 @@
     <span class="k">return</span> <span class="n">residuals_critical</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">critical_state</span><span class="p">,</span> <span class="o">**</span><span class="n">throat_plane</span><span class="p">}</span></div>
 
 
+
 <div class="viewcode-block" id="get_mach_crit">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.get_mach_crit">[docs]</a>
 <span class="k">def</span> <span class="nf">get_mach_crit</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the critical Mach number for non-isentropic flow in a nozzle.</span>
 <span class="sd"> </span>
 <span class="sd">    This function calculates the critical Mach number ($\text{Ma}_\text{crit}$) using the</span>
@@ -346,6 +347,53 @@
     <span class="n">T_hat_crit</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">eta</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">eta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">alpha</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">eta</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">alpha</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
     <span class="n">Ma_crit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">T_hat_crit</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">Ma_crit</span></div>
+
+
+
+<div class="viewcode-block" id="get_flow_capacity">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.choking_model.html#turboflow.axial_turbine.choking_model.get_flow_capacity">[docs]</a>
+<span class="k">def</span> <span class="nf">get_flow_capacity</span><span class="p">(</span><span class="n">Ma</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">eta</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.</span>
+
+<span class="sd">    This function calculates the dimensionless mass flow rate ($\Phi$) using the </span>
+<span class="sd">    given Mach number ($\text{Ma}$), specific heat ratio ($\gamma$), and efficiency ($\eta$).</span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+<span class="sd">        \Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}</span>
+<span class="sd">        \left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}</span>
+
+<span class="sd">    where:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \hat{T} = \left(\frac{T}{T_{0}}\right)</span>
+
+<span class="sd">    and</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \eta = 1 - \Delta \phi^2</span>
+
+<span class="sd">    Here, $\Delta \phi^2$ is the kinetic energy loss coefficient.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Ma : float</span>
+<span class="sd">        Mach number of the flow.</span>
+<span class="sd">    gamma : float</span>
+<span class="sd">        Specific heat ratio of the gas.</span>
+<span class="sd">    eta : float</span>
+<span class="sd">        Nozzle efficiency, related to the kinetic energy loss coefficient.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Dimensionless mass flow rate (\Phi).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">T_hat</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Ma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">Phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">T_hat</span><span class="p">)</span> <span class="o">/</span> <span class="n">T_hat</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">eta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">T_hat</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Phi</span></div>
+
+
 
 
 <div class="viewcode-block" id="evaluate_cascade_critical">

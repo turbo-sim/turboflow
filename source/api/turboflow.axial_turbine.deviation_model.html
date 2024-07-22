@@ -62,8 +62,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../api_reference.html">API Reference</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="../api_reference.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.add_package_to_pythonpath"><code class="docutils literal notranslate"><span class="pre">add_package_to_pythonpath()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_banner"><code class="docutils literal notranslate"><span class="pre">print_banner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_package_info"><code class="docutils literal notranslate"><span class="pre">print_package_info()</span></code></a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a><ul class="current">
 <li class="toctree-l4 current"><a class="reference internal" href="turboflow.axial_turbine.html#submodules">Submodules</a></li>
 </ul>
@@ -73,7 +76,7 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.utilities.html">turboflow.utilities package</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="../api_reference.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="turboflow.html#submodules">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
@@ -93,7 +96,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="../api_reference.html">API Reference</a></li>
+          <li class="breadcrumb-item"><a href="turboflow.html">API Reference</a></li>
           <li class="breadcrumb-item"><a href="turboflow.axial_turbine.html">turboflow.axial_turbine package</a></li>
       <li class="breadcrumb-item active">turboflow.axial_turbine.deviation_model module</li>
       <li class="wy-breadcrumbs-aside">
@@ -156,7 +159,7 @@ interpolation between low and critical Mach numbers:</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.deviation_model.get_exit_flow_angle_aungier">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.deviation_model.</span></span><span class="sig-name descname"><span class="pre">get_exit_flow_angle_aungier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ma_exit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ma_crit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/deviation_model.html#get_exit_flow_angle_aungier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.deviation_model.get_exit_flow_angle_aungier" title="Link to this definition"></a></dt>
-<dd><p>Calculate the flow angle using the deviation model proposed by <span id="id2">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
+<dd><p>Calculate the flow angle using the deviation model proposed by <span id="id2">[<a class="reference internal" href="../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p>
 <p>This model defines the gauging angle with respect to tangential axis:</p>
 <div class="math notranslate nohighlight">
 \[\beta_g = 90 - \cos^{-1}\left(\frac{A_\mathrm{throat}}{A_\mathrm{out}}\right)\]</div>
@@ -238,7 +241,7 @@ This involves calculating the gauging angle, which is the angle of zero deviatio
 <dd><p>Calculate subsonic relative exit flow angle based on the selected deviation model.</p>
 <p>Available deviation models:</p>
 <ul class="simple">
-<li><p>“aungier”: Calculate deviation using the method proposed by <span id="id3">[<a class="reference internal" href="../bibliography.html#id10" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p></li>
+<li><p>“aungier”: Calculate deviation using the method proposed by <span id="id3">[<a class="reference internal" href="../bibliography.html#id12" title="Ronald H. Aungier. Turbine aerodynamics: axial-flow and radial-flow turbine design and analysis. ASME Press, New York, 2006. ISBN 978-0-7918-0241-8.">Aungier, 2006</a>]</span>.</p></li>
 <li><p>“ainley_mathieson”: Calculate deviation using the model proposed by <span id="id4">[<a class="reference internal" href="../bibliography.html#id5" title="D. G. Ainley and G. C. R. Mathieson. A method of performance estimation for axial-flow turbines. Aeronautical Research Council Reports and Memoranda 2974, Ministry of Supply, London, United Kingdom, 1951. URL: https://reports.aerade.cranfield.ac.uk/handle/1826.2/3538.">Ainley and Mathieson, 1951</a>]</span>.</p></li>
 <li><p>“metal_angle”: Assume the exit flow angle is given by the gauge angle (zero deviation).</p></li>
 </ul>
