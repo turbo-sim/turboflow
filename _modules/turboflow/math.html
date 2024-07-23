@@ -91,13 +91,13 @@
 <span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 
-<div class="viewcode-block" id="smooth_max">
-<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_max">[docs]</a>
-<span class="k">def</span> <span class="nf">smooth_max</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="smooth_maximum">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_maximum">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_maximum</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute a smooth approximation to the maximum of an array using the specified method.</span>
+<span class="sd">    Element-wise smoooth maximum approximation of array elements. Smoothed version of numpy.maximum().</span>
 
-<span class="sd">    The p-norm approximation to the maximum is given by :cite:p:`weisstein_vector_2023`:</span>
+<span class="sd">    The :math:`p`-norm approximation to the maximum is given by :cite:p:`weisstein_vector_2023`:</span>
 
 <span class="sd">    .. math::</span>
 
@@ -157,13 +157,19 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If an unsupported method is specified.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure x1 and x2 have the same shape by broadcasting</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+    
+    <span class="c1"># Stack the input arrays along a new axis to treat them as a single array</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
+    <span class="c1"># Compute smooth maximum approximation according to specified method</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;logsumexp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;boltzmann&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;p-norm&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unsupported method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Supported methods are:</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -174,15 +180,15 @@
 
 
 
-<div class="viewcode-block" id="smooth_min">
-<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_min">[docs]</a>
-<span class="k">def</span> <span class="nf">smooth_min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="smooth_minimum">
+<a class="viewcode-back" href="../../source/api/turboflow.math.html#turboflow.math.smooth_minimum">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_minimum</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;boltzmann&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compute a smooth approximation to the minimum of an array using the specified method.</span>
+<span class="sd">    Element-wise smoooth minimum approximation of array elements. Smoothed version of numpy.minimum().</span>
 
 <span class="sd">    The smooth minimum approximation is equivalent to the smooth maximum with a</span>
 <span class="sd">    negative value of the sharpness parameter :math:`\alpha`. See documentation</span>
-<span class="sd">    of the ```smooth_max()`` function for more information about the approximation</span>
+<span class="sd">    of the ```smooth_max()`` function for more information about the smoothing</span>
 <span class="sd">    methods available.</span>
 
 <span class="sd">    Parameters</span>
@@ -218,13 +224,19 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If an unsupported method is specified.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Ensure x1 and x2 have the same shape by broadcasting</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span>
+    
+    <span class="c1"># Stack the input arrays along a new axis to treat them as a single array</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
+    <span class="c1"># Compute smooth maximum approximation according to specified method</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;logsumexp&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_logsumexp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;boltzmann&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;p-norm&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Unsupported method &#39;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">&#39;. Supported methods are:</span><span class="se">\n</span><span class="s2">&quot;</span>
@@ -242,22 +254,16 @@
     <span class="n">shift_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Compute log-sum-exp with the shift and scale by alpha</span>
-    <span class="n">log_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift_value</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="n">log_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift_value</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
     <span class="c1"># Normalize the result by alpha and correct for the shift</span>
-    <span class="n">approx_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_sum</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">shift_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">alpha</span>
+    <span class="n">smooth_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_sum</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">shift_value</span><span class="p">)</span> <span class="o">/</span> <span class="n">alpha</span>
 
-    <span class="c1"># Handle keepdims</span>
+    <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-                <span class="n">approx_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">approx_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="n">approx_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">approx_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">smooth_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">smooth_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">approx_max</span>
+    <span class="k">return</span> <span class="n">smooth_max</span>
 
 
 <span class="k">def</span> <span class="nf">_smooth_max_boltzmann</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -273,26 +279,26 @@
     <span class="n">weight_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">shift</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Compute the Boltzmann-weighted average avoiding division by zero</span>
-    <span class="n">max_approx</span> <span class="o">=</span> <span class="n">weighted_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">weight_sum</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">smooth_max</span> <span class="o">=</span> <span class="n">weighted_sum</span> <span class="o">/</span> <span class="p">(</span><span class="n">weight_sum</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
 
+    <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
-        <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
-        <span class="n">max_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">max_approx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">smooth_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">smooth_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">max_approx</span>
+    <span class="k">return</span> <span class="n">smooth_max</span>
 
 
 <span class="k">def</span> <span class="nf">_smooth_max_pnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Smooth approximation to the maximum of an array using the p-norm method&quot;&quot;&quot;</span>
 
     <span class="c1"># Compute the p-norm approximation</span>
-    <span class="n">pnorm_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">alpha</span><span class="p">)</span>
+    <span class="n">smooth_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">alpha</span><span class="p">)</span>
 
+    <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">keepdims</span><span class="p">:</span>
-        <span class="c1"># Remove the dimensions of size one if keepdims is False</span>
-        <span class="n">pnorm_approx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">pnorm_approx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="n">smooth_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">smooth_max</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">pnorm_approx</span>
+    <span class="k">return</span> <span class="n">smooth_max</span>
 
 
 <div class="viewcode-block" id="smooth_abs">

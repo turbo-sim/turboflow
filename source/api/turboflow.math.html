@@ -63,7 +63,6 @@
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="turboflow.html">API Reference</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.add_package_to_pythonpath"><code class="docutils literal notranslate"><span class="pre">add_package_to_pythonpath()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_banner"><code class="docutils literal notranslate"><span class="pre">print_banner()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="turboflow.html#turboflow.print_package_info"><code class="docutils literal notranslate"><span class="pre">print_package_info()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="turboflow.html#subpackages">Subpackages</a></li>
@@ -84,8 +83,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sigmoid_smoothstep"><code class="docutils literal notranslate"><span class="pre">sigmoid_smoothstep()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.math.sind"><code class="docutils literal notranslate"><span class="pre">sind()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_abs"><code class="docutils literal notranslate"><span class="pre">smooth_abs()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_max"><code class="docutils literal notranslate"><span class="pre">smooth_max()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_min"><code class="docutils literal notranslate"><span class="pre">smooth_min()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_maximum"><code class="docutils literal notranslate"><span class="pre">smooth_maximum()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.math.smooth_minimum"><code class="docutils literal notranslate"><span class="pre">smooth_minimum()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.math.tand"><code class="docutils literal notranslate"><span class="pre">tand()</span></code></a></li>
 </ul>
 </li>
@@ -333,10 +332,10 @@ The transcendental methods give a better approximation to the absolute value fun
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.math.smooth_max">
-<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_max</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepdims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_max"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_max" title="Link to this definition"></a></dt>
-<dd><p>Compute a smooth approximation to the maximum of an array using the specified method.</p>
-<p>The p-norm approximation to the maximum is given by <span id="id4">[<a class="reference internal" href="../bibliography.html#id118" title="Eric W. Weisstein. Vector norm. 2023. Publisher: Wolfram Research, Inc. URL: https://mathworld.wolfram.com/VectorNorm.html.">Weisstein, 2023</a>]</span>:</p>
+<dt class="sig sig-object py" id="turboflow.math.smooth_maximum">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_maximum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_maximum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_maximum" title="Link to this definition"></a></dt>
+<dd><p>Element-wise smoooth maximum approximation of array elements. Smoothed version of numpy.maximum().</p>
+<p>The <span class="math notranslate nohighlight">\(p\)</span>-norm approximation to the maximum is given by <span id="id4">[<a class="reference internal" href="../bibliography.html#id118" title="Eric W. Weisstein. Vector norm. 2023. Publisher: Wolfram Research, Inc. URL: https://mathworld.wolfram.com/VectorNorm.html.">Weisstein, 2023</a>]</span>:</p>
 <div class="math notranslate nohighlight">
 \[f_{\alpha}(x) = \left( \sum_i x_i^\alpha \right)^{\frac{1}{\alpha}}\]</div>
 <p>The Boltzmann approximation is given by <span id="id5">[<a class="reference internal" href="../bibliography.html#id24" title="Pierre Blanchard, Desmond J Higham, and Nicholas J Higham. Accurately computing the log-sum-exp and softmax functions. IMA Journal of Numerical Analysis, 41(4):2311–2330, 2021. doi:10.1093/imanum/draa038.">Blanchard <em>et al.</em>, 2021</a>]</span>:</p>
@@ -390,12 +389,12 @@ the result will broadcast correctly against the input array.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.math.smooth_min">
-<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_min</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keepdims</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_min"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_min" title="Link to this definition"></a></dt>
-<dd><p>Compute a smooth approximation to the minimum of an array using the specified method.</p>
+<dt class="sig sig-object py" id="turboflow.math.smooth_minimum">
+<span class="sig-prename descclassname"><span class="pre">turboflow.math.</span></span><span class="sig-name descname"><span class="pre">smooth_minimum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'boltzmann'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/math.html#smooth_minimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.math.smooth_minimum" title="Link to this definition"></a></dt>
+<dd><p>Element-wise smoooth minimum approximation of array elements. Smoothed version of numpy.minimum().</p>
 <p>The smooth minimum approximation is equivalent to the smooth maximum with a
 negative value of the sharpness parameter <span class="math notranslate nohighlight">\(\alpha\)</span>. See documentation
-of the <code class="docutils literal notranslate"><span class="pre">`smooth_max()</span></code> function for more information about the approximation
+of the <code class="docutils literal notranslate"><span class="pre">`smooth_max()</span></code> function for more information about the smoothing
 methods available.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

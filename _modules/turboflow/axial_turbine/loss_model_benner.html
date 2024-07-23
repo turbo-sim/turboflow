@@ -1037,13 +1037,9 @@
 
     <span class="c1"># Limit the loss to the loss_limit</span>
     <span class="k">if</span> <span class="n">loss_limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">loss_increment</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">loss_increment</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">loss_increment</span><span class="p">,</span> <span class="n">loss_limit</span><span class="p">)]</span>
+        <span class="n">loss_increment</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">smooth_minimum</span><span class="p">(</span>
+            <span class="n">loss_increment</span><span class="p">,</span> <span class="n">loss_limit</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;logsumexp&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">25</span>
         <span class="p">)</span>
-        <span class="n">loss_increment</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">smooth_min</span><span class="p">(</span>
-            <span class="n">loss_increment</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;logsumexp&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
-        <span class="p">)</span>
-
     <span class="k">return</span> <span class="n">loss_increment</span></div>
 
 
