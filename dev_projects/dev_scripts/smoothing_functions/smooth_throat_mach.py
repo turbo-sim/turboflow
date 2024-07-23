@@ -5,20 +5,19 @@ import turboflow as tf
 
 if __name__ == "__main__":
 
-    # Example data
-    x = np.linspace(0.5, 1.5, 51)
-    inputs = np.asarray([x, 1 + 0 * x])  # f1(x) = x and f2(x) = 1
-
-    # Calculate softmin using various methods
-    f_max = np.min(inputs, axis=0)
-    f_pnorm = tf.smooth_min(inputs, method="p-norm", alpha=25, axis=0)
-    f_logsumexp = tf.smooth_min(inputs, method="logsumexp", alpha=25, axis=0)
-    f_boltzmann = tf.smooth_min(inputs, method="boltzmann", alpha=25, axis=0)
-
-    # Create the folder to save figures
     fig_dir = "figures"
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
+
+    # Example data
+    Ma_crit = 1
+    x = np.linspace(0.5, 1.5, 51)
+
+    # Calculate softmin using various methods
+    f_max = np.minimum(x, Ma_crit)
+    f_logsumexp = tf.smooth_minimum(x, Ma_crit, method="logsumexp", alpha=25)
+    f_boltzmann = tf.smooth_minimum(x, Ma_crit, method="boltzmann", alpha=25)
+    f_pnorm = tf.smooth_minimum(x, Ma_crit, method="p-norm", alpha=25)
 
     # Plot the data
     fig, ax = plt.subplots()

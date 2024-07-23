@@ -1,11 +1,11 @@
 import numpy as np
 
 
-def smooth_max(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
+def smooth_maximum(x1, x2, method="boltzmann", alpha=10):
     r"""
-    Compute a smooth approximation to the maximum of an array using the specified method.
+    Element-wise smoooth maximum approximation of array elements. Smoothed version of numpy.maximum().
 
-    The p-norm approximation to the maximum is given by :cite:p:`weisstein_vector_2023`:
+    The :math:`p`-norm approximation to the maximum is given by :cite:p:`weisstein_vector_2023`:
 
     .. math::
 
@@ -65,13 +65,19 @@ def smooth_max(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
     ValueError
         If an unsupported method is specified.
     """
+    # Ensure x1 and x2 have the same shape by broadcasting
+    x1, x2 = np.broadcast_arrays(x1, x2)
+    
+    # Stack the input arrays along a new axis to treat them as a single array
+    x = np.stack([x1, x2], axis=0)
 
+    # Compute smooth maximum approximation according to specified method
     if method == "logsumexp":
-        return _smooth_max_logsumexp(x, np.abs(alpha), axis, keepdims)
+        return _smooth_max_logsumexp(x, np.abs(alpha), axis=0)
     elif method == "boltzmann":
-        return _smooth_max_boltzmann(x, np.abs(alpha), axis, keepdims)
+        return _smooth_max_boltzmann(x, np.abs(alpha), axis=0)
     elif method == "p-norm":
-        return _smooth_max_pnorm(x, np.abs(alpha), axis, keepdims)
+        return _smooth_max_pnorm(x, np.abs(alpha), axis=0)
     else:
         raise ValueError(
             f"Unsupported method '{method}'. Supported methods are:\n"
@@ -81,13 +87,13 @@ def smooth_max(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
         )
 
 
-def smooth_min(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
+def smooth_minimum(x1, x2, method="boltzmann", alpha=10):
     r"""
-    Compute a smooth approximation to the minimum of an array using the specified method.
+    Element-wise smoooth minimum approximation of array elements. Smoothed version of numpy.minimum().
 
     The smooth minimum approximation is equivalent to the smooth maximum with a
     negative value of the sharpness parameter :math:`\alpha`. See documentation
-    of the ```smooth_max()`` function for more information about the approximation
+    of the ```smooth_max()`` function for more information about the smoothing
     methods available.
 
     Parameters
@@ -123,13 +129,19 @@ def smooth_min(x, method="boltzmann", alpha=10, axis=None, keepdims=False):
     ValueError
         If an unsupported method is specified.
     """
+    # Ensure x1 and x2 have the same shape by broadcasting
+    x1, x2 = np.broadcast_arrays(x1, x2)
+    
+    # Stack the input arrays along a new axis to treat them as a single array
+    x = np.stack([x1, x2], axis=0)
 
+    # Compute smooth maximum approximation according to specified method
     if method == "logsumexp":
-        return _smooth_max_logsumexp(x, -np.abs(alpha), axis, keepdims)
+        return _smooth_max_logsumexp(x, -np.abs(alpha), axis=0)
     elif method == "boltzmann":
-        return _smooth_max_boltzmann(x, -np.abs(alpha), axis, keepdims)
+        return _smooth_max_boltzmann(x, -np.abs(alpha), axis=0)
     elif method == "p-norm":
-        return _smooth_max_pnorm(x, -np.abs(alpha), axis, keepdims)
+        return _smooth_max_pnorm(x, -np.abs(alpha), axis=0)
     else:
         raise ValueError(
             f"Unsupported method '{method}'. Supported methods are:\n"
@@ -146,22 +158,16 @@ def _smooth_max_logsumexp(x, alpha, axis=None, keepdims=False):
     shift_value = np.sign(alpha) * np.max(np.sign(alpha) * x, axis=axis, keepdims=True)
 
     # Compute log-sum-exp with the shift and scale by alpha
-    log_sum = np.log(
-        np.sum(np.exp(alpha * (x - shift_value)), axis=axis, keepdims=True)
-    )
+    log_sum = np.log(np.sum(np.exp(alpha * (x - shift_value)), axis=axis, keepdims=True))
 
     # Normalize the result by alpha and correct for the shift
-    approx_max = (log_sum + alpha * shift_value) / alpha
+    smooth_max = (log_sum + alpha * shift_value) / alpha
 
-    # Handle keepdims
+    # Remove the dimensions of size one if keepdims is False
     if not keepdims:
-        if isinstance(axis, tuple):
-            for ax in sorted(axis, reverse=True):
-                approx_max = np.squeeze(approx_max, axis=ax)
-        elif isinstance(axis, int):
-            approx_max = np.squeeze(approx_max, axis=axis)
+        smooth_max = np.squeeze(smooth_max, axis=axis)
 
-    return approx_max
+    return smooth_max
 
 
 def _smooth_max_boltzmann(x, alpha, axis=None, keepdims=False):
@@ -177,26 +183,26 @@ def _smooth_max_boltzmann(x, alpha, axis=None, keepdims=False):
     weight_sum = np.sum(np.exp(alpha * (x - shift)), axis=axis, keepdims=True)
 
     # Compute the Boltzmann-weighted average avoiding division by zero
-    max_approx = weighted_sum / (weight_sum + np.finfo(float).eps)
+    smooth_max = weighted_sum / (weight_sum + np.finfo(float).eps)
 
+    # Remove the dimensions of size one if keepdims is False
     if not keepdims:
-        # Remove the dimensions of size one if keepdims is False
-        max_approx = np.squeeze(max_approx, axis=axis)
+        smooth_max = np.squeeze(smooth_max, axis=axis)
 
-    return max_approx
+    return smooth_max
 
 
 def _smooth_max_pnorm(x, alpha, axis=None, keepdims=False):
     """Smooth approximation to the maximum of an array using the p-norm method"""
 
     # Compute the p-norm approximation
-    pnorm_approx = np.sum(np.power(x, alpha), axis=axis, keepdims=True) ** (1 / alpha)
+    smooth_max = np.sum(np.power(x, alpha), axis=axis, keepdims=True) ** (1 / alpha)
 
+    # Remove the dimensions of size one if keepdims is False
     if not keepdims:
-        # Remove the dimensions of size one if keepdims is False
-        pnorm_approx = np.squeeze(pnorm_approx, axis=axis)
+        smooth_max = np.squeeze(smooth_max, axis=axis)
 
-    return pnorm_approx
+    return smooth_max
 
 
 def smooth_abs(x, method="quadratic", epsilon=1e-5):
