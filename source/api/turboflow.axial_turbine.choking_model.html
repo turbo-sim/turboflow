@@ -410,8 +410,8 @@ and by ensuring that the mach at the throat equals the critical at supercritical
 <dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_flow_capacity">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_flow_capacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_flow_capacity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_flow_capacity" title="Link to this definition"></a></dt>
 <dd><p>Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.</p>
-<p>This function calculates the dimensionless mass flow rate ($Phi$) using the 
-given Mach number ($text{Ma}$), specific heat ratio ($gamma$), and efficiency ($eta$).</p>
+<p>This function calculates the dimensionless mass flow rate (<span class="math notranslate nohighlight">\(\Phi\)</span>) using the 
+given Mach number (<span class="math notranslate nohighlight">\(\text{Ma}\)</span>), specific heat ratio (<span class="math notranslate nohighlight">\(\gamma\)</span>), and efficiency (<span class="math notranslate nohighlight">\(\eta\)</span>).</p>
 <div class="math notranslate nohighlight">
 \[\Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}
 \left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}\]</div>
@@ -421,7 +421,7 @@ given Mach number ($text{Ma}$), specific heat ratio ($gamma$), and efficiency ($
 <p>and</p>
 <div class="math notranslate nohighlight">
 \[\eta = 1 - \Delta \phi^2\]</div>
-<p>Here, $Delta phi^2$ is the kinetic energy loss coefficient.</p>
+<p>Here, <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span> is the kinetic energy loss coefficient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -435,7 +435,7 @@ given Mach number ($text{Ma}$), specific heat ratio ($gamma$), and efficiency ($
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>Dimensionless mass flow rate (Phi).</p>
+<dt>float</dt><dd><p>Dimensionless mass flow rate.</p>
 </dd>
 </dl>
 </dd>
@@ -446,8 +446,8 @@ given Mach number ($text{Ma}$), specific heat ratio ($gamma$), and efficiency ($
 <dt class="sig sig-object py" id="turboflow.axial_turbine.choking_model.get_mach_crit">
 <span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_model.</span></span><span class="sig-name descname"><span class="pre">get_mach_crit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_model.html#get_mach_crit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_model.get_mach_crit" title="Link to this definition"></a></dt>
 <dd><p>Compute the critical Mach number for non-isentropic flow in a nozzle.</p>
-<p>This function calculates the critical Mach number ($text{Ma}_text{crit}$) using the
-given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
+<p>This function calculates the critical Mach number (<span class="math notranslate nohighlight">\(\text{Ma}_\text{crit}\)</span>) using the
+given specific heat ratio (<span class="math notranslate nohighlight">\(\gamma\)</span>) and nozzle efficiency (<span class="math notranslate nohighlight">\(\eta\)</span>).</p>
 <div class="math notranslate nohighlight">
 \[\text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
 = \left(\frac{2}{\gamma-1}\right)\left[\frac{4 \alpha-2}{(2 \alpha+\eta-3) + \sqrt{(1+\eta)^{2}+4 \alpha(1+\alpha-3 \eta)}} - 1\right]\]</div>
@@ -457,7 +457,7 @@ given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
 <p>and</p>
 <div class="math notranslate nohighlight">
 \[\eta = 1 - \Delta \phi^2\]</div>
-<p>Here, $Delta phi^2$ is the kinetic energy loss coefficient.</p>
+<p>Here, <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span> is the kinetic energy loss coefficient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -469,7 +469,7 @@ given specific heat ratio ($gamma$) and nozzle efficiency ($eta$).</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>float</dt><dd><p>Critical Mach number (text{Ma}_text{crit}).</p>
+<dt>float</dt><dd><p>Critical Mach number.</p>
 </dd>
 </dl>
 </dd>

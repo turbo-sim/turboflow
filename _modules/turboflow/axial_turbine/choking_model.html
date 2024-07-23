@@ -312,8 +312,8 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute the critical Mach number for non-isentropic flow in a nozzle.</span>
 <span class="sd"> </span>
-<span class="sd">    This function calculates the critical Mach number ($\text{Ma}_\text{crit}$) using the</span>
-<span class="sd">    given specific heat ratio (\$gamma$) and nozzle efficiency ($\eta$).</span>
+<span class="sd">    This function calculates the critical Mach number (:math:`\text{Ma}_\text{crit}`) using the</span>
+<span class="sd">    given specific heat ratio (:math:`\gamma`) and nozzle efficiency (:math:`\eta`).</span>
 <span class="sd">   </span>
 <span class="sd">    .. math::</span>
 <span class="sd">        \text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)</span>
@@ -329,7 +329,7 @@
 <span class="sd">    .. math::</span>
 <span class="sd">        \eta = 1 - \Delta \phi^2</span>
 <span class="sd"> </span>
-<span class="sd">    Here, $\Delta \phi^2$ is the kinetic energy loss coefficient.</span>
+<span class="sd">    Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.</span>
 <span class="sd">       </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -341,7 +341,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
-<span class="sd">        Critical Mach number (\text{Ma}_\text{crit}).</span>
+<span class="sd">        Critical Mach number.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">alpha</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">T_hat_crit</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">alpha</span> <span class="o">+</span> <span class="n">eta</span> <span class="o">-</span> <span class="mi">3</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">eta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">alpha</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">eta</span><span class="p">)))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">alpha</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
@@ -356,8 +356,8 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.</span>
 
-<span class="sd">    This function calculates the dimensionless mass flow rate ($\Phi$) using the </span>
-<span class="sd">    given Mach number ($\text{Ma}$), specific heat ratio ($\gamma$), and efficiency ($\eta$).</span>
+<span class="sd">    This function calculates the dimensionless mass flow rate (:math:`\Phi`) using the </span>
+<span class="sd">    given Mach number (:math:`\text{Ma}`), specific heat ratio (:math:`\gamma`), and efficiency (:math:`\eta`).</span>
 <span class="sd">    </span>
 <span class="sd">    .. math::</span>
 <span class="sd">        \Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}</span>
@@ -373,7 +373,7 @@
 <span class="sd">    .. math::</span>
 <span class="sd">        \eta = 1 - \Delta \phi^2</span>
 
-<span class="sd">    Here, $\Delta \phi^2$ is the kinetic energy loss coefficient.</span>
+<span class="sd">    Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -387,7 +387,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    float</span>
-<span class="sd">        Dimensionless mass flow rate (\Phi).</span>
+<span class="sd">        Dimensionless mass flow rate.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">T_hat</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">Ma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">Phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">T_hat</span><span class="p">)</span> <span class="o">/</span> <span class="n">T_hat</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">eta</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">T_hat</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
