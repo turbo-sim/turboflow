@@ -171,7 +171,7 @@ dictionary containing information on design variables, objective function, const
 <tr class="row-odd"><td><p><strong>get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)</strong></p></td>
 <td><p>Convert specific speed to actual angular speed</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>extend_variables(variables)</strong></p></td>
+<tr class="row-even"><td><p><strong>index_variables(variables)</strong></p></td>
 <td><p>Convert a dict containing lists or arrays to a dictionaries of only one element.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>get_given_bounds(design_variable)</strong></p></td>
@@ -237,25 +237,19 @@ Constraints are defined to be less than 0.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables">
-<span class="sig-name descname"><span class="pre">extend_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.extend_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.extend_variables" title="Link to this definition"></a></dt>
-<dd><p>Index the design variables for each cascade for the default initial guess.</p>
-<p>The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.
-This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
-for example <cite>aspect_ratio_1</cite> for first cascade and etc.</p>
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">
+<span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the objective function and constraints for given decision variables.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>variables</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where each key maps to a dictionary containing at least a
-“value” key. The “value” can be a list, numpy array, or float.</p>
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of independent variables (i.e., degrees of freedom).</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>A dictionary where each list or numpy array in the original dictionary
-is expanded into individual elements with keys formatted as “key_index”.
-Float values are kept as is.</p>
+<dt>array_like</dt><dd><p>Vector containing the objective function, equality constraints, and inequality constraints.</p>
 </dd>
 </dl>
 </dd>
@@ -263,9 +257,29 @@ Float values are kept as is.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness">
-<span class="sig-name descname"><span class="pre">fitness</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_gradient_based">
+<span class="sig-name descname"><span class="pre">fitness_gradient_based</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness_gradient_based"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_gradient_based" title="Link to this definition"></a></dt>
 <dd><p>Evaluate the objective function and constraints at a given pint <cite>x</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of design variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>An array containg the value of the objective function and constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_gradient_free">
+<span class="sig-name descname"><span class="pre">fitness_gradient_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness_gradient_free"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_gradient_free" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the objective function and constraints at a given pint <cite>x</cite> for genetic algrothims.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -451,6 +465,42 @@ If objective function should be maximized, the sign of the scale is changed.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.index_variables">
+<span class="sig-name descname"><span class="pre">index_variables</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.index_variables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.index_variables" title="Link to this definition"></a></dt>
+<dd><p>Index the design variables for each cascade for the default initial guess.</p>
+<p>The design variables are given without indexing the cascades. For example, the aspect ratio is simply provided by aspect_ratio.
+This function extend the design_variable dictionary such that for each cascade specific design variable, one item is given for each cascade.
+for example <cite>aspect_ratio_1</cite> for first cascade and etc.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>variables</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where each key maps to a dictionary containing at least a
+“value” key. The “value” can be a list, numpy array, or float.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>A dictionary where each list or numpy array in the original dictionary
+is expanded into individual elements with keys formatted as “key_index”.
+Float values are kept as is.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_based">
+<span class="sig-name descname"><span class="pre">init_gradient_based</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.init_gradient_based"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_based" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_free">
+<span class="sig-name descname"><span class="pre">init_gradient_free</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.init_gradient_free"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_free" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.update_boundary_conditions">

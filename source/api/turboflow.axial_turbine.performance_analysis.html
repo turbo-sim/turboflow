@@ -110,7 +110,7 @@
 <span id="turboflow-axial-turbine-performance-analysis-module"></span><h1>turboflow.axial_turbine.performance_analysis module<a class="headerlink" href="#module-turboflow.axial_turbine.performance_analysis" title="Link to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">CascadesNonlinearSystemProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#CascadesNonlinearSystemProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">CascadesNonlinearSystemProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#CascadesNonlinearSystemProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></p>
 <p>A class representing a nonlinear system problem for cascade analysis.</p>
 <p>This class is designed for solving nonlinear systems of equations related to cascade analysis.
@@ -176,78 +176,6 @@ If this method is not present in the derived class, the solver will revert to us
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.compute_heuristic_initial_guess">
-<span class="sig-name descname"><span class="pre">compute_heuristic_initial_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enthalpy_loss_fractions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ma_crit</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#CascadesNonlinearSystemProblem.compute_heuristic_initial_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.compute_heuristic_initial_guess" title="Link to this definition"></a></dt>
-<dd><p>Compute the heuristic initial guess for the performance analysis based on the given parameters.</p>
-<p>This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,
-total-to-static and total-to-total efficiencies, and critical Mach number.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>enthalpy_loss_fractions</strong><span class="classifier">array-like</span></dt><dd><p>Enthalpy loss fractions for each cascade.</p>
-</dd>
-<dt><strong>eta_tt</strong><span class="classifier">float</span></dt><dd><p>Total-to-total efficiency.</p>
-</dd>
-<dt><strong>eta_ts</strong><span class="classifier">float</span></dt><dd><p>Total-to-static efficiency.</p>
-</dd>
-<dt><strong>Ma_crit</strong><span class="classifier">float</span></dt><dd><p>Critical Mach number.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Heuristic initial guess for the performance analysis.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.get_initial_guess">
-<span class="sig-name descname"><span class="pre">get_initial_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#CascadesNonlinearSystemProblem.get_initial_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.get_initial_guess" title="Link to this definition"></a></dt>
-<dd><p>Determine the initial guess for the performance analysis based on the given parameters or default values.</p>
-<p>The given <cite>initial_guess</cite> make take three forms:</p>
-<blockquote>
-<div><ul>
-<li><p>None, which generate a default initial guess</p></li>
-<li><p>A dictionary which generates an initial guess through <cite>compute_heuristic_initial_guess</cite>. Required elements are:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>enthalpy_loss_fractions</cite>, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.</p></li>
-<li><p><cite>eta_ts</cite>, which is the assumed total-to-static efficiency.</p></li>
-<li><p><cite>eta_tt</cite>, which is the assumed total-to-total efficiency.</p></li>
-<li><p><cite>Ma_crit</cite>, which is the assumed critical mash number.</p></li>
-</ul>
-</div></blockquote>
-</li>
-<li><p>A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.</p></li>
-</ul>
-</div></blockquote>
-<p>The initial guess is scaled in this function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>initial_guess</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary containing the initial guess parameters.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>dict</dt><dd><p>Initial guess for the performance analysis.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt>ValueError</dt><dd><p>If the provided initial_guess is invalid or incompatible with the model options.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.residual">
 <span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#CascadesNonlinearSystemProblem.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.residual" title="Link to this definition"></a></dt>
@@ -331,8 +259,13 @@ These are stored in the object’s internal state for further use in calculation
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.calculate_enthalpy_residual_1">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">calculate_enthalpy_residual_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#calculate_enthalpy_residual_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.calculate_enthalpy_residual_1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.compute_performance">
-<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#compute_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.compute_performance" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#compute_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.compute_performance" title="Link to this definition"></a></dt>
 <dd><p>Compute and export the performance of each specified operation point to an Excel file.</p>
 <p>This function handles two types of input for operation points:</p>
 <blockquote>
@@ -396,7 +329,7 @@ ranges from which operation points will be generated.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.compute_single_operation_point">
-<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_single_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operating_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#compute_single_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.compute_single_operation_point" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_single_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operating_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#compute_single_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.compute_single_operation_point" title="Link to this definition"></a></dt>
 <dd><p>Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.</p>
 <p>The initial guess make take three forms:</p>
 <blockquote>
@@ -489,28 +422,14 @@ parameters to sweep through in the operation points.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.get_heuristic_guess_input">
-<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">get_heuristic_guess_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#get_heuristic_guess_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.get_heuristic_guess_input" title="Link to this definition"></a></dt>
-<dd><p>Generate a list of <cite>n</cite> number of different sets of dictionaries used to generate initial guesses.</p>
-<p>Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
-an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function <cite>compute_heuristic_initial_guess</cite>.</p>
-<p>The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
-or with equal increments for neighbouring values (see <cite>utils.fill_array_with_increment</cite> for more information). The critical mach is assumed to be 0.95.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Number of cascades.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>List of sets of variables used to generate an initial guess.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.get_heuristic_guess">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">get_heuristic_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eta_tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta_ts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mach</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_conditions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviation_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#get_heuristic_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.get_heuristic_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.get_initial_guess">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">get_initial_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_conditions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">choking_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deviation_model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#get_initial_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.get_initial_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.get_operation_point_distance">
@@ -535,6 +454,23 @@ for angle measurements and prevention of division by zero for very small values.
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.get_unkown">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">get_unkown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prop2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#get_unkown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.get_unkown" title="Link to this definition"></a></dt>
+<dd><p>call is either cp.DmassP_INPUTS (find Dmass based on a pressure) or cp.PSmass_INPUTS (find p based on a Smass)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.performance_analysis.latin_hypercube_sampling">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">latin_hypercube_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/performance_analysis.html#latin_hypercube_sampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.performance_analysis.latin_hypercube_sampling" title="Link to this definition"></a></dt>
+<dd><p>Generates samples using Latin Hypercube Sampling.</p>
+<p>Parameters:
+bounds (list of tuples): A list of (min, max) bounds for each variable.
+n_samples (int): The number of samples to generate.</p>
+<p>Returns:
+np.ndarray: An array of shape (n_samples, n_variables) containing the samples.</p>
 </dd></dl>
 
 <dl class="py function">

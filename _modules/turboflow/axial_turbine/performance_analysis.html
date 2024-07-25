@@ -105,6 +105,11 @@
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">properties</span> <span class="k">as</span> <span class="n">props</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">geometry_model</span> <span class="k">as</span> <span class="n">geom</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">flow_model</span> <span class="k">as</span> <span class="n">flow</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">choking_model</span> <span class="k">as</span> <span class="n">ch</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">deviation_model</span> <span class="k">as</span> <span class="n">dm</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">qmc</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">optimize</span>
+
 
 <span class="n">SOLVER_MAP</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;lm&quot;</span><span class="p">:</span> <span class="s2">&quot;Lavenberg-Marquardt&quot;</span><span class="p">,</span> <span class="s2">&quot;hybr&quot;</span><span class="p">:</span> <span class="s2">&quot;Powell&#39;s hybrid&quot;</span><span class="p">}</span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -112,53 +117,50 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="get_heuristic_guess_input">
-<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_heuristic_guess_input">[docs]</a>
-<span class="k">def</span> <span class="nf">get_heuristic_guess_input</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># def get_heuristic_guess_input(n):</span>
+<span class="c1">#     r&quot;&quot;&quot;</span>
 
-<span class="sd">    Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.</span>
+<span class="c1">#     Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.</span>
 
-<span class="sd">    Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate</span>
-<span class="sd">    an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.</span>
+<span class="c1">#     Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate</span>
+<span class="c1">#     an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.</span>
 
-<span class="sd">    The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,</span>
-<span class="sd">    or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.</span>
+<span class="c1">#     The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,</span>
+<span class="c1">#     or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">     ----------</span>
-<span class="sd">     n : int</span>
-<span class="sd">         Number of cascades.</span>
+<span class="c1">#     Parameters</span>
+<span class="c1">#      ----------</span>
+<span class="c1">#      n : int</span>
+<span class="c1">#          Number of cascades.</span>
 
-<span class="sd">     Returns</span>
-<span class="sd">     -------</span>
-<span class="sd">     list</span>
-<span class="sd">         List of sets of variables used to generate an initial guess.</span>
+<span class="c1">#      Returns</span>
+<span class="c1">#      -------</span>
+<span class="c1">#      list</span>
+<span class="c1">#          List of sets of variables used to generate an initial guess.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
 
-    <span class="n">eta_ts_vec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span>
+<span class="c1">#     eta_ts_vec = [0.8, 0.7, 0.6]</span>
 
-    <span class="n">array</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">fill_array_with_increment</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="n">enthalpy_distributions</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">enthalpy_distributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
-    <span class="n">enthalpy_distributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
-    <span class="n">enthalpy_distributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">array</span><span class="p">))</span>
+<span class="c1">#     array = utils.fill_array_with_increment(n)</span>
+<span class="c1">#     enthalpy_distributions = []</span>
+<span class="c1">#     enthalpy_distributions.append(np.ones(n) * 1 / n)</span>
+<span class="c1">#     enthalpy_distributions.append(array)</span>
+<span class="c1">#     enthalpy_distributions.append(np.flip(array))</span>
 
-    <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">eta_ts</span> <span class="ow">in</span> <span class="n">eta_ts_vec</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">enthalpy_distribution</span> <span class="ow">in</span> <span class="n">enthalpy_distributions</span><span class="p">:</span>
-            <span class="n">initial_guesses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;enthalpy_loss_fractions&quot;</span><span class="p">:</span> <span class="n">enthalpy_distribution</span><span class="p">,</span>
-                    <span class="s2">&quot;eta_ts&quot;</span><span class="p">:</span> <span class="n">eta_ts</span><span class="p">,</span>
-                    <span class="s2">&quot;eta_tt&quot;</span><span class="p">:</span> <span class="n">eta_ts</span> <span class="o">+</span> <span class="mf">0.1</span><span class="p">,</span>
-                    <span class="s2">&quot;Ma_crit&quot;</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
+<span class="c1">#     initial_guesses = []</span>
+<span class="c1">#     for eta_ts in eta_ts_vec:</span>
+<span class="c1">#         for enthalpy_distribution in enthalpy_distributions:</span>
+<span class="c1">#             initial_guesses.append(</span>
+<span class="c1">#                 {</span>
+<span class="c1">#                     &quot;enthalpy_loss_fractions&quot;: enthalpy_distribution,</span>
+<span class="c1">#                     &quot;eta_ts&quot;: eta_ts,</span>
+<span class="c1">#                     &quot;eta_tt&quot;: eta_ts + 0.1,</span>
+<span class="c1">#                     &quot;Ma_crit&quot;: 0.95,</span>
+<span class="c1">#                 }</span>
+<span class="c1">#             )</span>
 
-    <span class="k">return</span> <span class="n">initial_guesses</span></div>
-
+<span class="c1">#     return initial_guesses</span>
 
 
 <div class="viewcode-block" id="compute_performance">
@@ -166,7 +168,7 @@
 <span class="k">def</span> <span class="nf">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="c1"># initial_guess=None,</span>
     <span class="n">out_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -269,10 +271,7 @@
             <span class="c1"># Define initial guess</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="c1"># Use default initial guess for the first operation point</span>
-                <span class="k">if</span> <span class="n">initial_guess</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using default initial guess&quot;</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using user defined initial guess&quot;</span><span class="p">)</span>
+                <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;initial_guess&quot;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">closest_x</span><span class="p">,</span> <span class="n">closest_index</span> <span class="o">=</span> <span class="n">find_closest_operation_point</span><span class="p">(</span>
                     <span class="n">operation_point</span><span class="p">,</span>
@@ -284,8 +283,12 @@
 
             <span class="c1"># Compute performance</span>
             <span class="n">solver</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">compute_single_operation_point</span><span class="p">(</span>
-                <span class="n">operation_point</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">config</span>
-            <span class="p">)</span>
+                                <span class="n">operation_point</span><span class="p">,</span>
+                                <span class="n">initial_guess</span><span class="p">,</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
+                                <span class="p">)</span>
 
             <span class="c1"># Retrieve solver data</span>
             <span class="n">solver_status</span> <span class="o">=</span> <span class="p">{</span>
@@ -384,7 +387,9 @@
 <span class="k">def</span> <span class="nf">compute_single_operation_point</span><span class="p">(</span>
     <span class="n">operating_point</span><span class="p">,</span>
     <span class="n">initial_guess</span><span class="p">,</span>
-    <span class="n">config</span><span class="p">,</span>
+    <span class="n">geometry</span><span class="p">,</span>
+    <span class="n">simulation_options</span><span class="p">,</span>
+    <span class="n">solver_options</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.</span>
@@ -418,43 +423,75 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Initialize problem object</span>
-    <span class="n">problem</span> <span class="o">=</span> <span class="n">CascadesNonlinearSystemProblem</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">CascadesNonlinearSystemProblem</span><span class="p">(</span><span class="n">geometry</span><span class="p">,</span> <span class="n">simulation_options</span><span class="p">)</span>
     <span class="c1"># TODO: A limitation of defining a new problem for each operation point is that the geometry generated and checked once for every point</span>
     <span class="c1"># TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.</span>
     <span class="c1"># TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails</span>
     <span class="n">problem</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">operating_point</span><span class="p">)</span>
-    <span class="n">solver_options</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">])</span>
+    <span class="n">solver_options</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">solver_options</span><span class="p">)</span>
 
-    <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span> <span class="o">+</span> <span class="n">get_heuristic_guess_input</span><span class="p">(</span>
-        <span class="n">problem</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
-    <span class="n">methods_to_try</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span>
-        <span class="n">method</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SOLVER_MAP</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
-    <span class="p">]</span>
+    <span class="c1"># Get initial guess from sample of hearistic guesses</span>
+    <span class="n">initial_guesses</span> <span class="o">=</span> <span class="n">get_initial_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> 
+                                        <span class="n">problem</span><span class="p">,</span> 
+                                        <span class="n">problem</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">,</span> 
+                                        <span class="n">problem</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> 
+                                        <span class="n">problem</span><span class="o">.</span><span class="n">fluid</span><span class="p">,</span> 
+                                        <span class="n">simulation_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">],</span> 
+                                        <span class="n">simulation_options</span><span class="p">[</span><span class="s2">&quot;deviation_model&quot;</span><span class="p">])</span> 
+
+    <span class="c1"># Get solver method array</span>
+    <span class="n">solver_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">method</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SOLVER_MAP</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span>
 
     <span class="k">for</span> <span class="n">initial_guess</span> <span class="ow">in</span> <span class="n">initial_guesses</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">methods_to_try</span><span class="p">:</span>
-            <span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">x0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_initial_guess</span><span class="p">(</span>
-                <span class="n">initial_guess</span>
-            <span class="p">)</span> 
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Trying to solve the problem using </span><span class="si">{</span><span class="n">SOLVER_MAP</span><span class="p">[</span><span class="n">method</span><span class="p">]</span><span class="si">}</span><span class="s2"> method&quot;</span><span class="p">)</span>
+        <span class="n">initial_guess_scaled</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> 
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">solver_methods</span><span class="p">:</span>
             <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
-
             <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
-            <span class="c1"># TODO: Roberto: add the option to use optimizers as solver depending on the method specified?</span>
-
             <span class="k">try</span><span class="p">:</span> 
-                <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span>
+                <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">func_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="n">e</span> 
                 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Error during solving: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="n">solver</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-                <span class="k">break</span>
+                    <span class="k">break</span>
+            
         <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-            <span class="k">break</span>
+                    <span class="k">break</span>
+    
+    <span class="c1"># initial_guesses = [initial_guess] + get_heuristic_guess_input(</span>
+    <span class="c1"># problem.geometry[&quot;number_of_cascades&quot;]</span>
+    <span class="c1"># )</span>
+    <span class="c1"># solver_methods = [solver_options[&quot;method&quot;]] + [</span>
+    <span class="c1">#     method for method in SOLVER_MAP.keys() if method != solver_options[&quot;method&quot;]</span>
+    <span class="c1"># ]</span>
+
+    <span class="c1"># for initial_guess in initial_guesses:</span>
+    <span class="c1">#     for method in solver_methods:</span>
+    <span class="c1">#         success = False</span>
+    <span class="c1">#         x0 = problem.get_initial_guess(</span>
+    <span class="c1">#             initial_guess</span>
+    <span class="c1">#         ) </span>
+    <span class="c1">#         print(f&quot; Trying to solve the problem using {SOLVER_MAP[method]} method&quot;)</span>
+    <span class="c1">#         solver_options[&quot;method&quot;] = method</span>
+
+    <span class="c1">#         solver = psv.NonlinearSystemSolver(problem, **solver_options)</span>
+    <span class="c1">#         # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?</span>
+
+    <span class="c1">#         try: </span>
+    <span class="c1">#             solver.solve(problem.x0)</span>
+    <span class="c1">#         except Exception as e:</span>
+    <span class="c1">#             if solver.func_count == 0:</span>
+    <span class="c1">#                 raise e </span>
+    <span class="c1">#             print(f&quot; Error during solving: {e}&quot;)</span>
+    <span class="c1">#             solver.success = False</span>
+    <span class="c1">#         if solver.success:</span>
+    <span class="c1">#             break</span>
+    <span class="c1">#     if solver.success:</span>
+    <span class="c1">#         break</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: All attempts failed to converge&quot;</span><span class="p">)</span>
@@ -613,6 +650,91 @@
         <span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="get_initial_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_initial_guess">[docs]</a>
+<span class="k">def</span> <span class="nf">get_initial_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">choking_model</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">):</span>
+
+    <span class="c1"># Three types of initial guess:</span>
+        <span class="c1"># 1. Full guess</span>
+        <span class="c1"># 2. Input for heuristic guess</span>
+        <span class="c1"># 4. Input for generatic heuristic guess based on latin hypercube sampling</span>
+    <span class="c1"># Check which guess is given</span>
+    <span class="n">valid_keys_1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;eta_ts&quot;</span><span class="p">,</span> <span class="s2">&quot;ma&quot;</span><span class="p">]</span>
+    <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;eta_ts&quot;</span><span class="p">,</span> <span class="s2">&quot;ma&quot;</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
+    <span class="n">valid_keys_3</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;w_out&quot;</span><span class="p">,</span> <span class="s2">&quot;s_out&quot;</span><span class="p">,</span> <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span> <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">,</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">,]</span>
+    <span class="n">valid_keys_3</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_3</span><span class="p">]</span>
+    <span class="n">valid_keys_4</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;w_out&quot;</span><span class="p">,</span> <span class="s2">&quot;s_out&quot;</span><span class="p">,</span> <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span> <span class="s2">&quot;v_crit_in&quot;</span><span class="p">,</span> <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">,</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">,]</span>
+    <span class="n">valid_keys_4</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_4</span><span class="p">]</span>
+    <span class="n">valid_keys_5</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;w_out&quot;</span><span class="p">,</span> <span class="s2">&quot;s_out&quot;</span><span class="p">,</span> <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span> <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">]</span>
+    <span class="n">valid_keys_5</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_5</span><span class="p">]</span>
+    <span class="n">check</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+    <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+    <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+    <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_4</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+    <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_5</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+    <span class="k">if</span> <span class="n">check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">])):</span>
+                <span class="n">ma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])</span><span class="o">*</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;ma&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_ts&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">ma</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">)</span>
+                <span class="n">initial_guesses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heuristic_guess</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])</span><span class="o">*</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;ma&quot;</span><span class="p">]</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_ts&quot;</span><span class="p">],</span> <span class="n">ma</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">)</span>
+            <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_ts&quot;</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;ma&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])]</span>
+        <span class="n">n_samples</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
+        <span class="n">heuristic_inputs</span> <span class="o">=</span> <span class="n">latin_hypercube_sampling</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+        <span class="n">norm_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="n">failures</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">heuristic_input</span> <span class="ow">in</span> <span class="n">heuristic_inputs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ma</span> <span class="o">=</span> <span class="p">[</span><span class="n">heuristic_input</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">])]</span>
+                <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">heuristic_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">heuristic_input</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>  <span class="n">ma</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
+                <span class="n">problem</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+                <span class="n">residual</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+                <span class="n">norm_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">failures</span> <span class="o">+=</span> <span class="mi">1</span> 
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating heuristic inital guesses from latin hypercube sampling&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of failures: </span><span class="si">{</span><span class="n">failures</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2"> samples&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Least norm of residuals: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Check index: </span><span class="si">{</span><span class="n">norm_residuals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">heuristic_input</span> <span class="o">=</span> <span class="n">heuristic_inputs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)]</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">heuristic_input</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">get_initial_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">choking_model</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+        <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">4</span><span class="p">]:</span>
+        <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Initial guess must be a dictionary, which require a certain set of keys. See documentation for more information&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check that set of initial guess correspond with choking_criteria</span>
+    <span class="k">for</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">initial_guesses</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_guesses</span><span class="p">))):</span>
+        <span class="k">if</span> <span class="n">choking_model</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)}</span>
+        <span class="k">elif</span> <span class="n">choking_model</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)}</span>
+        <span class="k">elif</span> <span class="n">choking_model</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span><span class="p">:</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">))}</span>
+        
+        <span class="n">initial_guesses</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_guess</span>
+        <span class="c1"># Always normalize initial guess</span>
+        <span class="c1"># initial_guess_scaled = scale_values(initial_guess)</span>
+        <span class="c1"># initial_guesses_scaled += initial_guess_scaled</span>
+
+    <span class="k">return</span> <span class="n">initial_guesses</span></div>
+
 
 <span class="c1"># ------------------------------------------------------------------------------------------ #</span>
 <span class="c1"># ------------------------------------------------------------------------------------------ #</span>
@@ -679,7 +801,7 @@
 <span class="sd">                pass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">simulation_options</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a CascadesNonlinearSystemProblem.</span>
 
@@ -690,12 +812,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Process turbine geometry</span>
-        <span class="n">geom</span><span class="o">.</span><span class="n">validate_turbine_geometry</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">])</span>
+        <span class="n">geom</span><span class="o">.</span><span class="n">validate_turbine_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
         <span class="c1"># self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)</span>
 
         <span class="c1"># Initialize other attributes</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span> <span class="o">=</span> <span class="n">simulation_options</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="CascadesNonlinearSystemProblem.residual">
@@ -860,436 +982,436 @@
                 <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">scaled_variables</span></div>
-
-
-<div class="viewcode-block" id="CascadesNonlinearSystemProblem.get_initial_guess">
-<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.get_initial_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_initial_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Determine the initial guess for the performance analysis based on the given parameters or default values.</span>
-
-<span class="sd">        The given `initial_guess` make take three forms:</span>
-
-<span class="sd">            - None, which generate a default initial guess</span>
-<span class="sd">            - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:</span>
-
-<span class="sd">                - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.</span>
-<span class="sd">                - `eta_ts`, which is the assumed total-to-static efficiency.</span>
-<span class="sd">                - `eta_tt`, which is the assumed total-to-total efficiency.</span>
-<span class="sd">                - `Ma_crit`, which is the assumed critical mash number.</span>
-
-<span class="sd">            - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.</span>
-
-<span class="sd">        The initial guess is scaled in this function.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        initial_guess : dict, optional</span>
-<span class="sd">            A dictionary containing the initial guess parameters.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Initial guess for the performance analysis.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If the provided initial_guess is invalid or incompatible with the model options.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">]</span>
-
-        <span class="c1"># Define initial guess</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="n">valid_keys_1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;enthalpy_loss_fractions&quot;</span><span class="p">,</span> <span class="s2">&quot;eta_ts&quot;</span><span class="p">,</span> <span class="s2">&quot;eta_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;Ma_crit&quot;</span><span class="p">]</span>
-            <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="s2">&quot;w_out&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;s_out&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;beta_out&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;v_crit_in&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;w_crit_throat&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;s_crit_throat&quot;</span><span class="p">,</span>
-            <span class="p">]</span>
-            <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
-            <span class="p">]</span>
-            <span class="n">valid_keys_3</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">key</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)]</span>
-            <span class="n">valid_keys_4</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">key</span>
-                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">valid_keys_2</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">]</span>
-
-            <span class="n">check</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
-            <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
-            <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
-            <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_4</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
-
-            <span class="k">if</span> <span class="n">check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">enthalpy_loss_fractions</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;enthalpy_loss_fractions&quot;</span><span class="p">]</span>
-                <span class="n">eta_tt</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">]</span>
-                <span class="n">eta_ts</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;eta_ts&quot;</span><span class="p">]</span>
-                <span class="n">Ma_crit</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;Ma_crit&quot;</span><span class="p">]</span>
-
-                <span class="c1"># Check that eta_tt, eta_ts and Ma_crit is in reasonable range</span>
-                <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">variable</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                    <span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;eta_ts&quot;</span><span class="p">,</span> <span class="s2">&quot;Ma_crit&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">eta_tt</span><span class="p">,</span> <span class="n">eta_ts</span><span class="p">,</span> <span class="n">Ma_crit</span><span class="p">]</span>
-                <span class="p">):</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">variable</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> should be between </span><span class="si">{</span><span class="mi">0</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="mi">1</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-                <span class="c1"># Check if enthalpy_loss_fractions is a list or a NumPy array</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">enthalpy_loss_fractions</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;enthalpy_loss_fractions must be a list or NumPy array&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Check that enthalpy_loss_fractions is of the same length as the number_of_cascades</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">enthalpy_loss_fractions</span><span class="p">)</span> <span class="o">!=</span> <span class="n">number_of_cascades</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;enthalpy_loss_fractions must be of length </span><span class="si">{</span><span class="n">number_of_cascades</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Check that the sum of enthalpy loss fractions is 1</span>
-                <span class="n">sum_fractions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">enthalpy_loss_fractions</span><span class="p">)</span>
-                <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-8</span>  <span class="c1"># Small epsilon value for floating-point comparison</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">sum_fractions</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">epsilon</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Sum of enthalpy_loss_fractions must be 1 (now: </span><span class="si">{</span><span class="n">sum_fractions</span><span class="si">}</span><span class="s2">).&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; Generating heuristic initial guess with given parameters&quot;</span><span class="p">)</span>
-                <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_heuristic_initial_guess</span><span class="p">(</span>
-                    <span class="n">enthalpy_loss_fractions</span><span class="p">,</span> <span class="n">eta_tt</span><span class="p">,</span> <span class="n">eta_ts</span><span class="p">,</span> <span class="n">Ma_crit</span>
-                <span class="p">)</span>
-
-            <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="c1"># Check that set of input correspond with model option</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span>
-                    <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;Set of input corresponds with different choking_model (evaluate_cascade_critical)&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Check that all values are a number</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All dictionary values must be a float or int&quot;</span><span class="p">)</span>
-
-            <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
-                <span class="c1"># Check that set of input correspond with model option</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;Set of input corresponds with different choking_model (evaluate_cascade_throat)&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Check that all values are a number</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All dictionary values must be a float or int&quot;</span><span class="p">)</span>
-
-            <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
-                <span class="c1"># Check that set of input correspond with model option</span>
-                <span class="k">if</span> <span class="p">(</span>
-                    <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span>
-                    <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)&quot;</span>
-                    <span class="p">)</span>
-
-                <span class="c1"># Check that all values are a number</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-                <span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All dictionary values must be a float or int&quot;</span><span class="p">)</span>
-
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Invalid keys provided for initial_guess. &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;Valid keys include either:&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">valid_keys_1</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">valid_keys_2</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">valid_keys_3</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">initial_guess</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">enthalpy_loss_fractions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
-                <span class="n">number_of_cascades</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">number_of_cascades</span>
-            <span class="p">)</span>
-            <span class="n">eta_tt</span> <span class="o">=</span> <span class="mf">0.9</span>
-            <span class="n">eta_ts</span> <span class="o">=</span> <span class="mf">0.8</span>
-            <span class="n">Ma_crit</span> <span class="o">=</span> <span class="mf">0.95</span>
-
-            <span class="c1"># Compute initial guess using several approximations</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_heuristic_initial_guess</span><span class="p">(</span>
-                <span class="n">enthalpy_loss_fractions</span><span class="p">,</span> <span class="n">eta_tt</span><span class="p">,</span> <span class="n">eta_ts</span><span class="p">,</span> <span class="n">Ma_crit</span>
-            <span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Initial guess must be either None or a dictionary.&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
-                        <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">))</span>
-
-            <span class="p">}</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
-            <span class="p">}</span>
-        <span class="k">elif</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
-        <span class="p">):</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">val</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
-                    <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
-                <span class="p">)</span>
-            <span class="p">}</span>
-
-        <span class="c1"># Always normalize initial guess</span>
-        <span class="n">initial_guess_scaled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
-
-        <span class="c1"># Store labels</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-
-        <span class="k">return</span> <span class="n">initial_guess_scaled</span></div>
-
-
-<div class="viewcode-block" id="CascadesNonlinearSystemProblem.compute_heuristic_initial_guess">
-<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.CascadesNonlinearSystemProblem.compute_heuristic_initial_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_heuristic_initial_guess</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">enthalpy_loss_fractions</span><span class="p">,</span> <span class="n">eta_tt</span><span class="p">,</span> <span class="n">eta_ts</span><span class="p">,</span> <span class="n">Ma_crit</span>
-    <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Compute the heuristic initial guess for the performance analysis based on the given parameters.</span>
-
-<span class="sd">        This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,</span>
-<span class="sd">        total-to-static and total-to-total efficiencies, and critical Mach number.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        enthalpy_loss_fractions : array-like</span>
-<span class="sd">            Enthalpy loss fractions for each cascade.</span>
-<span class="sd">        eta_tt : float</span>
-<span class="sd">            Total-to-total efficiency.</span>
-<span class="sd">        eta_ts : float</span>
-<span class="sd">            Total-to-static efficiency.</span>
-<span class="sd">        Ma_crit : float</span>
-<span class="sd">            Critical Mach number.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        dict</span>
-<span class="sd">            Heuristic initial guess for the performance analysis.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Load object attributes</span>
-        <span class="n">geometry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span>
-        <span class="n">boundary_conditions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span>
-        <span class="n">fluid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span>
-
-        <span class="c1"># Rename variables</span>
-        <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">]</span>
-        <span class="n">p0_in</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
-        <span class="n">T0_in</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;T0_in&quot;</span><span class="p">]</span>
-        <span class="n">alpha_in</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">]</span>
-        <span class="n">angular_speed</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
-        <span class="n">p_out</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p_out&quot;</span><span class="p">]</span>
-        <span class="n">h_out_s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;h_out_s&quot;</span><span class="p">]</span>
-
-        <span class="c1"># Calculate inlet stagnation state</span>
-        <span class="n">stagnation_properties_in</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">)</span>
-        <span class="n">h0_in</span> <span class="o">=</span> <span class="n">stagnation_properties_in</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
-        <span class="n">s_in</span> <span class="o">=</span> <span class="n">stagnation_properties_in</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
-        <span class="n">rho0_in</span> <span class="o">=</span> <span class="n">stagnation_properties_in</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
-
-        <span class="c1"># Calculate exit enthalpy</span>
-        <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">-</span> <span class="n">eta_ts</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_out_s</span><span class="p">)</span>
-        <span class="n">v_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_out_s</span> <span class="o">-</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h0_out</span><span class="p">)</span> <span class="o">/</span> <span class="n">eta_tt</span><span class="p">))</span>
-        <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
-
-        <span class="c1"># Calculate exit static state for expansion with guessed efficiency</span>
-        <span class="n">static_properties_exit</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassP_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">p_out</span><span class="p">)</span>
-        <span class="n">s_out</span> <span class="o">=</span> <span class="n">static_properties_exit</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
-
-        <span class="c1"># Define entropy distribution</span>
-        <span class="n">entropy_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">s_in</span><span class="p">,</span> <span class="n">s_out</span><span class="p">,</span> <span class="n">number_of_cascades</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
-
-        <span class="c1"># Define enthalpy distribution</span>
-        <span class="n">total_enthalpy_loss</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_out</span>
-        <span class="n">enthalpy_loss_per_cascade</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">fraction</span> <span class="o">*</span> <span class="n">total_enthalpy_loss</span> <span class="k">for</span> <span class="n">fraction</span> <span class="ow">in</span> <span class="n">enthalpy_loss_fractions</span>
-        <span class="p">]</span>
-        <span class="n">enthalpy_distribution</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">h0_in</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">enthalpy_loss_per_cascade</span><span class="p">[:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">)</span>
-        <span class="p">]</span>
-
-        <span class="c1"># Assums h0_in approx h_in for first inlet</span>
-        <span class="n">h_in</span> <span class="o">=</span> <span class="n">h0_in</span>
-
-        <span class="c1"># Define initial guess dictionary</span>
-        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">):</span>
-            <span class="n">geometry_cascade</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">,</span> <span class="s2">&quot;number_of_stages&quot;</span><span class="p">]</span>
-            <span class="p">}</span>
-
-            <span class="c1"># Load enthalpy from initial guess</span>
-            <span class="n">h_out</span> <span class="o">=</span> <span class="n">enthalpy_distribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
-            <span class="c1"># Load entropy from assumed entropy distribution</span>
-            <span class="n">s_out</span> <span class="o">=</span> <span class="n">entropy_distribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-
-            <span class="c1"># Rename necessary geometry</span>
-            <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
-            <span class="n">theta_out</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;gauging_angle&quot;</span><span class="p">]</span>
-            <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]</span>
-            <span class="n">A_throat</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span>
-            <span class="n">A_in</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">]</span>
-            <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">]</span>
-            <span class="n">radius_mean_throat</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_throat&quot;</span><span class="p">]</span>
-            <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_out&quot;</span><span class="p">]</span>
-
-            <span class="c1"># Calculate rothalpy at inlet of cascade</span>
-            <span class="n">blade_speed_in</span> <span class="o">=</span> <span class="n">angular_speed</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius_mean_in</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">h0_rel_in</span> <span class="o">=</span> <span class="n">h_in</span>
-                <span class="n">m_temp</span> <span class="o">=</span> <span class="n">rho0_in</span> <span class="o">*</span> <span class="n">A_in</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">v_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_in</span> <span class="o">-</span> <span class="n">h_in</span><span class="p">))</span>
-                <span class="n">velocity_triangle_in</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_velocity_triangle_in</span><span class="p">(</span>
-                    <span class="n">blade_speed_in</span><span class="p">,</span> <span class="n">v_in</span><span class="p">,</span> <span class="n">alpha_in</span>
-                <span class="p">)</span>
-                <span class="n">w_in</span> <span class="o">=</span> <span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
-                <span class="n">h0_rel_in</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">w_in</span><span class="o">**</span><span class="mi">2</span>
-
-            <span class="n">rothalpy</span> <span class="o">=</span> <span class="n">h0_rel_in</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">blade_speed_in</span><span class="o">**</span><span class="mi">2</span>
-
-            <span class="c1"># Calculate static state at cascade inlet</span>
-            <span class="n">static_state_in</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_in</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
-            <span class="n">rho_in</span> <span class="o">=</span> <span class="n">static_state_in</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
-
-            <span class="c1"># Calculate exit velocity from rothalpy and enthalpy distirbution</span>
-            <span class="n">blade_speed_out</span> <span class="o">=</span> <span class="n">angular_speed</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius_mean_out</span>
-            <span class="n">h0_rel_out</span> <span class="o">=</span> <span class="n">rothalpy</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">blade_speed_out</span><span class="o">**</span><span class="mi">2</span>
-            <span class="n">w_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_rel_out</span> <span class="o">-</span> <span class="n">h_out</span><span class="p">))</span>
-            <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_velocity_triangle_out</span><span class="p">(</span>
-                <span class="n">blade_speed_out</span><span class="p">,</span> <span class="n">w_out</span><span class="p">,</span> <span class="n">theta_out</span>
-            <span class="p">)</span>
-            <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
-            <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span>
-            <span class="n">v_out</span> <span class="o">=</span> <span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
-            <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h_out</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
-
-            <span class="c1"># Calculate static state at cascade exit</span>
-            <span class="n">static_state_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
-            <span class="n">a_out</span> <span class="o">=</span> <span class="n">static_state_out</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
-            <span class="n">rho_out</span> <span class="o">=</span> <span class="n">static_state_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
-
-            <span class="c1"># Calculate mass flow rate</span>
-            <span class="n">mass_flow</span> <span class="o">=</span> <span class="n">rho_out</span> <span class="o">*</span> <span class="n">v_m_out</span> <span class="o">*</span> <span class="n">A_out</span>
-
-            <span class="c1"># Calculate throat velocity depending on subsonic or supersonic conditions</span>
-            <span class="k">if</span> <span class="n">w_out</span> <span class="o">&lt;</span> <span class="n">a_out</span> <span class="o">*</span> <span class="n">Ma_crit</span><span class="p">:</span>
-                <span class="n">w_throat</span> <span class="o">=</span> <span class="n">w_out</span>
-                <span class="n">s_throat</span> <span class="o">=</span> <span class="n">s_out</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">w_throat</span> <span class="o">=</span> <span class="n">a_out</span> <span class="o">*</span> <span class="n">Ma_crit</span>
-                <span class="n">blade_speed_throat</span> <span class="o">=</span> <span class="n">angular_speed</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius_mean_throat</span>
-                <span class="n">h0_rel_throat</span> <span class="o">=</span> <span class="n">rothalpy</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">blade_speed_throat</span><span class="o">**</span><span class="mi">2</span>
-                <span class="n">h_throat</span> <span class="o">=</span> <span class="n">h0_rel_throat</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">w_throat</span><span class="o">**</span><span class="mi">2</span>
-                <span class="n">rho_throat</span> <span class="o">=</span> <span class="n">rho_out</span>
-                <span class="n">static_state_throat</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span>
-                    <span class="n">cp</span><span class="o">.</span><span class="n">DmassHmass_INPUTS</span><span class="p">,</span> <span class="n">rho_throat</span><span class="p">,</span> <span class="n">h_throat</span>
-                <span class="p">)</span>
-                <span class="n">s_throat</span> <span class="o">=</span> <span class="n">static_state_throat</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
-
-            <span class="c1"># Calculate critical state</span>
-            <span class="n">w_throat_crit</span> <span class="o">=</span> <span class="n">a_out</span> <span class="o">*</span> <span class="n">Ma_crit</span>
-            <span class="n">h_throat_crit</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">h0_rel_in</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">w_throat_crit</span><span class="o">**</span><span class="mi">2</span>
-            <span class="p">)</span>  <span class="c1"># FIXME: h0_rel_in works less good?</span>
-            <span class="n">static_state_throat_crit</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span>
-                <span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_throat_crit</span><span class="p">,</span> <span class="n">s_throat</span>
-            <span class="p">)</span>
-            <span class="n">rho_throat_crit</span> <span class="o">=</span> <span class="n">static_state_throat_crit</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
-            <span class="n">m_crit</span> <span class="o">=</span> <span class="n">w_throat_crit</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">rho_throat_crit</span> <span class="o">*</span> <span class="n">A_throat</span>
-            <span class="n">w_m_in_crit</span> <span class="o">=</span> <span class="n">m_crit</span> <span class="o">/</span> <span class="n">rho_in</span> <span class="o">/</span> <span class="n">A_in</span>
-            <span class="n">w_in_crit</span> <span class="o">=</span> <span class="n">w_m_in_crit</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span>
-                <span class="n">theta_in</span>
-            <span class="p">)</span>  <span class="c1"># XXX Works better with metal angle than inlet flow angle?</span>
-            <span class="n">velocity_triangle_crit_in</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_velocity_triangle_out</span><span class="p">(</span>
-                <span class="n">blade_speed_in</span><span class="p">,</span> <span class="n">w_in_crit</span><span class="p">,</span> <span class="n">theta_in</span>
-            <span class="p">)</span>
-            <span class="n">v_in_crit</span> <span class="o">=</span> <span class="n">velocity_triangle_crit_in</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
-
-            <span class="n">rho_out_crit</span> <span class="o">=</span> <span class="n">rho_throat_crit</span>
-            <span class="n">w_out_crit</span> <span class="o">=</span> <span class="n">m_crit</span> <span class="o">/</span> <span class="p">(</span><span class="n">rho_out_crit</span> <span class="o">*</span> <span class="n">A_out</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span>
-
-            <span class="c1"># Store initial guess</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">initial_guess</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-                <span class="p">{</span>
-                    <span class="s2">&quot;w_out&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_out</span><span class="p">,</span>
-                    <span class="s2">&quot;s_out&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
-                    <span class="s2">&quot;beta_out&quot;</span>
-                    <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">),</span>
-                    <span class="s2">&quot;v_crit_in&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">v_in_crit</span><span class="p">,</span>
-                    <span class="s2">&quot;beta_crit_throat&quot;</span>
-                    <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">),</span>
-                    <span class="s2">&quot;w_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_throat_crit</span><span class="p">,</span>
-                    <span class="s2">&quot;s_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_throat</span><span class="p">,</span>
-                <span class="p">}</span>
-            <span class="p">)</span>
-
-            <span class="c1"># Update variables for next cascade</span>
-            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="p">(</span><span class="n">number_of_cascades</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
-                <span class="n">A_next</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-                <span class="n">radius_mean_next</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
-                <span class="n">v_m_in</span> <span class="o">=</span> <span class="n">v_m_out</span> <span class="o">*</span> <span class="n">A_out</span> <span class="o">/</span> <span class="n">A_next</span>
-                <span class="n">v_t_in</span> <span class="o">=</span> <span class="n">v_t_out</span> <span class="o">*</span> <span class="n">radius_mean_out</span> <span class="o">/</span> <span class="n">radius_mean_next</span>
-                <span class="n">v_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v_m_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">v_t_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-                <span class="n">alpha_in</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">(</span><span class="n">v_t_in</span> <span class="o">/</span> <span class="n">v_m_in</span><span class="p">)</span>
-                <span class="n">h0_in</span> <span class="o">=</span> <span class="n">h0_out</span>
-                <span class="n">h_in</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
-                <span class="n">s_in</span> <span class="o">=</span> <span class="n">s_out</span>
-
-        <span class="c1"># Calculate inlet velocity from</span>
-        <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mass_flow</span> <span class="o">/</span> <span class="n">m_temp</span>
-
-        <span class="k">return</span> <span class="n">initial_guess</span></div>
 </div>
 
+
+    <span class="c1"># def get_initial_guess(self, initial_guess=None):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Determine the initial guess for the performance analysis based on the given parameters or default values.</span>
+
+    <span class="c1">#     The given `initial_guess` make take three forms:</span>
+
+    <span class="c1">#         - None, which generate a default initial guess</span>
+    <span class="c1">#         - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:</span>
+
+    <span class="c1">#             - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.</span>
+    <span class="c1">#             - `eta_ts`, which is the assumed total-to-static efficiency.</span>
+    <span class="c1">#             - `eta_tt`, which is the assumed total-to-total efficiency.</span>
+    <span class="c1">#             - `Ma_crit`, which is the assumed critical mash number.</span>
+
+    <span class="c1">#         - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.</span>
+
+    <span class="c1">#     The initial guess is scaled in this function.</span>
+
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     initial_guess : dict, optional</span>
+    <span class="c1">#         A dictionary containing the initial guess parameters.</span>
+
+    <span class="c1">#     Returns</span>
+    <span class="c1">#     -------</span>
+    <span class="c1">#     dict</span>
+    <span class="c1">#         Initial guess for the performance analysis.</span>
+
+    <span class="c1">#     Raises</span>
+    <span class="c1">#     ------</span>
+    <span class="c1">#     ValueError</span>
+    <span class="c1">#         If the provided initial_guess is invalid or incompatible with the model options.</span>
+
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1">#     number_of_cascades = self.geometry[&quot;number_of_cascades&quot;]</span>
+
+    <span class="c1">#     # Define initial guess</span>
+    <span class="c1">#     if isinstance(initial_guess, dict):</span>
+    <span class="c1">#         # valid_keys_1 = [&quot;enthalpy_loss_fractions&quot;, &quot;eta_ts&quot;, &quot;eta_tt&quot;, &quot;Ma_crit&quot;]</span>
+    <span class="c1">#         valid_keys_1 = [&quot;eta_tt&quot;, &quot;eta_ts&quot;, &quot;mach_1&quot;, &quot;mach_2&quot;]</span>
+    <span class="c1">#         valid_keys_2 = [</span>
+    <span class="c1">#             &quot;w_out&quot;,</span>
+    <span class="c1">#             &quot;s_out&quot;,</span>
+    <span class="c1">#             &quot;beta_out&quot;,</span>
+    <span class="c1">#             &quot;v_crit_in&quot;,</span>
+    <span class="c1">#             &quot;w_crit_throat&quot;,</span>
+    <span class="c1">#             &quot;s_crit_throat&quot;,</span>
+    <span class="c1">#         ]</span>
+    <span class="c1">#         valid_keys_2 = [&quot;v_in&quot;] + [</span>
+    <span class="c1">#             f&quot;{key}_{i+1}&quot;</span>
+    <span class="c1">#             for i in range(number_of_cascades)</span>
+    <span class="c1">#             for key in valid_keys_2</span>
+    <span class="c1">#         ]</span>
+    <span class="c1">#         valid_keys_3 = [</span>
+    <span class="c1">#             key for key in valid_keys_2 if not key.startswith(&quot;v_crit_in&quot;)]</span>
+    <span class="c1">#         valid_keys_4 = [</span>
+    <span class="c1">#             key</span>
+    <span class="c1">#             for key in valid_keys_2</span>
+    <span class="c1">#             if not (</span>
+    <span class="c1">#                 key.startswith(&quot;v_crit_in&quot;)</span>
+    <span class="c1">#                 or key.startswith(&quot;s_crit_throat&quot;)</span>
+    <span class="c1">#                 or key.startswith(&quot;beta_crit_throat&quot;)</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         ]</span>
+
+    <span class="c1">#         check = []</span>
+    <span class="c1">#         check.append(set(valid_keys_1) == set(list(initial_guess.keys())))</span>
+    <span class="c1">#         check.append(set(valid_keys_2) == set(list(initial_guess.keys())))</span>
+    <span class="c1">#         check.append(set(valid_keys_3) == set(list(initial_guess.keys())))</span>
+    <span class="c1">#         check.append(set(valid_keys_4) == set(list(initial_guess.keys())))</span>
+
+    <span class="c1">#         if check[0]:</span>
+    <span class="c1">#             # enthalpy_loss_fractions = initial_guess[&quot;enthalpy_loss_fractions&quot;]</span>
+    <span class="c1">#             # eta_tt = initial_guess[&quot;eta_tt&quot;]</span>
+    <span class="c1">#             # eta_ts = initial_guess[&quot;eta_ts&quot;]</span>
+    <span class="c1">#             # Ma_crit = initial_guess[&quot;Ma_crit&quot;]</span>
+
+    <span class="c1">#             # # Check that eta_tt, eta_ts and Ma_crit is in reasonable range</span>
+    <span class="c1">#             # for label, variable in zip(</span>
+    <span class="c1">#             #     [&quot;eta_tt&quot;, &quot;eta_ts&quot;, &quot;Ma_crit&quot;], [eta_tt, eta_ts, Ma_crit]</span>
+    <span class="c1">#             # ):</span>
+    <span class="c1">#             #     if not 0 &lt;= variable &lt;= 1:</span>
+    <span class="c1">#             #         raise ValueError(f&quot;{label} should be between {0} and {1}.&quot;)</span>
+
+    <span class="c1">#             # # Check if enthalpy_loss_fractions is a list or a NumPy array</span>
+    <span class="c1">#             # if not isinstance(enthalpy_loss_fractions, (list, np.ndarray)):</span>
+    <span class="c1">#             #     raise ValueError(</span>
+    <span class="c1">#             #         &quot;enthalpy_loss_fractions must be a list or NumPy array&quot;</span>
+    <span class="c1">#             #     )</span>
+
+    <span class="c1">#             # # Check that enthalpy_loss_fractions is of the same length as the number_of_cascades</span>
+    <span class="c1">#             # if len(enthalpy_loss_fractions) != number_of_cascades:</span>
+    <span class="c1">#             #     raise ValueError(</span>
+    <span class="c1">#             #         f&quot;enthalpy_loss_fractions must be of length {number_of_cascades}&quot;</span>
+    <span class="c1">#             #     )</span>
+
+    <span class="c1">#             # # Check that the sum of enthalpy loss fractions is 1</span>
+    <span class="c1">#             # sum_fractions = np.sum(enthalpy_loss_fractions)</span>
+    <span class="c1">#             # epsilon = 1e-8  # Small epsilon value for floating-point comparison</span>
+    <span class="c1">#             # if not np.isclose(sum_fractions, 1, atol=epsilon):</span>
+    <span class="c1">#             #     raise ValueError(</span>
+    <span class="c1">#             #         f&quot;Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions}).&quot;</span>
+    <span class="c1">#             #     )</span>
+
+    <span class="c1">#             # print(&quot; Generating heuristic initial guess with given parameters&quot;)</span>
+    <span class="c1">#             # initial_guess = self.compute_heuristic_initial_guess(</span>
+    <span class="c1">#             #     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit</span>
+    <span class="c1">#             # )</span>
+
+    <span class="c1">#             initial_guess = get_heuristic_guess(initial_guess[&quot;eta_tt&quot;], initial_guess[&quot;eta_ts&quot;],  [initial_guess[&quot;mach_1&quot;], initial_guess[&quot;mach_2&quot;]], self.boundary_conditions, self.geometry, self.fluid, self.model_options[&quot;deviation_model&quot;])</span>
+
+    <span class="c1">#         elif check[1]:</span>
+    <span class="c1">#             # Check that set of input correspond with model option</span>
+    <span class="c1">#             if (</span>
+    <span class="c1">#                 not self.model_options[&quot;choking_model&quot;]</span>
+    <span class="c1">#                 == &quot;evaluate_cascade_critical&quot;</span>
+    <span class="c1">#             ):</span>
+    <span class="c1">#                 raise ValueError(</span>
+    <span class="c1">#                     &quot;Set of input corresponds with different choking_model (evaluate_cascade_critical)&quot;</span>
+    <span class="c1">#                 )</span>
+
+    <span class="c1">#             # Check that all values are a number</span>
+    <span class="c1">#             if not all(</span>
+    <span class="c1">#                 isinstance(val, (int, float)) for val in initial_guess.values()</span>
+    <span class="c1">#             ):</span>
+    <span class="c1">#                 raise ValueError(&quot;All dictionary values must be a float or int&quot;)</span>
+
+    <span class="c1">#         elif check[2]:</span>
+    <span class="c1">#             # Check that set of input correspond with model option</span>
+    <span class="c1">#             if not self.model_options[&quot;choking_model&quot;] == &quot;evaluate_cascade_throat&quot;:</span>
+    <span class="c1">#                 raise ValueError(</span>
+    <span class="c1">#                     &quot;Set of input corresponds with different choking_model (evaluate_cascade_throat)&quot;</span>
+    <span class="c1">#                 )</span>
+
+    <span class="c1">#             # Check that all values are a number</span>
+    <span class="c1">#             if not all(</span>
+    <span class="c1">#                 isinstance(val, (int, float)) for val in initial_guess.values()</span>
+    <span class="c1">#             ):</span>
+    <span class="c1">#                 raise ValueError(&quot;All dictionary values must be a float or int&quot;)</span>
+
+    <span class="c1">#         elif check[3]:</span>
+    <span class="c1">#             # Check that set of input correspond with model option</span>
+    <span class="c1">#             if (</span>
+    <span class="c1">#                 not self.model_options[&quot;choking_model&quot;]</span>
+    <span class="c1">#                 == &quot;evaluate_cascade_isentropic_throat&quot;</span>
+    <span class="c1">#             ):</span>
+    <span class="c1">#                 raise ValueError(</span>
+    <span class="c1">#                     &quot;Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)&quot;</span>
+    <span class="c1">#                 )</span>
+
+    <span class="c1">#             # Check that all values are a number</span>
+    <span class="c1">#             if not all(</span>
+    <span class="c1">#                 isinstance(val, (int, float)) for val in initial_guess.values()</span>
+    <span class="c1">#             ):</span>
+    <span class="c1">#                 raise ValueError(&quot;All dictionary values must be a float or int&quot;)</span>
+
+    <span class="c1">#         else:</span>
+    <span class="c1">#             raise ValueError(</span>
+    <span class="c1">#                 f&quot;Invalid keys provided for initial_guess. &quot;</span>
+    <span class="c1">#                 f&quot;Valid keys include either:&quot;</span>
+    <span class="c1">#                 f&quot;{valid_keys_1} \n&quot;</span>
+    <span class="c1">#                 f&quot;{valid_keys_2} \n&quot;</span>
+    <span class="c1">#                 f&quot;{valid_keys_3} \n&quot;</span>
+    <span class="c1">#             )</span>
+
+    <span class="c1">#     elif initial_guess == None:</span>
+    <span class="c1">#         enthalpy_loss_fractions = np.full(</span>
+    <span class="c1">#             number_of_cascades, 1 / number_of_cascades</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         eta_tt = 0.9</span>
+    <span class="c1">#         eta_ts = 0.8</span>
+    <span class="c1">#         Ma_crit = 0.95</span>
+
+    <span class="c1">#         # Compute initial guess using several approximations</span>
+    <span class="c1">#         initial_guess = self.compute_heuristic_initial_guess(</span>
+    <span class="c1">#             enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit</span>
+    <span class="c1">#         )</span>
+
+    <span class="c1">#     else:</span>
+    <span class="c1">#         raise ValueError(&quot;Initial guess must be either None or a dictionary.&quot;)</span>
+
+    <span class="c1">#     if self.model_options[&quot;choking_model&quot;] == &quot;evaluate_cascade_throat&quot;:</span>
+    <span class="c1">#         initial_guess = {</span>
+    <span class="c1">#             key: val</span>
+    <span class="c1">#             for key, val in initial_guess.items()</span>
+    <span class="c1">#             if not (key.startswith(&quot;v_crit_in&quot;)</span>
+    <span class="c1">#                     or key.startswith(&quot;beta_crit_throat&quot;))</span>
+
+    <span class="c1">#         }</span>
+    <span class="c1">#     elif self.model_options[&quot;choking_model&quot;] == &quot;evaluate_cascade_critical&quot;:</span>
+    <span class="c1">#         initial_guess = {</span>
+    <span class="c1">#             key: val</span>
+    <span class="c1">#             for key, val in initial_guess.items()</span>
+    <span class="c1">#             if not key.startswith(&quot;beta_crit_throat&quot;)</span>
+    <span class="c1">#         }</span>
+    <span class="c1">#     elif (</span>
+    <span class="c1">#         self.model_options[&quot;choking_model&quot;] == &quot;evaluate_cascade_isentropic_throat&quot;</span>
+    <span class="c1">#     ):</span>
+    <span class="c1">#         initial_guess = {</span>
+    <span class="c1">#             key: val</span>
+    <span class="c1">#             for key, val in initial_guess.items()</span>
+    <span class="c1">#             if not (</span>
+    <span class="c1">#                 key.startswith(&quot;v_crit_in&quot;)</span>
+    <span class="c1">#                 or key.startswith(&quot;s_crit_throat&quot;)</span>
+    <span class="c1">#                 or key.startswith(&quot;beta_crit_throat&quot;)</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#         }</span>
+
+    <span class="c1">#     # Always normalize initial guess</span>
+    <span class="c1">#     initial_guess_scaled = self.scale_values(initial_guess)</span>
+
+    <span class="c1">#     # Store labels</span>
+    <span class="c1">#     self.keys = initial_guess_scaled.keys()</span>
+    <span class="c1">#     self.x0 = np.array(list(initial_guess_scaled.values()))</span>
+
+    <span class="c1">#     return initial_guess_scaled</span>
+
+    <span class="c1"># def compute_heuristic_initial_guess(</span>
+    <span class="c1">#     self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit</span>
+    <span class="c1"># ):</span>
+    <span class="c1">#     &quot;&quot;&quot;</span>
+    <span class="c1">#     Compute the heuristic initial guess for the performance analysis based on the given parameters.</span>
+
+    <span class="c1">#     This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,</span>
+    <span class="c1">#     total-to-static and total-to-total efficiencies, and critical Mach number.</span>
+
+    <span class="c1">#     Parameters</span>
+    <span class="c1">#     ----------</span>
+    <span class="c1">#     enthalpy_loss_fractions : array-like</span>
+    <span class="c1">#         Enthalpy loss fractions for each cascade.</span>
+    <span class="c1">#     eta_tt : float</span>
+    <span class="c1">#         Total-to-total efficiency.</span>
+    <span class="c1">#     eta_ts : float</span>
+    <span class="c1">#         Total-to-static efficiency.</span>
+    <span class="c1">#     Ma_crit : float</span>
+    <span class="c1">#         Critical Mach number.</span>
+
+    <span class="c1">#     Returns</span>
+    <span class="c1">#     -------</span>
+    <span class="c1">#     dict</span>
+    <span class="c1">#         Heuristic initial guess for the performance analysis.</span>
+
+    <span class="c1">#     &quot;&quot;&quot;</span>
+
+    <span class="c1">#     # Load object attributes</span>
+    <span class="c1">#     geometry = self.geometry</span>
+    <span class="c1">#     boundary_conditions = self.boundary_conditions</span>
+    <span class="c1">#     fluid = self.fluid</span>
+
+    <span class="c1">#     # Rename variables</span>
+    <span class="c1">#     number_of_cascades = geometry[&quot;number_of_cascades&quot;]</span>
+    <span class="c1">#     p0_in = boundary_conditions[&quot;p0_in&quot;]</span>
+    <span class="c1">#     T0_in = boundary_conditions[&quot;T0_in&quot;]</span>
+    <span class="c1">#     alpha_in = boundary_conditions[&quot;alpha_in&quot;]</span>
+    <span class="c1">#     angular_speed = boundary_conditions[&quot;omega&quot;]</span>
+    <span class="c1">#     p_out = boundary_conditions[&quot;p_out&quot;]</span>
+    <span class="c1">#     h_out_s = self.reference_values[&quot;h_out_s&quot;]</span>
+
+    <span class="c1">#     # Calculate inlet stagnation state</span>
+    <span class="c1">#     stagnation_properties_in = fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)</span>
+    <span class="c1">#     h0_in = stagnation_properties_in[&quot;h&quot;]</span>
+    <span class="c1">#     s_in = stagnation_properties_in[&quot;s&quot;]</span>
+    <span class="c1">#     rho0_in = stagnation_properties_in[&quot;d&quot;]</span>
+
+    <span class="c1">#     # Calculate exit enthalpy</span>
+    <span class="c1">#     h0_out = h0_in - eta_ts * (h0_in - h_out_s)</span>
+    <span class="c1">#     v_out = np.sqrt(2 * (h0_in - h_out_s - (h0_in - h0_out) / eta_tt))</span>
+    <span class="c1">#     h_out = h0_out - 0.5 * v_out**2</span>
+
+    <span class="c1">#     # Calculate exit static state for expansion with guessed efficiency</span>
+    <span class="c1">#     static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_out, p_out)</span>
+    <span class="c1">#     s_out = static_properties_exit[&quot;s&quot;]</span>
+
+    <span class="c1">#     cp.DmassP_INPUTS</span>
+    <span class="c1">#     cp.PSmass_INPUTS</span>
+
+    <span class="c1">#     # Define entropy distribution</span>
+    <span class="c1">#     entropy_distribution = np.linspace(s_in, s_out, number_of_cascades + 1)[1:]</span>
+
+    <span class="c1">#     # Define enthalpy distribution</span>
+    <span class="c1">#     total_enthalpy_loss = h0_in - h_out</span>
+    <span class="c1">#     enthalpy_loss_per_cascade = [</span>
+    <span class="c1">#         fraction * total_enthalpy_loss for fraction in enthalpy_loss_fractions</span>
+    <span class="c1">#     ]</span>
+    <span class="c1">#     enthalpy_distribution = [</span>
+    <span class="c1">#         h0_in - sum(enthalpy_loss_per_cascade[: i + 1])</span>
+    <span class="c1">#         for i in range(number_of_cascades)</span>
+    <span class="c1">#     ]</span>
+
+    <span class="c1">#     # Assums h0_in approx h_in for first inlet</span>
+    <span class="c1">#     h_i = h0_in</span>
+
+    <span class="c1">#     # Define initial guess dictionary</span>
+    <span class="c1">#     initial_guess = {}</span>
+
+    <span class="c1">#     for i in range(number_of_cascades):</span>
+    <span class="c1">#         geometry_cascade = {</span>
+    <span class="c1">#             key: values[i]</span>
+    <span class="c1">#             for key, values in geometry.items()</span>
+    <span class="c1">#             if key not in [&quot;number_of_cascades&quot;, &quot;number_of_stages&quot;]</span>
+    <span class="c1">#         }</span>
+
+    <span class="c1">#         # Load enthalpy from initial guess</span>
+    <span class="c1">#         h_out = enthalpy_distribution[i]</span>
+
+    <span class="c1">#         # Load entropy from assumed entropy distribution</span>
+    <span class="c1">#         s_out = entropy_distribution[i]</span>
+
+    <span class="c1">#         # Rename necessary geometry</span>
+    <span class="c1">#         theta_in = geometry_cascade[&quot;leading_edge_angle&quot;]</span>
+    <span class="c1">#         theta_out = geometry_cascade[&quot;gauging_angle&quot;]</span>
+    <span class="c1">#         A_out = geometry_cascade[&quot;A_out&quot;]</span>
+    <span class="c1">#         A_throat = geometry_cascade[&quot;A_throat&quot;]</span>
+    <span class="c1">#         A_in = geometry_cascade[&quot;A_in&quot;]</span>
+    <span class="c1">#         radius_mean_in = geometry_cascade[&quot;radius_mean_in&quot;]</span>
+    <span class="c1">#         radius_mean_throat = geometry_cascade[&quot;radius_mean_throat&quot;]</span>
+    <span class="c1">#         radius_mean_out = geometry_cascade[&quot;radius_mean_out&quot;]</span>
+            
+    <span class="c1">#         # Calculate rothalpy at inlet of cascade</span>
+    <span class="c1">#         blade_speed_in = angular_speed * (i % 2) * radius_mean_in</span>
+    <span class="c1">#         if i == 0:</span>
+    <span class="c1">#             h0_rel_in = h_in</span>
+    <span class="c1">#             m_temp = rho0_in * A_in * math.cosd(alpha_in)</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             v_in = np.sqrt(2 * (h0_in - h_in))</span>
+    <span class="c1">#             velocity_triangle_in = flow.evaluate_velocity_triangle_in(</span>
+    <span class="c1">#                 blade_speed_in, v_in, alpha_in</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#             w_in = velocity_triangle_in[&quot;w&quot;]</span>
+    <span class="c1">#             h0_rel_in = h_in + 0.5 * w_in**2</span>
+
+    <span class="c1">#         rothalpy = h0_rel_in - 0.5 * blade_speed_in**2</span>
+
+    <span class="c1">#         # Calculate static state at cascade inlet</span>
+    <span class="c1">#         static_state_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)</span>
+    <span class="c1">#         rho_in = static_state_in[&quot;d&quot;]</span>
+
+    <span class="c1">#         # Calculate exit velocity from rothalpy and enthalpy distirbution</span>
+    <span class="c1">#         blade_speed_out = angular_speed * (i % 2) * radius_mean_out</span>
+    <span class="c1">#         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2</span>
+    <span class="c1">#         w_out = np.sqrt(2 * (h0_rel_out - h_out))</span>
+    <span class="c1">#         velocity_triangle_out = flow.evaluate_velocity_triangle_out(</span>
+    <span class="c1">#             blade_speed_out, w_out, theta_out</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         v_t_out = velocity_triangle_out[&quot;v_t&quot;]</span>
+    <span class="c1">#         v_m_out = velocity_triangle_out[&quot;v_m&quot;]</span>
+    <span class="c1">#         v_out = velocity_triangle_out[&quot;v&quot;]</span>
+    <span class="c1">#         h0_out = h_out + 0.5 * v_out**2</span>
+
+    <span class="c1">#         # Calculate static state at cascade exit</span>
+    <span class="c1">#         static_state_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)</span>
+    <span class="c1">#         a_out = static_state_out[&quot;a&quot;]</span>
+    <span class="c1">#         rho_out = static_state_out[&quot;d&quot;]</span>
+
+    <span class="c1">#         # Calculate mass flow rate</span>
+    <span class="c1">#         mass_flow = rho_out * v_m_out * A_out</span>
+
+    <span class="c1">#         # Calculate throat velocity depending on subsonic or supersonic conditions</span>
+    <span class="c1">#         if w_out &lt; a_out * Ma_crit:</span>
+    <span class="c1">#             w_throat = w_out</span>
+    <span class="c1">#             s_throat = s_out</span>
+    <span class="c1">#         else:</span>
+    <span class="c1">#             w_throat = a_out * Ma_crit</span>
+    <span class="c1">#             blade_speed_throat = angular_speed * (i % 2) * radius_mean_throat</span>
+    <span class="c1">#             h0_rel_throat = rothalpy + 0.5 * blade_speed_throat**2</span>
+    <span class="c1">#             h_throat = h0_rel_throat - 0.5 * w_throat**2</span>
+    <span class="c1">#             rho_throat = rho_out</span>
+    <span class="c1">#             static_state_throat = fluid.get_props(</span>
+    <span class="c1">#                 cp.DmassHmass_INPUTS, rho_throat, h_throat</span>
+    <span class="c1">#             )</span>
+    <span class="c1">#             s_throat = static_state_throat[&quot;s&quot;]</span>
+
+    <span class="c1">#         # Calculate critical state</span>
+    <span class="c1">#         w_throat_crit = a_out * Ma_crit</span>
+    <span class="c1">#         h_throat_crit = (</span>
+    <span class="c1">#             h0_rel_in - 0.5 * w_throat_crit**2</span>
+    <span class="c1">#         )  # FIXME: h0_rel_in works less good?</span>
+    <span class="c1">#         static_state_throat_crit = fluid.get_props(</span>
+    <span class="c1">#             cp.HmassSmass_INPUTS, h_throat_crit, s_throat</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         rho_throat_crit = static_state_throat_crit[&quot;d&quot;]</span>
+    <span class="c1">#         m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_throat</span>
+    <span class="c1">#         w_m_in_crit = m_crit / rho_in / A_in</span>
+    <span class="c1">#         w_in_crit = w_m_in_crit / math.cosd(</span>
+    <span class="c1">#             theta_in</span>
+    <span class="c1">#         )  # XXX Works better with metal angle than inlet flow angle?</span>
+    <span class="c1">#         velocity_triangle_crit_in = flow.evaluate_velocity_triangle_out(</span>
+    <span class="c1">#             blade_speed_in, w_in_crit, theta_in</span>
+    <span class="c1">#         )</span>
+    <span class="c1">#         v_in_crit = velocity_triangle_crit_in[&quot;v&quot;]</span>
+
+    <span class="c1">#         rho_out_crit = rho_throat_crit</span>
+    <span class="c1">#         w_out_crit = m_crit / (rho_out_crit * A_out * math.cosd(theta_out))</span>
+
+    <span class="c1">#         # Store initial guess</span>
+    <span class="c1">#         index = f&quot;_{i+1}&quot;</span>
+    <span class="c1">#         initial_guess.update(</span>
+    <span class="c1">#             {</span>
+    <span class="c1">#                 &quot;w_out&quot; + index: w_out,</span>
+    <span class="c1">#                 &quot;s_out&quot; + index: s_out,</span>
+    <span class="c1">#                 &quot;beta_out&quot;</span>
+    <span class="c1">#                 + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),</span>
+    <span class="c1">#                 &quot;v_crit_in&quot; + index: v_in_crit,</span>
+    <span class="c1">#                 &quot;beta_crit_throat&quot;</span>
+    <span class="c1">#                 + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),</span>
+    <span class="c1">#                 &quot;w_crit_throat&quot; + index: w_throat_crit,</span>
+    <span class="c1">#                 &quot;s_crit_throat&quot; + index: s_throat,</span>
+    <span class="c1">#             }</span>
+    <span class="c1">#         )</span>
+
+    <span class="c1">#         # Update variables for next cascade</span>
+    <span class="c1">#         if i != (number_of_cascades - 1):</span>
+    <span class="c1">#             A_next = geometry[&quot;A_in&quot;][i + 1]</span>
+    <span class="c1">#             radius_mean_next = geometry[&quot;radius_mean_in&quot;][i + 1]</span>
+    <span class="c1">#             v_m_in = v_m_out * A_out / A_next</span>
+    <span class="c1">#             v_t_in = v_t_out * radius_mean_out / radius_mean_next</span>
+    <span class="c1">#             v_in = np.sqrt(v_m_in**2 + v_t_in**2)</span>
+    <span class="c1">#             alpha_in = math.arctand(v_t_in / v_m_in)</span>
+    <span class="c1">#             h0_in = h0_out</span>
+    <span class="c1">#             h_in = h0_in - 0.5 * v_in**2</span>
+    <span class="c1">#             s_in = s_out</span>
+
+    <span class="c1">#     # Calculate inlet velocity from</span>
+    <span class="c1">#     initial_guess[&quot;v_in&quot;] = mass_flow / m_temp</span>
+
+    <span class="c1">#     return initial_guess</span>
 
 
 <div class="viewcode-block" id="print_simulation_summary">
@@ -1497,6 +1619,196 @@
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">output_lines</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">formatted_output</span></div>
+
+
+<div class="viewcode-block" id="calculate_enthalpy_residual_1">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.calculate_enthalpy_residual_1">[docs]</a>
+<span class="k">def</span> <span class="nf">calculate_enthalpy_residual_1</span><span class="p">(</span><span class="n">prop1</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">h0</span><span class="p">,</span> <span class="n">Ma</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">prop2</span><span class="p">):</span>
+
+    <span class="n">props</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">call</span><span class="p">,</span> <span class="n">prop1</span><span class="o">*</span><span class="n">scale</span><span class="p">,</span> <span class="n">prop2</span><span class="p">)</span>
+
+    <span class="k">return</span>  <span class="n">props</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">h0</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">Ma</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">props</span><span class="p">[</span><span class="s2">&quot;speed_sound&quot;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> </div>
+
+
+<div class="viewcode-block" id="get_unkown">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_unkown">[docs]</a>
+<span class="k">def</span> <span class="nf">get_unkown</span><span class="p">(</span><span class="n">prop1</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">h0</span><span class="p">,</span> <span class="n">Ma</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">prop2</span><span class="p">):</span>
+
+    <span class="s2">&quot;call is either cp.DmassP_INPUTS (find Dmass based on a pressure) or cp.PSmass_INPUTS (find p based on a Smass)&quot;</span>
+
+    <span class="n">sol</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">root_scalar</span><span class="p">(</span><span class="n">calculate_enthalpy_residual_1</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">h0</span><span class="p">,</span> <span class="n">Ma</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">call</span><span class="p">,</span> <span class="n">prop2</span><span class="p">),</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;secant&quot;</span><span class="p">,</span> <span class="n">x0</span> <span class="o">=</span> <span class="n">prop1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="o">*</span><span class="n">scale</span></div>
+
+
+<div class="viewcode-block" id="get_heuristic_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.get_heuristic_guess">[docs]</a>
+<span class="k">def</span> <span class="nf">get_heuristic_guess</span><span class="p">(</span><span class="n">eta_tt</span><span class="p">,</span> <span class="n">eta_ts</span><span class="p">,</span>  <span class="n">mach</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">deviation_model</span><span class="p">):</span>
+
+    <span class="n">p0_first</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
+    <span class="n">T0_first</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;T0_in&quot;</span><span class="p">]</span>
+    <span class="n">p_final</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p_out&quot;</span><span class="p">]</span>
+    <span class="n">angular_speed</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
+    <span class="n">alpha_first</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">]</span>
+    <span class="n">number_of_cascades</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate first stagnation properties</span>
+    <span class="n">stag_first</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p0_first</span><span class="p">,</span> <span class="n">T0_first</span><span class="p">)</span>
+    <span class="n">h0_first</span> <span class="o">=</span> <span class="n">stag_first</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+    <span class="n">s_first</span> <span class="o">=</span> <span class="n">stag_first</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+    <span class="n">d0_first</span> <span class="o">=</span> <span class="n">stag_first</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate final exit enthalpy for isentropic expansion</span>
+    <span class="n">static_is</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p_final</span><span class="p">,</span> <span class="n">s_first</span><span class="p">)</span>
+    <span class="n">h_final_s</span> <span class="o">=</span> <span class="n">static_is</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+    <span class="n">a_final_s</span> <span class="o">=</span> <span class="n">static_is</span><span class="p">[</span><span class="s2">&quot;speed_sound&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate spouting velocity</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h0_first</span><span class="o">-</span><span class="n">h_final_s</span><span class="p">))</span>
+
+    <span class="c1"># Calculate exit enthalpy</span>
+    <span class="n">h0_final</span> <span class="o">=</span> <span class="n">h0_first</span> <span class="o">-</span> <span class="n">eta_ts</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_first</span> <span class="o">-</span> <span class="n">h_final_s</span><span class="p">)</span>
+    <span class="n">v_final</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">h0_first</span> <span class="o">-</span> <span class="n">h_final_s</span> <span class="o">-</span> <span class="p">(</span><span class="n">h0_first</span> <span class="o">-</span> <span class="n">h0_final</span><span class="p">)</span> <span class="o">/</span> <span class="n">eta_tt</span><span class="p">))</span>
+    <span class="n">h_final</span> <span class="o">=</span> <span class="n">h0_final</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">v_final</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Calculate exit static state for expansion with guessed efficiency</span>
+    <span class="n">static_properties_exit</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassP_INPUTS</span><span class="p">,</span> <span class="n">h_final</span><span class="p">,</span> <span class="n">p_final</span><span class="p">)</span>
+    <span class="n">s_final</span> <span class="o">=</span> <span class="n">static_properties_exit</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Assume linear entropy distribution</span>
+    <span class="n">entropy_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">s_first</span><span class="p">,</span> <span class="n">s_final</span><span class="p">,</span> <span class="n">number_of_cascades</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># Define initial guess dictionary</span>
+    <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Initialize inlet calculation</span>
+    <span class="n">s_in</span> <span class="o">=</span> <span class="n">s_first</span>
+    <span class="n">rothalpy</span> <span class="o">=</span> <span class="n">h0_first</span>
+    <span class="n">alpha_in</span> <span class="o">=</span> <span class="n">alpha_first</span>
+    <span class="n">d_in</span> <span class="o">=</span> <span class="n">d0_first</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_cascades</span><span class="p">):</span>
+        <span class="n">geometry_cascade</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">key</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;number_of_cascades&quot;</span><span class="p">,</span> <span class="s2">&quot;number_of_stages&quot;</span><span class="p">]</span>
+        <span class="p">}</span>
+
+        <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">]</span>
+        <span class="n">radius_mean_throat</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_throat&quot;</span><span class="p">]</span>
+        <span class="n">radius_mean_out</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;radius_mean_out&quot;</span><span class="p">]</span>
+        <span class="n">A_throat</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span>
+        <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">]</span>
+        <span class="n">A_in</span> <span class="o">=</span> <span class="n">geometry_cascade</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load entropy from assumed entropy distribution</span>
+        <span class="n">s_out</span> <span class="o">=</span> <span class="n">entropy_distribution</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">ma_out</span> <span class="o">=</span> <span class="n">mach</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit pressure</span>
+        <span class="n">blade_speed_out</span> <span class="o">=</span> <span class="n">angular_speed</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius_mean_out</span>
+        <span class="n">h0_rel_out</span> <span class="o">=</span> <span class="n">rothalpy</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">blade_speed_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">p_out</span> <span class="o">=</span> <span class="n">get_unkown</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">p0_first</span><span class="p">,</span> <span class="n">h0_rel_out</span><span class="p">,</span> <span class="n">ma_out</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+
+        <span class="c1"># Calculate exit state</span>
+        <span class="n">static_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">static_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">a_out</span> <span class="o">=</span> <span class="n">static_out</span><span class="p">[</span><span class="s2">&quot;speed_sound&quot;</span><span class="p">]</span>
+        <span class="n">d_out</span> <span class="o">=</span> <span class="n">static_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+        <span class="n">gamma_out</span> <span class="o">=</span> <span class="n">static_out</span><span class="p">[</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit velocity</span>
+        <span class="n">w_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h0_rel_out</span> <span class="o">-</span> <span class="n">h_out</span><span class="p">))</span>
+        
+        <span class="c1"># Calculate critical mach</span>
+        <span class="n">static_props_is</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+        <span class="n">h_out_s</span> <span class="o">=</span> <span class="n">static_props_is</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="p">(</span><span class="n">h0_rel_out</span><span class="o">-</span><span class="n">h_out</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">h0_rel_out</span><span class="o">-</span><span class="n">h_out_s</span><span class="p">)</span>
+        <span class="n">ma_crit</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">get_mach_crit</span><span class="p">(</span><span class="n">gamma_out</span><span class="p">,</span> <span class="n">eta</span><span class="p">)</span>
+
+        <span class="c1"># Calculate exit flow angle </span>
+        <span class="n">beta_out</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">i</span><span class="o">*</span><span class="n">dm</span><span class="o">.</span><span class="n">get_subsonic_deviation</span><span class="p">(</span>
+                <span class="n">ma_out</span><span class="p">,</span> <span class="n">ma_crit</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;A_throat&quot;</span> <span class="p">:</span> <span class="n">A_throat</span><span class="p">,</span> <span class="s2">&quot;A_out&quot;</span> <span class="p">:</span> <span class="n">A_out</span><span class="p">},</span> <span class="n">deviation_model</span>
+            <span class="p">)</span>
+        
+        <span class="c1"># Calculate mass flow rate</span>
+        <span class="n">mass_flow</span> <span class="o">=</span> <span class="n">d_out</span> <span class="o">*</span> <span class="n">w_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">A_out</span>
+        
+         <span class="c1"># Calculate critical state</span>
+        <span class="n">w_throat_crit</span> <span class="o">=</span> <span class="n">a_out</span> <span class="o">*</span> <span class="n">ma_crit</span>
+        <span class="n">h_throat_crit</span> <span class="o">=</span> <span class="n">h0_rel_out</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">w_throat_crit</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">s_throat_crit</span> <span class="o">=</span> <span class="n">s_out</span>
+        <span class="n">static_state_throat_crit</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_throat_crit</span><span class="p">,</span> <span class="n">s_throat_crit</span><span class="p">)</span>
+        <span class="n">rho_throat_crit</span> <span class="o">=</span> <span class="n">static_state_throat_crit</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+        <span class="n">m_crit</span> <span class="o">=</span> <span class="n">w_throat_crit</span> <span class="o">*</span> <span class="n">rho_throat_crit</span> <span class="o">*</span> <span class="n">A_throat</span>
+        <span class="n">w_m_in_crit</span> <span class="o">=</span> <span class="n">m_crit</span> <span class="o">/</span> <span class="n">d_in</span> <span class="o">/</span> <span class="n">A_in</span>
+        <span class="n">v_in_crit</span> <span class="o">=</span> <span class="n">w_m_in_crit</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)</span>
+
+        <span class="c1"># Store initial guess</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">initial_guess</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;w_out&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_out</span><span class="p">,</span>
+                <span class="s2">&quot;s_out&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
+                <span class="s2">&quot;beta_out&quot;</span>
+                <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">i</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">A_throat</span> <span class="o">/</span> <span class="n">A_out</span><span class="p">),</span>
+                <span class="s2">&quot;v_crit_in&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">v_in_crit</span><span class="p">,</span>
+                <span class="s2">&quot;w_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">w_throat_crit</span><span class="p">,</span>
+                <span class="s2">&quot;s_crit_throat&quot;</span> <span class="o">+</span> <span class="n">index</span><span class="p">:</span> <span class="n">s_throat_crit</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Update variables for next cascade</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="p">(</span><span class="n">number_of_cascades</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">A_next</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">radius_mean_next</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">][</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_velocity_triangle_out</span><span class="p">(</span><span class="n">blade_speed_out</span><span class="p">,</span> <span class="n">w_out</span><span class="p">,</span> <span class="n">beta_out</span><span class="p">)</span>
+            <span class="n">v_m_in</span> <span class="o">=</span> <span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">A_out</span> <span class="o">/</span> <span class="n">A_next</span>
+            <span class="n">v_t_in</span> <span class="o">=</span> <span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">radius_mean_out</span> <span class="o">/</span> <span class="n">radius_mean_next</span>
+            <span class="n">v_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v_m_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">v_t_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">alpha_in</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">(</span><span class="n">v_t_in</span> <span class="o">/</span> <span class="n">v_m_in</span><span class="p">)</span>
+            <span class="n">blade_speed_in</span> <span class="o">=</span> <span class="n">angular_speed</span> <span class="o">*</span> <span class="p">((</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">radius_mean_next</span>
+            <span class="n">velocity_triangle_in</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_velocity_triangle_in</span><span class="p">(</span><span class="n">blade_speed_in</span><span class="p">,</span> <span class="n">v_in</span><span class="p">,</span> <span class="n">alpha_in</span><span class="p">)</span>
+            <span class="n">h0_in</span> <span class="o">=</span> <span class="n">h_out</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">velocity_triangle_out</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">h_in</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">rothalpy</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;w&quot;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">blade_speed_in</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">s_in</span> <span class="o">=</span> <span class="n">s_out</span>
+            <span class="n">static_in</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_in</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+            <span class="n">d_in</span> <span class="o">=</span> <span class="n">static_in</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate inlet velocity from</span>
+    <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mass_flow</span> <span class="o">/</span> <span class="p">(</span><span class="n">d0_first</span> <span class="o">*</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_first</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">initial_guess</span></div>
+
+
+<div class="viewcode-block" id="latin_hypercube_sampling">
+<a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.latin_hypercube_sampling">[docs]</a>
+<span class="k">def</span> <span class="nf">latin_hypercube_sampling</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates samples using Latin Hypercube Sampling.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    bounds (list of tuples): A list of (min, max) bounds for each variable.</span>
+<span class="sd">    n_samples (int): The number of samples to generate.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    np.ndarray: An array of shape (n_samples, n_variables) containing the samples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_variables</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bounds</span><span class="p">)</span>
+    <span class="c1"># Create a Latin Hypercube Sampler</span>
+    <span class="n">sampler</span> <span class="o">=</span> <span class="n">qmc</span><span class="o">.</span><span class="n">LatinHypercube</span><span class="p">(</span><span class="n">d</span><span class="o">=</span><span class="n">n_variables</span><span class="p">)</span>
+    
+    <span class="c1"># Generate samples in the unit hypercube</span>
+    <span class="n">unit_hypercube_samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="n">n_samples</span><span class="p">)</span>
+    
+    <span class="c1"># Scale the samples to the provided bounds</span>
+    <span class="n">lower_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+    <span class="n">upper_bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bounds</span><span class="p">])</span>
+    <span class="n">scaled_samples</span> <span class="o">=</span> <span class="n">qmc</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">unit_hypercube_samples</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scaled_samples</span></div>
+
 
 </pre></div>
 
