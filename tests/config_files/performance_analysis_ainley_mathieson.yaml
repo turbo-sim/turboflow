@@ -39,6 +39,10 @@ performance_analysis:
     derivative_abs_step: 1e-6
     print_convergence: True
     plot_convergence: False
+  initial_guess :
+    eta_tt : [0.9, 0.8]
+    eta_ts : [0.8, 0.7]
+    ma : [0.8, 0.8]
 
 geometry:
   cascade_type: ["stator", "rotor"]
