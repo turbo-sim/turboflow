@@ -57,9 +57,9 @@ class NonlinearSystemSolver:
         Finite difference method to be used when the problem Jacobian is not provided. Defaults to '2-point'
     derivative_abs_step : float, optional
         Finite difference absolute step size to be used when the problem Jacobian is not provided. Defaults to 1e-6
-    display : bool, optional
+    print_convergence : bool, optional
         If True, displays the convergence progress. Defaults to True.
-    plot : bool, optional
+    plot_convergence : bool, optional
         If True, plots the convergence progress. Defaults to False.
     logger : logging.Logger, optional
         Logger object to which logging messages will be directed. Defaults to None.
@@ -280,7 +280,7 @@ class NonlinearSystemSolver:
         if self.update_on == "gradient":
             self._print_convergence_progress(x)
 
-        return jacobian
+        return np.atleast_1d(jacobian)
 
     def _write_header(self):
         """

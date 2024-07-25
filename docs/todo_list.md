@@ -8,6 +8,12 @@ Option 1. Relative import in the testing scripts
 Option 2. Somehow use the package code without relative import
 
 
+Roberto 24.07.2024
+I could not run the tests from their own scripts. I have to learn how to run them
+I failed to run the examples/tutorials. We have to make sure reviewer can do it easily (I did not try to fix, gave up after first fail)
+We have to include smoothing to the np.max() np.min() min() max() functions in the code. I have created a convenient function for that. See if convergence is imporved
+Use a different style for the docs? Looks more modern. It seems that the bibliography is fixed now (it was broken, thats I selected an old-fashinged, but still good, theme in the past)
+
 
 ## To-do list
 - [x] Verify torque and efficiency deviation match
