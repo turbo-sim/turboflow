@@ -15,6 +15,11 @@ from .. import utilities as utils
 from .. import properties as props
 from . import geometry_model as geom
 from . import flow_model as flow
+from . import choking_model as ch
+from . import deviation_model as dm
+from scipy.stats import qmc
+from scipy import optimize
+
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 """
@@ -22,56 +27,56 @@ Available solvers for performance analysis.
 """
 
 
-def get_heuristic_guess_input(n):
-    r"""
+# def get_heuristic_guess_input(n):
+#     r"""
 
-    Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
+#     Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
 
-    Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
-    an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
+#     Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
+#     an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
 
-    The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
-    or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
+#     The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
+#     or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
 
-    Parameters
-     ----------
-     n : int
-         Number of cascades.
+#     Parameters
+#      ----------
+#      n : int
+#          Number of cascades.
 
-     Returns
-     -------
-     list
-         List of sets of variables used to generate an initial guess.
+#      Returns
+#      -------
+#      list
+#          List of sets of variables used to generate an initial guess.
 
-    """
+#     """
 
-    eta_ts_vec = [0.8, 0.7, 0.6]
+#     eta_ts_vec = [0.8, 0.7, 0.6]
 
-    array = utils.fill_array_with_increment(n)
-    enthalpy_distributions = []
-    enthalpy_distributions.append(np.ones(n) * 1 / n)
-    enthalpy_distributions.append(array)
-    enthalpy_distributions.append(np.flip(array))
+#     array = utils.fill_array_with_increment(n)
+#     enthalpy_distributions = []
+#     enthalpy_distributions.append(np.ones(n) * 1 / n)
+#     enthalpy_distributions.append(array)
+#     enthalpy_distributions.append(np.flip(array))
 
-    initial_guesses = []
-    for eta_ts in eta_ts_vec:
-        for enthalpy_distribution in enthalpy_distributions:
-            initial_guesses.append(
-                {
-                    "enthalpy_loss_fractions": enthalpy_distribution,
-                    "eta_ts": eta_ts,
-                    "eta_tt": eta_ts + 0.1,
-                    "Ma_crit": 0.95,
-                }
-            )
+#     initial_guesses = []
+#     for eta_ts in eta_ts_vec:
+#         for enthalpy_distribution in enthalpy_distributions:
+#             initial_guesses.append(
+#                 {
+#                     "enthalpy_loss_fractions": enthalpy_distribution,
+#                     "eta_ts": eta_ts,
+#                     "eta_tt": eta_ts + 0.1,
+#                     "Ma_crit": 0.95,
+#                 }
+#             )
 
-    return initial_guesses
+#     return initial_guesses
 
 
 def compute_performance(
     operation_points,
     config,
-    initial_guess=None,
+    # initial_guess=None,
     out_filename=None,
     out_dir="output",
     stop_on_failure=False,
@@ -174,10 +179,7 @@ def compute_performance(
             # Define initial guess
             if i == 0:
                 # Use default initial guess for the first operation point
-                if initial_guess == None:
-                    print("Using default initial guess")
-                else:
-                    print("Using user defined initial guess")
+                initial_guess = config["performance_analysis"]["initial_guess"]
             else:
                 closest_x, closest_index = find_closest_operation_point(
                     operation_point,
@@ -189,8 +191,12 @@ def compute_performance(
 
             # Compute performance
             solver, results = compute_single_operation_point(
-                operation_point, initial_guess, config
-            )
+                                operation_point,
+                                initial_guess,
+                                config["geometry"],
+                                config["simulation_options"],
+                                config["performance_analysis"]["solver_options"],
+                                )
 
             # Retrieve solver data
             solver_status = {
@@ -286,7 +292,9 @@ def compute_performance(
 def compute_single_operation_point(
     operating_point,
     initial_guess,
-    config,
+    geometry,
+    simulation_options,
+    solver_options,
 ):
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
@@ -320,43 +328,75 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
-    problem = CascadesNonlinearSystemProblem(config)
+    problem = CascadesNonlinearSystemProblem(geometry, simulation_options)
     # TODO: A limitation of defining a new problem for each operation point is that the geometry generated and checked once for every point
     # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
     # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
     problem.update_boundary_conditions(operating_point)
-    solver_options = copy.deepcopy(config["performance_analysis"]["solver_options"])
+    solver_options = copy.deepcopy(solver_options)
 
-    initial_guesses = [initial_guess] + get_heuristic_guess_input(
-        problem.geometry["number_of_cascades"]
-    )
-    methods_to_try = [solver_options["method"]] + [
-        method for method in SOLVER_MAP.keys() if method != solver_options["method"]
-    ]
+    # Get initial guess from sample of hearistic guesses
+    initial_guesses = get_initial_guess(initial_guess, 
+                                        problem, 
+                                        problem.boundary_conditions, 
+                                        problem.geometry, 
+                                        problem.fluid, 
+                                        simulation_options["choking_model"], 
+                                        simulation_options["deviation_model"]) 
+
+    # Get solver method array
+    solver_methods = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
 
     for initial_guess in initial_guesses:
-        for method in methods_to_try:
-            success = False
-            x0 = problem.get_initial_guess(
-                initial_guess
-            ) 
-            print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
+        initial_guess_scaled = problem.scale_values(initial_guess)
+        x0 = np.array(list(initial_guess_scaled.values()))
+        problem.keys = initial_guess_scaled.keys() 
+        for method in solver_methods:
             solver_options["method"] = method
-
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
-            # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
-
             try: 
-                solver.solve(problem.x0)
+                solver.solve(x0)
             except Exception as e:
                 if solver.func_count == 0:
                     raise e 
                 print(f" Error during solving: {e}")
                 solver.success = False
             if solver.success:
-                break
+                    break
+            
         if solver.success:
-            break
+                    break
+    
+    # initial_guesses = [initial_guess] + get_heuristic_guess_input(
+    # problem.geometry["number_of_cascades"]
+    # )
+    # solver_methods = [solver_options["method"]] + [
+    #     method for method in SOLVER_MAP.keys() if method != solver_options["method"]
+    # ]
+
+    # for initial_guess in initial_guesses:
+    #     for method in solver_methods:
+    #         success = False
+    #         x0 = problem.get_initial_guess(
+    #             initial_guess
+    #         ) 
+    #         print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
+    #         solver_options["method"] = method
+
+    #         solver = psv.NonlinearSystemSolver(problem, **solver_options)
+    #         # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
+
+    #         try: 
+    #             solver.solve(problem.x0)
+    #         except Exception as e:
+    #             if solver.func_count == 0:
+    #                 raise e 
+    #             print(f" Error during solving: {e}")
+    #             solver.success = False
+    #         if solver.success:
+    #             break
+    #     if solver.success:
+    #         break
 
     if not solver.success:
         print("WARNING: All attempts failed to converge")
@@ -502,6 +542,88 @@ def validate_operation_point(op_point):
             f"Missing fields: {missing}, Extra fields: {extra}"
         )
 
+def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_model, deviation_model):
+
+    # Three types of initial guess:
+        # 1. Full guess
+        # 2. Input for heuristic guess
+        # 4. Input for generatic heuristic guess based on latin hypercube sampling
+    # Check which guess is given
+    valid_keys_1 = ["eta_tt", "eta_ts", "ma"]
+    valid_keys_2 = ["eta_tt", "eta_ts", "ma", "n_samples"]
+    valid_keys_3 = ["w_out", "s_out", "beta_out", "w_crit_throat","s_crit_throat",]
+    valid_keys_3 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_3]
+    valid_keys_4 = ["w_out", "s_out", "beta_out", "v_crit_in", "w_crit_throat","s_crit_throat",]
+    valid_keys_4 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_4]
+    valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
+    valid_keys_5 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_5]
+    check = []
+    check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_5) == set(list(initial_guess.keys())))
+
+    if check[0]:
+        if isinstance(initial_guess["eta_tt"], (list, np.ndarray)):
+            initial_guesses = []
+            for i in range(len(initial_guess["eta_tt"])):
+                ma = np.ones(geometry["number_of_cascades"])*initial_guess["ma"][i]
+                heuristic_guess = get_heuristic_guess(initial_guess["eta_tt"][i], initial_guess["eta_ts"][i], ma, boundary_conditions, geometry, fluid, deviation_model)
+                initial_guesses.append(heuristic_guess)
+        else:
+            ma = np.ones(geometry["number_of_cascades"])*initial_guess["ma"]
+            initial_guess = get_heuristic_guess(initial_guess["eta_tt"], initial_guess["eta_ts"], ma, boundary_conditions, geometry, fluid, deviation_model)
+            initial_guesses = [initial_guess]
+    elif check[1]:
+        bounds = [initial_guess["eta_tt"], initial_guess["eta_ts"]] + [initial_guess["ma"] for i in range(geometry["number_of_cascades"])]
+        n_samples = initial_guess["n_samples"]
+        heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
+        norm_residuals = np.array([])
+        failures = 0
+        for heuristic_input in heuristic_inputs:
+            try:
+                ma = [heuristic_input[i+2] for i in range(geometry["number_of_cascades"])]
+                initial_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
+                x = problem.scale_values(initial_guess)
+                problem.keys = x.keys()
+                x0 = np.array(list(x.values()))
+                residual = problem.residual(x0)
+                norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
+            except:
+                failures += 1 
+        print(f"Generating heuristic inital guesses from latin hypercube sampling")
+        print(f"Number of failures: {failures} out of {n_samples} samples")
+        print(f"Least norm of residuals: {np.min(norm_residuals)}")
+        print(f"Check index: {norm_residuals[np.argmin(norm_residuals)]}")
+        heuristic_input = heuristic_inputs[np.argmin(norm_residuals)]
+        initial_guess = dict(zip(initial_guess.keys(), heuristic_input))
+        print(initial_guess)
+        initial_guess = get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_model, deviation_model)
+    elif check[2]:
+        initial_guesses = [initial_guess]
+    elif check[3]:
+        initial_guesses = [initial_guess]
+    elif check[4]:
+        initial_guesses = [initial_guess]
+    else:
+        raise ValueError("Initial guess must be a dictionary, which require a certain set of keys. See documentation for more information")
+
+    # Check that set of initial guess correspond with choking_criteria
+    for initial_guess, i in zip(initial_guesses, range(len(initial_guesses))):
+        if choking_model == "evaluate_cascade_throat":
+            initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("v_crit_in")}
+        elif choking_model == "evaluate_cascade_critical":
+            initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("beta_crit_throat")}
+        elif choking_model == "evaluate_cascade_isentropic_throat":
+            initial_guess = {key: val for key, val in initial_guess.items() if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))}
+        
+        initial_guesses[i] = initial_guess
+        # Always normalize initial guess
+        # initial_guess_scaled = scale_values(initial_guess)
+        # initial_guesses_scaled += initial_guess_scaled
+
+    return initial_guesses
 
 # ------------------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------------------ #
@@ -566,7 +688,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 pass
     """
 
-    def __init__(self, config):
+    def __init__(self, geometry, simulation_options):
         """
         Initialize a CascadesNonlinearSystemProblem.
 
@@ -577,12 +699,12 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         """
 
         # Process turbine geometry
-        geom.validate_turbine_geometry(config["geometry"])
-        self.geometry = geom.calculate_full_geometry(config["geometry"])
+        geom.validate_turbine_geometry(geometry)
+        self.geometry = geom.calculate_full_geometry(geometry)
         # self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
         # Initialize other attributes
-        self.model_options = config["simulation_options"]
+        self.model_options = simulation_options
         self.keys = []
 
     def residual(self, x):
@@ -740,427 +862,433 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
         return scaled_variables
 
-    def get_initial_guess(self, initial_guess=None):
-        """
-        Determine the initial guess for the performance analysis based on the given parameters or default values.
-
-        The given `initial_guess` make take three forms:
-
-            - None, which generate a default initial guess
-            - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:
-
-                - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
-                - `eta_ts`, which is the assumed total-to-static efficiency.
-                - `eta_tt`, which is the assumed total-to-total efficiency.
-                - `Ma_crit`, which is the assumed critical mash number.
-
-            - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.
-
-        The initial guess is scaled in this function.
-
-        Parameters
-        ----------
-        initial_guess : dict, optional
-            A dictionary containing the initial guess parameters.
-
-        Returns
-        -------
-        dict
-            Initial guess for the performance analysis.
-
-        Raises
-        ------
-        ValueError
-            If the provided initial_guess is invalid or incompatible with the model options.
-
-        """
-
-        number_of_cascades = self.geometry["number_of_cascades"]
-
-        # Define initial guess
-        if isinstance(initial_guess, dict):
-            valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
-            valid_keys_2 = [
-                "w_out",
-                "s_out",
-                "beta_out",
-                "v_crit_in",
-                "w_crit_throat",
-                "s_crit_throat",
-            ]
-            valid_keys_2 = ["v_in"] + [
-                f"{key}_{i+1}"
-                for i in range(number_of_cascades)
-                for key in valid_keys_2
-            ]
-            valid_keys_3 = [
-                key for key in valid_keys_2 if not key.startswith("v_crit_in")]
-            valid_keys_4 = [
-                key
-                for key in valid_keys_2
-                if not (
-                    key.startswith("v_crit_in")
-                    or key.startswith("s_crit_throat")
-                    or key.startswith("beta_crit_throat")
-                )
-            ]
-
-            check = []
-            check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
-            check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
-            check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
-            check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
-
-            if check[0]:
-                enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
-                eta_tt = initial_guess["eta_tt"]
-                eta_ts = initial_guess["eta_ts"]
-                Ma_crit = initial_guess["Ma_crit"]
-
-                # Check that eta_tt, eta_ts and Ma_crit is in reasonable range
-                for label, variable in zip(
-                    ["eta_tt", "eta_ts", "Ma_crit"], [eta_tt, eta_ts, Ma_crit]
-                ):
-                    if not 0 <= variable <= 1:
-                        raise ValueError(f"{label} should be between {0} and {1}.")
-
-                # Check if enthalpy_loss_fractions is a list or a NumPy array
-                if not isinstance(enthalpy_loss_fractions, (list, np.ndarray)):
-                    raise ValueError(
-                        "enthalpy_loss_fractions must be a list or NumPy array"
-                    )
-
-                # Check that enthalpy_loss_fractions is of the same length as the number_of_cascades
-                if len(enthalpy_loss_fractions) != number_of_cascades:
-                    raise ValueError(
-                        f"enthalpy_loss_fractions must be of length {number_of_cascades}"
-                    )
-
-                # Check that the sum of enthalpy loss fractions is 1
-                sum_fractions = np.sum(enthalpy_loss_fractions)
-                epsilon = 1e-8  # Small epsilon value for floating-point comparison
-                if not np.isclose(sum_fractions, 1, atol=epsilon):
-                    raise ValueError(
-                        f"Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions})."
-                    )
-
-                print(" Generating heuristic initial guess with given parameters")
-                initial_guess = self.compute_heuristic_initial_guess(
-                    enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
-                )
-
-            elif check[1]:
-                # Check that set of input correspond with model option
-                if (
-                    not self.model_options["choking_model"]
-                    == "evaluate_cascade_critical"
-                ):
-                    raise ValueError(
-                        "Set of input corresponds with different choking_model (evaluate_cascade_critical)"
-                    )
-
-                # Check that all values are a number
-                if not all(
-                    isinstance(val, (int, float)) for val in initial_guess.values()
-                ):
-                    raise ValueError("All dictionary values must be a float or int")
-
-            elif check[2]:
-                # Check that set of input correspond with model option
-                if not self.model_options["choking_model"] == "evaluate_cascade_throat":
-                    raise ValueError(
-                        "Set of input corresponds with different choking_model (evaluate_cascade_throat)"
-                    )
-
-                # Check that all values are a number
-                if not all(
-                    isinstance(val, (int, float)) for val in initial_guess.values()
-                ):
-                    raise ValueError("All dictionary values must be a float or int")
-
-            elif check[3]:
-                # Check that set of input correspond with model option
-                if (
-                    not self.model_options["choking_model"]
-                    == "evaluate_cascade_isentropic_throat"
-                ):
-                    raise ValueError(
-                        "Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)"
-                    )
-
-                # Check that all values are a number
-                if not all(
-                    isinstance(val, (int, float)) for val in initial_guess.values()
-                ):
-                    raise ValueError("All dictionary values must be a float or int")
-
-            else:
-                raise ValueError(
-                    f"Invalid keys provided for initial_guess. "
-                    f"Valid keys include either:"
-                    f"{valid_keys_1} \n"
-                    f"{valid_keys_2} \n"
-                    f"{valid_keys_3} \n"
-                )
-
-        elif initial_guess == None:
-            enthalpy_loss_fractions = np.full(
-                number_of_cascades, 1 / number_of_cascades
-            )
-            eta_tt = 0.9
-            eta_ts = 0.8
-            Ma_crit = 0.95
-
-            # Compute initial guess using several approximations
-            initial_guess = self.compute_heuristic_initial_guess(
-                enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
-            )
-
-        else:
-            raise ValueError("Initial guess must be either None or a dictionary.")
-
-        if self.model_options["choking_model"] == "evaluate_cascade_throat":
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not (key.startswith("v_crit_in")
-                        or key.startswith("beta_crit_throat"))
-
-            }
-        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not key.startswith("beta_crit_throat")
-            }
-        elif (
-            self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
-        ):
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not (
-                    key.startswith("v_crit_in")
-                    or key.startswith("s_crit_throat")
-                    or key.startswith("beta_crit_throat")
-                )
-            }
-
-        # Always normalize initial guess
-        initial_guess_scaled = self.scale_values(initial_guess)
-
-        # Store labels
-        self.keys = initial_guess_scaled.keys()
-        self.x0 = np.array(list(initial_guess_scaled.values()))
-
-        return initial_guess_scaled
-
-    def compute_heuristic_initial_guess(
-        self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
-    ):
-        """
-        Compute the heuristic initial guess for the performance analysis based on the given parameters.
-
-        This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,
-        total-to-static and total-to-total efficiencies, and critical Mach number.
-
-        Parameters
-        ----------
-        enthalpy_loss_fractions : array-like
-            Enthalpy loss fractions for each cascade.
-        eta_tt : float
-            Total-to-total efficiency.
-        eta_ts : float
-            Total-to-static efficiency.
-        Ma_crit : float
-            Critical Mach number.
-
-        Returns
-        -------
-        dict
-            Heuristic initial guess for the performance analysis.
-
-        """
-
-        # Load object attributes
-        geometry = self.geometry
-        boundary_conditions = self.boundary_conditions
-        fluid = self.fluid
-
-        # Rename variables
-        number_of_cascades = geometry["number_of_cascades"]
-        p0_in = boundary_conditions["p0_in"]
-        T0_in = boundary_conditions["T0_in"]
-        alpha_in = boundary_conditions["alpha_in"]
-        angular_speed = boundary_conditions["omega"]
-        p_out = boundary_conditions["p_out"]
-        h_out_s = self.reference_values["h_out_s"]
-
-        # Calculate inlet stagnation state
-        stagnation_properties_in = fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
-        h0_in = stagnation_properties_in["h"]
-        s_in = stagnation_properties_in["s"]
-        rho0_in = stagnation_properties_in["d"]
-
-        # Calculate exit enthalpy
-        h0_out = h0_in - eta_ts * (h0_in - h_out_s)
-        v_out = np.sqrt(2 * (h0_in - h_out_s - (h0_in - h0_out) / eta_tt))
-        h_out = h0_out - 0.5 * v_out**2
-
-        # Calculate exit static state for expansion with guessed efficiency
-        static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_out, p_out)
-        s_out = static_properties_exit["s"]
-
-        # Define entropy distribution
-        entropy_distribution = np.linspace(s_in, s_out, number_of_cascades + 1)[1:]
-
-        # Define enthalpy distribution
-        total_enthalpy_loss = h0_in - h_out
-        enthalpy_loss_per_cascade = [
-            fraction * total_enthalpy_loss for fraction in enthalpy_loss_fractions
-        ]
-        enthalpy_distribution = [
-            h0_in - sum(enthalpy_loss_per_cascade[: i + 1])
-            for i in range(number_of_cascades)
-        ]
-
-        # Assums h0_in approx h_in for first inlet
-        h_in = h0_in
-
-        # Define initial guess dictionary
-        initial_guess = {}
-
-        for i in range(number_of_cascades):
-            geometry_cascade = {
-                key: values[i]
-                for key, values in geometry.items()
-                if key not in ["number_of_cascades", "number_of_stages"]
-            }
-
-            # Load enthalpy from initial guess
-            h_out = enthalpy_distribution[i]
-
-            # Load entropy from assumed entropy distribution
-            s_out = entropy_distribution[i]
-
-            # Rename necessary geometry
-            theta_in = geometry_cascade["leading_edge_angle"]
-            theta_out = geometry_cascade["gauging_angle"]
-            A_out = geometry_cascade["A_out"]
-            A_throat = geometry_cascade["A_throat"]
-            A_in = geometry_cascade["A_in"]
-            radius_mean_in = geometry_cascade["radius_mean_in"]
-            radius_mean_throat = geometry_cascade["radius_mean_throat"]
-            radius_mean_out = geometry_cascade["radius_mean_out"]
-
-            # Calculate rothalpy at inlet of cascade
-            blade_speed_in = angular_speed * (i % 2) * radius_mean_in
-            if i == 0:
-                h0_rel_in = h_in
-                m_temp = rho0_in * A_in * math.cosd(alpha_in)
-            else:
-                v_in = np.sqrt(2 * (h0_in - h_in))
-                velocity_triangle_in = flow.evaluate_velocity_triangle_in(
-                    blade_speed_in, v_in, alpha_in
-                )
-                w_in = velocity_triangle_in["w"]
-                h0_rel_in = h_in + 0.5 * w_in**2
-
-            rothalpy = h0_rel_in - 0.5 * blade_speed_in**2
-
-            # Calculate static state at cascade inlet
-            static_state_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
-            rho_in = static_state_in["d"]
-
-            # Calculate exit velocity from rothalpy and enthalpy distirbution
-            blade_speed_out = angular_speed * (i % 2) * radius_mean_out
-            h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
-            w_out = np.sqrt(2 * (h0_rel_out - h_out))
-            velocity_triangle_out = flow.evaluate_velocity_triangle_out(
-                blade_speed_out, w_out, theta_out
-            )
-            v_t_out = velocity_triangle_out["v_t"]
-            v_m_out = velocity_triangle_out["v_m"]
-            v_out = velocity_triangle_out["v"]
-            h0_out = h_out + 0.5 * v_out**2
-
-            # Calculate static state at cascade exit
-            static_state_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
-            a_out = static_state_out["a"]
-            rho_out = static_state_out["d"]
-
-            # Calculate mass flow rate
-            mass_flow = rho_out * v_m_out * A_out
-
-            # Calculate throat velocity depending on subsonic or supersonic conditions
-            if w_out < a_out * Ma_crit:
-                w_throat = w_out
-                s_throat = s_out
-            else:
-                w_throat = a_out * Ma_crit
-                blade_speed_throat = angular_speed * (i % 2) * radius_mean_throat
-                h0_rel_throat = rothalpy + 0.5 * blade_speed_throat**2
-                h_throat = h0_rel_throat - 0.5 * w_throat**2
-                rho_throat = rho_out
-                static_state_throat = fluid.get_props(
-                    cp.DmassHmass_INPUTS, rho_throat, h_throat
-                )
-                s_throat = static_state_throat["s"]
-
-            # Calculate critical state
-            w_throat_crit = a_out * Ma_crit
-            h_throat_crit = (
-                h0_rel_in - 0.5 * w_throat_crit**2
-            )  # FIXME: h0_rel_in works less good?
-            static_state_throat_crit = fluid.get_props(
-                cp.HmassSmass_INPUTS, h_throat_crit, s_throat
-            )
-            rho_throat_crit = static_state_throat_crit["d"]
-            m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_throat
-            w_m_in_crit = m_crit / rho_in / A_in
-            w_in_crit = w_m_in_crit / math.cosd(
-                theta_in
-            )  # XXX Works better with metal angle than inlet flow angle?
-            velocity_triangle_crit_in = flow.evaluate_velocity_triangle_out(
-                blade_speed_in, w_in_crit, theta_in
-            )
-            v_in_crit = velocity_triangle_crit_in["v"]
-
-            rho_out_crit = rho_throat_crit
-            w_out_crit = m_crit / (rho_out_crit * A_out * math.cosd(theta_out))
-
-            # Store initial guess
-            index = f"_{i+1}"
-            initial_guess.update(
-                {
-                    "w_out" + index: w_out,
-                    "s_out" + index: s_out,
-                    "beta_out"
-                    + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
-                    "v_crit_in" + index: v_in_crit,
-                    "beta_crit_throat"
-                    + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
-                    "w_crit_throat" + index: w_throat_crit,
-                    "s_crit_throat" + index: s_throat,
-                }
-            )
-
-            # Update variables for next cascade
-            if i != (number_of_cascades - 1):
-                A_next = geometry["A_in"][i + 1]
-                radius_mean_next = geometry["radius_mean_in"][i + 1]
-                v_m_in = v_m_out * A_out / A_next
-                v_t_in = v_t_out * radius_mean_out / radius_mean_next
-                v_in = np.sqrt(v_m_in**2 + v_t_in**2)
-                alpha_in = math.arctand(v_t_in / v_m_in)
-                h0_in = h0_out
-                h_in = h0_in - 0.5 * v_in**2
-                s_in = s_out
-
-        # Calculate inlet velocity from
-        initial_guess["v_in"] = mass_flow / m_temp
-
-        return initial_guess
+    # def get_initial_guess(self, initial_guess=None):
+    #     """
+    #     Determine the initial guess for the performance analysis based on the given parameters or default values.
+
+    #     The given `initial_guess` make take three forms:
+
+    #         - None, which generate a default initial guess
+    #         - A dictionary which generates an initial guess through `compute_heuristic_initial_guess`. Required elements are:
+
+    #             - `enthalpy_loss_fractions`, which is a list containing the assumed fractions of enthalpy loss that occurs for each cascade.
+    #             - `eta_ts`, which is the assumed total-to-static efficiency.
+    #             - `eta_tt`, which is the assumed total-to-total efficiency.
+    #             - `Ma_crit`, which is the assumed critical mash number.
+
+    #         - A dictionary containing the full set of variables needed to evaluate turbine performance. This option require that the user has complete knowledge of what are the required variables, and the setup of the inital guess dictionary for the given configuration.
+
+    #     The initial guess is scaled in this function.
+
+    #     Parameters
+    #     ----------
+    #     initial_guess : dict, optional
+    #         A dictionary containing the initial guess parameters.
+
+    #     Returns
+    #     -------
+    #     dict
+    #         Initial guess for the performance analysis.
+
+    #     Raises
+    #     ------
+    #     ValueError
+    #         If the provided initial_guess is invalid or incompatible with the model options.
+
+    #     """
+
+    #     number_of_cascades = self.geometry["number_of_cascades"]
+
+    #     # Define initial guess
+    #     if isinstance(initial_guess, dict):
+    #         # valid_keys_1 = ["enthalpy_loss_fractions", "eta_ts", "eta_tt", "Ma_crit"]
+    #         valid_keys_1 = ["eta_tt", "eta_ts", "mach_1", "mach_2"]
+    #         valid_keys_2 = [
+    #             "w_out",
+    #             "s_out",
+    #             "beta_out",
+    #             "v_crit_in",
+    #             "w_crit_throat",
+    #             "s_crit_throat",
+    #         ]
+    #         valid_keys_2 = ["v_in"] + [
+    #             f"{key}_{i+1}"
+    #             for i in range(number_of_cascades)
+    #             for key in valid_keys_2
+    #         ]
+    #         valid_keys_3 = [
+    #             key for key in valid_keys_2 if not key.startswith("v_crit_in")]
+    #         valid_keys_4 = [
+    #             key
+    #             for key in valid_keys_2
+    #             if not (
+    #                 key.startswith("v_crit_in")
+    #                 or key.startswith("s_crit_throat")
+    #                 or key.startswith("beta_crit_throat")
+    #             )
+    #         ]
+
+    #         check = []
+    #         check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
+    #         check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
+    #         check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
+    #         check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
+
+    #         if check[0]:
+    #             # enthalpy_loss_fractions = initial_guess["enthalpy_loss_fractions"]
+    #             # eta_tt = initial_guess["eta_tt"]
+    #             # eta_ts = initial_guess["eta_ts"]
+    #             # Ma_crit = initial_guess["Ma_crit"]
+
+    #             # # Check that eta_tt, eta_ts and Ma_crit is in reasonable range
+    #             # for label, variable in zip(
+    #             #     ["eta_tt", "eta_ts", "Ma_crit"], [eta_tt, eta_ts, Ma_crit]
+    #             # ):
+    #             #     if not 0 <= variable <= 1:
+    #             #         raise ValueError(f"{label} should be between {0} and {1}.")
+
+    #             # # Check if enthalpy_loss_fractions is a list or a NumPy array
+    #             # if not isinstance(enthalpy_loss_fractions, (list, np.ndarray)):
+    #             #     raise ValueError(
+    #             #         "enthalpy_loss_fractions must be a list or NumPy array"
+    #             #     )
+
+    #             # # Check that enthalpy_loss_fractions is of the same length as the number_of_cascades
+    #             # if len(enthalpy_loss_fractions) != number_of_cascades:
+    #             #     raise ValueError(
+    #             #         f"enthalpy_loss_fractions must be of length {number_of_cascades}"
+    #             #     )
+
+    #             # # Check that the sum of enthalpy loss fractions is 1
+    #             # sum_fractions = np.sum(enthalpy_loss_fractions)
+    #             # epsilon = 1e-8  # Small epsilon value for floating-point comparison
+    #             # if not np.isclose(sum_fractions, 1, atol=epsilon):
+    #             #     raise ValueError(
+    #             #         f"Sum of enthalpy_loss_fractions must be 1 (now: {sum_fractions})."
+    #             #     )
+
+    #             # print(" Generating heuristic initial guess with given parameters")
+    #             # initial_guess = self.compute_heuristic_initial_guess(
+    #             #     enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
+    #             # )
+
+    #             initial_guess = get_heuristic_guess(initial_guess["eta_tt"], initial_guess["eta_ts"],  [initial_guess["mach_1"], initial_guess["mach_2"]], self.boundary_conditions, self.geometry, self.fluid, self.model_options["deviation_model"])
+
+    #         elif check[1]:
+    #             # Check that set of input correspond with model option
+    #             if (
+    #                 not self.model_options["choking_model"]
+    #                 == "evaluate_cascade_critical"
+    #             ):
+    #                 raise ValueError(
+    #                     "Set of input corresponds with different choking_model (evaluate_cascade_critical)"
+    #                 )
+
+    #             # Check that all values are a number
+    #             if not all(
+    #                 isinstance(val, (int, float)) for val in initial_guess.values()
+    #             ):
+    #                 raise ValueError("All dictionary values must be a float or int")
+
+    #         elif check[2]:
+    #             # Check that set of input correspond with model option
+    #             if not self.model_options["choking_model"] == "evaluate_cascade_throat":
+    #                 raise ValueError(
+    #                     "Set of input corresponds with different choking_model (evaluate_cascade_throat)"
+    #                 )
+
+    #             # Check that all values are a number
+    #             if not all(
+    #                 isinstance(val, (int, float)) for val in initial_guess.values()
+    #             ):
+    #                 raise ValueError("All dictionary values must be a float or int")
+
+    #         elif check[3]:
+    #             # Check that set of input correspond with model option
+    #             if (
+    #                 not self.model_options["choking_model"]
+    #                 == "evaluate_cascade_isentropic_throat"
+    #             ):
+    #                 raise ValueError(
+    #                     "Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)"
+    #                 )
+
+    #             # Check that all values are a number
+    #             if not all(
+    #                 isinstance(val, (int, float)) for val in initial_guess.values()
+    #             ):
+    #                 raise ValueError("All dictionary values must be a float or int")
+
+    #         else:
+    #             raise ValueError(
+    #                 f"Invalid keys provided for initial_guess. "
+    #                 f"Valid keys include either:"
+    #                 f"{valid_keys_1} \n"
+    #                 f"{valid_keys_2} \n"
+    #                 f"{valid_keys_3} \n"
+    #             )
+
+    #     elif initial_guess == None:
+    #         enthalpy_loss_fractions = np.full(
+    #             number_of_cascades, 1 / number_of_cascades
+    #         )
+    #         eta_tt = 0.9
+    #         eta_ts = 0.8
+    #         Ma_crit = 0.95
+
+    #         # Compute initial guess using several approximations
+    #         initial_guess = self.compute_heuristic_initial_guess(
+    #             enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
+    #         )
+
+    #     else:
+    #         raise ValueError("Initial guess must be either None or a dictionary.")
+
+    #     if self.model_options["choking_model"] == "evaluate_cascade_throat":
+    #         initial_guess = {
+    #             key: val
+    #             for key, val in initial_guess.items()
+    #             if not (key.startswith("v_crit_in")
+    #                     or key.startswith("beta_crit_throat"))
+
+    #         }
+    #     elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+    #         initial_guess = {
+    #             key: val
+    #             for key, val in initial_guess.items()
+    #             if not key.startswith("beta_crit_throat")
+    #         }
+    #     elif (
+    #         self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
+    #     ):
+    #         initial_guess = {
+    #             key: val
+    #             for key, val in initial_guess.items()
+    #             if not (
+    #                 key.startswith("v_crit_in")
+    #                 or key.startswith("s_crit_throat")
+    #                 or key.startswith("beta_crit_throat")
+    #             )
+    #         }
+
+    #     # Always normalize initial guess
+    #     initial_guess_scaled = self.scale_values(initial_guess)
+
+    #     # Store labels
+    #     self.keys = initial_guess_scaled.keys()
+    #     self.x0 = np.array(list(initial_guess_scaled.values()))
+
+    #     return initial_guess_scaled
+
+    # def compute_heuristic_initial_guess(
+    #     self, enthalpy_loss_fractions, eta_tt, eta_ts, Ma_crit
+    # ):
+    #     """
+    #     Compute the heuristic initial guess for the performance analysis based on the given parameters.
+
+    #     This function calculates the heuristic initial guess based on the provided enthalpy loss fractions for each cascade,
+    #     total-to-static and total-to-total efficiencies, and critical Mach number.
+
+    #     Parameters
+    #     ----------
+    #     enthalpy_loss_fractions : array-like
+    #         Enthalpy loss fractions for each cascade.
+    #     eta_tt : float
+    #         Total-to-total efficiency.
+    #     eta_ts : float
+    #         Total-to-static efficiency.
+    #     Ma_crit : float
+    #         Critical Mach number.
+
+    #     Returns
+    #     -------
+    #     dict
+    #         Heuristic initial guess for the performance analysis.
+
+    #     """
+
+    #     # Load object attributes
+    #     geometry = self.geometry
+    #     boundary_conditions = self.boundary_conditions
+    #     fluid = self.fluid
+
+    #     # Rename variables
+    #     number_of_cascades = geometry["number_of_cascades"]
+    #     p0_in = boundary_conditions["p0_in"]
+    #     T0_in = boundary_conditions["T0_in"]
+    #     alpha_in = boundary_conditions["alpha_in"]
+    #     angular_speed = boundary_conditions["omega"]
+    #     p_out = boundary_conditions["p_out"]
+    #     h_out_s = self.reference_values["h_out_s"]
+
+    #     # Calculate inlet stagnation state
+    #     stagnation_properties_in = fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+    #     h0_in = stagnation_properties_in["h"]
+    #     s_in = stagnation_properties_in["s"]
+    #     rho0_in = stagnation_properties_in["d"]
+
+    #     # Calculate exit enthalpy
+    #     h0_out = h0_in - eta_ts * (h0_in - h_out_s)
+    #     v_out = np.sqrt(2 * (h0_in - h_out_s - (h0_in - h0_out) / eta_tt))
+    #     h_out = h0_out - 0.5 * v_out**2
+
+    #     # Calculate exit static state for expansion with guessed efficiency
+    #     static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_out, p_out)
+    #     s_out = static_properties_exit["s"]
+
+    #     cp.DmassP_INPUTS
+    #     cp.PSmass_INPUTS
+
+    #     # Define entropy distribution
+    #     entropy_distribution = np.linspace(s_in, s_out, number_of_cascades + 1)[1:]
+
+    #     # Define enthalpy distribution
+    #     total_enthalpy_loss = h0_in - h_out
+    #     enthalpy_loss_per_cascade = [
+    #         fraction * total_enthalpy_loss for fraction in enthalpy_loss_fractions
+    #     ]
+    #     enthalpy_distribution = [
+    #         h0_in - sum(enthalpy_loss_per_cascade[: i + 1])
+    #         for i in range(number_of_cascades)
+    #     ]
+
+    #     # Assums h0_in approx h_in for first inlet
+    #     h_i = h0_in
+
+    #     # Define initial guess dictionary
+    #     initial_guess = {}
+
+    #     for i in range(number_of_cascades):
+    #         geometry_cascade = {
+    #             key: values[i]
+    #             for key, values in geometry.items()
+    #             if key not in ["number_of_cascades", "number_of_stages"]
+    #         }
+
+    #         # Load enthalpy from initial guess
+    #         h_out = enthalpy_distribution[i]
+
+    #         # Load entropy from assumed entropy distribution
+    #         s_out = entropy_distribution[i]
+
+    #         # Rename necessary geometry
+    #         theta_in = geometry_cascade["leading_edge_angle"]
+    #         theta_out = geometry_cascade["gauging_angle"]
+    #         A_out = geometry_cascade["A_out"]
+    #         A_throat = geometry_cascade["A_throat"]
+    #         A_in = geometry_cascade["A_in"]
+    #         radius_mean_in = geometry_cascade["radius_mean_in"]
+    #         radius_mean_throat = geometry_cascade["radius_mean_throat"]
+    #         radius_mean_out = geometry_cascade["radius_mean_out"]
+            
+    #         # Calculate rothalpy at inlet of cascade
+    #         blade_speed_in = angular_speed * (i % 2) * radius_mean_in
+    #         if i == 0:
+    #             h0_rel_in = h_in
+    #             m_temp = rho0_in * A_in * math.cosd(alpha_in)
+    #         else:
+    #             v_in = np.sqrt(2 * (h0_in - h_in))
+    #             velocity_triangle_in = flow.evaluate_velocity_triangle_in(
+    #                 blade_speed_in, v_in, alpha_in
+    #             )
+    #             w_in = velocity_triangle_in["w"]
+    #             h0_rel_in = h_in + 0.5 * w_in**2
+
+    #         rothalpy = h0_rel_in - 0.5 * blade_speed_in**2
+
+    #         # Calculate static state at cascade inlet
+    #         static_state_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
+    #         rho_in = static_state_in["d"]
+
+    #         # Calculate exit velocity from rothalpy and enthalpy distirbution
+    #         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
+    #         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
+    #         w_out = np.sqrt(2 * (h0_rel_out - h_out))
+    #         velocity_triangle_out = flow.evaluate_velocity_triangle_out(
+    #             blade_speed_out, w_out, theta_out
+    #         )
+    #         v_t_out = velocity_triangle_out["v_t"]
+    #         v_m_out = velocity_triangle_out["v_m"]
+    #         v_out = velocity_triangle_out["v"]
+    #         h0_out = h_out + 0.5 * v_out**2
+
+    #         # Calculate static state at cascade exit
+    #         static_state_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
+    #         a_out = static_state_out["a"]
+    #         rho_out = static_state_out["d"]
+
+    #         # Calculate mass flow rate
+    #         mass_flow = rho_out * v_m_out * A_out
+
+    #         # Calculate throat velocity depending on subsonic or supersonic conditions
+    #         if w_out < a_out * Ma_crit:
+    #             w_throat = w_out
+    #             s_throat = s_out
+    #         else:
+    #             w_throat = a_out * Ma_crit
+    #             blade_speed_throat = angular_speed * (i % 2) * radius_mean_throat
+    #             h0_rel_throat = rothalpy + 0.5 * blade_speed_throat**2
+    #             h_throat = h0_rel_throat - 0.5 * w_throat**2
+    #             rho_throat = rho_out
+    #             static_state_throat = fluid.get_props(
+    #                 cp.DmassHmass_INPUTS, rho_throat, h_throat
+    #             )
+    #             s_throat = static_state_throat["s"]
+
+    #         # Calculate critical state
+    #         w_throat_crit = a_out * Ma_crit
+    #         h_throat_crit = (
+    #             h0_rel_in - 0.5 * w_throat_crit**2
+    #         )  # FIXME: h0_rel_in works less good?
+    #         static_state_throat_crit = fluid.get_props(
+    #             cp.HmassSmass_INPUTS, h_throat_crit, s_throat
+    #         )
+    #         rho_throat_crit = static_state_throat_crit["d"]
+    #         m_crit = w_throat_crit * math.cosd(theta_out) * rho_throat_crit * A_throat
+    #         w_m_in_crit = m_crit / rho_in / A_in
+    #         w_in_crit = w_m_in_crit / math.cosd(
+    #             theta_in
+    #         )  # XXX Works better with metal angle than inlet flow angle?
+    #         velocity_triangle_crit_in = flow.evaluate_velocity_triangle_out(
+    #             blade_speed_in, w_in_crit, theta_in
+    #         )
+    #         v_in_crit = velocity_triangle_crit_in["v"]
+
+    #         rho_out_crit = rho_throat_crit
+    #         w_out_crit = m_crit / (rho_out_crit * A_out * math.cosd(theta_out))
+
+    #         # Store initial guess
+    #         index = f"_{i+1}"
+    #         initial_guess.update(
+    #             {
+    #                 "w_out" + index: w_out,
+    #                 "s_out" + index: s_out,
+    #                 "beta_out"
+    #                 + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
+    #                 "v_crit_in" + index: v_in_crit,
+    #                 "beta_crit_throat"
+    #                 + index: np.sign(theta_out) * math.arccosd(A_throat / A_out),
+    #                 "w_crit_throat" + index: w_throat_crit,
+    #                 "s_crit_throat" + index: s_throat,
+    #             }
+    #         )
+
+    #         # Update variables for next cascade
+    #         if i != (number_of_cascades - 1):
+    #             A_next = geometry["A_in"][i + 1]
+    #             radius_mean_next = geometry["radius_mean_in"][i + 1]
+    #             v_m_in = v_m_out * A_out / A_next
+    #             v_t_in = v_t_out * radius_mean_out / radius_mean_next
+    #             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
+    #             alpha_in = math.arctand(v_t_in / v_m_in)
+    #             h0_in = h0_out
+    #             h_in = h0_in - 0.5 * v_in**2
+    #             s_in = s_out
+
+    #     # Calculate inlet velocity from
+    #     initial_guess["v_in"] = mass_flow / m_temp
+
+    #     return initial_guess
 
 
 def print_simulation_summary(solvers):
@@ -1360,3 +1488,181 @@ def print_operation_points(operation_points):
     for line in output_lines:
         print(line)
     return formatted_output
+
+def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
+
+    props = fluid.get_props(call, prop1*scale, prop2)
+
+    return  props["h"] - h0 + 0.5*Ma**2*props["speed_sound"]**2 
+
+def get_unkown(prop1, scale, h0, Ma, fluid, call, prop2):
+
+    "call is either cp.DmassP_INPUTS (find Dmass based on a pressure) or cp.PSmass_INPUTS (find p based on a Smass)"
+
+    sol = optimize.root_scalar(calculate_enthalpy_residual_1, args = (scale, h0, Ma, fluid, call, prop2), method = "secant", x0 = prop1)
+
+    return sol.root*scale
+
+def get_heuristic_guess(eta_tt, eta_ts,  mach, boundary_conditions, geometry, fluid, deviation_model):
+
+    p0_first = boundary_conditions["p0_in"]
+    T0_first = boundary_conditions["T0_in"]
+    p_final = boundary_conditions["p_out"]
+    angular_speed = boundary_conditions["omega"]
+    alpha_first = boundary_conditions["alpha_in"]
+    number_of_cascades = geometry["number_of_cascades"]
+
+    # Calculate first stagnation properties
+    stag_first = fluid.get_props(cp.PT_INPUTS, p0_first, T0_first)
+    h0_first = stag_first["h"]
+    s_first = stag_first["s"]
+    d0_first = stag_first["d"]
+
+    # Calculate final exit enthalpy for isentropic expansion
+    static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
+    h_final_s = static_is["h"]
+    a_final_s = static_is["speed_sound"]
+
+    # Calculate spouting velocity
+    v0 = np.sqrt(2*(h0_first-h_final_s))
+
+    # Calculate exit enthalpy
+    h0_final = h0_first - eta_ts * (h0_first - h_final_s)
+    v_final = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / eta_tt))
+    h_final = h0_final - 0.5 * v_final**2
+
+    # Calculate exit static state for expansion with guessed efficiency
+    static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_final, p_final)
+    s_final = static_properties_exit["s"]
+
+    # Assume linear entropy distribution
+    entropy_distribution = np.linspace(s_first, s_final, number_of_cascades + 1)[1:]
+
+    # Define initial guess dictionary
+    initial_guess = {}
+
+    # Initialize inlet calculation
+    s_in = s_first
+    rothalpy = h0_first
+    alpha_in = alpha_first
+    d_in = d0_first
+
+    for i in range(number_of_cascades):
+        geometry_cascade = {
+            key: values[i]
+            for key, values in geometry.items()
+            if key not in ["number_of_cascades", "number_of_stages"]
+        }
+
+        radius_mean_in = geometry_cascade["radius_mean_in"]
+        radius_mean_throat = geometry_cascade["radius_mean_throat"]
+        radius_mean_out = geometry_cascade["radius_mean_out"]
+        A_throat = geometry_cascade["A_throat"]
+        A_out = geometry_cascade["A_out"]
+        A_in = geometry_cascade["A_in"]
+
+        # Load entropy from assumed entropy distribution
+        s_out = entropy_distribution[i]
+        ma_out = mach[i]
+
+        # Calculate exit pressure
+        blade_speed_out = angular_speed * (i % 2) * radius_mean_out
+        h0_rel_out = rothalpy + 0.5*blade_speed_out**2
+        p_out = get_unkown(1.0, p0_first, h0_rel_out, ma_out, fluid, cp.PSmass_INPUTS, s_out)
+
+        # Calculate exit state
+        static_out = fluid.get_props(cp.PSmass_INPUTS, p_out, s_out)
+        h_out = static_out["h"]
+        a_out = static_out["speed_sound"]
+        d_out = static_out["d"]
+        gamma_out = static_out["gamma"]
+
+        # Calculate exit velocity
+        w_out = np.sqrt(2*(h0_rel_out - h_out))
+        
+        # Calculate critical mach
+        static_props_is = fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        h_out_s = static_props_is["h"]
+        eta = (h0_rel_out-h_out)/(h0_rel_out-h_out_s)
+        ma_crit = ch.get_mach_crit(gamma_out, eta)
+
+        # Calculate exit flow angle 
+        beta_out = (-1)**i*dm.get_subsonic_deviation(
+                ma_out, ma_crit, {"A_throat" : A_throat, "A_out" : A_out}, deviation_model
+            )
+        
+        # Calculate mass flow rate
+        mass_flow = d_out * w_out*math.cosd(beta_out) * A_out
+        
+         # Calculate critical state
+        w_throat_crit = a_out * ma_crit
+        h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
+        s_throat_crit = s_out
+        static_state_throat_crit = fluid.get_props(cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        rho_throat_crit = static_state_throat_crit["d"]
+        m_crit = w_throat_crit * rho_throat_crit * A_throat
+        w_m_in_crit = m_crit / d_in / A_in
+        v_in_crit = w_m_in_crit/math.cosd(alpha_in)
+
+        # Store initial guess
+        index = f"_{i+1}"
+        initial_guess.update(
+            {
+                "w_out" + index: w_out,
+                "s_out" + index: s_out,
+                "beta_out"
+                + index: (-1)**i * math.arccosd(A_throat / A_out),
+                "v_crit_in" + index: v_in_crit,
+                "w_crit_throat" + index: w_throat_crit,
+                "s_crit_throat" + index: s_throat_crit,
+            }
+        )
+
+        # Update variables for next cascade
+        if i != (number_of_cascades - 1):
+            A_next = geometry["A_in"][i + 1]
+            radius_mean_next = geometry["radius_mean_in"][i + 1]
+            velocity_triangle_out = flow.evaluate_velocity_triangle_out(blade_speed_out, w_out, beta_out)
+            v_m_in = velocity_triangle_out["v_m"] * A_out / A_next
+            v_t_in = velocity_triangle_out["v_t"] * radius_mean_out / radius_mean_next
+            v_in = np.sqrt(v_m_in**2 + v_t_in**2)
+            alpha_in = math.arctand(v_t_in / v_m_in)
+            blade_speed_in = angular_speed * ((i+1) % 2) * radius_mean_next
+            velocity_triangle_in = flow.evaluate_velocity_triangle_in(blade_speed_in, v_in, alpha_in)
+            h0_in = h_out + 0.5*velocity_triangle_out["v"]**2
+            h_in = h0_in - 0.5 * v_in**2
+            rothalpy = h_in + 0.5*velocity_triangle_in["w"]**2 - 0.5*blade_speed_in**2
+            s_in = s_out
+            static_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
+            d_in = static_in["d"]
+
+    # Calculate inlet velocity from
+    initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
+
+    return initial_guess
+
+def latin_hypercube_sampling(bounds, n_samples):
+    """
+    Generates samples using Latin Hypercube Sampling.
+
+    Parameters:
+    bounds (list of tuples): A list of (min, max) bounds for each variable.
+    n_samples (int): The number of samples to generate.
+
+    Returns:
+    np.ndarray: An array of shape (n_samples, n_variables) containing the samples.
+    """
+    n_variables = len(bounds)
+    # Create a Latin Hypercube Sampler
+    sampler = qmc.LatinHypercube(d=n_variables)
+    
+    # Generate samples in the unit hypercube
+    unit_hypercube_samples = sampler.random(n=n_samples)
+    
+    # Scale the samples to the provided bounds
+    lower_bounds = np.array([b[0] for b in bounds])
+    upper_bounds = np.array([b[1] for b in bounds])
+    scaled_samples = qmc.scale(unit_hypercube_samples, lower_bounds, upper_bounds)
+
+    return scaled_samples
+
