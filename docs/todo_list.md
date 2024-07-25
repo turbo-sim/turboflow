@@ -8,6 +8,12 @@ Option 1. Relative import in the testing scripts
 Option 2. Somehow use the package code without relative import
 
 
+Roberto 24.07.2024
+I could not run the tests from their own scripts. I have to learn how to run them
+I failed to run the examples/tutorials. We have to make sure reviewer can do it easily (I did not try to fix, gave up after first fail)
+We have to include smoothing to the np.max() np.min() min() max() functions in the code. I have created a convenient function for that. See if convergence is imporved
+Use a different style for the docs? Looks more modern. It seems that the bibliography is fixed now (it was broken, thats I selected an old-fashinged, but still good, theme in the past)
+
 
 ## To-do list
 - [x] Verify torque and efficiency deviation match
@@ -120,3 +126,30 @@ Option 2. Somehow use the package code without relative import
 Add idal gas calculations for fast evaluations
 Add automatic differentiation and jit for reliable convergence and speed
 Add rho-T thermodynamic function calls for increased robustness and speed (true equation oriented)
+
+
+
+Over the years, several families of loss models for axial turbines have been proposed. Among these, the Ainley-Mathieson model \cite{ainley_method_1951}, along with its subsequent modifications \cite{dunham_improvements_1970, kacker_mean_1982, moustapha_improved_1990, benner_influence_1997, benner_influence_2004, benner_empirical_2006, benner_empirical_2006-1}, stands out due to the continuous development it has undergone since its original publication, reflecting both advancements in turbine design and a better understanding of the underlying flow physics.
+This method was originally proposed by \citeauthor{ainley_method_1951} in 1951 \cite{ainley_method_1951}, and it is based on data from an extensive number of turbine and cascade tests. It employs the stagnation pressure loss coefficient and uses different correlations to predict the losses arising from different factors including profile, endwall, tip clearance, and trailing edge loss.
+The method was updated by \citeauthor{dunham_improvements_1970} in 1972 \cite{dunham_improvements_1970}, and later by \citeauthor{kacker_mean_1982} in 1982 \cite{kacker_mean_1982}, to reflect the advancements in turbine aerodynamics since its initial publication.
+Subsequently, \citeauthor{moustapha_improved_1990} further refined the model in 1990 by introducing an enhanced incidence loss coefficient, aiming for a more accurate prediction of the profile losses at off-design conditions.
+In subsequent studies, \citeauthor{benner_empirical_2006} enhanced loss correlations for profile losses at off-design incidence \cite{benner_influence_1997} and endwall losses at design incidence \cite{benner_influence_2004}. Furthermore, they introduced a new formulation for the total loss coefficient using the concept of penetration depth of secondary flows, aiming to enhance the prediction of endwall losses based on the underlying flow physics \cite{benner_empirical_2006, benner_empirical_2006-1}.
+
+
+
+\section{Loss coefficient definitions}\label{sec:loss_coefficients}
+There are several definitions of the loss coefficient commonly used to characterize the irreversibility within blade cascades. The meanline model described in this paper can use any of the four loss coefficient definitions listed below. Throughout these definitions, the subscript "0" signifies the stagnation state for stator cascades and the relative stagnation state for rotor cascades.
+
+The \textbf{stagnation pressure loss coefficient} is defined as the reduction in stagnation pressure from inlet to outlet relative to the dynamic pressure at the exit of the cascade:
+$$Y=\frac{p_{0, \mathrm{in}}-p_{0, \mathrm{out}}}{p_{0, \mathrm{out}} - p_\mathrm{out}}.$$
+The \textbf{kinetic energy loss coefficient} is the ratio of the enthalpy increase due to irreversibility to the isentropic total-to-static enthalpy change:
+$$\Delta \phi^2  =  \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out},s}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out},s}^2} =1 - \left(\frac{v_{\mathrm{out}}}{v_{\mathrm{out},s}}\right)^2 =  1- \phi^2.$$
+Here, $\phi^2$ is the ratio of actual to ideal kinetic energy at the cascade's exit, commonly interpreted as the efficiency of the cascade.
+The \textbf{enthalpy loss coefficient} is analogously defined, but it utilizes the actual total-to-static enthalpy change in the denominator:
+$$ \zeta=\frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{h_{0,\mathrm{out}}-h_{\mathrm{out}}} = \frac{h_{\mathrm{out}}-h_{\mathrm{out},s}}{\frac{1}{2}v_{\mathrm{out}}^2} = \left(\frac{v_{\mathrm{out},s}}{v_{\mathrm{out}}  }\right)^2 - 1 = \frac{1}{\phi^2}-1.$$
+Finally, the \textbf{entropy loss coefficient} is the product of exit temperature and the entropy increase across the cascade, divided by the kinetic energy at the cascade's exit:
+$$\varsigma  = \frac{T_\mathrm{out}(s_{\mathrm{out}}-s_{\mathrm{in}})}{\frac{1}{2}v_{\mathrm{out}}^2}. $$
+
+These four loss coefficient definitions are inter-related as they are alternative approaches to quantify the loss within a cascade. The kinetic energy and enthalpy loss coefficient definitions can be directly converted as follows:
+$$\zeta = \frac{\Delta \phi^2}{1-\Delta \phi^2} \Longleftrightarrow \Delta \phi^2 = \frac{\zeta}{1+\zeta}$$
+By contrast, to transition between either of these two definitions and the entropy loss coefficient or the stagnation pressure loss coefficient it is necessary to know the inlet thermodynamic state and the pressure ratio across the cascade \cite{moustapha_improved_1990}.

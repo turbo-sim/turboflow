@@ -909,13 +909,9 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
 
     # Limit the loss to the loss_limit
     if loss_limit is not None:
-        loss_increment = np.asarray(
-            [loss_increment, np.full_like(loss_increment, loss_limit)]
+        loss_increment = math.smooth_minimum(
+            loss_increment, loss_limit, method="logsumexp", alpha=25
         )
-        loss_increment = math.smooth_min(
-            loss_increment, method="logsumexp", alpha=25, axis=0
-        )
-
     return loss_increment
 
 

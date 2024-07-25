@@ -1,7 +1,6 @@
 @article{agromayor_preliminary_2019,
  abstract = {Axial turbines are the most common turbine configuration for electric power generation and propulsion systems due to their versatility in terms of power capacity and range of operating conditions. Mean-line models are essential for the preliminary design of axial turbines and, despite being covered to some extent in turbomachinery textbooks, only some scientific publications present a comprehensive formulation of the preliminary design problem. In this context, a mean-line model and optimization methodology for the preliminary design of axial turbines with any number of stages is proposed. The model is formulated to use arbitrary equations of state and empirical loss models and it accounts for the influence of the diffuser on turbine performance using a one-dimensional flow model. The mathematical problem was formulated as a constrained, optimization problem, and solved using gradient-based algorithms. In addition, the model was validated against two test cases from the literature and it was found that the deviation between experimental data and model prediction in terms of mass flow rate and power output was less than 1.2\% for both cases and that the deviation of the total-to-static efficiency was within the uncertainty of the empirical loss models. Moreover, the optimization methodology was applied to a case study from the literature and a sensitivity analysis was performed to investigate the influence of several variables on turbine performance, concluding that: (1) the minimum hub-to-tip ratio constraint is always active at the outlet of the last rotor and that its value should be selected as a trade-off of aerodynamic performance and mechanical integrity; (2) that the total-to-static isentropic efficiency of turbines without diffuser deteriorates rapidly when the pressure ratio is increased; and (3) that there exist a loci of maximum efficiency in the specific speed and specific diameter plane (Baljé diagram) that can be predicted with a simple analytical expression.},
  author = {Agromayor, Roberto and Nord, Lars O.},
- copyright = {Copyright 2020 Elsevier B.V., All rights reserved.},
  doi = {10.3390/ijtpp4030032},
  journal = {International Journal of Turbomachinery, Propulsion and Power},
  keywords = {Algorithms, Annular diffuser, Baljé diagram, Case studies, Constraints, Cryogenic, Design optimization, Design specifications, Deviation, Diameters, Diffusers, Empirical equations, Equations of state, Geometry, Gradient-based, Loss model, Mass flow rate, Mathematical models, Mean-line, Multistage, One dimensional flow, Optimization, Organic rankine cycle, Preliminary designs, Pressure ratio, Propulsion system configurations, Scientific papers, Sensitivity analysis, Supercritical carbon dioxide, Textbooks, Turbines, Turbomachinery, Turbulence models, Velocity},
@@ -46,15 +45,29 @@ Publisher: Elsevier Science Ltd},
  year = {2017}
 }
 
+@article{anderson_equation-oriented_2024,
+ author = {Anderson, Lasse B. and Agormayor, Roberto and Haglind, Fredrik and Nord, Lars O.},
+ journal = {Journal of Turbomachinery},
+ title = {Equation-{Oriented} {Meanline} {Method} for {Axial} {Turbine} {Performance} {Prediction} {Under} {Choking} {Conditions}},
+ year = {2024}
+}
+
 @inproceedings{anderson_method_2022,
  abstract = {Today, expanders for Organic Rankine Cycles (ORC) are either inefficient or expensive. One reason for this is that expanders of power conversion systems usually operate under different conditions over an annual perspective. Still, they are designed to perform best at a single operating point. In view of this limitation, it is suggested that the overall expander performance can be improved by taking into account off-design operation in the design process. As the first step in this direction, this paper presents a two-fold method for design optimization and performance analysis of one-stage axial turbines. The method utilizes the same mean-line model for performance analysis and design optimization, ensuring consistency between the two modes. In addition, the proposed method evaluates the turbine performance at three stations for each blade row: inlet, throat and exit, and employs a novel numerical treatment of flow choking that automatically determines which blade rows are choked as part of the solution. Furthermore, the method was validated against cold-air experimental data from three different one-stage axial turbines, at both on- and off-design conditions. The model predicts design point efficiencies between 1.1 and 4.5 percentage points off the experimental values. The model was also able to capture the trend of mass flow rate as a function of total-to-static pressure ratio and angular speed. However, an unphysical behavior was observed as the pressure ratio approaches the critical value, and further developments of the model are required. It is envisioned that the proposed method will serve as foundation for a robust design methodology that will enable higher expander performance over a range of operating conditions.},
  author = {Anderson, Lasse Borg and Agromayor, Roberto and Nord, Lars O.},
  booktitle = {Proceedings of the 63rd {International} {Conference} of {Scandinavian} {Simulation} {Society}},
- copyright = {http://creativecommons.org/licenses/by/4.0/deed.no; Navngivelse 4.0 Internasjonal},
  publisher = {Linköping University Electronic Press},
  title = {Method for mean-line design and performance prediction of one-stage axial turbines},
  url = {https://hdl.handle.net/11250/3047450},
  year = {2022}
+}
+
+@article{anderson_turboflow_2024,
+ author = {Anderson, Lasse B. and Agormayor, Roberto and Haglind, Fredrik and Nord, Lars O.},
+ journal = {Journal of Open Source Software},
+ note = {Manuscript submitted for publication},
+ title = {{TurboFlow}: {Meanline} {Modelling} of {Turbomachinery}},
+ year = {2024}
 }
 
 @article{arabkoohsar_impact_2020,
@@ -115,10 +128,8 @@ Publisher: Elsevier Science Ltd},
  abstract = {A meanline loss system is described that is capable of predicting the efficiency of radial turbine stages at both on- and off-design conditions. The system is based on the well-known approach introduced by NASA in the 1960s, but includes many developments and refinements which arise from a physical understanding of the turbine rotor flow processes. The model has been tested against a database of thirty turbine tests covering a wide range of configurations and geometries. (author)},
  author = {Baines, N. C.},
  language = {English},
- month = {July},
  title = {A meanline prediction method for radial turbine efficiency},
  url = {https://www.osti.gov/etdeweb/biblio/20064537},
- urldate = {2024-04-02},
  year = {1998}
 }
 
@@ -240,16 +251,33 @@ Publisher: Elsevier Science Ltd},
  year = {2014}
 }
 
+@article{brind_data-driven_2024,
+ abstract = {Estimates of turbomachinery performance trends inform system-level compromises during preliminary design. Existing empirical correlations for efficiency use limited experimental data, while analytical loss models require calibration to yield predictive results. From a set of 3708 radial compressor computations, this paper maps efficiency as a function of mean-line aerodynamics, and determines the governing loss mechanisms. An open-source turbomachinery design code creates annulus and blade geometry, then runs a Reynolds-average Navier–Stokes simulation for compressors sampled from the mean-line design space. Polynomial surface fits yield a continuous eight-dimensional representation of the design space for analysis, predicting efficiency with a root-mean-square error of 1.2\% points.},
+ author = {Brind, James},
+ doi = {10.17863/CAM.106741},
+ language = {en},
+ title = {Data-driven radial compressor design space mapping},
+ year = {2024}
+}
+
+@misc{brind_turbigen_2024,
+ author = {Brind, James},
+ note = {v1.8.2},
+ title = {turbigen},
+ url = {https://turbigen.org/index.html#},
+ urldate = {2024-06-26},
+ year = {2024}
+}
+
 @article{casati_centrifugal_2014,
  abstract = {Organic Rankine cycle (ORC) power systems are rapidly diffusing as a technology for the conversion of thermal energy sources in the small-to-medium power range, e. g., from 150 kW(e) up to several MWe. The most critical component is arguably the expander, especially if the power capacity is small or very small, as it is the case for innovative high-potential applications such as waste heat recovery from truck engines, or distributed conversion of concentrated solar radiation. In these so-called high-temperature applications, the expansion ratio is very high; therefore, turbines are the expanders of choice. Recently, multistage radial-outflow turbines (ROT), a nonconventional turbine configuration, have been studied, and first commercial implementations in the MWe power range have been successful. The objective of this work is the evaluation of the radial-outflow arrangement for the turbine of high-temperature mini-ORC power systems, with power output of the order of 10 kW(e). To this end, a method for the preliminary fluid-dynamic design is presented. It consists of an automated optimization procedure based on an in-house mean-line code for the one-dimensional preliminary design and efficiency estimation of turbines. It is first shown that usually adopted simplified design procedures, such as that of the so-called repeating-stage, cannot be extended to minicentrifugal turbines. The novel methodology is applied to the exemplary case of the 10 kW(e) turbine of an ORC power system for truck engine heat recovery documented in the literature. The expansion ratio is 45. The preliminary fluid-dynamic design of two miniturbines is presented, namely, a five-stage transonic and a three-stage slightly supersonic turbine. The outcome of the preliminary design leads to two turbine configurations whose fluid-dynamic efficiency exceeds 79\% and 77\%, respectively. The speed of revolution is around 12,400 and 15,400 RPM for the five-stage and the three-stage machine, respectively. These results show that the ROT configuration may allow for compact and efficient expanders for low power output applications.},
  author = {Casati, Emiliano and Vitale, Salvatore and Pini, Matteo and Persico, Giacomo and Colonna, Piero},
- copyright = {Copyright 2014 Elsevier B.V., All rights reserved.},
  doi = {10.1115/1.4027904},
  journal = {Journal of Engineering for Gas Turbines and Power},
  keywords = {Conversion, Design engineering, Engineering, Engineering Mechanical, Gas Turbines: Turbomachinery, Heat recovery, Preliminary designs, Rankine cycle, Science \& Technology, Solar power generation, Technology, Truck engines, Turbines},
  number = {12},
  pages = {122607},
- title = {Centrifugal {Turbines} for {Mini}-{Organic} {Rankine} {Cycle} {Power} {Systems}},
+ title = {Centrifugal turbines for mini-organic rankine cycle power systems},
  volume = {136},
  year = {2014}
 }
@@ -354,9 +382,8 @@ Place: Boston},
 }
 
 @article{da_lio_mean-line_2017,
- abstract = {•A mean-line model of radial inflow turbines in ORC systems is developed.•The model includes a novel design and performance analysis procedure.•Optimum values of specific speed and velocity ratio are obtained.•The influence of the size and expansion ratio on the design efficiency is evaluated. Organic Rankine Cycle (ORC) systems represent an efficient technology for power generation from low-to-medium temperature heat sources. Most of the efforts in the recent literature are addressed to the improvement of turbine design and efficiency by taking advantage of the low enthalpy drops while dealing with the large volume flow ratios across the expansion process and low speed of sound typical of high molecular weight fluids. These peculiar conditions make the choice and the design of an ORC turbine a challenging task, exacerbated by the only few experimental data available in the open literature. The aim of this paper is to obtain the optimum design and corresponding maximum efficiency of single stage radial inflow turbines for different cycle design specifications (i.e., mass flow rate and enthalpy drop) using the real gas properties of refrigerant R245fa. This aim is pursued by means of a mean-line model developed in Matlab® which includes the design and performance analysis procedure suggested by Aungier (2005). Results indicate how different design choices in terms of specific speed and velocity ratio, and different working conditions in terms of expansion ratio and turbine size may affect the efficiency of single stage radial inflow turbines in ORC systems.},
+ abstract = {A mean-line model of radial inflow turbines in ORC systems is developed.•The model includes a novel design and performance analysis procedure.•Optimum values of specific speed and velocity ratio are obtained.•The influence of the size and expansion ratio on the design efficiency is evaluated. Organic Rankine Cycle (ORC) systems represent an efficient technology for power generation from low-to-medium temperature heat sources. Most of the efforts in the recent literature are addressed to the improvement of turbine design and efficiency by taking advantage of the low enthalpy drops while dealing with the large volume flow ratios across the expansion process and low speed of sound typical of high molecular weight fluids. These peculiar conditions make the choice and the design of an ORC turbine a challenging task, exacerbated by the only few experimental data available in the open literature. The aim of this paper is to obtain the optimum design and corresponding maximum efficiency of single stage radial inflow turbines for different cycle design specifications (i.e., mass flow rate and enthalpy drop) using the real gas properties of refrigerant R245fa. This aim is pursued by means of a mean-line model developed in Matlab® which includes the design and performance analysis procedure suggested by Aungier (2005). Results indicate how different design choices in terms of specific speed and velocity ratio, and different working conditions in terms of expansion ratio and turbine size may affect the efficiency of single stage radial inflow turbines in ORC systems.},
  author = {Da Lio, Luca and Manente, Giovanni and Lazzaretto, Andrea},
- copyright = {2017 Elsevier Ltd},
  doi = {10.1016/j.apenergy.2017.07.120},
  journal = {Applied energy},
  keywords = {Aungier's loss correlations, Control theory, Efficiency maps, Electricity generation, Energy \& Fuels, Engineering, Engineering Chemical, Inflow, Mass flow rate, Organic Rankine cycle, Process engineering, Radial inflow turbine, Rankine cycle, Refrigerant, Science \& Technology, Size parameter, Specific speed, Technology, Turbine, Volumetric expansion ratio, chemical engineering, electrical engineering electronic engineering information engineering, energy, engineering and technology},
@@ -482,6 +509,20 @@ Place: Boston},
  year = {1974}
 }
 
+@article{esfahanian_mean-line_2024,
+ abstract = {Compressible flow turbines usually work under choked conditions, requiring an analysis for the performance estimation. The Mean-line modeling is a fast and accurate method extensively used for the analysis and design purposes. However, it has not already been well-investigated for axial flow turbines specially in choked conditions. The present study investigates the issue from three novel aspects. First, a detailed study is accomplished on the inconsistencies of Mean-line method respect to the physics of real flows. It is discussed that the conditions related to maximum mass flow rate through a nozzle and the Mach number one at the throat are different. In fact, the latter condition is not quite physical. Second, a complete algorithm is utilized to implement the aforementioned considerations for the analysis of turbines. This algorithm includes an innovative Blade Solution Algorithm (BSA) and Turbine Solution Algorithm (TSA). The BSA solves the blade rows of turbine using the basic laws of Physics and real-gas properties. In the TSA, a robust and efficient procedure is presented so the solution of turbine converges in wide ranges of boundary conditions with minimum iterations. The results demonstrate that the algorithm generate close maps to the previous studies. Eventually in the third part, since a fast and robust Mean-line algorithm is crucial in optimization, the code is utilized for a design based on optimization using the Genetic Algorithm. In this procedure, all geometrical parameters are optimized as decision parameters rather than the use of old and approximate correlations. This is done along with novel constraints, which not only maximizes efficiency, but also puts the output power, mass flow rate and turbine size in appropriate ranges. The optimization results in a 3.5\% rise in efficiency.},
+ author = {Esfahanian, Vahid and Taghavi, Arman and Shahbazi, Ali Akbar},
+ doi = {10.1016/j.ijheatfluidflow.2024.109370},
+ issn = {0142-727X},
+ journal = {International Journal of Heat and Fluid Flow},
+ keywords = {Choked flow, Mean-line analysis, Mean-line design, Performance estimation, Turbine optimization},
+ month = {July},
+ pages = {109370},
+ title = {Mean-line analysis and optimal design of turbines using a proper algorithm for choked conditions},
+ volume = {107},
+ year = {2024}
+}
+
 @article{fiaschi_design_2015,
  abstract = {In this paper, a zero-dimensional model for the design of radial turbo-expanders for ORC applications is discussed, with special reference to the estimation of losses and efficiency; a comparison between different fluids (R134a, R1234yf, R236fa, R245fa, Cyclohexane, N-Pentane) is presented and discussed, referring to a typical small-size application (50kW). In the model, different methods for the design of radial turbines are screened, with special attention to the estimation of losses, for which correlations from literature are used. Real Equations Of State (EOS) are applied to the expansion process in place of the traditionally adopted Mach relationships for ideal gas, which is a significant advancement for modeling organic fluids in ORC, often operating near to critical conditions. The results show that the total to total efficiency of the designed machines range between 0.72 and 0.80, depending on the considered fluid. Generally, higher efficiency (1.5–2.5\% points) can be achieved adopting backswept-bladed rotors. The most significant losses come from the rotor secondary flows, due to the high curvature of blade profiles combined to the large pressure gradient. The best performing fluids are R236fa and R245fa, followed by R134a and R1234yf. Finally, starting from the developed design tool, an off-design analysis of turbo-expanders is presented. Once the design data are available, the characteristic curves of the expander at variable temperature, pressure and fluid mass flowrate at the expander inlet for different values of the specific speed are built. It is thus possible to evaluate the performance of the radial expanders when working far from design point. This analysis, demonstrated for R134a, shows that the total to static efficiency has a relatively modest sensitivity to the off design of the expansion ratio, especially at corrected speed below the design value.},
  author = {Fiaschi, Daniele and Manfrida, Giampaolo and Maraschiello, Francesco},
@@ -518,7 +559,7 @@ NTRS Research Center: Legacy CDMS (CDMS)},
  doi = {10.1115/GT2005-68716},
  pages = {1161--1168},
  publisher = {American Society of Mechanical Engineers Digital Collection},
- title = {A {Reduced}-{Order} {Through}-{Flow} {Program} for {Choked} and {Cooled} {Axial} {Turbines}},
+ title = {A reduced-order through-flow program for choked and cooled axial turbines},
  year = {2005}
 }
 
@@ -582,7 +623,6 @@ NTRS Research Center: Legacy CDMS (CDMS)},
 @article{hagen_equation-oriented_2021,
  abstract = {This paper presents methods for design optimization and performance analysis of radial inflow turbines. Both methods are formulated in an equation-oriented manner and involve a single mathematical problem that is solved by an efficient, gradient-based optimization algorithm. In addition, the comparison of the model output with experimental data showed that the underlying mean-line flow model accurately predicts the variation of mass flow rate and isentropic efficiency as a function of the pressure ratio, rotational speed, and nozzle throat area. Moreover, the capabilities of the proposed methods were demonstrated by carrying out the preliminary design and performance prediction of the radial inflow turbine of an organic Rankine cycle. The results indicate that the design optimization method converges to the global optimum solution, regardless of the start values for the independent variables. In addition, the performance maps generated by the performance analysis method are physically consistent and agree with general findings from experimental data reported in the open literature. Considering the accuracy, robustness and low computational cost of the proposed methods, they can be regarded as a powerful tool for the preliminary design and performance prediction of radial inflow turbines, either as a standalone component or as part of a larger system. •New methods for design optimization and performance analysis of radial turbines.•The design optimization method reliably converges to the global optimum.•The analysis method predicts physically consistent performance maps.•Validation of the underlying mean-line model against experimental data.•Novel treatment of choked flow in the case of supersonic flow velocities.},
  author = {Hagen, Brede A.L and Agromayor, Roberto and Nekså, Petter},
- copyright = {2021 The Author(s)},
  doi = {10.1016/j.energy.2021.121596},
  journal = {Energy},
  keywords = {Algorithms, Analysis, Choked flow, Computer applications, Design analysis, Design and construction, Design optimization, Experimental data, Flow rates, Gradient-based optimization, Independent variables, Inflow, Mass flow rate, Mathematical optimization, Mathematical problems, Mean-line model, Methods, Model validation, Optimization, Organic Rankine cycle, Performance prediction, Preliminary designs, Pressure ratio, Rankine cycle, Robustness (mathematics), Turbines},
@@ -596,11 +636,10 @@ NTRS Research Center: Legacy CDMS (CDMS)},
  abstract = {The prediction of turbomachinery performance characteristics is an important part of the conceptual aircraft engine design process. During this phase, the designer must examine the effects of a large number of turbomachinery design parameters to determine their impact on overall engine performance and weight. The lack of detailed design information available in this phase necessitates the use of simpler meanline and streamline methods to determine the turbomachinery geometry characteristics and provide performance estimates prior to more detailed CFD (Computational Fluid Dynamics) analyses. While a number of analysis codes have been developed for this purpose, most are written in outdated software languages and may be difficult or impossible to apply to new, unconventional designs. The Object-Oriented Turbomachinery Analysis Code (OTAC) is currently being developed at NASA Glenn Research Center to provide a flexible meanline and streamline analysis capability in a modern object-oriented language. During the development and validation of OTAC, a limitation was identified in the code's ability to analyze and converge turbines as the flow approached choking. This paper describes a series of changes which can be made to typical OTAC turbine meanline models to enable the assessment of choked flow up to limit load conditions. Results produced with this revised model setup are provided in the form of turbine performance maps and are compared to published maps.},
  address = {San Diego, CA},
  author = {Hendricks, Eric S},
- copyright = {Copyright NASA/Langley Research Center Jan 4, 2016},
+ doi = {10.2514/6.2016-0119},
  keywords = {Aerodynamics, Aircraft components, Aircraft design, Aircraft engines, Choked flow, Computational fluid dynamics, Design, Design parameters, Engine design, Limit load, Mathematical models, Object-oriented languages, R\&D, Research \& development, Turbines, Turbomachinery, Weight},
  publisher = {Glenn Research Center},
- title = {Meanline {Analysis} of {Turbines} with {Choked} {Flow} in the {Object}-{Oriented} {Turbomachinery} {Analysis} {Code}},
- url = {https://ntrs.nasa.gov/citations/20160010270},
+ title = {Meanline analysis of turbines with choked flow in the object-oriented turbomachinery analysis code},
  year = {2016}
 }
 
@@ -645,12 +684,10 @@ NTRS Research Center: Legacy CDMS (CDMS)},
  abstract = {The flow field in axial turbines is complex and three-dimensional. Therefore, experimental flow field is essential to determine the performance characteristics. However, such testing is always expensive and complex. Simulation of gas turbines is a simple way to reduce testing costs and complexity.The main objective of this paper is to make a detailed systematic analysis of two-stage, axial flow turbine by using of different loss models and a new suggested algorithm based on one-dimensional simulation. In one-dimensional modeling, the loss models have to be used to determine the entropy increase across each section of axial turbines stage at both the design and off-design conditions.The calculation used in this modeling is based on common thermodynamics and aerodynamics principles in a mean stream line analysis.Finally, in order to have a better understanding of the loss models behavior and verify the suggested algorithm accuracy, the analytical results from modeling were compared with experimental results and the comparison shows that good adaptation is obtained.},
  author = {Jouybari, H. Javaniyan and Eftari, M. and Shahhosseini, M. and Rad, M.},
  doi = {10.1115/GT2012-69149},
- language = {en},
  month = {July},
  pages = {1391--1399},
  publisher = {American Society of Mechanical Engineers Digital Collection},
- title = {Performance {Prediction} of {Axial} {Flow} {Two}-{Stage} {Turbine} {Based} on {Different} {Losses} {Models}},
- urldate = {2024-02-26},
+ title = {Performance prediction of axial flow two-stage turbine based on different losses models},
  year = {2013}
 }
 
@@ -695,7 +732,6 @@ Place: Tulsa, Okla},
 @article{ketata_methodology_2022,
  abstract = {PurposeVariable geometry turbine (VGT), a key component of modern internal combustion engines (ICE) turbochargers, is increasingly used for better efficiency and reduced exhaust gas emissions. The aim of this study is the development of a new meanline FORTRAN code for accurate performance and loss assessment of VGTs under a wider operating range. This code is a useful alternative tool for engineers for fast design of VGT systems where higher efficiency and minimum loss are being required.Design/methodology/approachThe proposed meanline code was applied to a variable geometry mixed flow turbine at different nozzle vane angles and under a wide range of rotational speed and the expansion ratio. The numerical methodology was validated through a comparison of the predicted performance to test data. The maps of the mass flow rate as well as the efficiency of the VGT system are discussed for different nozzle vane angles under a wide range of rotational speed. Based on the developed model, a breakdown loss analysis was carried out showing a significant effect of the nozzle vane angle on the loss distribution.FindingsResults indicated that the nozzle angle of 70° has led to the maximum efficiency compared to the other investigated nozzle vane angles ranging from 30° up to 80°. The results showed that the passage loss was significantly reduced as the nozzle vane angle increases from 30° up to 70°.Originality/valueThis paper outlines a new meanline approach for variable geometry turbocharger turbines. The developed code presents the novelty of including the effect of the vane radii variation, due to the pivoting mechanism of the nozzle ring. The developed code can be generalized to either radial or mixed flow turbines with or without a VGT system.},
  author = {Ketata, Ahmed and Driss, Zied},
- copyright = {Emerald Publishing Limited},
  doi = {10.1108/EC-05-2021-0290},
  journal = {Engineering Computations},
  keywords = {Angles (geometry), Computer science, Cost control, Design of experiments, Efficiency, Energy consumption, Exhaust gases, FORTRAN, Geometry, Internal combustion engines, Investigations, Loss breakdown, Mass flow, Mass flow rate, Mathematical analysis, Meanline FORTRAN code, Mechanical engineering, Methodology, Nozzles, Optimization techniques, Performance assessment, Sensors, Superchargers, Turbine, Turbines, Turbocharger, Variable geometry turbine (VGT), Variable-geometry turbocharger},
@@ -724,12 +760,12 @@ Place: Tulsa, Okla},
  language = {en},
  publisher = {American Society of Mechanical Engineers Digital Collection},
  title = {Aerodynamic {Study} of a {Turbine} {Designed} for a {Small} {Low}-{Cost} {Turbofan} {Engine}},
- urldate = {2023-09-30},
  year = {1974}
 }
 
 @techreport{kofskey_design_1972,
  author = {Kofskey, M. G. and Nusbaum, W. J.},
+ institution = {National Aeronautics and Space Administration (NASA)},
  keywords = {Auxiliary Systems},
  number = {NASA-TN-D-6967},
  title = {Design and cold-air investigation of a turbine for a small low-cost turbofan engine},
@@ -738,34 +774,45 @@ Place: Tulsa, Okla},
 }
 
 @techreport{kofskey_turbine_1974,
+ author = {Kofskey, M. G. and Nusbaum, W. J. and Haas, J. E.},
+ institution = {National Aeronautics and Space Administration (NASA)},
+ keywords = {Propulsion Systems},
+ number = {E-7776},
+ title = {Turbine for ordnance turbojet engine.  2:  {Cold}-air performance with opened stator},
+ url = {https://ntrs.nasa.gov/citations/19740019165},
+ year = {1974}
+}
+
+@techreport{kofskey_turbine_1974-1,
  author = {Kofskey, M. G. and Roelke, R. J. and Haas, J. E.},
+ institution = {National Aeronautics and Space Administration (NASA)},
  keywords = {Propulsion Systems},
  number = {NASA-TN-D-7625},
- shorttitle = {Turbine for a low cost turbojet engine.  1},
  title = {Turbine for a low cost turbojet engine.  1:  {Design} and cold-air performance},
  url = {https://ntrs.nasa.gov/citations/19740018139},
  year = {1974}
 }
 
-@techreport{kofskey_turbine_1974_1,
- author = {Kofskey, M. G. and Nusbaum, W. J. and Haas, J. E.},
- keywords = {Propulsion Systems},
- note = {NTRS Author Affiliations: NASA Lewis Research Center
-NTRS Document ID: 19740019165
-NTRS Research Center: Legacy CDMS (CDMS)},
- number = {E-7776},
- shorttitle = {Turbine for ordnance turbojet engine.  2},
- title = {Turbine for ordnance turbojet engine.  2:  {Cold}-air performance with opened stator},
- url = {https://ntrs.nasa.gov/citations/19740019165},
- urldate = {2023-09-30},
- year = {1974}
+@incollection{macchi_9_2017,
+ abstract = {This chapter aims to define a set of general correlations for the estimation of axial-flow turbine efficiency in the Organic Rankine Cycle (ORC) field. A dedicated numerical tool is used for the optimization of several hundreds of turbines and the results are presented in terms of specific parameters (SP, Vr, and Ns) according to similarity rules. The analysis is carried out for single, two, and three stages turbines. For each case a correlation of efficiency at optimal rotational speed is calibrated in function of the equivalent single stage SP and the total isentropic Vr. Three sensitivity analyses are proposed in order to highlight the effects of each single parameter on stage efficiency. Finally, the effect of fluid choice on turbine performance and dimension is discussed with a numerical example.},
+ author = {Macchi, E. and Astolfi, M.},
+ booktitle = {Organic {Rankine} {Cycle} ({ORC}) {Power} {Systems}},
+ copyright = {2017 Elsevier Ltd},
+ isbn = {978-0-08-100510-1},
+ keywords = {Axial flow, Axtur code, Efficiency prediction, Model validation, Multistage turbines, Organic Rankine Cycle, Single stage turbines, Size parameter, Specific speed, Volume ratio},
+ language = {eng},
+ pages = {299--319},
+ publisher = {Elsevier Ltd},
+ title = {9 - {Axial} flow turbines for {Organic} {Rankine} {Cycle} applications},
+ year = {2017}
 }
 
-@misc{macchi_organic_2017,
+@book{macchi_organic_2017,
  author = {Macchi, Ennio and Astolfi, Marco},
+ isbn = {0-08-100511-3},
  keywords = {Rankine cycle, Thermodynamic cycles},
  language = {eng},
- note = {ISBN: 0-08-100511-3
+ note = {ISBN: 
 Place: Amsterdam, Netherlands
 Series: Woodhead Publishing in energy ;
 Volume: Number 107},
@@ -890,12 +937,39 @@ In this lecture we attempt to include in a general comparison of part-load perfo
  year = {2020}
 }
 
+@misc{noauthor_axstream_nodate,
+ note = {SoftInWay Inc.},
+ title = {{AxSTREAM}},
+ url = {https://www.softinway.com/software/},
+ urldate = {2024-06-25}
+}
+
+@misc{noauthor_cfturbo_nodate,
+ note = {CFturbo GmbH},
+ title = {{CFturbo}},
+ url = {https://cfturbo.com/},
+ urldate = {2024-06-25}
+}
+
+@misc{noauthor_concepts_nodate,
+ title = {Concepts {NREC}},
+ url = {https://www.conceptsnrec.com/turbomachinery-software-solutions},
+ urldate = {2024-06-25}
+}
+
 @article{noauthor_hinkley_2023,
  month = {May},
  title = {Hinkley {Point} {C} nuclear power station},
  url = {https://www.power-technology.com/projects/hinkley-point-c-nuclear-power-station/?cf-view},
  urldate = {2024-03-04},
  year = {2023}
+}
+
+@misc{noauthor_turbodesign_nodate,
+ note = {Advanced Design Technology Ltd},
+ title = {{TURBOdesign} {Suite}},
+ url = {https://www.adtechnology.com/products},
+ urldate = {2024-06-25}
 }
 
 @book{nocedal_numerical_2006,
@@ -941,6 +1015,34 @@ In this lecture we attempt to include in a general comparison of part-load perfo
  publisher = {American Society of Mechanical Engineers Digital Collection},
  title = {Thermo-economic assessment of pumped thermal electricity storage systems employing reversible turbomachinery},
  year = {2023}
+}
+
+@article{pini_preliminary_2013,
+ abstract = {Organic rankine cycles (ORC) are renowned to be attractive energy conversion systems for the thermal energy sources in the small-to-medium power range. A critical component in the ORC technology is the turbo-expander; the difficulties involved in the accurate thermodynamic modeling of organic fluids and, especially, the complex gasdynamic phenomena that are commonly found in ORC turbines may result in relatively low efficiency and in performance reduction at partial loads. In this perspective, a relevant path of development can be outlined in the evaluation of nonconventional turbine architectures, such as the radial-outward or centrifugal turbine. In the present work, a critical evaluation of the feasibility of multistage transonic centrifugal turbines for ORC systems is presented. To support this study, a two-step design procedure, specifically oriented to ORC turbines, was developed. The methodology includes a 1D mean-line code coupled to an external optimizer to perform a preliminary design of the machine. The selected configurations are then verified with a CFD (computational fluid dynamics)-based throughflow solver, able to deal with any flow regime and to treat fluids described by arbitrary equations of state. The overall procedure is applied to the design of two different turbines of the same target power of about 1 MW, the former representing a transonic six-stage turbine and the latter a supersonic three-stage turbine. The two machines are characterized by very different shape and comparable performances. The results are extensively discussed in terms of both overall data and detailed flow fields.},
+ author = {Pini, Matteo and Persico, Giacomo and Casati, Emiliano and Dossena, Vincenzo},
+ doi = {10.1115/1.4023122},
+ issn = {0742-4795, 1528-8919},
+ journal = {Journal of Engineering for Gas Turbines and Power},
+ month = {April},
+ number = {4},
+ pages = {042312},
+ title = {Preliminary design of a centrifugal turbine for organic {Rankine} cycle applications},
+ volume = {135},
+ year = {2013}
+}
+
+@article{pini_preliminary_2013-1,
+ author = {Pini, Matteo and Persico, Giacomo and Casati, Emiliano and Dossena, Vincenzo},
+ doi = {10.1115/1.4023122},
+ issn = {0742-4795},
+ journal = {Journal of Engineering for Gas Turbines and Power},
+ month = {March},
+ note = {\_eprint: https://asmedigitalcollection.asme.org/gasturbinespower/article-pdf/135/4/042312/6156675/gtp\_135\_4\_042312.pdf},
+ number = {4},
+ pages = {042312},
+ title = {Preliminary {Design} of a {Centrifugal} {Turbine} for {Organic} {Rankine} {Cycle} {Applications}},
+ volume = {135},
+ year = {2013}
 }
 
 @article{powell_hybrid_1970,
@@ -1043,10 +1145,8 @@ Publisher: Elsevier Ltd},
  author = {Sammak, Majed and Thern, Marcus and Genrup, Magnus},
  doi = {10.1115/GT2013-95469},
  language = {en},
- month = {November},
  publisher = {American Society of Mechanical Engineers Digital Collection},
- title = {Reduced-{Order} {Through}-{Flow} {Design} {Code} for {Highly} {Loaded}, {Cooled} {Axial} {Turbines}},
- urldate = {2024-02-26},
+ title = {Reduced-order through-flow design code for highly loaded, cooled axial turbines},
  year = {2013}
 }
 
@@ -1075,7 +1175,6 @@ Publisher: Elsevier Ltd},
 @article{shahbazi_performance_2023,
  abstract = {Development of a fast and accurate tool to estimate the performance of axial flow turbines in all range of working conditions including choked region is of great interest in the design steps of turbines. Mean-line (one-dimensional) analysis is one of the solutions that is computationally cost-effective along with producing accurate results. However, the development of a mean-line model that able to solve the flow in a choked turbine (one-row chocking and multi-row choking) is a challenging problem. This study presents a new algorithm for mean-line analysis of axial flow turbines with a set of well-posed boundary conditions, i.e., the inlet total pressure, the inlet total temperature, inlet flow angle, and outlet static pressure and calculates the flow condition through the turbine row-by-row. The proposed algorithm is implemented in an object-oriented C++ code named Axial Turbine Simulator (ATSim). The results of ATSim program is validated and verified under various working conditions, e.g., low and high-pressure ratios (choking condition), for four different turbine configurations including two uncooled single-stage turbines, an uncooled two-stage turbine, and a cooled three-stage turbine. ATSim provide good consistency with previous experimental and numerical studies. Moreover, the results show that ATSim is capable of estimating the performance of the turbine in a very short time over a wide range of working conditions, including choking (one-row choking or multi-row choking) region. •An efficient and real-time mean-line analysis of axial turbines is proposed.•The algorithm employed a well-posed set of boundary conditions, i.e.: pt,in, Tt,in, αin, ps,out.•The performance of turbines in a wide range of working conditions can be estimated.•The effect of blade film cooling is considered in the algorithm.•Results indicate good consistency with previous experimental and numerical studies.},
  author = {Shahbazi, Ali Akbar and Esfahanian, Vahid and Taghavi, Arman and Salavati-Zadeh, Ali and Poursamad, Amir and Zirak, Saadat},
- copyright = {2023 Elsevier Ltd},
  doi = {10.1016/j.applthermaleng.2023.120828},
  journal = {Applied thermal engineering},
  keywords = {Axial turbine, Choked conditions, Cooled turbine, Mean-line analysis, Performance estimation},
@@ -1183,6 +1282,24 @@ Volume: 2},
  title = {Profile {Loss} of {Ultra}-{Highly} {Loaded} {Turbine} {Cascade} at {Transonic} {Flow} {Condition}},
  urldate = {2024-03-14},
  year = {2019}
+}
+
+@article{virtanen_scipy_2020,
+ abstract = {SciPy is an open-source scientific computing library for the Python programming language. Since its initial release in 2001, SciPy has become a de facto standard for leveraging scientific algorithms in Python, with over 600 unique code contributors, thousands of dependent packages, over 100,000 dependent repositories and millions of downloads per year. In this work, we provide an overview of the capabilities and development practices of SciPy 1.0 and highlight some recent technical developments.},
+ author = {Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E. and Haberland, Matt and Reddy, Tyler and Cournapeau, David and Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and Bright, Jonathan and van der Walt, Stéfan J. and Brett, Matthew and Wilson, Joshua and Millman, K. Jarrod and Mayorov, Nikolay and Nelson, Andrew R. J. and Jones, Eric and Kern, Robert and Larson, Eric and Carey, C.J. and Polat, İlhan and Feng, Yu and Moore, Eric W. and VanderPlas, Jake and Laxalde, Denis and Perktold, Josef and Henriksen, Ian and Quintero, E.A. and Harris, Charles R. and Archibald, Anne M. and Ribeiro, Antônio H. and Pedregosa, Fabian and van Mulbregt, Paul and Bardelli, Alessandro Pietro and Rothberg, Alex and Hilboll, Andreas and Scopatz, Anthony and Lee, Antony and Rokem, Ariel and Woods, C. Nathan and Fulton, Chad and Masson, Charles and Häggström, Christian and Fitzgerald, Clark and Hagen, David R. and Pasechnik, Dmitrii V. and Olivetti, Emanuele and Martin, Eric and Wieser, Eric and Silva, Fabrice and Lenders, Felix and Wilhelm, Florian and Young, G. and Price, Gavin A. and Ingold, Gert-Ludwig and Allen, Gregory E. and Lee, Gregory R. and Audren, Hervé and Probst, Irvin and Dietrich, Jörg P. and Silterra, Jacob and Webber, James T and Slavič, Janko and Nothman, Joel and Buchner, Johannes and Kulick, Johannes and Schönberger, Johannes L. and de Miranda Cardoso, José Vinícius and Harrington, Joseph and Rodríguez, Juan Luis Cano and Nunez-Iglesias, Juan and Kuczynski, Justin and Thoma, Martin and Bolingbroke, Maximilian and Tartre, Michael and Smith, Nathaniel J. and Nowaczyk, Nikolai and Shebanov, Nikolay and Pavlyk, Oleksandr and Brodtkorb, Per A. and Feldbauer, Roman and Lewis, Sam and Tygier, Sam and Sievert, Scott and Vigna, Sebastiano and Peterson, Stefan and More, Surhud and Pudlik, Tadeusz and Oshima, Takuya and Pingel, Thomas J. and Robitaille, Thomas P. and Spura, Thomas and Jones, Thouis R. and Cera, Tim and Leslie, Tim and Zito, Tiziano and Krauss, Tom and Upadhyay, Utkarsh and Halchenko, Yaroslav O. and Vázquez-Baeza, Yoshiki},
+ copyright = {Copyright 2020 Elsevier B.V., All rights reserved.},
+ issn = {1548-7091},
+ journal = {Nature methods},
+ keywords = {Algorithms, Biophysical chemistry, Clustering, Computation, Computational Biology - history, Computational Biology - methods, Computational Physics, Computational biology and bioinformatics, Computational geometry, Computer Science, Computer Simulation, Data Structures and Algorithms, Fourier transforms, Gravitational waves, History 20th Century, History 21st Century, Image processing, Interpolation, Libraries, Linear Models, Linear algebra, MATHEMATICS AND COMPUTING, Machine learning, Mathematical Software, Models Biological, Nonlinear Dynamics, Numerical Analysis, Programming Languages, Regression analysis, Repositories, Signal Processing Computer-Assisted, Signal processing, Software, Software Engineering, Sparse matrices, Technology},
+ language = {eng},
+ note = {Backup Publisher: SciPy 1.0 Contributors
+Place: United States
+Publisher: Cornell University Library, arXiv.org},
+ number = {3},
+ pages = {261--272},
+ title = {{SciPy} 1.0: fundamental algorithms for scientific computing in {Python}},
+ volume = {17},
+ year = {2020}
 }
 
 @misc{weisstein_vector_2023,

@@ -4,7 +4,7 @@
 **TurboFlow** is a Python package for mean-line modelling of turbomachinery. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
 
 [![PyPI](https://img.shields.io/pypi/v/turboflow.svg)](https://pypi.org/project/turboflow/)
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://turbo-sim.github.io/TurboFlow/)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://turbo-sim.github.io/turboflow/)
 
 ## Core features
 

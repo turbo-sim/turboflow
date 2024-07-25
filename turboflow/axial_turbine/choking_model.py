@@ -209,12 +209,13 @@ def evaluate_cascade_throat(
 
     return residuals_critical, {**critical_state, **throat_plane}
 
+
 def get_mach_crit(gamma, eta):
-    """
+    r"""
     Compute the critical Mach number for non-isentropic flow in a nozzle.
  
-    This function calculates the critical Mach number ($\text{Ma}_\text{crit}$) using the
-    given specific heat ratio (\$gamma$) and nozzle efficiency ($\eta$).
+    This function calculates the critical Mach number (:math:`\text{Ma}_\text{crit}`) using the
+    given specific heat ratio (:math:`\gamma`) and nozzle efficiency (:math:`\eta`).
    
     .. math::
         \text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
@@ -230,7 +231,7 @@ def get_mach_crit(gamma, eta):
     .. math::
         \eta = 1 - \Delta \phi^2
  
-    Here, $\Delta \phi^2$ is the kinetic energy loss coefficient.
+    Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.
        
     Parameters
     ----------
@@ -242,12 +243,56 @@ def get_mach_crit(gamma, eta):
     Returns
     -------
     float
-        Critical Mach number (\text{Ma}_\text{crit}).
+        Critical Mach number.
     """
     alpha = gamma / (gamma - 1)
     T_hat_crit = (2*alpha + eta - 3 + np.sqrt((1+eta)**2 + 4*alpha*(1+alpha-3*eta))) / (4*alpha - 2)
     Ma_crit = np.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
     return Ma_crit
+
+
+def get_flow_capacity(Ma, gamma, eta):
+    r"""
+    Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.
+
+    This function calculates the dimensionless mass flow rate (:math:`\Phi`) using the 
+    given Mach number (:math:`\text{Ma}`), specific heat ratio (:math:`\gamma`), and efficiency (:math:`\eta`).
+    
+    .. math::
+        \Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}
+        \left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}
+
+    where:
+
+    .. math::
+        \hat{T} = \left(\frac{T}{T_{0}}\right)
+
+    and
+
+    .. math::
+        \eta = 1 - \Delta \phi^2
+
+    Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.
+    
+    Parameters
+    ----------
+    Ma : float
+        Mach number of the flow.
+    gamma : float
+        Specific heat ratio of the gas.
+    eta : float
+        Nozzle efficiency, related to the kinetic energy loss coefficient.
+
+    Returns
+    -------
+    float
+        Dimensionless mass flow rate.
+    """
+    T_hat = (1 + (gamma - 1) / 2 * Ma**2) ** (-1)
+    Phi = np.sqrt(2 * gamma / (gamma - 1)) * np.sqrt(1 - T_hat) / T_hat * (1 - 1 / eta * (1 - T_hat)) ** (gamma / (gamma - 1))
+    return Phi
+
+
 
 def evaluate_cascade_critical(
     choking_input,

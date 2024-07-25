@@ -23,30 +23,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Compiled documentation
-_build/
-docs/_build/
-docs/build/
-
-# Sphinx generated files
-.doctrees/
-environment.pickle
-
-# Output directories
-_output/
-_results/
-results/
-figures/
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Generated LaTeX files
-*.latex
-
-# Virtual environment
-venv/
-
 # Visual Studio Code specific
 .vscode/         # VS Code settings and cache
 settings.json    # VS Code settings file
@@ -58,6 +34,35 @@ settings.json    # VS Code settings file
 *.bak
 .DS_Store       # Mac OS X desktop services store
 *.swp           # Vim swap files
+
+# Sphinx generated files
+_build/
+docs/_build/
+docs/.doctrees/
+docs/.buildinfo
+.doctrees/
+environment.pickle
+
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Generated LaTeX files
+*.latex
+
+# Other common directories and files
+*.log
+*.bak
+*.swp
+*.bak~
+*.cache
+*.tmp
+*.~lock.*
+
+# Environment directories
+.env
+venv/
+
 
 # Results folders
 **/output/
