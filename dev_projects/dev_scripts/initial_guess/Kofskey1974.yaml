@@ -1,0 +1,61 @@
+turbomachinery: axial_turbine
+operation_points:
+  fluid_name: air          # Fluid
+  p0_in: 10.82e4           # Inlet total pressure
+  T0_in: 310.0             # Inlet total temperature
+  p_out: 10.82e4/2.144     # Exit static pressure
+  alpha_in: 0              # Flow angle at first stator
+  omega: 1963         # Rotational speed
+
+simulation_options:
+  choking_model : evaluate_cascade_throat
+  deviation_model : aungier
+  blockage_model : 0.0 #flat_plate_turbulent
+  rel_step_fd: 1e-4
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.00
+      incidence: 1.00
+      secondary: 1.00
+      trailing: 1.00
+      clearance: 1.00
+
+performance_analysis :
+  performance_map:
+    fluid_name: air
+    T0_in: 310.0
+    p0_in: 10.82e4
+    p_out: 10.82e4/np.linspace(1.3, 3.5, 40)
+    omega: 1963*np.array([1.0])
+    alpha_in: 0
+  solver_options:
+    method: hybr
+    tolerance: 1e-8
+    max_iterations: 100
+    derivative_method: "2-point"
+    derivative_abs_step: 1e-6  # Optional
+    print_convergence: True
+    plot_convergence: False
+
+geometry:
+  cascade_type: ["stator", "rotor"]
+  radius_hub_in : [8.36e-2, 8.31e-2]
+  radius_hub_out : [8.36e-2, 8.03e-2]
+  radius_tip_in : [12.35e-2, 12.35e-2]
+  radius_tip_out : [12.35e-2, 12.35e-2]
+  # pitch: [1.858027655e-2, 1.140894174e-2] 
+  pitch: [1.896207585e-2, 1.140909091e-2]
+  chord: [2.2655e-2, 1.8251e-2]
+  stagger_angle: [33.0, -15.7]  
+  opening: [0.7505e-2*(1-0.064), 0.6500e-2*1.0]
+  leading_edge_diameter: [2*0.081e-2, 2*0.081e-2]
+  leading_edge_wedge_angle: [50, 50]  
+  leading_edge_angle:  [0.0, 23.2] 
+  trailing_edge_thickness: [0.05e-2, 0.05e-2] 
+  maximum_thickness: [0.3529e-2, 0.2071e-2] 
+  tip_clearance: [0.0, 0.28e-3]  
+  throat_location_fraction: [1.0, 1.0]
+
