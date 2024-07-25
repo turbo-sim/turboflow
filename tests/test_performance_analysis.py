@@ -78,6 +78,7 @@ def compute_performance_from_config(request):
     config_file = os.path.basename(config_path)
     config = tf.load_config(
         config_path,
+        print_summary=False,
     )
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, config, export_results=False)
