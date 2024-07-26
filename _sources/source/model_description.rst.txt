@@ -20,4 +20,4 @@ The TurboFlow meanline-model is designed to be flexible and offers a variety of 
    model_description/choking_models
 
 
-   .. model_description/equation_formulation
+.. model_description/equation_formulation
