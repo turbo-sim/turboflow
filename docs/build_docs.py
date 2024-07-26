@@ -27,7 +27,7 @@ def run_sphinx_apidoc(output_dir, src_dir,exclude = None, force = False):
     cmd.append("-M") # Module first
 
     if force:
-        cmd.append("-f") # Force overwriting oN any existing generated files
+        cmd.append("-f") # Force overwriting on any existing generated files
 
     subprocess.check_call(cmd)
     print("Sphinx apidoc completed successfully.")

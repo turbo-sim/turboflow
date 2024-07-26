@@ -1,5 +1,6 @@
 import os
 import sys
+from inspect import getfile, isfunction
 
 # Add package root dir to path
 sys.path.insert(0, os.path.abspath(".."))
@@ -35,11 +36,15 @@ bibtex_reference_style = "author_year"
 
 # Exclude unnecessary files
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
-exclude_patterns.extend(["source/api/turboflow.add_to_pythonpath.rst",
-                         "source/api/turboflow.cycles.rst",
+exclude_patterns.extend(["source/api/turboflow.cycles.rst",
                          "source/api/turboflow.turbo_configurations.rst",
-                         "source/api/turboflow.turboflow.turbo_configurations.config_axial_turbine.rst"])
+                         "source/api/turboflow.turboflow.turbo_configurations.config_axial_turbine.rst",
+                         "source/configuration_old/*",
+                         "source/model_validation.rst",
+                         "source/model_description/design_optimization.rst",
+                         "source/model_description/performance_analysis.rst",
+                         "source/model_description/equation_formulation.rst"])
+
 
 # Define theme
 # html_theme = "sphinx_book_theme"  # Bibliography is messed up with this theme

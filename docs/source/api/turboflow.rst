@@ -1,11 +1,6 @@
 API Reference
 =================
 
-.. automodule:: turboflow
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Subpackages
 -----------
 
@@ -23,6 +18,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   turboflow.config_validation
    turboflow.math
+   turboflow.config_validation
    turboflow.plot_functions
