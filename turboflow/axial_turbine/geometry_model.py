@@ -264,7 +264,6 @@ def prepare_geometry(geometry, radius_type):
         "maximum_thickness": maximum_thickness,
         "cascade_type": geom["cascade_type"],
         "leading_edge_angle": geom["leading_edge_angle"],
-        "gauging_angle": gauging_angle,
         "stagger_angle": stagger_angle,
         "leading_edge_diameter": geom["leading_edge_diameter"],
         "leading_edge_wedge_angle": geom["leading_edge_wedge_angle"],

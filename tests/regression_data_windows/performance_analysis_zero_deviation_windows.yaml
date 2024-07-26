@@ -89,6 +89,16 @@ performance_analysis:
     derivative_abs_step: 1.0e-06
     print_convergence: true
     plot_convergence: false
+  initial_guess:
+    eta_tt:
+    - 0.9
+    - 0.8
+    eta_ts:
+    - 0.8
+    - 0.7
+    ma:
+    - 0.8
+    - 0.8
 design_optimization:
   objective_function:
     variable: overall.efficieny_ts

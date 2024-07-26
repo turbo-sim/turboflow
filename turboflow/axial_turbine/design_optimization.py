@@ -133,8 +133,7 @@ def compute_optimal_turbine(
             for sheet_name, df in dfs.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=True)
 
-    return solver
-
+    return solver        
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
@@ -190,7 +189,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Get the number of oinequality constraints.
     get_omega(specific_speed, mass_flow, h0_in, d_is, h_is)
         Convert specific speed to actual angular speed
-    extend_variables(variables)
+    index_variables(variables)
         Convert a dict containing lists or arrays to a dictionaries of only one element.
     get_given_bounds(design_variable)
         Retrieves the lower and upper bounds for the given design variables.
@@ -226,8 +225,17 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             config["design_optimization"]["constraints"]
         )
 
+        algorithm = config["design_optimization"]["solver_options"]["method"]
+        if algorithm in ["snopt", "ipopt", "slsqp"]:
+            self.init_gradient_based(config)
+        elif algorithm in ["de", "pso"]:
+            self.init_gradient_free(config)
+        else:
+            raise ValueError(f"Unknown algorithm: {algorithm}")
+
+    def init_gradient_based(self, config):
+
         # Update design point 
-        # TODO: Differ between operation-points and design point? 
         if isinstance(config["operation_points"], (list, np.ndarray)):
             self.update_boundary_conditions(config["operation_points"][0])
         else:
@@ -273,12 +281,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 fixed_params[key] = value
 
         # Initialize initial guess
-        initial_guess = self.extend_variables(design_variables)
+        initial_guess = self.index_variables(design_variables)
         self.design_variables_keys = initial_guess.keys()
         self.initial_guess = np.array(list(initial_guess.values()))
 
-        # Extend fixed variables
-        self.fixed_params = self.extend_variables(fixed_params)
+        # Index fixed variables
+        self.fixed_params = self.index_variables(fixed_params)
 
         # Initialize bounds
         lb, ub = self.get_given_bounds(design_variables)
@@ -313,7 +321,159 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 )
             ]
 
+        # Set fitness function
+        self.fitness = self.fitness_gradient_based
+
+    def init_gradient_free(self, config):
+        
+        # Update design point 
+        if isinstance(config["operation_points"], (list, np.ndarray)):
+            self.operation_point = config["operation_points"][0]
+            self.update_boundary_conditions(config["operation_points"][0])
+        else:
+            self.operation_point = config["operation_points"]
+            self.update_boundary_conditions(config["operation_points"])
+
+        # Adjust given variables according to choking model (remove excess variables)
+        variables = config["design_optimization"]["variables"]
+        prefixes = ["v_", "w_", "s_", "beta_"]
+        variables = {key: var for key, var in variables.items() if not any(key.startswith(prefix) for prefix in prefixes)}
+
+        # Separate fixed variables and design variables
+        fixed_params = {}
+        design_variables = {}
+        for key, value in variables.items():
+            if value["lower_bound"] is not None:
+                design_variables[key] = value
+            else:
+                fixed_params[key] = value
+
+        # Initialize initial guess
+        initial_guess = self.index_variables(design_variables)
+        self.design_variables_keys = initial_guess.keys()
+        self.initial_guess = np.array(list(initial_guess.values()))
+
+        # Index fixed variables
+        self.fixed_params = self.index_variables(fixed_params)
+
+        # Initialize bounds
+        lb, ub = self.get_given_bounds(design_variables)
+        self.bounds = (lb, ub)            
+
+        # Set initial guess for root finder
+        self.x0 = None
+
+        # Set constraints to None
+        self.c_eq = None
+        self.c_ineq = None
+
+        # Initialize config copy
+        self.config = {"simulation_options" : config["simulation_options"],
+                       "performance_analysis" : {"solver_options" : config["performance_analysis"]["solver_options"]} } 
+
+        # Set fitness function
+        self.fitness = self.fitness_gradient_free
+        self.iteration = 1
+
     def fitness(self, x):
+        
+        # TODO: Add if-statement
+
+        pass
+
+    def fitness_gradient_free(self, x):
+        r"""
+        Evaluate the objective function and constraints at a given pint `x` for genetic algrothims.
+
+        Parameters
+        ----------
+        x : array-like
+            Vector of design variables.
+
+        Returns
+        -------
+        numpy.ndarray
+            An array containg the value of the objective function and constraints.
+        """
+
+        # Rename reference values
+        h0_in = self.boundary_conditions["h0_in"]
+        s_in = self.boundary_conditions["s_in"]
+        mass_flow = self.reference_values["mass_flow_ref"]
+        h_is = self.reference_values["h_out_s"]
+        d_is = self.reference_values["d_out_s"]
+        v0 = self.reference_values["v0"]
+        angle_range = self.reference_values["angle_range"]
+        angle_min = self.reference_values["angle_min"]
+
+        # Structure design variables to dictionary (Assume set of design variables)
+        design_variables = dict(zip(self.design_variables_keys, x))
+
+        # Contruct variables
+        variables = {**design_variables, **self.fixed_params}
+
+        # Calculate angular speed
+        specific_speed = variables["specific_speed"]
+        self.operation_point["omega"] = self.get_omega(
+            specific_speed, mass_flow, h0_in, d_is, h_is
+        )
+
+        # Calculate mean radius
+        blade_jet_ratio = variables["blade_jet_ratio"]
+        blade_speed = blade_jet_ratio * v0
+        self.geometry = {}
+        self.geometry["radius"] = blade_speed / self.boundary_conditions["omega"]
+
+        # Assign geometry design variables to geometry attribute
+        for key in INDEXED_VARIABLES:
+            self.geometry[key] = np.array(
+                [v for k, v in variables.items() if k.startswith(key)]
+            )
+            if key in ANGLE_KEYS:
+                self.geometry[key] = self.geometry[key] * angle_range + angle_min
+
+        self.config["geometry"] = geom.prepare_geometry(self.geometry, self.radius_type)
+
+        try:
+        # Evaluate turbine model
+            solvers = pa.compute_single_operation_point(
+                self.operation_point,
+                self.config,
+                initial_guess=self.x0,
+            )
+            self.results = solvers[0].problem.results
+            self.geometry = solvers[0].problem.geometry
+
+            # Update initial guess
+            self.x0 = solvers[0].problem.vars_real
+
+            # Evaluate objective function
+            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+
+            # Evaluate additional constraints
+            self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
+                / self.geometry["A_out"][0:-1]})
+            
+            # Evaluate constraints
+            c_eq = self.evaluate_constraints(self.eq_constraints)
+            c_ineq = self.evaluate_constraints(self.ineq_constraints)
+
+            # Include constriants in objective function
+            self.f = self.f + sum(c_eq**2)
+        except:
+            self.f = 0
+        
+        self.iteration =+ 1
+        print(f"Iteration: {self.iteration}")
+
+        # Combine objective functions and constraint
+        objective_and_constraints = psv.combine_objective_and_constraints(
+            self.f, self.c_eq, self.c_ineq
+        )
+
+        return objective_and_constraints
+
+    def fitness_gradient_based(self, x):
         r"""
         Evaluate the objective function and constraints at a given pint `x`.
 
@@ -421,7 +581,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         return objective
 
-    def extend_variables(self, variables):
+    def index_variables(self, variables):
         """
         Index the design variables for each cascade for the default initial guess.
 
@@ -632,7 +792,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         # Define current operating point
-        self.boundary_conditions = design_point
+        self.boundary_conditions = design_point.copy()
 
         # Initialize fluid object
         self.fluid = props.Fluid(design_point["fluid_name"])

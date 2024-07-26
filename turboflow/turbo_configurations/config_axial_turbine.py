@@ -6,7 +6,7 @@ from pydantic import (
     field_validator,
     ConfigDict,
 )
-from typing import Optional, List, Union, Literal, Dict
+from typing import Optional, List, Union, Literal, Tuple
 from enum import Enum
 from typing_extensions import Self
 from typing_extensions import Annotated
@@ -355,6 +355,31 @@ class SolverOptionsOptimization(BaseModel):
             raise ValueError(f"Method {method} is not available in {lib} library.")
         return self
 
+class InitialGuess1(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+    n_samples : int 
+    eta_tt : Tuple[float, float] = (0.5, 0.95)
+    eta_ts : Tuple[float, float] = (0.4, 0.9)
+    ma : Tuple[float, float] = (0.5, 1.2)
+
+class InitialGuess2(BaseModel):
+
+    model_config = ConfigDict(extra="forbid")
+    eta_tt : Union[float, List[float]] = [0.9, 0.8]
+    eta_ts : Union[float, List[float]] = [0.8, 0.7]
+    ma : Union[float, List[float]] = [0.8, 0.8]
+
+    @model_validator(mode="after")
+    def check_length(self) -> Self:
+        attributes = vars(self).values()
+        input_type = type(self.eta_tt)
+        if not all(isinstance(attr, input_type) for attr in attributes):
+            raise ValueError("Variable input is not of same type")
+        if input_type == list:
+            if not all(len(attr) == len(self.eta_tt) for attr in attributes):
+                raise ValueError("Variable input is not of same length")
+        return self
 
 class PerformanceAnalysis(BaseModel):
     """
@@ -378,6 +403,7 @@ class PerformanceAnalysis(BaseModel):
     solver_options: SolverOptionsPerformanceAnalysis = (
         SolverOptionsPerformanceAnalysis()
     )
+    initial_guess : Union[InitialGuess1, InitialGuess2] = InitialGuess2()
 
 
 class Variable(BaseModel):

@@ -35,6 +35,7 @@ PYGMO_SOLVERS = [
     "ipopt",
     "snopt",
     # "worhp",
+    "pso",
 ]
 """List of valid Pygmo solvers"""
 
@@ -187,6 +188,8 @@ def minimize_pygmo(problem, x0, method, options):
         return _minimize_pygmo_ipopt(problem, x0, options)
     # elif method == "worhp":
     #     return _minimize_pygmo_worhp(problem, x0, options)
+    elif method == "pso":
+        return _minimize_pygmo_pso(problem, x0, options)
     else:
         error_message = (
             f"Invalid solver: '{method}'. \nAvailable options:\n   - "
@@ -195,6 +198,21 @@ def minimize_pygmo(problem, x0, method, options):
         )
         raise ValueError(error_message)
 
+def _minimize_pygmo_pso(problem, x0, options):
+    """Solve optimization problem using Pygmo's wrapper to PSO"""
+    
+    # Solve the problem
+    algorithm = pg.algorithm(pg.nsga2(gen = 500))
+    algorithm.set_verbosity(50)
+    problem = pg.problem(problem)
+    population = pg.population(problem, 20)
+    population = algorithm.evolve(population)
+
+    # Optimization output
+    success = ""
+    message = ""
+
+    return success, message
 
 def _minimize_pygmo_ipopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to IPOPT"""

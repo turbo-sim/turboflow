@@ -75,7 +75,7 @@ def compute_optimal_turbine_from_config(request):
     print()
     config_path = request.param
     config_file = os.path.basename(config_path)
-    config = tf.load_config(config_path)
+    config = tf.load_config(config_path, print_summary=False)
     solvers = tf.compute_optimal_turbine(config, export_results=False)
     return solvers, config_file
 
