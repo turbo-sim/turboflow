@@ -296,6 +296,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">success</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">message</span>
 
+        <span class="c1"># Check if solver actually converged</span>
+        <span class="n">norm_residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_final</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="ow">and</span> <span class="n">norm_residual</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;The equation solver returned a success exit flag.</span><span class="se">\n</span><span class="s2">However, the two-norm of the final residual is higher than tolerance (</span><span class="si">{</span><span class="n">norm_residual</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">)&quot;</span>
+
         <span class="c1"># Calculate elapsed time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
 
