@@ -203,6 +203,12 @@ class NonlinearSystemSolver:
         self.success = solution.success
         self.message = solution.message
 
+        # Check if solver actually converged
+        norm_residual = np.linalg.norm(self.f_final)
+        if self.success and norm_residual > 10*self.tol:
+            self.success = False
+            self.message = f"The equation solver returned a success exit flag.\nHowever, the two-norm of the final residual is higher than tolerance ({norm_residual:0.2e}>{self.tol:0.2e})"
+
         # Calculate elapsed time
         self.elapsed_time = time.perf_counter() - start_time
 
