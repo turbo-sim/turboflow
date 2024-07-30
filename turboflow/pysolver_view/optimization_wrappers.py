@@ -35,10 +35,19 @@ PYGMO_SOLVERS = [
     "ipopt",
     "snopt",
     # "worhp",
+    "de",
+    "sga",
     "pso",
 ]
 """List of valid Pygmo solvers"""
 
+GENETIC_SOLVERS = [
+    "de",
+    "sga",
+    "pso",
+]
+
+GRADIENT_SOLVERS = list(set(PYGMO_SOLVERS + SCIPY_SOLVERS) - set(GENETIC_SOLVERS))
 
 NLOPT_SOLVERS = [
     "auglag",
@@ -100,9 +109,8 @@ def minimize_scipy(problem, x0, method, options):
         raise ValueError(error_message)
 
     # Define the options dictionary
-    options = options.copy()  # Work with a copy to avoid side effects
-    tol = options.pop("tol")
-    max_iter = options.pop("max_iter")
+    tol = 1e-6 # Default tolerance
+    max_iter = 100 # Default iterations
     default_options = {
         "bfgs": {"gtol": tol, "maxiter": max_iter},
         "l-bfgs-b": {"ftol": tol, "gtol": tol, "maxiter": max_iter},
@@ -112,6 +120,7 @@ def minimize_scipy(problem, x0, method, options):
     default_options = (
         default_options[method] if method in default_options.keys() else {}
     )
+    options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options  # Merge defaults with input
 
     # Convert bounds from Pygmo to Scipy convention
@@ -188,6 +197,10 @@ def minimize_pygmo(problem, x0, method, options):
         return _minimize_pygmo_ipopt(problem, x0, options)
     # elif method == "worhp":
     #     return _minimize_pygmo_worhp(problem, x0, options)
+    elif method == "de":
+        return _minimize_pygmo_de(problem, x0, options)
+    elif method == "sga":
+        return _minimize_pygmo_sga(problem, x0, options)
     elif method == "pso":
         return _minimize_pygmo_pso(problem, x0, options)
     else:
@@ -198,14 +211,22 @@ def minimize_pygmo(problem, x0, method, options):
         )
         raise ValueError(error_message)
 
-def _minimize_pygmo_pso(problem, x0, options):
-    """Solve optimization problem using Pygmo's wrapper to PSO"""
+def _minimize_pygmo_de(problem, x0, options):
+    """Solve optimization problem using Pygmo's wrapper to de"""
+
+    # Define solver options
+    default_options = {
+        "gen": 10, 
+        "pop_size": 10,
+    }
+    options = options.copy()  # Work with a copy to avoid side effects
+    combined_options = default_options | options
     
     # Solve the problem
-    algorithm = pg.algorithm(pg.nsga2(gen = 500))
+    algorithm = pg.algorithm(pg.de(gen = int(combined_options["gen"])))
     algorithm.set_verbosity(50)
     problem = pg.problem(problem)
-    population = pg.population(problem, 20)
+    population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
 
     # Optimization output
@@ -213,6 +234,56 @@ def _minimize_pygmo_pso(problem, x0, options):
     message = ""
 
     return success, message
+
+def _minimize_pygmo_sga(problem, x0, options):
+    """Solve optimization problem using Pygmo's wrapper to sga"""
+
+    # Define solver options
+    default_options = {
+        "gen": 10, 
+        "pop_size": 10,
+    }
+    options = options.copy()  # Work with a copy to avoid side effects
+    combined_options = default_options | options
+    
+    # Solve the problem
+    algorithm = pg.algorithm(pg.sga(gen = int(combined_options["gen"])))
+    algorithm.set_verbosity(50)
+    problem = pg.problem(problem)
+    population = pg.population(problem, int(combined_options["pop_size"]))
+    population = algorithm.evolve(population)
+
+    # Optimization output
+    success = ""
+    message = ""
+
+    return success, message
+
+def _minimize_pygmo_pso(problem, x0, options):
+    """Solve optimization problem using Pygmo's wrapper to PSO"""
+
+    # Define solver options
+    default_options = {
+        "gen": 10, 
+        "pop_size": 10,
+    }
+    options = options.copy()  # Work with a copy to avoid side effects
+    combined_options = default_options | options
+
+
+    # Solve the problem
+    algorithm = pg.algorithm(pg.pso(gen = int(combined_options["gen"])))
+    algorithm.set_verbosity(50)
+    problem = pg.problem(problem)
+    population = pg.population(problem, int(combined_options["pop_size"]))
+    population = algorithm.evolve(population)
+
+    # Optimization output
+    success = ""
+    message = ""
+
+    return success, message
+
 
 def _minimize_pygmo_ipopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to IPOPT"""
@@ -240,16 +311,7 @@ def _minimize_pygmo_ipopt(problem, x0, options):
         -102: "Insufficient Memory",
         -199: "Internal Error",
     }
-
-    # Define solver options
-    options = options.copy()  # Work with a copy to avoid side effects
-    tol = options.pop("tol")
-    max_iter = options.pop("max_iter")
-    if tol < 1e-3:
-        print(
-            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {tol:0.2e}."
-        )
-
+    
     # Define solver options
     default_options = {
         "print_level": 0,  # No output to the screen
@@ -258,10 +320,15 @@ def _minimize_pygmo_ipopt(problem, x0, options):
         "limited_memory_update_type": "bfgs",  # bfgs, sr1
         "line_search_method": "cg-penalty",  # filter, cg-penalty, penalty
         "limited_memory_max_history": 30,  # bfgs
-        "max_iter": int(max_iter),
-        "tol": tol,
+        "max_iter": 100,
+        "tol": 1e-3,
     }
+    options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
+    if combined_options["tol"] < 1e-3:
+        print(
+            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {tol:0.2e}."
+        )
 
     # Solve the problem
     problem = pg.problem(problem)
@@ -284,18 +351,16 @@ def _minimize_pygmo_snopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to SNOPT"""
 
     # Define solver options
-    options = options.copy()  # Work with a copy to avoid side effects
-    tol = options.pop("tol")
-    max_iter = options.pop("max_iter")
     default_options = {
-        "Major feasibility tolerance": tol,
-        "Major optimality tolerance": tol,
-        "Minor feasibility tolerance": tol,
-        "Iterations limit": int(max_iter),
+        "Major feasibility tolerance": 1e-3,
+        "Major optimality tolerance": 1e-3,
+        "Minor feasibility tolerance": 1e-3,
+        "Iterations limit": 100,
         "Major iterations limit": 1e6,
         "Minor iterations limit": 1e6,
         "Hessian updates": 30,
     }
+    options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
 
     # Define SNOPT path
@@ -328,16 +393,14 @@ def _minimize_pygmo_worhp(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to WORHP"""
 
     # Define solver options
-    options = options.copy()  # Work with a copy to avoid side effects
-    tol = options.pop("tol")
-    max_iter = options.pop("max_iter")
     default_options = {
         "Algorithm": 1,  # Set: 1 (SQP) or 2 (IP)
         "BFGSmethod": 0,  # Set 0 to use the classic dense BFGS method
-        "TolOpti": tol,
-        "TolFeas": tol,
-        "MaxIter": max_iter,
+        "TolOpti": 1e-3,
+        "TolFeas": 1e-3,
+        "MaxIter": 100,
     }
+    options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
 
     # Define WORHP path
