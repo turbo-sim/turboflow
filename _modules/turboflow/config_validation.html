@@ -312,7 +312,6 @@
 
             <span class="c1"># Convert string representation of numbers to number and lists to arrays</span>
             <span class="n">config_data</span> <span class="o">=</span> <span class="n">convert_configuration_options</span><span class="p">(</span><span class="n">config_data</span><span class="p">)</span>
-
             <span class="k">if</span> <span class="s2">&quot;turbomachinery&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config_data</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing &#39;turbomachinery&#39; field in configuration.&quot;</span><span class="p">)</span>
 
@@ -326,7 +325,6 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Unknown turbomachinery type: </span><span class="si">{</span><span class="n">turbomachinery_type</span><span class="si">}</span><span class="s2">. Available turbomachineries are: </span><span class="si">{</span><span class="n">TURBOMACHINERIES</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
-
             <span class="c1"># Convert configuration object to a nested dictionary</span>
             <span class="n">config</span> <span class="o">=</span> <span class="n">object_to_dict</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 

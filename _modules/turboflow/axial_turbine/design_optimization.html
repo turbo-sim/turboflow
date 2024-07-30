@@ -128,6 +128,9 @@
     <span class="s2">&quot;cascade_type&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 
+<span class="n">GENETIC_ALGORITHMS</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">GENETIC_SOLVERS</span>
+<span class="n">GRADIENT_ALGORITHMS</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">GRADIENT_SOLVERS</span>
+
 <div class="viewcode-block" id="compute_optimal_turbine">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.design_optimization.html#turboflow.axial_turbine.design_optimization.compute_optimal_turbine">[docs]</a>
 <span class="k">def</span> <span class="nf">compute_optimal_turbine</span><span class="p">(</span>
@@ -320,9 +323,9 @@
         <span class="p">)</span>
 
         <span class="n">algorithm</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">][</span><span class="s2">&quot;method&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">algorithm</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;snopt&quot;</span><span class="p">,</span> <span class="s2">&quot;ipopt&quot;</span><span class="p">,</span> <span class="s2">&quot;slsqp&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">algorithm</span> <span class="ow">in</span> <span class="n">GRADIENT_ALGORITHMS</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">init_gradient_based</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">algorithm</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;de&quot;</span><span class="p">,</span> <span class="s2">&quot;pso&quot;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">algorithm</span> <span class="ow">in</span> <span class="n">GENETIC_ALGORITHMS</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">init_gradient_free</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown algorithm: </span><span class="si">{</span><span class="n">algorithm</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -342,20 +345,20 @@
 
         <span class="c1"># Adjust given variables according to choking model (remove excess variables)</span>
         <span class="n">variables</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;design_optimization&quot;</span><span class="p">][</span><span class="s2">&quot;variables&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_mach_number&quot;</span><span class="p">:</span>
             <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
             <span class="p">}</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_mass_flow_rate&quot;</span><span class="p">:</span>
             <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
                 <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
             <span class="p">}</span>
         <span class="k">elif</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_isentropic_throat&quot;</span>
         <span class="p">):</span>
             <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">var</span>
@@ -366,6 +369,9 @@
                     <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;STOP&quot;</span><span class="p">)</span>
+
 
         <span class="c1"># Separate fixed variables and design variables</span>
         <span class="n">fixed_params</span> <span class="o">=</span> <span class="p">{}</span>
@@ -394,18 +400,18 @@
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
             <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">var</span><span class="p">)</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">INDEPENDENT_VARIABLES</span><span class="p">)</span>
         <span class="p">]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_throat&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_mach_number&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">var</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
             <span class="p">]</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_critical&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_mass_flow_rate&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">var</span>
                 <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="k">elif</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_model&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;evaluate_cascade_isentropic_throat&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;choking_criterion&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;critical_isentropic_throat&quot;</span>
         <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">independent_variables</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="n">var</span>
@@ -413,9 +419,10 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
                     <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;v_crit_in&quot;</span><span class="p">)</span>
                     <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;s_crit_throat&quot;</span><span class="p">)</span>
-                    <span class="ow">or</span> <span class="n">var</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;beta_crit_throat&quot;</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;STOP&quot;</span><span class="p">)</span>
 
         <span class="c1"># Set fitness function</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness_gradient_based</span></div>
@@ -460,19 +467,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb</span><span class="p">,</span> <span class="n">ub</span><span class="p">)</span>            
 
         <span class="c1"># Set initial guess for root finder</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;initial_guess&quot;</span><span class="p">]</span>
 
         <span class="c1"># Set constraints to None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c_eq</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c_ineq</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Initialize config copy</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;simulation_options&quot;</span> <span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
-                       <span class="s2">&quot;performance_analysis&quot;</span> <span class="p">:</span> <span class="p">{</span><span class="s2">&quot;solver_options&quot;</span> <span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">]}</span> <span class="p">}</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulation_options</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solver_options</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">]</span> 
 
         <span class="c1"># Set fitness function</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fitness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fitness_gradient_free</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=</span> <span class="mi">1</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="mi">0</span></div>
 
 
 <div class="viewcode-block" id="CascadesOptimizationProblem.fitness">
@@ -537,39 +545,45 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ANGLE_KEYS</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">prepare_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span><span class="p">)</span>
-
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">prepare_geometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_type</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
         <span class="c1"># Evaluate turbine model</span>
-            <span class="n">solvers</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">compute_single_operation_point</span><span class="p">(</span>
+            <span class="n">solver</span><span class="p">,</span> <span class="n">results</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">compute_single_operation_point</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
-                <span class="n">initial_guess</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">simulation_options</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">solver_options</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">solvers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">solvers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">geometry</span>
+            <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;residuals&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">&lt;</span> <span class="mf">1e-6</span> <span class="p">:</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span> <span class="o">=</span> <span class="n">results</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">]</span>
+                <span class="c1"># Update initial guess</span>
+                <span class="c1"># self.x0 = solvers[0].problem.vars_real</span>
 
-            <span class="c1"># Update initial guess</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">x0</span> <span class="o">=</span> <span class="n">solvers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">vars_real</span>
+                <span class="c1"># Evaluate objective function</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="c1"># self.obj.func on the form &quot;key.column&quot;</span>
 
-            <span class="c1"># Evaluate objective function</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nested_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;variable&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_func</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]</span> <span class="c1"># self.obj.func on the form &quot;key.column&quot;</span>
+                <span class="c1"># Evaluate additional constraints</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;additional_constraints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;interspace_area_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+                    <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
+                
+                <span class="c1"># Evaluate constraints</span>
+                <span class="n">c_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">)</span>
+                <span class="n">c_ineq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span><span class="p">)</span>
 
-            <span class="c1"># Evaluate additional constraints</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;additional_constraints&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;interspace_area_ratio&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_in&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
-                <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]})</span>
-            
-            <span class="c1"># Evaluate constraints</span>
-            <span class="n">c_eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eq_constraints</span><span class="p">)</span>
-            <span class="n">c_ineq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ineq_constraints</span><span class="p">)</span>
+                <span class="c1"># Include constriants in objective function</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">+</span> <span class="mi">100</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">c_eq</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-            <span class="c1"># Include constriants in objective function</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">c_eq</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">success</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">1e3</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="mf">1e3</span>
         
-        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+=</span> <span class="mi">1</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Iteration: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successful iterations: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">success</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Combine objective functions and constraint</span>
         <span class="n">objective_and_constraints</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">combine_objective_and_constraints</span><span class="p">(</span>

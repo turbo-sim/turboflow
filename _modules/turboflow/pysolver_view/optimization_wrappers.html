@@ -124,10 +124,19 @@
     <span class="s2">&quot;ipopt&quot;</span><span class="p">,</span>
     <span class="s2">&quot;snopt&quot;</span><span class="p">,</span>
     <span class="c1"># &quot;worhp&quot;,</span>
+    <span class="s2">&quot;de&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sga&quot;</span><span class="p">,</span>
     <span class="s2">&quot;pso&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;List of valid Pygmo solvers&quot;&quot;&quot;</span>
 
+<span class="n">GENETIC_SOLVERS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;de&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sga&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pso&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">GRADIENT_SOLVERS</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">PYGMO_SOLVERS</span> <span class="o">+</span> <span class="n">SCIPY_SOLVERS</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">GENETIC_SOLVERS</span><span class="p">))</span>
 
 <span class="n">NLOPT_SOLVERS</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;auglag&quot;</span><span class="p">,</span>
@@ -191,9 +200,8 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
 
     <span class="c1"># Define the options dictionary</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
-    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-6</span> <span class="c1"># Default tolerance</span>
+    <span class="n">max_iter</span> <span class="o">=</span> <span class="mi">100</span> <span class="c1"># Default iterations</span>
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;bfgs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
         <span class="s2">&quot;l-bfgs-b&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;ftol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;gtol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span> <span class="s2">&quot;maxiter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">},</span>
@@ -203,6 +211,7 @@
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">default_options</span><span class="p">[</span><span class="n">method</span><span class="p">]</span> <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">default_options</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="p">{}</span>
     <span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>  <span class="c1"># Merge defaults with input</span>
 
     <span class="c1"># Convert bounds from Pygmo to Scipy convention</span>
@@ -282,6 +291,10 @@
         <span class="k">return</span> <span class="n">_minimize_pygmo_ipopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
     <span class="c1"># elif method == &quot;worhp&quot;:</span>
     <span class="c1">#     return _minimize_pygmo_worhp(problem, x0, options)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;de&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_minimize_pygmo_de</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;sga&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_minimize_pygmo_sga</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">&quot;pso&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_minimize_pygmo_pso</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -293,14 +306,22 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_minimize_pygmo_pso</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to PSO&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">_minimize_pygmo_de</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to de&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;gen&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> 
+        <span class="s2">&quot;pop_size&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
     
     <span class="c1"># Solve the problem</span>
-    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">nsga2</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="mi">500</span><span class="p">))</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">de</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;gen&quot;</span><span class="p">])))</span>
     <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
     <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
 
     <span class="c1"># Optimization output</span>
@@ -308,6 +329,56 @@
     <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
 
     <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
+<span class="k">def</span> <span class="nf">_minimize_pygmo_sga</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to sga&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;gen&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> 
+        <span class="s2">&quot;pop_size&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+    
+    <span class="c1"># Solve the problem</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">sga</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;gen&quot;</span><span class="p">])))</span>
+    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
+<span class="k">def</span> <span class="nf">_minimize_pygmo_pso</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to PSO&quot;&quot;&quot;</span>
+
+    <span class="c1"># Define solver options</span>
+    <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;gen&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> 
+        <span class="s2">&quot;pop_size&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
+    <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+
+
+    <span class="c1"># Solve the problem</span>
+    <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">pso</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;gen&quot;</span><span class="p">])))</span>
+    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
+    <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># Optimization output</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">success</span><span class="p">,</span> <span class="n">message</span>
+
 
 <span class="k">def</span> <span class="nf">_minimize_pygmo_ipopt</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to IPOPT&quot;&quot;&quot;</span>
@@ -335,16 +406,7 @@
         <span class="o">-</span><span class="mi">102</span><span class="p">:</span> <span class="s2">&quot;Insufficient Memory&quot;</span><span class="p">,</span>
         <span class="o">-</span><span class="mi">199</span><span class="p">:</span> <span class="s2">&quot;Internal Error&quot;</span><span class="p">,</span>
     <span class="p">}</span>
-
-    <span class="c1"># Define solver options</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
-    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">tol</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.</span><span class="se">\n</span><span class="s2">Consider relaxing the termination tolerance above 1e-3. Current tolerance: </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">.&quot;</span>
-        <span class="p">)</span>
-
+    
     <span class="c1"># Define solver options</span>
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;print_level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># No output to the screen</span>
@@ -353,10 +415,15 @@
         <span class="s2">&quot;limited_memory_update_type&quot;</span><span class="p">:</span> <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>  <span class="c1"># bfgs, sr1</span>
         <span class="s2">&quot;line_search_method&quot;</span><span class="p">:</span> <span class="s2">&quot;cg-penalty&quot;</span><span class="p">,</span>  <span class="c1"># filter, cg-penalty, penalty</span>
         <span class="s2">&quot;limited_memory_max_history&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>  <span class="c1"># bfgs</span>
-        <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_iter</span><span class="p">),</span>
-        <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
+        <span class="s2">&quot;max_iter&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s2">&quot;tol&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+    <span class="k">if</span> <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;tol&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.</span><span class="se">\n</span><span class="s2">Consider relaxing the termination tolerance above 1e-3. Current tolerance: </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
 
     <span class="c1"># Solve the problem</span>
     <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
@@ -379,18 +446,16 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to SNOPT&quot;&quot;&quot;</span>
 
     <span class="c1"># Define solver options</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
-    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;Major feasibility tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
-        <span class="s2">&quot;Major optimality tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
-        <span class="s2">&quot;Minor feasibility tolerance&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
-        <span class="s2">&quot;Iterations limit&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_iter</span><span class="p">),</span>
+        <span class="s2">&quot;Major feasibility tolerance&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+        <span class="s2">&quot;Major optimality tolerance&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+        <span class="s2">&quot;Minor feasibility tolerance&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+        <span class="s2">&quot;Iterations limit&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
         <span class="s2">&quot;Major iterations limit&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span>
         <span class="s2">&quot;Minor iterations limit&quot;</span><span class="p">:</span> <span class="mf">1e6</span><span class="p">,</span>
         <span class="s2">&quot;Hessian updates&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
 
     <span class="c1"># Define SNOPT path</span>
@@ -423,16 +488,14 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Solve optimization problem using Pygmo&#39;s wrapper to WORHP&quot;&quot;&quot;</span>
 
     <span class="c1"># Define solver options</span>
-    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
-    <span class="n">tol</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;tol&quot;</span><span class="p">)</span>
-    <span class="n">max_iter</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_iter&quot;</span><span class="p">)</span>
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;Algorithm&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Set: 1 (SQP) or 2 (IP)</span>
         <span class="s2">&quot;BFGSmethod&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># Set 0 to use the classic dense BFGS method</span>
-        <span class="s2">&quot;TolOpti&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
-        <span class="s2">&quot;TolFeas&quot;</span><span class="p">:</span> <span class="n">tol</span><span class="p">,</span>
-        <span class="s2">&quot;MaxIter&quot;</span><span class="p">:</span> <span class="n">max_iter</span><span class="p">,</span>
+        <span class="s2">&quot;TolOpti&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+        <span class="s2">&quot;TolFeas&quot;</span><span class="p">:</span> <span class="mf">1e-3</span><span class="p">,</span>
+        <span class="s2">&quot;MaxIter&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
 
     <span class="c1"># Define WORHP path</span>

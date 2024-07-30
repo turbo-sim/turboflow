@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.axial_turbine.choking_criterion module &mdash; turboflow v0.1.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=825059f5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">turboflow.axial_turbine.choking_criterion module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.axial_turbine.choking_criterion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.axial_turbine.choking_criterion">
+<span id="turboflow-axial-turbine-choking-criterion-module"></span><h1>turboflow.axial_turbine.choking_criterion module<a class="headerlink" href="#module-turboflow.axial_turbine.choking_criterion" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.compute_critical_jacobian">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">compute_critical_jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">critical_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#compute_critical_jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.compute_critical_jacobian" title="Link to this definition"></a></dt>
+<dd><p>Compute the Jacobian matrix of the compute_critical_values function using finite differences.</p>
+<p>This function approximates the Jacobian of a combined function that includes the mass flow rate value,
+mass balance residual, and loss model evaluation residual at the critical point. It uses forward finite
+difference to approximate the partial derivatives of the Jacobian matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Array of input variables for the <cite>compute_critical_values</cite> function.</p>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>critical_state</strong><span class="classifier">dict</span></dt><dd><p>Dictionary to store the critical state information.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used in the critical condition evaluation.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculations, including mass flow reference and other parameters.</p>
+</dd>
+<dt><strong>f0</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>The function value at x, used for finite difference approximation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>The approximated Jacobian matrix of the compute_critical_values function.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.compute_critical_values">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">compute_critical_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_crit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">critical_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#compute_critical_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.compute_critical_values" title="Link to this definition"></a></dt>
+<dd><p>Compute cascade performance at the critical conditions</p>
+<p>This function evaluates the performance of a cascade at its critical operating point defined by:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Critical inlet absolute velocity,</p></li>
+<li><p>Critical throat relative velocity,</p></li>
+<li><p>Critical throat entropy.</p></li>
+</ol>
+</div></blockquote>
+<p>Using these variables, the function calculates the critical mass flow rate and residuals of the mass balance and the loss model equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x_crit</strong><span class="classifier">numpy.ndarray</span></dt><dd><p>Array containing scaled critical variables <cite>[v_in*, w_throat*, s_throat*]</cite>.</p>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>critical_state</strong><span class="classifier">dict</span></dt><dd><p>Dictionary to store the critical state information.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used in the critical condition evaluation.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculations, including mass flow reference and other parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>An array containing the computed mass flow at the throat plane at critical state and the residuals
+for mass conservation and loss coefficient error.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.critical_isentropic_throat">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">critical_isentropic_throat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">choking_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#critical_isentropic_throat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.critical_isentropic_throat" title="Link to this definition"></a></dt>
+<dd><p>Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the <cite>critical_isentropic_throat</cite> choking model.</p>
+<p>This choking model evaluates the cascade throat and checks if the throat mach number exceed unity. The throat is isentropic from inlet to throat.
+The exit flow angle is determined by ensuring that the mach at throat mach number equals the exit for subconic condition, and unity for supersonic conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>choking_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
+<ul class="simple">
+<li><p><cite>w_crit_throat</cite> : throat velocity.</p></li>
+</ul>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>exit_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the exit plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used to evaluate choking.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculation, including the reference mass flow rate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the residuals of choking model:</p>
+<ul class="simple">
+<li><p><cite>m*</cite>: Mass flow rate residual.</p></li>
+<li><p><cite>choking</cite>: Choking residual.</p></li>
+</ul>
+</dd>
+<dt>dict</dt><dd><p>Dictionary satisfying the required elements for critical state dict.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.critical_mach_number">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">critical_mach_number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">choking_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#critical_mach_number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.critical_mach_number" title="Link to this definition"></a></dt>
+<dd><p>Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the critical_mach_number choking model.</p>
+<p>This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated
+from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition,
+and by ensuring that the mach at the throat equals the critical at supercritical conditions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>choking_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
+<ul class="simple">
+<li><p><cite>w_crit_throat</cite> : throat velocity.</p></li>
+<li><p><cite>s_crit_throat</cite> : throat entropy.</p></li>
+<li><p><cite>beta_crit_throat</cite> : throat relative flow angle.</p></li>
+</ul>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>exit_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the exit plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used to evaluate choking.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculation, including the reference mass flow rate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the residuals of choking model:</p>
+<ul class="simple">
+<li><p><cite>m*</cite>: Mass flow rate residual.</p></li>
+<li><p><cite>Y*</cite>: Loss error residual.</p></li>
+<li><p><cite>beta*</cite>: Residual of the flow angle.</p></li>
+<li><p><cite>choking</cite>: Choking residual.</p></li>
+</ul>
+</dd>
+<dt>dict</dt><dd><p>Dictionary containing relevant information on the critical state and throat plane.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.critical_mass_flow_rate">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">critical_mass_flow_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">choking_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#critical_mass_flow_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.critical_mass_flow_rate" title="Link to this definition"></a></dt>
+<dd><p>Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the <cite>critical_mass_flow_rate</cite> choking model.</p>
+<p>This choking model evaluate the critical state by optimizing the mass flow rate at the throat through the method of lagrange multipliers, and checks if the throat mach number exceed the critical. 
+The exit flow angle is calculated by the selected devaition model at subsonic condition, and from the critical mass flow rate at supersonic conditions.</p>
+<p>Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
+conservation and loss computation equations at the throat.</p>
+<p>The constrained optimization problem to maximize the mass flow rate can be converted to a set of equations through the method of lagrange multipliers. The method
+utlize that at the optimal point, the gradient of the constraints are proportional to the gradient fo the objective function. Thus the solution to the optimization problem 
+eaulas the solution as the following set of equations:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\nabla L = \begin{bmatrix}
+\frac{\partial f}{\partial x_1} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_1} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_1} \\
+\frac{\partial f}{\partial x_2} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_2} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_2} \\
+\frac{\partial f}{\partial x_3} + \lambda_1 \cdot \frac{\partial g_1}{\partial x_3} + \lambda_2 \cdot \frac{\partial g_2}{\partial x_3} \\
+g_1(x_1, x_2, x_3) \\
+g_2(x_1, x_2, x_3) \\
+\end{bmatrix} = 0\end{split}\]</div>
+<p>This function returns the value of the three last equations in the set above, while the two first equations are used to 
+explicitly calculate the lagrange multipliers.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\lambda_1 = \frac{\frac{\partial g_2}{\partial x_2}\cdot\frac{-\partial f}{\partial x_1} - \frac{\partial g_2}{\partial x_1}\cdot-\frac{\partial f}{\partial x_2}} 
+             {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \\                     
+\lambda_2 = \frac{\frac{\partial g_1}{\partial x_1}\cdot\frac{-\partial f}{\partial x_2} - \frac{\partial g_1}{\partial x_2}\cdot-\frac{\partial f}{\partial x_1}} 
+             {\frac{\partial g_1}{\partial x_1}\cdot\frac{\partial g_2}{\partial x_2} - \frac{\partial g_2}{\partial x_1}\cdot\frac{\partial g_1}{\partial x_2}} \end{split}\]</div>
+<p>By transforming the problem into a system of equations, this approach allows the evaluation of the critical
+point without directly solving an optimization problem. One significant advantage of this
+equation-oriented method is that it enables the coupling of these critical condition equations with the
+other modeling equations. This integrated system of equations can then be efficiently solved using gradient-based
+root finding algorithms (e.g., Newton-Raphson solvers).</p>
+<p>Such a coupled solution strategy, as opposed to segregated approaches where nested systems are solved
+sequentially and iteratively, offers superior computational efficiency. This method thus provides
+a more direct and computationally effective way of determining the critical conditions in a cascade.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>critical_cascade_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing scaled input parameters required for selected choking model. Required items are:</p>
+<ul class="simple">
+<li><p><cite>v_crit_in</cite> : inlet velocity at critical state.</p></li>
+<li><p><cite>w_crit_throat</cite> : throat velocity at critical state.</p></li>
+<li><p><cite>s_crit_throat</cite> : throat entropy at critical state.</p></li>
+</ul>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>exit_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the exit plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used in the critical condition evaluation.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculation, including the reference mass flow rate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the residuals of choking model:</p>
+<ul class="simple">
+<li><p><cite>m*</cite>: Mass flow rate residual.</p></li>
+<li><p><cite>Y*</cite>: Loss error residual.</p></li>
+<li><p><cite>L*</cite>: Residual of the lagrange function.</p></li>
+<li><p><cite>choking</cite>: Choking residual.</p></li>
+</ul>
+</dd>
+<dt>dict</dt><dd><p>Dictionary containing state information on the critical conditions at inlet and throat plane.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.evaluate_choking">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">evaluate_choking</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">choking_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inlet_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exit_plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angular_speed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#evaluate_choking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.evaluate_choking" title="Link to this definition"></a></dt>
+<dd><p>Calculate condition for choking and evaluate wheter or not the cascade is choked, based on selected choking model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>choking_input</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing necessary input parameters required for selected choking model. See each models documentation for specifics.</p>
+</dd>
+<dt><strong>inlet_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the inlet plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>exit_plane</strong><span class="classifier">dict</span></dt><dd><p>Dictionary containing data on the exit plane for the actual cascade operating condition.</p>
+</dd>
+<dt><strong>fluid</strong><span class="classifier">object</span></dt><dd><p>A fluid object with methods for thermodynamic property calculations.</p>
+</dd>
+<dt><strong>geometry</strong><span class="classifier">dict</span></dt><dd><p>Geometric parameters of the cascade.</p>
+</dd>
+<dt><strong>angular_speed</strong><span class="classifier">float</span></dt><dd><p>Angular speed of the cascade.</p>
+</dd>
+<dt><strong>model_options</strong><span class="classifier">dict</span></dt><dd><p>Options for the model used to evaluate choking.</p>
+</dd>
+<dt><strong>reference_values</strong><span class="classifier">dict</span></dt><dd><p>Reference values used in the calculation, including the reference mass flow rate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary containing the residuals of choking model</p>
+</dd>
+<dt>dict</dt><dd><p>Dictionary containing state information on the critical conditions.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If an invalid choking model is provided.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.get_flow_capacity">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">get_flow_capacity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Ma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#get_flow_capacity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.get_flow_capacity" title="Link to this definition"></a></dt>
+<dd><p>Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.</p>
+<p>This function calculates the dimensionless mass flow rate (<span class="math notranslate nohighlight">\(\Phi\)</span>) using the 
+given Mach number (<span class="math notranslate nohighlight">\(\text{Ma}\)</span>), specific heat ratio (<span class="math notranslate nohighlight">\(\gamma\)</span>), and efficiency (<span class="math notranslate nohighlight">\(\eta\)</span>).</p>
+<div class="math notranslate nohighlight">
+\[\Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}
+\left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}\]</div>
+<p>where:</p>
+<div class="math notranslate nohighlight">
+\[\hat{T} = \left(\frac{T}{T_{0}}\right)\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\eta = 1 - \Delta \phi^2\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span> is the kinetic energy loss coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Ma</strong><span class="classifier">float</span></dt><dd><p>Mach number of the flow.</p>
+</dd>
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>Specific heat ratio of the gas.</p>
+</dd>
+<dt><strong>eta</strong><span class="classifier">float</span></dt><dd><p>Nozzle efficiency, related to the kinetic energy loss coefficient.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Dimensionless mass flow rate.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.choking_criterion.get_mach_crit">
+<span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.choking_criterion.</span></span><span class="sig-name descname"><span class="pre">get_mach_crit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/choking_criterion.html#get_mach_crit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.choking_criterion.get_mach_crit" title="Link to this definition"></a></dt>
+<dd><p>Compute the critical Mach number for non-isentropic flow in a nozzle.</p>
+<p>This function calculates the critical Mach number (<span class="math notranslate nohighlight">\(\text{Ma}_\text{crit}\)</span>) using the
+given specific heat ratio (<span class="math notranslate nohighlight">\(\gamma\)</span>) and nozzle efficiency (<span class="math notranslate nohighlight">\(\eta\)</span>).</p>
+<div class="math notranslate nohighlight">
+\[\text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
+= \left(\frac{2}{\gamma-1}\right)\left[\frac{4 \alpha-2}{(2 \alpha+\eta-3) + \sqrt{(1+\eta)^{2}+4 \alpha(1+\alpha-3 \eta)}} - 1\right]\]</div>
+<p>where:</p>
+<div class="math notranslate nohighlight">
+\[\alpha = \frac{\gamma}{\gamma-1}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight">
+\[\eta = 1 - \Delta \phi^2\]</div>
+<p>Here, <span class="math notranslate nohighlight">\(\Delta \phi^2\)</span> is the kinetic energy loss coefficient.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>gamma</strong><span class="classifier">float</span></dt><dd><p>Specific heat ratio of the gas.</p>
+</dd>
+<dt><strong>eta</strong><span class="classifier">float</span></dt><dd><p>Nozzle efficiency, related to the kinetic energy loss coefficient.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Critical Mach number.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

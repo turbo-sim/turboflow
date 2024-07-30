@@ -207,8 +207,8 @@
         <span class="n">problem</span><span class="p">,</span>
         <span class="n">library</span><span class="o">=</span><span class="s2">&quot;scipy&quot;</span><span class="p">,</span>
         <span class="n">method</span><span class="o">=</span><span class="s2">&quot;slsqp&quot;</span><span class="p">,</span>
-        <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
-        <span class="n">max_iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="c1"># tolerance=1e-6,</span>
+        <span class="c1"># max_iterations=100,</span>
         <span class="n">options</span><span class="o">=</span><span class="p">{},</span>
         <span class="n">derivative_method</span><span class="o">=</span><span class="s2">&quot;2-point&quot;</span><span class="p">,</span>
         <span class="n">derivative_abs_step</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -241,8 +241,8 @@
 
         <span class="c1"># Define options dictionary</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">options</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span> <span class="k">else</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;tol&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tolerance</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">[</span><span class="s2">&quot;max_iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_iterations</span>
+        <span class="c1"># self.options[&quot;tol&quot;] = tolerance</span>
+        <span class="c1"># self.options[&quot;max_iter&quot;] = max_iterations</span>
 
         <span class="c1"># Check for logger validity</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
