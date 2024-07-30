@@ -26,9 +26,9 @@ def convert_numpy_to_python(data, precision=10):
     if isinstance(data, dict):
         return {k: convert_numpy_to_python(v, precision) for k, v in data.items()}
 
-    elif isinstance(data, list):
+    elif isinstance(data, (list, tuple)):
         return [convert_numpy_to_python(item, precision) for item in data]
-
+    
     elif isinstance(data, np.ndarray):
         # If the numpy array has more than one element, it is iterable.
         if data.ndim > 0:
