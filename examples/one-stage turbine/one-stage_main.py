@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define mode 
-MODE = "performance_map"
+MODE = "design_optimzation"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
@@ -20,7 +20,6 @@ if MODE == "performance_analysis":
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=False,
         stop_on_failure=True,
     )

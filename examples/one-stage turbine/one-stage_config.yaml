@@ -10,7 +10,7 @@ operation_points:
 
 simulation_options: 
   deviation_model : aungier 
-  choking_model : evaluate_cascade_throat
+  choking_citerion : evaluate_cascade_throat
   rel_step_fd: 1e-4 
   loss_model:  
     model: benner  
@@ -33,6 +33,11 @@ performance_analysis :
     derivative_abs_step: 1e-6 
     print_convergence: True
     plot_convergence: False
+  initial_guess :
+      efficiency_tt : [0.9, 0.8] 
+      efficiency_ke : [0.2, 0.1]
+      ma_1 : [0.8, 0.8]
+      ma_2 : [0.8, 0.8]
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -54,7 +59,10 @@ geometry:
   
 
 design_optimization:
-  objective_function: efficiency_ts
+  objective_function: 
+    variable : overall.efficiency_ts
+    scale : 10
+    type : maximize
   variables :
     specific_speed :
       value : 1.2
@@ -108,19 +116,15 @@ design_optimization:
       value : [0.83, 0.17]
       lower_bound : [0.72, 0.06]
       upper_bound : [0.94, 0.28]
-    v*_in : 
+    v_crit_in : 
       value : [0.4, 0.4]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
-    beta*_throat : 
-      value : [0.83, 0.17]
-      lower_bound : [0.72, 0.06]
-      upper_bound : [0.94, 0.28]
-    w*_throat : 
+    w_crit_throat : 
       value : [0.65, 0.65]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
-    s*_throat : 
+    s_crit_throat : 
       value : [0.15, 0.15]
       lower_bound : [0.0, 0.0]
       upper_bound : [0.32, 0.32]
@@ -134,12 +138,12 @@ design_optimization:
       value : [0.00, 0.030e-2]
     cascade_type : 
       value : ["stator", "rotor"]
-  constraints :
-    mass_flow_rate :
+  constraints : 
+    - variable: overall.mass_flow_rate
       type : "="
       value : 2.5
       normalize : True 
-    interstage_flaring :
+    - variable : additional_constraints.interspace_area_ratio
       type : "="
       value : 1
       normalize : True
@@ -148,13 +152,14 @@ design_optimization:
   solver_options:
     library: scipy 
     method: slsqp 
-    tolerance: 1e-3 
-    max_iterations: 100 
     derivative_method: 2-point
     derivative_abs_step: 1e-6
     print_convergence: True
     plot_convergence: True 
     update_on: "gradient"
-  
+    options :
+      tol: 1e-3 
+      max_iter: 100 
+
 
 

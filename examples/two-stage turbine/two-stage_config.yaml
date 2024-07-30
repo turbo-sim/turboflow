@@ -8,7 +8,7 @@ operation_points:
   omega: 1627              # Rotational speed
 
 simulation_options:
-  choking_model : evaluate_cascade_critical 
+  choking_citerion : evaluate_cascade_critical 
   deviation_model : aungier
   rel_step_fd: 1e-3
   loss_model:
@@ -32,6 +32,12 @@ performance_analysis :
     derivative_abs_step: 1e-6  
     print_convergence: True
     plot_convergence: False
+  initial_guess :
+    n_samples : 100
+    efficiency_tt : (0.7, 0.99)
+    efficiency_ke : (0.2, 0.6)
+    ma : (0.5, 1.2)
+
 
 geometry:
   cascade_type : ["stator", "rotor", "stator", "rotor"]
