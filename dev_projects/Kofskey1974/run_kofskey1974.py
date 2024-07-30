@@ -31,7 +31,6 @@ if CASE == 1:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        # initial_guess=x0,
         export_results=False,
         stop_on_failure=True,
     )
@@ -43,7 +42,12 @@ if CASE == 1:
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
-    tf.compute_performance(operation_points, config, initial_guess=None)
+    tf.compute_performance(operation_points, 
+                           config, 
+                           out_filename='performance_map_evaluate_cascade_throat',
+                            stop_on_failure=False,
+                            export_results=True,
+                           )
 
 elif CASE == 3:
 

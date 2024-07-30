@@ -652,123 +652,131 @@ elif Case == "test":
     # filename_1 = "output/performance_analysis_2024-07-20_17-39-40.xlsx" # Lagrange, 5/6
     # filename_2 = "output/performance_analysis_2024-07-20_17-33-26.xlsx" # Critical mach, Madrid correlation, 5/6
     # filename_3 = "output/performance_analysis_2024-07-20_17-47-54.xlsx" # Critical mach, Lasse correlation, 5/6
-    filename_1 = "output/performance_analysis_2024-07-20_20-01-58.xlsx" # Lagrange, 1.0
+    # filename_1 = "output/performance_analysis_2024-07-20_20-01-58.xlsx" # Lagrange, 1.0
     # filename_2 = "output/performance_analysis_2024-07-20_19-57-29.xlsx" # Critical mach, Lasse correlation, 1.0
-    filename_2 = "output/performance_analysis_2024-07-20_20-05-38.xlsx" # Critical mach, Madrid correlation, 1.0
+    # filename_2 = "output/performance_analysis_2024-07-20_20-05-38.xlsx" # Critical mach, Madrid correlation, 1.0
+    filename_1 = "output/performance_map_evaluate_cascade_throat.xlsx"
+    filename_2 = "output/performance_analysis_2024-03-13_23-14-55.xlsx"
 
     data_1 = tf.plot_functions.load_data(filename_1)
     data_2 = tf.plot_functions.load_data(filename_2)
-    # data_3 = tf.plot_functions.load_data(filename_3)
 
-    subsets = ["omega", 1627]
+    subsets = ["omega"] + list(1627*np.array([0.7, 1.0]))
+    colors = plt.get_cmap('magma')(np.linspace(0.2, 0.7, 2))
     fig1, ax1 = tf.plot_functions.plot_lines(
         data_1,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
+        subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        colors='k',
+        colors=colors,
+        linestyles=['-']*2,
         filename = 'mass_flow_rate',
         outdir = "figures",
-        save_figs=True,
+        save_figs=False,
     )
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data_2,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
+        subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        colors=['r'],
+        colors=colors,
+        linestyles=[":"]*2,
         fig = fig1,
         ax = ax1, 
-        linestyles = ["--"],
         filename = 'mass_flow_rate',
         outdir = "figures",
-        save_figs=True,
+        save_figs=False,
     )
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_3,
-    #     x_key="PR_ts",
-    #     y_keys=["mass_flow_rate"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Mass flow rate [kg/s]",
-    #     colors=['r'],
-    #     fig = fig1,
-    #     ax = ax1, 
-    #     linestyles = ["--"],
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-    #     save_figs=True,
-    # )
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        data_1,
+        x_key="PR_ts",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        colors=colors,
+        linestyles=['-']*2,
+        filename = 'torque',
+        outdir = "figures",
+        save_figs=False,
+    )
 
-    ax1.legend(labels = ["Maxmized mass flow rate", "Critical mach"], loc = "lower right")
-    ax1.set_title("Kofskey 1972 one stage")
-    ax1.set_ylim([2.55, 2.8])
-    fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_1,
-    #     x_key="PR_ts",
-    #     y_keys=["beta_4"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Relative flow angle",
-    #     colors=['k'],
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-    #     save_figs=True,
-    # )
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        data_2,
+        x_key="PR_ts",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        colors=colors,
+        linestyles=[":"]*2,
+        fig = fig2,
+        ax = ax2, 
+        filename = 'torque',
+        outdir = "figures",
+        save_figs=False,
+    )
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_2,
-    #     x_key="PR_ts",
-    #     y_keys=["beta_4"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Relative flow angle",
-    #     colors=['r'],
-    #     fig = fig1,
-    #     ax = ax1, 
-    #     linestyles = ["--"],
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-        
-    #     save_figs=True,
-    # )
+    # Add experimental points
+    filename_exp = "experimental_data_Kofskey1972_1stage_interpolated.xlsx"
+    data_exp = pd.read_excel(filename_exp, sheet_name = ["Sheet1"])
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_1,
-    #     x_key="PR_ts",
-    #     y_keys=["s_3", "s_throat_2", "s_4"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Entropy",
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-    #     save_figs=True,
-    # )
+    subsets = ["speed_percent"] + list(np.array([70, 100]))
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        data_exp,
+        x_key="pressure_ratio_ts",
+        y_keys=["mass_flow_rate"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        colors=colors,
+        linestyles = ['none']*2,
+        markers = ["x"]*2,
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        fig = fig1,
+        ax = ax1,
+        save_figs=False,
+    )
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_1,
-    #     x_key="PR_ts",
-    #     y_keys=["beta_4", "beta_throat_2"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Entropy",
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-    #     save_figs=True,
-    # )
+    subsets = ["speed_percent"] + list(np.array([70, 100]))
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        data_exp,
+        x_key="pressure_ratio_ts",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        colors=colors,
+        linestyles = ['none']*2,
+        markers = ["x"]*2,
+        filename = 'torque',
+        outdir = "figures",
+        fig = fig2,
+        ax = ax2,
+        save_figs=False,
+    )
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_2,
-    #     x_key="PR_ts",
-    #     y_keys=["s_3", "s_throat_2", "s_4"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Entropy",
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-        
-    #     save_figs=True,
-    # )
+    lables = ["$0.7\Omega_\mathrm{des}$, Critical mach", "$1.0\Omega_\mathrm{des}$, Critical mach", 
+              "$0.7\Omega_\mathrm{des}$, Max mass flow rate", "$1.0\Omega_\mathrm{des}$, Max mass flow rate", 
+              "$0.7\Omega_\mathrm{des}$, Exp. data", "$1.0\Omega_\mathrm{des}$, Exp. data"]
+    ax1.legend(labels = lables, ncols = 1, loc = 'lower right')
+    ax2.legend(labels = lables, ncols = 1, loc = 'lower right')
 
+    ax1.set_ylim([2.55, 2.85])
+    ax2.set_ylim([40, 140])
+
+    if save_figs:
+        filename1 = 'validation_mass_flow_kofskey_1972'
+        filename2 = 'validation_torque_kofskey_1972'
+        tf.plot_functions.savefig_in_formats(fig1, filename1, formats=[".png",".eps"])
+        tf.plot_functions.savefig_in_formats(fig2, filename2, formats=[".png",".eps"])
 
 if show_figures:
     plt.show()

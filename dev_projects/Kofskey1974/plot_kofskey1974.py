@@ -712,66 +712,136 @@ elif Case == "error_plot":
 elif Case == "test":
 
     # Load performance data
-    filename_1 = "output/performance_analysis_2024-03-16_20-10-25.xlsx" # Lagrange, 5/6
-    filename_2 = "output/performance_analysis_2024-07-20_20-09-13.xlsx" # Critical mach, Madrid correlation, 5/6
-    # filename_1 = "output/performance_analysis_2024-07-20_21-07-30.xlsx" # Lagrange, 1.0
-    # filename_2 = "output/performance_analysis_2024-07-20_21-01-37.xlsx" # Critical mach, Madrid correlation, 1.0
+    filename_1 = "output/performance_map_evaluate_cascade_throat.xlsx"
+    filename_2 = "output/performance_analysis_2024-03-16_20-10-25.xlsx"
 
     data_1 = tf.plot_functions.load_data(filename_1)
-    sheets = data_1.keys()
-    filtered_indices = data_1["overall"][data_1["overall"]["angular_speed"] == 1963].index
-    for sheet in sheets:
-        data_1[sheet] = data_1[sheet].loc[filtered_indices, :]
     data_2 = tf.plot_functions.load_data(filename_2)
-    # data_3 = tf.plot_functions.load_data(filename_3)
 
-    subsets = ["omega", 1627]
+    subsets = ["omega"] + list(1963*np.array([0.7, 1.0]))
+    linestyles = ["-", ":"]
+    colors = plt.get_cmap('magma')(np.linspace(0.2, 0.7, 2))
     fig1, ax1 = tf.plot_functions.plot_lines(
         data_1,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
+        subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        colors='k',
+        colors=colors,
+        # color_map = 'magma',
+        linestyles=['-']*2,
         filename = 'mass_flow_rate',
         outdir = "figures",
-        save_figs=True,
+        save_figs=False,
     )
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data_2,
         x_key="PR_ts",
         y_keys=["mass_flow_rate"],
+        subsets=subsets,
         xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
         ylabel="Mass flow rate [kg/s]",
-        colors=['r'],
+        linestyles=[':']*2,
+        colors=colors, 
+        # color_map = 'Blues',       
         fig = fig1,
         ax = ax1, 
-        linestyles = ["--"],
         filename = 'mass_flow_rate',
         outdir = "figures",
-        save_figs=True,
+        save_figs=False,
     )
 
-    ax1.legend(labels = ["Maxmized mass flow rate", "Critical mach"], loc = "lower right")
-    ax1.set_ylim([1.8, 2.4])
-    ax1.set_title("Kofskey 1974")
-    fig1.tight_layout(pad=1, w_pad=None, h_pad=None)
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        data_1,
+        x_key="PR_ts",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        colors=colors,
+        # color_map = 'magma',
+        linestyles=['-']*2,
+        filename = 'torque',
+        outdir = "figures",
+        save_figs=False,
+    )
 
-    # fig1, ax1 = tf.plot_functions.plot_lines(
-    #     data_3,
-    #     x_key="PR_ts",
-    #     y_keys=["mass_flow_rate"],
-    #     xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
-    #     ylabel="Mass flow rate [kg/s]",
-    #     colors=['r'],
-    #     fig = fig1,
-    #     ax = ax1, 
-    #     linestyles = ["--"],
-    #     filename = 'mass_flow_rate',
-    #     outdir = "figures",
-    #     save_figs=True,
-    # )
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        data_2,
+        x_key="PR_ts",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        linestyles=[':']*2,
+        colors=colors, 
+        # color_map = 'Blues',       
+        fig = fig2,
+        ax = ax2, 
+        filename = 'torque',
+        outdir = "figures",
+        save_figs=False,
+    )
+
+    # Add experimental points
+    filename_exp = "experimental_data_Kofskey1974_raw.xlsx"
+    validation_data = pd.read_excel(filename_exp, sheet_name="Interpolated pr_ts")
+    data_mass_flow_exp = validation_data[~validation_data["mass_flow_rate"].isna()]
+    torque_data = validation_data[~validation_data["torque"].isna()]
+    alpha_data = validation_data[~validation_data["alpha"].isna()]
+
+    subsets = ["speed_percent"] + list(np.array([70, 100]))
+    fig1, ax1 = tf.plot_functions.plot_lines(
+        {"data_exp" : data_mass_flow_exp},
+        x_key="pressure_ratio_ts_interp",
+        y_keys=["mass_flow_rate"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Mass flow rate [kg/s]",
+        colors=colors,
+        # color_map='Reds',
+        linestyles = ['none']*2,
+        markers = ["x"]*2,
+        filename = 'mass_flow_rate',
+        outdir = "figures",
+        fig = fig1,
+        ax = ax1,
+        save_figs=False,
+    )
+
+    fig2, ax2 = tf.plot_functions.plot_lines(
+        {"data_exp" : torque_data},
+        x_key="pressure_ratio_ts_interp",
+        y_keys=["torque"],
+        subsets=subsets,
+        xlabel="Total-to-static pressure ratio [$p_{0, \mathrm{in}}/p_\mathrm{out}$]",
+        ylabel="Torque [Nm]",
+        colors=colors,
+        # color_map='Reds',
+        linestyles = ['none']*2,
+        markers = ["x"]*2,
+        filename = 'torque',
+        outdir = "figures",
+        fig = fig2,
+        ax = ax2,
+        save_figs=False,
+    )
+
+    lables = ["$0.7\Omega_\mathrm{des}$, Critical mach", "$1.0\Omega_\mathrm{des}$, Critical mach", 
+              "$0.7\Omega_\mathrm{des}$, Max mass flow rate", "$1.0\Omega_\mathrm{des}$, Max mass flow rate", 
+              "$0.7\Omega_\mathrm{des}$, Exp. data", "$1.0\Omega_\mathrm{des}$, Exp. data"]
+    ax1.legend(labels = lables, ncols = 1, loc = 'lower right')
+    ax2.legend(labels = lables, ncols = 1, loc = 'lower right')
+    ax1.set_ylim([2.0, 2.5])
+    ax2.set_ylim([10, 110])
+
+    if save_figs:
+        filename1 = 'validation_mass_flow_kofskey_1974'
+        filename2 = 'validation_torque_kofskey_1974'
+        tf.plot_functions.savefig_in_formats(fig1, filename1, formats=[".png",".eps"])
+        tf.plot_functions.savefig_in_formats(fig2, filename2, formats=[".png",".eps"])
 
 if show_figures:
     plt.show()
