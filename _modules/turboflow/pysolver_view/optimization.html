@@ -275,6 +275,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">elapsed_time</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">include_solution_in_footer</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s2">&quot;grad_count&quot;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s2">&quot;func_count&quot;</span><span class="p">:</span> <span class="p">[],</span>
             <span class="s2">&quot;func_count_total&quot;</span><span class="p">:</span> <span class="p">[],</span>
@@ -596,6 +597,7 @@
         <span class="n">violation_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">violation_all</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">violation_all</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
 
         <span class="c1"># Store convergence status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_last</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;grad_count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grad_count</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_count</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count_total&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func_count_tot</span><span class="p">)</span>
