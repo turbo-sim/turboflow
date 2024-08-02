@@ -6,7 +6,7 @@ from pydantic import (
     field_validator,
     ConfigDict,
 )
-from typing import Optional, List, Union, Literal, Tuple
+from typing import Optional, List, Union, Literal, Tuple, Dict
 from enum import Enum
 from typing_extensions import Self
 from typing_extensions import Annotated
@@ -14,7 +14,7 @@ from pydantic.functional_validators import AfterValidator, BeforeValidator
 from ..axial_turbine import (
     LOSS_MODELS,
     LOSS_COEFFICIENTS,
-    CHOKING_MODELS,
+    CHOKING_CRITERIONS,
     DEVIATION_MODELS,
     RADIUS_TYPE,
 )
@@ -23,6 +23,8 @@ from ..pysolver_view import (
     VALID_LIBRARIES_AND_METHODS,
     DERIVATIVE_METHODS,
 )
+import re
+
 
 class OperationPoints(BaseModel):
     """
@@ -156,7 +158,7 @@ class LossModel(BaseModel):
     tuning_factors: TuningFactors = TuningFactors()
 
 DeviationModelEnum = Enum('DeviationModels', dict(zip([model.upper() for model in DEVIATION_MODELS], DEVIATION_MODELS)))
-ChokingModelEnum = Enum('ChokingModels', dict(zip([model.upper() for model in CHOKING_MODELS], CHOKING_MODELS)))
+ChokingCriterionEnum = Enum('ChokingModels', dict(zip([model.upper() for model in CHOKING_CRITERIONS], CHOKING_CRITERIONS)))
 
 class SimulationOptions(BaseModel):
     """
@@ -184,7 +186,7 @@ class SimulationOptions(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
     deviation_model : DeviationModelEnum
     blockage_model: Union[str, float] = 0.00
-    choking_model : ChokingModelEnum
+    choking_criterion : ChokingCriterionEnum
     rel_step_fd: float = 1e-4
     loss_model: LossModel
 
@@ -339,13 +341,12 @@ class SolverOptionsOptimization(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
     library: LibraryEnum = list(VALID_LIBRARIES_AND_METHODS.keys())[0]
     method: MethodEnum = VALID_LIBRARIES_AND_METHODS[list(VALID_LIBRARIES_AND_METHODS.keys())[0]][0]
-    tolerance: float = 1e-5
-    max_iterations: int = 100
     derivative_method: DerivativeMethodEnum = DERIVATIVE_METHODS[0]
     derivative_abs_step: float = None
     print_convergence: bool = True
     plot_convergence: bool = False
     update_on: UpdateOnEnum = "gradient"
+    options : Dict = {}
 
     @model_validator(mode="after")
     def check_solver_method(self) -> Self:
@@ -355,32 +356,32 @@ class SolverOptionsOptimization(BaseModel):
             raise ValueError(f"Method {method} is not available in {lib} library.")
         return self
 
-class InitialGuess1(BaseModel):
+# class InitialGuess1(BaseModel):
 
-    model_config = ConfigDict(extra="forbid")
-    n_samples : int 
-    eta_tt : Tuple[float, float] = (0.5, 0.95)
-    eta_ts : Tuple[float, float] = (0.4, 0.9)
-    ma : Tuple[float, float] = (0.5, 1.2)
+#     model_config = ConfigDict(extra="forbid")
+#     n_samples : int 
+#     efficiency_tt : Tuple[float, float] = (0.5, 0.95)
+#     efficiency_ke : Tuple[float, float] = (0.4, 0.9)
+#     ma : Tuple[float, float] = (0.5, 1.2)
 
 class InitialGuess2(BaseModel):
 
-    model_config = ConfigDict(extra="forbid")
-    eta_tt : Union[float, List[float]] = [0.9, 0.8]
-    eta_ts : Union[float, List[float]] = [0.8, 0.7]
-    ma : Union[float, List[float]] = [0.8, 0.8]
+    model_config = ConfigDict(extra="allow")
+    efficiency_tt : Union[float, List[float]] = [0.9, 0.8]
+    efficiency_ke : Union[float, List[float]] = [0.8, 0.7]
 
     @model_validator(mode="after")
     def check_length(self) -> Self:
         attributes = vars(self).values()
-        input_type = type(self.eta_tt)
+        input_type = type(self.efficiency_tt)
+        print(attributes)
         if not all(isinstance(attr, input_type) for attr in attributes):
             raise ValueError("Variable input is not of same type")
         if input_type == list:
-            if not all(len(attr) == len(self.eta_tt) for attr in attributes):
+            if not all(len(attr) == len(self.efficiency_tt) for attr in attributes):
                 raise ValueError("Variable input is not of same length")
         return self
-
+    
 class PerformanceAnalysis(BaseModel):
     """
     Model describing performance analysis parameters.
@@ -403,7 +404,29 @@ class PerformanceAnalysis(BaseModel):
     solver_options: SolverOptionsPerformanceAnalysis = (
         SolverOptionsPerformanceAnalysis()
     )
-    initial_guess : Union[InitialGuess1, InitialGuess2] = InitialGuess2()
+    initial_guess : Dict = {}
+
+    @model_validator(mode='before')
+    def validate_initial_guess_keys(cls, v):
+        allowed_keys = {'efficiency_tt', 'efficiency_ke', 'n_samples', 'ma'}
+        ma_pattern = re.compile(r'^ma_(\d+)$')
+        ma_indices = set()
+        
+        initial_guess = v.get('initial_guess', {})
+        for key in initial_guess.keys():
+            if key not in allowed_keys:
+                match = ma_pattern.match(key)
+                if not match:
+                    raise ValueError(f'Invalid key in initial_guess: {key}. Allowed keys are efficiency_tt, efficiency_ke, and ma_<number>')
+                ma_index = int(match.group(1))
+                if ma_index in ma_indices:
+                    raise ValueError(f'Duplicate ma_i index {ma_index} in initial_guess')
+                ma_indices.add(ma_index)
+        
+        # Check if ma_indices include all numbers from 1 to len(ma_indices)
+        if ma_indices and (min(ma_indices) != 1 or max(ma_indices) != len(ma_indices)):
+            raise ValueError(f'ma_i indices must include all numbers from 1 to {len(ma_indices)} without gaps')
+        return v
 
 
 class Variable(BaseModel):

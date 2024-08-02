@@ -8,51 +8,40 @@ operation_points:
     omega: 1627
     alpha_in: 0
 
-simulation_options: # Optional
-  deviation_model : aungier  # Optional
-  # blockage_model : 0.00  #flat_plate_turbulent  # Optional
-  choking_model : evaluate_cascade_isentropic_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
-  rel_step_fd: 1e-4  # Optional
-  loss_model:  # Optional
-    model: benner  # Optional
-    loss_coefficient: stagnation_pressure  # Optional
-    # inlet_displacement_thickness_height_ratio: 0.011  # Optional
-    # tuning_factors:  # Optional
-      # profile: 1.00  # Optional
-      # incidence: 1.00  # Optional
-      # secondary: 1.00  # Optional
-      # trailing: 1.00  # Optional
-      # clearance: 1.00  # Optional
+simulation_options: 
+  deviation_model : aungier 
+  choking_criterion : critical_mach_number # evaluate_cascade_throat, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
+  rel_step_fd: 1e-4 
+  loss_model:  
+    model: benner  
+    loss_coefficient: stagnation_pressure  
+
   
 performance_analysis :
-  performance_map: # Optional
+  performance_map: 
     fluid_name: air 
     T0_in: 295.6
     p0_in: 13.8e4
-    # p_out: 13.8e4/np.linspace(1.6, 4.5, 40)
-    p_out: 13.8e4/np.linspace(1.6, 1.8, 2)
-    omega: 1627
+    p_out: 13.8e4/np.linspace(1.6, 4.5, 40)
+    omega: 1627*np.array([0.7, 0.9, 1.0, 1.1])
     alpha_in: 0 
-  solver_options: # Optional
-    method: hybr  # Optional
-    tolerance: 1e-8  # Optional
-    max_iterations: 100  # Optional
-    derivative_method: 2-point  # Optional
-    derivative_abs_step: 1e-6  # Optional
-    print_convergence: True
+  solver_options: 
+    method: hybr  
+    tolerance: 1e-8  
+    max_iterations: 100  
+    derivative_method: 2-point  
+    derivative_abs_step: 1e-6  
     plot_convergence: False
   # initial_guess :
   #   n_samples : 100
-  #   eta_tt : (0.9, 0.99)
-  #   eta_ts : (0.7, 0.89)
+  #   efficiency_tt : (0.7, 0.99)
+  #   efficiency_ke : (0.2, 0.6)
   #   ma : (0.5, 1.2)
   initial_guess :
-    eta_ts : [0.9, 0.8] 
-    eta_tt : [0.8, 0.7]
-    ma : [0.8, 0.8]
-
-  
-
+    efficiency_tt : [0.9, 0.8] 
+    efficiency_ke : [0.1, 0.1]
+    ma_1 : [0.8, 0.8]
+    ma_2 : [0.8, 0.8]
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -70,7 +59,7 @@ geometry:
   trailing_edge_thickness : [0.050e-2, 0.050e-2]
   maximum_thickness : [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
-  throat_location_fraction: [1, 1]
+  throat_location_fraction: [5/6, 5/6]
   
 
 design_optimization:
@@ -79,14 +68,14 @@ design_optimization:
     scale : 1
     type : maximize
   variables :
-    specific_speed :
+    specific_speed : # Limited
       value : 0.660834348
-      lower_bound : 0.01
-      upper_bound : 10
-    blade_jet_ratio :
+      lower_bound : 0.05
+      upper_bound : 1.5
+    blade_jet_ratio : # Limited
       value : 0.416813303
-      lower_bound : 0.1
-      upper_bound : 0.9
+      lower_bound : 0.3
+      upper_bound : 0.8
     hub_tip_ratio_in :
       value : [0.715998818, 0.715998818]
       lower_bound : [0.6, 0.6]
@@ -106,7 +95,7 @@ design_optimization:
     trailing_edge_thickness_opening_ratio :
       value : [0.066889342, 0.068006543]
       lower_bound : [0.05, 0.05]
-      upper_bound : [0.4, 0.4]
+      upper_bound : [0.2, 0.2]
     leading_edge_angle :
       value : [0.5, 0.66444444]
       lower_bound : [0.41, 0.08]
@@ -247,16 +236,20 @@ design_optimization:
       normalize : True
 
   radius_type : "constant_tip"
-  solver_options: # Optional
-    library: scipy # Optional
-    method: slsqp # Optional
-    tolerance: 1e-3 # Optional
-    max_iterations: 100 # Optional
-    derivative_method: 2-point # Optional
-    derivative_abs_step: 1e-6 # Optional
-    print_convergence: True # Optional
-    plot_convergence: False # Optional
-    update_on: "function" # Optional
+  solver_options: 
+    library: pygmo 
+    method: pso 
+    derivative_method: 2-point 
+    derivative_abs_step: 1e-6 
+    print_convergence: False 
+    plot_convergence: False 
+    update_on: "function" 
+    options : 
+      gen : 5
+      pop_size : 10
+      # tol: 1e-3 # Optional
+      # max_iter: 100 # Optional
+
   
 
 

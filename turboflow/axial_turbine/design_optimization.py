@@ -39,6 +39,9 @@ INDEXED_VARIABLES = [
     "cascade_type",
 ]
 
+GENETIC_ALGORITHMS = psv.GENETIC_SOLVERS
+GRADIENT_ALGORITHMS = psv.GRADIENT_SOLVERS
+
 def compute_optimal_turbine(
     config,
     out_filename=None,
@@ -226,9 +229,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         algorithm = config["design_optimization"]["solver_options"]["method"]
-        if algorithm in ["snopt", "ipopt", "slsqp"]:
+        if algorithm in GRADIENT_ALGORITHMS:
             self.init_gradient_based(config)
-        elif algorithm in ["de", "pso"]:
+        elif algorithm in GENETIC_ALGORITHMS:
             self.init_gradient_free(config)
         else:
             raise ValueError(f"Unknown algorithm: {algorithm}")
@@ -246,20 +249,20 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Adjust given variables according to choking model (remove excess variables)
         variables = config["design_optimization"]["variables"]
-        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+        if self.model_options["choking_criterion"] == "critical_mach_number":
             variables = {
                 key: var
                 for key, var in variables.items()
                 if not key.startswith("v_crit_in")
             }
-        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+        elif self.model_options["choking_criterion"] == "critical_mass_flow_rate":
             variables = {
                 key: var
                 for key, var in variables.items()
                 if not key.startswith("beta_crit_throat")
             }
         elif (
-            self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
+            self.model_options["choking_criterion"] == "critical_isentropic_throat"
         ):
             variables = {
                 key: var
@@ -270,6 +273,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                     or key.startswith("beta_crit_throat")
                 )
             }
+        else:
+            raise ValueError("STOP")
+
 
         # Separate fixed variables and design variables
         fixed_params = {}
@@ -298,18 +304,18 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             for key in initial_guess.keys()
             if any(key.startswith(var) for var in INDEPENDENT_VARIABLES)
         ]
-        if self.model_options["choking_model"] == "evaluate_cascade_throat":
+        if self.model_options["choking_criterion"] == "critical_mach_number":
             self.independent_variables = [
                 var for var in self.independent_variables if not var.startswith("v_crit_in")
             ]
-        elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+        elif self.model_options["choking_criterion"] == "critical_mass_flow_rate":
             self.independent_variables = [
                 var
                 for var in self.independent_variables
                 if not var.startswith("beta_crit_throat")
             ]
         elif (
-            self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
+            self.model_options["choking_criterion"] == "critical_isentropic_throat"
         ):
             self.independent_variables = [
                 var
@@ -317,9 +323,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 if not (
                     var.startswith("v_crit_in")
                     or var.startswith("s_crit_throat")
-                    or var.startswith("beta_crit_throat")
                 )
             ]
+        else:
+            raise ValueError("STOP")
 
         # Set fitness function
         self.fitness = self.fitness_gradient_based
@@ -361,19 +368,20 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.bounds = (lb, ub)            
 
         # Set initial guess for root finder
-        self.x0 = None
+        self.x0 = config["performance_analysis"]["initial_guess"]
 
         # Set constraints to None
         self.c_eq = None
         self.c_ineq = None
 
         # Initialize config copy
-        self.config = {"simulation_options" : config["simulation_options"],
-                       "performance_analysis" : {"solver_options" : config["performance_analysis"]["solver_options"]} } 
+        self.simulation_options = config["simulation_options"]
+        self.solver_options = config["performance_analysis"]["solver_options"] 
 
         # Set fitness function
         self.fitness = self.fitness_gradient_free
         self.iteration = 1
+        self.success = 0
 
     def fitness(self, x):
         
@@ -432,39 +440,45 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             if key in ANGLE_KEYS:
                 self.geometry[key] = self.geometry[key] * angle_range + angle_min
 
-        self.config["geometry"] = geom.prepare_geometry(self.geometry, self.radius_type)
-
+        self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         try:
         # Evaluate turbine model
-            solvers = pa.compute_single_operation_point(
+            solver, results = pa.compute_single_operation_point(
                 self.operation_point,
-                self.config,
-                initial_guess=self.x0,
+                self.x0,
+                self.geometry,
+                self.simulation_options,
+                self.solver_options,
             )
-            self.results = solvers[0].problem.results
-            self.geometry = solvers[0].problem.geometry
+            if solver.success and np.min(list(results["residuals"].values())) < 1e-6 : 
+                self.results = results
+                self.geometry = results["geometry"]
+                # Update initial guess
+                # self.x0 = solvers[0].problem.vars_real
 
-            # Update initial guess
-            self.x0 = solvers[0].problem.vars_real
+                # Evaluate objective function
+                self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
 
-            # Evaluate objective function
-            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+                # Evaluate additional constraints
+                self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
+                    / self.geometry["A_out"][0:-1]})
+                
+                # Evaluate constraints
+                c_eq = self.evaluate_constraints(self.eq_constraints)
+                c_ineq = self.evaluate_constraints(self.ineq_constraints)
 
-            # Evaluate additional constraints
-            self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
-                / self.geometry["A_out"][0:-1]})
-            
-            # Evaluate constraints
-            c_eq = self.evaluate_constraints(self.eq_constraints)
-            c_ineq = self.evaluate_constraints(self.ineq_constraints)
+                # Include constriants in objective function
+                self.f = self.f + 100*sum(c_eq**2)
 
-            # Include constriants in objective function
-            self.f = self.f + sum(c_eq**2)
+                self.success += 1
+            else:
+                self.f = 1e3
         except:
-            self.f = 0
+            self.f = 1e3
         
-        self.iteration =+ 1
+        self.iteration += 1
         print(f"Iteration: {self.iteration}")
+        print(f"Successful iterations: {self.success}")
 
         # Combine objective functions and constraint
         objective_and_constraints = psv.combine_objective_and_constraints(

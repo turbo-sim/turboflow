@@ -116,8 +116,8 @@ class OptimizationSolver:
         problem,
         library="scipy",
         method="slsqp",
-        tolerance=1e-6,
-        max_iterations=100,
+        # tolerance=1e-6,
+        # max_iterations=100,
         options={},
         derivative_method="2-point",
         derivative_abs_step=None,
@@ -150,8 +150,8 @@ class OptimizationSolver:
 
         # Define options dictionary
         self.options = copy.deepcopy(options) if options else {}
-        self.options["tol"] = tolerance
-        self.options["max_iter"] = max_iterations
+        # self.options["tol"] = tolerance
+        # self.options["max_iter"] = max_iterations
 
         # Check for logger validity
         if self.logger is not None:

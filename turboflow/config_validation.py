@@ -215,7 +215,6 @@ def load_config(config_file_path: str, print_summary=True):
 
             # Convert string representation of numbers to number and lists to arrays
             config_data = convert_configuration_options(config_data)
-
             if "turbomachinery" not in config_data:
                 raise ValueError("Missing 'turbomachinery' field in configuration.")
 
@@ -229,7 +228,6 @@ def load_config(config_file_path: str, print_summary=True):
                 raise ValueError(
                     f"Unknown turbomachinery type: {turbomachinery_type}. Available turbomachineries are: {TURBOMACHINERIES}"
                 )
-
             # Convert configuration object to a nested dictionary
             config = object_to_dict(config)
 

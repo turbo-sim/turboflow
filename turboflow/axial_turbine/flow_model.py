@@ -8,7 +8,7 @@ from .. import math
 from .. import utilities as utils
 from . import loss_model as lm
 from . import deviation_model as dm
-from . import choking_model as cm
+from . import choking_criterion as cm
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]

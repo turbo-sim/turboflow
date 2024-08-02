@@ -15,9 +15,9 @@ REGRESSION_CONFIG_DIR = os.path.join('tests', f'regression_data_{os_name}')
 # Dictionary to map test names to their respective configuration files
 TEST_CONFIGS = {
     'test_performance_analysis': [
-                                "performance_analysis_evaluate_cascade_throat.yaml",
-                                "performance_analysis_evaluate_cascade_critical.yaml",
-                                "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
+                                "performance_analysis_critical_mach_number.yaml",
+                                "performance_analysis_critical_mass_flow_rate.yaml",
+                                "performance_analysis_critical_isentropic_throat.yaml",
                                 "performance_analysis_kacker_okapuu.yaml",
                                 "performance_analysis_moustapha.yaml",
                                 "performance_analysis_zero_deviation.yaml",
@@ -31,9 +31,9 @@ TEST_CONFIGS = {
 # Dictionary of configuration files for regression data generation
 REGRESSION_CONFIGS = {
     'performance_analysis': [
-                                "performance_analysis_evaluate_cascade_throat.yaml",
-                                "performance_analysis_evaluate_cascade_critical.yaml",
-                                "performance_analysis_evaluate_cascade_isentropic_throat.yaml",
+                                "performance_analysis_critical_mach_number.yaml",
+                                "performance_analysis_critical_mass_flow_rate.yaml",
+                                "performance_analysis_critical_isentropic_throat.yaml",
                                 "performance_analysis_kacker_okapuu.yaml",
                                 "performance_analysis_moustapha.yaml",
                                 "performance_analysis_zero_deviation.yaml",

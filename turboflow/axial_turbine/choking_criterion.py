@@ -6,10 +6,10 @@ from .. import math
 from . import flow_model as fm
 from . import deviation_model as dm
 
-CHOKING_MODELS = [
-    "evaluate_cascade_critical",
-    "evaluate_cascade_throat",
-    "evaluate_cascade_isentropic_throat",
+CHOKING_CRITERIONS = [
+    "critical_mass_flow_rate",
+    "critical_mach_number",
+    "critical_isentropic_throat",
 ]
 
 REGRESSION_COEFFICIENTS = {'air' : [0.999984354, -0.368037583, 0.202442269, -0.096333086, 0.023783628],
@@ -64,13 +64,13 @@ def evaluate_choking(
     """
 
     critical_cascade_functions = {
-        CHOKING_MODELS[0]: evaluate_cascade_critical,
-        CHOKING_MODELS[1]: evaluate_cascade_throat,
-        CHOKING_MODELS[2]: evaluate_cascade_isentropic_throat,
+        CHOKING_CRITERIONS[0]: critical_mass_flow_rate,
+        CHOKING_CRITERIONS[1]: critical_mach_number,
+        CHOKING_CRITERIONS[2]: critical_isentropic_throat,
     }
 
     # Evaluate loss model
-    model = model_options["choking_model"]
+    model = model_options["choking_criterion"]
     if model in critical_cascade_functions:
         return critical_cascade_functions[model](
             choking_input,
@@ -83,12 +83,12 @@ def evaluate_choking(
             reference_values,
         )
     else:
-        options = ", ".join(f"'{k}'" for k in CHOKING_MODELS)
+        options = ", ".join(f"'{k}'" for k in CHOKING_CRITERIONS)
         raise ValueError(
             f"Invalid critical cascade model '{model}'. Available options: {options}"
         )
 
-def evaluate_cascade_throat(
+def critical_mach_number(
     choking_input,
     inlet_plane,
     exit_plane,
@@ -100,7 +100,7 @@ def evaluate_cascade_throat(
 ):
     r"""
 
-    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the evaluate_cascade_throat choking model.
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the critical_mach_number choking model.
 
     This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated
     from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition,
@@ -294,7 +294,7 @@ def get_flow_capacity(Ma, gamma, eta):
 
 
 
-def evaluate_cascade_critical(
+def critical_mass_flow_rate(
     choking_input,
     inlet_plane,
     exit_plane,
@@ -306,7 +306,7 @@ def evaluate_cascade_critical(
 ):
     r"""
 
-    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_critical` choking model.
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `critical_mass_flow_rate` choking model.
 
     This choking model evaluate the critical state by optimizing the mass flow rate at the throat through the method of lagrange multipliers, and checks if the throat mach number exceed the critical. 
     The exit flow angle is calculated by the selected devaition model at subsonic condition, and from the critical mass flow rate at supersonic conditions. 
@@ -664,7 +664,7 @@ def compute_critical_jacobian(
     return jacobian
 
 
-def evaluate_cascade_isentropic_throat(
+def critical_isentropic_throat(
     choking_input,
     inlet_plane,
     exit_plane,
@@ -676,7 +676,7 @@ def evaluate_cascade_isentropic_throat(
 ):
     r"""
 
-    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `evaluate_cascade_isentropic_throat` choking model.
+    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `critical_isentropic_throat` choking model.
 
     This choking model evaluates the cascade throat and checks if the throat mach number exceed unity. The throat is isentropic from inlet to throat.
     The exit flow angle is determined by ensuring that the mach at throat mach number equals the exit for subconic condition, and unity for supersonic conditions.

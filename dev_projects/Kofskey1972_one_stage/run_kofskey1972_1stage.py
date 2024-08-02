@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 10
+CASE = 1
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -22,7 +22,6 @@ if CASE == 1:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        # initial_guess=None,
         export_results=False,
         stop_on_failure=True,
     )
@@ -36,8 +35,8 @@ elif CASE == 2:
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, 
                                      config, 
-                                    #  initial_guess = None, 
-                                     export_results=False)
+                                     out_filename='performance_map_evaluate_cascade_throat',
+                                     export_results=True)
 
 elif CASE == 3:
 
@@ -74,7 +73,9 @@ elif CASE == 3:
 
 elif CASE == 4:
     operation_points = config["operation_points"]
-    solvers = tf.compute_optimal_turbine(config, export_results=True)
+    solver = tf.compute_optimal_turbine(config, export_results=True)
+    solver.problem.results["overall"]["mass_flow_rate"]
+    solver.problem.results["overall"]["efficiency_ts"]
     # fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
 
 # Show plots

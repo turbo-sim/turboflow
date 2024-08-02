@@ -70,6 +70,7 @@ def plot_lines(
     close_fig=False,
     save_figs=False,
     linestyles=None,
+    markers = None,
     save_formats=[".png"],
     legend_loc="best",
 ):
@@ -165,11 +166,13 @@ def plot_lines(
     # Get linestyles
     if linestyles == None:
         linestyles = ["-"] * len(y)
+    if markers == None:
+        markers = ["none"] * len(y)
 
     # Plot figure
     if subsets is not None and len(y_keys) == 1:
         for i in range(len(y)):
-            ax.plot(x[i], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
+            ax.plot(x[i], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i], marker = markers[i])
     elif subsets is not None and len(subsets) == 2:
         if stack == True:
             ax.stackplot(x[0], y, labels=labels, colors=colors)
@@ -183,7 +186,7 @@ def plot_lines(
         else:
             for i in range(len(y)):
                 ax.plot(
-                    x[0], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i]
+                    x[0], y[i], label=labels[i], color=colors[i], linestyle=linestyles[i], marker = markers[i]
                 )
     elif subsets is None:
         if stack == True:
@@ -197,7 +200,7 @@ def plot_lines(
                 ax.plot(x, cumulative_y[i], color="black", linewidth=0.5)
         else:
             for i in range(len(y)):
-                ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle=linestyles[i])
+                ax.plot(x, y[i], label=labels[i], color=colors[i], linestyle=linestyles[i], marker = markers[i])
     else:
         raise Exception("x_keys and y_keys are not well defined")
 

@@ -15,7 +15,7 @@ from .. import utilities as utils
 from .. import properties as props
 from . import geometry_model as geom
 from . import flow_model as flow
-from . import choking_model as ch
+from . import choking_criterion as ch
 from . import deviation_model as dm
 from scipy.stats import qmc
 from scipy import optimize
@@ -26,57 +26,9 @@ SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 Available solvers for performance analysis.
 """
 
-
-# def get_heuristic_guess_input(n):
-#     r"""
-
-#     Generate a list of `n` number of different sets of dictionaries used to generate initial guesses.
-
-#     Total-to-total efficiency, total-to-static efficiency, enthalpy loss fractions for each cascade and critical mach can be used to generate
-#     an initial guess for performance analysis. This function generate a list of such different sets used to generate a full initial guess through the function `compute_heuristic_initial_guess`.
-
-#     The total-to-static efficiency, varies between  0.6, 0.7, or 0.8, while the total-to-total efficiency can be 0.7, 0.8 or 0.9. The enthalpy loss fractions can either split equally between the cascade,
-#     or with equal increments for neighbouring values (see `utils.fill_array_with_increment` for more information). The critical mach is assumed to be 0.95.
-
-#     Parameters
-#      ----------
-#      n : int
-#          Number of cascades.
-
-#      Returns
-#      -------
-#      list
-#          List of sets of variables used to generate an initial guess.
-
-#     """
-
-#     eta_ts_vec = [0.8, 0.7, 0.6]
-
-#     array = utils.fill_array_with_increment(n)
-#     enthalpy_distributions = []
-#     enthalpy_distributions.append(np.ones(n) * 1 / n)
-#     enthalpy_distributions.append(array)
-#     enthalpy_distributions.append(np.flip(array))
-
-#     initial_guesses = []
-#     for eta_ts in eta_ts_vec:
-#         for enthalpy_distribution in enthalpy_distributions:
-#             initial_guesses.append(
-#                 {
-#                     "enthalpy_loss_fractions": enthalpy_distribution,
-#                     "eta_ts": eta_ts,
-#                     "eta_tt": eta_ts + 0.1,
-#                     "Ma_crit": 0.95,
-#                 }
-#             )
-
-#     return initial_guesses
-
-
 def compute_performance(
     operation_points,
     config,
-    # initial_guess=None,
     out_filename=None,
     out_dir="output",
     stop_on_failure=False,
@@ -341,7 +293,7 @@ def compute_single_operation_point(
                                         problem.boundary_conditions, 
                                         problem.geometry, 
                                         problem.fluid, 
-                                        simulation_options["choking_model"], 
+                                        simulation_options["choking_criterion"], 
                                         simulation_options["deviation_model"]) 
 
     # Get solver method array
@@ -542,21 +494,23 @@ def validate_operation_point(op_point):
             f"Missing fields: {missing}, Extra fields: {extra}"
         )
 
-def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_model, deviation_model):
+def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_criterion, deviation_model):
 
+    # Rename variables
+    number_of_cascades = geometry["number_of_cascades"]
     # Three types of initial guess:
         # 1. Full guess
         # 2. Input for heuristic guess
         # 4. Input for generatic heuristic guess based on latin hypercube sampling
     # Check which guess is given
-    valid_keys_1 = ["eta_tt", "eta_ts", "ma"]
-    valid_keys_2 = ["eta_tt", "eta_ts", "ma", "n_samples"]
+    valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [f"ma_{i+1}" for i in range(number_of_cascades)] 
+    valid_keys_2 = ["efficiency_tt", "efficiency_ke", "ma", "n_samples"]
     valid_keys_3 = ["w_out", "s_out", "beta_out", "w_crit_throat","s_crit_throat",]
-    valid_keys_3 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_3]
+    valid_keys_3 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3]
     valid_keys_4 = ["w_out", "s_out", "beta_out", "v_crit_in", "w_crit_throat","s_crit_throat",]
-    valid_keys_4 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_4]
+    valid_keys_4 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4]
     valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
-    valid_keys_5 = ["v_in"] + [f"{key}_{i+1}" for i in range(geometry["number_of_cascades"]) for key in valid_keys_5]
+    valid_keys_5 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5]
     check = []
     check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
     check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
@@ -565,41 +519,43 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
     check.append(set(valid_keys_5) == set(list(initial_guess.keys())))
 
     if check[0]:
-        if isinstance(initial_guess["eta_tt"], (list, np.ndarray)):
+        if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
             initial_guesses = []
-            for i in range(len(initial_guess["eta_tt"])):
-                ma = np.ones(geometry["number_of_cascades"])*initial_guess["ma"][i]
-                heuristic_guess = get_heuristic_guess(initial_guess["eta_tt"][i], initial_guess["eta_ts"][i], ma, boundary_conditions, geometry, fluid, deviation_model)
+            for i in range(len(initial_guess["efficiency_tt"])):
+                ma = np.array([initial_guess[f"ma_{j+1}"][i] for j in range(number_of_cascades)])
+                heuristic_guess = get_heuristic_guess(initial_guess["efficiency_tt"][i], initial_guess["efficiency_ke"][i], ma, boundary_conditions, geometry, fluid, deviation_model)
                 initial_guesses.append(heuristic_guess)
         else:
-            ma = np.ones(geometry["number_of_cascades"])*initial_guess["ma"]
-            initial_guess = get_heuristic_guess(initial_guess["eta_tt"], initial_guess["eta_ts"], ma, boundary_conditions, geometry, fluid, deviation_model)
-            initial_guesses = [initial_guess]
+            ma = np.array([initial_guess[f"ma_{j+1}"] for j in range(number_of_cascades)])
+            heuristic_guess = get_heuristic_guess(initial_guess["efficiency_tt"], initial_guess["efficiency_ke"], ma, boundary_conditions, geometry, fluid, deviation_model)
+            initial_guesses = [heuristic_guess]
     elif check[1]:
-        bounds = [initial_guess["eta_tt"], initial_guess["eta_ts"]] + [initial_guess["ma"] for i in range(geometry["number_of_cascades"])]
+        bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [initial_guess["ma"] for i in range(number_of_cascades)]
         n_samples = initial_guess["n_samples"]
         heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
         norm_residuals = np.array([])
         failures = 0
         for heuristic_input in heuristic_inputs:
             try:
-                ma = [heuristic_input[i+2] for i in range(geometry["number_of_cascades"])]
-                initial_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
-                x = problem.scale_values(initial_guess)
+                ma = [heuristic_input[i+2] for i in range(number_of_cascades)]
+                heuristic_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
+                x = problem.scale_values(heuristic_guess)
                 problem.keys = x.keys()
                 x0 = np.array(list(x.values()))
                 residual = problem.residual(x0)
                 norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
             except:
                 failures += 1 
+                norm_residuals = np.append(norm_residuals, np.nan)
+
         print(f"Generating heuristic inital guesses from latin hypercube sampling")
         print(f"Number of failures: {failures} out of {n_samples} samples")
-        print(f"Least norm of residuals: {np.min(norm_residuals)}")
-        print(f"Check index: {norm_residuals[np.argmin(norm_residuals)]}")
-        heuristic_input = heuristic_inputs[np.argmin(norm_residuals)]
-        initial_guess = dict(zip(initial_guess.keys(), heuristic_input))
-        print(initial_guess)
-        initial_guess = get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_model, deviation_model)
+        print(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
+        heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
+        initial_guess = dict(zip(valid_keys_1, heuristic_input))
+        ma = [heuristic_input[i+2] for i in range(number_of_cascades)]
+        initial_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
+        initial_guesses = [initial_guess]
     elif check[2]:
         initial_guesses = [initial_guess]
     elif check[3]:
@@ -611,11 +567,11 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
 
     # Check that set of initial guess correspond with choking_criteria
     for initial_guess, i in zip(initial_guesses, range(len(initial_guesses))):
-        if choking_model == "evaluate_cascade_throat":
+        if choking_criterion == "critical_mach_number":
             initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("v_crit_in")}
-        elif choking_model == "evaluate_cascade_critical":
+        elif choking_criterion == "critical_mass_flow_rate":
             initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("beta_crit_throat")}
-        elif choking_model == "evaluate_cascade_isentropic_throat":
+        elif choking_criterion == "critical_isentropic_throat":
             initial_guess = {key: val for key, val in initial_guess.items() if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))}
         
         initial_guesses[i] = initial_guess
@@ -977,11 +933,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     #         elif check[1]:
     #             # Check that set of input correspond with model option
     #             if (
-    #                 not self.model_options["choking_model"]
+    #                 not self.model_options["choking_criterion"]
     #                 == "evaluate_cascade_critical"
     #             ):
     #                 raise ValueError(
-    #                     "Set of input corresponds with different choking_model (evaluate_cascade_critical)"
+    #                     "Set of input corresponds with different choking_criterion (evaluate_cascade_critical)"
     #                 )
 
     #             # Check that all values are a number
@@ -992,9 +948,9 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
     #         elif check[2]:
     #             # Check that set of input correspond with model option
-    #             if not self.model_options["choking_model"] == "evaluate_cascade_throat":
+    #             if not self.model_options["choking_criterion"] == "evaluate_cascade_throat":
     #                 raise ValueError(
-    #                     "Set of input corresponds with different choking_model (evaluate_cascade_throat)"
+    #                     "Set of input corresponds with different choking_criterion (evaluate_cascade_throat)"
     #                 )
 
     #             # Check that all values are a number
@@ -1006,11 +962,11 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     #         elif check[3]:
     #             # Check that set of input correspond with model option
     #             if (
-    #                 not self.model_options["choking_model"]
+    #                 not self.model_options["choking_criterion"]
     #                 == "evaluate_cascade_isentropic_throat"
     #             ):
     #                 raise ValueError(
-    #                     "Set of input corresponds with different choking_model (evaluate_cascade_isentropic_throat)"
+    #                     "Set of input corresponds with different choking_criterion (evaluate_cascade_isentropic_throat)"
     #                 )
 
     #             # Check that all values are a number
@@ -1044,7 +1000,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     #     else:
     #         raise ValueError("Initial guess must be either None or a dictionary.")
 
-    #     if self.model_options["choking_model"] == "evaluate_cascade_throat":
+    #     if self.model_options["choking_criterion"] == "evaluate_cascade_throat":
     #         initial_guess = {
     #             key: val
     #             for key, val in initial_guess.items()
@@ -1052,14 +1008,14 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
     #                     or key.startswith("beta_crit_throat"))
 
     #         }
-    #     elif self.model_options["choking_model"] == "evaluate_cascade_critical":
+    #     elif self.model_options["choking_criterion"] == "evaluate_cascade_critical":
     #         initial_guess = {
     #             key: val
     #             for key, val in initial_guess.items()
     #             if not key.startswith("beta_crit_throat")
     #         }
     #     elif (
-    #         self.model_options["choking_model"] == "evaluate_cascade_isentropic_throat"
+    #         self.model_options["choking_criterion"] == "evaluate_cascade_isentropic_throat"
     #     ):
     #         initial_guess = {
     #             key: val
@@ -1503,7 +1459,7 @@ def get_unkown(prop1, scale, h0, Ma, fluid, call, prop2):
 
     return sol.root*scale
 
-def get_heuristic_guess(eta_tt, eta_ts,  mach, boundary_conditions, geometry, fluid, deviation_model):
+def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions, geometry, fluid, deviation_model):
 
     p0_first = boundary_conditions["p0_in"]
     T0_first = boundary_conditions["T0_in"]
@@ -1527,8 +1483,9 @@ def get_heuristic_guess(eta_tt, eta_ts,  mach, boundary_conditions, geometry, fl
     v0 = np.sqrt(2*(h0_first-h_final_s))
 
     # Calculate exit enthalpy
-    h0_final = h0_first - eta_ts * (h0_first - h_final_s)
-    v_final = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / eta_tt))
+    efficiency_ts = efficiency_tt/(1+efficiency_tt*efficiency_ke)
+    h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
+    v_final = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
     h_final = h0_final - 0.5 * v_final**2
 
     # Calculate exit static state for expansion with guessed efficiency

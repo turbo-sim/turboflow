@@ -24,14 +24,15 @@ performance_analysis :
     print_convergence: True
     plot_convergence: False
   initial_guess :
-    eta_tt : [0.9, 0.8]
-    eta_ts : [0.8, 0.7]
-    ma : [0.8, 0.8]
+    efficiency_tt : [0.9, 0.8]
+    efficiency_ke : [0.13888888888888884, 0.1785714285714286]
+    ma_1 : [0.8, 0.8]
+    ma_2 : [0.8, 0.8]
 
 simulation_options:
   deviation_model : aungier
   blockage_model : 0.00  #flat_plate_turbulent
-  choking_model : evaluate_cascade_throat # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
+  choking_criterion : critical_mach_number # evaluate_cascade_critical, evaluate_cascade_throat, evaluate_cascade_isentropic_throat
   rel_step_fd: 1e-4
   loss_model:
     model: benner

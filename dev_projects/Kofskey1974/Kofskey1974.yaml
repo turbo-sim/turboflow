@@ -8,7 +8,7 @@ operation_points:
   omega: 1963         # Rotational speed
 
 simulation_options:
-  choking_model : evaluate_cascade_critical
+  choking_model : evaluate_cascade_throat
   deviation_model : aungier
   blockage_model : 0.0 #flat_plate_turbulent
   rel_step_fd: 1e-4
@@ -29,7 +29,7 @@ performance_analysis :
     T0_in: 310.0
     p0_in: 10.82e4
     p_out: 10.82e4/np.linspace(1.3, 3.5, 40)
-    omega: 1963*np.array([1.0])
+    omega: 1963*np.array([0.7, 0.9, 1.0, 1.05])
     alpha_in: 0
   solver_options:
     method: hybr
@@ -39,6 +39,11 @@ performance_analysis :
     derivative_abs_step: 1e-6  # Optional
     print_convergence: True
     plot_convergence: False
+  initial_guess : 
+    efficiency_tt : [0.9, 0.8]
+    efficiency_ke : [0.1, 0.1]
+    ma_1 : [0.8, 0.8]
+    ma_2 : [0.8, 0.8]
 
 geometry:
   cascade_type: ["stator", "rotor"]
@@ -57,5 +62,5 @@ geometry:
   trailing_edge_thickness: [0.05e-2, 0.05e-2] 
   maximum_thickness: [0.3529e-2, 0.2071e-2] 
   tip_clearance: [0.0, 0.28e-3]  
-  throat_location_fraction: [1.0, 1.0]
+  throat_location_fraction: [5/6, 5/6]
 
