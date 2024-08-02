@@ -174,7 +174,7 @@ def print_rc_parameters(filename=None):
                 file.write(f"{key}: {value}\n")
 
 
-def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg"], dpi=500):
+def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg", ".eps"], dpi=500):
     """
     Save a given Matplotlib figure in multiple file formats.
 
@@ -272,3 +272,67 @@ def create_mp4(image_folder, output_file, fps=10):
                 file_path = os.path.join(image_folder, filename)
                 image = imageio.imread(file_path)
                 writer.append_data(image)
+
+
+def scale_graphics_x(fig, scale, mode="multiply"):
+    """Scale x-coordinates of graphics objects"""
+
+    for ax in fig.get_axes():
+        # Scaling lines
+        for line in ax.get_lines():
+            xdata, ydata = line.get_data()
+            if mode == "multiply":
+                line.set_xdata(xdata * scale)
+            elif mode == "add":
+                line.set_xdata(xdata + scale)
+
+        # Scaling patches (like rectangles)
+        for patch in ax.patches:
+            if mode == "multiply":
+                xy = patch.get_xy()
+                xy[:, 0] = xy[:, 0] * scale
+                patch.set_xy(xy)
+            elif mode == "add":
+                xy = patch.get_xy()
+                xy[:, 0] = xy[:, 0] + scale
+                patch.set_xy(xy)
+
+        # Scaling contour plots
+        for collection in ax.collections:
+            for path in collection.get_paths():
+                if mode == "multiply":
+                    path.vertices[:, 0] *= scale
+                elif mode == "add":
+                    path.vertices[:, 0] += scale
+
+
+def scale_graphics_y(fig, scale, mode="multiply"):
+    """Scale y-coordinates of graphics objects"""
+
+    for ax in fig.get_axes():
+        # Scaling lines
+        for line in ax.get_lines():
+            xdata, ydata = line.get_data()
+            if mode == "multiply":
+                line.set_ydata(ydata * scale)
+            elif mode == "add":
+                line.set_ydata(ydata + scale)
+
+        # Scaling patches (like rectangles)
+        for patch in ax.patches:
+            if mode == "multiply":
+                xy = patch.get_xy()
+                xy[:, 1] = xy[:, 1] * scale
+                patch.set_xy(xy)
+            elif mode == "add":
+                xy = patch.get_xy()
+                xy[:, 1] = xy[:, 1] + scale
+                patch.set_xy(xy)
+
+        # Scaling contour plots
+        for collection in ax.collections:
+            for path in collection.get_paths():
+                if mode == "multiply":
+                    path.vertices[:, 1] *= scale
+                elif mode == "add":
+                    path.vertices[:, 1] += scale

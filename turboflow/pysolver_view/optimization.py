@@ -184,6 +184,7 @@ class OptimizationSolver:
         self.elapsed_time = None
         self.include_solution_in_footer = False
         self.convergence_history = {
+            "x": [],
             "grad_count": [],
             "func_count": [],
             "func_count_total": [],
@@ -496,6 +497,7 @@ class OptimizationSolver:
         violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
 
         # Store convergence status
+        self.convergence_history["x"].append(self.x_last)
         self.convergence_history["grad_count"].append(self.grad_count)
         self.convergence_history["func_count"].append(self.func_count)
         self.convergence_history["func_count_total"].append(self.func_count_tot)
