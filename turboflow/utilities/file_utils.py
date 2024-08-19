@@ -3,9 +3,9 @@ import re
 import yaml
 import time
 import logging
+import pickle
 from datetime import datetime
 import numpy as np
-
 
 def convert_numpy_to_python(data, precision=10):
     """
@@ -420,3 +420,29 @@ class DictionaryValidationError(Exception):
         if self.key is not None and self.value is not None:
             return f"{self.message} Key: '{self.key}', Value: {self.value}"
         return self.message
+    
+def save_to_pickle(obj, filename = "pickle_file", out_dir = "output"):
+    """
+    Save a Python object to a pickle file.
+
+    :param obj: The Python object to be saved.
+    :param filename: The name of the file where the object will be saved (with .pkl extension).
+    """
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = os.path.join(out_dir, f"{filename}_{timestamp}.pkl")
+    with open(filename, 'wb') as file:
+        pickle.dump(obj, file)
+    print(f"Object successfully saved to {filename}")
+
+def load_from_pickle(filename):
+    """
+    Load a Python object from a pickle file.
+
+    :param filename: The name of the pickle file to be loaded (with .pkl extension).
+    :return: The Python object that was stored in the pickle file.
+    """
+    with open(filename, 'rb') as file:
+        obj = pickle.load(file)
+    print(f"Object successfully loaded from {filename}")
+    return obj
