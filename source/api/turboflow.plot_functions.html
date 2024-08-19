@@ -67,14 +67,19 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.math.html">turboflow.math module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.config_validation.html">turboflow.config_validation module</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">turboflow.plot_functions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.combine_multiple_figures"><code class="docutils literal notranslate"><span class="pre">combine_multiple_figures()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.find_column"><code class="docutils literal notranslate"><span class="pre">find_column()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.get_column"><code class="docutils literal notranslate"><span class="pre">get_column()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.get_lines"><code class="docutils literal notranslate"><span class="pre">get_lines()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.get_subset"><code class="docutils literal notranslate"><span class="pre">get_subset()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_axial_radial_plane"><code class="docutils literal notranslate"><span class="pre">plot_axial_radial_plane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_convergence_process"><code class="docutils literal notranslate"><span class="pre">plot_convergence_process()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_lines"><code class="docutils literal notranslate"><span class="pre">plot_lines()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangles"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangles()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_optimization_results"><code class="docutils literal notranslate"><span class="pre">plot_optimization_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangle"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangle_stage"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangle_stage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangles_planes"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangles_planes()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.savefig_in_formats"><code class="docutils literal notranslate"><span class="pre">savefig_in_formats()</span></code></a></li>
 </ul>
 </li>
@@ -112,6 +117,44 @@
              
   <section id="module-turboflow.plot_functions">
 <span id="turboflow-plot-functions-module"></span><h1>turboflow.plot_functions module<a class="headerlink" href="#module-turboflow.plot_functions" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.combine_multiple_figures">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">combine_multiple_figures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figures</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#combine_multiple_figures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.combine_multiple_figures" title="Link to this definition"></a></dt>
+<dd><p>Combine multiple matplotlib figures into a single figure with custom labels, markers, linestyles, and colors.</p>
+<p>This function extracts the lines from all axes of the given figures 
+and plots them onto a new figure. The resulting figure contains 
+the plots from all corresponding axes in the input figures, with 
+custom labels, markers, linestyles, and colors applied to each line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>figures</strong><span class="classifier">list of matplotlib.figure.Figure</span></dt><dd><p>The list of figures to be combined.</p>
+</dd>
+<dt><strong>labels</strong><span class="classifier">list of str, optional</span></dt><dd><p>The list of labels. 
+If not provided, default labels ‘fig1’, ‘fig2’, etc. will be used.</p>
+</dd>
+<dt><strong>markers</strong><span class="classifier">list of str, optional</span></dt><dd><p>The list of markers to use for the lines from each figure. If not 
+provided, default markers will be used.</p>
+</dd>
+<dt><strong>linestyles</strong><span class="classifier">list of str, optional</span></dt><dd><p>The list of linestyles to use for the lines from each figure. If not 
+provided, default linestyles will be used.</p>
+</dd>
+<dt><strong>colors</strong><span class="classifier">list of str, optional</span></dt><dd><p>The list of colors to use for the lines from each figure. If not 
+provided, default colors will be used.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The new figure containing the combined plots.</p>
+</dd>
+<dt><strong>axes</strong><span class="classifier">list of matplotlib.axes.Axes</span></dt><dd><p>The list of axes objects in the new figure.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.plot_functions.find_column">
 <span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">find_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#find_column"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.find_column" title="Link to this definition"></a></dt>
@@ -289,6 +332,58 @@ axial-radial plane.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_convergence_process">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_convergence_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_together</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_convergence_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_convergence_process" title="Link to this definition"></a></dt>
+<dd><p>Plots the convergence process for multiple optimization algorithms.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>data</strong><span class="classifier">dict</span></dt><dd><p>A dictionary where each key is the algorithm name and the value is another dictionary
+with the following keys:
+- ‘objective’ : list</p>
+<blockquote>
+<div><p>List of objective values at each iteration.</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>‘constraint_violation’<span class="classifier">list</span></dt><dd><p>List of constraint violations at each iteration.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>‘iterations’<span class="classifier">list</span></dt><dd><p>List of iteration counts corresponding to the objective values and constraint violations.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>plot_together</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, plots the objective value and constraint violation in separate subplots in the same figure.
+If False, plots them in separate figures. Default is True.</p>
+</dd>
+<dt><strong>colors</strong><span class="classifier">list, optional</span></dt><dd><p>List of colors for the lines, one for each algorithm. If None, default colors are used.</p>
+</dd>
+<dt><strong>linestyles</strong><span class="classifier">list, optional</span></dt><dd><p>List of linestyles for the lines, one for each algorithm. If None, default linestyles are used.</p>
+</dd>
+<dt><strong>labels</strong><span class="classifier">list, optional</span></dt><dd><p>List of labels for the legend, one for each algorithm. If None, the dictionary keys are used as labels.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The figure object containing the plots.</p>
+</dd>
+<dt><strong>ax</strong><span class="classifier">matplotlib.axes.Axes or list of Axes</span></dt><dd><p>The axes object(s) containing the plots. If <cite>plot_together=True</cite>, a list of two axes is returned.
+Otherwise, a single axes object is returned.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The function creates either one or two subplots depending on the <cite>plot_together</cite> parameter.
+It also customizes the plots using the provided colors, linestyles, and labels.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="turboflow.plot_functions.plot_lines">
 <span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_keys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subsets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figures'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">close_fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_figs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_formats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_lines" title="Link to this definition"></a></dt>
 <dd><p>Plot lines from performance data.</p>
@@ -352,14 +447,92 @@ remaining elemnts represet the values defining the subset. Default is None.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.plot_functions.plot_velocity_triangles">
-<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_velocity_triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_velocity_triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_velocity_triangles" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_optimization_results">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_optimization_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lower_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_solutions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markersizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_optimization_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_optimization_results" title="Link to this definition"></a></dt>
+<dd><p>Plots the relative change from the initial guess for each variable,
+along with the bounds as an error bar style plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>initial_guess</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array of initial guesses for the design variables.</p>
+</dd>
+<dt><strong>lower_bounds</strong><span class="classifier">list of float</span></dt><dd><p>List of lower bounds for each design variable.</p>
+</dd>
+<dt><strong>upper_bounds</strong><span class="classifier">list of float</span></dt><dd><p>List of upper bounds for each design variable.</p>
+</dd>
+<dt><strong>final_solutions</strong><span class="classifier">list of np.ndarray</span></dt><dd><p>List of arrays where each array represents a set of final optimized design variables.</p>
+</dd>
+<dt><strong>markers</strong><span class="classifier">list of str, optional</span></dt><dd><p>List of markers to use for each set of final solutions. Default is ‘o’.</p>
+</dd>
+<dt><strong>colors</strong><span class="classifier">list of str, optional</span></dt><dd><p>List of colors to use for each set of final solutions. Default is ‘b’, ‘g’, ‘r’, etc.</p>
+</dd>
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure, optional</span></dt><dd><p>Matplotlib Figure object. If not provided, a new figure will be created.</p>
+</dd>
+<dt><strong>ax</strong><span class="classifier">matplotlib.axes.Axes, optional</span></dt><dd><p>Matplotlib Axes object. If not provided, a new axes will be created.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>fig</strong><span class="classifier">matplotlib.figure.Figure</span></dt><dd><p>The Figure object containing the plot.</p>
+</dd>
+<dt><strong>ax</strong><span class="classifier">matplotlib.axes.Axes</span></dt><dd><p>The Axes object containing the plot.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">initial_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lower_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">upper_bounds</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">final_solutions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.8</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_optimization_results</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">,</span> <span class="n">final_solutions</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_velocity_triangle">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_velocity_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cascade</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_velocity_triangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_velocity_triangle" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_velocity_triangle_stage">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_velocity_triangle_stage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fontsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_velocity_triangle_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_velocity_triangle_stage" title="Link to this definition"></a></dt>
 <dd><p>Plot velocity triangles for each stage of a turbine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>plane</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing velocity components for each plane of the turbine.
-The dictionary should have the following keys:
+<dt><strong>plane</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>A DataFrame containing velocity components for each plane of the turbine.
+The DataFrame should have the following keys:
+- ‘v_m’: Meridional velocities.
+- ‘v_t’: Tangential velocities.
+- ‘w_m’: Meridional velocities of relative motion.
+- ‘w_t’: Tangential velocities of relative motion.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The matplotlib figure object containing the velocity triangle plot.</p>
+</dd>
+<dt>matplotlib.axes._subplots.AxesSubplot</dt><dd><p>The matplotlib axis object containing the velocity triangle plot.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_velocity_triangles_planes">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_velocity_triangles_planes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_velocity_triangles_planes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_velocity_triangles_planes" title="Link to this definition"></a></dt>
+<dd><p>Plot velocity triangles for each plane of a turbine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>plane</strong><span class="classifier">pandas.DataFrame</span></dt><dd><p>A DataFrame containing velocity components for each plane of the turbine.
+The DataFrame should have the following keys:
 - ‘v_m’: Meridional velocities.
 - ‘v_t’: Tangential velocities.
 - ‘w_m’: Meridional velocities of relative motion.

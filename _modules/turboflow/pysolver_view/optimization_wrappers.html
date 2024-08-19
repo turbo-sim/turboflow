@@ -324,6 +324,10 @@
     <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
 
+    <span class="c1"># print solution</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best solution found:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_x</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Objective value of the best solution:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_f</span><span class="p">)</span>
+
     <span class="c1"># Optimization output</span>
     <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="n">message</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -340,13 +344,24 @@
     <span class="p">}</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+
+    <span class="c1"># Set seed </span>
+    <span class="k">if</span> <span class="s2">&quot;seed&quot;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">combined_options</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="n">pg</span><span class="o">.</span><span class="n">set_global_rng_seed</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">])</span>
     
     <span class="c1"># Solve the problem</span>
     <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">sga</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;gen&quot;</span><span class="p">])))</span>
-    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># print solution</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best solution found:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_x</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Objective value of the best solution:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_f</span><span class="p">)</span>
+
+    <span class="c1"># Evaluate final solution </span>
+    <span class="n">final</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">fitness</span><span class="p">(</span><span class="n">population</span><span class="o">.</span><span class="n">champion_x</span><span class="p">)</span>
 
     <span class="c1"># Optimization output</span>
     <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -365,13 +380,23 @@
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
 
+    <span class="c1"># Set seed </span>
+    <span class="k">if</span> <span class="s2">&quot;seed&quot;</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">combined_options</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="n">pg</span><span class="o">.</span><span class="n">set_global_rng_seed</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;seed&quot;</span><span class="p">])</span>
 
     <span class="c1"># Solve the problem</span>
     <span class="n">algorithm</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">algorithm</span><span class="p">(</span><span class="n">pg</span><span class="o">.</span><span class="n">pso</span><span class="p">(</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;gen&quot;</span><span class="p">])))</span>
-    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">algorithm</span><span class="o">.</span><span class="n">set_verbosity</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">problem</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">problem</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">population</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;pop_size&quot;</span><span class="p">]))</span>
     <span class="n">population</span> <span class="o">=</span> <span class="n">algorithm</span><span class="o">.</span><span class="n">evolve</span><span class="p">(</span><span class="n">population</span><span class="p">)</span>
+
+    <span class="c1"># print solution</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best solution found:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_x</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Objective value of the best solution:&quot;</span><span class="p">,</span> <span class="n">population</span><span class="o">.</span><span class="n">champion_f</span><span class="p">)</span>
+
+    <span class="c1"># Evaluate final solution </span>
+    <span class="n">final</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">fitness</span><span class="p">(</span><span class="n">population</span><span class="o">.</span><span class="n">champion_x</span><span class="p">)</span>
 
     <span class="c1"># Optimization output</span>
     <span class="n">success</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>

@@ -271,6 +271,20 @@ handles concurrency in multi-instance environments.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.file_utils.load_from_pickle">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">load_from_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#load_from_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.load_from_pickle" title="Link to this definition"></a></dt>
+<dd><p>Load a Python object from a pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – The name of the pickle file to be loaded (with .pkl extension).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The Python object that was stored in the pickle file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="turboflow.utilities.file_utils.print_dict">
 <span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">print_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#print_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.print_dict" title="Link to this definition"></a></dt>
 <dd><p>Recursively prints nested dictionaries with indentation or returns the formatted string.</p>
@@ -314,6 +328,20 @@ handles concurrency in multi-instance environments.</p></li>
 <dt>None</dt><dd><p>This function does not return any value. It prints the attributes and methods of the given object.</p>
 </dd>
 </dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.file_utils.save_to_pickle">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">save_to_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'pickle_file'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#save_to_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.save_to_pickle" title="Link to this definition"></a></dt>
+<dd><p>Save a Python object to a pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The Python object to be saved.</p></li>
+<li><p><strong>filename</strong> – The name of the file where the object will be saved (with .pkl extension).</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
