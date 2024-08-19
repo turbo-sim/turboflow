@@ -4,6 +4,7 @@ import CoolProp as cp
 import datetime
 import os
 import yaml
+import pickle
 from .. import pysolver_view as psv
 from .. import utilities as utils
 from . import geometry_model as geom
@@ -288,7 +289,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
-        self.design_variables_keys = initial_guess.keys()
+        self.design_variables_keys = list(initial_guess.keys())
         self.initial_guess = np.array(list(initial_guess.values()))
 
         # Index fixed variables
@@ -357,7 +358,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
-        self.design_variables_keys = initial_guess.keys()
+        self.design_variables_keys = list(initial_guess.keys())
         self.initial_guess = np.array(list(initial_guess.values()))
 
         # Index fixed variables
@@ -380,8 +381,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Set fitness function
         self.fitness = self.fitness_gradient_free
-        self.iteration = 1
-        self.success = 0
+
+        # Define variables (development variables) 
+        self.optimization_process = BlackBoxOptimization()
 
     def fitness(self, x):
         
@@ -441,49 +443,47 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 self.geometry[key] = self.geometry[key] * angle_range + angle_min
 
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
-        try:
         # Evaluate turbine model
-            solver, results = pa.compute_single_operation_point(
-                self.operation_point,
-                self.x0,
-                self.geometry,
-                self.simulation_options,
-                self.solver_options,
-            )
-            if solver.success and np.min(list(results["residuals"].values())) < 1e-6 : 
-                self.results = results
-                self.geometry = results["geometry"]
-                # Update initial guess
-                # self.x0 = solvers[0].problem.vars_real
+        solver, results = pa.compute_single_operation_point(
+            self.operation_point,
+            self.x0,
+            self.geometry,
+            self.simulation_options,
+            self.solver_options,
+        )
+        if solver.success: 
+            self.results = results
+            self.geometry = results["geometry"]
 
-                # Evaluate objective function
-                self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+            # Evaluate objective function
+            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
 
-                # Evaluate additional constraints
-                self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
-                    / self.geometry["A_out"][0:-1]})
-                
-                # Evaluate constraints
-                c_eq = self.evaluate_constraints(self.eq_constraints)
-                c_ineq = self.evaluate_constraints(self.ineq_constraints)
+            # Evaluate additional constraints
+            self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
+                / self.geometry["A_out"][0:-1].values})
+                            
+            # Evaluate constraints
+            c_eq = self.evaluate_constraints(self.eq_constraints)
+            c_ineq = self.evaluate_constraints(self.ineq_constraints)
 
-                # Include constriants in objective function
-                self.f = self.f + 100*sum(c_eq**2)
+            violation_all = np.concatenate((c_eq, np.maximum(c_ineq, 0)))
+            violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
 
-                self.success += 1
-            else:
-                self.f = 1e3
-        except:
-            self.f = 1e3
+            # Include constriants in objective function
+            self.f = self.f + 100*(sum(c_eq**2) + sum(c_ineq[c_ineq > 0]**2)) 
+
+            # Update optimization ptrocess object
+            self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, vars_scaled=solver.problem.vars_scaled)
+        else:
+            self.f = np.nan
+            self.optimization_process.update_optimization_process(results, converged = False)
         
-        self.iteration += 1
-        print(f"Iteration: {self.iteration}")
-        print(f"Successful iterations: {self.success}")
-
         # Combine objective functions and constraint
         objective_and_constraints = psv.combine_objective_and_constraints(
             self.f, self.c_eq, self.c_ineq
         )
+
+        self.optimization_process.print_optimization_process()
 
         return objective_and_constraints
 
@@ -1016,3 +1016,152 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                         }
                     ]
         return eq_constraints, ineq_constraints
+    
+    def __getstate__(self):
+        # Create a copy of the object's state dictionary
+        state = self.__dict__.copy()
+        # Remove the unpickleable 'fluid' entry
+        state['fluid'] = None
+        return state
+
+    def __setstate__(self, state):
+        # Restore the attributes
+        self.__dict__.update(state)
+        # Recreate the 'fluid' attribute
+        self.fluid = props.Fluid(self.boundary_conditions["fluid_name"])
+
+class BlackBoxOptimization:
+
+    def __init__(self):
+        self.turbine_results = []
+        self.iterations_convergence = np.array([])
+        self.iterations_objective_function = np.array([])
+        self.iterations_efficiency = np.array([])
+        self.iterations_mass_flow_rate = np.array([])
+        self.iterations_interspace_flaring = np.array([])
+        self.iterations_flaring_1 = np.array([])
+        self.iterations_flaring_2 = np.array([])
+        self.constraint_violation = np.array([])
+        self.root_finder_solutions = np.array([])
+        self.failed_iterations = 0
+        self.failed_iterations_percentage = 0
+    
+    def update_optimization_process(self, results, converged = True, f = None, violation = None, vars_scaled = None):
+
+        if converged:
+            self.iterations_objective_function = np.append(self.iterations_objective_function, f)
+            self.iterations_efficiency = np.append(self.iterations_efficiency, results["overall"]["efficiency_ts"])
+            self.iterations_convergence = np.append(self.iterations_convergence, converged)
+            self.iterations_mass_flow_rate = np.append(self.iterations_mass_flow_rate, results["overall"]["mass_flow_rate"])
+            self.iterations_interspace_flaring = np.append(self.iterations_interspace_flaring, results["additional_constraints"]["interspace_area_ratio"])
+            self.iterations_flaring_1 = np.append(self.iterations_flaring_1, results["geometry"]["flaring_angle"].values[0])
+            self.iterations_flaring_2 = np.append(self.iterations_flaring_2, results["geometry"]["flaring_angle"].values[1])
+            self.constraint_violation = np.append(self.constraint_violation, violation)
+            self.root_finder_solutions = np.append(self.root_finder_solutions, vars_scaled)
+        else:
+            self.iterations_objective_function = np.append(self.iterations_objective_function, np.nan)
+            self.iterations_efficiency = np.append(self.iterations_efficiency, np.nan)
+            self.iterations_convergence = np.append(self.iterations_convergence, converged)
+            self.iterations_mass_flow_rate = np.append(self.iterations_mass_flow_rate, np.nan)
+            self.iterations_interspace_flaring = np.append(self.iterations_interspace_flaring, np.nan)
+            self.iterations_flaring_1 = np.append(self.iterations_flaring_1, np.nan)
+            self.iterations_flaring_2 = np.append(self.iterations_flaring_2, np.nan)
+            self.constraint_violation = np.append(self.constraint_violation, np.nan)
+            self.root_finder_solutions = np.append(self.root_finder_solutions, np.nan)
+            self.failed_iterations += 1
+
+        self.turbine_results.append(results)
+        self.failed_iterations_percentage = self.failed_iterations/len(self.iterations_objective_function)
+
+    def print_optimization_process(self):
+
+        print(f'Iteration: {len(self.iterations_objective_function)}')
+        print(f'Objective function: {self.iterations_objective_function[-1]}')
+        print(f'Mass flow rate: {self.iterations_mass_flow_rate[-1]}')
+        print(f'Interspace flaring: {self.iterations_interspace_flaring[-1]}')
+        print(f'Stator flaring: {self.iterations_flaring_1[-1]}')
+        print(f'Rotor flaring: {self.iterations_flaring_2[-1]}')
+        print('\n')
+
+    def find_champion(self, solver):
+
+        champion_i = np.nanargmin(solver.convergence_history["objective_value"])
+        champion_x = solver.convergence_history["x"][champion_i]
+        solver.problem.fitness(champion_x)
+
+    def export_optimization_process(self, config):
+        overall_data = []
+        plane_data = []
+        cascade_data = []
+        stage_data = []
+        solver_data = []
+        geometry_data = []
+
+        for i in range(len(self.turbine_results)):
+            solver_status = {"Success" : self.iterations_convergence[i],
+                        "Objective" : self.iterations_objective_function[i],
+                        "Efficiency" : self.iterations_efficiency[i],
+                        "Mass flow rate" : self.iterations_mass_flow_rate[i],
+                        "Interspace flaring" : self.iterations_interspace_flaring[i],
+                        "Flaring Stator" : self.iterations_flaring_1[i],
+                        "Flaring Rotor" : self.iterations_flaring_2[i],
+            }
+            results = self.turbine_results[i]
+            overall_data.append(results["overall"])
+            plane_data.append(utils.flatten_dataframe(results["plane"]))
+            cascade_data.append(utils.flatten_dataframe(results["cascade"]))
+            stage_data.append(utils.flatten_dataframe(results["stage"]))
+            geometry_data.append(utils.flatten_dataframe(results["geometry"]))
+            solver_data.append(pd.DataFrame([solver_status]))
+
+        all_results = {
+            "overall": pd.concat(overall_data, ignore_index=True),
+            "plane": pd.concat(plane_data, ignore_index=True),
+            "cascade": pd.concat(cascade_data, ignore_index=True),
+            "stage": pd.concat(stage_data, ignore_index=True),
+            "geometry": pd.concat(geometry_data, ignore_index=True),
+            "solver": pd.concat(solver_data, ignore_index=True),
+        }
+        
+        # Create a directory to save simulation results
+        out_dir = "output"
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        out_filename = f"black_box_optimization_{timestamp}"
+
+        # Export simulation configuration as YAML file
+        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+        config_data = utils.convert_numpy_to_python(config_data, precision=12)
+        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+        with open(config_file, "w") as file:
+            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+        # Export performance results in excel file
+        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            for sheet_name, df in all_results.items():
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+def build_config(filename, performance_map, solver_options, initial_guess):
+    
+    """
+    Build configuration from CascadesOptimizationProblem object
+    """
+
+    obj = utils.load_from_pickle(filename)
+    bc_keys = ["fluid_name", "T0_in", "p0_in", "p_out", "omega" , "alpha_in"]
+    geometry_keys = ["cascade_type", "radius_hub_in", "radius_hub_out", "radius_tip_in", "radius_tip_out", "pitch",
+                     "chord", "stagger_angle", "opening", "leading_edge_angle", "leading_edge_wedge_angle",
+                     "leading_edge_diameter", "trailing_edge_thickness", "maximum_thickness",
+                     "tip_clearance", "throat_location_fraction"]
+    boundary_conditions = {key :  val for key, val in obj.problem.boundary_conditions.items() if key in bc_keys}
+    geometry = {key : val for key, val in obj.problem.geometry.items() if key in geometry_keys}
+    print(obj.problem.geometry)
+    config = {"geometry" : geometry,
+              "simulation_options" : obj.problem.model_options,
+              "operation_points" : boundary_conditions,
+              "performance_analysis" : {"perfromance_map" : performance_map,
+                                        "solver_options" : solver_options,
+                                        "initial_guess" : initial_guess,}}
+    
+    return config
