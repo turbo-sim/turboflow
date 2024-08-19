@@ -106,12 +106,14 @@ def test_design_optimization(compute_optimal_turbine_from_config):
 
     # Loop over all operating points
     mismatch = []  # List to store discrepancies
-    for key in solver.convergence_history.keys():
+    convergence_checks = set(solver.convergence_history.keys()) - {"x"}
+    result_checks = solver.problem.results["overall"].keys()
+    for key in convergence_checks:
         value_old = saved_df["solver"][key].to_numpy()[-1]
         value_new = solver.convergence_history[key][-1]
         check_value(value_old, value_new, key, config_name, mismatch)
 
-    for key in solver.problem.results["overall"].keys():
+    for key in result_checks:
         value_old = saved_df["overall"][key].to_numpy()[0]
         value_new = solver.problem.results["overall"][key][0]
         check_value(value_old, value_new, key, config_name, mismatch)

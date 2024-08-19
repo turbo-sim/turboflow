@@ -9,7 +9,7 @@ operation_points:
 simulation_options:
   deviation_model: aungier
   blockage_model: 0.0
-  choking_model: evaluate_cascade_critical
+  choking_criterion: critical_mass_flow_rate
   rel_step_fd: 0.0001
   loss_model:
     model: kacker_okapuu
@@ -90,13 +90,16 @@ performance_analysis:
     print_convergence: true
     plot_convergence: false
   initial_guess:
-    eta_tt:
+    efficiency_tt:
     - 0.9
     - 0.8
-    eta_ts:
+    efficiency_ke:
+    - 0.138888888889
+    - 0.178571428571
+    ma_1:
     - 0.8
-    - 0.7
-    ma:
+    - 0.8
+    ma_2:
     - 0.8
     - 0.8
 design_optimization:
@@ -263,11 +266,10 @@ design_optimization:
   solver_options:
     library: scipy
     method: nelder-mead
-    tolerance: 1.0e-05
-    max_iterations: 100
     derivative_method: 2-point
     derivative_abs_step: null
     print_convergence: true
     plot_convergence: false
     update_on: gradient
+    options: {}
   radius_type: constant_mean
