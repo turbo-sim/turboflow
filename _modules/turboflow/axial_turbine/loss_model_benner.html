@@ -368,6 +368,7 @@
 
     <span class="c1"># Numerical trick to avoid too big r_to&#39;s</span>
     <span class="n">r_to</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">t_te</span> <span class="o">/</span> <span class="n">o</span><span class="p">)</span>  <span class="c1"># TODO: smoothing</span>
+    <span class="c1"># r_to = math.smooth_minimum(0.4, t_te / o, method=&quot;logsumexp&quot;)  # TODO: smoothing</span>
 
     <span class="c1"># Interpolate data</span>
     <span class="n">d_phi2_reaction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">r_to</span><span class="p">,</span> <span class="n">r_to_data</span><span class="p">,</span> <span class="n">phi_data_reaction</span><span class="p">)</span>
