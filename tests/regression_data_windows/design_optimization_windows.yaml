@@ -4,14 +4,12 @@ operation_points:
   T0_in: 463.15
   p0_in: 3620000.0
   p_out: 1585000.0
-  omega: 3979.75886308017
+  omega: 3810.0
   alpha_in: 0.0
-  h0_in: 497686.3106530505
-  s_in: 1837.707528152813
 simulation_options:
   deviation_model: zero_deviation
   blockage_model: 0.0
-  choking_model: evaluate_cascade_isentropic_throat
+  choking_criterion: critical_isentropic_throat
   rel_step_fd: 0.0001
   loss_model:
     model: kacker_okapuu
@@ -34,6 +32,7 @@ performance_analysis:
     derivative_abs_step: 1.0e-06
     print_convergence: true
     plot_convergence: true
+  initial_guess: {}
 design_optimization:
   objective_function:
     variable: overall.efficiency_ts
@@ -234,11 +233,12 @@ design_optimization:
   solver_options:
     library: scipy
     method: slsqp
-    tolerance: 1.0e-06
-    max_iterations: 100
     derivative_method: 2-point
     derivative_abs_step: null
     print_convergence: true
     plot_convergence: false
     update_on: gradient
+    options:
+      tol: 1.0e-06
+      max_iter: 100
   radius_type: constant_mean

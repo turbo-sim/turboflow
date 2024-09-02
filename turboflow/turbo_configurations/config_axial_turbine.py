@@ -493,7 +493,7 @@ class Constraint(BaseModel):
     variable : str
     type: Literal["<", "=", ">"]
     value: Union[float, List[float]]
-    normalize: bool
+    normalize: Union[bool, float]
 
 RadiusTypeEnum = Enum('RadiusTypes', dict(zip([model.upper() for model in RADIUS_TYPE], RADIUS_TYPE)))
 

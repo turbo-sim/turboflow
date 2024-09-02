@@ -39,7 +39,7 @@ REGRESSION_CONFIGS = {
                                 "performance_analysis_zero_deviation.yaml",
                                 "performance_analysis_ainley_mathieson.yaml",
                             ],
-    'design_optimization': None,
+    'design_optimization': ["design_optimization.yaml"],
 }
 
 def get_config_files(test_name):

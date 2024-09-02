@@ -546,16 +546,140 @@ def plot_axial_radial_plane(geometry):
 
     return fig, ax
 
+def plot_velocity_triangle_stage(plane,
+                                 fig = None,
+                                 ax = None,
+                                 color = None,
+                                 linestyle = None,
+                                 fontsize = 12,
+                                 hs = 15,
+                                 start_y = 0,
+                                 start_x = 0,
+                                 dy = 0.1,
+                                 dx = 0):
 
-def plot_velocity_triangles(plane):
     """
     Plot velocity triangles for each stage of a turbine.
 
     Parameters
     ----------
-    plane : dict
-        A dictionary containing velocity components for each plane of the turbine.
-        The dictionary should have the following keys:
+    plane : pandas.DataFrame
+        A DataFrame containing velocity components for each plane of the turbine.
+        The DataFrame should have the following keys:
+        - 'v_m': Meridional velocities.
+        - 'v_t': Tangential velocities.
+        - 'w_m': Meridional velocities of relative motion.
+        - 'w_t': Tangential velocities of relative motion.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The matplotlib figure object containing the velocity triangle plot.
+
+    matplotlib.axes._subplots.AxesSubplot
+        The matplotlib axis object containing the velocity triangle plot.
+
+    """
+
+    # Get indices of inlet and exit of each rotor plane
+    indices = np.array(
+        [val for pair in zip(plane.index[2::4], plane.index[3::4]) for val in pair]
+    )
+    data = plane.iloc[indices]
+
+    # Load variables
+    v_ms = data["v_m"].values
+    v_ts = data["v_t"].values
+    w_ms = data["w_m"].values
+    w_ts = data["w_t"].values
+
+    # Get maximum an minimum tangential velocities
+    max_w_t = max(np.array([val for pair in zip(v_ts, w_ts) for val in pair]))
+    min_w_t = min(np.array([val for pair in zip(v_ts, w_ts) for val in pair]))
+
+    # initialize figure and axis
+    if fig == None:
+        fig, ax = plt.subplots()
+
+    # Calculate number of stages
+    number_of_stages = int(np.floor(len(plane)/4))
+
+    # Plot stage velocity triangles
+    for i in range(number_of_stages):
+        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i], v_ts[2*i], v_ms[2*i], w_ms[2*i], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 's')
+        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i + 1], v_ts[2*i+ 1], v_ms[2*i+ 1], w_ms[2*i+ 1], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 'r')
+
+        start_x += dx
+        start_y += dy
+
+    # Set plot options
+    ax.grid(False)
+    ax.set_yticks([])
+    ax.set_xticks([])
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+
+    return fig, ax
+
+def plot_velocity_triangle(fig, ax, start_x, start_y, w_t, v_t, v_m, w_m, hs = 10, fontsize = 12, lines = "all", color = None, linestyle = None, cascade = ''):
+
+    # Plot triangle
+    if lines == "all":
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, v_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot absolute tangential velocity
+        ax.plot([start_x, w_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot relative tangential velocity
+        ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
+        ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
+        ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
+    elif lines == "total":
+        ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
+        ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
+        ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
+    elif lines == "absolute":
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, v_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot absolute tangential velocity
+        ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
+    elif lines == "relative":
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, w_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot relative tangential velocity
+        ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
+        ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
+
+    # Arrows
+    plt.annotate(
+        "",
+        xy=(v_t / 2, (start_y + start_y - v_m) / 2),
+        xytext=(start_x, start_y),
+        arrowprops=dict( color = color, arrowstyle="-|>", linestyle = "none"),
+    )  # Arrow for absolute velocity
+    plt.annotate(
+                "",
+                xy=(w_t / 2, (start_y + start_y - w_m) / 2),
+                xytext=(start_x, start_y),
+                arrowprops=dict(color = color, arrowstyle="-|>", linestyle = "none"),
+            )  # Arrow for relative velocity
+    plt.annotate(
+                "",
+                xy=((w_t + v_t) / 2, start_y - w_m),
+                xytext=(w_t, start_y - w_m),
+                arrowprops=dict(color = color, arrowstyle="-|>", linestyle = "none"),
+            )  # Arrow for blade speed
+    
+    ax.set_aspect('equal')
+
+    return fig, ax
+
+def plot_velocity_triangles_planes(plane):
+    """
+    Plot velocity triangles for each plane of a turbine.
+
+    Parameters
+    ----------
+    plane : pandas.DataFrame
+        A DataFrame containing velocity components for each plane of the turbine.
+        The DataFrame should have the following keys:
         - 'v_m': Meridional velocities.
         - 'v_t': Tangential velocities.
         - 'w_m': Meridional velocities of relative motion.
@@ -727,3 +851,318 @@ def plot_velocity_triangles(plane):
     plt.show()
 
     return fig, ax
+
+import matplotlib.pyplot as plt
+
+def combine_multiple_figures(figures, labels=None, markers=None, linestyles=None, colors=None, y_labels = None):
+    """
+    Combine multiple matplotlib figures into a single figure with custom labels, markers, linestyles, and colors.
+
+    This function extracts the lines from all axes of the given figures 
+    and plots them onto a new figure. The resulting figure contains 
+    the plots from all corresponding axes in the input figures, with 
+    custom labels, markers, linestyles, and colors applied to each line.
+
+    Parameters
+    ----------
+    figures : list of matplotlib.figure.Figure
+        The list of figures to be combined.
+    labels : list of str, optional
+        The list of labels. 
+        If not provided, default labels 'fig1', 'fig2', etc. will be used.
+    markers : list of str, optional
+        The list of markers to use for the lines from each figure. If not 
+        provided, default markers will be used.
+    linestyles : list of str, optional
+        The list of linestyles to use for the lines from each figure. If not 
+        provided, default linestyles will be used.
+    colors : list of str, optional
+        The list of colors to use for the lines from each figure. If not 
+        provided, default colors will be used.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The new figure containing the combined plots.
+    axes : list of matplotlib.axes.Axes
+        The list of axes objects in the new figure.
+
+    Example
+    -------
+    >>> fig1, ax1 = plt.subplots(2, 1)
+    >>> ax1[0].plot([1, 2, 3], [1, 4, 9], label='Plot 1')
+    >>> ax1[1].plot([1, 2, 3], [1, 2, 3], label='Plot 2')
+    >>> fig2, ax2 = plt.subplots(2, 1)
+    >>> ax2[0].plot([1, 2, 3], [9, 4, 1], label='Plot 3')
+    >>> ax2[1].plot([1, 2, 3], [3, 2, 1], label='Plot 4')
+    >>> fig3, ax3 = plt.subplots(2, 1)
+    >>> ax3[0].plot([1, 2, 3], [2, 3, 4], label='Plot 5')
+    >>> fig, axes = combine_multiple_figures(
+    >>>     [fig1, fig2, fig3], 
+    >>>     labels=['Figure 1', 'Figure 2', 'Figure 3'],
+    >>>     markers=['o', 's', 'd'],
+    >>>     linestyles=['-', '--', ':'],
+    >>>     colors=['blue', 'green', 'red']
+    >>> )
+    >>> plt.show()
+    """
+    if labels is None:
+        labels = [f'fig{i+1}' for i in range(len(figures))]
+    
+    if markers is None:
+        markers = [None] * len(figures)
+    
+    if linestyles is None:
+        linestyles = [None] * len(figures)
+    
+    if colors is None:
+        colors = [None] * len(figures)
+
+    if len(labels) != len(figures):
+        raise ValueError("The number of labels must match the number of figures.")
+    if len(markers) != len(figures):
+        raise ValueError("The number of markers must match the number of figures.")
+    if len(linestyles) != len(figures):
+        raise ValueError("The number of linestyles must match the number of figures.")
+    if len(colors) != len(figures):
+        raise ValueError("The number of colors must match the number of figures.")
+
+    # Determine the maximum number of axes across all figures
+    max_num_axes = max(len(fig.get_axes()) for fig in figures)
+
+    # Set y_labels
+    if y_labels is None:
+        y_labels = [""]*max_num_axes
+    
+    if len(y_labels) != max_num_axes:
+        raise ValueError("The number of y-axis labels must match the number of axes.")
+
+    # Create a new figure with the same number of subplots as the maximum number of axes
+    fig, axes = plt.subplots(nrows=max_num_axes, ncols=1, squeeze=False)
+
+    # Flatten axes to make iteration easier
+    axes = axes.flatten()
+
+    # Combine plots from all figures
+    for i in range(max_num_axes):
+        for j, (fig, label, marker, linestyle, color) in enumerate(zip(figures, labels, markers, linestyles, colors)):
+            axes_list = fig.get_axes()
+            if i < len(axes_list):
+                for line in axes_list[i].get_lines():
+                    axes[i].plot(
+                        line.get_xdata(), 
+                        line.get_ydata(), 
+                        label=label, 
+                        marker=marker, 
+                        linestyle=linestyle, 
+                        color=color
+                    )
+
+        # axis options
+        axes[i].legend()
+        axes[i].set_ylabel(y_labels[i])
+
+    return fig, axes
+
+
+def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_solutions, 
+                              markers=None, colors=None, fig=None, ax=None, labels = None, variable_names = None, fontsize = 12, markersizes = 6):
+    """
+    Plots the relative change from the initial guess for each variable,
+    along with the bounds as an error bar style plot.
+
+    Parameters
+    ----------
+    initial_guess : np.ndarray
+        Array of initial guesses for the design variables.
+    lower_bounds : list of float
+        List of lower bounds for each design variable.
+    upper_bounds : list of float
+        List of upper bounds for each design variable.
+    final_solutions : list of np.ndarray
+        List of arrays where each array represents a set of final optimized design variables.
+    markers : list of str, optional
+        List of markers to use for each set of final solutions. Default is 'o'.
+    colors : list of str, optional
+        List of colors to use for each set of final solutions. Default is 'b', 'g', 'r', etc.
+    fig : matplotlib.figure.Figure, optional
+        Matplotlib Figure object. If not provided, a new figure will be created.
+    ax : matplotlib.axes.Axes, optional
+        Matplotlib Axes object. If not provided, a new axes will be created.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The Figure object containing the plot.
+    ax : matplotlib.axes.Axes
+        The Axes object containing the plot.
+
+    Examples
+    --------
+    >>> initial_guess = np.array([1.0, 2.0, 3.0])
+    >>> lower_bounds = [0.5, 1.0, 2.0]
+    >>> upper_bounds = [1.5, 3.0, 4.0]
+    >>> final_solutions = [np.array([1.1, 2.5, 2.8]), np.array([0.9, 2.1, 3.2])]
+    >>> fig, ax = plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_solutions)
+    >>> plt.show()
+    """
+
+    num_vars = len(initial_guess)
+    
+    # Convert lower and upper bounds to numpy arrays
+    lower_bounds = np.array(lower_bounds)
+    upper_bounds = np.array(upper_bounds)
+
+    # Calculate the relative change for each solution and the bounds
+    relative_changes = [(solution - initial_guess) / initial_guess for solution in final_solutions]
+    relative_lower_bounds = (lower_bounds - initial_guess) / initial_guess
+    relative_upper_bounds = (upper_bounds - initial_guess) / initial_guess
+
+    # Default markers and colors if not provided
+    if markers is None:
+        markers = ['o'] * len(final_solutions)
+    if not isinstance(markersizes, (list,np.ndarray)):
+        markersizes = [markersizes]*len(final_solutions)
+    if colors is None:
+        colors = plt.cm.tab10.colors[:len(final_solutions)]  # Use default color cycle
+    
+    # Create fig and ax if not provided
+    if fig is None or ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Set labels 
+    if labels == None:
+        labels = [f'Solution {i+1}' for i in range(len(final_solutions))]
+
+    # Plotting the error bar for bounds as relative changes
+    ax.errorbar(range(num_vars), 
+                (relative_upper_bounds + relative_lower_bounds) / 2, 
+                yerr=[(relative_upper_bounds - relative_lower_bounds) / 2, 
+                      (relative_upper_bounds - relative_lower_bounds) / 2],
+                fmt=' ', color='gray', alpha=0.5, capsize = 6)
+
+    # Plot each final solution
+    for i, rel_change in enumerate(relative_changes):
+        ax.plot(range(num_vars), rel_change, linestyle = 'none', marker=markers[i], markersize=markersizes[i], label=labels[i], color=colors[i])
+
+    # Adding labels and titles
+    ax.set_ylabel('Relative Change from Initial Guess', fontsize = fontsize)
+    ax.legend(fontsize = fontsize)
+    ax.grid(False)
+    ax.minorticks_off()
+
+    # Set custom tick labels if provided
+    if variable_names is not None:
+        ax.set_xticks(range(num_vars))
+        ax.set_xticklabels(variable_names, rotation=75, fontsize = fontsize)
+
+    return fig, ax
+
+import matplotlib.pyplot as plt
+
+def plot_convergence_process(data, plot_together=True, colors=None, linestyles=None, labels=None):
+    """
+    Plots the convergence process for multiple optimization algorithms.
+    
+    Parameters
+    ----------
+    data : dict
+        A dictionary where each key is the algorithm name and the value is another dictionary
+        with the following keys:
+        - 'objective' : list
+            List of objective values at each iteration.
+        - 'constraint_violation' : list
+            List of constraint violations at each iteration.
+        - 'iterations' : list
+            List of iteration counts corresponding to the objective values and constraint violations.
+        
+    plot_together : bool, optional
+        If True, plots the objective value and constraint violation in separate subplots in the same figure.
+        If False, plots them in separate figures. Default is True.
+        
+    colors : list, optional
+        List of colors for the lines, one for each algorithm. If None, default colors are used.
+        
+    linestyles : list, optional
+        List of linestyles for the lines, one for each algorithm. If None, default linestyles are used.
+        
+    labels : list, optional
+        List of labels for the legend, one for each algorithm. If None, the dictionary keys are used as labels.
+        
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object containing the plots.
+        
+    ax : matplotlib.axes.Axes or list of Axes
+        The axes object(s) containing the plots. If `plot_together=True`, a list of two axes is returned.
+        Otherwise, a single axes object is returned.
+    
+    Notes
+    -----
+    The function creates either one or two subplots depending on the `plot_together` parameter.
+    It also customizes the plots using the provided colors, linestyles, and labels.
+    
+    Example
+    -------
+    >>> data = {
+    >>>     'Algorithm 1': {
+    >>>         'objective': [10, 8, 6, 5, 3],
+    >>>         'constraint_violation': [1, 0.8, 0.5, 0.3, 0],
+    >>>         'iterations': [1, 2, 3, 4, 5],
+    >>>     },
+    >>>     'Algorithm 2': {
+    >>>         'objective': [12, 9, 7, 4, 2],
+    >>>         'constraint_violation': [1.2, 0.7, 0.6, 0.2, 0.1],
+    >>>         'iterations': [1, 2, 3, 4, 5],
+    >>>     }
+    >>> }
+    >>> fig, ax = plot_convergence_process(data, plot_together=True, colors=['blue', 'green'], linestyles=['-', '--'], labels=['Algo 1', 'Algo 2'])
+    """
+    
+    if colors is None:
+        colors = [None] * len(data)
+    if linestyles is None:
+        linestyles = ['-'] * len(data)
+    if labels is None:
+        labels = list(data.keys())
+
+    if plot_together:
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12))
+        ax = [ax1, ax2]
+    else:
+        fig, ax1 = plt.subplots(1, 1, figsize=(14, 6))
+        fig2, ax2 = plt.subplots(1, 1, figsize=(14, 6))
+        ax = [ax1, ax2]
+        ax[0].set_xlabel('Iterations')
+
+    for idx, (algo, algo_data) in enumerate(data.items()):
+        iterations = algo_data['iterations']
+        objective = algo_data['objective']
+        constraint_violation = algo_data['constraint_violation']
+
+        ax[0].plot(iterations, objective, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
+        ax[1].plot(iterations, constraint_violation, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
+
+    ax[0].set_ylabel('Objective Value')
+    ax[0].legend()
+    ax[0].grid(True)
+
+    ax[1].set_xlabel('Iterations')
+    ax[1].set_ylabel('Constraint Violation')
+    ax[1].legend()
+    ax[1].grid(True)
+
+    plt.tight_layout()
+
+    return fig, ax
+
+
+
+
+
+
+
+
+
+

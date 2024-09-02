@@ -229,6 +229,10 @@ def _minimize_pygmo_de(problem, x0, options):
     population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
 
+    # print solution
+    print("Best solution found:", population.champion_x)
+    print("Objective value of the best solution:", population.champion_f)
+
     # Optimization output
     success = ""
     message = ""
@@ -245,13 +249,24 @@ def _minimize_pygmo_sga(problem, x0, options):
     }
     options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
+
+    # Set seed 
+    if "seed" in list(combined_options.keys()):
+        pg.set_global_rng_seed(combined_options["seed"])
     
     # Solve the problem
     algorithm = pg.algorithm(pg.sga(gen = int(combined_options["gen"])))
-    algorithm.set_verbosity(50)
+    algorithm.set_verbosity(0)
     problem = pg.problem(problem)
     population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
+
+    # print solution
+    print("Best solution found:", population.champion_x)
+    print("Objective value of the best solution:", population.champion_f)
+
+    # Evaluate final solution 
+    final = problem.fitness(population.champion_x)
 
     # Optimization output
     success = ""
@@ -270,13 +285,23 @@ def _minimize_pygmo_pso(problem, x0, options):
     options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
 
+    # Set seed 
+    if "seed" in list(combined_options.keys()):
+        pg.set_global_rng_seed(combined_options["seed"])
 
     # Solve the problem
     algorithm = pg.algorithm(pg.pso(gen = int(combined_options["gen"])))
-    algorithm.set_verbosity(50)
+    algorithm.set_verbosity(0)
     problem = pg.problem(problem)
     population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
+
+    # print solution
+    print("Best solution found:", population.champion_x)
+    print("Objective value of the best solution:", population.champion_f)
+
+    # Evaluate final solution 
+    final = problem.fitness(population.champion_x)
 
     # Optimization output
     success = ""

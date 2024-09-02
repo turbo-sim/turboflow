@@ -135,6 +135,3 @@ design_optimization:
     print_convergence: True
     plot_convergence: False
     update_on: "gradient"
-    options : 
-      tol: 1e-6
-      max_iter: 100
