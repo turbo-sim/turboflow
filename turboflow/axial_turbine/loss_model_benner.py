@@ -271,6 +271,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     # Numerical trick to avoid too big r_to's
     r_to = min(0.4, t_te / o)  # TODO: smoothing
+    # r_to = math.smooth_minimum(0.4, t_te / o, method="logsumexp")  # TODO: smoothing
 
     # Interpolate data
     d_phi2_reaction = np.interp(r_to, r_to_data, phi_data_reaction)
