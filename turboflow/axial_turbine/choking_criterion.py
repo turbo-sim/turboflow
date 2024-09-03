@@ -198,7 +198,7 @@ def critical_mach_number(
             choking_residual,
         ]
     )
-    residual_keys = ["m*", "Y*", "beta*", "choking"]
+    residual_keys = ["m*", "Y*", "choking"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
     # Define output values
