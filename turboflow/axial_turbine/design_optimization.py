@@ -74,16 +74,21 @@ def compute_optimal_turbine(
     # Perform initial function call to initialize problem
     # This populates the arrays of equality and inequality constraints
     # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
-    problem.fitness(problem.initial_guess)
+    problem.fitness(problem.initial_guesses[0])
 
     # Load solver configuration
     solver_config = config["design_optimization"]["solver_options"]
 
-    # Initialize solver object using keyword-argument dictionary unpacking
-    solver = psv.OptimizationSolver(problem, **solver_config)
-
-    # Solve optimization problem for initial guess x0
-    solver.solve(problem.initial_guess)
+    solver_container = SolverContainer()
+    success = []
+    for ig in problem.initial_guesses:
+        # Initialize solver object using keyword-argument dictionary unpacking
+        solver = psv.OptimizationSolver(problem, **solver_config)
+        
+         # Solve optimization problem for initial guess x0
+        solver.solve(ig)
+        solver_container.solver_container.append(solver)
+        success.append(solver.success)
 
     dfs = {
         "operation point": pd.DataFrame(
@@ -137,7 +142,10 @@ def compute_optimal_turbine(
             for sheet_name, df in dfs.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=True)
 
-    return solver        
+    if len(solver_container.solver_container) == 1:
+        return solver_container.solver_container[0]
+
+    return solver_container     
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
@@ -230,6 +238,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         algorithm = config["design_optimization"]["solver_options"]["method"]
+        
+        # self.init_black_box_constrained(config)
         if algorithm in GRADIENT_ALGORITHMS:
             self.init_gradient_based(config)
         elif algorithm in GENETIC_ALGORITHMS:
@@ -290,7 +300,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
         self.design_variables_keys = list(initial_guess.keys())
-        self.initial_guess = np.array(list(initial_guess.values()))
+        # self.initial_guess = np.array(list(initial_guess.values()))
 
         # Index fixed variables
         self.fixed_params = self.index_variables(fixed_params)
@@ -298,6 +308,15 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize bounds
         lb, ub = self.get_given_bounds(design_variables)
         self.bounds = (lb, ub)
+
+        # Initialize a range of initial guesses for multistart optimization
+        starts = config["design_optimization"]["multistarts"]
+        if starts > 0:
+            bounds = [(lower, upper) for lower, upper in zip(lb, ub)]
+            initial_guesses = pa.latin_hypercube_sampling(bounds, starts)
+            self.initial_guesses = np.insert(initial_guesses, 0, np.array(list(initial_guess.values())), axis = 0)
+        else:
+            self.initial_guesses = [np.array(list(initial_guess.values()))]            
 
         # Adjust set of independent variables according to choking model
         self.independent_variables = [
@@ -359,7 +378,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
         self.design_variables_keys = list(initial_guess.keys())
-        self.initial_guess = np.array(list(initial_guess.values()))
+        self.initial_guesses = [np.array(list(initial_guess.values()))]
 
         # Index fixed variables
         self.fixed_params = self.index_variables(fixed_params)
@@ -381,6 +400,55 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Set fitness function
         self.fitness = self.fitness_gradient_free
+
+        # Define variables (development variables) 
+        self.optimization_process = BlackBoxOptimization()
+
+    def init_black_box_constrained(self, config):
+        
+        # Update design point 
+        if isinstance(config["operation_points"], (list, np.ndarray)):
+            self.operation_point = config["operation_points"][0]
+            self.update_boundary_conditions(config["operation_points"][0])
+        else:
+            self.operation_point = config["operation_points"]
+            self.update_boundary_conditions(config["operation_points"])
+
+        # Adjust given variables according to choking model (remove excess variables)
+        variables = config["design_optimization"]["variables"]
+        prefixes = ["v_", "w_", "s_", "beta_"]
+        variables = {key: var for key, var in variables.items() if not any(key.startswith(prefix) for prefix in prefixes)}
+
+        # Separate fixed variables and design variables
+        fixed_params = {}
+        design_variables = {}
+        for key, value in variables.items():
+            if value["lower_bound"] is not None:
+                design_variables[key] = value
+            else:
+                fixed_params[key] = value
+
+        # Initialize initial guess
+        initial_guess = self.index_variables(design_variables)
+        self.design_variables_keys = list(initial_guess.keys())
+        self.initial_guess = np.array(list(initial_guess.values()))
+
+        # Index fixed variables
+        self.fixed_params = self.index_variables(fixed_params)
+
+        # Initialize bounds
+        lb, ub = self.get_given_bounds(design_variables)
+        self.bounds = (lb, ub)            
+
+        # Set initial guess for root finder
+        self.x0 = config["performance_analysis"]["initial_guess"]
+
+        # Initialize config copy
+        self.simulation_options = config["simulation_options"]
+        self.solver_options = config["performance_analysis"]["solver_options"] 
+
+        # Set fitness function
+        self.fitness = self.fitness_black_box_constrained
 
         # Define variables (development variables) 
         self.optimization_process = BlackBoxOptimization()
@@ -473,7 +541,100 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.f = self.f + 100*(sum(c_eq**2) + sum(c_ineq[c_ineq > 0]**2)) 
 
             # Update optimization ptrocess object
-            self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, vars_scaled=solver.problem.vars_scaled)
+            self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, solver=solver)
+        else:
+            self.f = np.nan
+            self.optimization_process.update_optimization_process(results, converged = False)
+        
+        # Combine objective functions and constraint
+        objective_and_constraints = psv.combine_objective_and_constraints(
+            self.f, self.c_eq, self.c_ineq
+        )
+
+        self.optimization_process.print_optimization_process()
+
+        return objective_and_constraints
+    
+    def fitness_black_box_constrained(self, x):
+        r"""
+        Evaluate the objective function and constraints at a given pint `x` for genetic algrothims.
+
+        Parameters
+        ----------
+        x : array-like
+            Vector of design variables.
+
+        Returns
+        -------
+        numpy.ndarray
+            An array containg the value of the objective function and constraints.
+        """
+
+        # Rename reference values
+        h0_in = self.boundary_conditions["h0_in"]
+        s_in = self.boundary_conditions["s_in"]
+        mass_flow = self.reference_values["mass_flow_ref"]
+        h_is = self.reference_values["h_out_s"]
+        d_is = self.reference_values["d_out_s"]
+        v0 = self.reference_values["v0"]
+        angle_range = self.reference_values["angle_range"]
+        angle_min = self.reference_values["angle_min"]
+
+        # Structure design variables to dictionary (Assume set of design variables)
+        design_variables = dict(zip(self.design_variables_keys, x))
+
+        # Contruct variables
+        variables = {**design_variables, **self.fixed_params}
+
+        # Calculate angular speed
+        specific_speed = variables["specific_speed"]
+        self.operation_point["omega"] = self.get_omega(
+            specific_speed, mass_flow, h0_in, d_is, h_is
+        )
+
+        # Calculate mean radius
+        blade_jet_ratio = variables["blade_jet_ratio"]
+        blade_speed = blade_jet_ratio * v0
+        self.geometry = {}
+        self.geometry["radius"] = blade_speed / self.boundary_conditions["omega"]
+
+        # Assign geometry design variables to geometry attribute
+        for key in INDEXED_VARIABLES:
+            self.geometry[key] = np.array(
+                [v for k, v in variables.items() if k.startswith(key)]
+            )
+            if key in ANGLE_KEYS:
+                self.geometry[key] = self.geometry[key] * angle_range + angle_min
+
+        self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
+        # Evaluate turbine model
+        solver, results = pa.compute_single_operation_point(
+            self.operation_point,
+            self.x0,
+            self.geometry,
+            self.simulation_options,
+            self.solver_options,
+        )
+        if solver.success: 
+            self.results = results
+            self.geometry = results["geometry"]
+
+            # Evaluate objective function
+            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+
+            # Evaluate additional constraints
+            self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
+                / self.geometry["A_out"][0:-1].values})
+                            
+            # Evaluate constraints
+            self.c_eq = self.evaluate_constraints(self.eq_constraints)
+            self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
+
+            violation_all = np.concatenate((self.c_eq, np.maximum(self.c_ineq, 0)))
+            violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
+
+            # Update optimization ptrocess object
+            self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, solver=solver)
         else:
             self.f = np.nan
             self.optimization_process.update_optimization_process(results, converged = False)
@@ -1018,6 +1179,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return eq_constraints, ineq_constraints
     
     def __getstate__(self):
+
+        """
+        This function is called when dumping object using pickle.
+        This function ensures that attribute types that are not supported by pickle is reset.
+        Every action in this function should correspond to an action in __setstate__ 
+        """
+
         # Create a copy of the object's state dictionary
         state = self.__dict__.copy()
         # Remove the unpickleable 'fluid' entry
@@ -1025,10 +1193,19 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         return state
 
     def __setstate__(self, state):
+
+        """
+        This function is called when loading a pickle file.
+        This function ensures that attribute types that are not supported by pickle are restored.
+        Every action in this function should correspond to an action in __getstate__ 
+        """
+
         # Restore the attributes
         self.__dict__.update(state)
         # Recreate the 'fluid' attribute
         self.fluid = props.Fluid(self.boundary_conditions["fluid_name"])
+
+        
 
 class BlackBoxOptimization:
 
@@ -1042,11 +1219,11 @@ class BlackBoxOptimization:
         self.iterations_flaring_1 = np.array([])
         self.iterations_flaring_2 = np.array([])
         self.constraint_violation = np.array([])
-        self.root_finder_solutions = np.array([])
+        self.root_finder_solvers = np.array([])
         self.failed_iterations = 0
         self.failed_iterations_percentage = 0
     
-    def update_optimization_process(self, results, converged = True, f = None, violation = None, vars_scaled = None):
+    def update_optimization_process(self, results, converged = True, f = None, violation = None, solver = None):
 
         if converged:
             self.iterations_objective_function = np.append(self.iterations_objective_function, f)
@@ -1057,7 +1234,7 @@ class BlackBoxOptimization:
             self.iterations_flaring_1 = np.append(self.iterations_flaring_1, results["geometry"]["flaring_angle"].values[0])
             self.iterations_flaring_2 = np.append(self.iterations_flaring_2, results["geometry"]["flaring_angle"].values[1])
             self.constraint_violation = np.append(self.constraint_violation, violation)
-            self.root_finder_solutions = np.append(self.root_finder_solutions, vars_scaled)
+            self.root_finder_solvers = np.append(self.root_finder_solvers, solver)
         else:
             self.iterations_objective_function = np.append(self.iterations_objective_function, np.nan)
             self.iterations_efficiency = np.append(self.iterations_efficiency, np.nan)
@@ -1067,7 +1244,7 @@ class BlackBoxOptimization:
             self.iterations_flaring_1 = np.append(self.iterations_flaring_1, np.nan)
             self.iterations_flaring_2 = np.append(self.iterations_flaring_2, np.nan)
             self.constraint_violation = np.append(self.constraint_violation, np.nan)
-            self.root_finder_solutions = np.append(self.root_finder_solutions, np.nan)
+            self.root_finder_solvers = np.append(self.root_finder_solvers, np.nan)
             self.failed_iterations += 1
 
         self.turbine_results.append(results)
@@ -1165,3 +1342,9 @@ def build_config(filename, performance_map, solver_options, initial_guess):
                                         "initial_guess" : initial_guess,}}
     
     return config
+
+class SolverContainer:
+
+    def __init__(self):
+        self.solver_container = []
+    
