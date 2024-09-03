@@ -144,7 +144,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.BlackBoxOptimization.update_optimization_process">
-<span class="sig-name descname"><span class="pre">update_optimization_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">violation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vars_scaled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#BlackBoxOptimization.update_optimization_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.BlackBoxOptimization.update_optimization_process" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">update_optimization_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">violation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#BlackBoxOptimization.update_optimization_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.BlackBoxOptimization.update_optimization_process" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -291,6 +291,26 @@ Constraints are defined to be less than 0.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>array_like</dt><dd><p>Vector containing the objective function, equality constraints, and inequality constraints.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_black_box_constrained">
+<span class="sig-name descname"><span class="pre">fitness_black_box_constrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.fitness_black_box_constrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.fitness_black_box_constrained" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the objective function and constraints at a given pint <cite>x</cite> for genetic algrothims.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of design variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>numpy.ndarray</dt><dd><p>An array containg the value of the objective function and constraints.</p>
 </dd>
 </dl>
 </dd>
@@ -534,6 +554,11 @@ Float values are kept as is.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_black_box_constrained">
+<span class="sig-name descname"><span class="pre">init_black_box_constrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.init_black_box_constrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_black_box_constrained" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_based">
 <span class="sig-name descname"><span class="pre">init_gradient_based</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#CascadesOptimizationProblem.init_gradient_based"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.CascadesOptimizationProblem.init_gradient_based" title="Link to this definition"></a></dt>
 <dd></dd></dl>
@@ -576,6 +601,12 @@ These are stored in the object’s internal state for further use in calculation
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.axial_turbine.design_optimization.SolverContainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.axial_turbine.design_optimization.</span></span><span class="sig-name descname"><span class="pre">SolverContainer</span></span><a class="reference internal" href="../../_modules/turboflow/axial_turbine/design_optimization.html#SolverContainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.axial_turbine.design_optimization.SolverContainer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
 <dl class="py function">

@@ -435,6 +435,7 @@
     <span class="c1"># Define solver options</span>
     <span class="n">default_options</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;print_level&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>  <span class="c1"># No output to the screen</span>
+        <span class="s2">&quot;print_info_string&quot;</span> <span class="p">:</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span>
         <span class="s2">&quot;sb&quot;</span><span class="p">:</span> <span class="s2">&quot;yes&quot;</span><span class="p">,</span>  <span class="c1"># Suppress banner</span>
         <span class="s2">&quot;hessian_approximation&quot;</span><span class="p">:</span> <span class="s2">&quot;limited-memory&quot;</span><span class="p">,</span>  <span class="c1"># exact, limited-memory</span>
         <span class="s2">&quot;limited_memory_update_type&quot;</span><span class="p">:</span> <span class="s2">&quot;bfgs&quot;</span><span class="p">,</span>  <span class="c1"># bfgs, sr1</span>
@@ -445,9 +446,12 @@
     <span class="p">}</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+    <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;max_iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;max_iter&quot;</span><span class="p">])</span>
+    <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;print_level&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;print_level&quot;</span><span class="p">])</span>
+    <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;acceptable_iter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;acceptable_iter&quot;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;tol&quot;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e-3</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.</span><span class="se">\n</span><span class="s2">Consider relaxing the termination tolerance above 1e-3. Current tolerance: </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.</span><span class="se">\n</span><span class="s2">Consider relaxing the termination tolerance above 1e-3. Current tolerance: </span><span class="si">{</span><span class="n">combined_options</span><span class="p">[</span><span class="s1">&#39;tol&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">0.2e</span><span class="si">}</span><span class="s2">.&quot;</span>
         <span class="p">)</span>
 
     <span class="c1"># Solve the problem</span>
@@ -482,6 +486,7 @@
     <span class="p">}</span>
     <span class="n">options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># Work with a copy to avoid side effects</span>
     <span class="n">combined_options</span> <span class="o">=</span> <span class="n">default_options</span> <span class="o">|</span> <span class="n">options</span>
+    <span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;Iterations limit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">combined_options</span><span class="p">[</span><span class="s2">&quot;Iterations limit&quot;</span><span class="p">])</span>
 
     <span class="c1"># Define SNOPT path</span>
     <span class="n">lib</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;SNOPT_LIB&quot;</span><span class="p">)</span>
