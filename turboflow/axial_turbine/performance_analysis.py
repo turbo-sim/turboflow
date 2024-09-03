@@ -302,7 +302,7 @@ def compute_single_operation_point(
     for initial_guess in initial_guesses:
         initial_guess_scaled = problem.scale_values(initial_guess)
         x0 = np.array(list(initial_guess_scaled.values()))
-        problem.keys = initial_guess_scaled.keys() 
+        problem.keys = list(initial_guess_scaled.keys())
         for method in solver_methods:
             solver_options["method"] = method
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
@@ -319,37 +319,6 @@ def compute_single_operation_point(
         if solver.success:
                     break
     
-    # initial_guesses = [initial_guess] + get_heuristic_guess_input(
-    # problem.geometry["number_of_cascades"]
-    # )
-    # solver_methods = [solver_options["method"]] + [
-    #     method for method in SOLVER_MAP.keys() if method != solver_options["method"]
-    # ]
-
-    # for initial_guess in initial_guesses:
-    #     for method in solver_methods:
-    #         success = False
-    #         x0 = problem.get_initial_guess(
-    #             initial_guess
-    #         ) 
-    #         print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
-    #         solver_options["method"] = method
-
-    #         solver = psv.NonlinearSystemSolver(problem, **solver_options)
-    #         # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
-
-    #         try: 
-    #             solver.solve(problem.x0)
-    #         except Exception as e:
-    #             if solver.func_count == 0:
-    #                 raise e 
-    #             print(f" Error during solving: {e}")
-    #             solver.success = False
-    #         if solver.success:
-    #             break
-    #     if solver.success:
-    #         break
-
     if not solver.success:
         print("WARNING: All attempts failed to converge")
         # TODO: Add messages to Log file
@@ -814,6 +783,34 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
                 )
 
         return scaled_variables
+    
+    def __getstate__(self):
+
+        """
+        This function is called when dumping object using pickle.
+        This function ensures that attribute types that are not supported by pickle is reset.
+        Every action in this function should correspond to an action in __setstate__ 
+        """
+
+        # Create a copy of the object's state dictionary
+        state = self.__dict__.copy()
+        # Remove the unpickleable 'fluid' entry
+        state['fluid'] = None
+        return state
+
+    def __setstate__(self, state):
+
+        """
+        This function is called when loading a pickle file.
+        This function ensures that attribute types that are not supported by pickle are restored.
+        Every action in this function should correspond to an action in __getstate__ 
+        """
+
+        # Restore the attributes
+        self.__dict__.update(state)
+
+        # Recreate the 'fluid' attribute
+        self.fluid = props.Fluid(self.boundary_conditions["fluid_name"])
 
 
 
@@ -1167,6 +1164,8 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
     initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
 
     return initial_guess
+
+    
 
 def latin_hypercube_sampling(bounds, n_samples):
     """
