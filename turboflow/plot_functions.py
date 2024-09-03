@@ -551,6 +551,7 @@ def plot_velocity_triangle_stage(plane,
                                  ax = None,
                                  color = None,
                                  linestyle = None,
+                                 label = '',
                                  fontsize = 12,
                                  hs = 15,
                                  start_y = 0,
@@ -606,8 +607,8 @@ def plot_velocity_triangle_stage(plane,
 
     # Plot stage velocity triangles
     for i in range(number_of_stages):
-        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i], v_ts[2*i], v_ms[2*i], w_ms[2*i], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 's')
-        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i + 1], v_ts[2*i+ 1], v_ms[2*i+ 1], w_ms[2*i+ 1], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 'r')
+        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i], v_ts[2*i], v_ms[2*i], w_ms[2*i], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 's', label = label)
+        fig, ax = plot_velocity_triangle(fig, ax, start_x, start_y, w_ts[2*i + 1], v_ts[2*i+ 1], v_ms[2*i+ 1], w_ms[2*i+ 1], hs = hs, fontsize = fontsize, lines = "total", color = color, linestyle = linestyle, cascade = 'r', label = '')
 
         start_x += dx
         start_y += dy
@@ -623,26 +624,26 @@ def plot_velocity_triangle_stage(plane,
 
     return fig, ax
 
-def plot_velocity_triangle(fig, ax, start_x, start_y, w_t, v_t, v_m, w_m, hs = 10, fontsize = 12, lines = "all", color = None, linestyle = None, cascade = ''):
+def plot_velocity_triangle(fig, ax, start_x, start_y, w_t, v_t, v_m, w_m, hs = 10, fontsize = 12, lines = "all", color = None, linestyle = None, cascade = '', label = ''):
 
     # Plot triangle
     if lines == "all":
-        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle, label = label)  # Plot meridional velocity
         ax.plot([start_x, v_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot absolute tangential velocity
         ax.plot([start_x, w_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot relative tangential velocity
         ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
         ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
         ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
     elif lines == "total":
-        ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
+        ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle, label = label)  # Plot abolsute velocity
         ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
         ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
     elif lines == "absolute":
-        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle, label = label)  # Plot meridional velocity
         ax.plot([start_x, v_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot absolute tangential velocity
         ax.plot([start_x, v_t], [start_y, start_y - v_m], color=color, linestyle = linestyle)  # Plot abolsute velocity
     elif lines == "relative":
-        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle)  # Plot meridional velocity
+        ax.plot([start_x, start_x], [start_y, start_y - v_m], color=color, linestyle=linestyle, label = label)  # Plot meridional velocity
         ax.plot([start_x, w_t], [start_y - v_m, start_y - v_m], color=color, linestyle=linestyle)  # Plot relative tangential velocity
         ax.plot([start_x, w_t], [start_y, start_y - w_m], color=color, linestyle = linestyle)  # Plot relative velocity
         ax.plot([w_t, v_t], [start_y - w_m, start_y - w_m], color = color, linestyle = linestyle)  # Plot blade speed
@@ -1024,7 +1025,7 @@ def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_s
     if not isinstance(markersizes, (list,np.ndarray)):
         markersizes = [markersizes]*len(final_solutions)
     if colors is None:
-        colors = plt.cm.tab10.colors[:len(final_solutions)]  # Use default color cycle
+        colors = plt.get_cmap('magma')(np.linspace(0.2, 1.0, len(final_solutions)))  # Use default color cycle
     
     # Create fig and ax if not provided
     if fig is None or ax is None:
@@ -1155,7 +1156,7 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
 
     plt.tight_layout()
 
-    return fig, ax
+    return fig, fig2, ax
 
 
 
