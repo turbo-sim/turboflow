@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define mode 
-MODE = "design_optimzation"
+# MODE = "design_optimzation"
+MODE = "performance_analysis"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
