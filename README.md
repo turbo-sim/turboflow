@@ -17,7 +17,7 @@
 - **Flexible model:** The model offers options for submodels for loss, deviation and choking calculations
 - **General geometry:** Geometrical variables are defined to cover a wide range of designs, including multistage configurations.  
 - **Easy-to-use:** Intuitive and easy setup of input parameters for rapid development and analysis. 
-- **Extensive Documentation:** Comprehensive guides and examples to help you get started quickly.
+- **Extensive Documentation:** https://turbo-sim.github.io/turboflow/
 
 
 ## Quick Installation Guide
