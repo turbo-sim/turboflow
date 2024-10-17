@@ -793,7 +793,7 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     v : float
         Absolute velocity.
     alpha : float
-        Absolute flow angle in radians.
+        Absolute flow angle in degrees.
 
     Returns
     -------
