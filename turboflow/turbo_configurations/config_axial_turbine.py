@@ -578,6 +578,7 @@ class DesignOptimization(BaseModel):
     constraints : List[Constraint] = None
     solver_options: SolverOptionsOptimization = SolverOptionsOptimization()
     radius_type : RadiusTypeEnum = RADIUS_TYPE[0]
+    multistarts : int = 0 
 
 
 

@@ -340,6 +340,7 @@ def _minimize_pygmo_ipopt(problem, x0, options):
     # Define solver options
     default_options = {
         "print_level": 0,  # No output to the screen
+        "print_info_string" : "yes",
         "sb": "yes",  # Suppress banner
         "hessian_approximation": "limited-memory",  # exact, limited-memory
         "limited_memory_update_type": "bfgs",  # bfgs, sr1
@@ -350,9 +351,12 @@ def _minimize_pygmo_ipopt(problem, x0, options):
     }
     options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
+    combined_options["max_iter"] = int(combined_options["max_iter"])
+    combined_options["print_level"] = int(combined_options["print_level"])
+    combined_options["acceptable_iter"] = int(combined_options["acceptable_iter"])
     if combined_options["tol"] < 1e-3:
         print(
-            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {tol:0.2e}."
+            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {combined_options['tol']:0.2e}."
         )
 
     # Solve the problem
@@ -387,6 +391,7 @@ def _minimize_pygmo_snopt(problem, x0, options):
     }
     options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options
+    combined_options["Iterations limit"] = int(combined_options["Iterations limit"])
 
     # Define SNOPT path
     lib = os.getenv("SNOPT_LIB")
