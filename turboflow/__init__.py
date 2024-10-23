@@ -11,7 +11,6 @@ except ImportError:
 else:
     sys.excepthook = IPython.core.ultratb.ColorTB()
 
-
 # Import submodules
 from .math import *
 from .plot_functions import *
@@ -23,9 +22,8 @@ from .properties import *
 from .cycles import *
 from .utilities import *
 
-from .axial_turbine import *
-from .axial_turbine.performance_analysis import *
-from .axial_turbine.design_optimization import *
+from .axial_turbine import compute_performance, compute_optimal_turbine
+from . import centrifugal_compressor 
 
 # Set plot options
 set_plot_options()
