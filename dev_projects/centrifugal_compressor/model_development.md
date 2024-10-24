@@ -206,9 +206,31 @@ $$
 \begin{gather}
 R_1 = \rho_2 v_{m2} A_2 - \rho_1 v_{m1} A_1 = 0 \\
 R_2 = \frac{r_2 v_{\theta2}}{r_1 v_{\theta1}} -  \exp\left({-\frac{c_f \Delta r}{b \cos{\alpha}}}\right) = 0 \\
-R_3 = \zeta^\text{definition} - \zeta^\text{loss model} = \frac{h_2 - h(p_2, s_1)}{v_1^2/2} - \left(\frac{\Delta r}{b}\right)c_f = 0
+R_3 = \zeta^\text{definition} - \zeta^\text{loss model} = \frac{h_2 - h(p_2, s_1)}{v_1^2/2} - \left(\frac{2 \Delta r}{b}\right)c_f = 0
 \end{gather}
 $$
 This model implementation requires 3 inputs from the user and 3 additional residual equations.
 
 The alternative ODE approach integrates the 1D equations in space from inlet to outlet, and the variables at the outlet are computed at an output of the integration without requiring extra inputs/residuals,
+
+
+
+## Derivation of loss coefficient relations
+
+Definition of stagnation enthalpy
+$$ \text{d}h_0 = \text{d} h +  v \text{d}  v = 0 \quad (\text{adiabatic flow})
+$$
+
+Gibbs relation:
+$$ T \text{d}s = \text{d}h -\text{d}p / \rho
+$$
+
+Substituting into the definition of stgnation pressure:
+$$ \text{d}p_0 = \text{d} p + \rho v \text{d}  v = \rho (\text{d}h - T \text{d}s) - \rho \text{d}h = -\rho T \text{d}s$$
+$$ \int_1^2 \frac{\text{d}p_0}{\rho}  = - \int_1^2 T\text{d}s$$
+
+Integrating between states 1 and 2 and assuming that the density and temperature are constant (low speed or incompressible):
+$$  \frac{p_{01} - p_{02}}{\rho}  = T(s_2-s_1)$$
+
+Dividing by the inlet velocity:
+$$  Y = \frac{p_{01} - p_{02}}{\rho v_1^2/2}  = \frac{T_(s_2-s_1)}{v_1^2/2} = \zeta_s$$
