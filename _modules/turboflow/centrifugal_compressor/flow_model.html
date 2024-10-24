@@ -110,13 +110,6 @@
     <span class="n">reference_values</span><span class="p">,</span>
 <span class="p">):</span>
 
-    <span class="c1"># Load reference_values</span>
-    <span class="n">v_max</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
-    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
-    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
-    <span class="n">angle_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
-    <span class="n">angle_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
-
     <span class="c1"># Initialize results structure</span>
     <span class="n">compressor_results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;residuals&quot;</span> <span class="p">:</span> <span class="p">{},</span>
                           <span class="s2">&quot;planes&quot;</span> <span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(),</span>
@@ -133,15 +126,13 @@
     <span class="c1"># Prepare first set of inputs</span>
     <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;h0_in&quot;</span> <span class="p">:</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">],</span>
              <span class="s2">&quot;s_in&quot;</span> <span class="p">:</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;s_in&quot;</span><span class="p">],</span>
-             <span class="s2">&quot;v_in&quot;</span> <span class="p">:</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span><span class="p">,</span>
              <span class="s2">&quot;alpha_in&quot;</span> <span class="p">:</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">],</span>
-             <span class="s2">&quot;w_out&quot;</span> <span class="p">:</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;w_out&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span><span class="p">,</span>
-             <span class="s2">&quot;beta_out&quot;</span> <span class="p">:</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span><span class="o">*</span> <span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span><span class="p">,</span>
-             <span class="s2">&quot;s_out&quot;</span> <span class="p">:</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;s_out&quot;</span><span class="p">]</span><span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span><span class="p">}</span>
+             <span class="p">}</span>
 
     <span class="c1"># Evaluate components</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">results</span><span class="p">,</span> <span class="n">residuals</span> <span class="o">=</span> <span class="n">component_function</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">)</span>
+        <span class="n">independents</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span> <span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">key</span><span class="p">)}</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">residuals</span> <span class="o">=</span> <span class="n">component_function</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">)</span>
 
         <span class="c1"># Store result in result structure</span>
         <span class="n">compressor_results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span>
@@ -162,16 +153,30 @@
 
 <div class="viewcode-block" id="evaluate_impeller">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_impeller">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_impeller</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">evaluate_impeller</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate impelkler performance</span>
+<span class="sd">    - Deviation calculated according to slip factor</span>
+<span class="sd">    - Losses calculated according to correlation for loss coefficient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load reference_values</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+    <span class="n">angle_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+    <span class="n">angle_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load indepndent variables</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;v_in_impeller&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span>
+    <span class="n">w_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;w_out_impeller&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span> 
+    <span class="n">beta_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;beta_out_impeller&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span> 
+    <span class="n">s_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;s_out_impeller&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span>
 
     <span class="c1"># Load input variables</span>
     <span class="n">h0_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
     <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s_in&quot;</span><span class="p">]</span>
-    <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_in&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
     <span class="n">alpha_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">]</span>
-    <span class="n">w_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;w_out&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
-    <span class="n">beta_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;beta_out&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
-    <span class="n">s_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s_out&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
 
     <span class="c1"># Load boundary conditions</span>
     <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
@@ -291,14 +296,27 @@
 
 <div class="viewcode-block" id="evaluate_vaned_diffuser">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_vaned_diffuser">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_vaned_diffuser</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">evaluate_vaned_diffuser</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
 
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate vaned diffuser</span>
+<span class="sd">    - Deviation calculated according to aungier </span>
+<span class="sd">    - Losses calculated according to correlation for loss coefficient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load reference_values</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load independent variables</span>
+    <span class="n">v_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;v_out_vaned_diffuser&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span>
+    <span class="n">s_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;s_out_vaned_diffuser&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span>
+    
     <span class="c1"># Load input variables</span>
-    <span class="n">v_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_out&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
-    <span class="n">s_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s_out&quot;</span><span class="p">]</span> <span class="c1"># IV</span>
     <span class="n">alpha_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
-    <span class="n">h0_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span>
-    <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s_in&quot;</span><span class="p">]</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
 
     <span class="c1"># Load diffuser geometry</span>
     <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
@@ -371,8 +389,122 @@
 
 <div class="viewcode-block" id="evaluate_vaneless_diffuser">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_vaneless_diffuser">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_vaneless_diffuser</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">evaluate_vaneless_diffuser</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
+
+    <span class="n">vaneless_diffuser_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser_model&quot;</span><span class="p">]</span>
+
+    <span class="n">diffuser_function</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;algebraic&quot;</span> <span class="p">:</span> <span class="n">evaluate_vaneless_diffuser_algebraic</span><span class="p">,</span>
+        <span class="s2">&quot;1D&quot;</span> <span class="p">:</span> <span class="n">evaluate_vaneless_diffuser_1D</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">vaneless_diffuser_model</span> <span class="ow">in</span> <span class="n">diffuser_function</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">results</span><span class="p">,</span> <span class="n">residual</span> <span class="o">=</span> <span class="n">diffuser_function</span><span class="p">[</span><span class="n">vaneless_diffuser_model</span><span class="p">](</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">residual</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">diffuser_function</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Invalid diffuser model: &#39;</span><span class="si">{</span><span class="n">vaneless_diffuser_model</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="evaluate_vaneless_diffuser_algebraic">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_vaneless_diffuser_algebraic">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_vaneless_diffuser_algebraic</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate vaneless diffuser using algerbraic equations</span>
+<span class="sd">    - Use conservation of angular momentum, accouting for friction by introducing a loss term</span>
+<span class="sd">    - Pressure losses calculated according to correlation for loss coefficient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load reference_values</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+    <span class="n">angle_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
+    <span class="n">angle_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load independent variables</span>
+    <span class="n">v_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;v_out_vaneless_diffuser&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span>
+    <span class="n">s_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;s_out_vaneless_diffuser&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span> 
+    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;alpha_out_vaneless_diffuser&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">angle_range</span> <span class="o">+</span> <span class="n">angle_min</span>
+
+    <span class="c1"># Load input variables</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+    <span class="n">alpha_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load diffuser geometry</span>
+    <span class="n">b_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
+    <span class="n">r_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_in&quot;</span><span class="p">]</span>
+    <span class="n">r_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load boundary conditions</span>
+    <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load model options</span>
+    <span class="n">Cf</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;Cf&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate tangential and meridional velocity</span>
+    <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+    <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+
+    <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_t&quot;</span> <span class="p">:</span> <span class="n">v_t_out</span><span class="p">,</span>
+                   <span class="s2">&quot;v_m&quot;</span> <span class="p">:</span> <span class="n">v_m_out</span><span class="p">,</span>
+                   <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+                   <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span><span class="p">,</span>
+                   <span class="p">}</span>
     
+    <span class="c1"># Calculate thermophysical properties</span>
+    <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h0_in</span>
+    <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+    <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+
+    <span class="c1"># Calculate mass flow rate</span>
+    <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_m_out</span><span class="o">*</span><span class="n">A_out</span>
+
+    <span class="c1"># Evaluate loss coefficient</span>
+    <span class="n">Y_lm</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="n">b_in</span>
+    <span class="n">Y_def</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h_out</span> <span class="o">-</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">])</span><span class="o">/</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Evaluate change of angular momentum</span>
+    <span class="n">phi_is</span> <span class="o">=</span> <span class="n">r_out</span><span class="o">*</span><span class="n">v_t_out</span><span class="o">/</span><span class="p">(</span><span class="n">r_in</span><span class="o">*</span><span class="n">v_t_in</span><span class="p">)</span>
+    <span class="n">phi_AM</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)))</span>
+
+    <span class="c1"># Evaluate residuals</span>
+    <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
+                 <span class="s2">&quot;losses&quot;</span> <span class="p">:</span> <span class="n">Y_lm</span> <span class="o">-</span> <span class="n">Y_def</span><span class="p">,</span>
+                 <span class="s2">&quot;angular_momentum&quot;</span> <span class="p">:</span> <span class="n">phi_is</span> <span class="o">-</span> <span class="n">phi_AM</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Store diffuser results</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+    <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y_lm</span> <span class="o">-</span> <span class="n">Y_def</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+               <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">resiudals</span></div>
+
+
+<div class="viewcode-block" id="evaluate_vaneless_diffuser_1D">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_vaneless_diffuser_1D">[docs]</a>
+<span class="k">def</span> <span class="nf">evaluate_vaneless_diffuser_1D</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate vaneless diffuser using 1D transport equations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="c1"># Rename inlet state properties</span>
     <span class="n">v_m_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span>
     <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
@@ -380,11 +512,11 @@
     <span class="n">p_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
 
     <span class="c1"># Rename geometry</span>
-    <span class="n">phi</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;phi&quot;</span><span class="p">]</span>
-    <span class="n">div</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;div&quot;</span><span class="p">]</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;wall_divergence&quot;</span><span class="p">]</span>
     <span class="n">r_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_in&quot;</span><span class="p">]</span>
     <span class="n">r_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
     <span class="n">b_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="mi">0</span> <span class="c1"># Diffuser channel is radial</span>
 
     <span class="c1"># Load model options</span>
     <span class="n">Cf</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;Cf&quot;</span><span class="p">]</span>
@@ -500,10 +632,83 @@
 
 <div class="viewcode-block" id="evaluate_volute">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.evaluate_volute">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_volute</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">evaluate_volute</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">):</span>
 
-    <span class="k">pass</span></div>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate the volute. This include the scroll and concial diffuser.</span>
 
+<span class="sd">    Assumptions:</span>
+<span class="sd">    - Single velocity component at volute exit</span>
+<span class="sd">    - Incompressible flow in diffuser cone</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load reference_values</span>
+    <span class="n">v_max</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
+    <span class="n">s_range</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
+    <span class="n">s_min</span> <span class="o">=</span> <span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load independent variables</span>
+    <span class="n">v_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;v_out_volute&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_max</span>
+    <span class="n">s_out</span> <span class="o">=</span> <span class="n">independents</span><span class="p">[</span><span class="s2">&quot;s_out_volute&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span>
+
+    <span class="c1"># Load input variables</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load diffuser geometry</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+    <span class="n">A_scroll</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;area_scroll&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load boundary conditions</span>
+    <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load model options</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Defin velocity triangle</span>
+    <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_out&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">}</span>
+
+    <span class="c1"># Calculate thermophysical properties</span>
+    <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h0_in</span>
+    <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+    <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+
+    <span class="c1"># Calculate mass flow rate</span>
+    <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_out</span><span class="o">*</span><span class="n">A_out</span>
+
+    <span class="c1"># Evaluate scroll velocity (Assume incoimpressible flow in diffuser cone)</span>
+    <span class="n">v_scroll</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">A_out</span><span class="o">/</span><span class="n">A_scroll</span>
+
+    <span class="c1"># Evaluate losses </span>
+    <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;h0_rel_out&quot;</span> <span class="p">:</span> <span class="n">h0_out</span><span class="p">,</span>
+        <span class="s2">&quot;h0_rel_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;h_out&quot;</span> <span class="p">:</span> <span class="n">h_out</span><span class="p">,</span>
+        <span class="s2">&quot;h_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;v_scroll&quot;</span> <span class="p">:</span> <span class="n">v_scroll</span><span class="p">}</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">,</span> <span class="s2">&quot;volute&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Evaluate residuals</span>
+    <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
+                 <span class="s2">&quot;losses&quot;</span> <span class="p">:</span> <span class="n">loss_dict</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Store diffuser results</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+               <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">resiudals</span></div>
+
+    
 
 <div class="viewcode-block" id="compute_overall_performance">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.flow_model.html#turboflow.centrifugal_compressor.flow_model.compute_overall_performance">[docs]</a>
