@@ -29,7 +29,6 @@ Given:
 Calculated:
 - Exit width: $b_{vld, out} = b_{vld, in} + 2\tan(\psi)\frac{r_{vld, out} - r_{vld, in}}{\sin(\phi)}$
 - Exit area: $A_{vld, out} = 2\pi r_{vld, out} b_{vld,out}$ 
-
 ### Vaned diffuser
 From previous component:
 - Radius inlet: $r_{in}$
