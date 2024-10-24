@@ -19,13 +19,6 @@ def evaluate_centrifugal_compressor(
     reference_values,
 ):
 
-    # Load reference_values
-    v_max = reference_values["v_max"]
-    s_range = reference_values["s_range"]
-    s_min = reference_values["s_min"]
-    angle_range = reference_values["angle_range"]
-    angle_min = reference_values["angle_min"]
-
     # Initialize results structure
     compressor_results = {"residuals" : {},
                           "planes" : pd.DataFrame(),
@@ -42,15 +35,13 @@ def evaluate_centrifugal_compressor(
     # Prepare first set of inputs
     input = {"h0_in" : boundary_conditions["h0_in"],
              "s_in" : boundary_conditions["s_in"],
-             "v_in" : variables["v_in"]*v_max,
              "alpha_in" : boundary_conditions["alpha_in"],
-             "w_out" : variables["w_out"]*v_max,
-             "beta_out" : variables["beta_out"]* angle_range + angle_min,
-             "s_out" : variables["s_out"]* s_range + s_min}
+             }
 
     # Evaluate components
     for key in geometry.keys():
-        results, residuals = component_function[key](input, boundary_conditions, geometry[key], fluid, model_options)
+        independents = {var : val for var, val in variables.items() if var.endswith(key)}
+        results, residuals = component_function[key](independents, input, boundary_conditions, geometry[key], fluid, model_options, reference_values)
 
         # Store result in result structure
         compressor_results[key] = results
@@ -68,16 +59,30 @@ def evaluate_centrifugal_compressor(
 
     return compressor_results
 
-def evaluate_impeller(input, boundary_conditions, geometry, fluid, model_options):
+def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
+    """
+    Evaluate impelkler performance
+    - Deviation calculated according to slip factor
+    - Losses calculated according to correlation for loss coefficient
+    """
+
+    # Load reference_values
+    v_max = reference_values["v_max"]
+    s_range = reference_values["s_range"]
+    s_min = reference_values["s_min"]
+    angle_range = reference_values["angle_range"]
+    angle_min = reference_values["angle_min"]
+
+    # Load indepndent variables
+    v_in = independents["v_in_impeller"]*v_max
+    w_out = independents["w_out_impeller"]*v_max 
+    beta_out = independents["beta_out_impeller"]*angle_range + angle_min 
+    s_out = independents["s_out_impeller"]*s_range + s_min
 
     # Load input variables
     h0_in = input["h0_in"]
     s_in = input["s_in"]
-    v_in = input["v_in"] # IV
     alpha_in = input["alpha_in"]
-    w_out = input["w_out"] # IV
-    beta_out = input["beta_out"] # IV
-    s_out = input["s_out"] # IV
 
     # Load boundary conditions
     mass_flow_rate = boundary_conditions["mass_flow_rate"]
@@ -194,14 +199,27 @@ def evaluate_impeller(input, boundary_conditions, geometry, fluid, model_options
 
     return results, resiudals
 
-def evaluate_vaned_diffuser(input, boundary_conditions, geometry, fluid, model_options):
+def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
 
+    """
+    Evaluate vaned diffuser
+    - Deviation calculated according to aungier 
+    - Losses calculated according to correlation for loss coefficient
+    """
+
+    # Load reference_values
+    v_max = reference_values["v_max"]
+    s_range = reference_values["s_range"]
+    s_min = reference_values["s_min"]
+
+    # Load independent variables
+    v_out = independents["v_out_vaned_diffuser"]*v_max
+    s_out = independents["s_out_vaned_diffuser"]*s_range + s_min
+    
     # Load input variables
-    v_out = input["v_out"] # IV
-    s_out = input["s_out"] # IV
     alpha_in = input["alpha"]
-    h0_in = input["h0_in"]
-    s_in = input["s_in"]
+    h0_in = input["h0"]
+    s_in = input["s"]
 
     # Load diffuser geometry
     theta_in = geometry["leading_edge_angle"]
@@ -271,8 +289,116 @@ def evaluate_vaned_diffuser(input, boundary_conditions, geometry, fluid, model_o
     return results, resiudals
 
 
-def evaluate_vaneless_diffuser(input, boundary_conditions, geometry, fluid, model_options):
+def evaluate_vaneless_diffuser(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
+
+    vaneless_diffuser_model = model_options["vaneless_diffuser_model"]
+
+    diffuser_function = {
+        "algebraic" : evaluate_vaneless_diffuser_algebraic,
+        "1D" : evaluate_vaneless_diffuser_1D,
+    }
+
+    if vaneless_diffuser_model in diffuser_function.keys():
+        results, residual = diffuser_function[vaneless_diffuser_model](independents, input, boundary_conditions, geometry, fluid, model_options, reference_values)
+        return results, residual
+    else:
+        options = ", ".join(f"'{k}'" for k in diffuser_function.keys())
+        raise ValueError(
+            f"Invalid diffuser model: '{vaneless_diffuser_model}'. Available options: {options}"
+        )
+
+def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
+
+    """
+    Evaluate vaneless diffuser using algerbraic equations
+    - Use conservation of angular momentum, accouting for friction by introducing a loss term
+    - Pressure losses calculated according to correlation for loss coefficient
+    """
+
+    # Load reference_values
+    v_max = reference_values["v_max"]
+    s_range = reference_values["s_range"]
+    s_min = reference_values["s_min"]
+    angle_range = reference_values["angle_range"]
+    angle_min = reference_values["angle_min"]
+
+    # Load independent variables
+    v_out = independents["v_out_vaneless_diffuser"]*v_max
+    s_out = independents["s_out_vaneless_diffuser"]*s_range + s_min 
+    alpha_out = independents["alpha_out_vaneless_diffuser"]*angle_range + angle_min
+
+    # Load input variables
+    h0_in = input["h0"]
+    s_in = input["s"]
+    v_in = input["v"]
+    v_t_in = input["v_t"]
+    alpha_in = input["alpha"]
+
+    # Load diffuser geometry
+    b_in = geometry["width_in"]
+    r_in = geometry["radius_in"]
+    r_out = geometry["radius_out"]
+    A_out = geometry["area_out"]
+
+    # Load boundary conditions
+    mass_flow_rate = boundary_conditions["mass_flow_rate"]
+
+    # Load model options
+    Cf = model_options ["Cf"]
+
+    # Calculate tangential and meridional velocity
+    v_m_out = v_out*math.cosd(alpha_out)
+    v_t_out = v_out*math.sind(alpha_out)
+
+    velocity_triangle_out = {"v_t" : v_t_out,
+                   "v_m" : v_m_out,
+                   "v" : v_out,
+                   "alpha" : alpha_out,
+                   }
     
+    # Calculate thermophysical properties
+    h0_out = h0_in
+    h_out = h0_out - 0.5*v_out**2
+    static_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
+    stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
+    isentropic_stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_in)
+    isentropic_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+
+    # Calculate mass flow rate
+    m_out = static_properties_out["d"]*v_m_out*A_out
+
+    # Evaluate loss coefficient
+    Y_lm = 2*Cf*(r_out-r_in)/b_in
+    Y_def = 2*(h_out - isentropic_properties_out["h"])/v_in**2
+
+    # Evaluate change of angular momentum
+    phi_is = r_out*v_t_out/(r_in*v_t_in)
+    phi_AM = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
+
+    # Evaluate residuals
+    resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
+                 "losses" : Y_lm - Y_def,
+                 "angular_momentum" : phi_is - phi_AM,
+    }
+
+    # Store diffuser results
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   }
+    exit_plane["loss_error"] = Y_lm - Y_def
+
+    results = {"inlet_plane" : input,
+               "exit_plane": exit_plane}
+    
+    return results, resiudals
+
+def evaluate_vaneless_diffuser_1D(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
+    
+    """
+    Evaluate vaneless diffuser using 1D transport equations
+    """
+
     # Rename inlet state properties
     v_m_in = input["v_m"]
     v_t_in = input["v_t"]
@@ -280,11 +406,11 @@ def evaluate_vaneless_diffuser(input, boundary_conditions, geometry, fluid, mode
     p_in = input["p"]
 
     # Rename geometry
-    phi = geometry["phi"]
-    div = geometry["div"]
+    div = geometry["wall_divergence"]
     r_in = geometry["radius_in"]
     r_out = geometry["radius_out"]
     b_in = geometry["width_in"]
+    phi = 0 # Diffuser channel is radial
 
     # Load model options
     Cf = model_options["Cf"]
@@ -391,9 +517,82 @@ def b_fun(b_in, div, m):
 
     return b_in + 2*math.tand(div)*m
 
-def evaluate_volute(input, boundary_conditions, geometry, fluid, model_options):
+def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
 
-    pass
+    """
+    Evaluate the volute. This include the scroll and concial diffuser.
+
+    Assumptions:
+    - Single velocity component at volute exit
+    - Incompressible flow in diffuser cone
+
+    """
+
+    # Load reference_values
+    v_max = reference_values["v_max"]
+    s_range = reference_values["s_range"]
+    s_min = reference_values["s_min"]
+
+    # Load independent variables
+    v_out = independents["v_out_volute"]*v_max
+    s_out = independents["s_out_volute"]*s_range + s_min
+
+    # Load input variables
+    h0_in = input["h0"]
+    s_in = input["s"]
+
+    # Load diffuser geometry
+    A_out = geometry["area_out"]
+    A_scroll = geometry["area_scroll"]
+
+    # Load boundary conditions
+    mass_flow_rate = boundary_conditions["mass_flow_rate"]
+
+    # Load model options
+    loss_model = model_options ["loss_model"]
+
+    # Defin velocity triangle
+    velocity_triangle_out = {"v_out" : v_out}
+
+    # Calculate thermophysical properties
+    h0_out = h0_in
+    h_out = h0_out - 0.5*v_out**2
+    static_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
+    stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
+    isentropic_stagnation_properties_out = fluid.get_props(cp.PSmass_INPUTS, stagnation_properties_out["p"], s_in)
+    isentropic_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+
+    # Calculate mass flow rate
+    m_out = static_properties_out["d"]*v_out*A_out
+
+    # Evaluate scroll velocity (Assume incoimpressible flow in diffuser cone)
+    v_scroll = v_out*A_out/A_scroll
+
+    # Evaluate losses 
+    loss_input = {
+        "h0_rel_out" : h0_out,
+        "h0_rel_out_is" : isentropic_stagnation_properties_out["h"],
+        "h_out" : h_out,
+        "h_out_is" : isentropic_properties_out["h"],
+        "v_scroll" : v_scroll}
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "volute")
+
+    # Evaluate residuals
+    resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
+                 "losses" : loss_dict["loss_error"],
+    }
+
+    # Store diffuser results
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   }
+
+    results = {"inlet_plane" : input,
+               "exit_plane": exit_plane}
+    
+    return results, resiudals
+    
 
 def compute_overall_performance(results, fluid, geometry):
     """

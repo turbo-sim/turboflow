@@ -15,14 +15,14 @@ def evaluate_slip(slip_model, input, geometry):
         SLIP_MODELS[1] : get_slip_weisner,
     }
 
-    # Evaluate deviation model
+    # Evaluate slip model
     if slip_model in SLIP_MODELS:
         slip_velocity = slip_model_functions[slip_model](input, geometry)
         return slip_velocity
     else:
         options = ", ".join(f"'{k}'" for k in SLIP_MODELS)
         raise ValueError(
-            f"Invalid deviation model: '{slip_model}'. Available options: {options}"
+            f"Invalid slip model: '{slip_model}'. Available options: {options}"
         )
 
 def get_slip_weisner(input, geometry):

@@ -24,8 +24,7 @@ impeller = {
 }
 
 vaneless_diffuser = {
-    "phi" : 90,
-    "div" : 0,
+    "wall_divergence" : 0,
     "radius_out" : 185e-3,
     "radius_in" : 103.7e-3,
     "width_in" : 7.5e-3,
@@ -36,10 +35,14 @@ geometry = {
     "vaneless_diffuser" : vaneless_diffuser,
     }
 
-initial_guess = {"v_in" : 0.001,
-                 "w_out" : 0.2,
-                 "beta_out" : -(30+90)/180,
-                 "s_out" : 0.00,}
+initial_guess = {"v_in_impeller" : 0.001,
+                 "w_out_impeller" : 0.2,
+                 "beta_out_impeller" : -(30+90)/180,
+                 "s_out_impeller" : 0.00,
+                 "v_out_vaneless_diffuser" : 0.1,
+                 "s_out_vaneless_diffuser" : 0.00,
+                 "alpha_out_vaneless_diffuser" : (30+90)/180,
+                 }
 
 simulation_options = {
     "slip_model" : "wiesner", 
@@ -48,7 +51,8 @@ simulation_options = {
     "loss_coefficient": "static_enthalpy_loss"
     },
     "Cf" : 0.002,
-    "q_w" : 0.00,  
+    "q_w" : 0.00,
+    "vaneless_diffuser_model" : "algebraic",  
 }
 
 solver_options = {

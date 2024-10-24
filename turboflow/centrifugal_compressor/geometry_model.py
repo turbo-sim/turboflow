@@ -33,21 +33,21 @@ def calculate_full_geometry(geometry):
         elif key == "volute":
             vol_geometry = calculate_volute_geometry(geometry["volute"])
             geometry["volute"] = vol_geometry
-
+         
     return geometry
 
 def calculate_impeller_geoemtry(imp_geometry):
 
     # Extract initial radii and compute throat values
-    radius_hub_in = imp_geometry["radius_hub_in"]
-    radius_tip_in = imp_geometry["radius_tip_in"]
-    radius_out = imp_geometry["radius_out"]
-    width_out = imp_geometry["width_out"]
+    radius_hub_in = imp_geometry["radius_hub_in"] # Hub radius at inlet
+    radius_tip_in = imp_geometry["radius_tip_in"] # Tip radius at inlet
+    radius_out = imp_geometry["radius_out"] # Radius of impeller exit
+    width_out = imp_geometry["width_out"] # Blade with at impeller exit
 
     # Calculate geometry
-    radius_mean_in = (radius_tip_in + radius_hub_in) / 2
-    A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
-    A_out = 2*np.pi*radius_out*width_out
+    radius_mean_in = (radius_tip_in + radius_hub_in) / 2 # Mean radius at inlet
+    A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2) # Area inlet
+    A_out = 2*np.pi*radius_out*width_out # Area exit
 
     new_parameters = {"radius_mean_in" : radius_mean_in,
                       "area_in" : A_in,
@@ -57,35 +57,45 @@ def calculate_impeller_geoemtry(imp_geometry):
 
 def calculate_vaneless_diffuser_geometry(vld_geometry):
 
-    # # Load geometry
-    # r_out = vld_geometry["radius_out"]
-    # b_out = vld_geometry["width_out"]
+    # Load geometry
+    b_in = vld_geometry["width_in"] # Channel width in
+    r_in = vld_geometry["radius_in"] # Radius in
+    r_out = vld_geometry["radius_out"] # Radius out
+    div = vld_geometry["wall_divergence"] # Wall divergence semi-angle
 
-    # # Calculate geometry
-    # A_out = 2*np.pi*r_out*b_out
+    # Calculate geometry
+    b_out = b_in + 2*math.tand(div)*(r_out - r_in) # Channel width out
+    A_in = 2*np.pi*r_in*b_in # Area in
+    A_out = 2*np.pi*r_out*b_out # Area out
 
-    # new_parameters = {"area_out" : A_out}
+    new_parameters = {
+        "area_in" : A_in,
+        "area_out" : A_out,
+        "width_out" : b_out}
 
-    # return {**vld_geometry, **new_parameters} 
-    return vld_geometry
+    return {**vld_geometry, **new_parameters} 
 
 def calculate_vaned_diffuser_geometry(vd_geometry):
 
     # Load geometry
-    r_out = vd_geometry["radius_out"]
-    b_out = vd_geometry["width_out"]
-    theta_in = vd_geometry["leading_edge_angle"]
-    theta_out = vd_geometry["trailing_edge_angle"]
-    z = vd_geometry["number_of_vanes"]
+    r_out = vd_geometry["radius_out"] # Radius out
+    r_in = vd_geometry["radius_in"] # Radius in
+    b_in = vd_geometry["width_in"] # Channel width in
+    b_out = vd_geometry["width_out"] # Channel width out
+    theta_in = vd_geometry["leading_edge_angle"] # Leading edge blade angle
+    theta_out = vd_geometry["trailing_edge_angle"] # Trailing edge blade angle
+    z = vd_geometry["number_of_vanes"] # Number of vanes
 
     # Calculate geometry
-    A_out = 2*np.pi*r_out*b_out
-    theta_avg = (theta_in + theta_out)/2
-    camber_angle = theta_out - theta_in
-    solidity = z*(r_out -r_in)/(2*np.pi*r_in*np.sin(theta_avg))
-    loc_camber_max = (2-(theta_avg-theta_in)/(theta_out-theta_in))/3
+    A_in = 2*np.pi*r_in*b_in # Area in
+    A_out = 2*np.pi*r_out*b_out # Area out
+    theta_avg = (theta_in + theta_out)/2 # Mean blade angle
+    camber_angle = theta_out - theta_in # Camber angle
+    solidity = z*(r_out -r_in)/(2*np.pi*r_in*np.sin(theta_avg)) # Solidity 
+    loc_camber_max = (2-(theta_avg-theta_in)/(theta_out-theta_in))/3 # Location of max camber
 
     new_parameters = {"area_out" : A_out,
+                      "area_in" : A_in,
                       "theta_mean" : theta_avg,
                       "camber_angle" : camber_angle,
                       "solidity" : solidity,
@@ -97,12 +107,19 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
 def calculate_volute_geometry(vol_geometry):
 
     # Load geometry
-    r_out = vol_geometry["radius_out"]
+    r_out = vol_geometry["radius_out"] # Radius out
+    r_in = vol_geometry["radius_in"] # Radius in
+    r_scroll = vol_geometry["radius_scroll"] # Radius at scroll exit
+    width_in = vol_geometry["width_in"] # Width at scroll inlet
 
     # Calculate geometry
-    A_out = np.pi*r_out**2
+    A_in = 2*np.pi*r_in*width_in # Area at scroll inlet
+    A_out = np.pi*r_out**2 # Area at cone diffuser exit
+    A_scroll = np.pi*r_scroll**2 # Area at scroll exit
 
-    new_parameters = {"area_out" : A_out}
+    new_parameters = {"area_out" : A_out,
+                      "area_in" : A_in,
+                      "area_scroll" : A_scroll}
 
     return {**vol_geometry, **new_parameters} 
 
