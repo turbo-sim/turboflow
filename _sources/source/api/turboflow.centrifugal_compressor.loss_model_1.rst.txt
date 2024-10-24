@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.loss\_model\_1 module
+=======================================================
+
+.. automodule:: turboflow.centrifugal_compressor.loss_model_1
+   :members:
+   :undoc-members:
+   :show-inheritance:

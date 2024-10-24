@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.choking\_model module
+=======================================================
+
+.. automodule:: turboflow.centrifugal_compressor.choking_model
+   :members:
+   :undoc-members:
+   :show-inheritance:

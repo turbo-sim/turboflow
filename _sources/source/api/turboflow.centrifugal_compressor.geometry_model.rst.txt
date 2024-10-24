@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.geometry\_model module
+========================================================
+
+.. automodule:: turboflow.centrifugal_compressor.geometry_model
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.slip\_model module
+====================================================
+
+.. automodule:: turboflow.centrifugal_compressor.slip_model
+   :members:
+   :undoc-members:
+   :show-inheritance:

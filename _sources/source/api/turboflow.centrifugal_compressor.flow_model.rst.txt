@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.flow\_model module
+====================================================
+
+.. automodule:: turboflow.centrifugal_compressor.flow_model
+   :members:
+   :undoc-members:
+   :show-inheritance:

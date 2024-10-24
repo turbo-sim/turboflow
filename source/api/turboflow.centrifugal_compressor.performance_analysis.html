@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.centrifugal_compressor.performance_analysis module &mdash; turboflow v0.1.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=825059f5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="turboflow.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">turboflow.centrifugal_compressor.performance_analysis module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/source/api/turboflow.centrifugal_compressor.performance_analysis.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-turboflow.centrifugal_compressor.performance_analysis">
+<span id="turboflow-centrifugal-compressor-performance-analysis-module"></span><h1>turboflow.centrifugal_compressor.performance_analysis module<a class="headerlink" href="#module-turboflow.centrifugal_compressor.performance_analysis" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">CentrifugalCompressorProblem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="turboflow.pysolver_view.nonlinear_system.html#turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem" title="turboflow.pysolver_view.nonlinear_system.NonlinearSystemProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonlinearSystemProblem</span></code></a></p>
+<p class="rubric">Methods</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">residual</span></code></a>(x)</p></td>
+<td><p>Evaluate the system of equations for given decision variables.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.scale_values" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.scale_values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scale_values</span></code></a>(variables[, to_normalized])</p></td>
+<td><p>Convert values between normalized and real values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.update_boundary_conditions" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.update_boundary_conditions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_boundary_conditions</span></code></a>(operation_point)</p></td>
+<td><p>Update the boundary conditions of the problem with the provided operation point.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual">
+<span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the system of equations for given decision variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Vector of decision variables.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>array_like</dt><dd><p>Vector containing the values of the system of equations for the given decision variables.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.scale_values">
+<span class="sig-name descname"><span class="pre">scale_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.scale_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.scale_values" title="Link to this definition"></a></dt>
+<dd><p>Convert values between normalized and real values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>variables: dict</strong></dt><dd><p>A dictionary containing values to be scaled.</p>
+</dd>
+<dt><strong>to_real: bool</strong></dt><dd><p>If True, scale to real values; if False, scale to normalized values.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>An array of values converted between scales.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.update_boundary_conditions">
+<span class="sig-name descname"><span class="pre">update_boundary_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.update_boundary_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.update_boundary_conditions" title="Link to this definition"></a></dt>
+<dd><p>Update the boundary conditions of the problem with the provided operation point.</p>
+<p>This method updates the boundary conditions attributes used to evaluate the turbine performance.
+It also initializes a Fluid object using the ‘fluid_name’ specified in the operation point.
+The method computes additional properties and reference values like stagnation properties at
+the inlet, exit static properties, spouting velocity, and reference mass flow rate.
+These are stored in the object’s internal state for further use in calculations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>operation_point</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing the boundary conditions defining the operation point.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd><p>This method does not return a value but updates the internal state of the object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.SOLVER_MAP">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">SOLVER_MAP</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'hybr':</span> <span class="pre">&quot;Powell's</span> <span class="pre">hybrid&quot;,</span> <span class="pre">'lm':</span> <span class="pre">'Lavenberg-Marquardt'}</span></em><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.SOLVER_MAP" title="Link to this definition"></a></dt>
+<dd><p>Available solvers for performance analysis.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_single_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operating_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#compute_single_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.find_closest_operation_point">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">find_closest_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_op_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#find_closest_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.find_closest_operation_point" title="Link to this definition"></a></dt>
+<dd><p>Find the solution vector and index of the closest operation point in the historical data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>current_op_point</strong><span class="classifier">dict</span></dt><dd><p>The current operation point we want to compare.</p>
+</dd>
+<dt><strong>operation_points</strong><span class="classifier">list of dict</span></dt><dd><p>A list of historical operation points to search through.</p>
+</dd>
+<dt><strong>solution_data</strong><span class="classifier">list</span></dt><dd><p>A list of solution vectors corresponding to each operation point.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tuple</dt><dd><p>A tuple containing the closest solution vector and the one-based index of the closest operation point.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.generate_operation_points">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">generate_operation_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#generate_operation_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.generate_operation_points" title="Link to this definition"></a></dt>
+<dd><p>Generates a list of dictionaries representing all possible combinations of
+operation points from a given performance map. The performance map is a
+dictionary where keys represent parameter names and values are the ranges
+of values for those parameters. The function ensures that the combinations
+are generated such that ‘p0_in’ and
+‘mass_flow_rate’ are the last ones to vary, effectively making them the first
+parameters to sweep through in the operation points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>- performance_map (dict): A dictionary with parameter names as keys and</strong></dt><dd><p>lists of parameter values as values.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><dl class="simple">
+<dt>operation_points (list of dict): A list of dictionaries, each representing</dt><dd><p>a unique combination of parameters from the performance_map.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.get_operation_point_distance">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">get_operation_point_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#get_operation_point_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.get_operation_point_distance" title="Link to this definition"></a></dt>
+<dd><p>Calculate the normalized distance between two operation points, with special consideration
+for angle measurements and prevention of division by zero for very small values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>point_1</strong><span class="classifier">dict</span></dt><dd><p>First operation point with numeric values.</p>
+</dd>
+<dt><strong>point_2</strong><span class="classifier">dict</span></dt><dd><p>Second operation point with numeric values.</p>
+</dd>
+<dt><strong>delta</strong><span class="classifier">float, optional</span></dt><dd><p>A small constant to prevent division by zero. Default is 1e-8.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>The calculated normalized distance.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.latin_hypercube_sampling">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">latin_hypercube_sampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bounds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#latin_hypercube_sampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.latin_hypercube_sampling" title="Link to this definition"></a></dt>
+<dd><p>Generates samples using Latin Hypercube Sampling.</p>
+<p>Parameters:
+bounds (list of tuples): A list of (min, max) bounds for each variable.
+n_samples (int): The number of samples to generate.</p>
+<p>Returns:
+np.ndarray: An array of shape (n_samples, n_variables) containing the samples.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.print_boundary_conditions">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">print_boundary_conditions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BC</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#print_boundary_conditions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.print_boundary_conditions" title="Link to this definition"></a></dt>
+<dd><p>Print the boundary conditions.</p>
+<p>This function prints the boundary conditions in a formatted manner. It takes a dictionary <cite>BC</cite>
+containing the following keys:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>fluid_name</cite> (str): Name of the fluid.</p></li>
+<li><p><cite>alpha_in</cite> (float): Flow angle at inlet in degrees.</p></li>
+<li><p><cite>T0_in</cite> (float): Total temperature at inlet in Kelvin.</p></li>
+<li><p><cite>p0_in</cite> (float): Total pressure at inlet in Pascal.</p></li>
+<li><p><cite>mass_flow_rate</cite> (float): Static pressure at outlet in Pascal.</p></li>
+<li><p><cite>omega</cite> (float): Angular speed in radians per second.</p></li>
+</ul>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>BC</strong><span class="classifier">dict</span></dt><dd><p>A dictionary containing the boundary conditions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.print_operation_points">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">print_operation_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#print_operation_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.print_operation_points" title="Link to this definition"></a></dt>
+<dd><p>Prints a summary table of operation points scheduled for simulation.</p>
+<p>This function takes a list of operation point dictionaries, formats them
+according to predefined specifications, applies unit conversions where
+necessary, and prints them in a neatly aligned table with headers and units.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>- operation_points (list of dict): A list where each dictionary contains</strong></dt><dd><p>key-value pairs representing operation parameters and their corresponding
+values.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This function assumes that all necessary keys exist within each operation
+point dictionary.</p></li>
+<li><p>The function directly prints the output; it does not return any value.</p></li>
+<li><p>Unit conversions are hardcoded and specific to known parameters.</p></li>
+<li><p>If the units of the parameters change or if different parameters are added,
+the unit conversion logic and <cite>field_specs</cite> need to be updated accordingly.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.print_simulation_summary">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">print_simulation_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#print_simulation_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.print_simulation_summary" title="Link to this definition"></a></dt>
+<dd><p>Print a formatted footer summarizing the performance of all operation points.</p>
+<p>This function processes a list of solver objects to provide a summary of the performance
+analysis calculations. It calculates and displays the number of successful points and a summary of
+simulation tme statistics. Additionally, it lists the indices of failed operation points, if any.</p>
+<p>The function is robust against solvers that failed and lack certain attributes like ‘elapsed_time’.
+In such cases, these solvers are included in the count of failed operation points, but not in the
+calculation time statistics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>solvers</strong><span class="classifier">list</span></dt><dd><p>A list of solver objects. Each solver object should contain attributes related to the
+calculation of an operation point, such as ‘elapsed_time’ and the ‘solution’ status.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.validate_operation_point">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">validate_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_point</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#validate_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.validate_operation_point" title="Link to this definition"></a></dt>
+<dd><p>Validates that an operation point has exactly the required fields:
+‘fluid_name’, ‘p0_in’, ‘T0_in’, ‘mass_flow_rate’, ‘alpha_in’, ‘omega’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>op_point: dict</strong></dt><dd><p>A dictionary representing an operation point.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError: If the dictionary does not contain the required fields or contains extra fields.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

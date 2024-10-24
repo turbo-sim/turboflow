@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.performance\_analysis module
+==============================================================
+
+.. automodule:: turboflow.centrifugal_compressor.performance_analysis
+   :members:
+   :undoc-members:
+   :show-inheritance:
