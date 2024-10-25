@@ -12,8 +12,6 @@ $$
 \end{gather}
 $$
 
-
-
 ## Derivation of sudden expansion loss
 
 Mass balance:
