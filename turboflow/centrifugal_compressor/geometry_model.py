@@ -90,9 +90,9 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
     A_in = 2*np.pi*r_in*b_in # Area in
     A_out = 2*np.pi*r_out*b_out # Area out
     theta_avg = (theta_in + theta_out)/2 # Mean blade angle
-    camber_angle = theta_out - theta_in # Camber angle
-    solidity = z*(r_out -r_in)/(2*np.pi*r_in*np.sin(theta_avg)) # Solidity 
-    loc_camber_max = (2-(theta_avg-theta_in)/(theta_out-theta_in))/3 # Location of max camber
+    camber_angle = abs(theta_in - theta_out) # Camber angle
+    solidity = z*(r_out -r_in)/(2*np.pi*r_in*math.cosd(theta_avg)) # Solidity 
+    loc_camber_max = (2-abs(theta_in - theta_avg)/camber_angle)/3 # Location of max camber
 
     new_parameters = {"area_out" : A_out,
                       "area_in" : A_in,

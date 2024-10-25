@@ -40,7 +40,10 @@ def evaluate_centrifugal_compressor(
 
     # Evaluate components
     for key in geometry.keys():
+        # Prepare set of independent variables
         independents = {var : val for var, val in variables.items() if var.endswith(key)}
+
+        # Evaluate component
         results, residuals = component_function[key](independents, input, boundary_conditions, geometry[key], fluid, model_options, reference_values)
 
         # Store result in result structure
@@ -97,7 +100,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
 
     # Load model options
     slip_model = model_options ["slip_model"]
-    loss_model = model_options ["loss_model"]
+    loss_model = model_options ["loss_model"]["impeller"]
 
     # evaluate inlet velocity triangle
     u_in = omega*r_mean_in
@@ -158,18 +161,33 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
     relative_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel_out, s_out)  
     isentropic_relative_properties_out = fluid.get_props(cp.PSmass_INPUTS, relative_properties_out["p"], s_in)
-    isentropic_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_relative_properties_out, "0")}
 
     # evaluate exit mass flow rate
     m_out = static_properties_out["d"]*w_m_out*A_out
 
+    # Collect inlet plane and exit plane results 
+    inlet_plane = {**velocity_triangle_in,
+                   **static_properties_in,
+                   **utils.add_string_to_keys(stagnation_properties_in, "0"),
+                   **utils.add_string_to_keys(relative_properties_in, "0_rel")}
+    
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   **utils.add_string_to_keys(relative_properties_out, "0_rel"),
+                   }
+
     # Evaluate loss coefficient
     loss_input = {
-        "h0_rel_out" : h0_rel_out,
-        "h0_rel_out_is" : isentropic_relative_properties_out["h"],
-        "h_out" : h_out,
-        "h_out_is" : isentropic_properties_out["h"]}
-    loss_dict = lm.evaluate_loss_model(loss_model, loss_input)
+        "inlet_plane" : inlet_plane,
+        "exit_plane" : exit_plane,
+        "geometry" : geometry,
+        "isentropic" : isentropic_properties_out,
+    }
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "impeller")
+    exit_plane = {**exit_plane, **loss_dict}
 
     # Evaluate slip
     slip_velocity = u_out + v_m_out*math.tand(theta_out) - v_t_out
@@ -183,19 +201,9 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
                  "slip" : slip_velocity-slip_model}
 
     # Store impeller results
-    inlet_plane = {**velocity_triangle_in,
-                   **static_properties_in,
-                   **utils.add_string_to_keys(stagnation_properties_in, "0"),
-                   **utils.add_string_to_keys(relative_properties_in, "0_rel")}
-    
-    exit_plane = {**velocity_triangle_out,
-                   **static_properties_out,
-                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
-                   **utils.add_string_to_keys(relative_properties_out, "0_rel"),
-                   **loss_dict}
-
     results = {"inlet_plane" : inlet_plane,
-               "exit_plane": exit_plane}
+               "exit_plane": exit_plane,
+    }
 
     return results, resiudals
 
@@ -225,7 +233,7 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     theta_in = geometry["leading_edge_angle"]
     theta_out = geometry["trailing_edge_angle"]
     loc_camber_max = geometry["loc_camber_max"]
-    camber = geometry["camber"]
+    camber = geometry["camber_angle"]
     solidity = geometry["solidity"]
     A_out = geometry["area_out"]
 
@@ -233,15 +241,16 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     mass_flow_rate = boundary_conditions["mass_flow_rate"]
 
     # Load model options
-    loss_model = model_options ["loss_model"]
+    loss_model = model_options["loss_model"]["vaned_diffuser"]
 
     # Calculate incidence
-    alpha_inc = theta_in - alpha_in
+    alpha_inc = alpha_in - theta_in
 
     # Calculate deviation angle and absolute flow angle
-    delta_0 = camber*(0.92*loc_camber_max**2 + 0.02*(90-theta_out))/(np.sqrt(solidity) - 0.02*camber)
-    d_delta = np.exp(((1.5-theta_out/60)**2-3.3)*solidity)
-    alpha_out = theta_out - delta_0 - d_delta*alpha_inc
+    delta_0 = camber*(0.92*loc_camber_max**2 + 0.02*theta_out)/(np.sqrt(solidity) - 0.02*camber)
+    d_delta = np.exp(((1.5-(90-theta_in)/60)**2-3.3)*solidity)
+    alpha_out = theta_out + delta_0 + d_delta*alpha_inc
+    alpha_out = theta_out
 
     # Calculate tangential and meridional velocity
     v_m_out = v_out*math.cosd(alpha_out)
@@ -252,25 +261,39 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
                    "v" : v_out,
                    "alpha" : alpha_out,
                    }
+    
+    dev = {"delta_0" : delta_0,
+           "alpha_inc" : alpha_inc,
+           "d_delta" : d_delta,
+           }
 
     # Calculate thermophysical properties
     h0_out = h0_in
     h_out = h0_out - 0.5*v_out**2
     static_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
     stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
-    isentropic_stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_in)
-    isentropic_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_in)
+    isentropic_stagnation_properties_out = fluid.get_props(cp.PSmass_INPUTS, stagnation_properties_out["p"], s_in)
+    isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
     # Calculate mass flow rate
     m_out = static_properties_out["d"]*v_m_out*A_out
 
+    # Collect exit plane results
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   }
+
     # Evaluate loss coefficient
     loss_input = {
-        "h0_rel_out" : h0_out,
-        "h0_rel_out_is" : isentropic_stagnation_properties_out["h"],
-        "h_out" : h_out,
-        "h_out_is" : isentropic_properties_out["h"]}
-    loss_dict = lm.evaluate_loss_model(loss_model, loss_input)
+        "inlet_plane" : input,
+        "exit_plane" : exit_plane,
+        "geometry" : geometry,
+        "isentropic" : isentropic_properties_out,
+    }
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "vaned_diffuser")
+    exit_plane = {**exit_plane, **loss_dict, **dev}
 
     # Evaluate residuals
     resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
@@ -278,11 +301,6 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     }
 
     # Store diffuser results
-    exit_plane = {**velocity_triangle_out,
-                   **static_properties_out,
-                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
-                   **loss_dict}
-
     results = {"inlet_plane" : input,
                "exit_plane": exit_plane}
     
@@ -345,6 +363,7 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
 
     # Load model options
     Cf = model_options ["Cf"]
+    loss_model = model_options["loss_model"]["vaneless_diffuser"]
 
     # Calculate tangential and meridional velocity
     v_m_out = v_out*math.cosd(alpha_out)
@@ -361,15 +380,29 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
     h_out = h0_out - 0.5*v_out**2
     static_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
     stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
-    isentropic_stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_in)
-    isentropic_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_stagnation_properties_out = fluid.get_props(cp.PSmass_INPUTS, stagnation_properties_out["p"], s_in)
+    isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
     # Calculate mass flow rate
     m_out = static_properties_out["d"]*v_m_out*A_out
 
+    # Collect exit plane results
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   }
+
     # Evaluate loss coefficient
-    Y_lm = 2*Cf*(r_out-r_in)/b_in
-    Y_def = 2*(h_out - isentropic_properties_out["h"])/v_in**2
+    loss_input = {
+        "inlet_plane" : input,
+        "exit_plane" : exit_plane,
+        "geometry" : geometry,
+        "Cf" : Cf,
+        "isentropic" : isentropic_properties_out,
+    }
+    loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "vaneless_diffuser")
+    exit_plane = {**exit_plane, **loss_dict}
 
     # Evaluate change of angular momentum
     phi_is = r_out*v_t_out/(r_in*v_t_in)
@@ -377,17 +410,11 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
 
     # Evaluate residuals
     resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
-                 "losses" : Y_lm - Y_def,
+                 "losses" : loss_dict["loss_error"],
                  "angular_momentum" : phi_is - phi_AM,
     }
 
     # Store diffuser results
-    exit_plane = {**velocity_triangle_out,
-                   **static_properties_out,
-                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
-                   }
-    exit_plane["loss_error"] = Y_lm - Y_def
-
     results = {"inlet_plane" : input,
                "exit_plane": exit_plane}
     
@@ -549,7 +576,7 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     mass_flow_rate = boundary_conditions["mass_flow_rate"]
 
     # Load model options
-    loss_model = model_options ["loss_model"]
+    loss_model = model_options["loss_model"]["volute"]
 
     # Defin velocity triangle
     velocity_triangle_out = {"v_out" : v_out}
@@ -560,7 +587,8 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     static_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
     stagnation_properties_out = fluid.get_props(cp.HmassSmass_INPUTS, h0_out, s_out)
     isentropic_stagnation_properties_out = fluid.get_props(cp.PSmass_INPUTS, stagnation_properties_out["p"], s_in)
-    isentropic_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
+    isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
     # Calculate mass flow rate
     m_out = static_properties_out["d"]*v_out*A_out
@@ -568,14 +596,21 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     # Evaluate scroll velocity (Assume incoimpressible flow in diffuser cone)
     v_scroll = v_out*A_out/A_scroll
 
+    # Collect exit plane results
+    exit_plane = {**velocity_triangle_out,
+                   **static_properties_out,
+                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   }
+
     # Evaluate losses 
     loss_input = {
-        "h0_rel_out" : h0_out,
-        "h0_rel_out_is" : isentropic_stagnation_properties_out["h"],
-        "h_out" : h_out,
-        "h_out_is" : isentropic_properties_out["h"],
-        "v_scroll" : v_scroll}
+        "inlet_plane" : input,
+        "exit_plane" : exit_plane,
+        "geometry" : geometry,
+        "isentropic" : isentropic_properties_out, 
+    }
     loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "volute")
+    exit_plane = {**exit_plane, **loss_dict}
 
     # Evaluate residuals
     resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
@@ -583,11 +618,6 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     }
 
     # Store diffuser results
-    exit_plane = {**velocity_triangle_out,
-                   **static_properties_out,
-                   **utils.add_string_to_keys(stagnation_properties_out, "0"),
-                   }
-
     results = {"inlet_plane" : input,
                "exit_plane": exit_plane}
     

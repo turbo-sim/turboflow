@@ -44,12 +44,28 @@ initial_guess = {"v_in_impeller" : 0.001,
                  "alpha_out_vaneless_diffuser" : (30+90)/180,
                  }
 
+loss_model = {
+    "impeller" :{
+        "model" : "isentropic",
+        "loss_coefficient" : "static_enthalpy_loss"
+    },
+    "vaneless_diffuser" :{
+        "model" : "custom",
+        "loss_coefficient" : "static_enthalpy_loss"
+    },
+}
+
+# loss_model = {
+#     "loss_model" : {
+#         "model" : "oh",
+#         "loss_coefficient" : "static_enthalpy_loss",
+#     }
+# }
+
+
 simulation_options = {
     "slip_model" : "wiesner", 
-    "loss_model" : {  
-    "model": "isentropic",  
-    "loss_coefficient": "static_enthalpy_loss"
-    },
+    "loss_model" : loss_model,
     "Cf" : 0.002,
     "q_w" : 0.00,
     "vaneless_diffuser_model" : "algebraic",  

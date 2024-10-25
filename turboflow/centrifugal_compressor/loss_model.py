@@ -1,5 +1,6 @@
 
 from .. import utilities as utils
+from . import loss_model_custom as lmc
 
 # List of valid options
 LOSS_MODELS = [
@@ -23,7 +24,7 @@ KEYS_LOSSES = [
 ]
 
 
-def evaluate_loss_model(loss_model_options, input_parameters):
+def evaluate_loss_model(loss_model_options, input_parameters, component):
     """
     Calculate loss coefficient based on the selected loss model.
 
@@ -46,28 +47,16 @@ def evaluate_loss_model(loss_model_options, input_parameters):
 
     # Function mappings for each loss model
     loss_model_functions = {
-        LOSS_MODELS[0]: lambda _: {
-            "loss_profile": 0.0,
-            "loss_incidence": 0.0,
-            "loss_trailing": 0.0,
-            "loss_secondary": 0.0,
-            "loss_clearance": 0.0,
+        LOSS_MODELS[0]: lambda x,y: {
             "loss_total": 0.0,
         },
-        LOSS_MODELS[1]: lambda input_parameters: {
-            "loss_profile": 0.0,
-            "loss_incidence": 0.0,
-            "loss_trailing": 0.0,
-            "loss_secondary": 0.0,
-            "loss_clearance": 0.0,
-            "loss_total": loss_model_options["custom_value"],
-        },
+        LOSS_MODELS[1] : lmc.compute_losses,
     }
 
     # Evaluate loss model
     model = loss_model_options["model"]
     if model in loss_model_functions:
-        loss_dict = loss_model_functions[model](input_parameters)
+        loss_dict = loss_model_functions[model](input_parameters, component)
     else:
         options = ", ".join(f"'{k}'" for k in LOSS_MODELS)
         raise ValueError(f"Invalid loss model '{model}'. Available options: {options}")
@@ -84,9 +73,12 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         h0rel_out = input_parameters["h0_rel_out"]
         Y_definition = h0rel_out - h0rel_out_is
     elif loss_coeff == "static_enthalpy_loss":
-        h_out_is = input_parameters["h_out_is"]
-        h_out = input_parameters["h_out"]
-        Y_definition = h_out - h_out_is
+        # h_out_is = input_parameters["h_out_is"]
+        # h_out = input_parameters["h_out"]
+        h_out_is = input_parameters["isentropic"]["h"]
+        h_out = input_parameters["exit_plane"]["h"]
+        v_in = input_parameters["inlet_plane"]["v"]
+        Y_definition = 2*(h_out - h_out_is)/(v_in**2)
 
     else:
         options = ", ".join(f"'{k}'" for k in LOSS_COEFFICIENTS)
