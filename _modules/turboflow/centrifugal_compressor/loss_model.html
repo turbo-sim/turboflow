@@ -89,6 +89,7 @@
   <h1>Source code for turboflow.centrifugal_compressor.loss_model</h1><div class="highlight"><pre>
 <span></span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">loss_model_custom</span> <span class="k">as</span> <span class="n">lmc</span>
 
 <span class="c1"># List of valid options</span>
 <span class="n">LOSS_MODELS</span> <span class="o">=</span> <span class="p">[</span>
@@ -114,7 +115,7 @@
 
 <div class="viewcode-block" id="evaluate_loss_model">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.loss_model.html#turboflow.centrifugal_compressor.loss_model.evaluate_loss_model">[docs]</a>
-<span class="k">def</span> <span class="nf">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model_options</span><span class="p">,</span> <span class="n">input_parameters</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model_options</span><span class="p">,</span> <span class="n">input_parameters</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate loss coefficient based on the selected loss model.</span>
 
@@ -137,28 +138,16 @@
 
     <span class="c1"># Function mappings for each loss model</span>
     <span class="n">loss_model_functions</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;loss_profile&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_incidence&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_trailing&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_secondary&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_clearance&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;loss_total&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="p">},</span>
-        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="k">lambda</span> <span class="n">input_parameters</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;loss_profile&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_incidence&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_trailing&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_secondary&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_clearance&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-            <span class="s2">&quot;loss_total&quot;</span><span class="p">:</span> <span class="n">loss_model_options</span><span class="p">[</span><span class="s2">&quot;custom_value&quot;</span><span class="p">],</span>
-        <span class="p">},</span>
+        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">:</span> <span class="n">lmc</span><span class="o">.</span><span class="n">compute_losses</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="c1"># Evaluate loss model</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">loss_model_options</span><span class="p">[</span><span class="s2">&quot;model&quot;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">loss_model_functions</span><span class="p">:</span>
-        <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">loss_model_functions</span><span class="p">[</span><span class="n">model</span><span class="p">](</span><span class="n">input_parameters</span><span class="p">)</span>
+        <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">loss_model_functions</span><span class="p">[</span><span class="n">model</span><span class="p">](</span><span class="n">input_parameters</span><span class="p">,</span> <span class="n">component</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">options</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">LOSS_MODELS</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid loss model &#39;</span><span class="si">{</span><span class="n">model</span><span class="si">}</span><span class="s2">&#39;. Available options: </span><span class="si">{</span><span class="n">options</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -175,9 +164,12 @@
         <span class="n">h0rel_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;h0_rel_out&quot;</span><span class="p">]</span>
         <span class="n">Y_definition</span> <span class="o">=</span> <span class="n">h0rel_out</span> <span class="o">-</span> <span class="n">h0rel_out_is</span>
     <span class="k">elif</span> <span class="n">loss_coeff</span> <span class="o">==</span> <span class="s2">&quot;static_enthalpy_loss&quot;</span><span class="p">:</span>
-        <span class="n">h_out_is</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;h_out_is&quot;</span><span class="p">]</span>
-        <span class="n">h_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;h_out&quot;</span><span class="p">]</span>
-        <span class="n">Y_definition</span> <span class="o">=</span> <span class="n">h_out</span> <span class="o">-</span> <span class="n">h_out_is</span>
+        <span class="c1"># h_out_is = input_parameters[&quot;h_out_is&quot;]</span>
+        <span class="c1"># h_out = input_parameters[&quot;h_out&quot;]</span>
+        <span class="n">h_out_is</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;isentropic&quot;</span><span class="p">][</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">v_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+        <span class="n">Y_definition</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h_out</span> <span class="o">-</span> <span class="n">h_out_is</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">options</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&#39;&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">LOSS_COEFFICIENTS</span><span class="p">)</span>

@@ -131,7 +131,10 @@
 
     <span class="c1"># Evaluate components</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># Prepare set of independent variables</span>
         <span class="n">independents</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span> <span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">key</span><span class="p">)}</span>
+
+        <span class="c1"># Evaluate component</span>
         <span class="n">results</span><span class="p">,</span> <span class="n">residuals</span> <span class="o">=</span> <span class="n">component_function</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="n">independents</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">)</span>
 
         <span class="c1"># Store result in result structure</span>
@@ -191,7 +194,7 @@
 
     <span class="c1"># Load model options</span>
     <span class="n">slip_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;slip_model&quot;</span><span class="p">]</span>
-    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">][</span><span class="s2">&quot;impeller&quot;</span><span class="p">]</span>
 
     <span class="c1"># evaluate inlet velocity triangle</span>
     <span class="n">u_in</span> <span class="o">=</span> <span class="n">omega</span><span class="o">*</span><span class="n">r_mean_in</span>
@@ -252,18 +255,33 @@
     <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
     <span class="n">relative_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>  
     <span class="n">isentropic_relative_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">relative_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
-    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">isentropic_static_properties_out</span><span class="p">,</span><span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">isentropic_relative_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)}</span>
 
     <span class="c1"># evaluate exit mass flow rate</span>
     <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">w_m_out</span><span class="o">*</span><span class="n">A_out</span>
 
+    <span class="c1"># Collect inlet plane and exit plane results </span>
+    <span class="n">inlet_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_in</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_in</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_in</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">relative_properties_in</span><span class="p">,</span> <span class="s2">&quot;0_rel&quot;</span><span class="p">)}</span>
+    
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">relative_properties_out</span><span class="p">,</span> <span class="s2">&quot;0_rel&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+
     <span class="c1"># Evaluate loss coefficient</span>
     <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;h0_rel_out&quot;</span> <span class="p">:</span> <span class="n">h0_rel_out</span><span class="p">,</span>
-        <span class="s2">&quot;h0_rel_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_relative_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;h_out&quot;</span> <span class="p">:</span> <span class="n">h_out</span><span class="p">,</span>
-        <span class="s2">&quot;h_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]}</span>
-    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">)</span>
+        <span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="n">inlet_plane</span><span class="p">,</span>
+        <span class="s2">&quot;exit_plane&quot;</span> <span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+        <span class="s2">&quot;geometry&quot;</span> <span class="p">:</span> <span class="n">geometry</span><span class="p">,</span>
+        <span class="s2">&quot;isentropic&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">,</span> <span class="s2">&quot;impeller&quot;</span><span class="p">)</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">exit_plane</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict</span><span class="p">}</span>
 
     <span class="c1"># Evaluate slip</span>
     <span class="n">slip_velocity</span> <span class="o">=</span> <span class="n">u_out</span> <span class="o">+</span> <span class="n">v_m_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)</span> <span class="o">-</span> <span class="n">v_t_out</span>
@@ -277,19 +295,9 @@
                  <span class="s2">&quot;slip&quot;</span> <span class="p">:</span> <span class="n">slip_velocity</span><span class="o">-</span><span class="n">slip_model</span><span class="p">}</span>
 
     <span class="c1"># Store impeller results</span>
-    <span class="n">inlet_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_in</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">static_properties_in</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_in</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">relative_properties_in</span><span class="p">,</span> <span class="s2">&quot;0_rel&quot;</span><span class="p">)}</span>
-    
-    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">relative_properties_out</span><span class="p">,</span> <span class="s2">&quot;0_rel&quot;</span><span class="p">),</span>
-                   <span class="o">**</span><span class="n">loss_dict</span><span class="p">}</span>
-
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="n">inlet_plane</span><span class="p">,</span>
-               <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
+               <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+    <span class="p">}</span>
 
     <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">resiudals</span></div>
 
@@ -322,7 +330,7 @@
     <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
     <span class="n">theta_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;trailing_edge_angle&quot;</span><span class="p">]</span>
     <span class="n">loc_camber_max</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;loc_camber_max&quot;</span><span class="p">]</span>
-    <span class="n">camber</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;camber&quot;</span><span class="p">]</span>
+    <span class="n">camber</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;camber_angle&quot;</span><span class="p">]</span>
     <span class="n">solidity</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;solidity&quot;</span><span class="p">]</span>
     <span class="n">A_out</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
 
@@ -330,15 +338,16 @@
     <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
 
     <span class="c1"># Load model options</span>
-    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">][</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">]</span>
 
     <span class="c1"># Calculate incidence</span>
-    <span class="n">alpha_inc</span> <span class="o">=</span> <span class="n">theta_in</span> <span class="o">-</span> <span class="n">alpha_in</span>
+    <span class="n">alpha_inc</span> <span class="o">=</span> <span class="n">alpha_in</span> <span class="o">-</span> <span class="n">theta_in</span>
 
     <span class="c1"># Calculate deviation angle and absolute flow angle</span>
-    <span class="n">delta_0</span> <span class="o">=</span> <span class="n">camber</span><span class="o">*</span><span class="p">(</span><span class="mf">0.92</span><span class="o">*</span><span class="n">loc_camber_max</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.02</span><span class="o">*</span><span class="p">(</span><span class="mi">90</span><span class="o">-</span><span class="n">theta_out</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">solidity</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.02</span><span class="o">*</span><span class="n">camber</span><span class="p">)</span>
-    <span class="n">d_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(((</span><span class="mf">1.5</span><span class="o">-</span><span class="n">theta_out</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mf">3.3</span><span class="p">)</span><span class="o">*</span><span class="n">solidity</span><span class="p">)</span>
-    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span> <span class="o">-</span> <span class="n">delta_0</span> <span class="o">-</span> <span class="n">d_delta</span><span class="o">*</span><span class="n">alpha_inc</span>
+    <span class="n">delta_0</span> <span class="o">=</span> <span class="n">camber</span><span class="o">*</span><span class="p">(</span><span class="mf">0.92</span><span class="o">*</span><span class="n">loc_camber_max</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">0.02</span><span class="o">*</span><span class="n">theta_out</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">solidity</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.02</span><span class="o">*</span><span class="n">camber</span><span class="p">)</span>
+    <span class="n">d_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(((</span><span class="mf">1.5</span><span class="o">-</span><span class="p">(</span><span class="mi">90</span><span class="o">-</span><span class="n">theta_in</span><span class="p">)</span><span class="o">/</span><span class="mi">60</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mf">3.3</span><span class="p">)</span><span class="o">*</span><span class="n">solidity</span><span class="p">)</span>
+    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span> <span class="o">+</span> <span class="n">delta_0</span> <span class="o">+</span> <span class="n">d_delta</span><span class="o">*</span><span class="n">alpha_inc</span>
+    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span>
 
     <span class="c1"># Calculate tangential and meridional velocity</span>
     <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
@@ -349,25 +358,39 @@
                    <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
                    <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span><span class="p">,</span>
                    <span class="p">}</span>
+    
+    <span class="n">dev</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;delta_0&quot;</span> <span class="p">:</span> <span class="n">delta_0</span><span class="p">,</span>
+           <span class="s2">&quot;alpha_inc&quot;</span> <span class="p">:</span> <span class="n">alpha_inc</span><span class="p">,</span>
+           <span class="s2">&quot;d_delta&quot;</span> <span class="p">:</span> <span class="n">d_delta</span><span class="p">,</span>
+           <span class="p">}</span>
 
     <span class="c1"># Calculate thermophysical properties</span>
     <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h0_in</span>
     <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
     <span class="n">static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
     <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
-    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
-    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">isentropic_static_properties_out</span><span class="p">,</span><span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">isentropic_stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)}</span>
 
     <span class="c1"># Calculate mass flow rate</span>
     <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_m_out</span><span class="o">*</span><span class="n">A_out</span>
 
+    <span class="c1"># Collect exit plane results</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+
     <span class="c1"># Evaluate loss coefficient</span>
     <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;h0_rel_out&quot;</span> <span class="p">:</span> <span class="n">h0_out</span><span class="p">,</span>
-        <span class="s2">&quot;h0_rel_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;h_out&quot;</span> <span class="p">:</span> <span class="n">h_out</span><span class="p">,</span>
-        <span class="s2">&quot;h_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]}</span>
-    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">)</span>
+        <span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+        <span class="s2">&quot;exit_plane&quot;</span> <span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+        <span class="s2">&quot;geometry&quot;</span> <span class="p">:</span> <span class="n">geometry</span><span class="p">,</span>
+        <span class="s2">&quot;isentropic&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">,</span> <span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">)</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">exit_plane</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">dev</span><span class="p">}</span>
 
     <span class="c1"># Evaluate residuals</span>
     <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
@@ -375,11 +398,6 @@
     <span class="p">}</span>
 
     <span class="c1"># Store diffuser results</span>
-    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
-                   <span class="o">**</span><span class="n">loss_dict</span><span class="p">}</span>
-
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
                <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
     
@@ -448,6 +466,7 @@
 
     <span class="c1"># Load model options</span>
     <span class="n">Cf</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;Cf&quot;</span><span class="p">]</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">][</span><span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">]</span>
 
     <span class="c1"># Calculate tangential and meridional velocity</span>
     <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
@@ -464,15 +483,29 @@
     <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
     <span class="n">static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
     <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
-    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
-    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">isentropic_static_properties_out</span><span class="p">,</span><span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">isentropic_stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)}</span>
 
     <span class="c1"># Calculate mass flow rate</span>
     <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_m_out</span><span class="o">*</span><span class="n">A_out</span>
 
+    <span class="c1"># Collect exit plane results</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+
     <span class="c1"># Evaluate loss coefficient</span>
-    <span class="n">Y_lm</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="n">b_in</span>
-    <span class="n">Y_def</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h_out</span> <span class="o">-</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">])</span><span class="o">/</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+        <span class="s2">&quot;exit_plane&quot;</span> <span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+        <span class="s2">&quot;geometry&quot;</span> <span class="p">:</span> <span class="n">geometry</span><span class="p">,</span>
+        <span class="s2">&quot;Cf&quot;</span> <span class="p">:</span> <span class="n">Cf</span><span class="p">,</span>
+        <span class="s2">&quot;isentropic&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">,</span> <span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">)</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">exit_plane</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict</span><span class="p">}</span>
 
     <span class="c1"># Evaluate change of angular momentum</span>
     <span class="n">phi_is</span> <span class="o">=</span> <span class="n">r_out</span><span class="o">*</span><span class="n">v_t_out</span><span class="o">/</span><span class="p">(</span><span class="n">r_in</span><span class="o">*</span><span class="n">v_t_in</span><span class="p">)</span>
@@ -480,17 +513,11 @@
 
     <span class="c1"># Evaluate residuals</span>
     <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
-                 <span class="s2">&quot;losses&quot;</span> <span class="p">:</span> <span class="n">Y_lm</span> <span class="o">-</span> <span class="n">Y_def</span><span class="p">,</span>
+                 <span class="s2">&quot;losses&quot;</span> <span class="p">:</span> <span class="n">loss_dict</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">],</span>
                  <span class="s2">&quot;angular_momentum&quot;</span> <span class="p">:</span> <span class="n">phi_is</span> <span class="o">-</span> <span class="n">phi_AM</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="c1"># Store diffuser results</span>
-    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
-                   <span class="p">}</span>
-    <span class="n">exit_plane</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y_lm</span> <span class="o">-</span> <span class="n">Y_def</span>
-
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
                <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
     
@@ -664,7 +691,7 @@
     <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
 
     <span class="c1"># Load model options</span>
-    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span> <span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+    <span class="n">loss_model</span> <span class="o">=</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">][</span><span class="s2">&quot;volute&quot;</span><span class="p">]</span>
 
     <span class="c1"># Defin velocity triangle</span>
     <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_out&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">}</span>
@@ -675,7 +702,8 @@
     <span class="n">static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
     <span class="n">stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
     <span class="n">isentropic_stagnation_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
-    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_static_properties_out</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">],</span> <span class="n">s_in</span><span class="p">)</span>
+    <span class="n">isentropic_properties_out</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">isentropic_static_properties_out</span><span class="p">,</span><span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">isentropic_stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)}</span>
 
     <span class="c1"># Calculate mass flow rate</span>
     <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_properties_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_out</span><span class="o">*</span><span class="n">A_out</span>
@@ -683,14 +711,21 @@
     <span class="c1"># Evaluate scroll velocity (Assume incoimpressible flow in diffuser cone)</span>
     <span class="n">v_scroll</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">A_out</span><span class="o">/</span><span class="n">A_scroll</span>
 
+    <span class="c1"># Collect exit plane results</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
+                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
+                   <span class="p">}</span>
+
     <span class="c1"># Evaluate losses </span>
     <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;h0_rel_out&quot;</span> <span class="p">:</span> <span class="n">h0_out</span><span class="p">,</span>
-        <span class="s2">&quot;h0_rel_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_stagnation_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;h_out&quot;</span> <span class="p">:</span> <span class="n">h_out</span><span class="p">,</span>
-        <span class="s2">&quot;h_out_is&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">],</span>
-        <span class="s2">&quot;v_scroll&quot;</span> <span class="p">:</span> <span class="n">v_scroll</span><span class="p">}</span>
+        <span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
+        <span class="s2">&quot;exit_plane&quot;</span> <span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+        <span class="s2">&quot;geometry&quot;</span> <span class="p">:</span> <span class="n">geometry</span><span class="p">,</span>
+        <span class="s2">&quot;isentropic&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">,</span> 
+    <span class="p">}</span>
     <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">lm</span><span class="o">.</span><span class="n">evaluate_loss_model</span><span class="p">(</span><span class="n">loss_model</span><span class="p">,</span> <span class="n">loss_input</span><span class="p">,</span> <span class="s2">&quot;volute&quot;</span><span class="p">)</span>
+    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">exit_plane</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict</span><span class="p">}</span>
 
     <span class="c1"># Evaluate residuals</span>
     <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
@@ -698,11 +733,6 @@
     <span class="p">}</span>
 
     <span class="c1"># Store diffuser results</span>
-    <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">static_properties_out</span><span class="p">,</span>
-                   <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">stagnation_properties_out</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">),</span>
-                   <span class="p">}</span>
-
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">,</span>
                <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">}</span>
     
