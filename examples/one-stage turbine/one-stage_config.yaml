@@ -10,7 +10,7 @@ operation_points:
 
 simulation_options: 
   deviation_model : aungier 
-  choking_criterion : evaluate_cascade_throat
+  choking_criterion : critical_mach_number
   rel_step_fd: 1e-4 
   loss_model:  
     model: benner  

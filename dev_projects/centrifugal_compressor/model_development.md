@@ -234,3 +234,7 @@ $$  \frac{p_{01} - p_{02}}{\rho}  = T(s_2-s_1)$$
 
 Dividing by the inlet velocity:
 $$  Y = \frac{p_{01} - p_{02}}{\rho v_1^2/2}  = \frac{T_(s_2-s_1)}{v_1^2/2} = \zeta_s$$
+
+
+For the relation between enthalpy and entropy loss coefficients is given by:
+$$ h(p_2,s_2)-h(p_2,s_1) \approx (\partial h / \partial s)_p (s_2 - s_1) = T_1 (s_2 - s_1) $$
