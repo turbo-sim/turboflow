@@ -356,14 +356,6 @@ class SolverOptionsOptimization(BaseModel):
             raise ValueError(f"Method {method} is not available in {lib} library.")
         return self
 
-# class InitialGuess1(BaseModel):
-
-#     model_config = ConfigDict(extra="forbid")
-#     n_samples : int 
-#     efficiency_tt : Tuple[float, float] = (0.5, 0.95)
-#     efficiency_ke : Tuple[float, float] = (0.4, 0.9)
-#     ma : Tuple[float, float] = (0.5, 1.2)
-
 class InitialGuess2(BaseModel):
 
     model_config = ConfigDict(extra="allow")
