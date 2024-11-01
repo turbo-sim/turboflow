@@ -355,10 +355,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         
         # Update design point 
         if isinstance(config["operation_points"], (list, np.ndarray)):
-            self.operation_point = config["operation_points"][0]
+            self.operation_point = config["operation_points"][0].copy()
             self.update_boundary_conditions(config["operation_points"][0])
         else:
-            self.operation_point = config["operation_points"]
+            self.operation_point = config["operation_points"].copy()
             self.update_boundary_conditions(config["operation_points"])
 
         # Adjust given variables according to choking model (remove excess variables)
@@ -492,9 +492,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Calculate angular speed
         specific_speed = variables["specific_speed"]
-        self.operation_point["omega"] = self.get_omega(
+        self.boundary_conditions["omega"] = self.get_omega(
             specific_speed, mass_flow, h0_in, d_is, h_is
         )
+        self.operation_point["omega"] = self.boundary_conditions["omega"]
 
         # Calculate mean radius
         blade_jet_ratio = variables["blade_jet_ratio"]
@@ -588,9 +589,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Calculate angular speed
         specific_speed = variables["specific_speed"]
-        self.operation_point["omega"] = self.get_omega(
+        self.boundary_conditions["omega"] = self.get_omega(
             specific_speed, mass_flow, h0_in, d_is, h_is
         )
+        self.operation_point["omega"] = self.boundary_conditions["omega"]
 
         # Calculate mean radius
         blade_jet_ratio = variables["blade_jet_ratio"]
