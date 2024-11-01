@@ -43,15 +43,19 @@ def calculate_impeller_geoemtry(imp_geometry):
     radius_tip_in = imp_geometry["radius_tip_in"] # Tip radius at inlet
     radius_out = imp_geometry["radius_out"] # Radius of impeller exit
     width_out = imp_geometry["width_out"] # Blade with at impeller exit
+    area_throat_ratio = imp_geometry["area_throat_ratio"]
 
     # Calculate geometry
     radius_mean_in = (radius_tip_in + radius_hub_in) / 2 # Mean radius at inlet
+    width_in = radius_tip_in - radius_hub_in
     A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2) # Area inlet
     A_out = 2*np.pi*radius_out*width_out # Area exit
 
     new_parameters = {"radius_mean_in" : radius_mean_in,
+                      "width_in" : width_in,
                       "area_in" : A_in,
-                      "area_out" : A_out}
+                      "area_out" : A_out,
+                      "area_throat" : A_in*area_throat_ratio}
 
     return {**imp_geometry, **new_parameters} 
 
@@ -85,6 +89,7 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
     theta_in = vd_geometry["leading_edge_angle"] # Leading edge blade angle
     theta_out = vd_geometry["trailing_edge_angle"] # Trailing edge blade angle
     z = vd_geometry["number_of_vanes"] # Number of vanes
+    throat_location_factor = vd_geometry["throat_location_factor"]
 
     # Calculate geometry
     A_in = 2*np.pi*r_in*b_in # Area in
@@ -93,6 +98,8 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
     camber_angle = abs(theta_in - theta_out) # Camber angle
     solidity = z*(r_out -r_in)/(2*np.pi*r_in*math.cosd(theta_avg)) # Solidity 
     loc_camber_max = (2-abs(theta_in - theta_avg)/camber_angle)/3 # Location of max camber
+    pitch = 2*np.pi*r_out/z
+    b_throat = b_in*(1-throat_location_factor) + b_out*throat_location_factor
 
     new_parameters = {"area_out" : A_out,
                       "area_in" : A_in,
@@ -100,6 +107,8 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
                       "camber_angle" : camber_angle,
                       "solidity" : solidity,
                       "loc_camber_max" : loc_camber_max,
+                      "pitch" : pitch,
+                      "width_throat" : b_throat,
                       }
 
     return {**vd_geometry, **new_parameters} 

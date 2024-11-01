@@ -12,7 +12,7 @@ Available loss models.
 """
 
 LOSS_COEFFICIENTS = [
-    "stagnation_enthalpy_loss"
+    "stagnation_enthalpy_loss",
     "static_enthalpy_loss"
 ]
 """
