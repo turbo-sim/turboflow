@@ -1,0 +1,98 @@
+
+# Compressor in Meronis paper (Table 5, Schiffmann and Favrat)
+turbomachinery: centrifugal_compressor
+operation_points: 
+    fluid_name: R134a
+    T0_in: 265
+    p0_in: 1.65e5
+    mass_flow_rate : 0.04
+    omega: 150e3*2*np.pi/60
+    alpha_in: 0
+
+simulation_options: 
+  slip_model : wiesner
+  loss_model:
+    impeller: 
+      model: custom  
+      loss_coefficient: static_enthalpy_loss
+    vaneless_diffuser: 
+      model: custom  
+      loss_coefficient: static_enthalpy_loss
+    volute: 
+      model: custom  
+      loss_coefficient: static_enthalpy_loss
+  # loss_model:
+  #   model: isentropic  
+  #   loss_coefficient: static_enthalpy_loss  
+  vaneless_diffuser_model : algebraic
+  factors: 
+    skin_friction : 0.02
+    wall_heat_flux : 0.00
+    wake_width : 0.366
+  
+performance_analysis :
+  # performance_map: 
+  #   fluid_name: air 
+  #   T0_in: 265
+  #   p0_in: 1.65e5
+  #   mass_flow_rate: [0.45, 0.50]
+  #   omega: 150e3*2*np.pi/60
+  #   alpha_in: 0 
+  solver_options: 
+    method: lm  
+    tolerance: 1e-8  
+    max_iterations: 100  
+    derivative_method: 2-point  
+    derivative_abs_step: 1e-6  
+    plot_convergence: False
+    print_convergence : True
+  # initial_guess :
+  #   efficiency_tt : 0.7
+  #   phi_out : 0.2
+  initial_guess :
+    efficiency_tt : (0.8, 0.9)
+    phi_out : (0.2, 0.6)
+    n_samples : 100
+  # initial_guess :
+  #     v_in_impeller: 85.3356068398654 
+  #     w_out_impeller: 137.89217290576872 
+  #     beta_out_impeller: -48.403824725190525 
+  #     s_out_impeller: 3893.531986735667
+      # v_out_vaneless_diffuser: 275.421400198415 
+      # s_out_vaneless_diffuser: 3896.4056527991916 
+      # alpha_out_vaneless_diffuser: 72.30714011067647 
+      # v_out_vaned_diffuser: 65.23016734654192
+      # s_out_vaned_diffuser: 3896.4056527959165
+
+
+
+geometry:
+  # Impeller required, and first (while IGV are not available)
+  # Components are evaluated in the same order as here
+  impeller :
+    radius_tip_in: 0.0056
+    radius_hub_in: 0.001
+    radius_out : 0.01
+    width_out : 0.0012
+    leading_edge_angle : (56+30.23)/2
+    trailing_edge_angle : -45
+    number_of_blades : 18
+    impeller_length : 0.007693
+    tip_clearance : 0.15e-3
+  vaneless_diffuser :
+    wall_divergence : -6.897
+    radius_out : 0.01*1.65
+    radius_in : 0.01
+    width_in : 6.29e-3
+  volute :
+    radius_out : 0.01
+    radius_in : 0.01*1.65
+    radius_scroll : 0.045 # Assume constant volume in cone
+    width_in : 0.75*6.29e-3
+
+# Notes
+# - Negative impeller leading edge angle in paper (different convention?)
+# - Test volute
+# - Test  wall-divergence
+# - Test initial guess strategy
+# - Different configuration (no vaned diffuser)
