@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def load_data(filename):
+def load_data(filename, sheet_names = None):
     """
     Load performance data from an Excel file.
 
@@ -13,17 +13,12 @@ def load_data(filename):
     a pandas DataFrame containing the data from that sheet. The data is rounded to avoid precision loss when
     loading from Excel.
 
-    The excel file must contain the following sheets:
-
-        - `operation point`
-        - `plane`
-        - `cascade`
-        - `overall`
-
     Parameters
     ----------
     filename : str
         The name of the Excel file containing performance parameters.
+    sheet_names : list
+        List of the sheets to be exported. Default None extract all worksheets.
 
     Returns
     -------
@@ -35,13 +30,7 @@ def load_data(filename):
     # Read excel file
     performance_data = pd.read_excel(
         filename,
-        sheet_name=[
-            "operation point",
-            "plane",
-            "cascade",
-            # "stage",
-            "overall",
-        ],
+        sheet_name=sheet_names
     )
 
     # Round off to ignore precision loss by loading data from excel
