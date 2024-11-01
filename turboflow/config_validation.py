@@ -1,12 +1,14 @@
 from pydantic import BaseModel, ValidationError
-from .turbo_configurations import AxialTurbine
+from .turbo_configurations import AxialTurbine, CentrifugalCompressor
 from typing import Union
 import yaml
 import numbers
 import numpy as np
 from . import utilities
 
-TURBOMACHINERIES = ["axial_turbine"]
+TURBOMACHINERIES = [
+    "axial_turbine",
+    "centrifugal_compressor"]
 
 
 def convert_configuration_options(config):
@@ -176,7 +178,7 @@ def object_to_dict(obj):
 
 
 # Function to load and validate the configuration file
-def load_config(config_file_path: str, print_summary=True):
+def load_config(config_file_path: str, print_summary=False):
     """
     Load and process a configuration file.
 
@@ -222,8 +224,8 @@ def load_config(config_file_path: str, print_summary=True):
 
             if turbomachinery_type == "axial_turbine":
                 config = AxialTurbine(**config_data)
-            # elif turbomachinery_type == 'radial_turbine':
-            #     config =  RadialTurbineConfig(**config_data)
+            elif turbomachinery_type == 'centrifugal_compressor':
+                config =  CentrifugalCompressor(**config_data)
             else:
                 raise ValueError(
                     f"Unknown turbomachinery type: {turbomachinery_type}. Available turbomachineries are: {TURBOMACHINERIES}"
