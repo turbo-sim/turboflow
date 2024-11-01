@@ -95,7 +95,7 @@
 
 <div class="viewcode-block" id="load_data">
 <a class="viewcode-back" href="../../source/api/turboflow.plot_functions.html#turboflow.plot_functions.load_data">[docs]</a>
-<span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">sheet_names</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load performance data from an Excel file.</span>
 
@@ -104,17 +104,12 @@
 <span class="sd">    a pandas DataFrame containing the data from that sheet. The data is rounded to avoid precision loss when</span>
 <span class="sd">    loading from Excel.</span>
 
-<span class="sd">    The excel file must contain the following sheets:</span>
-
-<span class="sd">        - `operation point`</span>
-<span class="sd">        - `plane`</span>
-<span class="sd">        - `cascade`</span>
-<span class="sd">        - `overall`</span>
-
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    filename : str</span>
 <span class="sd">        The name of the Excel file containing performance parameters.</span>
+<span class="sd">    sheet_names : list</span>
+<span class="sd">        List of the sheets to be exported. Default None extract all worksheets.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -126,13 +121,7 @@
     <span class="c1"># Read excel file</span>
     <span class="n">performance_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span>
         <span class="n">filename</span><span class="p">,</span>
-        <span class="n">sheet_name</span><span class="o">=</span><span class="p">[</span>
-            <span class="s2">&quot;operation point&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;plane&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cascade&quot;</span><span class="p">,</span>
-            <span class="c1"># &quot;stage&quot;,</span>
-            <span class="s2">&quot;overall&quot;</span><span class="p">,</span>
-        <span class="p">],</span>
+        <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_names</span>
     <span class="p">)</span>
 
     <span class="c1"># Round off to ignore precision loss by loading data from excel</span>

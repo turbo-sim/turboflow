@@ -266,25 +266,18 @@ equals the specified value (<cite>row_value</cite>). It first finds the sheet co
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.plot_functions.load_data">
-<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.load_data" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">load_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#load_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.load_data" title="Link to this definition"></a></dt>
 <dd><p>Load performance data from an Excel file.</p>
 <p>This function imports an Excel file containing performance parameters. It reads the data into a dictionary
 named ‘performance_data’ where each key corresponds to a sheet name in the Excel file, and each value is
 a pandas DataFrame containing the data from that sheet. The data is rounded to avoid precision loss when
 loading from Excel.</p>
-<p>The excel file must contain the following sheets:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>operation point</cite></p></li>
-<li><p><cite>plane</cite></p></li>
-<li><p><cite>cascade</cite></p></li>
-<li><p><cite>overall</cite></p></li>
-</ul>
-</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>filename</strong><span class="classifier">str</span></dt><dd><p>The name of the Excel file containing performance parameters.</p>
+</dd>
+<dt><strong>sheet_names</strong><span class="classifier">list</span></dt><dd><p>List of the sheets to be exported. Default None extract all worksheets.</p>
 </dd>
 </dl>
 </dd>

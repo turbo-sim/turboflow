@@ -113,6 +113,153 @@
 <span class="sd">Available solvers for performance analysis.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="compute_performance">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.compute_performance">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_performance</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">,</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">export_results</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">out_dir</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
+    <span class="n">out_filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="c1"># Get list of operating points</span>
+    <span class="n">operation_points</span> <span class="o">=</span> <span class="n">generate_operation_points</span><span class="p">(</span><span class="n">operation_points</span><span class="p">)</span>
+    
+    <span class="c1"># Initialize lists to hold each solution and solver </span>
+    <span class="n">solution_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">solver_container</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Calculate performance at all operation points</span>
+    <span class="n">print_operation_points</span><span class="p">(</span><span class="n">operation_points</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">operation_point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">operation_points</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Computing operation point </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">operation_points</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">print_boundary_conditions</span><span class="p">(</span><span class="n">operation_point</span><span class="p">)</span>
+
+        <span class="c1"># Update initial guess</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">closest_x</span><span class="p">,</span> <span class="n">closest_index</span> <span class="o">=</span> <span class="n">find_closest_operation_point</span><span class="p">(</span>
+                <span class="n">operation_point</span><span class="p">,</span>
+                <span class="n">operation_points</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span>  <span class="c1"># Use up to the previous point</span>
+                <span class="n">solution_data</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span>  <span class="c1"># Use solutions up to the previous point</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Using solution from point </span><span class="si">{</span><span class="n">closest_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> as initial guess&quot;</span><span class="p">)</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">closest_x</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Compute performance</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="n">compute_single_operation_point</span><span class="p">(</span>
+                                <span class="n">operation_point</span><span class="p">,</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;initial_guess&quot;</span><span class="p">],</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
+                                <span class="p">)</span>
+
+            <span class="c1"># Collect solution and solver</span>
+            <span class="n">solution_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">vars_real</span><span class="p">)</span>
+            <span class="n">solver_container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">handle_failure</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">stop_on_failure</span><span class="p">)</span>
+            <span class="n">solver_container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Print final report</span>
+    <span class="n">print_simulation_summary</span><span class="p">(</span><span class="n">solver_container</span><span class="p">)</span>
+
+    <span class="c1"># Export results</span>
+    <span class="k">if</span> <span class="n">export_results</span><span class="p">:</span>
+        <span class="n">export_results_excel</span><span class="p">(</span><span class="n">solver_container</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">out_filename</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">solver_container</span></div>
+
+
+<div class="viewcode-block" id="handle_failure">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.handle_failure">[docs]</a>
+<span class="k">def</span> <span class="nf">handle_failure</span><span class="p">(</span><span class="n">point_index</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">stop_on_failure</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Computation of point </span><span class="si">{</span><span class="n">point_index</span><span class="si">}</span><span class="s2"> failed&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Error: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">stop_on_failure</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="export_results_excel">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.export_results_excel">[docs]</a>
+<span class="k">def</span> <span class="nf">export_results_excel</span><span class="p">(</span><span class="n">solver_container</span><span class="p">,</span> <span class="n">out_dir</span><span class="p">,</span> <span class="n">out_filename</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export results to excel file</span>
+<span class="sd">    Each component has a distinct sheet in the excel file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">RESULTS_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">,</span> <span class="s2">&quot;boundary_conditions&quot;</span><span class="p">,</span> <span class="s2">&quot;impeller&quot;</span><span class="p">,</span> <span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">,</span> <span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">,</span> <span class="s2">&quot;volute&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Initialize results structures</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="p">:</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">solver_container</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">RESULTS_KEYS</span><span class="p">}</span>
+    <span class="n">solver_data</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Loop through each solver result in the container</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">solver</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">solver_container</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If solver failed, skip or add a placeholder</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
+            <span class="n">solver_data</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
+            <span class="k">continue</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Performance data</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="c1"># For components (impeller etc.)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">,</span> <span class="s2">&quot;exit_plane&quot;</span><span class="p">})):</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">],</span> <span class="s2">&quot;_in&quot;</span><span class="p">),</span> 
+                        <span class="o">**</span><span class="n">utils</span><span class="o">.</span><span class="n">add_string_to_keys</span><span class="p">(</span><span class="n">val</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">],</span> <span class="s2">&quot;_out&quot;</span><span class="p">)})</span>
+                
+                <span class="c1"># For entries with </span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+
+            <span class="c1"># Solver data</span>
+            <span class="n">solver_data</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;completed&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                <span class="s2">&quot;grad_count&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;grad_count&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;func_count&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;func_count_total&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;func_count_total&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;norm_residual&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;norm_residual&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;norm_step&quot;</span><span class="p">:</span> <span class="n">solver</span><span class="o">.</span><span class="n">convergence_history</span><span class="p">[</span><span class="s2">&quot;norm_step&quot;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">})</span>
+
+
+
+    <span class="c1"># Convert lists to a DataFrame</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+    <span class="n">results</span><span class="p">[</span><span class="s2">&quot;solver&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">solver_data</span><span class="p">)</span>
+
+    <span class="c1"># Create a directory to save simulation results</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
+
+    <span class="c1"># Define filename with unique date-time identifier</span>
+    <span class="k">if</span> <span class="n">out_filename</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
+        <span class="n">out_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;performance_analysis_</span><span class="si">{</span><span class="n">current_time</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_filename</span><span class="si">}</span><span class="s2">.xlsx&quot;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;openpyxl&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sheet_name</span><span class="p">,</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Write each DataFrame to a specific sheet</span>
+            <span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheet_name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results successfully exported to </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span></div>
+
+
 <div class="viewcode-block" id="compute_single_operation_point">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point">[docs]</a>
 <span class="k">def</span> <span class="nf">compute_single_operation_point</span><span class="p">(</span>
@@ -121,9 +268,6 @@
     <span class="n">geometry</span><span class="p">,</span>
     <span class="n">simulation_options</span><span class="p">,</span>
     <span class="n">solver_options</span><span class="p">,</span>
-    <span class="n">out_dir</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
-    <span class="n">out_filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">export_results</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
 
     <span class="c1"># Initialize problem object</span>
@@ -134,39 +278,33 @@
     <span class="c1"># Get solver method array</span>
     <span class="n">solver_methods</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span> <span class="o">+</span> <span class="p">[</span><span class="n">method</span> <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">SOLVER_MAP</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]]</span>
 
-    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
-    <span class="n">problem</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
-    <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+    <span class="c1"># Solve operation point</span>
+    <span class="n">initial_guesses</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">get_initial_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">initial_guess</span> <span class="ow">in</span> <span class="n">initial_guesses</span><span class="p">:</span>
+        <span class="n">initial_guess_scaled</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
+        <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">solver_methods</span><span class="p">:</span>
+            <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">func_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">e</span> 
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Error during solving: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">solver</span><span class="o">.</span><span class="n">success</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                    <span class="k">break</span>
+            
+        <span class="k">if</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+                    <span class="k">break</span>
     
     <span class="k">if</span> <span class="ow">not</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: All attempts failed to converge&quot;</span><span class="p">)</span>
         <span class="c1"># TODO: Add messages to Log file</span>
 
-    <span class="c1"># Export results</span>
-    <span class="n">overall</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;overall&quot;</span><span class="p">]</span>
-    <span class="n">overall</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="p">:</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">overall</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-    <span class="n">overall</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">overall</span><span class="p">)</span>
-    <span class="n">planes</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;planes&quot;</span><span class="p">]</span>
-
-    <span class="k">if</span> <span class="n">export_results</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">out_dir</span><span class="p">):</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">out_dir</span><span class="p">)</span>
-
-        <span class="c1"># Define filename with unique date-time identifier</span>
-        <span class="k">if</span> <span class="n">out_filename</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H-%M-%S&quot;</span><span class="p">)</span>
-            <span class="n">out_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cc_</span><span class="si">{</span><span class="n">current_time</span><span class="si">}</span><span class="s2">&quot;</span>
-
-        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_filename</span><span class="si">}</span><span class="s2">.xlsx&quot;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;openpyxl&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span>
-            <span class="c1"># Save the dictionary DataFrame to the first sheet</span>
-            <span class="n">overall</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Overall&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            
-            <span class="c1"># Save the original DataFrame to the second sheet</span>
-            <span class="n">planes</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Planes&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">solver</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">results</span></div>
+    <span class="k">return</span> <span class="n">solver</span></div>
 
 
 
@@ -250,45 +388,49 @@
 
 <div class="viewcode-block" id="generate_operation_points">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.generate_operation_points">[docs]</a>
-<span class="k">def</span> <span class="nf">generate_operation_points</span><span class="p">(</span><span class="n">performance_map</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">generate_operation_points</span><span class="p">(</span><span class="n">operation_points</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generates a list of dictionaries representing all possible combinations of</span>
-<span class="sd">    operation points from a given performance map. The performance map is a</span>
-<span class="sd">    dictionary where keys represent parameter names and values are the ranges</span>
-<span class="sd">    of values for those parameters. The function ensures that the combinations</span>
-<span class="sd">    are generated such that &#39;p0_in&#39; and</span>
-<span class="sd">    &#39;mass_flow_rate&#39; are the last ones to vary, effectively making them the first</span>
-<span class="sd">    parameters to sweep through in the operation points.</span>
+<span class="sd">    operation points from a given input. If the input is a dictionary with ranges,</span>
+<span class="sd">    it generates all combinations; if it&#39;s a list or array, it directly returns the</span>
+<span class="sd">    operation points.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    - performance_map (dict): A dictionary with parameter names as keys and</span>
-<span class="sd">      lists of parameter values as values.</span>
+<span class="sd">    - operation_points (dict or list/np.ndarray): A dictionary with parameter names as</span>
+<span class="sd">      keys and lists of parameter values as values, or a precomputed list of</span>
+<span class="sd">      operation points.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    - operation_points (list of dict): A list of dictionaries, each representing</span>
-<span class="sd">      a unique combination of parameters from the performance_map.</span>
+<span class="sd">      a unique combination of parameters from the performance map.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If input is already a list or array, return it as operation points</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operation_points</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">operation_points</span>
 
-    <span class="c1"># Make sure all values in the performance_map are iterables</span>
-    <span class="n">performance_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">performance_map</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="c1"># If input is a dictionary, generate operation points by creating all combinations</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">operation_points</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># Ensure all values in the performance_map are iterables</span>
+        <span class="n">performance_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">ensure_iterable</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">operation_points</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
-    <span class="c1"># Reorder performance map keys so first sweep is always through pressure</span>
-    <span class="n">priority_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">,</span> <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
-    <span class="n">other_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">performance_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">priority_keys</span><span class="p">]</span>
-    <span class="n">keys_order</span> <span class="o">=</span> <span class="n">other_keys</span> <span class="o">+</span> <span class="n">priority_keys</span>
-    <span class="n">performance_map</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">k</span><span class="p">:</span> <span class="n">performance_map</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys_order</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">performance_map</span>
-    <span class="p">}</span>
+        <span class="c1"># Reorder performance map keys so &#39;p0_in&#39; and &#39;mass_flow_rate&#39; are prioritized last</span>
+        <span class="n">priority_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">,</span> <span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+        <span class="n">other_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">performance_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">priority_keys</span><span class="p">]</span>
+        <span class="n">keys_order</span> <span class="o">=</span> <span class="n">other_keys</span> <span class="o">+</span> <span class="n">priority_keys</span>
+        <span class="n">performance_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">performance_map</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys_order</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">performance_map</span><span class="p">}</span>
 
-    <span class="c1"># Create all combinations of operation points</span>
-    <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">performance_map</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
-    <span class="n">operation_points</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">combination</span><span class="p">))</span> <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">)</span>
-    <span class="p">]</span>
+        <span class="c1"># Generate all combinations of operation points</span>
+        <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">performance_map</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">operation_points</span> <span class="o">=</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">combination</span><span class="p">))</span> <span class="k">for</span> <span class="n">combination</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">)]</span>
+        
+        <span class="k">return</span> <span class="n">operation_points</span>
 
-    <span class="k">return</span> <span class="n">operation_points</span></div>
+    <span class="c1"># Raise an error if input is neither a dict nor a list/array</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;operation_points must be either a list of dicts or a dict with ranges.&quot;</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
 
 
 
@@ -324,19 +466,23 @@
 <span class="c1"># ------------------------------------------------------------------------------------------ #</span>
 <span class="c1"># ------------------------------------------------------------------------------------------ #</span>
 
-
 <div class="viewcode-block" id="CentrifugalCompressorProblem">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem">[docs]</a>
 <span class="k">class</span> <span class="nc">CentrifugalCompressorProblem</span><span class="p">(</span><span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemProblem</span><span class="p">):</span>
-    
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">simulation_options</span><span class="p">):</span>
         
         <span class="c1"># Process turbine geometry</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">calculate_full_geometry</span><span class="p">(</span><span class="n">geometry</span><span class="p">)</span>
 
-        <span class="c1"># Initialize other attributes</span>
+        <span class="c1"># Initialize simulation options</span>
+        <span class="c1"># Specify loss model for each component if not given</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span> <span class="o">=</span> <span class="n">simulation_options</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">simulation_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="p">{</span><span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;loss_coefficient&quot;</span><span class="p">}:</span>
+            <span class="n">loss_model</span> <span class="o">=</span> <span class="n">simulation_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;loss_model&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="p">:</span> <span class="n">loss_model</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+
+        <span class="c1"># Initialize list of keys for the independent variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
 
 <div class="viewcode-block" id="CentrifugalCompressorProblem.residual">
@@ -345,6 +491,9 @@
         
         <span class="c1"># Create dictionary of scaled variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+        <span class="c1"># Create dictionary of real variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vars_real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vars_scaled</span><span class="p">,</span> <span class="n">to_normalized</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         
         <span class="c1"># Evaluate centrifugal compressor</span>
         <span class="n">results</span> <span class="o">=</span> <span class="n">flow</span><span class="o">.</span><span class="n">evaluate_centrifugal_compressor</span><span class="p">(</span>
@@ -394,40 +543,39 @@
         <span class="c1"># Rename variables</span>
         <span class="n">p0_in</span> <span class="o">=</span> <span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
         <span class="n">T0_in</span> <span class="o">=</span> <span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;T0_in&quot;</span><span class="p">]</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
 
         <span class="c1"># Compute stagnation properties at inlet</span>
         <span class="n">state_in_stag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">)</span>
         <span class="n">h0_in</span> <span class="o">=</span> <span class="n">state_in_stag</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
         <span class="n">s_in</span> <span class="o">=</span> <span class="n">state_in_stag</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
 
-        <span class="c1"># Store the inlet stagnation (h,s) for the first stage</span>
+        <span class="c1"># Store the inlet stagnation (h,s) for the first plane</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;h0_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">h0_in</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;s_in&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">s_in</span>
 
-        <span class="c1"># Calculate max velocity for a compression to the critical pressure</span>
-        <span class="c1"># p_crit = self.fluid.critical_point[&quot;p&quot;]</span>
-        <span class="n">critical_properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">_compute_critical_point</span><span class="p">()</span>
-        <span class="n">p_crit</span> <span class="o">=</span> <span class="n">critical_properties</span><span class="p">[</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
-        <span class="n">properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p_crit</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
-        <span class="n">h_max</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
-        <span class="n">v_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h_max</span> <span class="o">-</span> <span class="n">h0_in</span><span class="p">))</span>
+        <span class="c1"># Calculate reference velocity</span>
+        <span class="n">u_out</span> <span class="o">=</span> <span class="n">omega</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+        <span class="n">h0_max</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">ref_props_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p0_in</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+        <span class="n">h_ref_min</span> <span class="o">=</span> <span class="n">ref_props_min</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">h0_max</span> <span class="o">-</span> <span class="n">h_ref_min</span><span class="p">))</span>
 
-        <span class="c1"># Calculate entropy for zero compression with maximum enthalpy</span>
-        <span class="n">properties</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassP_INPUTS</span><span class="p">,</span> <span class="n">h_max</span><span class="p">,</span> <span class="n">p0_in</span><span class="p">)</span>
-        <span class="n">s_max</span> <span class="o">=</span> <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+        <span class="c1"># Calculate max entropy</span>
+        <span class="n">s_max</span> <span class="o">=</span> <span class="n">s_in</span> <span class="o">+</span> <span class="n">u_out</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">T0_in</span>
 
         <span class="c1"># Define reference_values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;s_range&quot;</span><span class="p">:</span> <span class="n">s_max</span> <span class="o">-</span> <span class="n">s_in</span><span class="p">,</span>
             <span class="s2">&quot;s_min&quot;</span><span class="p">:</span> <span class="n">s_in</span><span class="p">,</span>
-            <span class="s2">&quot;v_max&quot;</span><span class="p">:</span> <span class="n">v_max</span><span class="p">,</span>
+            <span class="s2">&quot;v_max&quot;</span><span class="p">:</span> <span class="n">v0</span><span class="p">,</span>
             <span class="s2">&quot;angle_range&quot;</span><span class="p">:</span> <span class="mi">180</span><span class="p">,</span>
             <span class="s2">&quot;angle_min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="k">return</span> </div>
+        <span class="k">return</span></div>
 
-
+      
 <div class="viewcode-block" id="CentrifugalCompressorProblem.scale_values">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.scale_values">[docs]</a>
     <span class="k">def</span> <span class="nf">scale_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variables</span><span class="p">,</span> <span class="n">to_normalized</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -447,7 +595,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># Load parameters</span>
-        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v0&quot;</span><span class="p">]</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
         <span class="n">s_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_range&quot;</span><span class="p">]</span>
         <span class="n">s_min</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;s_min&quot;</span><span class="p">]</span>
         <span class="n">angle_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;angle_range&quot;</span><span class="p">]</span>
@@ -463,7 +611,7 @@
                 <span class="n">scaled_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="p">(</span><span class="n">val</span> <span class="o">-</span> <span class="n">s_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">s_range</span> <span class="k">if</span> <span class="n">to_normalized</span> <span class="k">else</span> <span class="n">val</span> <span class="o">*</span> <span class="n">s_range</span> <span class="o">+</span> <span class="n">s_min</span>
                 <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">):</span>
                 <span class="n">scaled_variables</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
                     <span class="p">(</span><span class="n">val</span> <span class="o">-</span> <span class="n">angle_min</span><span class="p">)</span> <span class="o">/</span> <span class="n">angle_range</span>
                     <span class="k">if</span> <span class="n">to_normalized</span>
@@ -499,8 +647,416 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
         <span class="c1"># Recreate the &#39;fluid&#39; attribute</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">Fluid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;fluid_name&quot;</span><span class="p">])</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span> <span class="o">=</span> <span class="n">props</span><span class="o">.</span><span class="n">Fluid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;fluid_name&quot;</span><span class="p">])</span>
 
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_initial_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_initial_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_initial_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_guess</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        3 options:</span>
+<span class="sd">            - Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically</span>
+<span class="sd">            - Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best </span>
+<span class="sd">            - Give complete set (real values)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">valid_keys_1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_out&quot;</span><span class="p">]</span>
+        <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_out&quot;</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
+        <span class="n">check</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+        <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+        <span class="k">if</span> <span class="n">check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># Initial guess determined from heurustic guess, with given parameters</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+                <span class="c1"># Several initial guesses</span>
+                <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">])):</span>
+                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                    <span class="n">initial_guesses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heuristic_guess</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Single initial guess</span>
+                <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">])</span>
+                <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">heuristic_guess</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># Generate initial guess using latin hypercube sampling</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">]]</span>
+
+            <span class="n">n_samples</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
+            <span class="n">heuristic_inputs</span> <span class="o">=</span> <span class="n">latin_hypercube_sampling</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
+            <span class="n">norm_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">failures</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">heuristic_input</span> <span class="ow">in</span> <span class="n">heuristic_inputs</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">heuristic_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">heuristic_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">heuristic_guess</span><span class="p">)</span> <span class="c1"># TODO: Add scaling</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> 
+                    <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+                    <span class="n">residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
+                    <span class="n">norm_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">residual</span><span class="p">))</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="n">failures</span> <span class="o">+=</span> <span class="mi">1</span> 
+                    <span class="n">norm_residuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating heuristic inital guesses from latin hypercube sampling&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of failures: </span><span class="si">{</span><span class="n">failures</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">n_samples</span><span class="si">}</span><span class="s2"> samples&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Least norm of residuals: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">heuristic_input</span> <span class="o">=</span> <span class="n">heuristic_inputs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)]</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">,</span> <span class="n">heuristic_input</span><span class="p">))</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">heuristic_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">heuristic_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Simply return the initial guess given</span>
+            <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">initial_guesses</span></div>
+
+    
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_heuristic_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_heuristic_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_heuristic_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eta_tt</span><span class="p">,</span> <span class="n">phi_out</span><span class="p">):</span>
+
+        <span class="c1"># Check vaneless diffuser model</span>
+        <span class="n">vaneless_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser_model&quot;</span><span class="p">]</span>
+
+        <span class="c1"># initialize initial guess dictionary</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Prepare first input</span>
+        <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;eta_tt&quot;</span> <span class="p">:</span> <span class="n">eta_tt</span><span class="p">,</span>
+                <span class="s2">&quot;phi_out&quot;</span> <span class="p">:</span> <span class="n">phi_out</span><span class="p">}</span>
+
+        <span class="c1"># Get initial guess</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;impeller&quot;</span><span class="p">:</span>
+                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_impeller_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;vaneless_diffuser&quot;</span> <span class="ow">and</span> <span class="n">vaneless_model</span> <span class="o">==</span> <span class="s2">&quot;algebraic&quot;</span><span class="p">:</span>
+                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">:</span>
+                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaned_diffuser_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;volute&quot;</span><span class="p">:</span>
+                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_volute_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+            <span class="c1"># Store guess</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">initial_guess</span><span class="p">,</span> <span class="o">**</span><span class="n">guess</span><span class="p">}</span>
+
+            <span class="c1"># Prepare calculation of next component</span>
+            <span class="nb">input</span> <span class="o">=</span> <span class="n">exit_state</span>
+
+        <span class="k">return</span> <span class="n">initial_guess</span></div>
+
+    
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_impeller_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_impeller_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_impeller_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+
+        <span class="c1"># Load boundary conditions</span>
+        <span class="n">p0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
+        <span class="n">T0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;T0_in&quot;</span><span class="p">]</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
+        <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+        <span class="n">alpha_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load input</span>
+        <span class="n">eta_tt</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">]</span>
+        <span class="n">phi_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># Load geometry</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
+        <span class="n">theta_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;trailing_edge_angle&quot;</span><span class="p">]</span>
+        <span class="n">r_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+        <span class="n">r_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">]</span>
+        <span class="n">A_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+        <span class="n">A_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;area_in&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load velocity scale</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_values</span><span class="p">[</span><span class="s2">&quot;v_max&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Evaluate inlet thermpdynamic state</span>
+        <span class="n">stagnation_props_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p0_in</span><span class="p">,</span> <span class="n">T0_in</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">stagnation_props_in</span><span class="p">[</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span><span class="o">/</span><span class="n">stagnation_props_in</span><span class="p">[</span><span class="s2">&quot;cv&quot;</span><span class="p">]</span>
+        <span class="n">h0_in</span> <span class="o">=</span> <span class="n">stagnation_props_in</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">a0_in</span> <span class="o">=</span> <span class="n">stagnation_props_in</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+        <span class="n">s_in</span> <span class="o">=</span> <span class="n">stagnation_props_in</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Approximate impeller exit total pressure</span>
+        <span class="n">u_out</span> <span class="o">=</span> <span class="n">r_out</span><span class="o">*</span><span class="n">omega</span>
+        <span class="n">Ma_out</span> <span class="o">=</span> <span class="n">u_out</span><span class="o">/</span><span class="n">a0_in</span>
+        <span class="n">slip_factor</span> <span class="o">=</span> <span class="mi">1</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="p">(</span><span class="mf">0.7</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">phi_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">theta_out</span><span class="p">)))</span>
+        <span class="n">p0_out</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">gamma</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">eta_tt</span><span class="o">*</span><span class="n">slip_factor</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">phi_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span><span class="o">*</span><span class="n">Ma_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">gamma</span><span class="o">/</span><span class="p">(</span><span class="n">gamma</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">*</span><span class="n">p0_in</span>
+
+        <span class="c1"># Get impeller exit total enthalpy and entropy</span>
+        <span class="n">isentropic_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">PSmass_INPUTS</span><span class="p">,</span> <span class="n">p0_out</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+        <span class="n">h0_out_is</span> <span class="o">=</span> <span class="n">isentropic_props_out</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">h0_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">h0_out_is</span><span class="o">-</span><span class="n">h0_in</span><span class="p">)</span><span class="o">/</span><span class="n">eta_tt</span> <span class="o">+</span> <span class="n">h0_in</span>
+        <span class="n">stagnation_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassP_INPUTS</span><span class="p">,</span> <span class="n">h0_out</span><span class="p">,</span> <span class="n">p0_out</span><span class="p">)</span>
+        <span class="n">s_out</span> <span class="o">=</span> <span class="n">stagnation_props_out</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Get inlet velocity</span>
+        <span class="k">def</span> <span class="nf">calculate_inlet_residual</span><span class="p">(</span><span class="n">v_scaled</span><span class="p">):</span>
+
+            <span class="c1"># Calculate velocity triangle</span>
+            <span class="n">u_in</span> <span class="o">=</span> <span class="n">r_in</span><span class="o">*</span><span class="n">omega</span>
+            <span class="n">v_in</span> <span class="o">=</span> <span class="n">v_scaled</span><span class="o">*</span><span class="n">v0</span>
+            <span class="n">v_m_in</span> <span class="o">=</span> <span class="n">v_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)</span>
+            <span class="n">v_t_in</span> <span class="o">=</span> <span class="n">v_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)</span>
+            <span class="n">w_m_in</span> <span class="o">=</span> <span class="n">v_m_in</span>
+            <span class="n">w_t_in</span> <span class="o">=</span> <span class="n">v_t_in</span> <span class="o">-</span> <span class="n">u_in</span>
+            <span class="n">w_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w_m_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">w_t_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>   
+            <span class="n">beta_in</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">(</span><span class="n">w_t_in</span><span class="o">/</span><span class="n">w_m_in</span><span class="p">)</span>
+
+            <span class="n">velocity_triangle_in</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_t&quot;</span> <span class="p">:</span> <span class="n">v_t_in</span><span class="p">,</span>
+                    <span class="s2">&quot;v_m&quot;</span> <span class="p">:</span> <span class="n">v_m_in</span><span class="p">,</span>
+                    <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_in</span><span class="p">,</span>
+                    <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_in</span><span class="p">,</span>
+                    <span class="s2">&quot;w_t&quot;</span> <span class="p">:</span> <span class="n">w_t_in</span><span class="p">,</span>
+                    <span class="s2">&quot;w_m&quot;</span> <span class="p">:</span> <span class="n">w_m_in</span><span class="p">,</span>
+                    <span class="s2">&quot;w&quot;</span> <span class="p">:</span> <span class="n">w_in</span><span class="p">,</span>
+                    <span class="s2">&quot;beta&quot;</span> <span class="p">:</span> <span class="n">beta_in</span><span class="p">,</span>
+                    <span class="s2">&quot;blade_speed&quot;</span> <span class="p">:</span> <span class="n">u_in</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+            <span class="c1"># Calculate thermodynamic state</span>
+            <span class="n">h_in</span> <span class="o">=</span> <span class="n">h0_in</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">h0_rel_in</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">w_in</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">static_props_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_in</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+            <span class="n">relative_props_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h0_rel_in</span><span class="p">,</span> <span class="n">s_in</span><span class="p">)</span>
+
+            <span class="c1"># Calculate mass flow rate nad rothalpy</span>
+            <span class="n">m_in</span> <span class="o">=</span> <span class="n">static_props_in</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_m_in</span><span class="o">*</span><span class="n">A_in</span>
+            <span class="n">rothalpy_in</span> <span class="o">=</span> <span class="n">h0_rel_in</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">u_in</span><span class="o">**</span><span class="mi">2</span>
+
+            <span class="c1"># Evaluate mass flow rate residual</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">m_in</span> <span class="o">-</span> <span class="n">mass_flow_rate</span> 
+
+            <span class="n">check_in</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_rate&quot;</span> <span class="p">:</span> <span class="n">m_in</span><span class="p">,</span>
+                        <span class="s2">&quot;rothalpy&quot;</span> <span class="p">:</span> <span class="n">rothalpy_in</span><span class="p">,</span>
+                        <span class="s2">&quot;s_in&quot;</span> <span class="p">:</span> <span class="n">s_in</span><span class="p">}</span>
+
+            <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">velocity_triangle_in</span><span class="p">,</span> <span class="n">check_in</span>
+        
+        <span class="k">def</span> <span class="nf">calculate_inlet_velocity</span><span class="p">():</span>
+
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">optimize</span><span class="o">.</span><span class="n">root_scalar</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">calculate_inlet_residual</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">method</span> <span class="o">=</span> <span class="s2">&quot;secant&quot;</span><span class="p">,</span> <span class="n">x0</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span>
+            <span class="n">delta_h</span><span class="p">,</span> <span class="n">velocity_triangle_in</span><span class="p">,</span> <span class="n">check_in</span>  <span class="o">=</span> <span class="n">calculate_inlet_residual</span><span class="p">(</span><span class="n">sol</span><span class="o">.</span><span class="n">root</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">velocity_triangle_in</span><span class="p">,</span> <span class="n">check_in</span>
+
+        <span class="n">velocity_triangle_in</span><span class="p">,</span> <span class="n">check_in</span> <span class="o">=</span> <span class="n">calculate_inlet_velocity</span><span class="p">()</span>
+
+        <span class="c1"># Calculate exit state</span>
+        <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">phi_out</span><span class="o">*</span><span class="n">u_out</span>
+        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">slip_factor</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">phi_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span><span class="o">*</span><span class="n">u_out</span>
+        <span class="n">v_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v_t_out</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">v_m_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">(</span><span class="n">v_t_out</span><span class="o">/</span><span class="n">v_m_out</span><span class="p">)</span>
+        <span class="n">w_m_out</span> <span class="o">=</span> <span class="n">v_m_out</span>
+        <span class="n">w_t_out</span> <span class="o">=</span> <span class="n">v_t_out</span> <span class="o">-</span> <span class="n">u_out</span>
+        <span class="n">w_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w_t_out</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">w_m_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">beta_out</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">(</span><span class="n">w_t_out</span><span class="o">/</span><span class="n">w_m_out</span><span class="p">)</span>
+
+        <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_t&quot;</span> <span class="p">:</span> <span class="n">v_t_out</span><span class="p">,</span>
+                    <span class="s2">&quot;v_m&quot;</span> <span class="p">:</span> <span class="n">v_m_out</span><span class="p">,</span>
+                    <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+                    <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span><span class="p">,</span>
+                    <span class="s2">&quot;w_t&quot;</span> <span class="p">:</span> <span class="n">w_t_out</span><span class="p">,</span>
+                    <span class="s2">&quot;w_m&quot;</span> <span class="p">:</span> <span class="n">w_m_out</span><span class="p">,</span>
+                    <span class="s2">&quot;w&quot;</span> <span class="p">:</span> <span class="n">w_out</span><span class="p">,</span>
+                    <span class="s2">&quot;beta&quot;</span> <span class="p">:</span> <span class="n">beta_out</span><span class="p">,</span>
+                    <span class="s2">&quot;blade_speed&quot;</span> <span class="p">:</span> <span class="n">u_out</span><span class="p">,</span>
+                    <span class="p">}</span>
+        
+        <span class="c1"># Get thermophysical properties</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">h0_rel_out</span> <span class="o">=</span> <span class="n">h_out</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">w_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">static_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">HmassSmass_INPUTS</span><span class="p">,</span> <span class="n">h_out</span><span class="p">,</span> <span class="n">s_out</span><span class="p">)</span>
+
+        <span class="c1"># Calculate mass flow rate and rothalpy</span>
+        <span class="n">m_out</span> <span class="o">=</span> <span class="n">static_props_out</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span><span class="o">*</span><span class="n">v_m_out</span><span class="o">*</span><span class="n">A_out</span>
+        <span class="n">rothalpy_out</span> <span class="o">=</span> <span class="n">h0_rel_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">static_props_out</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Store initial guess</span>
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;v_in_impeller&quot;</span> <span class="p">:</span> <span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;w_out_impeller&quot;</span> <span class="p">:</span> <span class="n">w_out</span><span class="p">,</span>
+                    <span class="s2">&quot;beta_out_impeller&quot;</span> <span class="p">:</span> <span class="n">beta_out</span><span class="p">,</span>
+                    <span class="s2">&quot;s_out_impeller&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
+                    <span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">exit_plane</span></div>
+
+
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_vaneless_diffuser_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guess constant alpha</span>
+<span class="sd">        Simple correlation for static enthalpy loss coefficient</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load input</span>
+        <span class="n">alpha_in</span>  <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+        <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+        <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+        <span class="n">h_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load boundary conditions</span>
+        <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load geometry</span>
+        <span class="n">r_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+        <span class="n">r_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;radius_in&quot;</span><span class="p">]</span>
+        <span class="n">b_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
+        <span class="n">A_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load model options</span>
+        <span class="n">Cf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;skin_friction&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit velocity</span>
+        <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">alpha_in</span>
+        <span class="n">delta_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)))</span>
+        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">r_in</span><span class="o">*</span><span class="n">delta_M</span>
+        <span class="n">v_out</span> <span class="o">=</span> <span class="n">v_t_out</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+        <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+        <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+            <span class="s2">&quot;v_t&quot;</span> <span class="p">:</span> <span class="n">v_t_out</span><span class="p">,</span>
+            <span class="s2">&quot;v_m&quot;</span> <span class="p">:</span> <span class="n">v_m_out</span><span class="p">,</span>
+            <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Calculate exit entropy</span>
+        <span class="n">d_out</span> <span class="o">=</span> <span class="n">mass_flow_rate</span><span class="o">/</span><span class="p">(</span><span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span><span class="o">*</span><span class="n">A_out</span><span class="p">)</span>
+        <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">static_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">DmassHmass_INPUTS</span><span class="p">,</span> <span class="n">d_out</span><span class="p">,</span> <span class="n">h_out</span><span class="p">)</span>
+        <span class="n">s_out</span> <span class="o">=</span> <span class="n">static_props_out</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;v_out_vaneless_diffuser&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+                    <span class="s2">&quot;s_out_vaneless_diffuser&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
+                    <span class="s2">&quot;alpha_out_vaneless_diffuser&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span><span class="p">,</span>
+                    <span class="p">}</span>
+        
+        <span class="n">exit_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">static_props_out</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">exit_state</span></div>
+
+
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_vaned_diffuser_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_vaned_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Similar as vaneless diffuser</span>
+<span class="sd">        Assume zero deviation at exit </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Load input</span>
+        <span class="n">alpha_in</span>  <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+        <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+        <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+        <span class="n">h_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load boundary conditions</span>
+        <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load geometry</span>
+        <span class="n">r_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+        <span class="n">r_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;radius_in&quot;</span><span class="p">]</span>
+        <span class="n">b_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
+        <span class="n">A_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+        <span class="n">theta_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">][</span><span class="s2">&quot;trailing_edge_angle&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load model options</span>
+        <span class="n">Cf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;skin_friction&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit velocity</span>
+        <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span>
+        <span class="n">delta_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)))</span>
+        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">r_in</span><span class="o">*</span><span class="n">delta_M</span>
+        <span class="n">v_out</span> <span class="o">=</span> <span class="n">v_t_out</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+        <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+
+        <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+            <span class="s2">&quot;v_t&quot;</span> <span class="p">:</span> <span class="n">v_t_out</span><span class="p">,</span>
+            <span class="s2">&quot;v_m&quot;</span> <span class="p">:</span> <span class="n">v_m_out</span><span class="p">,</span>
+            <span class="s2">&quot;alpha&quot;</span> <span class="p">:</span> <span class="n">alpha_out</span>
+        <span class="p">}</span>
+        
+        <span class="c1"># Calculate exit entropy</span>
+        <span class="n">d_out</span> <span class="o">=</span> <span class="n">mass_flow_rate</span><span class="o">/</span><span class="p">(</span><span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span><span class="o">*</span><span class="n">A_out</span><span class="p">)</span>
+        <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">static_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">DmassHmass_INPUTS</span><span class="p">,</span> <span class="n">d_out</span><span class="p">,</span> <span class="n">h_out</span><span class="p">)</span>
+        <span class="n">s_out</span> <span class="o">=</span> <span class="n">static_props_out</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;v_out_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+                    <span class="s2">&quot;s_out_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
+                    <span class="p">}</span>
+        
+        <span class="n">exit_state</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">static_props_out</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">exit_state</span></div>
+
+
+<div class="viewcode-block" id="CentrifugalCompressorProblem.get_volute_guess">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_volute_guess">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_volute_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Guess constant density</span>
+<span class="sd">        Guess single velocity component at the exit</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Load input</span>
+        <span class="n">d_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+        <span class="n">h_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load boundary conditions</span>
+        <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Load geometry</span>
+        <span class="n">A_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;volute&quot;</span><span class="p">][</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Calculate exit velocity</span>
+        <span class="n">d_out</span> <span class="o">=</span> <span class="n">d_in</span>
+        <span class="n">v_out</span> <span class="o">=</span> <span class="n">mass_flow_rate</span><span class="o">/</span><span class="p">(</span><span class="n">d_out</span><span class="o">*</span><span class="n">A_out</span><span class="p">)</span>
+        <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+        <span class="p">}</span>
+
+
+        <span class="c1"># Calculate exit entropy</span>
+        <span class="n">h0_out</span> <span class="o">=</span> <span class="n">h_in</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">h_out</span> <span class="o">=</span> <span class="n">h0_out</span> <span class="o">-</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">static_props_out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fluid</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">cp</span><span class="o">.</span><span class="n">DmassHmass_INPUTS</span><span class="p">,</span> <span class="n">d_out</span><span class="p">,</span> <span class="n">h_out</span><span class="p">)</span>
+        <span class="n">s_out</span> <span class="o">=</span> <span class="n">static_props_out</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
+
+        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;v_out_volute&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
+                    <span class="s2">&quot;s_out_volute&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+        <span class="n">exit_plane</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">velocity_triangle_out</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">static_props_out</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">initial_guess</span><span class="p">,</span> <span class="n">exit_plane</span></div>
+</div>
 
 
 
@@ -614,7 +1170,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Flow angle in: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;alpha_in&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;.2f</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Total temperature in: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;T0_in&#39;</span><span class="p">]</span><span class="o">-</span><span class="mf">273.15</span><span class="si">:</span><span class="s2">&lt;.2f</span><span class="si">}</span><span class="s2"> degC&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Total pressure in: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;p0_in&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e5</span><span class="si">:</span><span class="s2">&lt;.3f</span><span class="si">}</span><span class="s2"> bar&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Mass flow rate: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;mass_flow_rate&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e5</span><span class="si">:</span><span class="s2">&lt;.3f</span><span class="si">}</span><span class="s2"> kg/s&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Mass flow rate: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;mass_flow_rate&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">&lt;.3f</span><span class="si">}</span><span class="s2"> kg/s&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="s1">&#39;Angular speed: &#39;</span><span class="si">:</span><span class="s2">&lt;</span><span class="si">{</span><span class="n">column_width</span><span class="si">}}</span><span class="s2"> </span><span class="si">{</span><span class="n">BC</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">60</span><span class="o">/</span><span class="mi">2</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="si">:</span><span class="s2">&lt;.1f</span><span class="si">}</span><span class="s2"> RPM&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span></div>
@@ -686,8 +1242,8 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]:</span>  <span class="c1"># Pa to kPa</span>
             <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="mf">1e3</span>
-        <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]:</span>  <span class="c1"># No change</span>
-            <span class="k">return</span> <span class="n">value</span>
+        <span class="c1"># elif key in [&quot;mass_flow_rate&quot;]:  # No change</span>
+        <span class="c1">#     return value</span>
         <span class="k">return</span> <span class="n">value</span>
 
     <span class="c1"># Process and format each operation point</span>

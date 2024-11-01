@@ -88,14 +88,16 @@
              
   <h1>Source code for turboflow.config_validation</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ValidationError</span>
-<span class="kn">from</span> <span class="nn">.turbo_configurations</span> <span class="kn">import</span> <span class="n">AxialTurbine</span>
+<span class="kn">from</span> <span class="nn">.turbo_configurations</span> <span class="kn">import</span> <span class="n">AxialTurbine</span><span class="p">,</span> <span class="n">CentrifugalCompressor</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
 
-<span class="n">TURBOMACHINERIES</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;axial_turbine&quot;</span><span class="p">]</span>
+<span class="n">TURBOMACHINERIES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;axial_turbine&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;centrifugal_compressor&quot;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="convert_configuration_options">
@@ -273,7 +275,7 @@
 <span class="c1"># Function to load and validate the configuration file</span>
 <div class="viewcode-block" id="load_config">
 <a class="viewcode-back" href="../../source/api/turboflow.config_validation.html#turboflow.config_validation.load_config">[docs]</a>
-<span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">print_summary</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">config_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">print_summary</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load and process a configuration file.</span>
 
@@ -319,8 +321,8 @@
 
             <span class="k">if</span> <span class="n">turbomachinery_type</span> <span class="o">==</span> <span class="s2">&quot;axial_turbine&quot;</span><span class="p">:</span>
                 <span class="n">config</span> <span class="o">=</span> <span class="n">AxialTurbine</span><span class="p">(</span><span class="o">**</span><span class="n">config_data</span><span class="p">)</span>
-            <span class="c1"># elif turbomachinery_type == &#39;radial_turbine&#39;:</span>
-            <span class="c1">#     config =  RadialTurbineConfig(**config_data)</span>
+            <span class="k">elif</span> <span class="n">turbomachinery_type</span> <span class="o">==</span> <span class="s1">&#39;centrifugal_compressor&#39;</span><span class="p">:</span>
+                <span class="n">config</span> <span class="o">=</span>  <span class="n">CentrifugalCompressor</span><span class="p">(</span><span class="o">**</span><span class="n">config_data</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Unknown turbomachinery type: </span><span class="si">{</span><span class="n">turbomachinery_type</span><span class="si">}</span><span class="s2">. Available turbomachineries are: </span><span class="si">{</span><span class="n">TURBOMACHINERIES</span><span class="si">}</span><span class="s2">&quot;</span>

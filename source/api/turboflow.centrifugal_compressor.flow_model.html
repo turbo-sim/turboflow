@@ -125,7 +125,7 @@ overall performance metrics, and returns these in a dictionary.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.centrifugal_compressor.flow_model.evaluate_impeller">
 <span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.flow_model.</span></span><span class="sig-name descname"><span class="pre">evaluate_impeller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">independents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_conditions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/flow_model.html#evaluate_impeller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.flow_model.evaluate_impeller" title="Link to this definition"></a></dt>
-<dd><p>Evaluate impelkler performance
+<dd><p>Evaluate impeller performance
 - Deviation calculated according to slip factor
 - Losses calculated according to correlation for loss coefficient</p>
 </dd></dl>
@@ -164,6 +164,14 @@ overall performance metrics, and returns these in a dictionary.</p>
 <p>Assumptions:
 - Single velocity component at volute exit
 - Incompressible flow in diffuser cone</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.flow_model.get_throat_gradient">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.flow_model.</span></span><span class="sig-name descname"><span class="pre">get_throat_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary_conditions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fluid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u_throat</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/flow_model.html#get_throat_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.flow_model.get_throat_gradient" title="Link to this definition"></a></dt>
+<dd><p>Get gradient of get_res_throat at point x</p>
+<p>Impeller: rothalpy is rothalpy, w2 is relative flow and u_throat is throat blade speed
+Stationary components: rothalpy is the stagnation enthalpy, w2 is absolute velocity and u_throat is zero</p>
 </dd></dl>
 
 <dl class="py function">

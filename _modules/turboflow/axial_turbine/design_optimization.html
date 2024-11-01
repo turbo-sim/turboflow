@@ -454,10 +454,10 @@
         
         <span class="c1"># Update design point </span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update_boundary_conditions</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;operation_points&quot;</span><span class="p">])</span>
 
         <span class="c1"># Adjust given variables according to choking model (remove excess variables)</span>
@@ -600,9 +600,10 @@
 
         <span class="c1"># Calculate angular speed</span>
         <span class="n">specific_speed</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
             <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
 
         <span class="c1"># Calculate mean radius</span>
         <span class="n">blade_jet_ratio</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span>
@@ -699,9 +700,10 @@
 
         <span class="c1"># Calculate angular speed</span>
         <span class="n">specific_speed</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;specific_speed&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_omega</span><span class="p">(</span>
             <span class="n">specific_speed</span><span class="p">,</span> <span class="n">mass_flow</span><span class="p">,</span> <span class="n">h0_in</span><span class="p">,</span> <span class="n">d_is</span><span class="p">,</span> <span class="n">h_is</span>
         <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operation_point</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span>
 
         <span class="c1"># Calculate mean radius</span>
         <span class="n">blade_jet_ratio</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="s2">&quot;blade_jet_ratio&quot;</span><span class="p">]</span>

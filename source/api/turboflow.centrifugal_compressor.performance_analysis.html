@@ -96,6 +96,18 @@
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_initial_guess" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_initial_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_initial_guess</span></code></a>(initial_guess)</p></td>
+<td><p>3 options:</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_vaned_diffuser_guess</span></code></a>(input)</p></td>
+<td><p>Similar as vaneless diffuser Assume zero deviation at exit</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_vaneless_diffuser_guess</span></code></a>(input)</p></td>
+<td><p>Guess constant alpha Simple correlation for static enthalpy loss coefficient</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_volute_guess" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_volute_guess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_volute_guess</span></code></a>(input)</p></td>
+<td><p>Guess constant density Guess single velocity component at the exit</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual" title="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual"><code class="xref py py-obj docutils literal notranslate"><span class="pre">residual</span></code></a>(x)</p></td>
 <td><p>Evaluate the system of equations for given decision variables.</p></td>
 </tr>
@@ -107,6 +119,60 @@
 </tr>
 </tbody>
 </table>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_heuristic_guess</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_impeller_guess</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_heuristic_guess">
+<span class="sig-name descname"><span class="pre">get_heuristic_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eta_tt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_heuristic_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_heuristic_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_impeller_guess">
+<span class="sig-name descname"><span class="pre">get_impeller_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_impeller_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_impeller_guess" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_initial_guess">
+<span class="sig-name descname"><span class="pre">get_initial_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_initial_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_initial_guess" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>3 options:</dt><dd><ul class="simple">
+<li><p>Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically</p></li>
+<li><p>Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best</p></li>
+<li><p>Give complete set (real values)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess">
+<span class="sig-name descname"><span class="pre">get_vaned_diffuser_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_vaned_diffuser_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess" title="Link to this definition"></a></dt>
+<dd><p>Similar as vaneless diffuser
+Assume zero deviation at exit</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess">
+<span class="sig-name descname"><span class="pre">get_vaneless_diffuser_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_vaneless_diffuser_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess" title="Link to this definition"></a></dt>
+<dd><p>Guess constant alpha
+Simple correlation for static enthalpy loss coefficient</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_volute_guess">
+<span class="sig-name descname"><span class="pre">get_volute_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.get_volute_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_volute_guess" title="Link to this definition"></a></dt>
+<dd><p>Guess constant density
+Guess single velocity component at the exit</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual">
 <span class="sig-name descname"><span class="pre">residual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#CentrifugalCompressorProblem.residual"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.residual" title="Link to this definition"></a></dt>
@@ -182,9 +248,21 @@ These are stored in the object’s internal state for further use in calculation
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point">
-<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_single_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operating_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#compute_single_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.compute_performance">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#compute_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.compute_performance" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">compute_single_operation_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operating_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_guess</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">geometry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">simulation_options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver_options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#compute_single_operation_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.compute_single_operation_point" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.export_results_excel">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">export_results_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solver_container</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#export_results_excel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.export_results_excel" title="Link to this definition"></a></dt>
+<dd><p>Export results to excel file
+Each component has a distinct sheet in the excel file</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.find_closest_operation_point">
@@ -212,25 +290,23 @@ These are stored in the object’s internal state for further use in calculation
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.generate_operation_points">
-<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">generate_operation_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">performance_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#generate_operation_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.generate_operation_points" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">generate_operation_points</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operation_points</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#generate_operation_points"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.generate_operation_points" title="Link to this definition"></a></dt>
 <dd><p>Generates a list of dictionaries representing all possible combinations of
-operation points from a given performance map. The performance map is a
-dictionary where keys represent parameter names and values are the ranges
-of values for those parameters. The function ensures that the combinations
-are generated such that ‘p0_in’ and
-‘mass_flow_rate’ are the last ones to vary, effectively making them the first
-parameters to sweep through in the operation points.</p>
+operation points from a given input. If the input is a dictionary with ranges,
+it generates all combinations; if it’s a list or array, it directly returns the
+operation points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>- performance_map (dict): A dictionary with parameter names as keys and</strong></dt><dd><p>lists of parameter values as values.</p>
+<dt><strong>- operation_points (dict or list/np.ndarray): A dictionary with parameter names as</strong></dt><dd><p>keys and lists of parameter values as values, or a precomputed list of
+operation points.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><dl class="simple">
-<dt>operation_points (list of dict): A list of dictionaries, each representing</dt><dd><p>a unique combination of parameters from the performance_map.</p>
+<dt>operation_points (list of dict): A list of dictionaries, each representing</dt><dd><p>a unique combination of parameters from the performance map.</p>
 </dd>
 </dl>
 </li>
@@ -263,6 +339,11 @@ for angle measurements and prevention of division by zero for very small values.
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.handle_failure">
+<span class="sig-prename descclassname"><span class="pre">turboflow.centrifugal_compressor.performance_analysis.</span></span><span class="sig-name descname"><span class="pre">handle_failure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_on_failure</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/centrifugal_compressor/performance_analysis.html#handle_failure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.centrifugal_compressor.performance_analysis.handle_failure" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.centrifugal_compressor.performance_analysis.latin_hypercube_sampling">

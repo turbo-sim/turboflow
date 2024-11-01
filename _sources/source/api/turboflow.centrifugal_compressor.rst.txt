@@ -12,7 +12,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   turboflow.centrifugal_compressor.choking_model
    turboflow.centrifugal_compressor.flow_model
    turboflow.centrifugal_compressor.geometry_model
    turboflow.centrifugal_compressor.loss_model

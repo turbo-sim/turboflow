@@ -137,15 +137,19 @@
     <span class="n">radius_tip_in</span> <span class="o">=</span> <span class="n">imp_geometry</span><span class="p">[</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span> <span class="c1"># Tip radius at inlet</span>
     <span class="n">radius_out</span> <span class="o">=</span> <span class="n">imp_geometry</span><span class="p">[</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span> <span class="c1"># Radius of impeller exit</span>
     <span class="n">width_out</span> <span class="o">=</span> <span class="n">imp_geometry</span><span class="p">[</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span> <span class="c1"># Blade with at impeller exit</span>
+    <span class="n">area_throat_ratio</span> <span class="o">=</span> <span class="n">imp_geometry</span><span class="p">[</span><span class="s2">&quot;area_throat_ratio&quot;</span><span class="p">]</span>
 
     <span class="c1"># Calculate geometry</span>
     <span class="n">radius_mean_in</span> <span class="o">=</span> <span class="p">(</span><span class="n">radius_tip_in</span> <span class="o">+</span> <span class="n">radius_hub_in</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="c1"># Mean radius at inlet</span>
+    <span class="n">width_in</span> <span class="o">=</span> <span class="n">radius_tip_in</span> <span class="o">-</span> <span class="n">radius_hub_in</span>
     <span class="n">A_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">radius_tip_in</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">radius_hub_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># Area inlet</span>
     <span class="n">A_out</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius_out</span><span class="o">*</span><span class="n">width_out</span> <span class="c1"># Area exit</span>
 
     <span class="n">new_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;radius_mean_in&quot;</span> <span class="p">:</span> <span class="n">radius_mean_in</span><span class="p">,</span>
+                      <span class="s2">&quot;width_in&quot;</span> <span class="p">:</span> <span class="n">width_in</span><span class="p">,</span>
                       <span class="s2">&quot;area_in&quot;</span> <span class="p">:</span> <span class="n">A_in</span><span class="p">,</span>
-                      <span class="s2">&quot;area_out&quot;</span> <span class="p">:</span> <span class="n">A_out</span><span class="p">}</span>
+                      <span class="s2">&quot;area_out&quot;</span> <span class="p">:</span> <span class="n">A_out</span><span class="p">,</span>
+                      <span class="s2">&quot;area_throat&quot;</span> <span class="p">:</span> <span class="n">A_in</span><span class="o">*</span><span class="n">area_throat_ratio</span><span class="p">}</span>
 
     <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">imp_geometry</span><span class="p">,</span> <span class="o">**</span><span class="n">new_parameters</span><span class="p">}</span> </div>
 
@@ -185,6 +189,7 @@
     <span class="n">theta_in</span> <span class="o">=</span> <span class="n">vd_geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span> <span class="c1"># Leading edge blade angle</span>
     <span class="n">theta_out</span> <span class="o">=</span> <span class="n">vd_geometry</span><span class="p">[</span><span class="s2">&quot;trailing_edge_angle&quot;</span><span class="p">]</span> <span class="c1"># Trailing edge blade angle</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">vd_geometry</span><span class="p">[</span><span class="s2">&quot;number_of_vanes&quot;</span><span class="p">]</span> <span class="c1"># Number of vanes</span>
+    <span class="n">throat_location_factor</span> <span class="o">=</span> <span class="n">vd_geometry</span><span class="p">[</span><span class="s2">&quot;throat_location_factor&quot;</span><span class="p">]</span>
 
     <span class="c1"># Calculate geometry</span>
     <span class="n">A_in</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_in</span><span class="o">*</span><span class="n">b_in</span> <span class="c1"># Area in</span>
@@ -193,6 +198,8 @@
     <span class="n">camber_angle</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">theta_in</span> <span class="o">-</span> <span class="n">theta_out</span><span class="p">)</span> <span class="c1"># Camber angle</span>
     <span class="n">solidity</span> <span class="o">=</span> <span class="n">z</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span> <span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_avg</span><span class="p">))</span> <span class="c1"># Solidity </span>
     <span class="n">loc_camber_max</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="nb">abs</span><span class="p">(</span><span class="n">theta_in</span> <span class="o">-</span> <span class="n">theta_avg</span><span class="p">)</span><span class="o">/</span><span class="n">camber_angle</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span> <span class="c1"># Location of max camber</span>
+    <span class="n">pitch</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">z</span>
+    <span class="n">b_throat</span> <span class="o">=</span> <span class="n">b_in</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">throat_location_factor</span><span class="p">)</span> <span class="o">+</span> <span class="n">b_out</span><span class="o">*</span><span class="n">throat_location_factor</span>
 
     <span class="n">new_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;area_out&quot;</span> <span class="p">:</span> <span class="n">A_out</span><span class="p">,</span>
                       <span class="s2">&quot;area_in&quot;</span> <span class="p">:</span> <span class="n">A_in</span><span class="p">,</span>
@@ -200,6 +207,8 @@
                       <span class="s2">&quot;camber_angle&quot;</span> <span class="p">:</span> <span class="n">camber_angle</span><span class="p">,</span>
                       <span class="s2">&quot;solidity&quot;</span> <span class="p">:</span> <span class="n">solidity</span><span class="p">,</span>
                       <span class="s2">&quot;loc_camber_max&quot;</span> <span class="p">:</span> <span class="n">loc_camber_max</span><span class="p">,</span>
+                      <span class="s2">&quot;pitch&quot;</span> <span class="p">:</span> <span class="n">pitch</span><span class="p">,</span>
+                      <span class="s2">&quot;width_throat&quot;</span> <span class="p">:</span> <span class="n">b_throat</span><span class="p">,</span>
                       <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">vd_geometry</span><span class="p">,</span> <span class="o">**</span><span class="n">new_parameters</span><span class="p">}</span> </div>
