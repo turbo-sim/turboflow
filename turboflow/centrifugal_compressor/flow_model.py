@@ -8,6 +8,8 @@ from .. import utilities as utils
 from .. import math
 import scipy.linalg
 import scipy.integrate
+from scipy.optimize._numdiff import approx_derivative
+
 
 
 def evaluate_centrifugal_compressor(
@@ -64,7 +66,7 @@ def evaluate_centrifugal_compressor(
 
 def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid, model_options, reference_values):
     """
-    Evaluate impelkler performance
+    Evaluate impeller performance
     - Deviation calculated according to slip factor
     - Losses calculated according to correlation for loss coefficient
     """
@@ -81,6 +83,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     w_out = independents["w_out_impeller"]*v_max 
     beta_out = independents["beta_out_impeller"]*angle_range + angle_min 
     s_out = independents["s_out_impeller"]*s_range + s_min
+    w_throat = independents["w_throat_impeller"]*v_max
 
     # Load input variables
     h0_in = input["h0_in"]
@@ -129,9 +132,11 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     stagnation_properties_in = fluid.get_props(cp.HmassSmass_INPUTS, h0_in, s_in)
     relative_properties_in = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel_in, s_in)
 
-    # evaluate inlet mass flow rate and rothalpy
+    # evaluate inlet mass flow rate, rothalpy and mach
     m_in = w_m_in*static_properties_in["d"]*A_in
     rothalpy = h0_rel_in - 0.5*u_in**2
+    Ma_in = v_in/static_properties_in["a"]
+    Ma_rel_in = w_in/static_properties_in["a"]
 
     # evaluate exit velocity triangle
     u_out = omega*r_out
@@ -164,19 +169,35 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
     isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_relative_properties_out, "0")}
 
-    # evaluate exit mass flow rate
+    # evaluate exit mass flow rate and Mach 
     m_out = static_properties_out["d"]*w_m_out*A_out
+    Ma_out = v_out/static_properties_out["a"]
+    Ma_rel_out = w_out/static_properties_out["a"]
+
+    # Evaluate throat residual
+    input_throat = {
+        "s_in" : s_in,
+        "rothalpy" : rothalpy,
+        "w_throat" : w_throat,
+    }
+    throat_residual, res = get_throat_gradient(input_throat, boundary_conditions, geometry, fluid, model_options, reference_values, u_throat = u_in)
 
     # Collect inlet plane and exit plane results 
     inlet_plane = {**velocity_triangle_in,
                    **static_properties_in,
                    **utils.add_string_to_keys(stagnation_properties_in, "0"),
-                   **utils.add_string_to_keys(relative_properties_in, "0_rel")}
+                   **utils.add_string_to_keys(relative_properties_in, "0_rel"),
+                   "Ma" : Ma_in,
+                   "Ma_rel" : Ma_rel_in,
+                   }
     
     exit_plane = {**velocity_triangle_out,
                    **static_properties_out,
                    **utils.add_string_to_keys(stagnation_properties_out, "0"),
                    **utils.add_string_to_keys(relative_properties_out, "0_rel"),
+                    "Ma" : Ma_out,
+                   "Ma_rel" : Ma_rel_out,
+                   "throat_mass_flow_res" : res, 
                    }
 
     # Evaluate loss coefficient
@@ -185,6 +206,8 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
         "exit_plane" : exit_plane,
         "geometry" : geometry,
         "isentropic" : isentropic_properties_out,
+        "factors" : model_options["factors"],
+        "boundary_conditions" : boundary_conditions,
     }
     loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "impeller")
     exit_plane = {**exit_plane, **loss_dict}
@@ -198,7 +221,8 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     resiudals = {"mass_flow_in" : (m_in-mass_flow_rate)/mass_flow_rate,
                  "mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
                  "losses" : loss_dict["loss_error"],
-                 "slip" : slip_velocity-slip_model}
+                 "slip" : slip_velocity-slip_model,
+                 "throat" : throat_residual}
 
     # Store impeller results
     results = {"inlet_plane" : inlet_plane,
@@ -247,9 +271,13 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     alpha_inc = alpha_in - theta_in
 
     # Calculate deviation angle and absolute flow angle
-    delta_0 = camber*(0.92*loc_camber_max**2 + 0.02*theta_out)/(np.sqrt(solidity) - 0.02*camber)
-    d_delta = np.exp(((1.5-(90-theta_in)/60)**2-3.3)*solidity)
-    alpha_out = theta_out + delta_0 + d_delta*alpha_inc
+    # delta_0 = camber*(0.92*loc_camber_max**2 + 0.02*theta_out)/(np.sqrt(solidity) - 0.02*camber)
+    # d_delta = np.exp(((1.5-(90-theta_in)/60)**2-3.3)*solidity)
+    # alpha_out = theta_out + delta_0 + d_delta*alpha_inc
+    # dev = {"delta_0" : delta_0,
+    #     "alpha_inc" : alpha_inc,
+        # "d_delta" : d_delta,
+    #     }
     alpha_out = theta_out
 
     # Calculate tangential and meridional velocity
@@ -261,11 +289,6 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
                    "v" : v_out,
                    "alpha" : alpha_out,
                    }
-    
-    dev = {"delta_0" : delta_0,
-           "alpha_inc" : alpha_inc,
-           "d_delta" : d_delta,
-           }
 
     # Calculate thermophysical properties
     h0_out = h0_in
@@ -276,13 +299,15 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
     isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
-    # Calculate mass flow rate
+    # Calculate mass flow rate and mach
     m_out = static_properties_out["d"]*v_m_out*A_out
+    Ma_out = v_out/static_properties_out["a"]
 
     # Collect exit plane results
     exit_plane = {**velocity_triangle_out,
                    **static_properties_out,
                    **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   "Ma" : Ma_out
                    }
 
     # Evaluate loss coefficient
@@ -291,9 +316,11 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
         "exit_plane" : exit_plane,
         "geometry" : geometry,
         "isentropic" : isentropic_properties_out,
+        "factors" : model_options["factors"],
+        "boundary_conditions" : boundary_conditions,
     }
     loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "vaned_diffuser")
-    exit_plane = {**exit_plane, **loss_dict, **dev}
+    exit_plane = {**exit_plane, **loss_dict}
 
     # Evaluate residuals
     resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
@@ -361,8 +388,8 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
     # Load boundary conditions
     mass_flow_rate = boundary_conditions["mass_flow_rate"]
 
-    # Load model options
-    Cf = model_options ["Cf"]
+    # Load model factors
+    Cf = model_options["factors"]["skin_friction"]
     loss_model = model_options["loss_model"]["vaneless_diffuser"]
 
     # Calculate tangential and meridional velocity
@@ -384,13 +411,15 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
     isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
     isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
-    # Calculate mass flow rate
+    # Calculate mass flow rate and mach 
     m_out = static_properties_out["d"]*v_m_out*A_out
+    Ma_out = v_out/static_properties_out["a"]
 
     # Collect exit plane results
     exit_plane = {**velocity_triangle_out,
                    **static_properties_out,
                    **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   "Ma" : Ma_out
                    }
 
     # Evaluate loss coefficient
@@ -398,8 +427,9 @@ def evaluate_vaneless_diffuser_algebraic(independents, input, boundary_condition
         "inlet_plane" : input,
         "exit_plane" : exit_plane,
         "geometry" : geometry,
-        "Cf" : Cf,
         "isentropic" : isentropic_properties_out,
+        "factors" : model_options["factors"],
+        "boundary_conditions" : boundary_conditions,
     }
     loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "vaneless_diffuser")
     exit_plane = {**exit_plane, **loss_dict}
@@ -440,8 +470,8 @@ def evaluate_vaneless_diffuser_1D(independents, input, boundary_conditions, geom
     phi = 0 # Diffuser channel is radial
 
     # Load model options
-    Cf = model_options["Cf"]
-    q_w = model_options["q_w"]
+    Cf = model_options["factors"]["skin_friction"]
+    q_w = model_options["factors"]["wall_heat_flux"]
 
     # Define integration interval
     m_out = r_out - r_in
@@ -579,7 +609,7 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     loss_model = model_options["loss_model"]["volute"]
 
     # Defin velocity triangle
-    velocity_triangle_out = {"v_out" : v_out}
+    velocity_triangle_out = {"v" : v_out}
 
     # Calculate thermophysical properties
     h0_out = h0_in
@@ -590,16 +620,18 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
     isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_stagnation_properties_out, "0")}
 
-    # Calculate mass flow rate
+    # Calculate mass flow rate and mach 
     m_out = static_properties_out["d"]*v_out*A_out
+    Ma_out = v_out/static_properties_out["a"]
 
-    # Evaluate scroll velocity (Assume incoimpressible flow in diffuser cone)
+    # Evaluate scroll velocity (Assume incompressible flow in diffuser cone)
     v_scroll = v_out*A_out/A_scroll
 
     # Collect exit plane results
     exit_plane = {**velocity_triangle_out,
                    **static_properties_out,
                    **utils.add_string_to_keys(stagnation_properties_out, "0"),
+                   "Ma" : Ma_out,
                    }
 
     # Evaluate losses 
@@ -607,7 +639,9 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
         "inlet_plane" : input,
         "exit_plane" : exit_plane,
         "geometry" : geometry,
-        "isentropic" : isentropic_properties_out, 
+        "isentropic" : isentropic_properties_out,
+        "factors" : model_options["factors"],
+        "boundary_conditions" : boundary_conditions, 
     }
     loss_dict = lm.evaluate_loss_model(loss_model, loss_input, "volute")
     exit_plane = {**exit_plane, **loss_dict}
@@ -657,16 +691,16 @@ def compute_overall_performance(results, fluid, geometry):
     # Calculate enthalpy for isentropic compression
     stagnation_properties = fluid.get_props(cp.PSmass_INPUTS, final_plane["p0"], first_plane["s"])
     h0_out_is = stagnation_properties["h"]
-    fluid.get_props(cp.PSmass_INPUTS, final_plane["p"], first_plane["s"])
-    h_out_is = stagnation_properties["h"]
+    static_properties = fluid.get_props(cp.PSmass_INPUTS, final_plane["p"], first_plane["s"])
+    h_out_is = static_properties["h"]
  
     # Calculate overall performance characteristics
     PR_tt = final_plane["p0"]/p0_in
     PR_ts = final_plane["p"]/p0_in
     power = mass_flow_rate*(final_plane["h0"]-first_plane["h0"])
     torque = mass_flow_rate*(abs(geometry["impeller"]["radius_out"]*impeller["exit_plane"]["v_t"]) - abs(geometry["impeller"]["radius_mean_in"]*impeller["inlet_plane"]["v_t"]))
-    efficiency_ts = mass_flow_rate*(h0_out_is - first_plane["h0"])/(omega*torque)*100
-    efficiency_tt = mass_flow_rate*(h_out_is - first_plane["h0"])/(omega*torque)*100
+    efficiency_ts = mass_flow_rate*(h_out_is - first_plane["h0"])/(omega*torque)*100
+    efficiency_tt = mass_flow_rate*(h0_out_is - first_plane["h0"])/(omega*torque)*100
 
     # Store all variables in dictionary
     overall = {
@@ -680,4 +714,63 @@ def compute_overall_performance(results, fluid, geometry):
 
     return overall
 
+def get_throat_gradient(input, boundary_conditions, geometry, fluid, model_options, reference_values, u_throat = 0):
+
+    """
+    Get gradient of get_res_throat at point x
+
+    Impeller: rothalpy is rothalpy, w2 is relative flow and u_throat is throat blade speed
+    Stationary components: rothalpy is the stagnation enthalpy, w2 is absolute velocity and u_throat is zero  
+    """
+
+    # Load input
+    w_throat = input["w_throat"]
+    rothalpy = input["rothalpy"]
+    s_in = input["s_in"]
+
+    # Load boundary conditions
+    mass_flow_rate = boundary_conditions["mass_flow_rate"]
+
+    # Load geometry
+    A_throat = geometry["area_throat"]
+
+    # Load model options
+    rel_step_fd = model_options["rel_step_fd"]
+
+    def get_res_throat(w, rothalpy, u_throat, s_in, mass_flow_rate):
+
+        """ 
+        Get mass flow rate residual at the throat for normalized velocity x
+        """
+        # Throat
+        h0_rel = rothalpy + 0.5*u_throat**2 # Assume same radius at throat and inlet
+        h = h0_rel - 0.5*w**2
+        s = s_in # Assume isentropic flow
+        statsic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+        d = statsic_properties["d"]
+        m = d*w*A_throat
+
+        res = 1-m/mass_flow_rate
+
+        return res
+    
+    # Evaluate gradient
+    x = np.array([w_throat])
+    res = get_res_throat(w_throat, rothalpy, u_throat, s_in, mass_flow_rate)
+    eps = rel_step_fd * x
+    jac = approx_derivative(
+        get_res_throat,
+        w_throat,
+        abs_step = eps,
+        f0 = res,
+        method="3-point",
+        args = (
+            rothalpy,
+            u_throat,
+            s_in,
+            mass_flow_rate,
+        )
+    )
+
+    return jac[0], res
 

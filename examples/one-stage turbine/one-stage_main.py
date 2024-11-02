@@ -25,12 +25,13 @@ if MODE == "performance_analysis":
         stop_on_failure=True,
     )
 
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+
 elif MODE == "performance_map":
 
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, config, export_results=True)
-
 
 elif MODE == "design_optimzation":
 

@@ -24,15 +24,150 @@ SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 Available solvers for performance analysis.
 """
 
+def compute_performance(
+    config,
+    operation_points,
+    stop_on_failure=False,
+    export_results = False,
+    out_dir = "output",
+    out_filename = None,
+):
+    # Get list of operating points
+    operation_points = generate_operation_points(operation_points)
+    
+    # Initialize lists to hold each solution and solver 
+    solution_data = []
+    solver_container = []
+
+    # Calculate performance at all operation points
+    print_operation_points(operation_points)
+    for i, operation_point in enumerate(operation_points):
+        print(f"\n Computing operation point {i+1} of {len(operation_points)}")
+        print_boundary_conditions(operation_point)
+
+        # Update initial guess
+        if i > 0:
+            closest_x, closest_index = find_closest_operation_point(
+                operation_point,
+                operation_points[:i],  # Use up to the previous point
+                solution_data[:i],  # Use solutions up to the previous point
+            )
+            print(f" Using solution from point {closest_index+1} as initial guess")
+            initial_guess = closest_x
+
+        try:
+            # Compute performance
+            solver = compute_single_operation_point(
+                                operation_point,
+                                config["performance_analysis"]["initial_guess"],
+                                config["geometry"],
+                                config["simulation_options"],
+                                config["performance_analysis"]["solver_options"],
+                                )
+
+            # Collect solution and solver
+            solution_data.append(solver.problem.vars_real)
+            solver_container.append(solver)
+
+        except Exception as e:
+            handle_failure(i, e, stop_on_failure)
+            solver_container.append(None)
+
+    # Print final report
+    print_simulation_summary(solver_container)
+
+    # Export results
+    if export_results:
+        export_results_excel(solver_container, out_dir, out_filename)
+
+    return solver_container
+
+def handle_failure(point_index, error, stop_on_failure):
+    print(f" Computation of point {point_index} failed")
+    print(f" Error: {error}")
+    if stop_on_failure:
+        raise Exception(error)
+
+def export_results_excel(solver_container, out_dir, out_filename):
+
+    """
+    Export results to excel file
+    Each component has a distinct sheet in the excel file
+    """
+
+    RESULTS_KEYS = ["overall", "boundary_conditions", "impeller", "vaneless_diffuser", "vaned_diffuser", "volute"]
+
+    # Initialize results structures
+    results = {key : [] for key in solver_container[0].problem.results.keys() if key in RESULTS_KEYS}
+    solver_data = []
+    
+    # Loop through each solver result in the container
+    for i, solver in enumerate(solver_container):
+        if solver is None:
+            # If solver failed, skip or add a placeholder
+            for key in results.keys():
+                results[key].append({})
+            solver_data.append({})
+            continue
+        
+        else:
+            # Performance data
+            for key in results.keys():
+                val = solver.problem.results[key]
+                # For components (impeller etc.)
+                if (isinstance(val, dict) and (set(val.keys()) == {"inlet_plane", "exit_plane"})):
+                    results[key].append({
+                        **utils.add_string_to_keys(val["inlet_plane"], "_in"), 
+                        **utils.add_string_to_keys(val["exit_plane"], "_out")})
+                
+                # For entries with 
+                elif isinstance(val, dict):
+                    results[key].append(val)
+
+            # Solver data
+            solver_data.append({
+                "completed": True,
+                "success": solver.success,
+                "message": solver.message,
+                "grad_count": solver.convergence_history["grad_count"][-1],
+                "func_count": solver.convergence_history["func_count"][-1],
+                "func_count_total": solver.convergence_history["func_count_total"][-1],
+                "norm_residual": solver.convergence_history["norm_residual"][-1],
+                "norm_step": solver.convergence_history["norm_step"][-1],
+            })
+
+
+
+    # Convert lists to a DataFrame
+    for key, val in results.items():
+        results[key] = pd.DataFrame(results[key])
+    results["solver"] = pd.DataFrame(solver_data)
+
+    # Create a directory to save simulation results
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    # Define filename with unique date-time identifier
+    if out_filename == None:
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        out_filename = f"performance_analysis_{current_time}"
+
+    filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+    with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+        for sheet_name, df in results.items():
+            # Write each DataFrame to a specific sheet
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    print(f"Results successfully exported to {filepath}")
+
+    return
+
 def compute_single_operation_point(
     operating_point,
     initial_guess,
     geometry,
     simulation_options,
     solver_options,
-    out_dir = "output",
-    out_filename = None,
-    export_results = False,
 ):
 
     # Initialize problem object
@@ -43,39 +178,33 @@ def compute_single_operation_point(
     # Get solver method array
     solver_methods = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
 
-    x0 = np.array(list(initial_guess.values()))
-    problem.keys = list(initial_guess.keys())
-    solver = psv.NonlinearSystemSolver(problem, **solver_options)
-    solver.solve(x0)
+    # Solve operation point
+    initial_guesses = problem.get_initial_guess(initial_guess)
+    for initial_guess in initial_guesses:
+        initial_guess_scaled = problem.scale_values(initial_guess)
+        x0 = np.array(list(initial_guess_scaled.values()))
+        problem.keys = list(initial_guess_scaled.keys())
+        for method in solver_methods:
+            solver_options["method"] = method
+            solver = psv.NonlinearSystemSolver(problem, **solver_options)
+            try:
+                solver.solve(x0)
+            except Exception as e:
+                if solver.func_count == 0:
+                    raise e 
+                print(f" Error during solving: {e}")
+                solver.success = False
+            if solver.success:
+                    break
+            
+        if solver.success:
+                    break
     
     if not solver.success:
         print("WARNING: All attempts failed to converge")
         # TODO: Add messages to Log file
 
-    # Export results
-    overall = solver.problem.results["overall"]
-    overall = {key : [val] for key, val in overall.items()}
-    overall = pd.DataFrame(overall)
-    planes = solver.problem.results["planes"]
-
-    if export_results:
-        if not os.path.exists(out_dir):
-                os.makedirs(out_dir)
-
-        # Define filename with unique date-time identifier
-        if out_filename == None:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            out_filename = f"cc_{current_time}"
-
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            # Save the dictionary DataFrame to the first sheet
-            overall.to_excel(writer, sheet_name='Overall', index=True)
-            
-            # Save the original DataFrame to the second sheet
-            planes.to_excel(writer, sheet_name='Planes', index=True)
-
-    return solver, problem.results
+    return solver
 
 
 def find_closest_operation_point(current_op_point, operation_points, solution_data):
@@ -150,45 +279,49 @@ def get_operation_point_distance(point_1, point_2, delta=1e-8):
     return np.linalg.norm(deviation_array)
 
 
-def generate_operation_points(performance_map):
+def generate_operation_points(operation_points):
     """
     Generates a list of dictionaries representing all possible combinations of
-    operation points from a given performance map. The performance map is a
-    dictionary where keys represent parameter names and values are the ranges
-    of values for those parameters. The function ensures that the combinations
-    are generated such that 'p0_in' and
-    'mass_flow_rate' are the last ones to vary, effectively making them the first
-    parameters to sweep through in the operation points.
+    operation points from a given input. If the input is a dictionary with ranges,
+    it generates all combinations; if it's a list or array, it directly returns the
+    operation points.
 
     Parameters
     ----------
-    - performance_map (dict): A dictionary with parameter names as keys and
-      lists of parameter values as values.
+    - operation_points (dict or list/np.ndarray): A dictionary with parameter names as
+      keys and lists of parameter values as values, or a precomputed list of
+      operation points.
 
     Returns
     -------
     - operation_points (list of dict): A list of dictionaries, each representing
-      a unique combination of parameters from the performance_map.
+      a unique combination of parameters from the performance map.
     """
+    # If input is already a list or array, return it as operation points
+    if isinstance(operation_points, (list, np.ndarray)):
+        return operation_points
 
-    # Make sure all values in the performance_map are iterables
-    performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
+    # If input is a dictionary, generate operation points by creating all combinations
+    if isinstance(operation_points, dict):
+        # Ensure all values in the performance_map are iterables
+        performance_map = {k: utils.ensure_iterable(v) for k, v in operation_points.items()}
 
-    # Reorder performance map keys so first sweep is always through pressure
-    priority_keys = ["p0_in", "mass_flow_rate"]
-    other_keys = [k for k in performance_map.keys() if k not in priority_keys]
-    keys_order = other_keys + priority_keys
-    performance_map = {
-        k: performance_map[k] for k in keys_order if k in performance_map
-    }
+        # Reorder performance map keys so 'p0_in' and 'mass_flow_rate' are prioritized last
+        priority_keys = ["p0_in", "mass_flow_rate"]
+        other_keys = [k for k in performance_map.keys() if k not in priority_keys]
+        keys_order = other_keys + priority_keys
+        performance_map = {k: performance_map[k] for k in keys_order if k in performance_map}
 
-    # Create all combinations of operation points
-    keys, values = zip(*performance_map.items())
-    operation_points = [
-        dict(zip(keys, combination)) for combination in itertools.product(*values)
-    ]
+        # Generate all combinations of operation points
+        keys, values = zip(*performance_map.items())
+        operation_points = [dict(zip(keys, combination)) for combination in itertools.product(*values)]
+        
+        return operation_points
 
-    return operation_points
+    # Raise an error if input is neither a dict nor a list/array
+    msg = "operation_points must be either a list of dicts or a dict with ranges."
+    raise TypeError(msg)
+
 
 
 def validate_operation_point(op_point):
@@ -220,23 +353,30 @@ def validate_operation_point(op_point):
 # ------------------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------------------ #
 
-
 class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
-    
 
     def __init__(self, geometry, simulation_options):
         
         # Process turbine geometry
         self.geometry = geom.calculate_full_geometry(geometry)
 
-        # Initialize other attributes
+        # Initialize simulation options
+        # Specify loss model for each component if not given
         self.model_options = simulation_options
+        if set(simulation_options["loss_model"].keys()) == {"model", "loss_coefficient"}:
+            loss_model = simulation_options["loss_model"]
+            self.model_options["loss_model"] = {key : loss_model for key in self.geometry.keys()}
+
+        # Initialize list of keys for the independent variables
         self.keys = []
 
     def residual(self, x):
         
         # Create dictionary of scaled variables
         self.vars_scaled = dict(zip(self.keys, x))
+
+        # Create dictionary of real variables
+        self.vars_real = self.scale_values(self.vars_scaled, to_normalized=False)
         
         # Evaluate centrifugal compressor
         results = flow.evaluate_centrifugal_compressor(
@@ -283,39 +423,38 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         # Rename variables
         p0_in = operation_point["p0_in"]
         T0_in = operation_point["T0_in"]
+        omega = operation_point["omega"]
 
         # Compute stagnation properties at inlet
         state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
-        # Store the inlet stagnation (h,s) for the first stage
+        # Store the inlet stagnation (h,s) for the first plane
         self.boundary_conditions["h0_in"] = h0_in
         self.boundary_conditions["s_in"] = s_in
 
-        # Calculate max velocity for a compression to the critical pressure
-        # p_crit = self.fluid.critical_point["p"]
-        critical_properties = self.fluid._compute_critical_point()
-        p_crit = critical_properties["p"]
-        properties = self.fluid.get_props(cp.PSmass_INPUTS, p_crit, s_in)
-        h_max = properties["h"]
-        v_max = np.sqrt(2*(h_max - h0_in))
+        # Calculate reference velocity
+        u_out = omega*self.geometry["impeller"]["radius_out"]
+        h0_max = h0_in + 0.5*u_out**2
+        ref_props_min = self.fluid.get_props(cp.PSmass_INPUTS, p0_in/2, s_in)
+        h_ref_min = ref_props_min["h"]
+        v0 = np.sqrt(2*(h0_max - h_ref_min))
 
-        # Calculate entropy for zero compression with maximum enthalpy
-        properties = self.fluid.get_props(cp.HmassP_INPUTS, h_max, p0_in)
-        s_max = properties["s"]
+        # Calculate max entropy
+        s_max = s_in + u_out**2/T0_in
 
         # Define reference_values
         self.reference_values = {
             "s_range": s_max - s_in,
             "s_min": s_in,
-            "v_max": v_max,
+            "v_max": v0,
             "angle_range": 180,
             "angle_min": -90,
         }
 
-        return 
-
+        return
+      
     def scale_values(self, variables, to_normalized=True):
         """
         Convert values between normalized and real values.
@@ -333,7 +472,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         """
 
         # Load parameters
-        v0 = self.reference_values["v0"]
+        v0 = self.reference_values["v_max"]
         s_range = self.reference_values["s_range"]
         s_min = self.reference_values["s_min"]
         angle_range = self.reference_values["angle_range"]
@@ -349,7 +488,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
                 scaled_variables[key] = (
                     (val - s_min) / s_range if to_normalized else val * s_range + s_min
                 )
-            elif key.startswith("b"):
+            elif key.startswith("b") or key.startswith("a"):
                 scaled_variables[key] = (
                     (val - angle_min) / angle_range
                     if to_normalized
@@ -386,6 +525,396 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         # Recreate the 'fluid' attribute
         self.fluid = props.Fluid(self.boundary_conditions["fluid_name"])
 
+    def get_initial_guess(self, initial_guess):
+
+        """
+        3 options:
+            - Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically
+            - Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best 
+            - Give complete set (real values)
+        """
+
+        valid_keys_1 = ["efficiency_tt", "phi_out"]
+        valid_keys_2 = ["efficiency_tt", "phi_out", "n_samples"]
+        check = []
+        check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
+        check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
+
+        if check[0]:
+            # Initial guess determined from heurustic guess, with given parameters
+            if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
+                # Several initial guesses
+                initial_guesses = []
+                for i in range(len(initial_guess["efficiency_tt"])):
+                    heuristic_guess = self.get_heuristic_guess(initial_guess["efficiency_tt"][i], initial_guess["phi_out"][i])
+                    initial_guesses.append(heuristic_guess)
+            else:
+                # Single initial guess
+                heuristic_guess = self.get_heuristic_guess(initial_guess["efficiency_tt"], initial_guess["phi_out"])
+                initial_guesses = [heuristic_guess]
+
+        elif check[1]:
+            # Generate initial guess using latin hypercube sampling
+            bounds = [initial_guess["efficiency_tt"], initial_guess["phi_out"]]
+
+            n_samples = initial_guess["n_samples"]
+            heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
+            norm_residuals = np.array([])
+            failures = 0
+            for heuristic_input in heuristic_inputs:
+                try:
+                    heuristic_guess = self.get_heuristic_guess(heuristic_input[0], heuristic_input[1])
+                    x = self.scale_values(heuristic_guess) # TODO: Add scaling
+                    self.keys = x.keys() 
+                    x0 = np.array(list(x.values()))
+                    residual = self.residual(x0)
+                    norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
+                except:
+                    failures += 1 
+                    norm_residuals = np.append(norm_residuals, np.nan)
+
+            print(f"Generating heuristic inital guesses from latin hypercube sampling")
+            print(f"Number of failures: {failures} out of {n_samples} samples")
+            print(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
+            heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
+            initial_guess = dict(zip(valid_keys_1, heuristic_input))
+            initial_guess = self.get_heuristic_guess(heuristic_input[0], heuristic_input[1])
+            initial_guesses = [initial_guess]
+        else:
+            # Simply return the initial guess given
+            initial_guesses = [initial_guess]
+
+        return initial_guesses
+    
+    def get_heuristic_guess(self, eta_tt, phi_out):
+
+        # Check vaneless diffuser model
+        vaneless_model = self.model_options["vaneless_diffuser_model"]
+
+        # initialize initial guess dictionary
+        initial_guess = {}
+
+        # Prepare first input
+        input = {"eta_tt" : eta_tt,
+                "phi_out" : phi_out}
+
+        # Get initial guess
+        for key in self.geometry.keys():
+            if key == "impeller":
+                guess, exit_state = self.get_impeller_guess(input)
+            elif key == "vaneless_diffuser" and vaneless_model == "algebraic":
+                guess, exit_state = self.get_vaneless_diffuser_guess(input)
+            elif key == "vaned_diffuser":
+                guess, exit_state = self.get_vaned_diffuser_guess(input)
+            elif key == "volute":
+                guess, exit_state = self.get_volute_guess(input)
+
+            # Store guess
+            initial_guess = {**initial_guess, **guess}
+
+            # Prepare calculation of next component
+            input = exit_state
+
+        return initial_guess
+    
+    def get_impeller_guess(self, input):
+
+        # Load boundary conditions
+        p0_in = self.boundary_conditions["p0_in"]
+        T0_in = self.boundary_conditions["T0_in"]
+        omega = self.boundary_conditions["omega"]
+        mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
+        alpha_in = self.boundary_conditions["alpha_in"]
+
+        # Load input
+        eta_tt = input["eta_tt"]
+        phi_out = input["phi_out"]
+        
+        # Load geometry
+        z = self.geometry["impeller"]["number_of_blades"]
+        theta_out = self.geometry["impeller"]["trailing_edge_angle"]
+        r_out = self.geometry["impeller"]["radius_out"]
+        r_in = self.geometry["impeller"]["radius_mean_in"]
+        A_out = self.geometry["impeller"]["area_out"]
+        A_in = self.geometry["impeller"]["area_in"]
+
+        # Load velocity scale
+        v0 = self.reference_values["v_max"]
+
+        # Evaluate inlet thermpdynamic state
+        stagnation_props_in = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        gamma = stagnation_props_in["cp"]/stagnation_props_in["cv"]
+        h0_in = stagnation_props_in["h"]
+        a0_in = stagnation_props_in["a"]
+        s_in = stagnation_props_in["s"]
+
+        # Approximate impeller exit total pressure
+        u_out = r_out*omega
+        Ma_out = u_out/a0_in
+        slip_factor = 1-np.sqrt(math.cosd(theta_out))/(z**(0.7)*(1+phi_out*math.tand(theta_out)))
+        p0_out = (1+(gamma-1)*eta_tt*slip_factor*(1+phi_out*math.tand(theta_out))*Ma_out**2)**(gamma/(gamma-1))*p0_in
+
+        # Get impeller exit total enthalpy and entropy
+        isentropic_props_out = self.fluid.get_props(cp.PSmass_INPUTS, p0_out, s_in)
+        h0_out_is = isentropic_props_out["h"]
+        h0_out = (h0_out_is-h0_in)/eta_tt + h0_in
+        stagnation_props_out = self.fluid.get_props(cp.HmassP_INPUTS, h0_out, p0_out)
+        s_out = stagnation_props_out["s"]
+
+        # Get inlet velocity
+        def calculate_inlet_residual(v_scaled):
+
+            # Calculate velocity triangle
+            u_in = r_in*omega
+            v_in = v_scaled*v0
+            v_m_in = v_in*math.cosd(alpha_in)
+            v_t_in = v_in*math.sind(alpha_in)
+            w_m_in = v_m_in
+            w_t_in = v_t_in - u_in
+            w_in = np.sqrt(w_m_in**2 + w_t_in**2)   
+            beta_in = math.arctand(w_t_in/w_m_in)
+
+            velocity_triangle_in = {"v_t" : v_t_in,
+                    "v_m" : v_m_in,
+                    "v" : v_in,
+                    "alpha" : alpha_in,
+                    "w_t" : w_t_in,
+                    "w_m" : w_m_in,
+                    "w" : w_in,
+                    "beta" : beta_in,
+                    "blade_speed" : u_in,
+                    }
+
+            # Calculate thermodynamic state
+            h_in = h0_in - 0.5*v_in**2
+            h0_rel_in = h_in + 0.5*w_in**2
+            static_props_in = self.fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
+            relative_props_in = self.fluid.get_props(cp.HmassSmass_INPUTS, h0_rel_in, s_in)
+
+            # Calculate mass flow rate nad rothalpy
+            m_in = static_props_in["d"]*v_m_in*A_in
+            rothalpy_in = h0_rel_in - 0.5*u_in**2
+
+            # Evaluate mass flow rate residual
+            res = m_in - mass_flow_rate 
+
+            check_in = {"mass_flow_rate" : m_in,
+                        "rothalpy" : rothalpy_in,
+                        "s_in" : s_in}
+
+            return res, velocity_triangle_in, check_in
+        
+        def calculate_inlet_velocity():
+
+            sol = optimize.root_scalar(lambda x: calculate_inlet_residual(x)[0], method = "secant", x0 = 0.2)
+            delta_h, velocity_triangle_in, check_in  = calculate_inlet_residual(sol.root)
+            return velocity_triangle_in, check_in
+
+        velocity_triangle_in, check_in = calculate_inlet_velocity()
+
+        # Calculate exit state
+        v_m_out = phi_out*u_out
+        v_t_out = slip_factor*(1+phi_out*math.tand(theta_out))*u_out
+        v_out = np.sqrt(v_t_out**2 + v_m_out**2)
+        alpha_out = math.arctand(v_t_out/v_m_out)
+        w_m_out = v_m_out
+        w_t_out = v_t_out - u_out
+        w_out = np.sqrt(w_t_out**2 + w_m_out**2)
+        beta_out = math.arctand(w_t_out/w_m_out)
+
+        velocity_triangle_out = {"v_t" : v_t_out,
+                    "v_m" : v_m_out,
+                    "v" : v_out,
+                    "alpha" : alpha_out,
+                    "w_t" : w_t_out,
+                    "w_m" : w_m_out,
+                    "w" : w_out,
+                    "beta" : beta_out,
+                    "blade_speed" : u_out,
+                    }
+        
+        # Get thermophysical properties
+        h_out = h0_out -0.5*v_out**2
+        h0_rel_out = h_out + 0.5*w_out**2
+        static_props_out = self.fluid.get_props(cp.HmassSmass_INPUTS, h_out, s_out)
+
+        # Calculate mass flow rate and rothalpy
+        m_out = static_props_out["d"]*v_m_out*A_out
+        rothalpy_out = h0_rel_out - 0.5*u_out**2
+
+        exit_plane = {
+            **velocity_triangle_out,
+            **static_props_out,
+        }
+
+        # Store initial guess
+        initial_guess = {"v_in_impeller" : velocity_triangle_in["v"],
+                    "w_out_impeller" : w_out,
+                    "beta_out_impeller" : beta_out,
+                    "s_out_impeller" : s_out,
+                    }
+        
+        return initial_guess, exit_plane
+
+    def get_vaneless_diffuser_guess(self, input):
+        """
+        Guess constant alpha
+        Simple correlation for static enthalpy loss coefficient
+        """
+
+        # Load input
+        alpha_in  = input["alpha"]
+        v_t_in = input["v_t"]
+        v_in = input["v"]
+        h_in = input["h"]
+
+        # Load boundary conditions
+        mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
+
+        # Load geometry
+        r_out = self.geometry["vaneless_diffuser"]["radius_out"]
+        r_in = self.geometry["vaneless_diffuser"]["radius_in"]
+        b_in = self.geometry["vaneless_diffuser"]["width_in"]
+        A_out = self.geometry["vaneless_diffuser"]["area_out"]
+
+        # Load model options
+        Cf = self.model_options["factors"]["skin_friction"]
+
+        # Calculate exit velocity
+        alpha_out = alpha_in
+        delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
+        v_t_out = v_t_in*r_out/r_in*delta_M
+        v_out = v_t_out/math.sind(alpha_out)
+        v_m_out = v_out*math.cosd(alpha_out)
+        velocity_triangle_out = {
+            "v" : v_out,
+            "v_t" : v_t_out,
+            "v_m" : v_m_out,
+            "alpha" : alpha_out
+        }
+        
+        # Calculate exit entropy
+        d_out = mass_flow_rate/(v_out*math.cosd(alpha_out)*A_out)
+        h0_out = h_in + 0.5*v_in**2
+        h_out = h0_out - 0.5*v_out**2
+        static_props_out = self.fluid.get_props(cp.DmassHmass_INPUTS, d_out, h_out)
+        s_out = static_props_out["s"]
+
+        initial_guess = {
+                    "v_out_vaneless_diffuser" : v_out,
+                    "s_out_vaneless_diffuser" : s_out,
+                    "alpha_out_vaneless_diffuser" : alpha_out,
+                    }
+        
+        exit_state = {
+            **velocity_triangle_out,
+            **static_props_out,
+        }
+
+        return initial_guess, exit_state
+
+    def get_vaned_diffuser_guess(self, input):
+
+        """
+        Similar as vaneless diffuser
+        Assume zero deviation at exit 
+        """
+        
+        # Load input
+        alpha_in  = input["alpha"]
+        v_t_in = input["v_t"]
+        v_in = input["v"]
+        h_in = input["h"]
+
+        # Load boundary conditions
+        mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
+
+        # Load geometry
+        r_out = self.geometry["vaned_diffuser"]["radius_out"]
+        r_in = self.geometry["vaned_diffuser"]["radius_in"]
+        b_in = self.geometry["vaned_diffuser"]["width_in"]
+        A_out = self.geometry["vaned_diffuser"]["area_out"]
+        theta_out = self.geometry["vaned_diffuser"]["trailing_edge_angle"]
+
+        # Load model options
+        Cf = self.model_options["factors"]["skin_friction"]
+
+        # Calculate exit velocity
+        alpha_out = theta_out
+        delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
+        v_t_out = v_t_in*r_out/r_in*delta_M
+        v_out = v_t_out/math.sind(alpha_out)
+        v_m_out = v_out*math.cosd(alpha_out)
+
+        velocity_triangle_out = {
+            "v" : v_out,
+            "v_t" : v_t_out,
+            "v_m" : v_m_out,
+            "alpha" : alpha_out
+        }
+        
+        # Calculate exit entropy
+        d_out = mass_flow_rate/(v_out*math.cosd(alpha_out)*A_out)
+        h0_out = h_in + 0.5*v_in**2
+        h_out = h0_out - 0.5*v_out**2
+        static_props_out = self.fluid.get_props(cp.DmassHmass_INPUTS, d_out, h_out)
+        s_out = static_props_out["s"]
+
+        initial_guess = {
+                    "v_out_vaned_diffuser" : v_out,
+                    "s_out_vaned_diffuser" : s_out,
+                    }
+        
+        exit_state = {
+            **velocity_triangle_out,
+            **static_props_out,
+        }
+
+        return initial_guess, exit_state
+
+    def get_volute_guess(self, input):
+        """
+        Guess constant density
+        Guess single velocity component at the exit
+        
+        """
+        
+        # Load input
+        d_in = input["d"]
+        h_in = input["h"]
+        v_in = input["v"]
+
+        # Load boundary conditions
+        mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
+
+        # Load geometry
+        A_out = self.geometry["volute"]["area_out"]
+
+        # Calculate exit velocity
+        d_out = d_in
+        v_out = mass_flow_rate/(d_out*A_out)
+        velocity_triangle_out = {
+            "v" : v_out,
+        }
+
+
+        # Calculate exit entropy
+        h0_out = h_in + 0.5*v_in**2
+        h_out = h0_out - 0.5*v_out**2
+        static_props_out = self.fluid.get_props(cp.DmassHmass_INPUTS, d_out, h_out)
+        s_out = static_props_out["s"]
+
+        initial_guess = {
+                    "v_out_volute" : v_out,
+                    "s_out_volute" : s_out,
+                    }
+
+        exit_plane = {
+            **velocity_triangle_out,
+            **static_props_out
+        }
+
+        return initial_guess, exit_plane
 
 
 def print_simulation_summary(solvers):
@@ -493,7 +1022,7 @@ def print_boundary_conditions(BC):
     print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
     print(f" {'Total temperature in: ':<{column_width}} {BC['T0_in']-273.15:<.2f} degC")
     print(f" {'Total pressure in: ':<{column_width}} {BC['p0_in']/1e5:<.3f} bar")
-    print(f" {'Mass flow rate: ':<{column_width}} {BC['mass_flow_rate']/1e5:<.3f} kg/s")
+    print(f" {'Mass flow rate: ':<{column_width}} {BC['mass_flow_rate']:<.3f} kg/s")
     print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
     print("-" * 80)
     print()
@@ -562,8 +1091,8 @@ def print_operation_points(operation_points):
             return np.degrees(value)
         elif key in ["p0_in"]:  # Pa to kPa
             return value / 1e3
-        elif key in ["mass_flow_rate"]:  # No change
-            return value
+        # elif key in ["mass_flow_rate"]:  # No change
+        #     return value
         return value
 
     # Process and format each operation point
