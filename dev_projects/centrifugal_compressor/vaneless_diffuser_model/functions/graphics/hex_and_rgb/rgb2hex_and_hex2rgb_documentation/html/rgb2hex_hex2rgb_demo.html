@@ -1,0 +1,255 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>rgb2hex and hex2rgb</title><meta name="generator" content="MATLAB 8.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-08-08"><meta name="DC.source" content="rgb2hex_hex2rgb_demo.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1><tt>rgb2hex</tt> and <tt>hex2rgb</tt></h1><!--introduction--><p>These functions convert RGB color triplets to hexadecimal format, or hexadecimal format to RGB color triplets.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Syntax</a></li><li><a href="#2">Description</a></li><li><a href="#3">Examples of <tt>rgb2hex</tt></a></li><li><a href="#7">Examples of <tt>hex2rgb</tt></a></li><li><a href="#14">Author Info</a></li></ul></div><h2>Syntax<a name="1"></a></h2><pre>rgb2hex(rgb)
+hex2rgb(hex)
+hex2rgb(hex,range)</pre><h2>Description<a name="2"></a></h2><p><tt>rgb2hex(rgb)</tt> converts RGB color triplets to hexadecimal format. If no value in the <tt>rgb</tt> matrix exceeds unity, values are assumed to be scaled from 0 to 1.  If any value in <tt>rgb</tt> exceeds unity, values are assumed to be scaled from 0 to 255.</p><p><tt>hex2rgb(hex)</tt> converts hexadecimal to rgb color triplets scale from 0 to 1.</p><p><tt>hex2rgb(hex,range)</tt> specifies a range as 1 or 256 for scaling output RGB values. A previous version of this function required a range of 255 when scaling from 0 to 255, but letting range equal 256 may be more intuitive, so either input will work now. Whether you enter a range of 255 or 256, RGB values will be scaled from 0 to 255. Default range is 1 to Matlab syntax, meaning values are scaled from 0 to 1.</p><h2>Examples of <tt>rgb2hex</tt><a name="3"></a></h2><p>What is the hexadecimal value of pure green?</p><pre class="codeinput">greenHex = rgb2hex([0 1 0])
+</pre><pre class="codeoutput">
+greenHex =
+
+#00FF00
+
+</pre><p>What if the rgb values are scaled from 0 to 255?</p><pre class="codeinput">greenHexIsStill = rgb2hex([0 255 0])
+</pre><pre class="codeoutput">
+greenHexIsStill =
+
+#00FF00
+
+</pre><p>This function works for multiple entries too:</p><pre class="codeinput">myrgbvalues = [.2 .3 .4;
+               .5 .6 .7;
+               .8 .6 .2;
+               .2 .2 .9];
+myhexvalues = rgb2hex(myrgbvalues)
+</pre><pre class="codeoutput">
+myhexvalues =
+
+#334D66
+#8099B3
+#CC9933
+#3333E6
+
+</pre><p>Or similarly,</p><pre class="codeinput">rgb2hex(jet(5))
+</pre><pre class="codeoutput">
+ans =
+
+#0080FF
+#00FFFF
+#80FF80
+#FFFF00
+#FF8000
+
+</pre><h2>Examples of <tt>hex2rgb</tt><a name="7"></a></h2><p>Say <a href="http://tools.medialab.sciences-po.fr/iwanthue/completion.php">some online color program</a> gives you some hex value that you'd like to use in your next Matlab plot. The number <tt>'#334D66'</tt> is something that Matlab can understand, so we use <tt>hex2rgb</tt>:</p><pre class="codeinput">hex2rgb(<span class="string">'#334D66'</span>)
+</pre><pre class="codeoutput">
+ans =
+
+    0.2000    0.3020    0.4000
+
+</pre><p>The <tt>hex2rgb</tt> function may also be used inside a <tt>plot</tt> command:</p><pre class="codeinput">plot(1:10,(1:10).^2,<span class="string">'color'</span>,hex2rgb(<span class="string">'#334D66'</span>),<span class="string">'linewidth'</span>,5)
+</pre><img vspace="5" hspace="5" src="rgb2hex_hex2rgb_demo_01.png" alt=""> <p>The pound sign is optional:</p><pre class="codeinput">myrgbvalue = hex2rgb(<span class="string">'334D66'</span>)
+</pre><pre class="codeoutput">
+myrgbvalue =
+
+    0.2000    0.3020    0.4000
+
+</pre><p>Values may be scaled from 0 to 255:</p><pre class="codeinput">myRGBvalue = hex2rgb(<span class="string">'#334D66'</span>,256)
+</pre><pre class="codeoutput">
+myRGBvalue =
+
+    51    77   102
+
+</pre><p>Input hex values can be in a matrix:</p><pre class="codeinput">myhexvalues = [<span class="string">'#334D66'</span>;<span class="string">'#8099B3'</span>;<span class="string">'#CC9933'</span>;<span class="string">'#3333E6'</span>];
+myrgbvalues = hex2rgb(myhexvalues)
+</pre><pre class="codeoutput">
+myrgbvalues =
+
+    0.2000    0.3020    0.4000
+    0.5020    0.6000    0.7020
+    0.8000    0.6000    0.2000
+    0.2000    0.2000    0.9020
+
+</pre><p>Input hex values may also be in a character array:</p><pre class="codeinput">HexValsAsACharacterArray = {<span class="string">'#334D66'</span>;<span class="string">'#8099B3'</span>;<span class="string">'#CC9933'</span>;<span class="string">'#3333E6'</span>};
+rgbvals = hex2rgb(HexValsAsACharacterArray)
+</pre><pre class="codeoutput">
+rgbvals =
+
+    0.2000    0.3020    0.4000
+    0.5020    0.6000    0.7020
+    0.8000    0.6000    0.2000
+    0.2000    0.2000    0.9020
+
+</pre><p>Character arrays can be useful when plotting and labelling:</p><pre class="codeinput">x = 1:4;
+y = -x;
+scatter(x,y,1e3,rgbvals,<span class="string">'filled'</span>)
+axis([0 5 -5 0])
+text(x,y,HexValsAsACharacterArray,<span class="string">'horizontalalignment'</span>,<span class="string">'center'</span>)
+</pre><img vspace="5" hspace="5" src="rgb2hex_hex2rgb_demo_02.png" alt=""> <h2>Author Info<a name="14"></a></h2><p>These functions were written by Chad A. Greene of the University of Texas at Austin's Institute for Geophysics (<a href="http://www.ig.utexas.edu/research/cryosphere/">UTIG</a>) in April of 2014. On advice from <a href="http://www.mathworks.com/matlabcentral/fileexchange/authors/186085">Stephen Cobeldick</a>, some changes were made in August 2014.  Functionality has not changed with these updates, but the functions are now faster and more robust. Thanks Stephen.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2012b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% |rgb2hex| and |hex2rgb|
+% These functions convert RGB color triplets to hexadecimal format, or
+% hexadecimal format to RGB color triplets. 
+
+%% Syntax 
+% 
+%  rgb2hex(rgb)
+%  hex2rgb(hex)
+%  hex2rgb(hex,range)
+
+%% Description
+% 
+% |rgb2hex(rgb)| converts RGB color triplets to hexadecimal format. If no
+% value in the |rgb| matrix exceeds unity, values are assumed to be scaled
+% from 0 to 1.  If any value in |rgb| exceeds unity, values are assumed to
+% be scaled from 0 to 255. 
+% 
+% |hex2rgb(hex)| converts hexadecimal to rgb color triplets scale from 0 to
+% 1. 
+%
+% |hex2rgb(hex,range)| specifies a range as 1 or 256 for scaling output RGB values.  
+% A previous version of this function required a range of 255 when scaling from 0 to 255,
+% but letting range equal 256 may be more intuitive, so either input will work now.  
+% Whether you enter a range of 255 or 256, RGB values will be scaled from 0 to 255.  
+% Default range is 1 to Matlab syntax, meaning values are scaled from 0 to 1. 
+
+%% Examples of |rgb2hex|
+% What is the hexadecimal value of pure green? 
+
+greenHex = rgb2hex([0 1 0])
+
+%%
+% What if the rgb values are scaled from 0 to 255? 
+
+greenHexIsStill = rgb2hex([0 255 0])
+
+%% 
+% This function works for multiple entries too: 
+
+myrgbvalues = [.2 .3 .4;
+               .5 .6 .7; 
+               .8 .6 .2;
+               .2 .2 .9];
+myhexvalues = rgb2hex(myrgbvalues) 
+
+%% 
+% Or similarly, 
+
+rgb2hex(jet(5))
+
+%% Examples of |hex2rgb|
+% Say <http://tools.medialab.sciences-po.fr/iwanthue/completion.php some
+% online color program> gives you some hex value that you'd like to use in
+% your next Matlab plot. The number |'#334D66'| is something that Matlab
+% can understand, so we use |hex2rgb|:
+
+hex2rgb('#334D66')
+
+%% 
+% The |hex2rgb| function may also be used inside a |plot| command: 
+
+plot(1:10,(1:10).^2,'color',hex2rgb('#334D66'),'linewidth',5)
+
+%% 
+% The pound sign is optional: 
+
+myrgbvalue = hex2rgb('334D66') 
+
+%% 
+% Values may be scaled from 0 to 255: 
+
+myRGBvalue = hex2rgb('#334D66',256)
+
+%% 
+% Input hex values can be in a matrix: 
+
+myhexvalues = ['#334D66';'#8099B3';'#CC9933';'#3333E6'];
+myrgbvalues = hex2rgb(myhexvalues)
+
+%% 
+% Input hex values may also be in a character array: 
+
+HexValsAsACharacterArray = {'#334D66';'#8099B3';'#CC9933';'#3333E6'}; 
+rgbvals = hex2rgb(HexValsAsACharacterArray)
+
+%% 
+% Character arrays can be useful when plotting and labelling: 
+
+x = 1:4; 
+y = -x; 
+scatter(x,y,1e3,rgbvals,'filled')
+axis([0 5 -5 0])
+text(x,y,HexValsAsACharacterArray,'horizontalalignment','center')
+
+%% Author Info
+% These functions were written by Chad A. Greene of the University of Texas
+% at Austin's Institute for Geophysics
+% (<http://www.ig.utexas.edu/research/cryosphere/ UTIG>) in April of 2014.
+% On advice from
+% <http://www.mathworks.com/matlabcentral/fileexchange/authors/186085
+% Stephen Cobeldick>, some changes were made in August 2014.  Functionality
+% has not changed with these updates, but the functions are now faster and
+% more robust. Thanks Stephen. 
+##### SOURCE END #####
+--></body></html>
