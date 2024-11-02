@@ -1,0 +1,5 @@
+Roberto 02.11.2024
+
+Performance data and geometry from this case to be digitized
+
+This compressor uses R134a as working fluid. Relevant for heat pumps

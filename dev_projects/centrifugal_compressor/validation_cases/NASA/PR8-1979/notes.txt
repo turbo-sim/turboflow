@@ -1,0 +1,1 @@
+See also: "Analysis of 8 Centrifugal Compressor Impellers Using Two Different CFD Methods: Part I — Code Validation" for geometry

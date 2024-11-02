@@ -1,0 +1,5 @@
+Roberto 02.11.2024
+
+Performance data and geometry from these 2 cases (vaned and vaneless) to be verified
+Performance data and geometry from the high-efficiency case to be digitized
+Performance data and geometry from the PR=8 case to be digitized
