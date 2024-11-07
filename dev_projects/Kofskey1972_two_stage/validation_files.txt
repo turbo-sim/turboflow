@@ -1,4 +1,0 @@
-Validation filesn Kofskey 1972 2 stage
---------------------------------------
-performance map:performance_analysis_2024-03-14_00-30-26
-error map: performance_analysis_2024-03-14_01-27-29
