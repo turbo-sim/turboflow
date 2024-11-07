@@ -90,6 +90,7 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
     theta_out = vd_geometry["trailing_edge_angle"] # Trailing edge blade angle
     z = vd_geometry["number_of_vanes"] # Number of vanes
     throat_location_factor = vd_geometry["throat_location_factor"]
+    area_throat_ratio = vd_geometry["area_throat_ratio"]
 
     # Calculate geometry
     A_in = 2*np.pi*r_in*b_in # Area in
@@ -109,6 +110,7 @@ def calculate_vaned_diffuser_geometry(vd_geometry):
                       "loc_camber_max" : loc_camber_max,
                       "pitch" : pitch,
                       "width_throat" : b_throat,
+                      "area_throat" : A_in*area_throat_ratio,
                       }
 
     return {**vd_geometry, **new_parameters} 

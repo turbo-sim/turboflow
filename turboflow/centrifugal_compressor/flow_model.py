@@ -4,13 +4,12 @@ import pandas as pd
 import CoolProp as cp
 from . import loss_model as lm
 from . import slip_model as sm
+from . import choking_criterion as cm
 from .. import utilities as utils
 from .. import math
 import scipy.linalg
 import scipy.integrate
 from scipy.optimize._numdiff import approx_derivative
-
-
 
 def evaluate_centrifugal_compressor(
     variables,
@@ -78,12 +77,11 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     angle_range = reference_values["angle_range"]
     angle_min = reference_values["angle_min"]
 
-    # Load indepndent variables
+    # Load independent variables
     v_in = independents["v_in_impeller"]*v_max
     w_out = independents["w_out_impeller"]*v_max 
     beta_out = independents["beta_out_impeller"]*angle_range + angle_min 
     s_out = independents["s_out_impeller"]*s_range + s_min
-    w_throat = independents["w_throat_impeller"]*v_max
 
     # Load input variables
     h0_in = input["h0_in"]
@@ -105,7 +103,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     slip_model = model_options ["slip_model"]
     loss_model = model_options ["loss_model"]["impeller"]
 
-    # evaluate inlet velocity triangle
+    # Evaluate inlet velocity triangle
     u_in = omega*r_mean_in
     v_m_in = v_in*math.cosd(alpha_in)
     v_t_in = v_in*math.sind(alpha_in)
@@ -125,20 +123,20 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
                    "blade_speed" : u_in,
                    }
 
-    # evaluate inlet thermodynamic state
+    # Evaluate inlet thermodynamic state
     h_in = h0_in - 0.5*v_in**2
     h0_rel_in = h_in + 0.5*w_in**2
     static_properties_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
     stagnation_properties_in = fluid.get_props(cp.HmassSmass_INPUTS, h0_in, s_in)
     relative_properties_in = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel_in, s_in)
 
-    # evaluate inlet mass flow rate, rothalpy and mach
+    # Evaluate inlet mass flow rate, rothalpy and mach
     m_in = w_m_in*static_properties_in["d"]*A_in
     rothalpy = h0_rel_in - 0.5*u_in**2
     Ma_in = v_in/static_properties_in["a"]
     Ma_rel_in = w_in/static_properties_in["a"]
 
-    # evaluate exit velocity triangle
+    # Evaluate exit velocity triangle
     u_out = omega*r_out
     w_m_out = w_out*math.cosd(beta_out)
     w_t_out = w_out*math.sind(beta_out)
@@ -158,7 +156,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
                    "blade_speed" : u_out,
                    }
 
-    # evaluate inlet thermodynamic state
+    # Evaluate inlet thermodynamic state
     h0_rel_out = rothalpy + 0.5*u_out**2
     h_out = h0_rel_out - 0.5*w_out**2
     h0_out = h_out + 0.5*v_out**2
@@ -169,18 +167,17 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     isentropic_static_properties_out = fluid.get_props(cp.PSmass_INPUTS, static_properties_out["p"], s_in)
     isentropic_properties_out = {**isentropic_static_properties_out,**utils.add_string_to_keys(isentropic_relative_properties_out, "0")}
 
-    # evaluate exit mass flow rate and Mach 
+    # Evaluate exit mass flow rate and Mach 
     m_out = static_properties_out["d"]*w_m_out*A_out
     Ma_out = v_out/static_properties_out["a"]
     Ma_rel_out = w_out/static_properties_out["a"]
 
     # Evaluate throat residual
-    input_throat = {
+    input_choking = {
         "s_in" : s_in,
         "rothalpy" : rothalpy,
-        "w_throat" : w_throat,
     }
-    throat_residual, res = get_throat_gradient(input_throat, boundary_conditions, geometry, fluid, model_options, reference_values, u_throat = u_in)
+    throat_residual, throat_results = cm.evaluate_choking(independents, input_choking, boundary_conditions, geometry, fluid, model_options, reference_values, component="impeller", u_throat = u_in)
 
     # Collect inlet plane and exit plane results 
     inlet_plane = {**velocity_triangle_in,
@@ -197,7 +194,6 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
                    **utils.add_string_to_keys(relative_properties_out, "0_rel"),
                     "Ma" : Ma_out,
                    "Ma_rel" : Ma_rel_out,
-                   "throat_mass_flow_res" : res, 
                    }
 
     # Evaluate loss coefficient
@@ -222,10 +218,11 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
                  "mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
                  "losses" : loss_dict["loss_error"],
                  "slip" : slip_velocity-slip_model,
-                 "throat" : throat_residual}
+                 **throat_residual}
 
     # Store impeller results
     results = {"inlet_plane" : inlet_plane,
+               "throat_plane" : throat_results,
                "exit_plane": exit_plane,
     }
 
@@ -303,11 +300,19 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     m_out = static_properties_out["d"]*v_m_out*A_out
     Ma_out = v_out/static_properties_out["a"]
 
+    # Evaluate throat residual
+    input_choking = {
+        "s_in" : s_in,
+        "rothalpy" : h0_in,
+    }
+    throat_residual, throat_results = cm.evaluate_choking(independents, input_choking, boundary_conditions, geometry, fluid, model_options, reference_values, component="vaned_diffuser")
+
+
     # Collect exit plane results
     exit_plane = {**velocity_triangle_out,
                    **static_properties_out,
                    **utils.add_string_to_keys(stagnation_properties_out, "0"),
-                   "Ma" : Ma_out
+                   "Ma" : Ma_out,
                    }
 
     # Evaluate loss coefficient
@@ -325,11 +330,14 @@ def evaluate_vaned_diffuser(independents, input, boundary_conditions, geometry, 
     # Evaluate residuals
     resiudals = {"mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
                  "losses" : loss_dict["loss_error"],
+                 **throat_residual
     }
 
     # Store diffuser results
     results = {"inlet_plane" : input,
-               "exit_plane": exit_plane}
+               "throat_plane" : throat_results,
+               "exit_plane": exit_plane,
+               }
     
     return results, resiudals
 
@@ -608,7 +616,7 @@ def evaluate_volute(independents, input, boundary_conditions, geometry, fluid, m
     # Load model options
     loss_model = model_options["loss_model"]["volute"]
 
-    # Defin velocity triangle
+    # Define velocity triangle
     velocity_triangle_out = {"v" : v_out}
 
     # Calculate thermophysical properties
@@ -714,63 +722,4 @@ def compute_overall_performance(results, fluid, geometry):
 
     return overall
 
-def get_throat_gradient(input, boundary_conditions, geometry, fluid, model_options, reference_values, u_throat = 0):
-
-    """
-    Get gradient of get_res_throat at point x
-
-    Impeller: rothalpy is rothalpy, w2 is relative flow and u_throat is throat blade speed
-    Stationary components: rothalpy is the stagnation enthalpy, w2 is absolute velocity and u_throat is zero  
-    """
-
-    # Load input
-    w_throat = input["w_throat"]
-    rothalpy = input["rothalpy"]
-    s_in = input["s_in"]
-
-    # Load boundary conditions
-    mass_flow_rate = boundary_conditions["mass_flow_rate"]
-
-    # Load geometry
-    A_throat = geometry["area_throat"]
-
-    # Load model options
-    rel_step_fd = model_options["rel_step_fd"]
-
-    def get_res_throat(w, rothalpy, u_throat, s_in, mass_flow_rate):
-
-        """ 
-        Get mass flow rate residual at the throat for normalized velocity x
-        """
-        # Throat
-        h0_rel = rothalpy + 0.5*u_throat**2 # Assume same radius at throat and inlet
-        h = h0_rel - 0.5*w**2
-        s = s_in # Assume isentropic flow
-        statsic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
-        d = statsic_properties["d"]
-        m = d*w*A_throat
-
-        res = 1-m/mass_flow_rate
-
-        return res
-    
-    # Evaluate gradient
-    x = np.array([w_throat])
-    res = get_res_throat(w_throat, rothalpy, u_throat, s_in, mass_flow_rate)
-    eps = rel_step_fd * x
-    jac = approx_derivative(
-        get_res_throat,
-        w_throat,
-        abs_step = eps,
-        f0 = res,
-        method="3-point",
-        args = (
-            rothalpy,
-            u_throat,
-            s_in,
-            mass_flow_rate,
-        )
-    )
-
-    return jac[0], res
 

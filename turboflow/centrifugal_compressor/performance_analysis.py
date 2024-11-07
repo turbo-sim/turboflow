@@ -34,6 +34,9 @@ def compute_performance(
 ):
     # Get list of operating points
     operation_points = generate_operation_points(operation_points)
+
+    # Initialize initial guess
+    initial_guess = config["performance_analysis"]["initial_guess"]
     
     # Initialize lists to hold each solution and solver 
     solution_data = []
@@ -59,7 +62,7 @@ def compute_performance(
             # Compute performance
             solver = compute_single_operation_point(
                                 operation_point,
-                                config["performance_analysis"]["initial_guess"],
+                                initial_guess,
                                 config["geometry"],
                                 config["simulation_options"],
                                 config["performance_analysis"]["solver_options"],
@@ -115,10 +118,12 @@ def export_results_excel(solver_container, out_dir, out_filename):
             for key in results.keys():
                 val = solver.problem.results[key]
                 # For components (impeller etc.)
-                if (isinstance(val, dict) and (set(val.keys()) == {"inlet_plane", "exit_plane"})):
+                if isinstance(val, dict) and set(val.keys()).issuperset({"inlet_plane", "exit_plane"}):
                     results[key].append({
                         **utils.add_string_to_keys(val["inlet_plane"], "_in"), 
-                        **utils.add_string_to_keys(val["exit_plane"], "_out")})
+                        **utils.add_string_to_keys(val["exit_plane"], "_out"),
+                        **(utils.add_string_to_keys(val["throat_plane"], "_throat") if "throat_plane" in val else {})
+                    })
                 
                 # For entries with 
                 elif isinstance(val, dict):
@@ -614,6 +619,17 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
 
             # Prepare calculation of next component
             input = exit_state
+        
+        # Define keys to be deleted based on choking criterion
+        choking_criterion = self.model_options["choking_criterion"]
+        keys_to_delete = {
+        "no_throat": {"w_throat_vaned_diffuser", "w_throat_impeller"},  
+        "critical_isentropic_throat": {},  
+        }
+        # Remove specified keys for the selected choking criterion
+        if choking_criterion in keys_to_delete:
+            for key in keys_to_delete[choking_criterion]:
+                initial_guess.pop(key, None)  # Remove key if it exists
 
         return initial_guess
     
@@ -748,7 +764,9 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         }
 
         # Store initial guess
-        initial_guess = {"v_in_impeller" : velocity_triangle_in["v"],
+        initial_guess = {
+                    "v_in_impeller" : velocity_triangle_in["v"],
+                    "w_throat_impeller" : velocity_triangle_in["w"],
                     "w_out_impeller" : w_out,
                     "beta_out_impeller" : beta_out,
                     "s_out_impeller" : s_out,
@@ -861,6 +879,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         s_out = static_props_out["s"]
 
         initial_guess = {
+                    "w_throat_vaned_diffuser" : input["v"],
                     "v_out_vaned_diffuser" : v_out,
                     "s_out_vaned_diffuser" : s_out,
                     }
