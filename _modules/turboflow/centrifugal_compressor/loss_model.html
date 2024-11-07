@@ -90,11 +90,15 @@
 <span></span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">utilities</span> <span class="k">as</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">loss_model_custom</span> <span class="k">as</span> <span class="n">lmc</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">loss_model_oh</span> <span class="k">as</span> <span class="n">lmo</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">loss_model_zhang_set1</span> <span class="k">as</span> <span class="n">zs1</span>
 
 <span class="c1"># List of valid options</span>
 <span class="n">LOSS_MODELS</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s2">&quot;isentropic&quot;</span><span class="p">,</span>
     <span class="s2">&quot;custom&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;oh&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zhang_set1&quot;</span>
 <span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Available loss models.</span>
@@ -142,6 +146,8 @@
             <span class="s2">&quot;loss_total&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
         <span class="p">},</span>
         <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">:</span> <span class="n">lmc</span><span class="o">.</span><span class="n">compute_losses</span><span class="p">,</span>
+        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="p">:</span> <span class="n">lmo</span><span class="o">.</span><span class="n">compute_losses</span><span class="p">,</span>
+        <span class="n">LOSS_MODELS</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="p">:</span> <span class="n">zs1</span><span class="o">.</span><span class="n">compute_losses</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="c1"># Evaluate loss model</span>

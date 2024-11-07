@@ -1,0 +1,7 @@
+turboflow.centrifugal\_compressor.loss\_model\_zhang\_set1 module
+=================================================================
+
+.. automodule:: turboflow.centrifugal_compressor.loss_model_zhang_set1
+   :members:
+   :undoc-members:
+   :show-inheritance:
