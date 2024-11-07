@@ -15,6 +15,7 @@ from ..centrifugal_compressor import (
     LOSS_MODELS,
     LOSS_COEFFICIENTS,
     SLIP_MODELS,
+    CHOKING_CRITERIONS,
 )
 from ..pysolver_view import (
     SOLVER_OPTIONS,
@@ -79,7 +80,9 @@ class Factors(BaseModel):
     wall_heat_flux : Annotated[float, Field(ge=0)] = 0.00
     wake_width : Annotated[float, Field(gt=0)] = 0.366
 
-SlipModelEnum = Enum('DeviationModels', dict(zip([model.upper() for model in SLIP_MODELS], SLIP_MODELS)))
+SlipModelEnum = Enum('SlipModels', dict(zip([model.upper() for model in SLIP_MODELS], SLIP_MODELS)))
+ChokingCriterionEnum = Enum('ChokingCriterionModels', dict(zip([model.upper() for model in CHOKING_CRITERIONS], CHOKING_CRITERIONS)))
+
 
 class SimulationOptions(BaseModel):
     """
@@ -103,7 +106,8 @@ class SimulationOptions(BaseModel):
     loss_model: Union[LossConfig1, LossConfig2]
     vaneless_diffuser_model : Literal["algebraic", "1D"]
     factors : Factors
-    rel_step_fd : Annotated[float, Field(gt=0)] = 1e-6
+    rel_step_fd : Annotated[float, Field(gt=0)] = 1e-4
+    choking_criterion : ChokingCriterionEnum 
 
 class Impeller(BaseModel):
 
@@ -131,6 +135,7 @@ class VanedDiffuser(BaseModel):
     number_of_vanes : Annotated[float, Field(gt=0)]
     opening : Annotated[float, Field(gt=0)]
     throat_location_factor : Annotated[float, Field(le=1), Field(gt=0)]
+    area_throat_ratio : Annotated[float, Field(gt=0)]
 
 class VanelessDiffuser(BaseModel):
 

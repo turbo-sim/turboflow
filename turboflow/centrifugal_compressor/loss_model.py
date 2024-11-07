@@ -1,11 +1,15 @@
 
 from .. import utilities as utils
 from . import loss_model_custom as lmc
+from . import loss_model_oh as lmo
+from . import loss_model_zhang_set1 as zs1
 
 # List of valid options
 LOSS_MODELS = [
     "isentropic",
     "custom",
+    "oh",
+    "zhang_set1"
 ]
 """
 Available loss models.
@@ -51,6 +55,8 @@ def evaluate_loss_model(loss_model_options, input_parameters, component):
             "loss_total": 0.0,
         },
         LOSS_MODELS[1] : lmc.compute_losses,
+        LOSS_MODELS[2] : lmo.compute_losses,
+        LOSS_MODELS[3] : zs1.compute_losses,
     }
 
     # Evaluate loss model

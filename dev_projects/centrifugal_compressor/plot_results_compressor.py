@@ -1,5 +1,6 @@
 import turboflow as tf
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 RESULTS_PATH = "output"
@@ -21,11 +22,12 @@ outdir = "figures"
 # Plot mass flow rate
 title = "Mass flow rate"
 filename = title.lower().replace(" ", "_") + "_" + timestamp
-subset = ["omega"] + [1627]
+subsets = ["omega"] + list(52000*2*np.pi/60*np.array([0.75, 0.9, 0.95, 1.0]))
 fig1, ax1 = tf.plot_functions.plot_lines(
     data,
     x_key="mass_flow_rate",
-    y_keys=["PR_tt"],
+    y_keys=["efficiency_tt"],
+    subsets = subsets,
     xlabel="Mass flow rate [kg/s]",
     ylabel="Total-to-total pressure ratio",
     title=title,
@@ -36,6 +38,6 @@ fig1, ax1 = tf.plot_functions.plot_lines(
 )
 
 
-ax1.set_ylim([0.0, 3.0])
+# ax1.set_ylim([0.0, 4.0])
 
 plt.show()
