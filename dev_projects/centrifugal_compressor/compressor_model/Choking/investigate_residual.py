@@ -18,7 +18,8 @@ radius_tip1 = 85.6/2*1e-3
 r1 = (radius_tip1+radius_hub1)/2
 A1 = np.pi * (radius_tip1**2 - radius_hub1**2)
 A2 = A1*0.35
-
+omega = 12000*2*np.pi/60
+u2 = omega*r1
 fluid = cp.AbstractState("HEOS", fluid_name)
 fluid.update(cp.PT_INPUTS, p01, T01)
 s1 = fluid.smass()
@@ -40,12 +41,13 @@ def get_res_throat(w2, mass_flow_rate, rothalpy, u2):
 
     res = 1-m2/mass_flow_rate
 
-    return res
+    # return np.sqrt(res**2 + 1e-8)
+    return tf.smooth_abs(res, method="logarithmic", epsilon=1e-3)
 
 
 # Explore solutions
 h0_rel1 =  429202.99461396
-N = 100
+N = 5000
 w2 = np.linspace(200, 450, N)
 mass_flow_rate = [0.4, 0.45] 
 
@@ -53,7 +55,7 @@ fig, ax = plt.subplots()
 for j in range(len(mass_flow_rate)):
     residual = np.zeros(N)
     for i in range(N):
-        res = get_res_throat(w2[i], mass_flow_rate[j], h0_rel1)
+        res = get_res_throat(w2[i], mass_flow_rate[j], h0_rel1, u2)
         residual[i] = res
 
     ax.plot(w2, residual, label = f"Mass flow rate: {mass_flow_rate[j]}")
