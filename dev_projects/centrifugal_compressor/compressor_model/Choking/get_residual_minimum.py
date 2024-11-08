@@ -16,12 +16,15 @@ p01 = 101325
 T01 = 273.15 + 15
 fluid_name = "air"
 omega = 52000*2*np.pi/60
+omega = 14000*2*np.pi/60
 
 radius_hub1 = 40.9/2*1e-3
 radius_tip1 = 85.6/2*1e-3
+radius_hub1 = 0.09/2
+radius_tip1 = 0.28/2
 r1 = (radius_tip1+radius_hub1)/2
 A1 = np.pi * (radius_tip1**2 - radius_hub1**2)
-A2 = A1*0.35
+A2 = A1*0.5
 
 fluid = cp.AbstractState("HEOS", fluid_name)
 fluid.update(cp.PT_INPUTS, p01, T01)
@@ -49,15 +52,16 @@ def get_res_throat(x, mass_flow_rate, rothalpy, u2):
     res = 1-m2/mass_flow_rate
 
     return res
+    # return tf.smooth_abs(res, method="logarithmic", epsilon=1e-1)
 
-def get_gradient(x, mass_flow_rate, rothalpy, u2, eps):
+def get_gradient(x0, mass_flow_rate, rothalpy, u2, eps):
 
     """
-    Get graident of get_res_throat at point x
+    Get gradient of get_res_throat at point x
     """
     jac = approx_derivative(
         get_res_throat,
-        x,
+        x0,
         abs_step = eps,
         method="3-point",
         args = (
@@ -70,21 +74,39 @@ def get_gradient(x, mass_flow_rate, rothalpy, u2, eps):
     return jac[0]
 
 # Test function
-w2 = 150
-mass_flow_rate = 0.45
-rothalpy = h01
+w2 = 275
+mass_flow_rate = 5.0
 u2 = r1*omega
+rothalpy = h01
+rothalpy = 423569.8891 - 0.5*u2**2
 
 start_time = time.time()
-rel_step_fd = 1e-6
+rel_step_fd = 1e-4
 x = np.array([w2])
 eps = rel_step_fd * x
 
 x0 = x/u2
 soln = optimize.root(get_gradient, x0, args = (mass_flow_rate, rothalpy, u2, eps))
 
+second_deriv = approx_derivative(
+    get_gradient,
+    soln.x,
+    abs_step = eps,
+    method="3-point",
+    args = (
+        mass_flow_rate,
+        rothalpy,
+        u2,
+        eps,
+    )
+)
+
+print(second_deriv)
+print(get_res_throat(soln.x, mass_flow_rate, rothalpy, u2))
 print(soln.x*u2)
 print(get_gradient(soln.x, mass_flow_rate, rothalpy, u2, eps))
 print(f"Time: {time.time() - start_time}")
+
+# Get second derivative
 
 

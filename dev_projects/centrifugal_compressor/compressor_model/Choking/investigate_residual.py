@@ -15,14 +15,18 @@ fluid_name = "air"
 
 radius_hub1 = 40.9/2*1e-3
 radius_tip1 = 85.6/2*1e-3
+radius_hub1 = 0.09/2
+radius_tip1 = 0.28/2
 r1 = (radius_tip1+radius_hub1)/2
 A1 = np.pi * (radius_tip1**2 - radius_hub1**2)
 A2 = A1*0.35
-omega = 12000*2*np.pi/60
+omega = 52000*2*np.pi/60
+omega = 14000*2*np.pi/60
 u2 = omega*r1
 fluid = cp.AbstractState("HEOS", fluid_name)
 fluid.update(cp.PT_INPUTS, p01, T01)
 s1 = fluid.smass()
+h01 = fluid.hmass()
 
 def get_res_throat(w2, mass_flow_rate, rothalpy, u2):
 
@@ -41,28 +45,28 @@ def get_res_throat(w2, mass_flow_rate, rothalpy, u2):
 
     res = 1-m2/mass_flow_rate
 
-    # return np.sqrt(res**2 + 1e-8)
-    return tf.smooth_abs(res, method="logarithmic", epsilon=1e-3)
-
+    # return res
+    return tf.smooth_abs(res, method="logarithmic", epsilon=1e-1)
 
 # Explore solutions
-h0_rel1 =  429202.99461396
+# h0_rel1 =  429202.99461396
+rothalpy = 423569.8891 - 0.5*u2**2
 N = 5000
 w2 = np.linspace(200, 450, N)
-mass_flow_rate = [0.4, 0.45] 
+mass_flow_rate = [5.0] 
 
 fig, ax = plt.subplots()
 for j in range(len(mass_flow_rate)):
     residual = np.zeros(N)
     for i in range(N):
-        res = get_res_throat(w2[i], mass_flow_rate[j], h0_rel1, u2)
+        res = get_res_throat(w2[i], mass_flow_rate[j], rothalpy, u2)
         residual[i] = res
 
     ax.plot(w2, residual, label = f"Mass flow rate: {mass_flow_rate[j]}")
 ax.legend()
-ax.plot([150, 550], [0.00, 0.00], 'k--')
-ax.set_xlim([190, 460])
-ax.set_ylim([-0.1, 0.23])
+ax.plot([100, 550], [0.00, 0.00], 'k--')
+# ax.set_xlim([190, 460])
+# ax.set_ylim([-0.1, 0.23])
 ax.grid(False)
 ax.set_ylabel("Residual")
 ax.set_xlabel("Throat velocity [m/s]")
