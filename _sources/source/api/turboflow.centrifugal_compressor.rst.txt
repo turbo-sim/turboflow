@@ -19,5 +19,7 @@ Submodules
    turboflow.centrifugal_compressor.loss_model_custom
    turboflow.centrifugal_compressor.loss_model_oh
    turboflow.centrifugal_compressor.loss_model_zhang_set1
+   turboflow.centrifugal_compressor.loss_model_zhang_set2
+   turboflow.centrifugal_compressor.loss_model_zhang_set3
    turboflow.centrifugal_compressor.performance_analysis
    turboflow.centrifugal_compressor.slip_model

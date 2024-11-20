@@ -271,7 +271,7 @@
         <span class="s2">&quot;s_in&quot;</span> <span class="p">:</span> <span class="n">s_in</span><span class="p">,</span>
         <span class="s2">&quot;rothalpy&quot;</span> <span class="p">:</span> <span class="n">rothalpy</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="n">throat_residual</span><span class="p">,</span> <span class="n">throat_results</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">evaluate_choking</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="n">input_choking</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="s2">&quot;impeller&quot;</span><span class="p">,</span> <span class="n">u_throat</span> <span class="o">=</span> <span class="n">u_in</span><span class="p">)</span>
+    <span class="n">throat_residual</span><span class="p">,</span> <span class="n">throat_plane</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">evaluate_choking</span><span class="p">(</span><span class="n">independents</span><span class="p">,</span> <span class="n">input_choking</span><span class="p">,</span> <span class="n">boundary_conditions</span><span class="p">,</span> <span class="n">geometry</span><span class="p">,</span> <span class="n">fluid</span><span class="p">,</span> <span class="n">model_options</span><span class="p">,</span> <span class="n">reference_values</span><span class="p">,</span> <span class="n">component</span><span class="o">=</span><span class="s2">&quot;impeller&quot;</span><span class="p">,</span> <span class="n">u_throat</span> <span class="o">=</span> <span class="n">u_in</span><span class="p">)</span>
 
     <span class="c1"># Collect inlet plane and exit plane results </span>
     <span class="n">inlet_plane</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">velocity_triangle_in</span><span class="p">,</span>
@@ -294,6 +294,7 @@
     <span class="n">loss_input</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="n">inlet_plane</span><span class="p">,</span>
         <span class="s2">&quot;exit_plane&quot;</span> <span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
+        <span class="s2">&quot;throat_plane&quot;</span> <span class="p">:</span> <span class="n">throat_plane</span><span class="p">,</span>
         <span class="s2">&quot;geometry&quot;</span> <span class="p">:</span> <span class="n">geometry</span><span class="p">,</span>
         <span class="s2">&quot;isentropic&quot;</span> <span class="p">:</span> <span class="n">isentropic_properties_out</span><span class="p">,</span>
         <span class="s2">&quot;factors&quot;</span> <span class="p">:</span> <span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">],</span>
@@ -311,12 +312,12 @@
     <span class="n">resiudals</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;mass_flow_in&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_in</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
                  <span class="s2">&quot;mass_flow_out&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">m_out</span><span class="o">-</span><span class="n">mass_flow_rate</span><span class="p">)</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="p">,</span>
                  <span class="s2">&quot;losses&quot;</span> <span class="p">:</span> <span class="n">loss_dict</span><span class="p">[</span><span class="s2">&quot;loss_error&quot;</span><span class="p">],</span>
-                 <span class="s2">&quot;slip&quot;</span> <span class="p">:</span> <span class="n">slip_velocity</span><span class="o">-</span><span class="n">slip_model</span><span class="p">,</span>
+                 <span class="s2">&quot;slip&quot;</span> <span class="p">:</span> <span class="p">(</span><span class="n">slip_velocity</span><span class="o">-</span><span class="n">slip_model</span><span class="p">)</span><span class="o">/</span><span class="n">v_max</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">throat_residual</span><span class="p">}</span>
 
     <span class="c1"># Store impeller results</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inlet_plane&quot;</span> <span class="p">:</span> <span class="n">inlet_plane</span><span class="p">,</span>
-               <span class="s2">&quot;throat_plane&quot;</span> <span class="p">:</span> <span class="n">throat_results</span><span class="p">,</span>
+               <span class="s2">&quot;throat_plane&quot;</span> <span class="p">:</span> <span class="n">throat_plane</span><span class="p">,</span>
                <span class="s2">&quot;exit_plane&quot;</span><span class="p">:</span> <span class="n">exit_plane</span><span class="p">,</span>
     <span class="p">}</span>
 

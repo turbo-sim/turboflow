@@ -162,17 +162,22 @@
     <span class="n">b_in</span> <span class="o">=</span> <span class="n">vld_geometry</span><span class="p">[</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span> <span class="c1"># Channel width in</span>
     <span class="n">r_in</span> <span class="o">=</span> <span class="n">vld_geometry</span><span class="p">[</span><span class="s2">&quot;radius_in&quot;</span><span class="p">]</span> <span class="c1"># Radius in</span>
     <span class="n">r_out</span> <span class="o">=</span> <span class="n">vld_geometry</span><span class="p">[</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span> <span class="c1"># Radius out</span>
-    <span class="n">div</span> <span class="o">=</span> <span class="n">vld_geometry</span><span class="p">[</span><span class="s2">&quot;wall_divergence&quot;</span><span class="p">]</span> <span class="c1"># Wall divergence semi-angle</span>
+    <span class="n">b_out</span> <span class="o">=</span> <span class="n">vld_geometry</span><span class="p">[</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span> <span class="c1"># Wall divergence semi-angle    </span>
+    <span class="c1"># div = vld_geometry[&quot;wall_divergence&quot;] # Wall divergence semi-angle</span>
+
 
     <span class="c1"># Calculate geometry</span>
-    <span class="n">b_out</span> <span class="o">=</span> <span class="n">b_in</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">div</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span> <span class="o">-</span> <span class="n">r_in</span><span class="p">)</span> <span class="c1"># Channel width out</span>
+    <span class="c1"># b_out = b_in + 2*math.tand(div)*(r_out - r_in) # Channel width out</span>
+    <span class="n">div</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arctand</span><span class="p">((</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">b_in</span><span class="o">-</span><span class="n">b_out</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)))</span>
     <span class="n">A_in</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_in</span><span class="o">*</span><span class="n">b_in</span> <span class="c1"># Area in</span>
     <span class="n">A_out</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_out</span><span class="o">*</span><span class="n">b_out</span> <span class="c1"># Area out</span>
 
     <span class="n">new_parameters</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;area_in&quot;</span> <span class="p">:</span> <span class="n">A_in</span><span class="p">,</span>
         <span class="s2">&quot;area_out&quot;</span> <span class="p">:</span> <span class="n">A_out</span><span class="p">,</span>
-        <span class="s2">&quot;width_out&quot;</span> <span class="p">:</span> <span class="n">b_out</span><span class="p">}</span>
+        <span class="c1"># &quot;width_out&quot; : b_out,</span>
+        <span class="s2">&quot;wall_divergence&quot;</span> <span class="p">:</span> <span class="n">div</span><span class="p">,</span>
+        <span class="p">}</span>
 
     <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">vld_geometry</span><span class="p">,</span> <span class="o">**</span><span class="n">new_parameters</span><span class="p">}</span> </div>
 

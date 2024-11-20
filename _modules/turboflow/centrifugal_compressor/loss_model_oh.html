@@ -118,6 +118,7 @@
     <span class="c1"># Load parameters</span>
     <span class="n">T0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;T0&quot;</span><span class="p">]</span>
     <span class="n">p0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p0&quot;</span><span class="p">]</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
     <span class="n">cp</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span>
     <span class="n">cv</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cv&quot;</span><span class="p">]</span>
     <span class="n">p_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
@@ -129,8 +130,9 @@
     <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">cp</span><span class="o">*</span><span class="n">T0_in</span><span class="o">*</span><span class="p">((</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_out</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span> <span class="o">-</span> <span class="p">(</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_in</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span><span class="p">)</span>
 
     <span class="c1"># Store losses in dict</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
     <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span>
+        <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="o">/</span><span class="n">scale</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="n">loss_dict</span></div>
@@ -169,19 +171,18 @@
     <span class="c1"># Load geometry</span>
     <span class="n">t_cl</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
     <span class="n">b_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span>
-    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;impeller_length&quot;</span><span class="p">]</span>
+    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_axial&quot;</span><span class="p">]</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
     <span class="n">r_in_hub</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
     <span class="n">r_in_tip</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
     <span class="n">r_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
 
     <span class="c1"># Load model factors</span>
-    <span class="n">Cf</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;skin_friction&quot;</span><span class="p">]</span> 
     <span class="n">wake_width</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;wake_width&quot;</span><span class="p">]</span>
 
     <span class="c1"># Incidence loss (Conrad)</span>
-    <span class="n">f_inc</span> <span class="o">=</span> <span class="mf">0.6</span>
-    <span class="n">Y_inc</span> <span class="o">=</span> <span class="n">f_inc</span><span class="o">*</span><span class="n">w_t_in</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">f_inc</span> <span class="o">=</span> <span class="mf">0.5</span>
+    <span class="n">Y_inc</span> <span class="o">=</span> <span class="n">f_inc</span><span class="o">*</span><span class="mf">0.5</span><span class="o">*</span><span class="n">w_t_in</span><span class="o">**</span><span class="mi">2</span>
 
     <span class="c1"># Blade loading loss (Coppage)</span>
     <span class="n">Df</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">w_out</span><span class="o">/</span><span class="n">w_in</span> <span class="o">+</span> <span class="mf">0.75</span><span class="o">*</span><span class="p">(</span><span class="n">h0_out</span> <span class="o">-</span> <span class="n">h0_in</span><span class="p">)</span><span class="o">*</span><span class="n">w_out</span><span class="o">/</span><span class="p">((</span><span class="n">z</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r_in_tip</span><span class="o">/</span><span class="n">r_out</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">r_in_tip</span><span class="o">/</span><span class="n">r_out</span><span class="p">)</span><span class="o">*</span><span class="n">w_in</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
@@ -201,7 +202,13 @@
     <span class="c1"># Mixing loss (Johnston and Dean)</span>
     <span class="n">width_diffuser</span> <span class="o">=</span> <span class="n">b_out</span> <span class="c1"># Assume no change in width from impeller exit to diffuser inlet</span>
     <span class="n">b_star</span> <span class="o">=</span> <span class="n">width_diffuser</span><span class="o">/</span><span class="n">b_out</span>
-    <span class="n">Y_mix</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">wake_width</span><span class="o">-</span><span class="n">b_star</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">wake_width</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">Y_mix</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">wake_width</span><span class="o">-</span><span class="n">b_star</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">wake_width</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="mf">0.5</span><span class="o">*</span><span class="n">v_out</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Parasitic losses</span>
+    <span class="n">parasitic_losses</span> <span class="o">=</span> <span class="n">compute_parasitic_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">)</span>
+    <span class="n">Y_lk</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;leakage&quot;</span><span class="p">]</span>
+    <span class="n">Y_df</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;disk_friction&quot;</span><span class="p">]</span>
+    <span class="n">Y_rc</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;recirculation&quot;</span><span class="p">]</span>
 
     <span class="c1"># Total losses</span>
     <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
@@ -210,7 +217,13 @@
     <span class="n">Y_sf</span> <span class="o">=</span> <span class="n">Y_sf</span><span class="o">/</span><span class="n">scale</span>
     <span class="n">Y_cl</span> <span class="o">=</span> <span class="n">Y_cl</span><span class="o">/</span><span class="n">scale</span>
     <span class="n">Y_mix</span> <span class="o">=</span> <span class="n">Y_mix</span><span class="o">/</span><span class="n">scale</span>
-    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_bld</span> <span class="o">+</span> <span class="n">Y_sf</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_mix</span>
+
+    <span class="n">Y_lk</span> <span class="o">=</span> <span class="n">Y_lk</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_df</span> <span class="o">=</span> <span class="n">Y_df</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_rc</span> <span class="o">=</span> <span class="n">Y_rc</span><span class="o">/</span><span class="n">scale</span>
+
+    <span class="n">Y_parasitic</span> <span class="o">=</span> <span class="n">Y_lk</span> <span class="o">+</span> <span class="n">Y_df</span> <span class="o">+</span> <span class="n">Y_rc</span>
+    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_bld</span> <span class="o">+</span> <span class="n">Y_sf</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_mix</span> <span class="o">+</span> <span class="n">Y_parasitic</span>
 
     <span class="c1"># Scale loss coefficent</span>
     <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;incidence&quot;</span> <span class="p">:</span> <span class="n">Y_inc</span><span class="p">,</span>
@@ -218,7 +231,11 @@
                  <span class="s2">&quot;skin_friction&quot;</span> <span class="p">:</span> <span class="n">Y_sf</span><span class="p">,</span>
                  <span class="s2">&quot;tip_clearance&quot;</span> <span class="p">:</span> <span class="n">Y_cl</span><span class="p">,</span>
                  <span class="s2">&quot;wake_mixing&quot;</span> <span class="p">:</span> <span class="n">Y_mix</span><span class="p">,</span>
-                 <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="p">}</span>
+                 <span class="s2">&quot;leakage&quot;</span> <span class="p">:</span> <span class="n">Y_lk</span><span class="p">,</span>
+                 <span class="s2">&quot;recirculation&quot;</span> <span class="p">:</span> <span class="n">Y_rc</span><span class="p">,</span>
+                 <span class="s2">&quot;disk_friction&quot;</span> <span class="p">:</span> <span class="n">Y_df</span><span class="p">,</span>
+                 <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="p">,</span>
+                 <span class="p">}</span>
     
     <span class="k">return</span> <span class="n">loss_dict</span></div>
 
@@ -253,7 +270,8 @@
     <span class="n">t_cl</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
     <span class="n">b_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span>
     <span class="n">b_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
-    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;impeller_length&quot;</span><span class="p">]</span>
+    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_axial&quot;</span><span class="p">]</span>
+    <span class="n">L_m</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_meridional&quot;</span><span class="p">]</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
     <span class="n">r_in_tip</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
     <span class="n">r_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>

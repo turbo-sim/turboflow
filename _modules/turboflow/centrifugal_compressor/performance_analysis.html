@@ -145,27 +145,28 @@
                 <span class="n">operation_point</span><span class="p">,</span>
                 <span class="n">operation_points</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span>  <span class="c1"># Use up to the previous point</span>
                 <span class="n">solution_data</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span>  <span class="c1"># Use solutions up to the previous point</span>
+                <span class="n">solver_container</span><span class="p">[:</span><span class="n">i</span><span class="p">],</span>
             <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Using solution from point </span><span class="si">{</span><span class="n">closest_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2"> as initial guess&quot;</span><span class="p">)</span>
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="n">closest_x</span>
+        <span class="c1"># try:</span>
+        <span class="c1"># Compute performance</span>
+        <span class="n">solver</span> <span class="o">=</span> <span class="n">compute_single_operation_point</span><span class="p">(</span>
+                            <span class="n">operation_point</span><span class="p">,</span>
+                            <span class="n">initial_guess</span><span class="p">,</span>
+                            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+                            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
+                            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
+                            <span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># Compute performance</span>
-            <span class="n">solver</span> <span class="o">=</span> <span class="n">compute_single_operation_point</span><span class="p">(</span>
-                                <span class="n">operation_point</span><span class="p">,</span>
-                                <span class="n">initial_guess</span><span class="p">,</span>
-                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
-                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
-                                <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
-                                <span class="p">)</span>
+        <span class="c1"># Collect solution and solver</span>
+        <span class="n">solution_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">vars_real</span><span class="p">)</span>
+        <span class="n">solver_container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
 
-            <span class="c1"># Collect solution and solver</span>
-            <span class="n">solution_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">vars_real</span><span class="p">)</span>
-            <span class="n">solver_container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
-
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">handle_failure</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">stop_on_failure</span><span class="p">)</span>
-            <span class="n">solver_container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># except Exception as e:</span>
+        <span class="c1">#     handle_failure(i, e, stop_on_failure)</span>
+        <span class="c1">#     solver_container.append(None)</span>
+        <span class="c1">#     solution_data.append([])</span>
 
     <span class="c1"># Print final report</span>
     <span class="n">print_simulation_summary</span><span class="p">(</span><span class="n">solver_container</span><span class="p">)</span>
@@ -315,7 +316,7 @@
 
 <div class="viewcode-block" id="find_closest_operation_point">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.find_closest_operation_point">[docs]</a>
-<span class="k">def</span> <span class="nf">find_closest_operation_point</span><span class="p">(</span><span class="n">current_op_point</span><span class="p">,</span> <span class="n">operation_points</span><span class="p">,</span> <span class="n">solution_data</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">find_closest_operation_point</span><span class="p">(</span><span class="n">current_op_point</span><span class="p">,</span> <span class="n">operation_points</span><span class="p">,</span> <span class="n">solution_data</span><span class="p">,</span> <span class="n">solver_container</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Find the solution vector and index of the closest operation point in the historical data.</span>
 
@@ -327,6 +328,8 @@
 <span class="sd">        A list of historical operation points to search through.</span>
 <span class="sd">    solution_data : list</span>
 <span class="sd">        A list of solution vectors corresponding to each operation point.</span>
+<span class="sd">    solver_container : list</span>
+<span class="sd">        A list of solver objects corresponding to each operation point.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -340,7 +343,7 @@
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">op_point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">operation_points</span><span class="p">):</span>
         <span class="n">distance</span> <span class="o">=</span> <span class="n">get_operation_point_distance</span><span class="p">(</span><span class="n">current_op_point</span><span class="p">,</span> <span class="n">op_point</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="n">min_distance</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="n">min_distance</span> <span class="ow">and</span> <span class="n">solver_container</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
             <span class="n">min_distance</span> <span class="o">=</span> <span class="n">distance</span>
             <span class="n">closest_point_x</span> <span class="o">=</span> <span class="n">solution_data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
             <span class="n">closest_index</span> <span class="o">=</span> <span class="n">i</span>
@@ -660,33 +663,34 @@
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        3 options:</span>
-<span class="sd">            - Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically</span>
-<span class="sd">            - Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best </span>
-<span class="sd">            - Give complete set (real values)</span>
+<span class="sd">            1. Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically</span>
+<span class="sd">            2. Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best </span>
+<span class="sd">            3. Give complete set (real values)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">valid_keys_1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_out&quot;</span><span class="p">]</span>
-        <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_out&quot;</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
+        <span class="n">valid_keys_1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_impeller&quot;</span><span class="p">,</span> <span class="s2">&quot;Ma_vaned_diffuser&quot;</span><span class="p">]</span>
+        <span class="n">valid_keys_2</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">,</span> <span class="s2">&quot;phi_impeller&quot;</span><span class="p">,</span> <span class="s2">&quot;Ma_vaned_diffuser&quot;</span><span class="p">,</span> <span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
         <span class="n">check</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
         <span class="n">check</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">valid_keys_2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">initial_guess</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
 
         <span class="k">if</span> <span class="n">check</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="c1"># Initial guess determined from heurustic guess, with given parameters</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
                 <span class="c1"># Several initial guesses</span>
                 <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">])):</span>
-                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">][</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">])):</span>
+                    <span class="n">guess</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span> <span class="p">:</span> <span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">initial_guess</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">guess</span><span class="p">)</span>
                     <span class="n">initial_guesses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">heuristic_guess</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Single initial guess</span>
-                <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">])</span>
+                <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
                 <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">heuristic_guess</span><span class="p">]</span>
 
         <span class="k">elif</span> <span class="n">check</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
             <span class="c1"># Generate initial guess using latin hypercube sampling</span>
-            <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_tt&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">]]</span>
+            <span class="n">bounds</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;phi_impeller&quot;</span><span class="p">],</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;Ma_vaned_diffuser&quot;</span><span class="p">]]</span>
 
             <span class="n">n_samples</span> <span class="o">=</span> <span class="n">initial_guess</span><span class="p">[</span><span class="s2">&quot;n_samples&quot;</span><span class="p">]</span>
             <span class="n">heuristic_inputs</span> <span class="o">=</span> <span class="n">latin_hypercube_sampling</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">n_samples</span><span class="p">)</span>
@@ -694,7 +698,8 @@
             <span class="n">failures</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">for</span> <span class="n">heuristic_input</span> <span class="ow">in</span> <span class="n">heuristic_inputs</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">heuristic_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">heuristic_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">,</span> <span class="n">heuristic_input</span><span class="p">))</span>
+                    <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">guess</span><span class="p">)</span>
                     <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_values</span><span class="p">(</span><span class="n">heuristic_guess</span><span class="p">)</span> <span class="c1"># TODO: Add scaling</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> 
                     <span class="n">x0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
@@ -709,42 +714,43 @@
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Least norm of residuals: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">heuristic_input</span> <span class="o">=</span> <span class="n">heuristic_inputs</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">norm_residuals</span><span class="p">)]</span>
             <span class="n">initial_guess</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">valid_keys_1</span><span class="p">,</span> <span class="n">heuristic_input</span><span class="p">))</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">heuristic_input</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">heuristic_input</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">initial_guess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_heuristic_guess</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">)</span>
             <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_guess</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="c1"># Simply return the initial guess given</span>
             <span class="n">initial_guesses</span> <span class="o">=</span> <span class="p">[</span><span class="n">initial_guess</span><span class="p">]</span>
-
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Provided initial guess is not valid.&quot;</span><span class="p">)</span>
+    
         <span class="k">return</span> <span class="n">initial_guesses</span></div>
 
     
 <div class="viewcode-block" id="CentrifugalCompressorProblem.get_heuristic_guess">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_heuristic_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_heuristic_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eta_tt</span><span class="p">,</span> <span class="n">phi_out</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_heuristic_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guess</span><span class="p">):</span>
 
         <span class="c1"># Check vaneless diffuser model</span>
         <span class="n">vaneless_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;vaneless_diffuser_model&quot;</span><span class="p">]</span>
 
         <span class="c1"># initialize initial guess dictionary</span>
-        <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{}</span>
-
-        <span class="c1"># Prepare first input</span>
-        <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;eta_tt&quot;</span> <span class="p">:</span> <span class="n">eta_tt</span><span class="p">,</span>
-                <span class="s2">&quot;phi_out&quot;</span> <span class="p">:</span> <span class="n">phi_out</span><span class="p">}</span>
+        <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="nb">input</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># Get initial guess</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">guess_component</span> <span class="o">=</span> <span class="p">{</span><span class="n">var</span> <span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">guess</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">key</span><span class="p">)}</span>
+
             <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;impeller&quot;</span><span class="p">:</span>
-                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_impeller_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                <span class="n">heuristic_guess_component</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_impeller_guess</span><span class="p">(</span><span class="n">guess_component</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;vaneless_diffuser&quot;</span> <span class="ow">and</span> <span class="n">vaneless_model</span> <span class="o">==</span> <span class="s2">&quot;algebraic&quot;</span><span class="p">:</span>
-                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                <span class="n">heuristic_guess_component</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="n">guess_component</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;vaned_diffuser&quot;</span><span class="p">:</span>
-                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaned_diffuser_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                <span class="n">heuristic_guess_component</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_vaned_diffuser_guess</span><span class="p">(</span><span class="n">guess_component</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;volute&quot;</span><span class="p">:</span>
-                <span class="n">guess</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_volute_guess</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+                <span class="n">heuristic_guess_component</span><span class="p">,</span> <span class="n">exit_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_volute_guess</span><span class="p">(</span><span class="n">guess_component</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
 
             <span class="c1"># Store guess</span>
-            <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">initial_guess</span><span class="p">,</span> <span class="o">**</span><span class="n">guess</span><span class="p">}</span>
+            <span class="n">heuristic_guess</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">heuristic_guess</span><span class="p">,</span> <span class="o">**</span><span class="n">heuristic_guess_component</span><span class="p">}</span>
 
             <span class="c1"># Prepare calculation of next component</span>
             <span class="nb">input</span> <span class="o">=</span> <span class="n">exit_state</span>
@@ -758,14 +764,14 @@
         <span class="c1"># Remove specified keys for the selected choking criterion</span>
         <span class="k">if</span> <span class="n">choking_criterion</span> <span class="ow">in</span> <span class="n">keys_to_delete</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys_to_delete</span><span class="p">[</span><span class="n">choking_criterion</span><span class="p">]:</span>
-                <span class="n">initial_guess</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Remove key if it exists</span>
+                <span class="n">heuristic_guess</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Remove key if it exists</span>
 
-        <span class="k">return</span> <span class="n">initial_guess</span></div>
+        <span class="k">return</span> <span class="n">heuristic_guess</span></div>
 
     
 <div class="viewcode-block" id="CentrifugalCompressorProblem.get_impeller_guess">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_impeller_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_impeller_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_impeller_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guess</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
 
         <span class="c1"># Load boundary conditions</span>
         <span class="n">p0_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;p0_in&quot;</span><span class="p">]</span>
@@ -774,9 +780,9 @@
         <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
         <span class="n">alpha_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;alpha_in&quot;</span><span class="p">]</span>
 
-        <span class="c1"># Load input</span>
-        <span class="n">eta_tt</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;eta_tt&quot;</span><span class="p">]</span>
-        <span class="n">phi_out</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;phi_out&quot;</span><span class="p">]</span>
+        <span class="c1"># Load guess</span>
+        <span class="n">eta_tt</span> <span class="o">=</span> <span class="n">guess</span><span class="p">[</span><span class="s2">&quot;efficiency_impeller&quot;</span><span class="p">]</span>
+        <span class="n">phi_out</span> <span class="o">=</span> <span class="n">guess</span><span class="p">[</span><span class="s2">&quot;phi_impeller&quot;</span><span class="p">]</span>
         
         <span class="c1"># Load geometry</span>
         <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;impeller&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
@@ -898,7 +904,7 @@
         <span class="c1"># Store initial guess</span>
         <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;v_in_impeller&quot;</span> <span class="p">:</span> <span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">],</span>
-                    <span class="s2">&quot;w_throat_impeller&quot;</span> <span class="p">:</span> <span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;w&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;w_throat_impeller&quot;</span> <span class="p">:</span> <span class="n">velocity_triangle_in</span><span class="p">[</span><span class="s2">&quot;w&quot;</span><span class="p">]</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span> <span class="c1"># factor to ensure correct solution of thorat velocity</span>
                     <span class="s2">&quot;w_out_impeller&quot;</span> <span class="p">:</span> <span class="n">w_out</span><span class="p">,</span>
                     <span class="s2">&quot;beta_out_impeller&quot;</span> <span class="p">:</span> <span class="n">beta_out</span><span class="p">,</span>
                     <span class="s2">&quot;s_out_impeller&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
@@ -909,7 +915,7 @@
 
 <div class="viewcode-block" id="CentrifugalCompressorProblem.get_vaneless_diffuser_guess">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaneless_diffuser_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_vaneless_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guess</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Guess constant alpha</span>
 <span class="sd">        Simple correlation for static enthalpy loss coefficient</span>
@@ -920,6 +926,8 @@
         <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
         <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
         <span class="n">h_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">d_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+        <span class="n">s_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
 
         <span class="c1"># Load boundary conditions</span>
         <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
@@ -935,8 +943,9 @@
 
         <span class="c1"># Calculate exit velocity</span>
         <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">alpha_in</span>
-        <span class="n">delta_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)))</span>
-        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">r_in</span><span class="o">*</span><span class="n">delta_M</span>
+        <span class="c1"># delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))</span>
+        <span class="n">delta_M</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_in</span><span class="o">/</span><span class="n">r_out</span><span class="o">*</span><span class="n">delta_M</span>
         <span class="n">v_out</span> <span class="o">=</span> <span class="n">v_t_out</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
         <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
         <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span>
@@ -969,18 +978,22 @@
 
 <div class="viewcode-block" id="CentrifugalCompressorProblem.get_vaned_diffuser_guess">
 <a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.performance_analysis.html#turboflow.centrifugal_compressor.performance_analysis.CentrifugalCompressorProblem.get_vaned_diffuser_guess">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_vaned_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_vaned_diffuser_guess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">guess</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Similar as vaneless diffuser</span>
 <span class="sd">        Assume zero deviation at exit </span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Load guess</span>
+        <span class="n">Ma_out</span> <span class="o">=</span> <span class="n">guess</span><span class="p">[</span><span class="s2">&quot;Ma_vaned_diffuser&quot;</span><span class="p">]</span>
         
         <span class="c1"># Load input</span>
         <span class="n">alpha_in</span>  <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
         <span class="n">v_t_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
         <span class="n">v_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
         <span class="n">h_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;h&quot;</span><span class="p">]</span>
+        <span class="n">a_in</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
 
         <span class="c1"># Load boundary conditions</span>
         <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">boundary_conditions</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
@@ -996,11 +1009,13 @@
         <span class="n">Cf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_options</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;skin_friction&quot;</span><span class="p">]</span>
 
         <span class="c1"># Calculate exit velocity</span>
-        <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span>
+        <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">theta_out</span><span class="o">*</span><span class="mf">0.9</span>
         <span class="n">delta_M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Cf</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">b_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_in</span><span class="p">)))</span>
-        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">r_in</span><span class="o">*</span><span class="n">delta_M</span>
+        <span class="c1"># delta_M = 1</span>
+        <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">v_t_in</span><span class="o">*</span><span class="n">r_in</span><span class="o">/</span><span class="n">r_out</span><span class="o">*</span><span class="n">delta_M</span>
         <span class="n">v_out</span> <span class="o">=</span> <span class="n">v_t_out</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sind</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
         <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">v_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">)</span>
+        <span class="n">v_out</span> <span class="o">=</span> <span class="mf">0.2</span><span class="o">*</span><span class="n">a_in</span>
 
         <span class="n">velocity_triangle_out</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;v&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
@@ -1017,7 +1032,7 @@
         <span class="n">s_out</span> <span class="o">=</span> <span class="n">static_props_out</span><span class="p">[</span><span class="s2">&quot;s&quot;</span><span class="p">]</span>
 
         <span class="n">initial_guess</span> <span class="o">=</span> <span class="p">{</span>
-                    <span class="s2">&quot;w_throat_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;w_throat_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="nb">input</span><span class="p">[</span><span class="s2">&quot;v&quot;</span><span class="p">]</span><span class="o">*</span><span class="mf">0.5</span><span class="p">,</span>
                     <span class="s2">&quot;v_out_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="n">v_out</span><span class="p">,</span>
                     <span class="s2">&quot;s_out_vaned_diffuser&quot;</span> <span class="p">:</span> <span class="n">s_out</span><span class="p">,</span>
                     <span class="p">}</span>
@@ -1107,10 +1122,8 @@
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">solver</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">solvers</span><span class="p">):</span>
         <span class="c1"># Check if the solver is not None and has the required attribute</span>
-        <span class="k">if</span> <span class="n">solver</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="s2">&quot;elapsed_time&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
             <span class="n">times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">elapsed_time</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">solver</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-                <span class="n">failed_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Handle failed solver or missing attributes</span>
             <span class="n">failed_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>

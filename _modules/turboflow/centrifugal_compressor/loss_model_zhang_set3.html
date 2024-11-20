@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>turboflow.centrifugal_compressor.loss_model_zhang_set3 &mdash; turboflow v0.1.12 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=abecb913" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=825059f5"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js?v=4a39c7ea"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            turboflow
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/model_description.html">Model Description</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/nomenclature.html">Nomenclature</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/api/turboflow.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/developer_guide.html">Developer guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">turboflow</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">turboflow.centrifugal_compressor.loss_model_zhang_set3</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for turboflow.centrifugal_compressor.loss_model_zhang_set3</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">math</span>
+
+<div class="viewcode-block" id="compute_losses">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.loss_model_zhang_set3.html#turboflow.centrifugal_compressor.loss_model_zhang_set3.compute_losses">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+
+    <span class="c1"># Map loss model functions</span>
+    <span class="n">component_function</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;impeller&quot;</span> <span class="p">:</span> <span class="n">compute_impeller_losses</span><span class="p">,</span>
+        <span class="s2">&quot;vaneless_diffuser&quot;</span> <span class="p">:</span> <span class="n">compute_vaneless_diffuser_losses</span><span class="p">,</span>
+    <span class="p">}</span>   
+
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="n">component_function</span><span class="p">[</span><span class="n">component</span><span class="p">](</span><span class="n">input_parameters</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loss_dict</span></div>
+
+
+
+<div class="viewcode-block" id="compute_vaneless_diffuser_losses">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.loss_model_zhang_set3.html#turboflow.centrifugal_compressor.loss_model_zhang_set3.compute_vaneless_diffuser_losses">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_vaneless_diffuser_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zhang set 1 vanless diffuser losses</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Load parameters</span>
+    <span class="n">T0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;T0&quot;</span><span class="p">]</span>
+    <span class="n">p0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p0&quot;</span><span class="p">]</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span>
+    <span class="n">cv</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cv&quot;</span><span class="p">]</span>
+    <span class="n">p_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
+    <span class="n">p0_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p0&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Calculate vaneless diffuser losses (Stanitz)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">cp</span><span class="o">/</span><span class="n">cv</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="n">gamma</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span>
+    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">cp</span><span class="o">*</span><span class="n">T0_in</span><span class="o">*</span><span class="p">((</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_out</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span> <span class="o">-</span> <span class="p">(</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_in</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span><span class="p">)</span>
+
+    <span class="c1"># Store losses in dict</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">loss_dict</span></div>
+
+
+<div class="viewcode-block" id="compute_impeller_losses">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.loss_model_zhang_set3.html#turboflow.centrifugal_compressor.loss_model_zhang_set3.compute_impeller_losses">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_impeller_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zhang set 1 Impeller losses</span>
+<span class="sd">    Throat not evaluated for now</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Load inlet plane</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="n">v_m_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span>
+    <span class="n">w_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
+    <span class="n">w_t_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w_t&quot;</span><span class="p">]</span>
+    <span class="n">beta_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
+    <span class="n">d_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">a_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+    <span class="n">p_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
+    <span class="n">Ma_rel_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;Ma_rel&quot;</span><span class="p">]</span>
+    <span class="n">mu_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;mu&quot;</span><span class="p">]</span>
+    <span class="n">p0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p0&quot;</span><span class="p">]</span>
+    <span class="n">T0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;T0&quot;</span><span class="p">]</span>
+    <span class="n">gamma_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;gamma&quot;</span><span class="p">]</span>
+    <span class="n">cp_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cpmass&quot;</span><span class="p">]</span>
+    <span class="n">cv_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cvmass&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load exit plane</span>
+    <span class="n">v_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="n">v_m_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v_m&quot;</span><span class="p">]</span>
+    <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+    <span class="n">beta_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
+    <span class="n">w_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
+    <span class="n">w_t_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w_t&quot;</span><span class="p">]</span>
+    <span class="n">u_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;blade_speed&quot;</span><span class="p">]</span>
+    <span class="n">d_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+    <span class="n">h0_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">a_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;a&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load throat plane</span>
+    <span class="n">w_th</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
+    <span class="n">p_th</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;throat_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load geometry</span>
+    <span class="n">t_cl</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+    <span class="n">b_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span>
+    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_axial&quot;</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
+    <span class="n">r_in_hub</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
+    <span class="n">r_in_tip</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
+    <span class="n">r_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+    <span class="n">A_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;area_out&quot;</span><span class="p">]</span>
+    <span class="n">A_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;area_in&quot;</span><span class="p">]</span>
+    <span class="n">A_th</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;area_throat&quot;</span><span class="p">]</span>
+    <span class="n">theta_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load boundary conditions</span>
+    <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;boundary_conditions&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load model factors</span>
+    <span class="n">wake_width</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;factors&quot;</span><span class="p">][</span><span class="s2">&quot;wake_width&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Incidence loss (Aungier)</span>
+    <span class="n">Y_inc</span> <span class="o">=</span> <span class="mf">0.4</span><span class="o">*</span><span class="p">(</span><span class="n">w_in</span><span class="o">-</span><span class="n">v_m_in</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> 
+
+    <span class="c1"># Blade loading loss (Aungier)</span>
+    <span class="n">L_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="n">r_out</span><span class="o">*</span><span class="mi">2</span><span class="o">-</span><span class="p">(</span><span class="n">r_in_tip</span> <span class="o">+</span> <span class="n">r_in_hub</span><span class="p">)</span><span class="o">-</span><span class="n">b_out</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">L_ax</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span><span class="o">+</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)))</span>
+    <span class="n">delta_W</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">r_out</span><span class="o">*</span><span class="n">v_t_out</span><span class="o">/</span><span class="p">(</span><span class="n">z</span><span class="o">*</span><span class="n">L_b</span><span class="p">)</span>
+    <span class="n">Y_bld</span> <span class="o">=</span> <span class="n">delta_W</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">48</span>
+
+    <span class="c1"># Skin friction loss (Jansen)</span>
+    <span class="n">D_h</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">r_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">z</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">r_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_out</span><span class="p">)</span><span class="o">/</span><span class="n">b_out</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">r_in_tip</span><span class="o">+</span><span class="n">r_in_hub</span><span class="p">)</span><span class="o">/</span><span class="n">r_out</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">z</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">+</span> <span class="p">(</span><span class="n">r_in_tip</span> <span class="o">+</span> <span class="n">r_in_hub</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">r_in_tip</span><span class="o">-</span><span class="n">r_in_hub</span><span class="p">)</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_in</span><span class="p">))</span>
+    <span class="n">w_avg</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">w_in</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">w_in</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span>
+    <span class="n">Re</span> <span class="o">=</span> <span class="n">u_out</span><span class="o">*</span><span class="n">D_h</span><span class="o">*</span><span class="n">d_in</span><span class="o">/</span><span class="n">mu_in</span>
+    <span class="n">Cf</span> <span class="o">=</span> <span class="mf">0.0412</span><span class="o">*</span><span class="n">Re</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.1925</span><span class="p">)</span>
+    <span class="n">Y_sf</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">Cf</span><span class="o">*</span><span class="n">L_b</span><span class="o">/</span><span class="n">D_h</span><span class="o">*</span><span class="n">w_avg</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Clearance loss (Rogers)</span>
+    <span class="n">Y_cl</span> <span class="o">=</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">t_cl</span><span class="o">/</span><span class="n">b_out</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Mixing loss (Aungier)</span>
+    <span class="n">W_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">v_m_out</span><span class="o">*</span><span class="n">A_out</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">r_out</span><span class="o">*</span><span class="n">b_out</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">w_t_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">W_max</span> <span class="o">=</span> <span class="p">(</span><span class="n">w_in</span> <span class="o">+</span> <span class="n">w_out</span><span class="o">+</span><span class="n">delta_W</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">D_eq</span> <span class="o">=</span> <span class="n">W_max</span><span class="o">/</span><span class="n">w_out</span>
+    <span class="n">W_sep</span> <span class="o">=</span> <span class="n">w_out</span><span class="o">*</span><span class="p">(</span><span class="n">D_eq</span> <span class="o">&lt;=</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">w_out</span><span class="o">*</span><span class="n">D_eq</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">D_eq</span> <span class="o">&gt;</span> <span class="mf">2.0</span><span class="p">)</span> 
+    <span class="n">Y_mix</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">W_sep</span> <span class="o">-</span> <span class="n">W_out</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c1"># Entrance diffusion loss (Aungier)</span>
+    <span class="n">Y_dif</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.4</span><span class="o">*</span><span class="p">(</span><span class="n">w_in</span> <span class="o">-</span> <span class="n">w_th</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">Y_inc</span><span class="p">)</span>
+
+    <span class="c1"># Choke loss (Aungier)</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">cp_in</span><span class="o">-</span><span class="n">cv_in</span>
+    <span class="n">A_crit</span> <span class="o">=</span> <span class="n">p0_in</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">/</span><span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">T0_in</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="p">((</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">Cr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span><span class="o">/</span><span class="n">A_th</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="mi">11</span><span class="o">-</span><span class="mi">10</span><span class="o">*</span><span class="p">(</span><span class="n">Cr</span><span class="o">*</span><span class="n">A_th</span><span class="p">)</span><span class="o">/</span><span class="n">A_crit</span>
+    <span class="n">Y_ch</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">w_in</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mf">0.05</span><span class="o">*</span><span class="n">X</span><span class="o">+</span><span class="n">X</span><span class="o">**</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">X</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Shock losses (Whitfield and Baines)</span>
+    <span class="n">Y_sh</span> <span class="o">=</span> <span class="n">w_in</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">w_th</span><span class="o">/</span><span class="n">w_in</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">2</span><span class="o">/</span><span class="p">((</span><span class="n">gamma_in</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Ma_rel_in</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="n">p_th</span><span class="o">/</span><span class="n">p_in</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">/</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># Parasitic losses</span>
+    <span class="n">parasitic_losses</span> <span class="o">=</span> <span class="n">compute_parasitic_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">)</span>
+    <span class="n">Y_lk</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;leakage&quot;</span><span class="p">]</span>
+    <span class="n">Y_df</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;disk_friction&quot;</span><span class="p">]</span>
+    <span class="n">Y_rc</span> <span class="o">=</span> <span class="n">parasitic_losses</span><span class="p">[</span><span class="s2">&quot;recirculation&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Total losses</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">Y_inc</span> <span class="o">=</span> <span class="n">Y_inc</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_bld</span> <span class="o">=</span> <span class="n">Y_bld</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_sf</span> <span class="o">=</span> <span class="n">Y_sf</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_cl</span> <span class="o">=</span> <span class="n">Y_cl</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_mix</span> <span class="o">=</span> <span class="n">Y_mix</span><span class="o">/</span><span class="n">scale</span>
+
+    <span class="n">Y_dif</span> <span class="o">=</span> <span class="n">Y_cl</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_ch</span> <span class="o">=</span> <span class="n">Y_mix</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_sh</span> <span class="o">=</span> <span class="n">Y_sh</span><span class="o">/</span><span class="n">scale</span>
+
+    <span class="n">Y_lk</span> <span class="o">=</span> <span class="n">Y_lk</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_df</span> <span class="o">=</span> <span class="n">Y_df</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_rc</span> <span class="o">=</span> <span class="n">Y_rc</span><span class="o">/</span><span class="n">scale</span>
+
+    <span class="n">Y_parasitic</span> <span class="o">=</span> <span class="n">Y_lk</span> <span class="o">+</span> <span class="n">Y_df</span> <span class="o">+</span> <span class="n">Y_rc</span>
+    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_bld</span> <span class="o">+</span> <span class="n">Y_sf</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_mix</span> <span class="o">+</span> <span class="n">Y_dif</span> <span class="o">+</span> <span class="n">Y_ch</span> <span class="o">+</span> <span class="n">Y_sh</span> <span class="o">+</span> <span class="n">Y_parasitic</span>
+
+    <span class="c1"># Scale loss coefficent</span>
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;incidence&quot;</span> <span class="p">:</span> <span class="n">Y_inc</span><span class="p">,</span>
+                 <span class="s2">&quot;blade_loading&quot;</span> <span class="p">:</span> <span class="n">Y_bld</span><span class="p">,</span>
+                 <span class="s2">&quot;skin_friction&quot;</span> <span class="p">:</span> <span class="n">Y_sf</span><span class="p">,</span>
+                 <span class="s2">&quot;tip_clearance&quot;</span> <span class="p">:</span> <span class="n">Y_cl</span><span class="p">,</span>
+                 <span class="s2">&quot;wake_mixing&quot;</span> <span class="p">:</span> <span class="n">Y_mix</span><span class="p">,</span>
+                 <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="p">,</span>
+                 <span class="s2">&quot;leakage&quot;</span> <span class="p">:</span> <span class="n">Y_lk</span><span class="p">,</span>
+                 <span class="s2">&quot;recirculation&quot;</span> <span class="p">:</span> <span class="n">Y_rc</span><span class="p">,</span>
+                 <span class="s2">&quot;disk_friction&quot;</span> <span class="p">:</span> <span class="n">Y_df</span><span class="p">,</span>
+                 <span class="s2">&quot;choke&quot;</span><span class="p">:</span> <span class="n">Y_ch</span><span class="p">,</span>
+                 <span class="s2">&quot;shock&quot;</span> <span class="p">:</span> <span class="n">Y_sh</span><span class="p">,</span>
+                 <span class="s2">&quot;entrance_diffusion&quot;</span> <span class="p">:</span> <span class="n">Y_dif</span><span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">loss_dict</span></div>
+
+
+<div class="viewcode-block" id="compute_parasitic_losses">
+<a class="viewcode-back" href="../../../source/api/turboflow.centrifugal_compressor.loss_model_zhang_set3.html#turboflow.centrifugal_compressor.loss_model_zhang_set3.compute_parasitic_losses">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_parasitic_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zhang set 1 parasitic losses</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load boundary conditions </span>
+    <span class="n">mass_flow_rate</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;boundary_conditions&quot;</span><span class="p">][</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load inlet plane</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="n">v_t_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+    <span class="n">u_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;blade_speed&quot;</span><span class="p">]</span>
+    <span class="n">w_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
+    <span class="n">d_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+    <span class="n">h0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load exit plane</span>
+    <span class="n">v_t_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v_t&quot;</span><span class="p">]</span>
+    <span class="n">alpha_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;alpha&quot;</span><span class="p">]</span>
+    <span class="n">w_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;w&quot;</span><span class="p">]</span>
+    <span class="n">v_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
+    <span class="n">u_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;blade_speed&quot;</span><span class="p">]</span>
+    <span class="n">d_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;d&quot;</span><span class="p">]</span>
+    <span class="n">h0_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;h0&quot;</span><span class="p">]</span>
+    <span class="n">mu_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;mu&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Load geometry</span>
+    <span class="n">t_cl</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;tip_clearance&quot;</span><span class="p">]</span>
+    <span class="n">b_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span>
+    <span class="n">b_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
+    <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_axial&quot;</span><span class="p">]</span>
+    <span class="n">L_m</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_meridonial&quot;</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
+    <span class="n">r_in_tip</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
+    <span class="n">r_hub_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
+    <span class="n">r_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_out&quot;</span><span class="p">]</span>
+    <span class="n">r_mean_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_mean_in&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Recirculation losses (Coppage)</span>
+    <span class="n">Df</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">w_out</span><span class="o">/</span><span class="n">w_in</span> <span class="o">+</span> <span class="mf">0.75</span><span class="o">*</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">u_out</span><span class="o">*</span><span class="n">v_t_out</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">u_in</span><span class="o">*</span><span class="n">v_t_in</span><span class="p">))</span><span class="o">*</span><span class="n">w_out</span><span class="o">/</span><span class="p">((</span><span class="n">z</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r_in_tip</span><span class="o">/</span><span class="n">r_out</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">r_in_tip</span><span class="o">/</span><span class="n">r_out</span><span class="p">)</span><span class="o">*</span><span class="n">w_in</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">Y_rc</span> <span class="o">=</span> <span class="mf">0.02</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">tand</span><span class="p">(</span><span class="n">alpha_out</span><span class="p">))</span><span class="o">*</span><span class="n">Df</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">2</span> <span class="c1"># Error in exponent in paper?</span>
+
+    <span class="c1"># Disk friction losses (Dailey and Nece)</span>
+    <span class="n">Re</span> <span class="o">=</span> <span class="n">d_out</span><span class="o">*</span><span class="n">u_out</span><span class="o">*</span><span class="n">r_out</span><span class="o">/</span><span class="n">mu_out</span>
+    <span class="n">f_df</span> <span class="o">=</span> <span class="mf">2.67</span><span class="o">/</span><span class="n">Re</span><span class="o">**</span><span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">Re</span><span class="o">&lt;</span><span class="mf">3e5</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.0622</span><span class="o">/</span><span class="n">Re</span><span class="o">**</span><span class="mf">0.2</span><span class="o">*</span><span class="p">(</span><span class="n">Re</span><span class="o">&gt;=</span><span class="mf">3e5</span><span class="p">)</span>
+    <span class="n">d_avg</span> <span class="o">=</span> <span class="p">(</span><span class="n">d_in</span> <span class="o">+</span> <span class="n">d_out</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">Y_df</span> <span class="o">=</span> <span class="n">f_df</span><span class="o">*</span><span class="n">d_avg</span><span class="o">*</span><span class="n">r_out</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">u_out</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">mass_flow_rate</span><span class="p">)</span>
+
+    <span class="c1"># Leakage loss (Jansen)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="n">r_in_tip</span><span class="o">-</span><span class="n">r_hub_in</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">r_out</span><span class="o">-</span><span class="n">r_in_tip</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">d_out</span><span class="o">/</span><span class="n">d_in</span><span class="p">)</span>
+    <span class="n">Y_lk</span> <span class="o">=</span> <span class="mf">0.6</span><span class="o">*</span><span class="n">t_cl</span><span class="o">/</span><span class="n">b_out</span><span class="o">*</span><span class="n">v_out</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">b_out</span><span class="o">/</span><span class="n">z</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="n">v_t_out</span><span class="o">*</span><span class="n">v_in</span><span class="p">)</span>
+
+    <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;recirculation&quot;</span> <span class="p">:</span> <span class="n">Y_rc</span><span class="p">,</span>
+                 <span class="s2">&quot;disk_friction&quot;</span> <span class="p">:</span> <span class="n">Y_df</span><span class="p">,</span>
+                 <span class="s2">&quot;leakage&quot;</span> <span class="p">:</span> <span class="n">Y_lk</span><span class="p">,</span>
+                 <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_rc</span> <span class="o">+</span> <span class="n">Y_df</span> <span class="o">+</span> <span class="n">Y_lk</span><span class="p">,</span>
+                 <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">loss_dict</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Lasse Borg Anderson and Roberto Agromayor.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
