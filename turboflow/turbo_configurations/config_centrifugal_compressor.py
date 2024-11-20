@@ -119,7 +119,8 @@ class Impeller(BaseModel):
     leading_edge_angle : Annotated[float, Field(le=90), Field(gt=-90)]
     trailing_edge_angle : Annotated[float, Field(le=90), Field(gt=-90)]
     number_of_blades : Annotated[float, Field(gt=0)]
-    impeller_length : Annotated[float, Field(gt=0)]
+    length_axial : Annotated[float, Field(gt=0)]
+    length_meridional : Annotated[float, Field(gt=0)]
     tip_clearance : Annotated[float, Field(gt=0)]
     area_throat_ratio : Annotated[float, Field(gt=0)]
 
@@ -140,10 +141,11 @@ class VanedDiffuser(BaseModel):
 class VanelessDiffuser(BaseModel):
 
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
-    wall_divergence : Annotated[float, Field(le=90), Field(gt=-90)]
+    # wall_divergence : Annotated[float, Field(le=90), Field(gt=-90)]
     radius_out : Annotated[float, Field(gt=0)]
     radius_in : Annotated[float, Field(gt=0)]
     width_in : Annotated[float, Field(gt=0)]
+    width_out : Annotated[float, Field(gt=0)]
 
 class Volute(BaseModel):
 

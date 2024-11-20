@@ -65,17 +65,22 @@ def calculate_vaneless_diffuser_geometry(vld_geometry):
     b_in = vld_geometry["width_in"] # Channel width in
     r_in = vld_geometry["radius_in"] # Radius in
     r_out = vld_geometry["radius_out"] # Radius out
-    div = vld_geometry["wall_divergence"] # Wall divergence semi-angle
+    b_out = vld_geometry["width_out"] # Wall divergence semi-angle    
+    # div = vld_geometry["wall_divergence"] # Wall divergence semi-angle
+
 
     # Calculate geometry
-    b_out = b_in + 2*math.tand(div)*(r_out - r_in) # Channel width out
+    # b_out = b_in + 2*math.tand(div)*(r_out - r_in) # Channel width out
+    div = math.arctand((0.5*(b_in-b_out)/(r_out-r_in)))
     A_in = 2*np.pi*r_in*b_in # Area in
     A_out = 2*np.pi*r_out*b_out # Area out
 
     new_parameters = {
         "area_in" : A_in,
         "area_out" : A_out,
-        "width_out" : b_out}
+        # "width_out" : b_out,
+        "wall_divergence" : div,
+        }
 
     return {**vld_geometry, **new_parameters} 
 
