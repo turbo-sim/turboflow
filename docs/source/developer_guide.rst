@@ -44,7 +44,7 @@ This installation guide is intended for developers who wish to contribute to or 
 
    .. code-block:: bash
 
-      conda env create --name turboflow_env python=3.11
+      conda create --name turboflow_env python=3.11
 
 4. **Activate the newly created virtual environment**:
 

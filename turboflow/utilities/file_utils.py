@@ -7,6 +7,9 @@ import pickle
 from datetime import datetime
 import numpy as np
 
+import jax
+import jax.numpy as jnp
+
 def convert_numpy_to_python(data, precision=10):
     """
     Recursively converts numpy arrays, scalars, and other numpy types to their Python counterparts
@@ -284,6 +287,21 @@ def is_dict_empty(data):
         return all(is_dict_empty(v) for v in data.values()) if data else True
     return False  # Not a dictionary
 
+def combine_to_dict_of_arrays(dict_list):
+    """
+    Combines a list of dictionaries into a dictionary of concatenated JAX arrays.
+    Checks that all dictionaries have the same keys and raises an error if not.
+    """
+    # Ensure all dictionaries have the same keys
+    keys = dict_list[0].keys()
+    for d in dict_list:
+        if d.keys() != keys:
+            raise ValueError("All dictionaries must have the same keys.")
+ 
+    # Concatenate values for each key across all dictionaries
+    combined_dict = {key: jnp.concatenate([jnp.atleast_1d(d[key]) for d in dict_list]) for key in keys}
+
+    return combined_dict
 
 def print_dict(data, indent=0, return_output=False):
     """

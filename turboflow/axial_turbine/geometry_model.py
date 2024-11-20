@@ -1,6 +1,9 @@
-import numpy as np
-from .. import math
-from .. import utilities as utils
+# import numpy as np
+from turboflow import math
+from turboflow import utilities as utils
+
+import jax
+import jax.numpy as jnp
 
 
 def validate_turbine_geometry(geom, display=False):
@@ -58,8 +61,8 @@ def validate_turbine_geometry(geom, display=False):
     number_of_cascades = len(geom["cascade_type"])
 
     # Check if cascade_type is correctly defined
-    valid_types = np.array(["stator", "rotor"])
-    invalid_types = geom["cascade_type"][~np.isin(geom["cascade_type"], valid_types)]
+    valid_types = jnp.array(["stator", "rotor"])
+    invalid_types = geom["cascade_type"][~jnp.isin(geom["cascade_type"], valid_types)]
     if invalid_types.size > 0:
         invalid_types_str = ", ".join(invalid_types)
         raise ValueError(
@@ -73,7 +76,7 @@ def validate_turbine_geometry(geom, display=False):
             continue
 
         # Check that all variables are numpy arrays
-        if not isinstance(value, np.ndarray):
+        if not isinstance(value,jnp.ndarray):
             raise TypeError(f"Parameter '{key}' must be a NumPy array.")
 
         else:
@@ -177,28 +180,28 @@ def prepare_geometry(geometry, radius_type):
     # Compute radius at hub and tip
     if radius_type == "constant_mean":
         radius_mean = radius
-        radius_tip_in = 2 * radius_mean / (1 + hub_to_tip_in)
-        radius_tip_out = 2 * radius_mean / (1 + hub_to_tip_out)
+        radius_tip_in = 2.0 * radius_mean / (1.0 + hub_to_tip_in)
+        radius_tip_out = 2.0 * radius_mean / (1.0 + hub_to_tip_out)
         radius_hub_in = hub_to_tip_in * radius_tip_in
         radius_hub_out = hub_to_tip_out * radius_tip_out
-        radius_mean_in = np.full_like(hub_to_tip_in, radius_mean)
-        radius_mean_out = np.full_like(hub_to_tip_out, radius_mean)
+        radius_mean_in = jnp.full_like(hub_to_tip_in, radius_mean)
+        radius_mean_out = jnp.full_like(hub_to_tip_out, radius_mean)
     elif radius_type == "constant_hub":
         radius_hub = radius
         radius_tip_in = radius_hub / hub_to_tip_in
         radius_tip_out = radius_hub / hub_to_tip_out
-        radius_mean_in = radius_tip_in * (1 + hub_to_tip_in) / 2
-        radius_mean_out = radius_tip_out * (1 + hub_to_tip_out) / 2
-        radius_hub_in = np.full_like(hub_to_tip_in, radius_hub)
-        radius_hub_out = np.full_like(hub_to_tip_out, radius_hub)
+        radius_mean_in = radius_tip_in * (1.0 + hub_to_tip_in) / 2
+        radius_mean_out = radius_tip_out * (1.0 + hub_to_tip_out) / 2
+        radius_hub_in = jnp.full_like(hub_to_tip_in, radius_hub)
+        radius_hub_out = jnp.full_like(hub_to_tip_out, radius_hub)
     elif radius_type == "constant_tip":
         radius_tip = radius
         radius_hub_in = hub_to_tip_in * radius_tip
         radius_hub_out = hub_to_tip_out * radius_tip
-        radius_tip_in = np.full_like(hub_to_tip_in, radius_tip)
-        radius_tip_out = np.full_like(hub_to_tip_out, radius_tip)
-        radius_mean_in = radius_tip_in * (1 + hub_to_tip_in) / 2
-        radius_mean_out = radius_tip_out * (1 + hub_to_tip_out) / 2
+        radius_tip_in = jnp.full_like(hub_to_tip_in, radius_tip)
+        radius_tip_out = jnp.full_like(hub_to_tip_out, radius_tip)
+        radius_mean_in = radius_tip_in * (1.0 + hub_to_tip_in) / 2
+        radius_mean_out = radius_tip_out * (1.0 + hub_to_tip_out) / 2
 
     # Compute throat radius
     radius_mean_throat = calculate_throat_radius(
@@ -226,7 +229,7 @@ def prepare_geometry(geometry, radius_type):
     # Compute maximum thickness
     gauging_angle = geom["gauging_angle"]
     blade_camber = abs(geom["leading_edge_angle"] - gauging_angle)
-    maximum_thickness = np.array(
+    maximum_thickness = jnp.array(
         [
             (
                 0.15 * (blade_camber[i] <= 40)
@@ -239,12 +242,12 @@ def prepare_geometry(geometry, radius_type):
         ]
     )
     # Compute areas
-    A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
-    A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
+    A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
+    A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
     A_throat = A_out * math.cosd(gauging_angle)
 
     # Compute opening
-    opening = A_throat * pitch / (2 * np.pi * radius_mean_throat * height_throat)
+    opening = A_throat * pitch / (2 * jnp.pi * radius_mean_throat * height_throat)
 
     # Compute trailing edge thickness
     trailing_edge_thickness = geom["trailing_edge_thickness_opening_ratio"] * opening
@@ -346,14 +349,14 @@ def calculate_full_geometry(geometry):
     height = (height_in + height_out) / 2
 
     # Compute areas for the full, in, out, and throat sections
-    A_in = np.pi * (radius_tip_in**2 - radius_hub_in**2)
-    A_out = np.pi * (radius_tip_out**2 - radius_hub_out**2)
+    A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
+    A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
     A_throat = (
-        2 * np.pi * radius_mean_throat * height_throat * geom["opening"] / geom["pitch"]
+        2 * jnp.pi * radius_mean_throat * height_throat * geom["opening"] / geom["pitch"]
     )
 
     # Gauging angle
-    gauging_angle = math.arccosd(A_throat / A_out) * np.array(
+    gauging_angle = math.arccosd(A_throat / A_out) * jnp.array(
         [(-1) ** i for i in range(number_of_cascades)]
     )
 
@@ -484,11 +487,11 @@ def check_turbine_geometry(geometry, display=True):
 
     # Define good practice ranges for each parameter
     recommended_ranges = {
-        "chord": {"min": 5e-3, "max": np.inf},
-        "height": {"min": 5e-3, "max": np.inf},
-        "maximum_thickness": {"min": 1e-3, "max": np.inf},
-        "trailing_edge_thickness": {"min": 5e-4, "max": np.inf},
-        "tip_clearance": {"min": 2e-4, "max": np.inf},
+        "chord": {"min": 5e-3, "max": jnp.inf},
+        "height": {"min": 5e-3, "max": jnp.inf},
+        "maximum_thickness": {"min": 1e-3, "max": jnp.inf},
+        "trailing_edge_thickness": {"min": 5e-4, "max": jnp.inf},
+        "tip_clearance": {"min": 2e-4, "max": jnp.inf},
         "hub_tip_ratio": {"min": 0.50, "max": 0.95},
         "aspect_ratio": {"min": 0.8, "max": 5.0},
         "pitch_chord_ratio": {"min": 0.3, "max": 1.1},
@@ -532,7 +535,7 @@ def check_turbine_geometry(geometry, display=True):
         lb, ub = limits["min"], limits["max"]
         value_array = geometry[parameter]
 
-        for index, value in enumerate(np.atleast_1d(value_array)):
+        for index, value in enumerate(jnp.atleast_1d(value_array)):
             # Determine cascade type for special cases
             blade_type = cascade_types[index % len(cascade_types)]
 

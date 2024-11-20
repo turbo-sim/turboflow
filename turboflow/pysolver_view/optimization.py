@@ -15,6 +15,7 @@ from . import optimization_wrappers as _opt
 from .pysolver_utilities import savefig_in_formats
 
 
+
 # Define valid libraries and their corresponding methods
 OPTIMIZATION_LIBRARIES = {
     "scipy": _opt.minimize_scipy,
@@ -386,6 +387,7 @@ class OptimizationSolver:
         # Use problem gradient method if it exists
         if hasattr(self.problem, "gradient"):
             grad = self.problem.gradient(x)
+            # grad = grad.T
         else:
             # Fall back to finite differences
             fun = lambda x: self.fitness(x, called_from_grad=True)
@@ -956,7 +958,9 @@ def combine_objective_and_constraints(f, c_eq=None, c_ineq=None):
         else:
             combined_list.append(c_ineq)
 
-    return np.array(combined_list)
+    updated_combined_list = np.array(combined_list)
+
+    return updated_combined_list
 
 
 class _PygmoProblem:

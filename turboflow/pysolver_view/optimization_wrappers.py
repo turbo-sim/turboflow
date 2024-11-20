@@ -352,7 +352,7 @@ def _minimize_pygmo_ipopt(problem, x0, options):
     combined_options = default_options | options
     if combined_options["tol"] < 1e-3:
         print(
-            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {tol:0.2e}."
+            f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {combined_options['tol']:0.2e}."
         )
 
     # Solve the problem
@@ -603,7 +603,7 @@ def _set_pygmo_options(handle, options):
     for option_name, value in options.items():
         if isinstance(value, str):
             handle.set_string_option(option_name, value)
-        elif isinstance(value, int):
+        elif isinstance(value, (int, np.int64)):
             handle.set_integer_option(option_name, value)
         elif isinstance(value, float):
             handle.set_numeric_option(option_name, value)

@@ -1,14 +1,21 @@
-import numpy as np
+# import numpy as np
 import pandas as pd
 import CoolProp as cp
 from scipy.linalg import solve
 from scipy.optimize._numdiff import approx_derivative
 
-from .. import math
-from .. import utilities as utils
-from . import loss_model as lm
-from . import deviation_model as dm
-from . import choking_criterion as cm
+import jax
+jax.config.update("jax_enable_x64", True)
+import jax.numpy as jnp
+
+from turboflow import math
+from turboflow import utilities as utils
+from turboflow.axial_turbine import loss_model as lm
+from turboflow.axial_turbine import deviation_model as dm
+from turboflow.axial_turbine import choking_criterion as cm
+
+import turboflow as tf
+from turboflow.properties import perfect_gas_props
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
@@ -66,6 +73,7 @@ def evaluate_axial_turbine(
 
     """
 
+
     # Load variables
     number_of_cascades = geometry["number_of_cascades"]
     h0_in = boundary_conditions["h0_in"]
@@ -81,10 +89,21 @@ def evaluate_axial_turbine(
     angle_min = reference_values["angle_min"]
 
     # Initialize results structure
+    # TODO remove dataframes, replace by dictionary, or dictionary of arrays
+    # results = {
+    #     "plane": pd.DataFrame(),
+    #     "cascade": pd.DataFrame(),
+    #     "stage": {},
+    #     "overall": {},
+    #     "geometry": geometry,
+    #     "reference_values": reference_values,
+    #     "boundary_conditions": boundary_conditions,
+    # }
+
     results = {
-        "plane": pd.DataFrame(),
-        "cascade": pd.DataFrame(),
-        "stage": {},
+        "planes": [],
+        "cascades": [],
+        "stage": [],
         "overall": {},
         "geometry": geometry,
         "reference_values": reference_values,
@@ -133,14 +152,26 @@ def evaluate_axial_turbine(
             if ("crit" and cascade in key) or key == "v_crit_in"
         }
 
-        cascade_residuals = evaluate_cascade(
+        # TODO inletplane outletplane cascade, residuals
+        # cascade_residuals = evaluate_cascade(
+        #     cascade_inlet_input,
+        #     cascade_exit_input,
+        #     choking_input,
+        #     fluid,
+        #     geometry_cascade,
+        #     angular_speed_cascade,
+        #     results,
+        #     model_options,
+        #     reference_values,
+        # )
+
+        cascade_residuals, inlet_plane, exit_plane, cascade_data = evaluate_cascade(
             cascade_inlet_input,
             cascade_exit_input,
             choking_input,
             fluid,
             geometry_cascade,
             angular_speed_cascade,
-            results,
             model_options,
             reference_values,
         )
@@ -157,20 +188,33 @@ def evaluate_axial_turbine(
                 alpha_in,
                 v_in,
             ) = evaluate_cascade_interspace(
-                results["plane"]["h0"].values[-1],
-                results["plane"]["v_m"].values[-1],
-                results["plane"]["v_t"].values[-1],
-                results["plane"]["d"].values[-1],
+                exit_plane["h0"], # TODO plane_out
+                exit_plane["v_m"],
+                exit_plane["v_t"],
+                exit_plane["d"],
                 geometry_cascade["radius_mean_out"],
                 geometry_cascade["A_out"],
-                results["plane"]["blockage"].values[-1],
+                exit_plane["blockage"],
                 geometry["radius_mean_in"][i + 1],
                 geometry["A_in"][i + 1],
                 fluid,
             )
 
+        # Storing the results
+        results["planes"].append(inlet_plane)
+        results["planes"].append(exit_plane)
+        
+        results["cascades"].append(cascade_data)
+
+    # print(results["planes"])
+
+    # Merge the list of dictionaries into one dictionary with an array of values for every key 
+    results["planes"] = tf.combine_to_dict_of_arrays(results["planes"])
+    results["cascades"] = tf.combine_to_dict_of_arrays(results["cascades"])
+       
+
     # Add exit pressure error to residuals
-    p_calc = results["plane"]["p"].values[-1]
+    p_calc = exit_plane["p"]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
 
@@ -179,10 +223,14 @@ def evaluate_axial_turbine(
     # results["cascade"] = pd.concat([results["cascade"], loss_fractions], axis=1)
 
     # Compute stage performance
-    results["stage"] = pd.DataFrame(compute_stage_performance(results))
+    # results["stage"] = pd.DataFrame(compute_stage_performance(results))
+    results["stage"] = compute_stage_performance(results)
+
 
     # Compute overall perfrormance
-    results["overall"] = pd.DataFrame([compute_overall_performance(results, geometry)])
+    # results["overall"] = pd.DataFrame([compute_overall_performance(results, geometry)])
+    results["overall"] = compute_overall_performance(results, geometry)
+
 
     # Store all residuals for export
     results["residuals"] = residuals
@@ -196,10 +244,24 @@ def evaluate_axial_turbine(
         for key, value in geometry.items()
         if len(utils.ensure_iterable(value)) == number_of_cascades
     }
-    results["geometry"] = pd.DataFrame(geom_cascades)
+
+    # results["geometry"] = pd.DataFrame(geom_cascades)
+    results["geometry"] = geom_cascades
 
     return results
 
+
+# def evaluate_cascade(
+#     cascade_inlet_input,
+#     cascade_exit_input,
+#     choking_input,
+#     fluid,
+#     geometry,
+#     angular_speed,
+#     results,  # TODO should be removed
+#     model_options,
+#     reference_values,
+# ):
 
 def evaluate_cascade(
     cascade_inlet_input,
@@ -208,7 +270,6 @@ def evaluate_cascade(
     fluid,
     geometry,
     angular_speed,
-    results,
     model_options,
     reference_values,
 ):
@@ -236,7 +297,7 @@ def evaluate_cascade(
         Dictionary containing geometric parameters of the cascade.
     angular_speed : float
         Angular speed of the cascade.
-    results : dict
+    results : dict # Removed now
         Dictionary to store the evaluation results.
     model_options : dict
         Dictionary containing various model options.
@@ -277,8 +338,14 @@ def evaluate_cascade(
         loss_model,
     )
 
+    
+
     # Evaluate isentropic enthalpy change
-    props_is = fluid.get_props(cp.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+    # props_is = fluid.get_props(cp.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
+
+    props_is = perfect_gas_props("PSmass_INPUTS", exit_plane["p"], inlet_plane["s"])
+    
+
     dh_is = exit_plane["h"] - props_is["h"]
 
     # Evaluate critical state
@@ -302,8 +369,9 @@ def evaluate_cascade(
     }
 
     # Return plane data in dataframe
-    results["plane"].loc[len(results["plane"]), inlet_plane.keys()] = inlet_plane
-    results["plane"].loc[len(results["plane"]), exit_plane.keys()] = exit_plane
+
+    # results["plane"].loc[len(results["plane"]), inlet_plane.keys()] = inlet_plane
+    # results["plane"].loc[len(results["plane"]), exit_plane.keys()] = exit_plane
 
     # Return cascade data in dataframe
     cascade_data = {
@@ -313,12 +381,15 @@ def evaluate_cascade(
         "incidence": inlet_plane["beta"] - geometry["leading_edge_angle"],
     }
 
-    results["cascade"].loc[len(results["cascade"]), cascade_data.keys()] = cascade_data
+    # results["cascade"].loc[len(results["cascade"]), cascade_data.keys()] = cascade_data
 
-    return residuals
+    return residuals, inlet_plane, exit_plane, cascade_data # TODO: We have to return inlet_plane, exit_plane, cascade and residuals 
+    # return residuals # TODO: We have to return inlet_plane, exit_plane, cascade and residuals 
 
 
+# @jax.jit
 def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
+# def evaluate_cascade_inlet(cascade_inlet_input, geometry, angular_speed):
     r"""
     Evaluate the inlet plane of a cascade including velocity triangles,
     thermodynamic properties, and flow characteristics.
@@ -364,18 +435,26 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # Calculate static properties
     h = h0 - 0.5 * v**2
-    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    # static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+
+    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
-    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    # stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    # relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+
+
     relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -387,22 +466,35 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     m = rho * w_m * area
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
+    loss_dict = {
+        "loss_error": 0.0,
+        "loss_profile": 0.0,
+        "loss_incidence": 0.0,
+        "loss_trailing": 0.0,
+        "loss_secondary": 0.0,
+        "loss_clearance": 0.0,
+        "loss_total": 0.0,
+        }
+
     # Store results in dictionary
     plane = {
         **velocity_triangle,
         **static_properties,
         **stagnation_properties,
         **relative_stagnation_properties,
+        ** loss_dict,
         "Ma": Ma,
         "Ma_rel": Ma_rel,
         "Re": Re,
         "mass_flow": m,
         "rothalpy": rothalpy,
+        "blockage": 0.0,
+        "h_is": static_properties["h"]
     }
 
     return plane
 
-
+# @jax.jit(static_argnums=(5,))
 def evaluate_cascade_exit(
     cascade_exit_input,
     fluid,
@@ -412,6 +504,15 @@ def evaluate_cascade_exit(
     blockage,
     loss_model,
 ):
+
+# def evaluate_cascade_exit(
+#     cascade_exit_input,
+#     geometry,
+#     inlet_plane,
+#     angular_speed,
+#     blockage,
+#     loss_model,
+# ):
     r"""
 
     Evaluate the exit plane of a cascade including velocity triangles,
@@ -471,19 +572,26 @@ def evaluate_cascade_exit(
 
     # Calculate static properties
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
-    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    # static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    
+
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    # stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    # relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    
     relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -495,8 +603,11 @@ def evaluate_cascade_exit(
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
     # Calculate state for isentropic expansion
-    relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
-    relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
+    # relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+    relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+    
+    # relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
+    relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -546,7 +657,7 @@ def evaluate_cascade_exit(
     }
     return plane, loss_dict
 
-
+# @jax.jit
 def evaluate_cascade_throat(
     cascade_throat_input,
     fluid,
@@ -556,6 +667,15 @@ def evaluate_cascade_throat(
     blockage,
     loss_model,
 ):
+    
+# def evaluate_cascade_throat(
+#     cascade_throat_input,
+#     geometry,
+#     inlet_plane,
+#     angular_speed,
+#     blockage,
+#     loss_model,
+# ):
     r"""
     Evaluate the throat plane of a cascade including velocity triangles,
     thermodynamic properties, flow characteristics and loss coefficients.
@@ -613,19 +733,25 @@ def evaluate_cascade_throat(
 
     # Calculate static properties
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
-    static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    # static_properties = fluid.get_props(cp.HmassSmass_INPUTS, h, s)
+    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
 
     # Calculate stagnation properties
     h0 = h + 0.5 * v**2
-    stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    # stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0, s)
+    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
     # Calculate relative stagnation properties
     h0_rel = h + 0.5 * w**2
-    relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    # relative_stagnation_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, s)
+    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    
     relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
     )
@@ -637,8 +763,12 @@ def evaluate_cascade_throat(
     rothalpy = h0_rel - 0.5 * blade_speed**2
 
     # Calculate state for isentropic expansion
-    relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
-    relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
+    # relative_stagnation_isentropic_properties = fluid.get_props(cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
+    relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+
+    # relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
+    relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
+
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -688,7 +818,7 @@ def evaluate_cascade_throat(
     }
     return plane, loss_dict
 
-
+# @jax.jit
 def evaluate_cascade_interspace(
     h0_exit,
     v_m_exit,
@@ -701,6 +831,18 @@ def evaluate_cascade_interspace(
     area_inlet,
     fluid,
 ):
+    
+# def evaluate_cascade_interspace(
+#     h0_exit,
+#     v_m_exit,
+#     v_t_exit,
+#     rho_exit,
+#     radius_exit,
+#     area_exit,
+#     blockage_exit,
+#     radius_inlet,
+#     area_inlet,
+# ):
     """
     Calculate the inlet conditions for the next cascade based on the exit conditions of the previous cascade.
 
@@ -764,18 +906,20 @@ def evaluate_cascade_interspace(
     v_m_in = v_m_exit * area_exit / area_inlet * (1 - blockage_exit)
 
     # Compute velocity vector
-    v_in = np.sqrt(v_t_in**2 + v_m_in**2)
+    v_in = jnp.sqrt(v_t_in**2 + v_m_in**2)
     alpha_in = math.arctand(v_t_in / v_m_in)
 
     # Compute thermodynamic state
     h_in = h0_in - 0.5 * v_in**2
     rho_in = rho_exit
-    stagnation_properties = fluid.get_props(cp.DmassHmass_INPUTS, rho_in, h_in)
+    # stagnation_properties = fluid.get_props(cp.DmassHmass_INPUTS, rho_in, h_in)
+    stagnation_properties = perfect_gas_props("DmassHmass_INPUTS", rho_in, h_in)
+    
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in
 
-
+# @jax.jit
 def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     """
     Compute the velocity triangle at the inlet of the cascade.
@@ -812,13 +956,14 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     """
 
     # Absolute velocities
+    
     v_t = v * math.sind(alpha)
     v_m = v * math.cosd(alpha)
 
     # Relative velocities
     w_t = v_t - blade_speed
     w_m = v_m
-    w = np.sqrt(w_t**2 + w_m**2)
+    w = jnp.sqrt(w_t**2 + w_m**2)
 
     # Relative flow angle
     beta = math.arctand(w_t / w_m)
@@ -838,7 +983,7 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
 
     return vel_in
 
-
+# @jax.jit
 def evaluate_velocity_triangle_out(blade_speed, w, beta):
     """
     Compute the velocity triangle at the outlet of the cascade.
@@ -881,7 +1026,7 @@ def evaluate_velocity_triangle_out(blade_speed, w, beta):
     # Absolute velocities
     v_t = w_t + blade_speed
     v_m = w_m
-    v = np.sqrt(v_t**2 + v_m**2)
+    v = jnp.sqrt(v_t**2 + v_m**2)
 
     # Absolute flow angle
     alpha = math.arctand(v_t / v_m)
@@ -901,7 +1046,7 @@ def evaluate_velocity_triangle_out(blade_speed, w, beta):
 
     return vel_out
 
-
+# @jax.jit
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     r"""
     Calculate the blockage factor due to boundary layer displacement thickness.
@@ -1055,8 +1200,9 @@ def compute_stage_performance(results):
         return {}
 
     # Calculate the degree of reaction for each stage using list comprehension
-    h = results["plane"]["h"].values
-    R = np.array(
+    # h = results["plane"]["h"].values
+    h = results["planes"]["h"]
+    R = jnp.array(
         [
             (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])
             for i in range(number_of_stages)
@@ -1093,13 +1239,13 @@ def compute_overall_performance(results, geometry):
     d_out_s = results["reference_values"]["d_out_s"]
 
     # Calculation of overall performance
-    p = results["plane"]["p"].values
-    p0 = results["plane"]["p0"].values
-    h0 = results["plane"]["h0"].values
-    v_out = results["plane"]["v"].values[-1]
-    u_out = results["plane"]["blade_speed"].values[-1]
-    mass_flow = results["plane"]["mass_flow"].values[-1]
-    exit_flow_angle = results["plane"]["alpha"].values[-1]
+    p = results["planes"]["p"]
+    p0 = results["planes"]["p0"]
+    h0 = results["planes"]["h0"]
+    v_out = results["planes"]["v"][-1]
+    u_out = results["planes"]["blade_speed"][-1]
+    mass_flow = results["planes"]["mass_flow"][-1]
+    exit_flow_angle = results["planes"]["alpha"][-1]
     PR_tt = p0[0] / p0[-1]
     PR_ts = p0[0] / p[-1]
     h0_in = h0[0]
@@ -1125,19 +1271,20 @@ def compute_overall_performance(results, geometry):
         "efficiency_ts_drop_losses": efficiency_ts_drop_losses,
         "power": power,
         "torque": torque,
-        "angular_speed": angular_speed,
+        "angular_speed": jnp.array(angular_speed),
         "exit_flow_angle": exit_flow_angle,
         "exit_velocity": v_out,
-        "spouting_velocity": v0,
+        "spouting_velocity": jnp.array(v0),
         "last_blade_velocity": u_out,
         "blade_jet_ratio": u_out / v0,
         "h0_in": h0_in,
         "h0_out": h0_out,
-        "h_out_s": h_out_s,
+        "h_out_s": jnp.array(h_out_s),
         "specific_speed": specific_speed,
-        "blade_jet_ratio_hub": angular_speed * geometry["radius_hub_out"][-1] / v0,
-        "blade_jet_ratio_mean": angular_speed * geometry["radius_mean_out"][-1] / v0,
-        "blade_jet_ratio_tip": angular_speed * geometry["radius_tip_out"][-1] / v0,
+        "blade_jet_ratio_hub": jnp.array(angular_speed * geometry["radius_hub_out"][-1] / v0),
+        "blade_jet_ratio_mean": jnp.array(angular_speed * geometry["radius_mean_out"][-1] / v0),
+        "blade_jet_ratio_tip": jnp.array(angular_speed * geometry["radius_tip_out"][-1] / v0),
     }
+
 
     return overall

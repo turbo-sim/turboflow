@@ -1,7 +1,7 @@
 # Flow variables at the throat
-density = 1
+density = 1.
 dynamic_viscosity = 1.81e-5
-velocity = 200
+velocity = 200.
 
 # Distance from the leading edge to the throat
 opening = 3e-3

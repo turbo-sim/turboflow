@@ -3,6 +3,7 @@ import pandas as pd
 import CoolProp as cp
 import datetime
 import os
+import copy
 import yaml
 import pickle
 from .. import pysolver_view as psv
@@ -12,6 +13,11 @@ from . import flow_model as flow
 from .. import properties as props
 from . import performance_analysis as pa
 
+from .. properties import perfect_gas_props
+import jax
+import jax.numpy as jnp
+
+from functools import reduce
 
 RADIUS_TYPE = ["constant_mean", "constant_hub", "constant_tip"]
 ANGLE_KEYS = ["leading_edge_angle", "gauging_angle"]
@@ -42,6 +48,41 @@ INDEXED_VARIABLES = [
 
 GENETIC_ALGORITHMS = psv.GENETIC_SOLVERS
 GRADIENT_ALGORITHMS = psv.GRADIENT_SOLVERS
+
+def fitness_gradient(config,step_size):
+    problem = CascadesOptimizationProblem(config)
+
+    x = problem.initial_guess
+    x_keys = problem.design_variables_keys
+    
+    grad_jax = jax.jacfwd(problem.fitness, argnums=0)(x)
+    grad_FD = psv.approx_gradient(
+                problem.fitness,
+                x,
+                f0=problem.fitness(x),
+                method="2-point",
+                # abs_step=config["design_optimization"]["solver_options"]["derivative_abs_step"],  ## TODO make sure it works when design variable takes value 0 * np.abs(x),
+                abs_step= step_size
+            )
+    output_dict = problem.output_dict
+
+    # Merge all dictionaries in the list into dict1
+    for d in config["design_optimization"]["constraints"]:
+        variable_name = d['variable']
+        type_value = d['type']
+
+        # To make the key unique, append or prepend the type to the variable name
+        unique_key = f"{variable_name}_{type_value}"
+
+        output_dict[unique_key] = d['value']
+
+    output_dict["geometry.flaring_angle_<1"] = 1.0
+    output_dict["geometry.flaring_angle_>1"] = 1.0
+    # output_keys = list(output_dict.keys())
+    fitness_func = problem.fitness(x)
+    output = problem.output
+
+    return x_keys, output_dict, output, grad_jax, grad_FD
 
 def compute_optimal_turbine(
     config,
@@ -90,9 +131,9 @@ def compute_optimal_turbine(
             {key: pd.Series(val) for key, val in problem.boundary_conditions.items()}
         ),
         "overall": pd.DataFrame(problem.results["overall"], index=[0]),
-        "plane": problem.results["plane"],
-        "cascade": problem.results["cascade"],
-        "stage": problem.results["stage"],
+        "planes": pd.DataFrame(problem.results["planes"]),
+        "cascades": pd.DataFrame(problem.results["cascades"]),
+        "stage": pd.DataFrame(problem.results["stage"]),
         "geometry": pd.DataFrame(
             {key: pd.Series(val) for key, val in problem.geometry.items()}
         ),
@@ -211,6 +252,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Get values from a dictionary of Dataframes
     """
 
+
     def __init__(self, config):
         r"""
         Initialize a CascadesOptimizationProblem.
@@ -223,6 +265,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         # Get list of design variables
+        config = copy.deepcopy(config)
         self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
@@ -240,7 +283,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     def init_gradient_based(self, config):
 
         # Update design point 
-        if isinstance(config["operation_points"], (list, np.ndarray)):
+        if isinstance(config["operation_points"], (list, jnp.ndarray)):
             self.update_boundary_conditions(config["operation_points"][0])
         else:
             self.update_boundary_conditions(config["operation_points"])
@@ -277,7 +320,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         else:
             raise ValueError("STOP")
 
-
         # Separate fixed variables and design variables
         fixed_params = {}
         design_variables = {}
@@ -290,7 +332,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
         self.design_variables_keys = list(initial_guess.keys())
-        self.initial_guess = np.array(list(initial_guess.values()))
+        self.initial_guess = jnp.array(list(initial_guess.values()))
 
         # Index fixed variables
         self.fixed_params = self.index_variables(fixed_params)
@@ -332,58 +374,64 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Set fitness function
         self.fitness = self.fitness_gradient_based
 
-    def init_gradient_free(self, config):
+        self.output_dict = {}
+        self.output_dict.update({"efficiency": self.obj_func})
+            
+        # TODO: define jacobian here
+        self.gradient = jax.jacfwd(self.fitness, argnums=0)
+
+    # def init_gradient_free(self, config):
         
-        # Update design point 
-        if isinstance(config["operation_points"], (list, np.ndarray)):
-            self.operation_point = config["operation_points"][0]
-            self.update_boundary_conditions(config["operation_points"][0])
-        else:
-            self.operation_point = config["operation_points"]
-            self.update_boundary_conditions(config["operation_points"])
+    #     # Update design point 
+    #     if isinstance(config["operation_points"], (list, np.ndarray)):
+    #         self.operation_point = config["operation_points"][0]
+    #         self.update_boundary_conditions(config["operation_points"][0])
+    #     else:
+    #         self.operation_point = config["operation_points"]
+    #         self.update_boundary_conditions(config["operation_points"])
 
-        # Adjust given variables according to choking model (remove excess variables)
-        variables = config["design_optimization"]["variables"]
-        prefixes = ["v_", "w_", "s_", "beta_"]
-        variables = {key: var for key, var in variables.items() if not any(key.startswith(prefix) for prefix in prefixes)}
+    #     # Adjust given variables according to choking model (remove excess variables)
+    #     variables = config["design_optimization"]["variables"]
+    #     prefixes = ["v_", "w_", "s_", "beta_"]
+    #     variables = {key: var for key, var in variables.items() if not any(key.startswith(prefix) for prefix in prefixes)}
 
-        # Separate fixed variables and design variables
-        fixed_params = {}
-        design_variables = {}
-        for key, value in variables.items():
-            if value["lower_bound"] is not None:
-                design_variables[key] = value
-            else:
-                fixed_params[key] = value
+    #     # Separate fixed variables and design variables
+    #     fixed_params = {}
+    #     design_variables = {}
+    #     for key, value in variables.items():
+    #         if value["lower_bound"] is not None:
+    #             design_variables[key] = value
+    #         else:
+    #             fixed_params[key] = value
 
-        # Initialize initial guess
-        initial_guess = self.index_variables(design_variables)
-        self.design_variables_keys = list(initial_guess.keys())
-        self.initial_guess = np.array(list(initial_guess.values()))
+    #     # Initialize initial guess
+    #     initial_guess = self.index_variables(design_variables)
+    #     self.design_variables_keys = list(initial_guess.keys())
+    #     self.initial_guess = np.array(list(initial_guess.values()))
 
-        # Index fixed variables
-        self.fixed_params = self.index_variables(fixed_params)
+    #     # Index fixed variables
+    #     self.fixed_params = self.index_variables(fixed_params)
 
-        # Initialize bounds
-        lb, ub = self.get_given_bounds(design_variables)
-        self.bounds = (lb, ub)            
+    #     # Initialize bounds
+    #     lb, ub = self.get_given_bounds(design_variables)
+    #     self.bounds = (lb, ub)            
 
-        # Set initial guess for root finder
-        self.x0 = config["performance_analysis"]["initial_guess"]
+    #     # Set initial guess for root finder
+    #     self.x0 = config["performance_analysis"]["initial_guess"]
 
-        # Set constraints to None
-        self.c_eq = None
-        self.c_ineq = None
+    #     # Set constraints to None
+    #     self.c_eq = None
+    #     self.c_ineq = None
 
-        # Initialize config copy
-        self.simulation_options = config["simulation_options"]
-        self.solver_options = config["performance_analysis"]["solver_options"] 
+    #     # Initialize config copy
+    #     self.simulation_options = config["simulation_options"]
+    #     self.solver_options = config["performance_analysis"]["solver_options"] 
 
-        # Set fitness function
-        self.fitness = self.fitness_gradient_free
+    #     # Set fitness function
+    #     self.fitness = self.fitness_gradient_free
 
-        # Define variables (development variables) 
-        self.optimization_process = BlackBoxOptimization()
+    #     # Define variables (development variables) 
+    #     self.optimization_process = BlackBoxOptimization()
 
     def fitness(self, x):
         
@@ -391,101 +439,104 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         pass
 
-    def fitness_gradient_free(self, x):
-        r"""
-        Evaluate the objective function and constraints at a given pint `x` for genetic algrothims.
+    # def fitness_gradient_free(self, x):
+    #     r"""
+    #     Evaluate the objective function and constraints at a given pint `x` for genetic algrothims.
 
-        Parameters
-        ----------
-        x : array-like
-            Vector of design variables.
+    #     Parameters
+    #     ----------
+    #     x : array-like
+    #         Vector of design variables.
 
-        Returns
-        -------
-        numpy.ndarray
-            An array containg the value of the objective function and constraints.
-        """
+    #     Returns
+    #     -------
+    #     numpy.ndarray
+    #         An array containg the value of the objective function and constraints.
+    #     """
 
-        # Rename reference values
-        h0_in = self.boundary_conditions["h0_in"]
-        s_in = self.boundary_conditions["s_in"]
-        mass_flow = self.reference_values["mass_flow_ref"]
-        h_is = self.reference_values["h_out_s"]
-        d_is = self.reference_values["d_out_s"]
-        v0 = self.reference_values["v0"]
-        angle_range = self.reference_values["angle_range"]
-        angle_min = self.reference_values["angle_min"]
+    #     # Rename reference values
+    #     h0_in = self.boundary_conditions["h0_in"]
+    #     s_in = self.boundary_conditions["s_in"]
+    #     mass_flow = self.reference_values["mass_flow_ref"]
+    #     h_is = self.reference_values["h_out_s"]
+    #     d_is = self.reference_values["d_out_s"]
+    #     v0 = self.reference_values["v0"]
+    #     angle_range = self.reference_values["angle_range"]
+    #     angle_min = self.reference_values["angle_min"]
 
-        # Structure design variables to dictionary (Assume set of design variables)
-        design_variables = dict(zip(self.design_variables_keys, x))
+    #     # Structure design variables to dictionary (Assume set of design variables)
+    #     design_variables = dict(zip(self.design_variables_keys, x))
 
-        # Contruct variables
-        variables = {**design_variables, **self.fixed_params}
+    #     # Contruct variables
+    #     variables = {**design_variables, **self.fixed_params}
 
-        # Calculate angular speed
-        specific_speed = variables["specific_speed"]
-        self.operation_point["omega"] = self.get_omega(
-            specific_speed, mass_flow, h0_in, d_is, h_is
-        )
+    #     # Calculate angular speed
+    #     specific_speed = variables["specific_speed"]
+    #     self.operation_point["omega"] = self.get_omega(
+    #         specific_speed, mass_flow, h0_in, d_is, h_is
+    #     )
 
-        # Calculate mean radius
-        blade_jet_ratio = variables["blade_jet_ratio"]
-        blade_speed = blade_jet_ratio * v0
-        self.geometry = {}
-        self.geometry["radius"] = blade_speed / self.boundary_conditions["omega"]
+    #     # Calculate mean radius
+    #     blade_jet_ratio = variables["blade_jet_ratio"]
+    #     blade_speed = blade_jet_ratio * v0
+    #     self.geometry = {}
+    #     self.geometry["radius"] = blade_speed / self.boundary_conditions["omega"]
 
-        # Assign geometry design variables to geometry attribute
-        for key in INDEXED_VARIABLES:
-            self.geometry[key] = np.array(
-                [v for k, v in variables.items() if k.startswith(key)]
-            )
-            if key in ANGLE_KEYS:
-                self.geometry[key] = self.geometry[key] * angle_range + angle_min
+    #     # Assign geometry design variables to geometry attribute
+    #     for key in INDEXED_VARIABLES:
+    #         self.geometry[key] = np.array(
+    #             [v for k, v in variables.items() if k.startswith(key)]
+    #         )
+    #         if key in ANGLE_KEYS:
+    #             self.geometry[key] = self.geometry[key] * angle_range + angle_min
 
-        self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
-        # Evaluate turbine model
-        solver, results = pa.compute_single_operation_point(
-            self.operation_point,
-            self.x0,
-            self.geometry,
-            self.simulation_options,
-            self.solver_options,
-        )
-        if solver.success: 
-            self.results = results
-            self.geometry = results["geometry"]
+    #     self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
+    #     # Evaluate turbine model
+    #     solver, results = pa.compute_single_operation_point(
+    #         self.operation_point,
+    #         self.x0,
+    #         self.geometry,
+    #         self.simulation_options,
+    #         self.solver_options,
+    #     )
+    #     if solver.success: 
+    #         self.results = results
+    #         self.geometry = results["geometry"]
 
-            # Evaluate objective function
-            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+    #         # Evaluate objective function
+    #         self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
 
-            # Evaluate additional constraints
-            self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
-                / self.geometry["A_out"][0:-1].values})
-                            
-            # Evaluate constraints
-            c_eq = self.evaluate_constraints(self.eq_constraints)
-            c_ineq = self.evaluate_constraints(self.ineq_constraints)
+    #         # Evaluate additional constraints
+    #         # self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
+    #         #     / self.geometry["A_out"][0:-1].values})
+            
+    #         self.results["additional_constraints"] = {"interspace_area_ratio": self.geometry["A_in"][1:].values 
+    #                                                   / self.geometry["A_out"][:-1].values}
+            
+    #         # Evaluate constraints
+    #         c_eq = self.evaluate_constraints(self.eq_constraints)
+    #         c_ineq = self.evaluate_constraints(self.ineq_constraints)
 
-            violation_all = np.concatenate((c_eq, np.maximum(c_ineq, 0)))
-            violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
+    #         violation_all = np.concatenate((c_eq, np.maximum(c_ineq, 0)))
+    #         violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
 
-            # Include constriants in objective function
-            self.f = self.f + 100*(sum(c_eq**2) + sum(c_ineq[c_ineq > 0]**2)) 
+    #         # Include constriants in objective function
+    #         self.f = self.f + 100*(sum(c_eq**2) + sum(c_ineq[c_ineq > 0]**2)) 
 
-            # Update optimization ptrocess object
-            self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, vars_scaled=solver.problem.vars_scaled)
-        else:
-            self.f = np.nan
-            self.optimization_process.update_optimization_process(results, converged = False)
+    #         # Update optimization ptrocess object
+    #         self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, vars_scaled=solver.problem.vars_scaled)
+    #     else:
+    #         self.f = jnp.nan
+    #         self.optimization_process.update_optimization_process(results, converged = False)
         
-        # Combine objective functions and constraint
-        objective_and_constraints = psv.combine_objective_and_constraints(
-            self.f, self.c_eq, self.c_ineq
-        )
+    #     # Combine objective functions and constraint
+    #     objective_and_constraints = psv.combine_objective_and_constraints(
+    #         self.f, self.c_eq, self.c_ineq
+    #     )
 
-        self.optimization_process.print_optimization_process()
+    #     self.optimization_process.print_optimization_process()
 
-        return objective_and_constraints
+    #     return objective_and_constraints
 
     def fitness_gradient_based(self, x):
         r"""
@@ -536,11 +587,21 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Assign geometry design variables to geometry attribute
         for key in INDEXED_VARIABLES:
-            self.geometry[key] = np.array(
-                [v for k, v in variables.items() if k.startswith(key)]
-            )
+
+            # Extract the values for this key
+            values = [v for k, v in variables.items() if k.startswith(key)]
+  
+            # If the key corresponds to non-numeric data (like 'cascade_type'), store it as a regular list.
+            if all(isinstance(v, str) for v in values):  # check if all values are strings
+                self.geometry[key] = values  # store as a regular list
+            else:
+                # Otherwise, convert to JAX array (for numeric values)
+                self.geometry[key] = jnp.array(values)
+            
             if key in ANGLE_KEYS:
                 self.geometry[key] = self.geometry[key] * angle_range + angle_min
+
+
 
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         self.geometry = geom.calculate_full_geometry(self.geometry)
@@ -556,23 +617,28 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         # Evaluate objective function
-        self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+        self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
 
         # Evaluate additional constraints
-        self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
-            / self.geometry["A_out"][0:-1]})
-        
-        # Evaluate constraints
-        self.c_eq = np.array(list(self.results["residuals"].values()))
-        self.c_eq = np.append(self.c_eq, self.evaluate_constraints(self.eq_constraints))
-        self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
+        self.results["additional_constraints"] = {"interspace_area_ratio": self.geometry["A_in"][1:] / self.geometry["A_out"][0:-1]}
 
-        # Combine objective functions and constraint
-        objective_and_constraints = psv.combine_objective_and_constraints(
-            self.f, self.c_eq, self.c_ineq
-        )
+        self.output_dict.update(self.results["residuals"])
+        # Evaluate constraints
+        self.c_eq = jnp.array(list(self.results["residuals"].values()))
+        self.c_eq = jnp.append(self.c_eq, self.evaluate_constraints(self.eq_constraints))
+        self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
+    
+        objective_and_constraints = jnp.concatenate([self.f, self.c_eq, self.c_ineq])  
+
+
+        self.output = objective_and_constraints
+        # # Combine objective functions and constraint
+        # objective_and_constraints = psv.combine_objective_and_constraints(
+        #     self.f, self.c_eq, self.c_ineq
+        # )
 
         return objective_and_constraints
+    
 
     def get_objective_function(self, objective):
         """
@@ -620,7 +686,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         variables_extended = {}
         for key in variables.keys():
-            if isinstance(variables[key]["value"], (list, np.ndarray)):
+            if isinstance(variables[key]["value"], (list, jnp.ndarray, np.ndarray)):
                 for i in range(len(variables[key]["value"])):
                     variables_extended[f"{key}_{i+1}"] = variables[key]["value"][i]
             elif isinstance(variables[key]["value"], float):
@@ -654,7 +720,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             if isinstance(design_variables[key]["value"], list):
                 lb += design_variables[key]["lower_bound"]
                 ub += design_variables[key]["upper_bound"]
-            elif isinstance(design_variables[key]["value"], np.ndarray):
+            elif isinstance(design_variables[key]["value"], (np.ndarray, jnp.ndarray)):
                 lb += list(design_variables[key]["lower_bound"])
                 ub += list(design_variables[key]["upper_bound"])
             elif isinstance(design_variables[key]["value"], float):
@@ -682,7 +748,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         keys = path.split('.')
-        return d[keys[0]][keys[1]].values
+
+        return jnp.array(d[keys[0]][keys[1]])
     
     def evaluate_constraints(self, constraints_list):
         r"""
@@ -703,9 +770,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         numpy.ndarray
             Array with constraint values
         """
-        constraints = np.array([])
+        constraints = jnp.array([])
         for constraint in constraints_list:
-            constraints = np.append(
+            constraints = jnp.append(
                 constraints,
                 (self.get_nested_value(self.results, constraint["variable"]) - constraint["value"])
                 / constraint["scale"],
@@ -817,7 +884,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         p_out = design_point["p_out"]
 
         # Compute stagnation properties at inlet
-        state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        # state_in_stag  = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
@@ -827,13 +895,17 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.boundary_conditions["s_in"] = s_in
 
         # Calculate exit static properties for a isentropic expansion
-        state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        # state_out_s  = self.fluid.get_props(cp.PSmass_INPUTS, p_out, state_in_stag.s)
+        state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+        
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
 
         # Calculate exit static properties for a isenthalpic expansion
-        state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
+        # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, state_in_stag.h, p_out)
+        state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
         s_isenthalpic = state_out_h["s"]
+
         # Calculate spouting velocity
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
 
@@ -1108,16 +1180,16 @@ class BlackBoxOptimization:
             }
             results = self.turbine_results[i]
             overall_data.append(results["overall"])
-            plane_data.append(utils.flatten_dataframe(results["plane"]))
-            cascade_data.append(utils.flatten_dataframe(results["cascade"]))
+            plane_data.append(utils.flatten_dataframe(results["planes"]))
+            cascade_data.append(utils.flatten_dataframe(results["cascades"]))
             stage_data.append(utils.flatten_dataframe(results["stage"]))
             geometry_data.append(utils.flatten_dataframe(results["geometry"]))
             solver_data.append(pd.DataFrame([solver_status]))
 
         all_results = {
             "overall": pd.concat(overall_data, ignore_index=True),
-            "plane": pd.concat(plane_data, ignore_index=True),
-            "cascade": pd.concat(cascade_data, ignore_index=True),
+            "planes": pd.concat(plane_data, ignore_index=True),
+            "cascades": pd.concat(cascade_data, ignore_index=True),
             "stage": pd.concat(stage_data, ignore_index=True),
             "geometry": pd.concat(geometry_data, ignore_index=True),
             "solver": pd.concat(solver_data, ignore_index=True),

@@ -1,5 +1,8 @@
-import numpy as np
-from .. import math
+# import numpy as np
+from turboflow import math
+
+import jax
+import jax.numpy as jnp
 
 
 DEVIATION_MODELS = ["aungier", "ainley_mathieson", "zero_deviation"]
@@ -46,7 +49,7 @@ def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
 
     # Evaluate deviation model
     if model in deviation_model_functions:
-        Ma_exit = np.float64(Ma_exit)
+        Ma_exit = jnp.float64(Ma_exit)
         beta, delta = deviation_model_functions[model](Ma_exit, Ma_crit_throat, geometry)
         return beta
     else:
@@ -108,10 +111,10 @@ def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
     """
 
     def _get_aungier_interpolant(x):
-        x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+        x = jnp.array(x)  # Ensure x is a NumPy array for vectorized operations
         p = 1 - 10 * x**3 + 15 * x**4 - 6 * x**5  # Compute polynomial
-        p = np.where(x < 0, 1, p)  # Trim to 1 where x < 0
-        p = np.where(x > 1, 0, p)  # Trim to 0 where x > 1
+        p = jnp.where(x < 0, 1, p)  # Trim to 1 where x < 0
+        p = jnp.where(x > 1, 0, p)  # Trim to 0 where x > 1
         return p
 
     # TODO add equations of Aungier model to docstring
@@ -179,10 +182,10 @@ def get_exit_flow_angle_ainley_mathieson(Ma_exit, Ma_crit, geometry):
     """
 
     def _get_ainley_mathieson_interpolant(x):
-        x = np.array(x)  # Ensure x is a NumPy array for vectorized operations
+        x = jnp.array(x)  # Ensure x is a NumPy array for vectorized operations
         p = 1 - x  # Compute polynomial
-        p = np.where(x < 0, 1, p)  # Trim to 1 where x < 0
-        p = np.where(x > 1, 0, p)  # Trim to 0 where x > 1
+        p = jnp.where(x < 0, 1, p)  # Trim to 1 where x < 0
+        p = jnp.where(x > 1, 0, p)  # Trim to 0 where x > 1
         return p
 
     # TODO add equations of Ainley-Mathieson to docstring

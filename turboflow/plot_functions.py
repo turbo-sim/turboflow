@@ -2,7 +2,8 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import jax
+import jax.numpy as jnp
 
 def load_data(filename):
     """

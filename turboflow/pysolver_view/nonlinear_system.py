@@ -14,6 +14,9 @@ from scipy.optimize import root
 from . import numerical_differentiation
 from .pysolver_utilities import savefig_in_formats
 
+import jax 
+import jax.numpy as jnp
+
 SOLVER_OPTIONS = ["hybr", "lm"]
 
 
@@ -204,7 +207,7 @@ class NonlinearSystemSolver:
         self.message = solution.message
 
         # Check if solver actually converged
-        norm_residual = np.linalg.norm(self.f_final)
+        norm_residual = jnp.linalg.norm(self.f_final)
         if self.success and norm_residual > 10*self.tol:
             self.success = False
             self.message = f"The equation solver returned a success exit flag.\nHowever, the two-norm of the final residual is higher than tolerance ({norm_residual:0.2e}>{self.tol:0.2e})"
@@ -286,7 +289,7 @@ class NonlinearSystemSolver:
         if self.update_on == "gradient":
             self._print_convergence_progress(x)
 
-        return np.atleast_1d(jacobian)
+        return jnp.atleast_1d(jacobian)
 
     def _write_header(self):
         """
@@ -349,11 +352,11 @@ class NonlinearSystemSolver:
         """
         # Compute norm of residual vector
         residual = self.residuals_last
-        norm_residual = np.linalg.norm(residual)
-        # norm_residual = np.max([np.linalg.norm(residual), np.finfo(float).eps])
+        norm_residual = jnp.linalg.norm(residual)
+        # norm_residual = np.max([np.linalg.norm(residual), jnp.finfo(float).eps])
 
         # Compute the norm of the last step
-        norm_step = np.linalg.norm(x - self.x_last) if self.x_last is not None else 0
+        norm_step = jnp.linalg.norm(x - self.x_last) if self.x_last is not None else 0
         self.x_last = x.copy()
 
         # Store convergence status

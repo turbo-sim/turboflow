@@ -905,7 +905,7 @@ if __name__ == "__main__":
     N = 100
 
     # Initialize problem
-    problem = tf.CascadesNonlinearSystemProblem(config)
+    problem = tf.AxialTurbineProblem(config)
     problem.update_boundary_conditions(config["operation_points"])
 
     # Initialize structure for storing data

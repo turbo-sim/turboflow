@@ -165,6 +165,36 @@ def ensure_iterable(obj):
         return [obj]
 
 
+# def flatten_dict(data: dict) -> dict: # To be used 
+#     """
+#     Convert a dictionary with lists of values into a single dictionary,
+#     with each key-value pair renamed to include the original index as a suffix.
+
+#     Parameters:
+#     - data (dict): The original dictionary to be flattened.
+
+#     Returns:
+#     - dict: A single dictionary with (n×m) key-value pairs.
+
+#     Example usage:
+#     >>> original_dict = {'A': [1, 2], 'B': [3, 4]}
+#     >>> flattened_dict = flatten_dict(original_dict)
+#     >>> print(flattened_dict)
+
+#     Note: Row indices start at 1 for the suffix in the key names.
+#     """
+
+#     flattened = {}
+    
+#     # Iterate through the dictionary
+#     for key, values in data.items():
+#         for index, value in enumerate(values):
+#             # Create new key with index starting from 1
+#             new_key = f"{key}_{index + 1}"
+#             flattened[new_key] = value
+
+#     return flattened
+
 def flatten_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
     Convert a DataFrame with multiple rows and columns into a single-row DataFrame with each column

@@ -1,10 +1,13 @@
 from scipy.optimize._numdiff import approx_derivative
 from scipy import interpolate
-import numpy as np
 
-from .. import math
-from . import flow_model as fm
-from . import deviation_model as dm
+# import numpy as np
+import jax.numpy as jnp
+import jax
+
+from turboflow import math
+from turboflow.axial_turbine import flow_model as fm
+from turboflow.axial_turbine import deviation_model as dm
 
 CHOKING_CRITERIONS = [
     "critical_mass_flow_rate",
@@ -12,8 +15,10 @@ CHOKING_CRITERIONS = [
     "critical_isentropic_throat",
 ]
 
-REGRESSION_COEFFICIENTS = {'air' : [0.999984354, -0.368037583, 0.202442269, -0.096333086, 0.023783628],
-                           'R125' : [0.999983586, -0.319079827, 0.165487456, -0.078246564, 0.01996359]}
+REGRESSION_COEFFICIENTS = {
+    "air": [0.999984354, -0.368037583, 0.202442269, -0.096333086, 0.023783628],
+    "R125": [0.999983586, -0.319079827, 0.165487456, -0.078246564, 0.01996359],
+}
 
 
 def evaluate_choking(
@@ -88,6 +93,7 @@ def evaluate_choking(
             f"Invalid critical cascade model '{model}'. Available options: {options}"
         )
 
+
 def critical_mach_number(
     choking_input,
     inlet_plane,
@@ -159,7 +165,7 @@ def critical_mach_number(
     cascade_throat_input = {
         "w": choking_input["w_crit_throat"] * v0,
         "s": choking_input["s_crit_throat"] * s_range + s_min,
-        "beta" : np.sign(exit_plane["beta"])
+        "beta": jnp.sign(exit_plane["beta"])
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
     }
@@ -175,12 +181,14 @@ def critical_mach_number(
 
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
-    eta = (throat_plane["h0_rel"]-throat_plane["h"])/(throat_plane["h0_rel"]-throat_plane["h_is"])
+    eta = (throat_plane["h0_rel"] - throat_plane["h"]) / (
+        throat_plane["h0_rel"] - throat_plane["h_is"]
+    )
     critical_mach = get_mach_crit(throat_plane["gamma"], eta)
 
     # Evaluate if flow cascade is choked or not an add choking residual
     if exit_plane["Ma_rel"] <= critical_mach:
-        beta_model = np.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
+        beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
         )
 
@@ -190,15 +198,14 @@ def critical_mach_number(
         choking_residual = throat_plane["Ma_rel"] - critical_mach
 
     # Evaluate resiudals
-    residual_values = np.array(
+    residual_values = jnp.array(
         [
-            (inlet_plane["mass_flow"] - throat_plane["mass_flow"])
-            / reference_values["mass_flow_ref"],
+            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / reference_values["mass_flow_ref"],
             throat_plane["loss_error"],
             choking_residual,
         ]
     )
-    residual_keys = ["m*", "Y*", "beta*", "choking"]
+    residual_keys = ["m*", "Y*", "beta*"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
     # Define output values
@@ -213,41 +220,46 @@ def critical_mach_number(
 def get_mach_crit(gamma, eta):
     r"""
     Compute the critical Mach number for non-isentropic flow in a nozzle.
- 
+
     This function calculates the critical Mach number (:math:`\text{Ma}_\text{crit}`) using the
     given specific heat ratio (:math:`\gamma`) and nozzle efficiency (:math:`\eta`).
-   
+
     .. math::
         \text{Ma}_\text{crit}^{2} = \left(\frac{2}{\gamma-1}\right)\left(\frac{1}{\hat{T}_\text{crit}}-1\right)
         = \left(\frac{2}{\gamma-1}\right)\left[\frac{4 \alpha-2}{(2 \alpha+\eta-3) + \sqrt{(1+\eta)^{2}+4 \alpha(1+\alpha-3 \eta)}} - 1\right]
- 
+
     where:
- 
+
     .. math::
         \alpha = \frac{\gamma}{\gamma-1}
- 
+
     and
- 
+
     .. math::
         \eta = 1 - \Delta \phi^2
- 
+
     Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.
-       
+
     Parameters
     ----------
     gamma : float
         Specific heat ratio of the gas.
     eta : float
         Nozzle efficiency, related to the kinetic energy loss coefficient.
- 
+
     Returns
     -------
     float
         Critical Mach number.
     """
     alpha = gamma / (gamma - 1)
-    T_hat_crit = (2*alpha + eta - 3 + np.sqrt((1+eta)**2 + 4*alpha*(1+alpha-3*eta))) / (4*alpha - 2)
-    Ma_crit = np.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
+    T_hat_crit = (
+        2 * alpha
+        + eta
+        - 3
+        + jnp.sqrt((1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta))
+    ) / (4 * alpha - 2)
+    Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
     return Ma_crit
 
 
@@ -255,9 +267,9 @@ def get_flow_capacity(Ma, gamma, eta):
     r"""
     Compute dimensionless mass flow rate for non-isentropic flow in a nozzle.
 
-    This function calculates the dimensionless mass flow rate (:math:`\Phi`) using the 
+    This function calculates the dimensionless mass flow rate (:math:`\Phi`) using the
     given Mach number (:math:`\text{Ma}`), specific heat ratio (:math:`\gamma`), and efficiency (:math:`\eta`).
-    
+
     .. math::
         \Phi = \left(\frac{\dot{m} \sqrt{R T_{0}}}{p_{0}  A}\right) = \left(\frac{2 \gamma}{\gamma-1}\right)^{1 / 2} \cdot \frac{\sqrt{1-\hat{T}}}{\hat{T}}
         \left[1-\frac{1}{\eta}(1-\hat{T})\right]^{\frac{\gamma}{\gamma-1}}
@@ -273,7 +285,7 @@ def get_flow_capacity(Ma, gamma, eta):
         \eta = 1 - \Delta \phi^2
 
     Here, :math:`\Delta \phi^2` is the kinetic energy loss coefficient.
-    
+
     Parameters
     ----------
     Ma : float
@@ -289,9 +301,13 @@ def get_flow_capacity(Ma, gamma, eta):
         Dimensionless mass flow rate.
     """
     T_hat = (1 + (gamma - 1) / 2 * Ma**2) ** (-1)
-    Phi = np.sqrt(2 * gamma / (gamma - 1)) * np.sqrt(1 - T_hat) / T_hat * (1 - 1 / eta * (1 - T_hat)) ** (gamma / (gamma - 1))
+    Phi = (
+        jnp.sqrt(2 * gamma / (gamma - 1))
+        * jnp.sqrt(1 - T_hat)
+        / T_hat
+        * (1 - 1 / eta * (1 - T_hat)) ** (gamma / (gamma - 1))
+    )
     return Phi
-
 
 
 def critical_mass_flow_rate(
@@ -392,11 +408,8 @@ def critical_mass_flow_rate(
     blockage = model_options["blockage_model"]
     deviation_model = model_options["deviation_model"]
 
-    # Define critical state dictionary to store information
-    critical_state = {}
-
     # Define array for inputs in compute critical values
-    x_crit = np.array(
+    x_crit = jnp.array(
         [
             choking_input["v_crit_in"],
             choking_input["w_crit_throat"],
@@ -405,29 +418,26 @@ def critical_mass_flow_rate(
     )
 
     # Evaluate the current cascade at critical conditions
-    f0 = compute_critical_values(
+    f0, updated_critical_state = compute_critical_values(
         x_crit,
         inlet_plane,
         fluid,
         geometry,
         angular_speed,
-        critical_state,
-        model_options,
-        reference_values,
+        model_options=model_options,
+        reference_values=reference_values,
     )
 
     # Evaluate the Jacobian of the evaluate_critical_cascade function
-    J = compute_critical_jacobian(
+    J = jnp.array(jax.jacfwd(compute_critical_values, argnums=(0))(
         x_crit,
         inlet_plane,
         fluid,
         geometry,
         angular_speed,
-        critical_state,
         model_options,
         reference_values,
-        f0,
-    )
+    )[0]).T
 
     # Rename gradients
     a11, a12, a21, a22, b1, b2 = (
@@ -448,35 +458,35 @@ def critical_mass_flow_rate(
     df, dg1, dg2 = J[0, 2 - 1], J[1, 2 - 1], J[2, 2 - 1]
     grad = (determinant * df + l1_det * dg1 + l2_det * dg2) / mass_flow_ref
 
-    critical_mach = critical_state["throat_plane"]["Ma_rel"]
-    critical_mass_flow = critical_state["throat_plane"]["mass_flow"]
+    critical_mach = updated_critical_state["throat_plane"]["Ma_rel"]
+    critical_mass_flow = updated_critical_state["throat_plane"]["mass_flow"]
     if exit_plane["Ma_rel"] <= critical_mach:
-        beta_model = np.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
+        beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
         )
     else:
-        beta_model = np.sign(exit_plane["beta"]) * math.arccosd(
+        beta_model = jnp.sign(exit_plane["beta"]) * math.arccosd(
             critical_mass_flow / exit_plane["d"] / exit_plane["w"] / geometry["A_out"]
         )
     choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
 
     # Restructure critical state dictionary
     inlet_plane = {
-        f"critical_{key}_in": val for key, val in critical_state["inlet_plane"].items()
+        f"critical_{key}_in": val for key, val in updated_critical_state["inlet_plane"].items()
     }
     throat_plane = {
         f"critical_{key}_throat": val
-        for key, val in critical_state["throat_plane"].items()
+        for key, val in updated_critical_state["throat_plane"].items()
     }
-    critical_state = {**inlet_plane, **throat_plane}
+    updated_critical_state = {**inlet_plane, **throat_plane}
 
     # Return last 3 equations of the Lagrangian gradient (df/dx2+l1*dg1/dx2+l2*dg2/dx2 and g1, g2)
     g = f0[1:]  # The two constraints
-    residual_values = np.concatenate((g, np.array([grad, choking_residual])))
+    residual_values = jnp.concatenate((g, jnp.array([grad, choking_residual])))
     residual_keys = ["m*", "Y*", "L*", "choking"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
-    return residuals_critical, critical_state
+    return residuals_critical, updated_critical_state
 
 
 def compute_critical_values(
@@ -485,7 +495,6 @@ def compute_critical_values(
     fluid,
     geometry,
     angular_speed,
-    critical_state,
     model_options,
     reference_values,
 ):
@@ -512,8 +521,6 @@ def compute_critical_values(
         Geometric parameters of the cascade.
     angular_speed : float
         Angular speed of the cascade.
-    critical_state : dict
-        Dictionary to store the critical state information.
     model_options : dict
         Options for the model used in the critical condition evaluation.
     reference_values : dict
@@ -561,7 +568,7 @@ def compute_critical_values(
     critical_throat_input = {
         "w": w_throat,
         "s": s_throat,
-        "beta": np.sign(geometry["gauging_angle"])
+        "beta": jnp.sign(geometry["gauging_angle"])
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": critical_inlet_plane["rothalpy"],
     }
@@ -577,7 +584,7 @@ def compute_critical_values(
     )
 
     # Add residuals
-    residuals = np.array(
+    residuals = jnp.array(
         [
             (critical_inlet_plane["mass_flow"] - critical_throat_plane["mass_flow"])
             / mass_flow_ref,
@@ -586,82 +593,17 @@ def compute_critical_values(
     )
 
     # Update critical state dictionary
-    critical_state["inlet_plane"] = critical_inlet_plane
-    critical_state["throat_plane"] = critical_throat_plane
+    # critical_state["inlet_plane"] = critical_inlet_plane
+    # critical_state["throat_plane"] = critical_throat_plane
 
-    output = np.insert(residuals, 0, critical_throat_plane["mass_flow"])
+    critical_state = {
+        "inlet_plane": critical_inlet_plane,
+        "throat_plane": critical_throat_plane,
+    }
 
-    return output
+    output = jnp.insert(residuals, 0, critical_throat_plane["mass_flow"])
 
-
-def compute_critical_jacobian(
-    x,
-    inlet_plane,
-    fluid,
-    geometry,
-    angular_speed,
-    critical_state,
-    model_options,
-    reference_values,
-    f0,
-):
-    """
-    Compute the Jacobian matrix of the compute_critical_values function using finite differences.
-
-    This function approximates the Jacobian of a combined function that includes the mass flow rate value,
-    mass balance residual, and loss model evaluation residual at the critical point. It uses forward finite
-    difference to approximate the partial derivatives of the Jacobian matrix.
-
-    Parameters
-    ----------
-    x : numpy.ndarray
-        Array of input variables for the `compute_critical_values` function.
-    inlet_plane : dict
-        Dictionary containing data on the inlet plane for the actual cascade operating condition.
-    fluid : object
-        A fluid object with methods for thermodynamic property calculations.
-    geometry : dict
-        Geometric parameters of the cascade.
-    angular_speed : float
-        Angular speed of the cascade.
-    critical_state : dict
-        Dictionary to store the critical state information.
-    model_options : dict
-        Options for the model used in the critical condition evaluation.
-    reference_values : dict
-        Reference values used in the calculations, including mass flow reference and other parameters.
-    f0 : numpy.ndarray
-        The function value at x, used for finite difference approximation.
-
-    Returns
-    -------
-    numpy.ndarray
-        The approximated Jacobian matrix of the compute_critical_values function.
-
-    """
-
-    # Define finite difference relative step size
-    eps = model_options["rel_step_fd"] * x
-
-    # Approximate problem Jacobian by finite differences
-    jacobian = approx_derivative(
-        compute_critical_values,
-        x,
-        method="2-point",
-        f0=f0,
-        abs_step=eps,
-        args=(
-            inlet_plane,
-            fluid,
-            geometry,
-            angular_speed,
-            critical_state,
-            model_options,
-            reference_values,
-        ),
-    )
-
-    return jacobian
+    return output, critical_state
 
 
 def critical_isentropic_throat(
@@ -728,7 +670,7 @@ def critical_isentropic_throat(
     cascade_throat_input = {
         "w": choking_input["w_crit_throat"] * v0,
         "s": inlet_plane["s"],
-        "beta": np.sign(exit_plane["beta"])
+        "beta": jnp.sign(exit_plane["beta"])
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
     }
@@ -746,7 +688,7 @@ def critical_isentropic_throat(
     choking_residual = throat_plane["Ma_rel"] - min(exit_plane["Ma_rel"], 1)
 
     # Evaluate resiudals
-    residual_values = np.array(
+    residual_values = jnp.array(
         [
             (inlet_plane["mass_flow"] - throat_plane["mass_flow"])
             / reference_values["mass_flow_ref"],

@@ -9,16 +9,20 @@ import pandas as pd
 import CoolProp as cp
 import matplotlib.pyplot as plt
 
-from .. import math
-from .. import pysolver_view as psv
-from .. import utilities as utils
-from .. import properties as props
-from . import geometry_model as geom
-from . import flow_model as flow
-from . import choking_criterion as ch
-from . import deviation_model as dm
+from turboflow import math
+from turboflow import pysolver_view as psv
+from turboflow import utilities as utils
+from turboflow import properties as props
+from turboflow.axial_turbine import geometry_model as geom
+from turboflow.axial_turbine import flow_model as flow
+from turboflow.axial_turbine import choking_criterion as ch
+from turboflow.axial_turbine import deviation_model as dm
 from scipy.stats import qmc
 from scipy import optimize
+
+from turboflow.properties import perfect_gas_props
+import jax
+import jax.numpy as jnp
 
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
@@ -127,75 +131,96 @@ def compute_performance(
         print(f" Computing operation point {i+1} of {len(operation_points)}")
         print_boundary_conditions(operation_point)
 
-        try:
-            # Define initial guess
-            if i == 0:
-                # Use default initial guess for the first operation point
-                initial_guess = config["performance_analysis"]["initial_guess"]
-            else:
-                closest_x, closest_index = find_closest_operation_point(
-                    operation_point,
-                    operation_points[:i],  # Use up to the previous point
-                    solution_data[:i],  # Use solutions up to the previous point
-                )
-                print(f" Using solution from point {closest_index+1} as initial guess")
-                initial_guess = closest_x
+        # try:
+        # Define initial guess
+        if i == 0:
+            # Use default initial guess for the first operation point
+            initial_guess = config["performance_analysis"]["initial_guess"]
+        else:
+            closest_x, closest_index = find_closest_operation_point(
+                operation_point,
+                operation_points[:i],  # Use up to the previous point
+                solution_data[:i],  # Use solutions up to the previous point
+            )
+            print(f" Using solution from point {closest_index+1} as initial guess")
+            initial_guess = closest_x
 
-            # Compute performance
-            solver, results = compute_single_operation_point(
-                                operation_point,
-                                initial_guess,
-                                config["geometry"],
-                                config["simulation_options"],
-                                config["performance_analysis"]["solver_options"],
-                                )
+        # Compute performance
+        solver, results = compute_single_operation_point(
+                            operation_point,
+                            initial_guess,
+                            config["geometry"],
+                            config["simulation_options"],
+                            config["performance_analysis"]["solver_options"],
+                            )
 
-            # Retrieve solver data
-            solver_status = {
-                "completed": True,
-                "success": solver.success,
-                "message": solver.message,
-                "grad_count": solver.convergence_history["grad_count"][-1],
-                "func_count": solver.convergence_history["func_count"][-1],
-                "func_count_total": solver.convergence_history["func_count_total"][-1],
-                "norm_residual": solver.convergence_history["norm_residual"][-1],
-                "norm_step": solver.convergence_history["norm_step"][-1],
-            }
+        # Retrieve solver data
+        solver_status = {
+            "completed": True,
+            "success": solver.success,
+            "message": solver.message,
+            "grad_count": solver.convergence_history["grad_count"][-1],
+            "func_count": solver.convergence_history["func_count"][-1],
+            "func_count_total": solver.convergence_history["func_count_total"][-1],
+            "norm_residual": solver.convergence_history["norm_residual"][-1],
+            "norm_step": solver.convergence_history["norm_step"][-1],
+        }
 
-            # Collect results
-            operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(results["overall"])
-            plane_data.append(utils.flatten_dataframe(results["plane"]))
-            cascade_data.append(utils.flatten_dataframe(results["cascade"]))
-            stage_data.append(utils.flatten_dataframe(results["stage"]))
-            geometry_data.append(utils.flatten_dataframe(results["geometry"]))
-            solver_data.append(pd.DataFrame([solver_status]))
-            solution_data.append(solver.problem.vars_real)
-            solver_container.append(solver)
+        # Collect results 
+        # operation_point_data.append([operation_point])
+        # overall_data.append(results["overall"])
+        # plane_data.append(utils.flatten_dict(results["planes"]))
+        # cascade_data.append(utils.flatten_dict(results["cascades"]))
+        # stage_data.append(utils.flatten_dict(results["stage"]))
+        # geometry_data.append(utils.flatten_dict(results["geometry"]))
+        # solver_data.append([solver_status])
+        # solution_data.append(solver.problem.vars_real)
+        # solver_container.append(solver)
 
-        except Exception as e:
-            if stop_on_failure:
-                raise Exception(e)
-            else:
-                print(f" Computation of point {i+1}/{len(operation_points)} failed")
-                print(f" Error: {e}")
+        operation_point_data.append(pd.DataFrame([operation_point]))
+        overall_data.append(pd.DataFrame.from_dict(results["overall"], orient='index').T)
+        plane_data.append(utils.flatten_dataframe(pd.DataFrame(results["planes"])))
+        cascade_data.append(utils.flatten_dataframe(pd.DataFrame(results["cascades"])))
+        stage_data.append(utils.flatten_dataframe(pd.DataFrame(results["stage"])))
+        geometry_data.append(utils.flatten_dataframe(pd.DataFrame(results["geometry"])))
+        solver_data.append(pd.DataFrame([solver_status]))
+        solution_data.append(solver.problem.vars_real)
+        solver_container.append(solver)
 
-            # Retrieve solver data
-            solver = None
-            solver_status = {"completed": False}
+        # except Exception as e:
+        #     if stop_on_failure:
+        #         raise Exception(e)
+        #     else:
+        #         print(f" Computation of point {i+1}/{len(operation_points)} failed")
+        #         print(f" Error: {e}")
 
-            # Collect data
-            operation_point_data.append(pd.DataFrame([operation_point]))
-            overall_data.append(pd.DataFrame([{}]))
-            plane_data.append(pd.DataFrame([{}]))
-            cascade_data.append(pd.DataFrame([{}]))
-            stage_data.append(pd.DataFrame([{}]))
-            geometry_data.append(pd.DataFrame([{}]))
-            solver_data.append(pd.DataFrame([solver_status]))
-            solution_data.append([])
-            solver_container.append(solver)
+            # # Retrieve solver data
+            # solver = None
+            # solver_status = {"completed": False}
+
+            # # Collect data
+            # # operation_point_data.append(pd.DataFrame([operation_point]))
+            # # overall_data.append(pd.DataFrame([{}]))
+            # # plane_data.append(pd.DataFrame([{}]))
+            # # cascade_data.append(pd.DataFrame([{}]))
+            # # stage_data.append(pd.DataFrame([{}]))
+            # # geometry_data.append(pd.DataFrame([{}]))
+            # # solver_data.append(pd.DataFrame([solver_status]))
+            # # solution_data.append([])
+            # # solver_container.append(solver)
+
+            # operation_point_data.append([operation_point])
+            # overall_data.append([{}])
+            # plane_data.append([{}])
+            # cascade_data.append([{}])
+            # stage_data.append([{}])
+            # geometry_data.append([{}])
+            # solver_data.append([solver_status])
+            # solution_data.append([])
+            # solver_container.append(solver)
 
     # Dictionary to hold concatenated dataframes
+
     dfs = {
         "operation point": pd.concat(operation_point_data, ignore_index=True),
         "overall": pd.concat(overall_data, ignore_index=True),
@@ -206,9 +231,19 @@ def compute_performance(
         "solver": pd.concat(solver_data, ignore_index=True),
     }
 
+    # dfs = {
+    #     "operation point": sum(operation_point_data, []),
+    #     "overall": utils.combine_to_dict_of_arrays(overall_data),
+    #     "plane": utils.combine_to_dict_of_arrays(plane_data),
+    #     "cascade": utils.combine_to_dict_of_arrays(cascade_data),
+    #     "stage": utils.combine_to_dict_of_arrays(stage_data),
+    #     "geometry": utils.combine_to_dict_of_arrays(geometry_data),
+    #     "solver": sum(solver_data, []),
+    # }
+
     # Add 'operation_point' column to each dataframe
-    for sheet_name, df in dfs.items():
-        df.insert(0, "operation_point", range(1, 1 + len(df)))
+    # for sheet_name, df in dfs.items():
+    #     df.insert(0, "operation_point", range(1, 1 + len(df)))
 
     # Write dataframes to excel
     if export_results:
@@ -280,7 +315,7 @@ def compute_single_operation_point(
     """
 
     # Initialize problem object
-    problem = CascadesNonlinearSystemProblem(geometry, simulation_options)
+    problem = AxialTurbineProblem(geometry, simulation_options)
     # TODO: A limitation of defining a new problem for each operation point is that the geometry generated and checked once for every point
     # TODO: Performing the computations is not a big problem, but displaying the geometry report for every point can be very long.
     # TODO: Perhaps we could add options of verbosity and perhaps only display the full geometry report when it fails
@@ -583,7 +618,7 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
 # ------------------------------------------------------------------------------------------ #
 
 
-class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
+class AxialTurbineProblem(psv.NonlinearSystemProblem):
     """
     A class representing a nonlinear system problem for cascade analysis.
 
@@ -652,7 +687,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         """
 
         # Process turbine geometry
-        geom.validate_turbine_geometry(geometry)
+        # geom.validate_turbine_geometry(geometry)
         self.geometry = geom.calculate_full_geometry(geometry)
         # self.geom_info = geom.check_turbine_geometry(self.geometry, display=True)
 
@@ -691,7 +726,10 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
             self.reference_values,
         )
 
-        return np.array(list(self.results["residuals"].values()))
+        return jnp.array(list(self.results["residuals"].values())) ## TODO: This should be a JAX array with residual values
+    
+    def gradient(self, x):
+        return jax.jacfwd(self.residual, argnums=0)(x)
 
     def update_boundary_conditions(self, operation_point):
         """
@@ -734,7 +772,10 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         p_out = operation_point["p_out"]
 
         # Compute stagnation properties at inlet
-        state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        # state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
+
+
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
@@ -744,12 +785,18 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions["s_in"] = s_in
 
         # Calculate exit static properties for a isentropic expansion
-        state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        # state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+
+
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
 
         # Calculate exit static properties for a isenthalpic expansion
-        state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
+        # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
+        state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
+
+
         s_isenthalpic = state_out_h["s"]
 
         # Calculate spouting velocity
@@ -1017,11 +1064,12 @@ def print_operation_points(operation_points):
 
 def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
 
-    props = fluid.get_props(call, prop1*scale, prop2)
+    # props = fluid.get_props(call, prop1*scale, prop2)
+    props = perfect_gas_props(str(call), prop1*scale, prop2)
 
     return  props["h"] - h0 + 0.5*Ma**2*props["speed_sound"]**2 
 
-def get_unkown(prop1, scale, h0, Ma, fluid, call, prop2):
+def get_unknown(prop1, scale, h0, Ma, fluid, call, prop2):
 
     "call is either cp.DmassP_INPUTS (find Dmass based on a pressure) or cp.PSmass_INPUTS (find p based on a Smass)"
 
@@ -1039,13 +1087,19 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
     number_of_cascades = geometry["number_of_cascades"]
 
     # Calculate first stagnation properties
-    stag_first = fluid.get_props(cp.PT_INPUTS, p0_first, T0_first)
+    # stag_first = fluid.get_props(cp.PT_INPUTS, p0_first, T0_first)
+    stag_first = perfect_gas_props("PT_INPUTS", p0_first, T0_first)
+
+
     h0_first = stag_first["h"]
     s_first = stag_first["s"]
     d0_first = stag_first["d"]
 
     # Calculate final exit enthalpy for isentropic expansion
-    static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
+    # static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
+    static_is = perfect_gas_props("PSmass_INPUTS", p_final, s_first)
+    
+
     h_final_s = static_is["h"]
     a_final_s = static_is["speed_sound"]
 
@@ -1059,7 +1113,9 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
     h_final = h0_final - 0.5 * v_final**2
 
     # Calculate exit static state for expansion with guessed efficiency
-    static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_final, p_final)
+    # static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_final, p_final)
+    static_properties_exit = perfect_gas_props("HmassP_INPUTS", h_final, p_final)
+    
     s_final = static_properties_exit["s"]
 
     # Assume linear entropy distribution
@@ -1095,10 +1151,13 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
         # Calculate exit pressure
         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
         h0_rel_out = rothalpy + 0.5*blade_speed_out**2
-        p_out = get_unkown(1.0, p0_first, h0_rel_out, ma_out, fluid, cp.PSmass_INPUTS, s_out)
+        p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
 
         # Calculate exit state
-        static_out = fluid.get_props(cp.PSmass_INPUTS, p_out, s_out)
+        # static_out = fluid.get_props(cp.PSmass_INPUTS, p_out, s_out)
+        static_out = perfect_gas_props("PSmass_INPUTS", p_out, s_out)
+
+
         h_out = static_out["h"]
         a_out = static_out["speed_sound"]
         d_out = static_out["d"]
@@ -1108,7 +1167,10 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
         w_out = np.sqrt(2*(h0_rel_out - h_out))
         
         # Calculate critical mach
-        static_props_is = fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        # static_props_is = fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
+        static_props_is = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+
+
         h_out_s = static_props_is["h"]
         eta = (h0_rel_out-h_out)/(h0_rel_out-h_out_s)
         ma_crit = 1.0
@@ -1125,7 +1187,9 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
         w_throat_crit = a_out * ma_crit
         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
         s_throat_crit = s_out
-        static_state_throat_crit = fluid.get_props(cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        # static_state_throat_crit = fluid.get_props(cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        static_state_throat_crit = perfect_gas_props("HmassSmass_INPUTS", h_throat_crit, s_throat_crit)
+        
         rho_throat_crit = static_state_throat_crit["d"]
         m_crit = w_throat_crit * rho_throat_crit * A_throat
         w_m_in_crit = m_crit / d_in / A_in
@@ -1160,7 +1224,12 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
             h_in = h0_in - 0.5 * v_in**2
             rothalpy = h_in + 0.5*velocity_triangle_in["w"]**2 - 0.5*blade_speed_in**2
             s_in = s_out
-            static_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
+            # static_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
+            static_in = perfect_gas_props("HmassSmass_INPUTS"
+                                          
+                                          , h_in, s_in)
+
+
             d_in = static_in["d"]
 
     # Calculate inlet velocity from

@@ -1,4 +1,6 @@
-import numpy as np
+# import numpy as np
+import jax
+import jax.numpy as jnp
 from .. import math
 
 
@@ -259,7 +261,7 @@ def get_secondary_loss(flow_parameters, geometry):
         * math.cosd(beta_out) ** 2
         / math.cosd(angle_m)
     )
-    far = (1 - 0.25 * np.sqrt(abs(2 - H / c))) / (H / c) * (H / c < 2) + 1 / (H / c) * (
+    far = (1 - 0.25 * jnp.sqrt(abs(2 - H / c))) / (H / c) * (H / c < 2) + 1 / (H / c) * (
         H / c >= 2
     )
     Y_s = 1.2 * Ks * 0.0334 * far * Z * math.cosd(beta_out) / math.cosd(theta_in)
@@ -312,19 +314,22 @@ def get_trailing_edge_loss(flow_parameters, geometry):
 
     # Range of trailing edge to throat opening ratio
     r_to_data = [0, 0.2, 0.4]
+    r_to_data = jnp.array(r_to_data)
 
     # Reacting blading
     phi_data_reaction = [0, 0.045, 0.15]
+    phi_data_reaction = jnp.array(phi_data_reaction)
 
     # Impulse blading
     phi_data_impulse = [0, 0.025, 0.075]
+    phi_data_impulse = jnp.array(phi_data_impulse)
 
     # Numerical trick to avoid too big r_to's
     r_to = min(0.4, t_te / o)  # TODO: smoothing
 
     # Interpolate data
-    d_phi2_reaction = np.interp(r_to, r_to_data, phi_data_reaction)
-    d_phi2_impulse = np.interp(r_to, r_to_data, phi_data_impulse)
+    d_phi2_reaction = jnp.interp(r_to, r_to_data, phi_data_reaction)
+    d_phi2_impulse = jnp.interp(r_to, r_to_data, phi_data_impulse)
 
     # Compute kinetic energy loss coefficient
     d_phi2 = d_phi2_reaction - abs(angle_in / angle_out) * (angle_in / angle_out) * (
@@ -395,7 +400,7 @@ def get_tip_clearance_loss(flow_parameters, geometry):
         print("Specify the type of cascade")
 
     # Tip clearance loss coefficient
-    Y_cl = B * Z * c / H * (t_cl / H) ** 0.78
+    Y_cl = B * Z * c / H * (1e-9 + t_cl / H) ** 0.78  ## JAX giving problems for t_cl=0
 
     return Y_cl
 
@@ -593,17 +598,20 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
         r_ht = 0.5  # Numerical trick to prevent extrapolation
 
     r_ht_data = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    r_ht_data = jnp.array(r_ht_data)
 
     # Stator curve
     f_data_S = [1.4, 1.18, 1.05, 1.0, 1.0, 1.0]
+    f_data_S = jnp.array(f_data_S)
 
     # Rotor curve
     f_data_R = [2.15, 1.7, 1.35, 1.12, 1.0, 1.0]
+    f_data_R = jnp.array(f_data_R)
 
     if cascade_type == "stator":
-        f = np.interp(r_ht, r_ht_data, f_data_S)
+        f = jnp.interp(r_ht, r_ht_data, f_data_S)
     elif cascade_type == "rotor":
-        f = np.interp(r_ht, r_ht_data, f_data_R)
+        f = jnp.interp(r_ht, r_ht_data, f_data_R)
     else:
         print("Specify the type of cascade")
 

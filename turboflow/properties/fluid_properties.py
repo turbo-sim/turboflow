@@ -3,12 +3,14 @@ import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
 import copy
 
-from ..pysolver_view import (
+from turboflow.pysolver_view import (
     NonlinearSystemSolver,
     NonlinearSystemProblem,
     OptimizationProblem,
     OptimizationSolver,
 )
+
+# from turboflow.properties import perfect_gas_props_func1
 
 # Define property aliases
 PROPERTY_ALIAS = {
@@ -78,6 +80,15 @@ DmassSmass_INPUTS = CP.DmassSmass_INPUTS
 DmolarSmolar_INPUTS = CP.DmolarSmolar_INPUTS
 DmassUmass_INPUTS = CP.DmassUmass_INPUTS
 DmolarUmolar_INPUTS = CP.DmolarUmolar_INPUTS
+
+# # Import property calculation functions into a dictionary for easy access
+# property_calculators = {
+#     "HmassSmass_INPUTS": perfect_gas_props_func1.calculate_properties_hs,
+#     "PSmass_INPUTS": perfect_gas_props_func1.calculate_properties_Ps,
+#     "PT_INPUTS": perfect_gas_props_func1.calculate_properties_PT,
+#     "HmassP_INPUTS": perfect_gas_props_func1.calculate_properties_hP,
+#     "DmassHmass_INPUTS": perfect_gas_props_func1.calculate_properties_rhoh
+# }
 
 # Define dictionary with dynamically generated fields
 PHASE_INDEX = {attr: getattr(CP, attr) for attr in dir(CP) if attr.startswith("iphase")}
@@ -323,6 +334,21 @@ class Fluid:
         """Calculate the properties at the triple point (vapor state)"""
         self.set_state(QT_INPUTS, 1.00, self._AS.Ttriple(), generalize_quality=False)
         return FluidState(self)
+    
+    # def perfect_gas_props(self, input_state, prop1, prop2):
+    #     """Calculate properties based on the specified input state."""
+        
+    #     # Retrieve the appropriate calculation function
+    #     calculate_properties = property_calculators.get(input_state)
+        
+    #     if calculate_properties is None:
+    #         raise ValueError(f"Unknown input state: {input_state}")
+
+    #     # Call the corresponding property calculation function 
+    #     properties = calculate_properties(prop1, prop2)
+        
+    #     return properties
+
 
     def get_props(self, input_type, prop_1, prop_2, generalize_quality=True):
         return self.set_state(

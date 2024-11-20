@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize._numdiff import approx_derivative
 
+
 DERIVATIVE_METHODS = [
     "2-point",
     "3-point",
