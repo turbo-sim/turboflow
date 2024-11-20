@@ -35,40 +35,63 @@ def get_res_throat(w2, mass_flow_rate, rothalpy, u2):
     Stationary components: rothalpy is the stagnation enthalpy, w2 is absolute velocity and u2 is zero  
     """
 
-    # Throat
-    h0_rel2 = rothalpy + 0.5*u2**2 # Assume same radius at throat and inlet
-    h2 = h0_rel2 - 0.5*w2**2
-    s2 = s1 # Assume isentropic flow
-    fluid.update(cp.HmassSmass_INPUTS, h2, s2)
-    d2 = fluid.rhomass()
-    m2 = d2*w2*A2
-
+    def get_mass(w2):
+        # Throat
+        h0_rel2 = rothalpy + 0.5*u2**2 # Assume same radius at throat and inlet
+        h2 = h0_rel2 - 0.5*w2**2
+        s2 = s1 # Assume isentropic flow
+        # s2 = s1 + 1  /  T01 * w2**2 / 2
+        fluid.update(cp.HmassSmass_INPUTS, h2, s2)
+        d2 = fluid.rhomass()
+        m2 = d2*w2*A2
+        a2 = fluid.speed_sound()
+        Ma = w2/a2
+        return m2, Ma
+   
+    m2, Ma = get_mass(w2)
+ 
+ 
+    # Mass flow residual
     res = 1-m2/mass_flow_rate
-
-    # return res
-    return tf.smooth_abs(res, method="logarithmic", epsilon=1e-1)
+ 
+    h = 1e-3
+    slope = (get_mass(w2+h/2.)[0] - get_mass(w2-h/2.)[0])/h
+    # res_mod = res * slope
+    res_mod = res * slope / ((0.8 - Ma)**2 + 0.001)
+ 
+    return res, res_mod, Ma
+    # return tf.smooth_abs(slope, method="logarithmic", epsilon=1e-3) , Ma
 
 # Explore solutions
 # h0_rel1 =  429202.99461396
 rothalpy = 423569.8891 - 0.5*u2**2
-N = 5000
-w2 = np.linspace(200, 450, N)
-mass_flow_rate = [5.0] 
+N = 2000
+w2 = np.linspace(0, 450, N)
+# mass_flow_rate = [0.2, 0.3, 0.35, 0.4, 0.5, 0.6]
+mass_flow_rate = [4.0, 4.5, 5.0, 5.25, 5.5, 6.0]
 
+ 
 fig, ax = plt.subplots()
+fig1, ax1 = plt.subplots()
 for j in range(len(mass_flow_rate)):
     residual = np.zeros(N)
+    residual_mod = np.zeros(N)
+    Mach = np.zeros(N)
     for i in range(N):
-        res = get_res_throat(w2[i], mass_flow_rate[j], rothalpy, u2)
+        res, res_mod, Ma = get_res_throat(w2[i], mass_flow_rate[j], rothalpy, u2)
         residual[i] = res
-
+        residual_mod[i] = res_mod
+        Mach[i] = Ma
+ 
     ax.plot(w2, residual, label = f"Mass flow rate: {mass_flow_rate[j]}")
+    ax1.plot(w2, residual_mod, label = f"Mass flow rate: {mass_flow_rate[j]}")
 ax.legend()
-ax.plot([100, 550], [0.00, 0.00], 'k--')
-# ax.set_xlim([190, 460])
-# ax.set_ylim([-0.1, 0.23])
+ax1.legend()
+ax.axhline(y=0, color='black', linestyle='--', linewidth=1)
+ax1.axhline(y=0, color='black', linestyle='--', linewidth=1)
 ax.grid(False)
+ax1.grid(False)
 ax.set_ylabel("Residual")
-ax.set_xlabel("Throat velocity [m/s]")
+ax.set_xlabel("Mach number")
 plt.tight_layout()
 plt.show()

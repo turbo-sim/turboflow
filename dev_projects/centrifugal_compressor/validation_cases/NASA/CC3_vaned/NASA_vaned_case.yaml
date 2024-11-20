@@ -1,0 +1,88 @@
+
+# NASA Vaned
+turbomachinery: centrifugal_compressor
+operation_points: 
+    fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate : 4.54
+    omega: 21789*2*np.pi/60
+    alpha_in: 0
+
+simulation_options: 
+  slip_model : wiesner 
+  loss_model:
+    impeller: 
+      model: zhang_set1  
+      loss_coefficient: static_enthalpy_loss
+    vaneless_diffuser: 
+      model: zhang_set1  
+      loss_coefficient: static_enthalpy_loss
+    vaned_diffuser: 
+      model: zhang_set1  
+      loss_coefficient: static_enthalpy_loss
+  vaneless_diffuser_model : algebraic
+  rel_step_fd : 1e-4
+  factors: 
+    skin_friction : 0.02
+    wall_heat_flux : 0.00
+    wake_width : 0.366
+  choking_criterion : evaluate_throat
+  
+performance_analysis :
+  performance_map: 
+    fluid_name: air 
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: np.linspace(2.0, 5.0, 40)
+    omega: np.array([21789.0, 19610.100000000002, 17431.199999999997, 15252.3])*2*np.pi/60
+    # omega: 12000*2*np.pi/60
+    alpha_in: 0 
+  solver_options: 
+    method: hybr  
+    tolerance: 1e-6  
+    max_iterations: 100  
+    derivative_method: 2-point  
+    derivative_abs_step: 1e-6  
+    plot_convergence: False
+    print_convergence : True
+
+  initial_guess :
+      v_in_impeller: 85.3356068398654
+      w_throat_impeller: 137.89217290576872 
+      w_out_impeller: 137.89217290576872 
+      beta_out_impeller: -48.403824725190525 
+      s_out_impeller: 3893.531986735667
+      v_out_vaneless_diffuser: 275.421400198415 
+      s_out_vaneless_diffuser: 3896.4056527991916 
+      alpha_out_vaneless_diffuser: 72.30714011067647
+
+geometry:
+  impeller :
+    radius_hub_in: 0.21/2
+    radius_tip_in: 0.082/2
+    radius_out : 0.431/2
+    width_out : 0.017
+    leading_edge_angle : -43.8095 
+    trailing_edge_angle : -46.0000
+    number_of_blades : 15
+    length_axial : 0.13224
+    length_meridonial : 
+    tip_clearance : 2.03e-04
+    area_throat_ratio : 1.0 # Not given
+  vaneless_diffuser:
+    wall_divergence : 
+    radius_out : 0.0167/2
+    radius_in : 0.431/2
+    width_in : 0.017
+    # width_out : 0.0167
+  vaned_diffuser :
+    radius_out : 0.67320/2
+    radius_in : 0.431/2
+    width_in : 0.0167
+    width_out : 0.0167 # Assume constant width
+    leading_edge_angle : 77.77
+    trailing_edge_angle : 34.0 
+    number_of_vanes : 24
+    throat_location_factor : 1.0
+    area_throat_ratio : 0.5

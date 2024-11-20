@@ -29,6 +29,7 @@ simulation_options:
     skin_friction : 0.02
     wall_heat_flux : 0.00
     wake_width : 0.366
+  choking_criterion : evaluate_throat
   
 performance_analysis :
   # performance_map: 
@@ -50,8 +51,8 @@ performance_analysis :
   #   efficiency_tt : 0.7
   #   phi_out : 0.2
   initial_guess :
-    efficiency_tt : (0.8, 0.9)
-    phi_out : (0.2, 0.6)
+    efficiency_tt : (0.3, 0.95) 
+    phi_out : (0.1, 0.8)
     n_samples : 100
   # initial_guess :
   #     v_in_impeller: 85.3356068398654 
@@ -77,18 +78,20 @@ geometry:
     leading_edge_angle : (56+30.23)/2
     trailing_edge_angle : -45
     number_of_blades : 18
-    impeller_length : 0.007693
+    length_axial : 0.007693
+    length_meridional : 0.007693
     tip_clearance : 0.15e-3
+    area_throat_ratio : 0.5
   vaneless_diffuser :
     wall_divergence : -6.897
     radius_out : 0.01*1.65
     radius_in : 0.01
     width_in : 6.29e-3
-  volute :
-    radius_out : 0.01
-    radius_in : 0.01*1.65
-    radius_scroll : 0.045 # Assume constant volume in cone
-    width_in : 0.75*6.29e-3
+  # volute :
+  #   radius_out : 0.01
+  #   radius_in : 0.01*1.65
+  #   radius_scroll : 0.045 # Assume constant volume in cone
+  #   width_in : 0.75*6.29e-3
 
 # Notes
 # - Negative impeller leading edge angle in paper (different convention?)
