@@ -1,4 +1,5 @@
 import os
+import warnings
 import numpy as np
 from scipy.optimize import minimize
 
@@ -355,6 +356,19 @@ def _minimize_pygmo_ipopt(problem, x0, options):
             f"IPOPT struggles to converge to tight tolerances when exact Hessians are not provided.\nConsider relaxing the termination tolerance above 1e-3. Current tolerance: {combined_options['tol']:0.2e}."
         )
 
+    # TODO: Implement similarly as SNOPT
+    # constr_viol_tol
+    # tol: Desired convergence tolerance (relative).
+    # dual_inf_tol: Desired threshold for the dual infeasibility.
+    # compl_inf_tol:
+    # acceptable_tol:
+    #  acceptable_iter:
+    #  acceptable_dual_inf_tol:
+    # acceptable_constr_viol_tol:
+    # acceptable_compl_inf_tol:
+    # acceptable_obj_change_tol:
+    # diverging_iterates_tol: 
+
     # Solve the problem
     problem = pg.problem(problem)
     algorithm = pg.algorithm(pg.ipopt())
@@ -376,17 +390,39 @@ def _minimize_pygmo_snopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to SNOPT"""
 
     # Define solver options
-    default_options = {
-        "Major feasibility tolerance": 1e-3,
+    snopt_options = {
+        "Major feasibility tolerance": 1e-6,
         "Major optimality tolerance": 1e-3,
-        "Minor feasibility tolerance": 1e-3,
+        "Minor feasibility tolerance": 1e-6,
         "Iterations limit": 100,
         "Major iterations limit": 1e6,
         "Minor iterations limit": 1e6,
         "Hessian updates": 30,
     }
-    options = options.copy()  # Work with a copy to avoid side effects
-    combined_options = default_options | options
+
+    # Make a copy of the options to avoid side effects
+    options = options.copy()  # Replace `options` with the actual options dictionary
+
+    # Check if 'tol' is in options, and apply it to the tolerances
+    if "tol" in options:
+        tol_value = options.pop("tol")
+        snopt_options["Major feasibility tolerance"] = tol_value
+        # snopt_options["Major optimality tolerance"] = tol_value  # Cannot be too tight or will not converge
+        snopt_options["Minor feasibility tolerance"] = tol_value
+
+    if "max_iter" in options:
+        max_iter = options.pop("max_iter")
+        snopt_options["Iterations limit"] = max_iter
+        snopt_options["Major iterations limit"] = 10*max_iter
+        snopt_options["Minor iterations limit"] = 10*max_iter
+        
+    # Raise a warning for any unused options
+    if options:  # Check if there are any leftover keys in options
+        unused_keys = ', '.join(options.keys())
+        warnings.warn(
+            f"The following options were not used: {unused_keys}. "
+            "Please check for typos or unsupported options."
+        )
 
     # Define SNOPT path
     lib = os.getenv("SNOPT_LIB")
@@ -397,13 +433,12 @@ def _minimize_pygmo_snopt(problem, x0, options):
     problem = pg.problem(problem)
     algorithm = pg.algorithm(ppnf.snopt7(library=lib, minor_version=7))
     algorithm_handle = algorithm.extract(ppnf.snopt7)
-    _set_pygmo_options(algorithm_handle, combined_options)
+    _set_pygmo_options(algorithm_handle, snopt_options)
     population = pg.population(problem, size=1)
     population.set_x(0, x0)
     population = algorithm.evolve(population)
 
     # Optimization output
-
     message = _extract_snopt_message(algorithm.get_extra_info())
     success = (
         True

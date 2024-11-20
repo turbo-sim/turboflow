@@ -246,14 +246,17 @@ design_optimization:
   solver_options:
     library: pygmo
     method: snopt
+    # library: scipy
+    # method: slsqp
     derivative_method: 2-point
-    derivative_abs_step: 1e-6
+    derivative_abs_step: 1e-9
     print_convergence: True
-    plot_convergence: True 
+    plot_convergence: False
     update_on: "gradient"
-    options :
-      tol: 1e-4
-      max_iter: 200 
+    options:
+      tol: 1e-6
+      max_iter: 500 
+
 
 
 
