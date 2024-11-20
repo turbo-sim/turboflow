@@ -24,6 +24,7 @@ def compute_vaneless_diffuser_losses(input_parameters):
     # Load parameters
     T0_in = input_parameters["inlet_plane"]["T0"]
     p0_in = input_parameters["inlet_plane"]["p0"]
+    v_in = input_parameters["inlet_plane"]["v"]
     cp = input_parameters["inlet_plane"]["cp"]
     cv = input_parameters["inlet_plane"]["cv"]
     p_out = input_parameters["exit_plane"]["p"]
@@ -35,8 +36,9 @@ def compute_vaneless_diffuser_losses(input_parameters):
     Y_tot = cp*T0_in*((p_out/p0_out)**alpha - (p_out/p0_in)**alpha)
 
     # Store losses in dict
+    scale = 0.5*v_in**2
     loss_dict = {
-        "loss_total" : Y_tot
+        "loss_total" : Y_tot/scale
     }
 
     return loss_dict
@@ -58,6 +60,11 @@ def compute_impeller_losses(input_parameters):
     h0_in = input_parameters["inlet_plane"]["h0"]
     a_in = input_parameters["inlet_plane"]["a"]
     mu_in = input_parameters["inlet_plane"]["mu"]
+    p0_in = input_parameters["inlet_plane"]["p0"]
+    T0_in = input_parameters["inlet_plane"]["T0"]
+    gamma_in = input_parameters["inlet_plane"]["gamma"]
+    cp_in = input_parameters["inlet_plane"]["cpmass"]
+    cv_in = input_parameters["inlet_plane"]["cvmass"]
 
     # Load exit plane
     v_out = input_parameters["exit_plane"]["v"]
@@ -73,57 +80,62 @@ def compute_impeller_losses(input_parameters):
     a_out = input_parameters["exit_plane"]["a"]
 
     # Load throat plane
-    # w_th = input_parameters["throat_plane"]["w"]
-    # A_crit = input_parameters["throat_plane"]["area_crit"]  # Critical area for given mass flow rate
+    w_th = input_parameters["throat_plane"]["w"]
 
     # Load geometry
     t_cl = input_parameters["geometry"]["tip_clearance"]
     b_out = input_parameters["geometry"]["width_out"]
-    L_ax = input_parameters["geometry"]["impeller_length"]
+    L_ax = input_parameters["geometry"]["length_axial"]
     z = input_parameters["geometry"]["number_of_blades"]
     r_in_hub = input_parameters["geometry"]["radius_hub_in"]
     r_in_tip = input_parameters["geometry"]["radius_tip_in"]
     r_out = input_parameters["geometry"]["radius_out"]
     A_out = input_parameters["geometry"]["area_out"]
     A_in = input_parameters["geometry"]["area_in"]
-    # A_th = input_parameters["geometry"]["area_throat"]
+    A_th = input_parameters["geometry"]["area_throat"]
+    theta_in = input_parameters["geometry"]["leading_edge_angle"]
+
+    # Load boundary conditions
+    mass_flow_rate = input_parameters["boundary_conditions"]["mass_flow_rate"]
 
     # Load model factors
-    Cf = input_parameters["factors"]["skin_friction"] 
     wake_width = input_parameters["factors"]["wake_width"]
 
     # Incidence loss (Aungier)
-    Y_inc = 0.4*(w_in-v_m_in/math.cosd(beta_in)) 
+    Y_inc = 0.4*(w_in-v_m_in/math.cosd(theta_in))**2 
 
     # Blade loading loss (Aungier)
-    delta_W = 2*np.pi*2*r_out*v_t_out/(z*L_ax)
+    L_b = np.pi/8*(r_out*2-(r_in_tip + r_in_hub)-b_out+2*L_ax)*(2/(math.cosd(beta_in)+math.cosd(beta_out)))
+    delta_W = 2*np.pi*2*r_out*v_t_out/(z*L_b)
     Y_bld = delta_W**2/48
 
     # Skin friction loss (Jansen)
-    L_b = np.pi/8*(r_out*2-(r_in_tip + r_in_hub)-b_out+2*L_ax)*(2/(math.cosd(beta_in)+math.cosd(beta_out)))
     D_h = 2*r_out*math.cosd(beta_out)/(z/np.pi + 2*r_out*math.cosd(beta_out)/b_out) + 0.5*(r_in_tip+r_in_hub)/r_out*math.cosd(beta_in)/(z/np.pi + (r_in_tip + r_in_hub)/(r_in_tip-r_in_hub)*math.cosd(beta_in))
-    w_avg = (v_in + v_out + 3*w_in + 3*w_out)/8
+    w_avg = (2*w_in + 2*w_in)/4
     Re = u_out*D_h*d_in/mu_in
     Cf = 0.0412*Re**(-0.1925)
     Y_sf = 2*Cf*L_b/D_h*w_avg**2
 
     # Clearance loss (Jansen)
-    Y_cl = 0.6*t_cl/b_out*v_t_out*(4*np.pi/(b_out*z)*(r_in_tip**2 - r_in_hub**2)/((r_out - r_in_tip)*(1+d_out/d_in))*v_t_out*v_m_in)**(0.5)
+    Y_cl = 0.6*t_cl/b_out*v_t_out*(4*np.pi/(b_out*z)*(r_in_tip**2 - r_in_hub**2)/(r_out - r_in_tip)*v_t_out*v_in/(1+d_out/d_in))**(0.5)
 
     # Mixing loss (Aungier)
-    W_out = np.sqrt((v_m_out*A_out/(2*np.pi*r_out*b_out))**2+w_t_out**2)
+    W_out = np.sqrt((v_m_out*A_out/(2*np.pi*r_out*b_out))**2+w_t_in**2) #w_t_in or w_t_out?
     W_max = (w_in + w_out+delta_W)/2
     D_eq = W_max/w_out
     W_sep = w_out*(D_eq <= 2.0) + w_out*D_eq/2*(D_eq > 2.0) 
     Y_mix = 0.5*(W_sep - W_out)**2
 
     # Entrance diffusion loss (Aungier)
-    # Y_dif = max(0, 0.4*(w_in - w_th)**2 - Y_inc)
+    Y_dif = max(0, 0.4*(w_in - w_th)**2 - Y_inc)
 
     # Choke loss (Aungier)
-    # Cr = np.sqrt(A_in*math.cosd(beta_in)/A_th)
-    # X = 11-10*(Cr*A_th)/A_crit
-    # Y_ch = 0.5*w_in**2*(0.05*X+X**7)*(X > 0)
+    R = cp_in-cv_in
+    A_crit = mass_flow_rate/(p0_in*np.sqrt(gamma_in/(R*T0_in))*(2/(gamma_in+1))**((gamma_in+1)/(2*(gamma_in-1))))
+    Cr = np.sqrt(A_in*math.cosd(theta_in)/A_th)
+    Cr = min(Cr, 1-(A_in*math.cosd(theta_in)/A_th-1)**2)
+    X = 11-10*(Cr*A_th)/A_crit
+    Y_ch = 0.5*w_in**2*(0.05*X+X**7)*(X > 0)
 
     # Parasitic losses
     parasitic_losses = compute_parasitic_losses(input_parameters)
@@ -139,12 +151,15 @@ def compute_impeller_losses(input_parameters):
     Y_cl = Y_cl/scale
     Y_mix = Y_mix/scale
 
+    Y_dif = Y_dif/scale
+    Y_ch = Y_ch/scale
+
     Y_lk = Y_lk/scale
     Y_df = Y_df/scale
     Y_rc = Y_rc/scale
 
     Y_parasitic = Y_lk + Y_df + Y_rc
-    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_parasitic
+    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_dif + Y_ch #+ Y_parasitic
 
     # Scale loss coefficent
     loss_dict = {"incidence" : Y_inc,
@@ -153,9 +168,12 @@ def compute_impeller_losses(input_parameters):
                  "tip_clearance" : Y_cl,
                  "wake_mixing" : Y_mix,
                  "loss_total" : Y_tot,
-                 "leakage" : Y_lk,
-                 "recirculation" : Y_rc,
-                 "disk_friction" : Y_df}
+                #  "leakage" : Y_lk,
+                #  "recirculation" : Y_rc,
+                #  "disk_friction" : Y_df,
+                 "choke": Y_ch,
+                 "entrance_diffusion" : Y_dif,
+                 }
     
     return loss_dict
 
@@ -190,7 +208,8 @@ def compute_parasitic_losses(input_parameters):
     t_cl = input_parameters["geometry"]["tip_clearance"]
     b_out = input_parameters["geometry"]["width_out"]
     b_in = input_parameters["geometry"]["width_in"]
-    L_ax = input_parameters["geometry"]["impeller_length"]
+    L_ax = input_parameters["geometry"]["length_axial"]
+    L_m = input_parameters["geometry"]["length_meridional"]
     z = input_parameters["geometry"]["number_of_blades"]
     r_in_tip = input_parameters["geometry"]["radius_tip_in"]
     r_hub_in = input_parameters["geometry"]["radius_hub_in"]
