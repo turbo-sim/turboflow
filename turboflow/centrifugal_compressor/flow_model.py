@@ -177,7 +177,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
         "s_in" : s_in,
         "rothalpy" : rothalpy,
     }
-    throat_residual, throat_results = cm.evaluate_choking(independents, input_choking, boundary_conditions, geometry, fluid, model_options, reference_values, component="impeller", u_throat = u_in)
+    throat_residual, throat_plane = cm.evaluate_choking(independents, input_choking, boundary_conditions, geometry, fluid, model_options, reference_values, component="impeller", u_throat = u_in)
 
     # Collect inlet plane and exit plane results 
     inlet_plane = {**velocity_triangle_in,
@@ -200,6 +200,7 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     loss_input = {
         "inlet_plane" : inlet_plane,
         "exit_plane" : exit_plane,
+        "throat_plane" : throat_plane,
         "geometry" : geometry,
         "isentropic" : isentropic_properties_out,
         "factors" : model_options["factors"],
@@ -217,12 +218,12 @@ def evaluate_impeller(independents, input, boundary_conditions, geometry, fluid,
     resiudals = {"mass_flow_in" : (m_in-mass_flow_rate)/mass_flow_rate,
                  "mass_flow_out" : (m_out-mass_flow_rate)/mass_flow_rate,
                  "losses" : loss_dict["loss_error"],
-                 "slip" : slip_velocity-slip_model,
+                 "slip" : (slip_velocity-slip_model)/v_max,
                  **throat_residual}
 
     # Store impeller results
     results = {"inlet_plane" : inlet_plane,
-               "throat_plane" : throat_results,
+               "throat_plane" : throat_plane,
                "exit_plane": exit_plane,
     }
 
