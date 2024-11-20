@@ -54,27 +54,28 @@ def compute_performance(
                 operation_point,
                 operation_points[:i],  # Use up to the previous point
                 solution_data[:i],  # Use solutions up to the previous point
+                solver_container[:i],
             )
             print(f" Using solution from point {closest_index+1} as initial guess")
             initial_guess = closest_x
+        # try:
+        # Compute performance
+        solver = compute_single_operation_point(
+                            operation_point,
+                            initial_guess,
+                            config["geometry"],
+                            config["simulation_options"],
+                            config["performance_analysis"]["solver_options"],
+                            )
 
-        try:
-            # Compute performance
-            solver = compute_single_operation_point(
-                                operation_point,
-                                initial_guess,
-                                config["geometry"],
-                                config["simulation_options"],
-                                config["performance_analysis"]["solver_options"],
-                                )
+        # Collect solution and solver
+        solution_data.append(solver.problem.vars_real)
+        solver_container.append(solver)
 
-            # Collect solution and solver
-            solution_data.append(solver.problem.vars_real)
-            solver_container.append(solver)
-
-        except Exception as e:
-            handle_failure(i, e, stop_on_failure)
-            solver_container.append(None)
+        # except Exception as e:
+        #     handle_failure(i, e, stop_on_failure)
+        #     solver_container.append(None)
+        #     solution_data.append([])
 
     # Print final report
     print_simulation_summary(solver_container)
@@ -212,7 +213,7 @@ def compute_single_operation_point(
     return solver
 
 
-def find_closest_operation_point(current_op_point, operation_points, solution_data):
+def find_closest_operation_point(current_op_point, operation_points, solution_data, solver_container):
     """
     Find the solution vector and index of the closest operation point in the historical data.
 
@@ -224,6 +225,8 @@ def find_closest_operation_point(current_op_point, operation_points, solution_da
         A list of historical operation points to search through.
     solution_data : list
         A list of solution vectors corresponding to each operation point.
+    solver_container : list
+        A list of solver objects corresponding to each operation point.
 
     Returns
     -------
@@ -237,7 +240,7 @@ def find_closest_operation_point(current_op_point, operation_points, solution_da
 
     for i, op_point in enumerate(operation_points):
         distance = get_operation_point_distance(current_op_point, op_point)
-        if distance < min_distance:
+        if distance < min_distance and solver_container[i].success:
             min_distance = distance
             closest_point_x = solution_data[i]
             closest_index = i
@@ -534,33 +537,34 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
 
         """
         3 options:
-            - Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically
-            - Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best 
-            - Give complete set (real values)
+            1. Give guess of efficiency_tt and phi_out. Initial guess calculated heuristically
+            2. Give bounds of efficiency_tt and phi_out, and a sample size. Initial guess calculated by the best 
+            3. Give complete set (real values)
         """
 
-        valid_keys_1 = ["efficiency_tt", "phi_out"]
-        valid_keys_2 = ["efficiency_tt", "phi_out", "n_samples"]
+        valid_keys_1 = ["efficiency_impeller", "phi_impeller", "Ma_vaned_diffuser"]
+        valid_keys_2 = ["efficiency_impeller", "phi_impeller", "Ma_vaned_diffuser", "n_samples"]
         check = []
         check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
         check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
 
         if check[0]:
             # Initial guess determined from heurustic guess, with given parameters
-            if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
+            if isinstance(initial_guess["efficiency_impeller"], (list, np.ndarray)):
                 # Several initial guesses
                 initial_guesses = []
-                for i in range(len(initial_guess["efficiency_tt"])):
-                    heuristic_guess = self.get_heuristic_guess(initial_guess["efficiency_tt"][i], initial_guess["phi_out"][i])
+                for i in range(len(initial_guess["efficiency_impeller"])):
+                    guess = {key : val[i] for key, val in initial_guess.items()}
+                    heuristic_guess = self.get_heuristic_guess(guess)
                     initial_guesses.append(heuristic_guess)
             else:
                 # Single initial guess
-                heuristic_guess = self.get_heuristic_guess(initial_guess["efficiency_tt"], initial_guess["phi_out"])
+                heuristic_guess = self.get_heuristic_guess(initial_guess)
                 initial_guesses = [heuristic_guess]
 
         elif check[1]:
             # Generate initial guess using latin hypercube sampling
-            bounds = [initial_guess["efficiency_tt"], initial_guess["phi_out"]]
+            bounds = [initial_guess["efficiency_impeller"], initial_guess["phi_impeller"], initial_guess["Ma_vaned_diffuser"]]
 
             n_samples = initial_guess["n_samples"]
             heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
@@ -568,7 +572,8 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
             failures = 0
             for heuristic_input in heuristic_inputs:
                 try:
-                    heuristic_guess = self.get_heuristic_guess(heuristic_input[0], heuristic_input[1])
+                    guess = dict(zip(valid_keys_1, heuristic_input))
+                    heuristic_guess = self.get_heuristic_guess(guess)
                     x = self.scale_values(heuristic_guess) # TODO: Add scaling
                     self.keys = x.keys() 
                     x0 = np.array(list(x.values()))
@@ -583,39 +588,40 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
             print(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
             heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
             initial_guess = dict(zip(valid_keys_1, heuristic_input))
-            initial_guess = self.get_heuristic_guess(heuristic_input[0], heuristic_input[1])
+            initial_guess = self.get_heuristic_guess(initial_guess)
             initial_guesses = [initial_guess]
-        else:
+        elif isinstance(initial_guess, dict):
             # Simply return the initial guess given
             initial_guesses = [initial_guess]
-
+        else:
+            raise ValueError("Provided initial guess is not valid.")
+    
         return initial_guesses
     
-    def get_heuristic_guess(self, eta_tt, phi_out):
+    def get_heuristic_guess(self, guess):
 
         # Check vaneless diffuser model
         vaneless_model = self.model_options["vaneless_diffuser_model"]
 
         # initialize initial guess dictionary
-        initial_guess = {}
-
-        # Prepare first input
-        input = {"eta_tt" : eta_tt,
-                "phi_out" : phi_out}
+        heuristic_guess = {}
+        input = {}
 
         # Get initial guess
         for key in self.geometry.keys():
+            guess_component = {var : val for var, val in guess.items() if var.endswith(key)}
+
             if key == "impeller":
-                guess, exit_state = self.get_impeller_guess(input)
+                heuristic_guess_component, exit_state = self.get_impeller_guess(guess_component, input)
             elif key == "vaneless_diffuser" and vaneless_model == "algebraic":
-                guess, exit_state = self.get_vaneless_diffuser_guess(input)
+                heuristic_guess_component, exit_state = self.get_vaneless_diffuser_guess(guess_component, input)
             elif key == "vaned_diffuser":
-                guess, exit_state = self.get_vaned_diffuser_guess(input)
+                heuristic_guess_component, exit_state = self.get_vaned_diffuser_guess(guess_component, input)
             elif key == "volute":
-                guess, exit_state = self.get_volute_guess(input)
+                heuristic_guess_component, exit_state = self.get_volute_guess(guess_component, input)
 
             # Store guess
-            initial_guess = {**initial_guess, **guess}
+            heuristic_guess = {**heuristic_guess, **heuristic_guess_component}
 
             # Prepare calculation of next component
             input = exit_state
@@ -629,11 +635,11 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         # Remove specified keys for the selected choking criterion
         if choking_criterion in keys_to_delete:
             for key in keys_to_delete[choking_criterion]:
-                initial_guess.pop(key, None)  # Remove key if it exists
+                heuristic_guess.pop(key, None)  # Remove key if it exists
 
-        return initial_guess
+        return heuristic_guess
     
-    def get_impeller_guess(self, input):
+    def get_impeller_guess(self, guess, input):
 
         # Load boundary conditions
         p0_in = self.boundary_conditions["p0_in"]
@@ -642,9 +648,9 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
         alpha_in = self.boundary_conditions["alpha_in"]
 
-        # Load input
-        eta_tt = input["eta_tt"]
-        phi_out = input["phi_out"]
+        # Load guess
+        eta_tt = guess["efficiency_impeller"]
+        phi_out = guess["phi_impeller"]
         
         # Load geometry
         z = self.geometry["impeller"]["number_of_blades"]
@@ -766,7 +772,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         # Store initial guess
         initial_guess = {
                     "v_in_impeller" : velocity_triangle_in["v"],
-                    "w_throat_impeller" : velocity_triangle_in["w"],
+                    "w_throat_impeller" : velocity_triangle_in["w"]*0.5, # factor to ensure correct solution of thorat velocity
                     "w_out_impeller" : w_out,
                     "beta_out_impeller" : beta_out,
                     "s_out_impeller" : s_out,
@@ -774,7 +780,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         
         return initial_guess, exit_plane
 
-    def get_vaneless_diffuser_guess(self, input):
+    def get_vaneless_diffuser_guess(self, guess, input):
         """
         Guess constant alpha
         Simple correlation for static enthalpy loss coefficient
@@ -785,6 +791,8 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         v_t_in = input["v_t"]
         v_in = input["v"]
         h_in = input["h"]
+        d_in = input["d"]
+        s_in = input["s"]
 
         # Load boundary conditions
         mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
@@ -800,8 +808,9 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
 
         # Calculate exit velocity
         alpha_out = alpha_in
-        delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
-        v_t_out = v_t_in*r_out/r_in*delta_M
+        # delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
+        delta_M = 1
+        v_t_out = v_t_in*r_in/r_out*delta_M
         v_out = v_t_out/math.sind(alpha_out)
         v_m_out = v_out*math.cosd(alpha_out)
         velocity_triangle_out = {
@@ -831,18 +840,22 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
 
         return initial_guess, exit_state
 
-    def get_vaned_diffuser_guess(self, input):
+    def get_vaned_diffuser_guess(self, guess, input):
 
         """
         Similar as vaneless diffuser
         Assume zero deviation at exit 
         """
+
+        # Load guess
+        Ma_out = guess["Ma_vaned_diffuser"]
         
         # Load input
         alpha_in  = input["alpha"]
         v_t_in = input["v_t"]
         v_in = input["v"]
         h_in = input["h"]
+        a_in = input["a"]
 
         # Load boundary conditions
         mass_flow_rate = self.boundary_conditions["mass_flow_rate"]
@@ -858,11 +871,13 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         Cf = self.model_options["factors"]["skin_friction"]
 
         # Calculate exit velocity
-        alpha_out = theta_out
+        alpha_out = theta_out*0.9
         delta_M = np.exp(-Cf*(r_out-r_in)/(b_in*math.cosd(alpha_in)))
-        v_t_out = v_t_in*r_out/r_in*delta_M
+        # delta_M = 1
+        v_t_out = v_t_in*r_in/r_out*delta_M
         v_out = v_t_out/math.sind(alpha_out)
         v_m_out = v_out*math.cosd(alpha_out)
+        v_out = 0.2*a_in
 
         velocity_triangle_out = {
             "v" : v_out,
@@ -879,7 +894,7 @@ class CentrifugalCompressorProblem(psv.NonlinearSystemProblem):
         s_out = static_props_out["s"]
 
         initial_guess = {
-                    "w_throat_vaned_diffuser" : input["v"],
+                    "w_throat_vaned_diffuser" : input["v"]*0.5,
                     "v_out_vaned_diffuser" : v_out,
                     "s_out_vaned_diffuser" : s_out,
                     }
@@ -962,10 +977,8 @@ def print_simulation_summary(solvers):
 
     for i, solver in enumerate(solvers):
         # Check if the solver is not None and has the required attribute
-        if solver and hasattr(solver, "elapsed_time"):
+        if solver is not None and solver.success:
             times.append(solver.elapsed_time)
-            if not solver.success:
-                failed_points.append(i)
         else:
             # Handle failed solver or missing attributes
             failed_points.append(i)
