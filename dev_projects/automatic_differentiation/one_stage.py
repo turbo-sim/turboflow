@@ -13,7 +13,7 @@ import jax.numpy as jnp
 
 import pickle
 from joblib import dump
-
+import dill
 
 from collections.abc import Mapping, Sequence
 
@@ -179,60 +179,12 @@ def FD_grad_excel(config, step_sizes):
 
 
 
-
-
-def jax_to_numpy(obj, seen=None):
-    """
-    Recursively convert JAX objects in a nested structure to NumPy arrays.
-    Prevent infinite recursion caused by circular references.
-    """
-    if seen is None:
-        seen = set()
-
-    obj_id = id(obj)
-    if obj_id in seen:
-        return None  # Avoid infinite recursion due to circular references
-
-    seen.add(obj_id)
-
-    # If the object is a JAX array, convert to NumPy array
-    if isinstance(obj, jnp.ndarray):
-        return obj.copy()  # Convert JAX array to NumPy array
-
-    # If the object is a dictionary, recursively convert each item
-    elif isinstance(obj, Mapping):
-        return {key: jax_to_numpy(value, seen) for key, value in obj.items()}
-
-    # If the object is a sequence (list/tuple), recursively convert each item
-    elif isinstance(obj, Sequence) and not isinstance(obj, str):
-        return type(obj)(jax_to_numpy(item, seen) for item in obj)
-
-    # Special handling for named tuples (e.g., _XYPair)
-    elif hasattr(obj, "_fields"):  # Check if it's a namedtuple
-        # For a named tuple or similar object, convert each field recursively
-        # Pass the fields back into the constructor
-        return obj.__class__(*(jax_to_numpy(getattr(obj, field), seen) for field in obj._fields))
-
-    # Handle custom objects with a __dict__ attribute (e.g., custom class instances)
-    elif hasattr(obj, "__dict__"):
-        obj_dict = obj.__dict__.copy()
-        for key, value in obj_dict.items():
-            obj_dict[key] = jax_to_numpy(value, seen)
-        return obj_dict
-
-    else:
-        return obj  # Return other types unchanged
-
-
-
-
-
 #By default jax uses 32 bit, for scientific computing we need 64 bit precision
 # jax.config.update("jax_enable_x64", True)
 
 # Define mode 
-# MODE = "performance_analysis"
-MODE = "design_optimization"
+MODE = "performance_analysis"
+# MODE = "design_optimization"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one_stage_config.yaml")
@@ -298,21 +250,19 @@ elif MODE == "design_optimization":
 
     
     solver = tf.compute_optimal_turbine(config, export_results=True)
-    solver.plot_convergence_history()
 
-    numpy_solver = jax_to_numpy(solver)
-    # print(solver.solution_report)
 
-    file_path = os.path.join('output', f"pickle_1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
+
+    file_path = os.path.join('output', f"pickle_1stage_jax_test_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     with open(file_path, 'wb') as file:
         # Serialize the object and write it to the file
-        pickle.dump(numpy_solver, file)
+        dill.dump(solver, file)
 
-    # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
-    # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
+    # with open(file_path, 'rb') as file:
+    #     solver_test = dill.load(file)
 
-    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
 # %%

@@ -32,12 +32,12 @@ performance_analysis :
     omega: 1627*np.array([1.1, 1, 0.9, 0.7])
     alpha_in: 0 
   solver_options:
-    method: hybr
+    method: lm
     tolerance: 1e-8
     max_iterations: 100
     derivative_method: "2-point"
-    derivative_abs_step: 1e-3  
-    print_convergence: False
+    derivative_abs_step: 1e-6  
+    print_convergence: True
     plot_convergence: False
   initial_guess :
     n_samples : 100

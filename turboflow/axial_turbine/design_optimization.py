@@ -496,7 +496,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     #         self.operation_point,
     #         self.x0,
     #         self.geometry,
-    #         self.simulation_options,
+    #         self.simulation_options,fitness_gradient_based
     #         self.solver_options,
     #     )
     #     if solver.success: 
