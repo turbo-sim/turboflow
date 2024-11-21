@@ -12,7 +12,7 @@ import jax
 import jax.numpy as jnp
 
 import pickle
-from joblib import dump
+
 import dill
 
 from collections.abc import Mapping, Sequence
@@ -179,12 +179,17 @@ def FD_grad_excel(config, step_sizes):
 
 
 
+
+
+
+
+
 #By default jax uses 32 bit, for scientific computing we need 64 bit precision
 # jax.config.update("jax_enable_x64", True)
 
 # Define mode 
-MODE = "performance_analysis"
-# MODE = "design_optimization"
+# MODE = "performance_analysis"
+MODE = "design_optimization"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one_stage_config.yaml")
@@ -253,16 +258,17 @@ elif MODE == "design_optimization":
 
 
 
-    file_path = os.path.join('output', f"pickle_1stage_jax_test_{config['design_optimization']['solver_options']['method']}.pkl")
+
+    file_path = os.path.join('output', f"pickle_1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     with open(file_path, 'wb') as file:
         # Serialize the object and write it to the file
-        dill.dump(solver, file)
+        pickle.dump(numpy_solver, file)
 
-    # with open(file_path, 'rb') as file:
-    #     solver_test = dill.load(file)
+    # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
+    # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
 
-    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
 # %%

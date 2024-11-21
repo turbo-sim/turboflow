@@ -387,9 +387,10 @@ class OptimizationSolver:
         # Use problem gradient method if it exists
         if hasattr(self.problem, "gradient"):
             grad = self.problem.gradient(x)
-            # grad = grad.T
+            # print("Using AD")
         else:
             # Fall back to finite differences
+            # print("Falling back to FD")
             fun = lambda x: self.fitness(x, called_from_grad=True)
             grad = numerical_differentiation.approx_gradient(
                 fun,
