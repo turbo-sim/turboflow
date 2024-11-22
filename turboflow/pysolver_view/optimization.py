@@ -15,7 +15,6 @@ from . import optimization_wrappers as _opt
 from .pysolver_utilities import savefig_in_formats
 
 
-
 # Define valid libraries and their corresponding methods
 OPTIMIZATION_LIBRARIES = {
     "scipy": _opt.minimize_scipy,
@@ -117,9 +116,9 @@ class OptimizationSolver:
         problem,
         library="scipy",
         method="slsqp",
-        # tolerance=1e-6,
-        # max_iterations=100,
-        options={},
+        tolerance=1e-6,
+        max_iterations=100,
+        extra_options={},
         derivative_method="2-point",
         derivative_abs_step=None,
         print_convergence=True,
@@ -150,9 +149,8 @@ class OptimizationSolver:
         self._validate_library_and_method()
 
         # Define options dictionary
-        self.options = copy.deepcopy(options) if options else {}
-        # self.options["tol"] = tolerance
-        # self.options["max_iter"] = max_iterations
+        self.options = {"tolerance": tolerance, "max_iterations": max_iterations}
+        self.options = self.options | extra_options
 
         # Check for logger validity
         if self.logger is not None:
@@ -387,10 +385,8 @@ class OptimizationSolver:
         # Use problem gradient method if it exists
         if hasattr(self.problem, "gradient"):
             grad = self.problem.gradient(x)
-            # print("Using AD")
         else:
             # Fall back to finite differences
-            # print("Falling back to FD")
             fun = lambda x: self.fitness(x, called_from_grad=True)
             grad = numerical_differentiation.approx_gradient(
                 fun,
@@ -959,9 +955,7 @@ def combine_objective_and_constraints(f, c_eq=None, c_ineq=None):
         else:
             combined_list.append(c_ineq)
 
-    updated_combined_list = np.array(combined_list)
-
-    return updated_combined_list
+    return np.array(combined_list)
 
 
 class _PygmoProblem:

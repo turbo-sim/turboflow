@@ -13,7 +13,7 @@ import jax.numpy as jnp
 
 import pickle
 
-import dill
+# import dill
 
 from collections.abc import Mapping, Sequence
 
@@ -261,14 +261,14 @@ elif MODE == "design_optimization":
 
     file_path = os.path.join('output', f"pickle_1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
-    with open(file_path, 'wb') as file:
-        # Serialize the object and write it to the file
-        pickle.dump(numpy_solver, file)
+    # with open(file_path, 'wb') as file:
+    #     # Serialize the object and write it to the file
+    #     pickle.dump(numpy_solver, file)
 
-    # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
-    # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
+    # # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
+    # # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
 
-    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
-    # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
+    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+    # # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
 # %%
