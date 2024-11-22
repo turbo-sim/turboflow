@@ -153,6 +153,7 @@ class OptimizationSolver:
         self.options = copy.deepcopy(options) if options else {}
         # self.options["tol"] = tolerance
         # self.options["max_iter"] = max_iterations
+        
 
         # Check for logger validity
         if self.logger is not None:

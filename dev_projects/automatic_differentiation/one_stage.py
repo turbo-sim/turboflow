@@ -178,12 +178,6 @@ def FD_grad_excel(config, step_sizes):
     return gradient_deviation_dataframe, gradient_dataframe
 
 
-
-
-
-
-
-
 #By default jax uses 32 bit, for scientific computing we need 64 bit precision
 # jax.config.update("jax_enable_x64", True)
 
@@ -268,7 +262,7 @@ elif MODE == "design_optimization":
     # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
     # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
 
-    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
 # %%
