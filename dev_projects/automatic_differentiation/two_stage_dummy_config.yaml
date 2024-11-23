@@ -156,13 +156,15 @@ design_optimization:
     library: scipy
     method: slsqp
     derivative_method: 2-point
-    derivative_abs_step: 1e-6
+    derivative_abs_step: 1e-9
     print_convergence: True
-    plot_convergence: True 
+    plot_convergence: False 
     update_on: "gradient"
-    options :
-      tol: 1e-6
-      max_iter: 5
+    tolerance: 1e-8
+    max_iterations: 1000
+    # options :
+    #   tol: 1e-6
+    #   max_iter: 5
 
 
 

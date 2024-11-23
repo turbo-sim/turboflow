@@ -13,10 +13,10 @@ import jax.numpy as jnp
 
 import pickle
 
-import dill
+# import dill
 
 from collections.abc import Mapping, Sequence
-# %%
+
 dir_figs = "figures"
 os.makedirs(dir_figs, exist_ok=True)
  
@@ -177,6 +177,7 @@ def FD_grad_excel(config, step_sizes):
 
     return gradient_deviation_dataframe, gradient_dataframe
 
+
 #By default jax uses 32 bit, for scientific computing we need 64 bit precision
 # jax.config.update("jax_enable_x64", True)
 
@@ -250,16 +251,22 @@ elif MODE == "design_optimization":
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
 
-    file_path = os.path.join('output', f"1stage_FD_1e-9_{config['design_optimization']['solver_options']['method']}.pkl")
-    # Open a file in write-binary mode
-    with open(file_path, 'wb') as file:
-        # Serialize the object and write it to the file
-        dill.dump(solver, file)
 
-    # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
-    # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
+
+    file_path = os.path.join('output', f"pickle_1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
+    # Open a file in write-binary mode
+    # with open(file_path, 'wb') as file:
+    #     # Serialize the object and write it to the file
+    #     pickle.dump(numpy_solver, file)
+
+    # # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
+    # # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")
 
     # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+<<<<<<< HEAD
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
+=======
+    # # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
+>>>>>>> 45e57efdb45c7f8ed35231499adb635dac48dec3
 
 # %%

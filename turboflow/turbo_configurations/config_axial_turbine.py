@@ -223,7 +223,7 @@ class SolverOptionsPerformanceAnalysis(BaseModel):
     model_config = ConfigDict(extra="forbid", use_enum_values=True)
     method : SolverOptionEnum = SOLVER_OPTIONS[0]
     tolerance: float = 1e-8
-    max_iterations: int = 100
+    max_iterations: int = 500
     derivative_method : DerivativeMethodEnum = DERIVATIVE_METHODS[0]
     derivative_abs_step: float = 1e-6
     print_convergence: bool = True
@@ -346,7 +346,9 @@ class SolverOptionsOptimization(BaseModel):
     print_convergence: bool = True
     plot_convergence: bool = False
     update_on: UpdateOnEnum = "gradient"
-    options : Dict = {}
+    tolerance: float = 1e-6
+    max_iterations: int = 500
+    extra_options : Dict = {}
 
     @model_validator(mode="after")
     def check_solver_method(self) -> Self:
