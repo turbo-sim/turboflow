@@ -255,10 +255,6 @@ elif MODE == "design_optimization":
 
     
     solver = tf.compute_optimal_turbine(config, export_results=True)
-
-
-
-
     file_path = os.path.join('output', f"pickle_1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     # with open(file_path, 'wb') as file:

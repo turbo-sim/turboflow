@@ -340,37 +340,23 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
 
     # Define default solver options
     default_options = {
-        "print_level": 5,  # No output to the screen
+        "print_level": 0,  # No output to the screen
         "sb": "yes",  # Suppress banner
         "hessian_approximation": "limited-memory",  # Options: 'exact', 'limited-memory'
         "limited_memory_update_type": "bfgs",  # Options: 'bfgs', 'sr1'
         "line_search_method": "filter",  # Options: 'filter', 'cg-penalty', 'penalty'
-        "limited_memory_max_history": 0,  # Max history for L-BFGS
+        "limited_memory_max_history": 15,  # Max history for L-BFGS
         "max_iter": 500,  # Maximum number of iterations.
-        "tol": 1e-3,  # Desired convergence tolerance (relative).
-        # "dual_inf_tol": 1e6,  # Desired threshold for the dual infeasibility.
-        # "compl_inf_tol": 1e6,  # Desired threshold for the complementarity conditions
+        "tol": 1.0,  # Desired convergence tolerance (relative).
+        "dual_inf_tol": 1e6,  # Desired threshold for the dual infeasibility.
+        "compl_inf_tol": 1e6,  # Desired threshold for the complementarity conditions
         "constr_viol_tol": 1e-6,  # Desired threshold for the constraint and variable bound violation.
-        "acceptable_iter": 10,  # Number of "acceptable" iterates before triggering termination. If it is set to zero, this heuristic is disabled.
-        "acceptable_tol": 0.01,
-        # acceptable_iter:
+        # "acceptable_iter": 10,  # Number of "acceptable" iterates before triggering termination. If it is set to zero, this heuristic is disabled.
+        # "acceptable_tol": 1.0,
         # acceptable_dual_inf_tol:
         # acceptable_constr_viol_tol:
         # acceptable_compl_inf_tol:
-        "acceptable_obj_change_tol": 1e-2,
-        "nlp_scaling_method": "none",  #"gradient-based",
-        "watchdog_shortened_iter_trigger": 5,
-        "bound_relax_factor":  1e-4,
-        "mu_strategy" : "monotone",
-        # "mu_oracle" : "quality-function",
-        # "limited_memory_max_history" : 20,
-        # "bound_relax_factor" : 1e-3,
-        "alpha_for_y" : "min",
-        "max_soc" : 10,
-        "mu_strategy": "adaptive",  # Dynamically adjust the barrier parameter
-        "mu_min": 1e-8,
-        # "bound_frac": 0.99,  # Control step size near bounds
-        "bound_push": 0.1,  # Avoid overly aggressive steps
+        # "acceptable_obj_change_tol": 1e-2,
     }
 
     # Define IPOPT tolerance settings based on generic input
@@ -387,7 +373,6 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
     solver_options = default_options | solver_options
 
     # Solve the problem
-    print(solver_options)
     problem = pg.problem(problem)
     algorithm = pg.algorithm(pg.ipopt())
     algorithm_handle = algorithm.extract(pg.ipopt)
