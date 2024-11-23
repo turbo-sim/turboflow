@@ -19,7 +19,7 @@ import jax.numpy as jnp
 MODE = "design_optimization"
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("two_stage_config.yaml")
+CONFIG_FILE = os.path.abspath("three_stage_dummy_config.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 if MODE == "performance_analysis":
@@ -48,9 +48,6 @@ elif MODE == "design_optimization":
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
-
-    # solver.plot_convergence_history()
-    # solver.print_convergence_history()
     # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 

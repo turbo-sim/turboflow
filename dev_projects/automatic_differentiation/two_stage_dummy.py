@@ -14,12 +14,14 @@ import copy
 import jax
 import jax.numpy as jnp
 
+import dill
+
 # Define mode
 # MODE = "performance_analysis"
 MODE = "design_optimization"
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("two_stage_config.yaml")
+CONFIG_FILE = os.path.abspath("two_stage_dummy_config.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 if MODE == "performance_analysis":
@@ -48,9 +50,12 @@ elif MODE == "design_optimization":
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
+    file_path = os.path.join('output', f"2stage_dummy_FD_1e-9_tole-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    # Open a file in write-binary mode
+    with open(file_path, 'wb') as file:
+        # Serialize the object and write it to the file
+        dill.dump(solver, file)
 
-    # solver.plot_convergence_history()
-    # solver.print_convergence_history()
     # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
