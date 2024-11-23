@@ -245,11 +245,11 @@ design_optimization:
   radius_type : "constant_mean"
   solver_options:
     library: pygmo
-    method: snopt
+    method: ipopt
     # library: scipy
     # method: slsqp
     derivative_method: 2-point
-    derivative_abs_step: 1e-9
+    derivative_abs_step: 1e-6
     print_convergence: True
     plot_convergence: False
     update_on: "gradient"
