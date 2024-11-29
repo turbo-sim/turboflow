@@ -131,10 +131,10 @@ def get_profile_loss(flow_parameters, geometry):
 
     # Compute losses related to shock effects at the inlet of the cascade
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
-    a = max(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+    a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
     # Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_in - p_in) / (p0rel_out - p_out)
     Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
-    Y_shock = max(0, Y_shock)  # TODO: smoothing
+    Y_shock = math.smooth_maximum(0, Y_shock)  # TODO: smoothing
 
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
@@ -145,7 +145,8 @@ def get_profile_loss(flow_parameters, geometry):
     # If the optimization algorithm has upper and lower bounds for the outlet
     # angle there is no need to worry about this problem
     # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
-    angle_out_bis = max(abs(beta_out), 40)
+    # angle_out_bis = max(abs(beta_out), 40)  # TODO smoothing
+    angle_out_bis = math.smooth_maximum(math.smooth_abs(beta_out), 40.0)
     Yp_reaction = nozzle_blades(s / c, angle_out_bis)
     Yp_impulse = impulse_blades(s / c, angle_out_bis)
 
@@ -158,10 +159,10 @@ def get_profile_loss(flow_parameters, geometry):
     # blade profiles with little deflection
     # Low limit to 80% of the axial entry nozzle profile loss
     # This value is completely arbitrary
-    Y_p = max(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+    Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
 
     # Avoid unphysical effect on the thickness by defining the variable aa
-    aa = max(0, -theta_in / beta_out)  # TODO: smoothing
+    aa = math.smooth_maximum(0, -theta_in / beta_out)  # TODO: smoothing
     Y_p = Y_p * ((t_max / c) / 0.2) ** aa
     Y_p = 0.914 * (2 / 3 * Y_p * Kp + Y_shock)
 
@@ -253,7 +254,7 @@ def get_secondary_loss(flow_parameters, geometry):
     # Secondary loss coefficient
     K3 = (b / H) ** 2
     Ks = 1 - K3 * (1 - Kp)
-    Ks = max(0.1, Ks)
+    Ks = math.smooth_maximum(0.1, Ks)  # TODO smooth this function
     angle_m = math.arctand((math.tand(beta_in) + math.tand(beta_out)) / 2)
     Z = (
         4
@@ -325,7 +326,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     phi_data_impulse = jnp.array(phi_data_impulse)
 
     # Numerical trick to avoid too big r_to's
-    r_to = min(0.4, t_te / o)  # TODO: smoothing
+    r_to = math.smooth_minimum(0.4, t_te / o)  # TODO: smoothing
 
     # Interpolate data
     d_phi2_reaction = jnp.interp(r_to, r_to_data, phi_data_reaction)
@@ -337,7 +338,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     )
 
     # Limit the extrapolation of the trailing edge loss
-    d_phi2 = max(d_phi2, d_phi2_impulse / 2)  # TODO: smoothing
+    d_phi2 = math.smooth_maximum(d_phi2, d_phi2_impulse / 2)  # TODO: smoothing
     Y_te = 1 / (1 - d_phi2) - 1
 
     return Y_te
@@ -569,7 +570,7 @@ def get_compressible_correction_factors(Ma_rel_in, Ma_rel_out):
     )  # TODO: this can be converted to a smooth piecewise function (sigmoid blending)
     K2 = (Ma_rel_in / Ma_rel_out) ** 2
     Kp = 1 - K2 * (1 - K1)
-    Kp = max(0.1, Kp)  # TODO: smoothing
+    Kp = math.smooth_maximum(0.1, Kp)  # TODO: smoothing
     return [Kp, K2, K1]
 
 
@@ -594,9 +595,9 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
 
     """
 
-    if r_ht < 0.5:  # TODO: add smoothing, this is essentially a max(r_ht, 0.5)
-        r_ht = 0.5  # Numerical trick to prevent extrapolation
-
+    # if r_ht < 0.5:  # TODO: add smoothing, this is essentially a max(r_ht, 0.5)
+    #     r_ht = 0.5  # Numerical trick to prevent extrapolation
+    r_ht = math.smooth_maximum(r_ht, 0.5)
     r_ht_data = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     r_ht_data = jnp.array(r_ht_data)
 

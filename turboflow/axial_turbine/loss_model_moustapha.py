@@ -4,7 +4,8 @@ from .. import math
 import jax
 import jax.numpy as jnp
 
-from turboflow.axial_turbine import loss_model_kacker_okapuu as lm_ko
+from . import loss_model_kacker_okapuu as lm_ko
+from .loss_coefficient_conversion import convert_kinetic_energy_to_stagnation_pressure_loss
 
 def compute_losses(input_parameters):
     r"""
@@ -430,7 +431,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
                         0.778e^{-5}\chi + 0.56e^{-7}\chi^2 + 0.4e^{-10}\chi^3 + 2.054e^{-19}\chi^6 & \text{if } 0 \leq \chi \leq 800
                         \end{cases}
 
-    The kinetic-energy coefficient is converted to total pressure loss coefficient through the `convert_kinetic_energy_coefficient` function. 
+    The kinetic-energy coefficient is converted to total pressure loss coefficient through the `convert_kinetic_energy_to_stagnation_pressure_loss` function. 
 
     Parameters
     ----------
@@ -476,7 +477,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
         dPhi = -5.1734e-6 * chi + 7.6902e-9 * chi**2
 
     # Convert kinetic-energy loss coefficient to total pressure loss coeffcient
-    Y_inc = convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out)
+    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(Ma_rel_out, gamma, dPhi, limit_output=True)
 
     return Y_inc
 
@@ -812,46 +813,46 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
     return chi
 
 
-def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
-    r"""
+# def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
+#     r"""
 
-    Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
+#     Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
 
-    .. math::
+#     .. math::
 
-        \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
+#         \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
 
-    where:
+#     where:
 
-        - :math:`\gamma` is the specific heat ratio.
-        - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
-        - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
+#         - :math:`\gamma` is the specific heat ratio.
+#         - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
+#         - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
 
-    Parameters
-    ----------
-    dPhi : float
-        Kinetic energy coefficient increment.
-    gamma : float
-        Heat capacity ratio.
-    Ma_rel_out : float
-        The cascade exit relative mach number.
+#     Parameters
+#     ----------
+#     dPhi : float
+#         Kinetic energy coefficient increment.
+#     gamma : float
+#         Heat capacity ratio.
+#     Ma_rel_out : float
+#         The cascade exit relative mach number.
 
-    Returns
-    -------
-    float
-        The total pressure loss coefficient.
+#     Returns
+#     -------
+#     float
+#         The total pressure loss coefficient.
 
-    Warnings
-    --------
-    This conversion assumes that the fluid is a perfect gas.
+#     Warnings
+#     --------
+#     This conversion assumes that the fluid is a perfect gas.
 
-    """
+#     """
 
-    denom = 1 - (1 + (gamma - 1) / 2 * Ma_rel_out**2) ** (-gamma / (gamma - 1))
-    numer = (1 - (gamma - 1) / 2 * Ma_rel_out**2 * (1 / (1 - dPhi) - 1)) ** (
-        -gamma / (gamma - 1)
-    ) - 1
+#     denom = 1 - (1 + (gamma - 1) / 2 * Ma_rel_out**2) ** (-gamma / (gamma - 1))
+#     numer = (1 - (gamma - 1) / 2 * Ma_rel_out**2 * (1 / (1 - dPhi) - 1)) ** (
+#         -gamma / (gamma - 1)
+#     ) - 1
 
-    Y = numer / denom
+#     Y = numer / denom
 
-    return Y
+#     return Y

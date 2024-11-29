@@ -43,7 +43,7 @@ def calculate_properties_hs(h, s):
     def temperature(h, s):
         """Calculate temperature from enthalpy."""
         cp, cv = specific_heat(R, gamma)
-        return h / cp  # Temperature in Kelvin
+        return jnp.max(jnp.asarray([1.0, h / cp]))  # Temperature in Kelvin
 
     def pressure(h, s):
         """Calculate pressure using enthalpy and entropy."""

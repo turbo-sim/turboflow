@@ -395,7 +395,7 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
     # Define default solver options
     default_options = {
         "Major feasibility tolerance": 1e-6,
-        "Major optimality tolerance": 1e-3,
+        "Major optimality tolerance": 1.0,
         "Minor feasibility tolerance": 1e-6,
         "Iterations limit": 500,
         "Major iterations limit": 1e6,

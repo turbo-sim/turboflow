@@ -4,7 +4,8 @@ from turboflow import math
 import jax
 import jax.numpy as jnp
 
-from turboflow.axial_turbine import loss_model_kacker_okapuu as lm_ko
+from . import loss_model_kacker_okapuu as lm_ko
+from .loss_coefficient_conversion import convert_kinetic_energy_to_stagnation_pressure_loss
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 
@@ -189,7 +190,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
 
     This model calculates the incidence loss parameter through the function `get_incidence_parameter`. The kinetic energu coefficient
     can be obtained from `get_incidence_profile_loss_increment`, which is a function of the incidence parameter. The kinetic energy loss coefficient is converted
-    to the total pressure loss coefficient through `convert_kinetic_energy_coefficient`.
+    to the total pressure loss coefficient through `convert_kinetic_energy_to_stagnation_pressure_loss`.
 
     Parameters
     ----------
@@ -220,7 +221,7 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
 
     dPhip = get_incidence_profile_loss_increment(chi)
 
-    Y_inc = convert_kinetic_energy_coefficient(dPhip, gamma, Ma_rel_out)
+    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(Ma_rel_out, gamma, dPhip, limit_output=True)
 
     return Y_inc
 
@@ -294,49 +295,48 @@ def get_penetration_depth(flow_parameters, geometry, delta_height):
     return Z_TE
 
 
-def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
-    r"""
+# def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
+#     r"""
 
-    Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
+#     Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
 
-    .. math::
+#     .. math::
 
-        \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
+#         \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
 
-    where:
+#     where:
 
-        - :math:`\gamma` is the specific heat ratio.
-        - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
-        - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
+#         - :math:`\gamma` is the specific heat ratio.
+#         - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
+#         - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
 
-    Parameters
-    ----------
-    dPhi : float
-        Kinetic energy coefficient increment.
-    gamma : float
-        Heat capacity ratio.
-    Ma_rel_out : float
-        The cascade exit relative mach number.
+#     Parameters
+#     ----------
+#     dPhi : float
+#         Kinetic energy coefficient increment.
+#     gamma : float
+#         Heat capacity ratio.
+#     Ma_rel_out : float
+#         The cascade exit relative mach number.
 
-    Returns
-    -------
-    float
-        The total pressure loss coefficient.
+#     Returns
+#     -------
+#     float
+#         The total pressure loss coefficient.
 
-    Warnings
-    --------
-    This conversion assumes that the fluid is a perfect gas.
+#     Warnings
+#     --------
+#     This conversion assumes that the fluid is a perfect gas.
 
-    """
-
-    denom = 1 - (1 + (gamma - 1) / 2 * Ma_rel_out**2) ** (-gamma / (gamma - 1))
-    numer = (1 - (gamma - 1) / 2 * Ma_rel_out**2 * (1 / (1 - dPhi) - 1)) ** (
-        -gamma / (gamma - 1)
-    ) - 1
-
-    Y = numer / denom
-
-    return Y
+#     """
+#     Ma_lim = jnp.sqrt(2/(gamma - 1) * (1-dPhi) / math.smooth_maximum(0.05, dPhi))
+#     Ma_rel_out = math.smooth_minimum(Ma_rel_out, 0.9*Ma_lim)
+#     denom = 1 - (1 + (gamma - 1) / 2 * Ma_rel_out**2) ** (-gamma / (gamma - 1))
+#     numer = (1 - (gamma - 1) / 2 * Ma_rel_out**2 * (1 / (1 - dPhi) - 1)) ** (
+#         -gamma / (gamma - 1)
+#     ) - 1
+#     Y = numer / denom
+#     return Y
 
 
 def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.5):

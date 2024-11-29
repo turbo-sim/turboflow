@@ -15,12 +15,6 @@ CHOKING_CRITERIONS = [
     "critical_isentropic_throat",
 ]
 
-REGRESSION_COEFFICIENTS = {
-    "air": [0.999984354, -0.368037583, 0.202442269, -0.096333086, 0.023783628],
-    "R125": [0.999983586, -0.319079827, 0.165487456, -0.078246564, 0.01996359],
-}
-
-
 def evaluate_choking(
     choking_input,
     inlet_plane,
@@ -252,6 +246,7 @@ def get_mach_crit(gamma, eta):
     float
         Critical Mach number.
     """
+    eta = math.smooth_maximum(0.0, eta, method="logsumexp")  # Prevent negative efficiency
     alpha = gamma / (gamma - 1)
     T_hat_crit = (
         2 * alpha
@@ -300,6 +295,7 @@ def get_flow_capacity(Ma, gamma, eta):
     float
         Dimensionless mass flow rate.
     """
+    eta = math.smooth_maximum(0.0, eta, method="logsumexp")  # Prevent negative efficiency
     T_hat = (1 + (gamma - 1) / 2 * Ma**2) ** (-1)
     Phi = (
         jnp.sqrt(2 * gamma / (gamma - 1))

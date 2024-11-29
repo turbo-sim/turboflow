@@ -5,3 +5,4 @@ from .geometry_model import *
 from .flow_model import *
 from .choking_criterion import *
 from .loss_model import *
+from .loss_coefficient_conversion import *
