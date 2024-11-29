@@ -245,7 +245,7 @@ design_optimization:
   radius_type : "constant_mean"
   solver_options:
     library: pygmo
-    method: ipopt
+    method: snopt
     # library: scipy
     # method: slsqp
 

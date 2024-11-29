@@ -1,0 +1,31 @@
+import os
+import numpy as np
+import matplotlib.pyplot as plt
+import turboflow as tf
+from matplotlib import cm
+
+tf.set_plot_options()
+
+# Plot plot the stagnation pressure loss coefficient for fixed kinetic energy loss coefficient
+fig = plt.figure(figsize=(6.4, 4.8))
+ax = fig.gca()
+ax.set_xlabel(r"$\text{Ma}$ - Mach number")
+ax.set_ylabel(r"$Y$ - Stagnation pressure loss coefficient")
+gamma = 1.4
+
+Ma = np.linspace(0.01, 2, 2001)
+dphi2_array = np.arange(0.001, 0.35, 0.05)
+# dphi2_array = [0.5]
+colormap = cm.Reds(np.linspace(0.5, 1.0, len(dphi2_array)))
+for i, dphi2 in enumerate(dphi2_array):
+    Y_actual = tf.axial_turbine.convert_kinetic_energy_to_stagnation_pressure_loss(Ma, gamma, dphi2, limit_output=False)
+    Y_limited = tf.axial_turbine.convert_kinetic_energy_to_stagnation_pressure_loss(Ma, gamma, dphi2, limit_output=True)
+    ax.plot(Ma, Y_actual, linestyle='-', color=colormap[i], label=rf"$\Delta \phi^2={dphi2:0.2f}$")
+    ax.plot(Ma, Y_limited, linestyle='--', color=colormap[i])
+ax.legend(loc="upper left", ncol=1, fontsize=10)
+plt.tight_layout(pad=1)
+
+plt.show()
+# tf.savefig_in_formats(fig, os.path.join(out_dir, "kinetic_energy_to_stagnation_pressure_loss_coefficient"))
+
+
