@@ -19,7 +19,7 @@ from collections.abc import Mapping, Sequence
 # %%
 dir_figs = "figures"
 os.makedirs(dir_figs, exist_ok=True)
- 
+
 tf.set_plot_options()
 
 def plot_grad_comparison(config, step_sizes):
@@ -126,7 +126,7 @@ def plot_grad_deviation_step_size(gradient_deviation_dataframe, column_name):
     # Extract the y-axis (specified column)
     y = gradient_deviation_dataframe[column_name]  # Column passed as argument for y-axis
 
-    ax.plot(x, y, label=column_name, color='b', linewidth=2)  # Plot y vs. x with labe
+    ax.plot(x, y, label=column_name, color='b', linewidth=2)  # Plot y vs. x with label
     
     ax.grid(False)
 
@@ -257,11 +257,11 @@ elif MODE == "design_optimization":
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
 
-    file_path = os.path.join('output', f"1stage_jax_{config['design_optimization']['solver_options']['method']}.pkl")
-    # Open a file in write-binary mode
-    with open(file_path, 'wb') as file:
-        # Serialize the object and write it to the file
-        dill.dump(solver, file)
+    # file_path = os.path.join('output', f"1stage_jax_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    # # Open a file in write-binary mode
+    # with open(file_path, 'wb') as file:
+    #     # Serialize the object and write it to the file
+    #     dill.dump(solver, file)
 
     # tf.save_to_pickle(solver, filename = f"pickle_1stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
     # dump(solver, f"output/pickle_1stage_{config['design_optimization']['solver_options']['method']}.joblib")

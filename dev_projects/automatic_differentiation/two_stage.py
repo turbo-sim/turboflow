@@ -14,6 +14,8 @@ import copy
 import jax
 import jax.numpy as jnp
 
+import dill
+
 # Define mode
 # MODE = "performance_analysis"
 MODE = "design_optimization"
@@ -47,6 +49,12 @@ elif MODE == "design_optimization":
     # fitness_func, x, x_keys, grad_jax, grad_FD = tf.fitness_gradient(config)
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
+
+    file_path = os.path.join('output', f"2stage_trial_jax_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    # Open a file in write-binary mode
+    with open(file_path, 'wb') as file:
+        # Serialize the object and write it to the file
+        dill.dump(solver, file)
 
 
     # solver.plot_convergence_history()

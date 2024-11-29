@@ -295,49 +295,6 @@ def get_penetration_depth(flow_parameters, geometry, delta_height):
     return Z_TE
 
 
-# def convert_kinetic_energy_coefficient(dPhi, gamma, Ma_rel_out):
-#     r"""
-
-#     Convert the kinetic energy coefficient increment due to incidence to the total pressure loss coefficient according to the following correlation:
-
-#     .. math::
-
-#         \mathrm{Y} = \frac{\left(1-\frac{\gamma -1}{2}\mathrm{Ma_{out}}^2(\frac{1}{(1-\Delta\phi^2_p)}-1)\right)^\frac{-\gamma}{\gamma - 1}-1}{1-\left(1 + \frac{\gamma - 1}{2}\mathrm{Ma_{out}}^2\right)^\frac{-\gamma}{\gamma - 1}}
-
-#     where:
-
-#         - :math:`\gamma` is the specific heat ratio.
-#         - :math:`\mathrm{Ma_{out}}` is the cascade exit relative mach number.
-#         - :math:`\Delta\phi^2_p` is the kinetic energy loss coefficient increment due to incidence.
-
-#     Parameters
-#     ----------
-#     dPhi : float
-#         Kinetic energy coefficient increment.
-#     gamma : float
-#         Heat capacity ratio.
-#     Ma_rel_out : float
-#         The cascade exit relative mach number.
-
-#     Returns
-#     -------
-#     float
-#         The total pressure loss coefficient.
-
-#     Warnings
-#     --------
-#     This conversion assumes that the fluid is a perfect gas.
-
-#     """
-#     Ma_lim = jnp.sqrt(2/(gamma - 1) * (1-dPhi) / math.smooth_maximum(0.05, dPhi))
-#     Ma_rel_out = math.smooth_minimum(Ma_rel_out, 0.9*Ma_lim)
-#     denom = 1 - (1 + (gamma - 1) / 2 * Ma_rel_out**2) ** (-gamma / (gamma - 1))
-#     numer = (1 - (gamma - 1) / 2 * Ma_rel_out**2 * (1 / (1 - dPhi) - 1)) ** (
-#         -gamma / (gamma - 1)
-#     ) - 1
-#     Y = numer / denom
-#     return Y
-
 
 def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.5):
     r"""

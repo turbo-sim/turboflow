@@ -4,6 +4,7 @@ import yaml
 import time
 import logging
 import pickle
+import dill
 from datetime import datetime
 import numpy as np
 
@@ -462,5 +463,17 @@ def load_from_pickle(filename):
     """
     with open(filename, 'rb') as file:
         obj = pickle.load(file)
+    print(f"Object successfully loaded from {filename}")
+    return obj
+
+def load_from_dill(filename):
+    """
+    Load a Python object from a pickle file.
+
+    :param filename: The name of the pickle file to be loaded (with .pkl extension).
+    :return: The Python object that was stored in the pickle file.
+    """
+    with open(filename, 'rb') as file:
+        obj = dill.load(file)
     print(f"Object successfully loaded from {filename}")
     return obj

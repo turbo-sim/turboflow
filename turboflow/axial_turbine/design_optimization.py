@@ -84,6 +84,13 @@ def fitness_gradient(config,step_size):
 
     return x_keys, output_dict, output, grad_jax, grad_FD
 
+# Helper function to ensure that JAX arrays are evaluated to NumPy arrays
+def evaluate_jax_array(val):
+    # If the value is a JAX array, evaluate it to a NumPy array
+    if isinstance(val, jax.Array):
+        return jax.device_get(val)  # Convert to a NumPy array after evaluation
+    return val  # If not a JAX array, return as is
+
 def compute_optimal_turbine(
     config,
     out_filename=None,
@@ -128,7 +135,8 @@ def compute_optimal_turbine(
 
     dfs = {
         "operation point": pd.DataFrame(
-            {key: pd.Series(val) for key, val in problem.boundary_conditions.items()}
+            {key: pd.Series(val) 
+             for key, val in problem.boundary_conditions.items()},
         ),
         "overall": pd.DataFrame(problem.results["overall"], index=[0]),
         "planes": pd.DataFrame(problem.results["planes"]),
@@ -615,6 +623,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.model_options,
             self.reference_values,
         )
+        print("These are the results")
+        utils.print_dict(self.results)
 
         # Evaluate objective function
         self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
@@ -630,12 +640,17 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
     
         objective_and_constraints = jnp.concatenate([self.f, self.c_eq, self.c_ineq])  
 
+        # print(self.c_eq)
+
+        # print(self.c_ineq)
 
         self.output = objective_and_constraints
         # # Combine objective functions and constraint
         # objective_and_constraints = psv.combine_objective_and_constraints(
         #     self.f, self.c_eq, self.c_ineq
         # )
+
+        # print(objective_and_constraints)
 
         return objective_and_constraints
     

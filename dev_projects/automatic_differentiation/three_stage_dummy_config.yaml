@@ -136,7 +136,7 @@ design_optimization:
   constraints : # Optional
     - variable: overall.mass_flow_rate
       type : "="
-      value : 1.5
+      value : 2.721057
       normalize : True
     - variable : additional_constraints.interspace_area_ratio
       type : "="
@@ -153,8 +153,10 @@ design_optimization:
 
   radius_type : "constant_mean"
   solver_options:
-    library: scipy
-    method: slsqp
+    # library: scipy
+    # method: slsqp
+    library: pygmo
+    method: ipopt
     derivative_method: 2-point
     derivative_abs_step: 1e-6
     print_convergence: True
