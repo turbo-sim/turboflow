@@ -112,7 +112,7 @@
 <span class="k">def</span> <span class="nf">compute_vaneless_diffuser_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Zhang set 1 vanless diffuser losses</span>
+<span class="sd">    Stanitz vanless diffuser losses</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Load parameters</span>
@@ -256,7 +256,7 @@
     <span class="n">Y_rc</span> <span class="o">=</span> <span class="n">Y_rc</span><span class="o">/</span><span class="n">scale</span>
 
     <span class="n">Y_parasitic</span> <span class="o">=</span> <span class="n">Y_lk</span> <span class="o">+</span> <span class="n">Y_df</span> <span class="o">+</span> <span class="n">Y_rc</span>
-    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_bld</span> <span class="o">+</span> <span class="n">Y_sf</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_mix</span> <span class="o">+</span> <span class="n">Y_dif</span> <span class="o">+</span> <span class="n">Y_ch</span> <span class="c1">#+ Y_parasitic</span>
+    <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">Y_inc</span> <span class="o">+</span> <span class="n">Y_bld</span> <span class="o">+</span> <span class="n">Y_sf</span> <span class="o">+</span> <span class="n">Y_cl</span> <span class="o">+</span> <span class="n">Y_mix</span> <span class="o">+</span> <span class="n">Y_dif</span> <span class="o">+</span> <span class="n">Y_ch</span> <span class="o">+</span> <span class="n">Y_parasitic</span>
 
     <span class="c1"># Scale loss coefficent</span>
     <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;incidence&quot;</span> <span class="p">:</span> <span class="n">Y_inc</span><span class="p">,</span>
@@ -265,9 +265,9 @@
                  <span class="s2">&quot;tip_clearance&quot;</span> <span class="p">:</span> <span class="n">Y_cl</span><span class="p">,</span>
                  <span class="s2">&quot;wake_mixing&quot;</span> <span class="p">:</span> <span class="n">Y_mix</span><span class="p">,</span>
                  <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="p">,</span>
-                <span class="c1">#  &quot;leakage&quot; : Y_lk,</span>
-                <span class="c1">#  &quot;recirculation&quot; : Y_rc,</span>
-                <span class="c1">#  &quot;disk_friction&quot; : Y_df,</span>
+                 <span class="s2">&quot;leakage&quot;</span> <span class="p">:</span> <span class="n">Y_lk</span><span class="p">,</span>
+                 <span class="s2">&quot;recirculation&quot;</span> <span class="p">:</span> <span class="n">Y_rc</span><span class="p">,</span>
+                 <span class="s2">&quot;disk_friction&quot;</span> <span class="p">:</span> <span class="n">Y_df</span><span class="p">,</span>
                  <span class="s2">&quot;choke&quot;</span><span class="p">:</span> <span class="n">Y_ch</span><span class="p">,</span>
                  <span class="s2">&quot;entrance_diffusion&quot;</span> <span class="p">:</span> <span class="n">Y_dif</span><span class="p">,</span>
                  <span class="p">}</span>

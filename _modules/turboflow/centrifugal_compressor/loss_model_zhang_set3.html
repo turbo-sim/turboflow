@@ -112,12 +112,13 @@
 <span class="k">def</span> <span class="nf">compute_vaneless_diffuser_losses</span><span class="p">(</span><span class="n">input_parameters</span><span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Zhang set 1 vanless diffuser losses</span>
+<span class="sd">    Stanitz vanless diffuser losses</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="c1"># Load parameters</span>
     <span class="n">T0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;T0&quot;</span><span class="p">]</span>
     <span class="n">p0_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p0&quot;</span><span class="p">]</span>
+    <span class="n">v_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;v&quot;</span><span class="p">]</span>
     <span class="n">cp</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cp&quot;</span><span class="p">]</span>
     <span class="n">cv</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;inlet_plane&quot;</span><span class="p">][</span><span class="s2">&quot;cv&quot;</span><span class="p">]</span>
     <span class="n">p_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;exit_plane&quot;</span><span class="p">][</span><span class="s2">&quot;p&quot;</span><span class="p">]</span>
@@ -129,8 +130,9 @@
     <span class="n">Y_tot</span> <span class="o">=</span> <span class="n">cp</span><span class="o">*</span><span class="n">T0_in</span><span class="o">*</span><span class="p">((</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_out</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span> <span class="o">-</span> <span class="p">(</span><span class="n">p_out</span><span class="o">/</span><span class="n">p0_in</span><span class="p">)</span><span class="o">**</span><span class="n">alpha</span><span class="p">)</span>
 
     <span class="c1"># Store losses in dict</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">v_in</span><span class="o">**</span><span class="mi">2</span>
     <span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span>
+        <span class="s2">&quot;loss_total&quot;</span> <span class="p">:</span> <span class="n">Y_tot</span><span class="o">/</span><span class="n">scale</span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="n">loss_dict</span></div>
@@ -229,8 +231,9 @@
 
     <span class="c1"># Choke loss (Aungier)</span>
     <span class="n">R</span> <span class="o">=</span> <span class="n">cp_in</span><span class="o">-</span><span class="n">cv_in</span>
-    <span class="n">A_crit</span> <span class="o">=</span> <span class="n">p0_in</span><span class="o">/</span><span class="n">mass_flow_rate</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">/</span><span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">T0_in</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="p">((</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
-    <span class="n">Cr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span><span class="o">/</span><span class="n">A_th</span><span class="p">)</span>
+    <span class="n">A_crit</span> <span class="o">=</span> <span class="n">mass_flow_rate</span><span class="o">/</span><span class="p">(</span><span class="n">p0_in</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">/</span><span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">T0_in</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="p">((</span><span class="n">gamma_in</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">gamma_in</span><span class="o">-</span><span class="mi">1</span><span class="p">))))</span>
+    <span class="n">Cr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">A_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span><span class="o">/</span><span class="n">A_th</span><span class="p">)</span>
+    <span class="n">Cr</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Cr</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">A_in</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span><span class="o">/</span><span class="n">A_th</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">X</span> <span class="o">=</span> <span class="mi">11</span><span class="o">-</span><span class="mi">10</span><span class="o">*</span><span class="p">(</span><span class="n">Cr</span><span class="o">*</span><span class="n">A_th</span><span class="p">)</span><span class="o">/</span><span class="n">A_crit</span>
     <span class="n">Y_ch</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">w_in</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mf">0.05</span><span class="o">*</span><span class="n">X</span><span class="o">+</span><span class="n">X</span><span class="o">**</span><span class="mi">7</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">X</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 
@@ -251,8 +254,8 @@
     <span class="n">Y_cl</span> <span class="o">=</span> <span class="n">Y_cl</span><span class="o">/</span><span class="n">scale</span>
     <span class="n">Y_mix</span> <span class="o">=</span> <span class="n">Y_mix</span><span class="o">/</span><span class="n">scale</span>
 
-    <span class="n">Y_dif</span> <span class="o">=</span> <span class="n">Y_cl</span><span class="o">/</span><span class="n">scale</span>
-    <span class="n">Y_ch</span> <span class="o">=</span> <span class="n">Y_mix</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_dif</span> <span class="o">=</span> <span class="n">Y_dif</span><span class="o">/</span><span class="n">scale</span>
+    <span class="n">Y_ch</span> <span class="o">=</span> <span class="n">Y_ch</span><span class="o">/</span><span class="n">scale</span>
     <span class="n">Y_sh</span> <span class="o">=</span> <span class="n">Y_sh</span><span class="o">/</span><span class="n">scale</span>
 
     <span class="n">Y_lk</span> <span class="o">=</span> <span class="n">Y_lk</span><span class="o">/</span><span class="n">scale</span>
@@ -313,7 +316,7 @@
     <span class="n">b_out</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_out&quot;</span><span class="p">]</span>
     <span class="n">b_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;width_in&quot;</span><span class="p">]</span>
     <span class="n">L_ax</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_axial&quot;</span><span class="p">]</span>
-    <span class="n">L_m</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_meridonial&quot;</span><span class="p">]</span>
+    <span class="n">L_m</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;length_meridional&quot;</span><span class="p">]</span>
     <span class="n">z</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;number_of_blades&quot;</span><span class="p">]</span>
     <span class="n">r_in_tip</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_tip_in&quot;</span><span class="p">]</span>
     <span class="n">r_hub_in</span> <span class="o">=</span> <span class="n">input_parameters</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">][</span><span class="s2">&quot;radius_hub_in&quot;</span><span class="p">]</span>
