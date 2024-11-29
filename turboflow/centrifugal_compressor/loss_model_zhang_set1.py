@@ -18,7 +18,7 @@ def compute_losses(input_parameters, component):
 def compute_vaneless_diffuser_losses(input_parameters):
 
     """
-    Zhang set 1 vanless diffuser losses
+    Stanitz vanless diffuser losses
     """
     
     # Load parameters
@@ -159,7 +159,7 @@ def compute_impeller_losses(input_parameters):
     Y_rc = Y_rc/scale
 
     Y_parasitic = Y_lk + Y_df + Y_rc
-    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_dif + Y_ch #+ Y_parasitic
+    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_dif + Y_ch + Y_parasitic
 
     # Scale loss coefficent
     loss_dict = {"incidence" : Y_inc,
@@ -168,9 +168,9 @@ def compute_impeller_losses(input_parameters):
                  "tip_clearance" : Y_cl,
                  "wake_mixing" : Y_mix,
                  "loss_total" : Y_tot,
-                #  "leakage" : Y_lk,
-                #  "recirculation" : Y_rc,
-                #  "disk_friction" : Y_df,
+                 "leakage" : Y_lk,
+                 "recirculation" : Y_rc,
+                 "disk_friction" : Y_df,
                  "choke": Y_ch,
                  "entrance_diffusion" : Y_dif,
                  }

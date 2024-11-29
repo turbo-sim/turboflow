@@ -19,12 +19,13 @@ def compute_losses(input_parameters, component):
 def compute_vaneless_diffuser_losses(input_parameters):
 
     """
-    Zhang set 1 vanless diffuser losses
+    Stanitz vanless diffuser losses
     """
     
     # Load parameters
     T0_in = input_parameters["inlet_plane"]["T0"]
     p0_in = input_parameters["inlet_plane"]["p0"]
+    v_in = input_parameters["inlet_plane"]["v"]
     cp = input_parameters["inlet_plane"]["cp"]
     cv = input_parameters["inlet_plane"]["cv"]
     p_out = input_parameters["exit_plane"]["p"]
@@ -36,8 +37,9 @@ def compute_vaneless_diffuser_losses(input_parameters):
     Y_tot = cp*T0_in*((p_out/p0_out)**alpha - (p_out/p0_in)**alpha)
 
     # Store losses in dict
+    scale = 0.5*v_in**2
     loss_dict = {
-        "loss_total" : Y_tot
+        "loss_total" : Y_tot/scale
     }
 
     return loss_dict
@@ -131,8 +133,9 @@ def compute_impeller_losses(input_parameters):
 
     # Choke loss (Aungier)
     R = cp_in-cv_in
-    A_crit = p0_in/mass_flow_rate*np.sqrt(gamma_in/(R*T0_in))*(2/(gamma_in+1))**((gamma_in+1)/(2*(gamma_in-1)))
-    Cr = np.sqrt(A_in*math.cosd(beta_in)/A_th)
+    A_crit = mass_flow_rate/(p0_in*np.sqrt(gamma_in/(R*T0_in))*(2/(gamma_in+1))**((gamma_in+1)/(2*(gamma_in-1))))
+    Cr = np.sqrt(A_in*math.cosd(theta_in)/A_th)
+    Cr = min(Cr, 1-(A_in*math.cosd(theta_in)/A_th-1)**2)
     X = 11-10*(Cr*A_th)/A_crit
     Y_ch = 0.5*w_in**2*(0.05*X+X**7)*(X > 0)
 
@@ -153,8 +156,8 @@ def compute_impeller_losses(input_parameters):
     Y_cl = Y_cl/scale
     Y_mix = Y_mix/scale
 
-    Y_dif = Y_cl/scale
-    Y_ch = Y_mix/scale
+    Y_dif = Y_dif/scale
+    Y_ch = Y_ch/scale
     Y_sh = Y_sh/scale
 
     Y_lk = Y_lk/scale
@@ -162,7 +165,7 @@ def compute_impeller_losses(input_parameters):
     Y_rc = Y_rc/scale
 
     Y_parasitic = Y_lk + Y_df + Y_rc
-    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_dif + Y_ch + Y_sh + Y_parasitic
+    Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_dif + Y_ch + Y_sh +  Y_parasitic
 
     # Scale loss coefficent
     loss_dict = {"incidence" : Y_inc,
@@ -212,7 +215,7 @@ def compute_parasitic_losses(input_parameters):
     b_out = input_parameters["geometry"]["width_out"]
     b_in = input_parameters["geometry"]["width_in"]
     L_ax = input_parameters["geometry"]["length_axial"]
-    L_m = input_parameters["geometry"]["length_meridonial"]
+    L_m = input_parameters["geometry"]["length_meridional"]
     z = input_parameters["geometry"]["number_of_blades"]
     r_in_tip = input_parameters["geometry"]["radius_tip_in"]
     r_hub_in = input_parameters["geometry"]["radius_hub_in"]
