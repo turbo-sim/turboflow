@@ -1156,7 +1156,7 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
 
     plt.tight_layout()
 
-    return fig, ax
+    return fig, fig2, ax
 
 
 

@@ -43,7 +43,8 @@ def calculate_properties_hs(h, s):
     def temperature(h, s):
         """Calculate temperature from enthalpy."""
         cp, cv = specific_heat(R, gamma)
-        return h / cp  # Temperature in Kelvin
+        return jnp.max(jnp.asarray([1.0, h / cp])) # Temperature in Kelvin
+        # return h / cp
 
     def pressure(h, s):
         """Calculate pressure using enthalpy and entropy."""
@@ -149,7 +150,8 @@ def calculate_properties_hP(h, P):
     def temperature(h, P):
         """Calculate temperature from enthalpy."""
         cp, cv = specific_heat(R, gamma)
-        return h / cp  # Temperature in Kelvin
+        return jnp.max(jnp.asarray([1.0, h / cp])) 
+        # return h / cp # Temperature in Kelvin
 
     def density(h, P):
         """Calculate density using enthalpy and pressure."""
@@ -201,8 +203,9 @@ def calculate_properties_Ps(P, s):
     def temperature(P, s):
         """Calculate temperature from enthalpy."""
         cp, cv = specific_heat(R, gamma)
-        return T_ref * jnp.exp(((s - s_ref) + (R * jnp.log(P / P_ref))) / cp)  # Temperature in Kelvin
-
+        return jnp.max(jnp.asarray([1.0, T_ref * jnp.exp(((s - s_ref) + (R * jnp.log(P / P_ref))) / cp)]))  # Temperature in Kelvin
+        # return T_ref * jnp.exp(((s - s_ref) + (R * jnp.log(P / P_ref))) / cp)
+    
     def enthalpy(P, s):
         """Calculate enthalpy from temperature."""
         cp, cv = specific_heat(R, gamma)
@@ -254,7 +257,8 @@ def calculate_properties_rhoh(rho, h):
     def temperature(rho, h):
         """Calculate temperature from ethalpy."""
         cp, cv = specific_heat(R, gamma)
-        return h / cp  # enthalpy in Joules Kg.m^2/s^2
+        return jnp.max(jnp.asarray([1.0, h / cp]))
+        # return h / cp # enthalpy in Joules Kg.m^2/s^2
 
     def pressure(rho, h):
         """Calculate pressure using enthalpy and entropy."""

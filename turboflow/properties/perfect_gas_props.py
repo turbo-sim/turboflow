@@ -1,6 +1,8 @@
 # This script should be used in turboflow for thermodynamic property calculations 
 
-from turboflow.properties import perfect_gas_props_func1
+from . import perfect_gas_props_func1
+from ..utilities import print_dict
+import jax.numpy as jnp
 
 # Import property calculation functions into a dictionary for easy access
 property_calculators = {
@@ -37,11 +39,15 @@ def perfect_gas_props(input_state, prop1, prop2):
 
     # Call the corresponding property calculation function 
     properties = calculate_properties(prop1, prop2)
+
+    # Check for NaN or complex values in the properties
+   
+    if any(jnp.isnan(value) or isinstance(value, complex) for value in properties.values()):
+        # Raise an error with detailed information
+            raise ValueError(
+                f"For input state '{input_state}' with inputs prop1={prop1:0.2f}, prop2={prop2:0.2f}, some properties are NaN or complex:\n"
+                f"{print_dict(properties, return_output=True)}"
+            )
     
     return properties
 
-# rho, h = 0.8884, 400980.0
-
-# properties = perfect_gas_props("DmassHmass_INPUTS", rho, h)
-
-# print(properties)

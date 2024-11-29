@@ -379,12 +379,48 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
     _set_pygmo_options(algorithm_handle, solver_options)
     population = pg.population(problem, size=1)
     population.set_x(0, x0)
+
+    # # Example data (replace with your actual computation)
+    # fitness = problem.fitness(x0)
+    # gradient = problem.gradient(x0)
+    
+    # # Assume N (rows) and M (columns) for Jacobian are known or computed
+    # N = len(fitness)  # Number of rows in Jacobian
+    # M = len(gradient) // N  # Number of columns in Jacobian
+    
+    # # Reshape the Jacobian if it's flattened
+    # gradient_matrix = np.reshape(gradient, (N, M))
+    
+    # # Check for NaN values
+    # has_nan_fitness = np.isnan(fitness).any()
+    # has_nan_gradient = np.isnan(gradient).any()
+    
+    # # Print fitness
+    # print("Fitness:")
+    # if has_nan_fitness:
+    #     print("Contains NaNs!")
+    # print("[" + ", ".join(f"{val:.4e}" for val in fitness) + "]")
+    # print()
+    
+    # # Print Jacobian
+    # print("Jacobian:")
+    # if has_nan_gradient:
+    #     print("Contains NaNs!")
+    # for row in gradient_matrix:  # Loop through each row of the matrix
+    #     for i in range(0, len(row), 6):  # Print 6 items per line
+    #         chunk = row[i:i + 6]
+    #         print(", ".join(f"{val:.4e}" for val in chunk))
+    #     print()  # Add a blank line after each row
+
+
     population = algorithm.evolve(population)
+
 
     # Optimization output
     exitflag = algorithm_handle.get_last_opt_result()
     message = exitflag_mapping.get(exitflag, "Unknown Status")
     success = exitflag in (0, 1)
+
 
     return success, message
 

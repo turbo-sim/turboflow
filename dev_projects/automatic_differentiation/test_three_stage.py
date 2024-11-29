@@ -21,7 +21,7 @@ import dill
 MODE = "design_optimization"
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("three_stage_trial_config.yaml")
+CONFIG_FILE = os.path.abspath("test_three_stage_config.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 if MODE == "performance_analysis":
@@ -50,7 +50,7 @@ elif MODE == "design_optimization":
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
-    file_path = os.path.join('output', f"3stage_trial_jax_PR8_IPOPT_IG_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    file_path = os.path.join('output', f"3stage_test_jax_PR8_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     with open(file_path, 'wb') as file:
         # Serialize the object and write it to the file
