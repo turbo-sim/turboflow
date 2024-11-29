@@ -5,7 +5,7 @@ import numpy as np
 
 impeller = "O" # A, O
 model = "zhang" # oh, zhang
-save_figs = True
+save_figs = False
 
 # Map files
 files_exp = {

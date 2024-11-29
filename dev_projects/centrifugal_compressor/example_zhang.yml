@@ -34,10 +34,10 @@ simulation_options:
   
 performance_analysis :
   performance_map: 
-    fluid_name: air 
-    T0_in: 273.15 + 15
+    fluid_name: water 
+    T0_in: 273.15 + 15 +110
     p0_in: 101325
-    mass_flow_rate: np.linspace(0.5, 0.25, 30)
+    mass_flow_rate: np.linspace(0.5, 0.25, 30)*0.75
     omega: 52000*2*np.pi/60*np.array([0.75,0.9,0.95, 1.0])
     alpha_in: 0 
   solver_options: 

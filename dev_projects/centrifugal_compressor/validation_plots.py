@@ -1,9 +1,10 @@
 
 import turboflow as tf
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 
-impeller = "O" # A, O
+impeller = "A" # A, O
 save_figs = True
 
 files_exp = {
@@ -69,7 +70,29 @@ fig1, ax1 = tf.plot_functions.plot_lines(
     linestyles=["--"]*4,
     colors=colors,
 )
-ax1.legend(omegas, loc = 'best')
+# ax1.legend(omegas, loc = 'best')
+
+color_handles = [
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[0], markersize=10, label = omegas[0]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[1], markersize=10, label = omegas[1]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[2], markersize=10, label = omegas[2]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[3], markersize=10, label = omegas[3]/1e3),
+]
+
+linestyle_handles = [
+    Line2D([0], [0], color=colors[0], linestyle='-', label = "Oh"),
+    Line2D([0], [0], color=colors[0], linestyle='--', label = "Zhang"),
+]
+
+# ax2.legend(np.array(omegas)/1e3, ncols = 1, loc = 'best')
+color_legend = ax1.legend(handles = color_handles)
+linestyle_legend = ax1.legend(handles=linestyle_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, frameon=False)
+ax1.add_artist(color_legend)
+# ax1.add_artist(linestyle_legend)
+# ax1.set_xlim([2.0, 8.0])
+ax1.set_ylim([1.2, 2.4])
+plt.tight_layout()
+
 
 # Efficiency
 fig2, ax2 = tf.plot_functions.plot_lines(
@@ -89,13 +112,30 @@ fig2, ax2 = tf.plot_functions.plot_lines(
     fig = fig2,
     ax = ax2,
     xlabel="Mass flow rate [kg/s]",
-    ylabel="Total-to-total efficiency",
+    ylabel="Total-to-total efficiency [%]",
     linestyles=["--"]*4,
     colors=colors,
 )
-ax2.legend(omegas, loc = 'best')
-ax2.set_xlim([2.0, 7.5])
-ax2.set_ylim([50, 100])
+color_handles = [
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[0], markersize=10, label = omegas[0]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[1], markersize=10, label = omegas[1]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[2], markersize=10, label = omegas[2]/1e3),
+    Line2D([0], [0], marker = 'o', color = 'w', markerfacecolor=colors[3], markersize=10, label = omegas[3]/1e3),
+]
+
+linestyle_handles = [
+    Line2D([0], [0], color=colors[0], linestyle='-', label = "Oh"),
+    Line2D([0], [0], color=colors[0], linestyle='--', label = "Zhang"),
+]
+
+# ax2.legend(np.array(omegas)/1e3, ncols = 1, loc = 'best')
+color_legend = ax2.legend(handles = color_handles, loc = "lower center", bbox_to_anchor=(0.3,0))
+linestyle_legend = ax2.legend(handles=linestyle_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, frameon=False)
+ax2.add_artist(color_legend)
+# ax2.add_artist(linestyle_legend)
+# ax2.set_xlim([2.0, 8.0])
+ax2.set_ylim([65, 95])
+plt.tight_layout()
 
 # Losses 
 subset = ["omega"] + [2*np.pi/60*14e3]

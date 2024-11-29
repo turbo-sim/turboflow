@@ -70,3 +70,248 @@ eta_tt:
   - [0.8769, 0.8753, 0.8682, 0.8641]
 partial_geometry: [0.09, 0.28, 0.4, 0.00211, 0.00108, 20, 0, 0.6748000000000001, 0.026,
   0.01335, -47.5, -32, -63, 0, 2.0e-06, 0, 0, 0.000372, 0, none, 0.13]
+
+mass_flow_rate = [2.3069, 3.0819, 3.9497, 4.94, 2.5402, 3.4118, 4.2229, 5.2399, 2.7568, 3.7083, 4.5328, 5.4565, 3.0301, 3.9816, 4.8227, 5.6898, 3.28, 4.2549, 5.0327, 5.9331, 3.5467, 4.5283, 5.2827, 6.1432, 3.7867, 4.775, 5.576, 6.4266, 4.0334, 4.9683, 5.7528, 6.6367, 4.2768, 5.1484, 5.9628, 6.8201, 4.5968, 5.3318, 6.1096, 6.9935]
+omega = [10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000, 10000, 12000, 14000, 16000]
+
+operation_points:
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 2.3069
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.0819
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.9497
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.94
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 2.5402
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.4118
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.2229
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.2399
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 2.7568
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.7083
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.5328
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.4565
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.0301
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.9816
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.8227
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.6898
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.28
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.2549
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.0327
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.9331
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.5467
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.5283
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.2827
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.1432
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 3.7867
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.775
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.576
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.4266
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.0334
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.9683
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.7528
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.6367
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.2768
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.1484
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.9628
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.8201
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 4.5968
+    omega: 10000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 5.3318
+    omega: 12000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.1096
+    omega: 14000*2*np.pi/60
+    alpha_in: 0
+  - fluid_name: air
+    T0_in: 288.15
+    p0_in: 101325
+    mass_flow_rate: 6.9935
+    omega: 16000*2*np.pi/60
+    alpha_in: 0
