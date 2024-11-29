@@ -141,7 +141,7 @@ def plot_lines(
 
     # Get colors
     if not isinstance(colors, (list,np.ndarray)):
-        colors = plt.get_cmap(color_map)(np.linspace(0.2, 1.0, len(y)))
+        colors = plt.get_cmap(color_map)(np.linspace(0.2, 0.8, len(y)))
 
     # Get labels
     if labels == None:
