@@ -687,6 +687,7 @@ def compute_overall_performance(results, fluid, geometry):
 
     # Load boundary conditions
     p0_in = results["boundary_conditions"]["p0_in"]
+    T0_in = results["boundary_conditions"]["T0_in"]
     omega = results["boundary_conditions"]["omega"]
     mass_flow_rate = results["boundary_conditions"]["mass_flow_rate"]
 
@@ -711,6 +712,12 @@ def compute_overall_performance(results, fluid, geometry):
     efficiency_ts = mass_flow_rate*(h_out_is - first_plane["h0"])/(omega*torque)*100
     efficiency_tt = mass_flow_rate*(h0_out_is - first_plane["h0"])/(omega*torque)*100
 
+    # Calculate nondimensional parameters
+    gamma = first_plane["gamma"]
+    R = first_plane["cp"] - first_plane["cv"]
+    m_non_dim = mass_flow_rate*np.sqrt(T0_in)/p0_in*np.sqrt(R/gamma)/(2*geometry["impeller"]["radius_out"])**2
+    N_non_dim = omega*60/2/np.pi/np.sqrt(T0_in)/np.sqrt(gamma*R)*2*geometry["impeller"]["radius_out"]
+
     # Store all variables in dictionary
     overall = {
         "PR_tt": PR_tt,
@@ -719,6 +726,8 @@ def compute_overall_performance(results, fluid, geometry):
         "efficiency_ts": efficiency_ts,
         "power": power,
         "torque": torque,
+        "m_non_dim" : m_non_dim,
+        "N_non_dim" : N_non_dim,
     }
 
     return overall
