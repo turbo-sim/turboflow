@@ -5,7 +5,9 @@ import datetime
 import os
 import copy
 import yaml
-import pickle
+import dill
+import warnings
+
 from .. import pysolver_view as psv
 from .. import utilities as utils
 from . import geometry_model as geom
@@ -16,6 +18,8 @@ from . import performance_analysis as pa
 from .. properties import perfect_gas_props
 import jax
 import jax.numpy as jnp
+jax.config.update("jax_enable_x64", True)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
+
 
 from functools import reduce
 
@@ -84,12 +88,28 @@ def fitness_gradient(config,step_size):
 
     return x_keys, output_dict, output, grad_jax, grad_FD
 
-# Helper function to ensure that JAX arrays are evaluated to NumPy arrays
+
 def evaluate_jax_array(val):
-    # If the value is a JAX array, evaluate it to a NumPy array
-    if isinstance(val, jax.Array):
-        return jax.device_get(val)  # Convert to a NumPy array after evaluation
-    return val  # If not a JAX array, return as is
+    """
+    Helper function to ensure that JAX arrays and tracers are converted to concrete values.
+    """
+    if isinstance(val, jax.core.Tracer):
+        # If val is a JAX Tracer, extract the primal value (concrete array being traced)
+        if hasattr(val, "primal"):
+            return jax.device_get(val.primal)
+        return jax.device_get(val)
+
+    # If the value is a JAX array, convert it
+    elif isinstance(val, jax.Array):
+        return jax.device_get(val)
+
+    # Handle NumPy scalars
+    elif isinstance(val, np.generic):
+        return np.asscalar(val)  # Convert to Python scalar
+
+    # If the value is already a NumPy or Python type, return as is
+    return val
+
 
 def compute_optimal_turbine(
     config,
@@ -119,6 +139,13 @@ def compute_optimal_turbine(
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
 
+    # Check that the initial guess is within bounds and clip if necessary
+    problem.initial_guess = check_and_clip_initial_guess(
+        problem.initial_guess,
+        problem.bounds,
+        problem.design_variables_keys
+    )
+
     # Perform initial function call to initialize problem
     # This populates the arrays of equality and inequality constraints
     # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
@@ -133,31 +160,38 @@ def compute_optimal_turbine(
     # Solve optimization problem for initial guess x0
     solver.solve(problem.initial_guess)
 
+
     dfs = {
         "operation point": pd.DataFrame(
-            {key: pd.Series(val) 
-             for key, val in problem.boundary_conditions.items()},
+            {key: [evaluate_jax_array(val)] for key, val in problem.boundary_conditions.items()}
         ),
-        "overall": pd.DataFrame(problem.results["overall"], index=[0]),
-        "planes": pd.DataFrame(problem.results["planes"]),
-        "cascades": pd.DataFrame(problem.results["cascades"]),
-        "stage": pd.DataFrame(problem.results["stage"]),
+        "overall": pd.DataFrame(
+            {key: evaluate_jax_array(val) for key, val in problem.results["overall"].items()},
+            index=[0],
+        ),
+        "planes": pd.DataFrame(
+            {key: evaluate_jax_array(val) for key, val in problem.results["planes"].items()}
+        ),
+        "cascades": pd.DataFrame(
+            {key: evaluate_jax_array(val) for key, val in problem.results["cascades"].items()}
+        ),
+        "stage": pd.DataFrame(
+            {key: evaluate_jax_array(val) for key, val in problem.results["stage"].items()}
+        ),
         "geometry": pd.DataFrame(
-            {key: pd.Series(val) for key, val in problem.geometry.items()}
+            {key: pd.Series(evaluate_jax_array(val)) for key, val in problem.geometry.items()}
         ),
         "solver": pd.DataFrame(
             {
                 "completed": pd.Series(True, index=[0]),
                 "success": pd.Series(solver.success, index=[0]),
                 "message": pd.Series(solver.message, index=[0]),
-                "grad_count": solver.convergence_history["grad_count"],
-                "func_count": solver.convergence_history["func_count"],
-                "func_count_total": solver.convergence_history["func_count_total"],
-                "objective_value": solver.convergence_history["objective_value"],
-                "constraint_violation": solver.convergence_history[
-                    "constraint_violation"
-                ],
-                "norm_step": solver.convergence_history["norm_step"],
+                "grad_count": evaluate_jax_array(solver.convergence_history["grad_count"]),
+                "func_count": evaluate_jax_array(solver.convergence_history["func_count"]),
+                "func_count_total": evaluate_jax_array(solver.convergence_history["func_count_total"]),
+                "objective_value": evaluate_jax_array(solver.convergence_history["objective_value"]),
+                "constraint_violation": evaluate_jax_array(solver.convergence_history["constraint_violation"]),
+                "norm_step": evaluate_jax_array(solver.convergence_history["norm_step"]),
             },
             index=range(len(solver.convergence_history["grad_count"])),
         ),
@@ -172,21 +206,33 @@ def compute_optimal_turbine(
         if out_filename == None:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             out_filename = f"design_optimization_{current_time}"
+        
+        out_filenames = [out_filename, "design_optimization_latest"]
+        for out_filename in out_filenames:
 
-        # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-        config_data = utils.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+            # Export simulation configuration as YAML file
+            config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+            config_data = utils.convert_numpy_to_python(config_data, precision=12)
+            config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+            with open(config_file, "w") as file:
+                yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
 
-        # Export optimal turbine in excel file
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            for sheet_name, df in dfs.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=True)
+            # Export optimal turbine in excel file
+            filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+            with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+                for sheet_name, df in dfs.items():
+                    df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+            # Export optimal turbine as dill object
+            filepath = os.path.join(out_dir, f"{out_filename}.pkl")
+            solver.problem = None
+            with open(filepath, 'wb') as file:
+                # Serialize the object and write it to the file
+                dill.dump(solver, file)
 
     return solver        
+
+
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
@@ -280,16 +326,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             config["design_optimization"]["constraints"]
         )
 
-        algorithm = config["design_optimization"]["solver_options"]["method"]
-        if algorithm in GRADIENT_ALGORITHMS:
-            self.init_gradient_based(config)
-        elif algorithm in GENETIC_ALGORITHMS:
-            self.init_gradient_free(config)
-        else:
-            raise ValueError(f"Unknown algorithm: {algorithm}")
-
-    def init_gradient_based(self, config):
-
         # Update design point 
         if isinstance(config["operation_points"], (list, jnp.ndarray)):
             self.update_boundary_conditions(config["operation_points"][0])
@@ -298,6 +334,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize model options
         self.model_options = config["simulation_options"]
+
+        # Initialize solver options to determine derivative calculation method
+        self.solver_options = config["design_optimization"]["solver_options"]
 
         # Adjust given variables according to choking model (remove excess variables)
         variables = config["design_optimization"]["variables"]
@@ -379,175 +418,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         else:
             raise ValueError("STOP")
 
-        # Set fitness function
-        self.fitness = self.fitness_gradient_based
-
-        self.output_dict = {}
-        self.output_dict.update({"efficiency": self.obj_func})
-            
-        # TODO: define jacobian here
-        # self.gradient = jax.jacfwd(self.fitness, argnums=0)
-
-
-    # def init_gradient_free(self, config):
-        
-    #     # Update design point 
-    #     if isinstance(config["operation_points"], (list, np.ndarray)):
-    #         self.operation_point = config["operation_points"][0]
-    #         self.update_boundary_conditions(config["operation_points"][0])
-    #     else:
-    #         self.operation_point = config["operation_points"]
-    #         self.update_boundary_conditions(config["operation_points"])
-
-    #     # Adjust given variables according to choking model (remove excess variables)
-    #     variables = config["design_optimization"]["variables"]
-    #     prefixes = ["v_", "w_", "s_", "beta_"]
-    #     variables = {key: var for key, var in variables.items() if not any(key.startswith(prefix) for prefix in prefixes)}
-
-    #     # Separate fixed variables and design variables
-    #     fixed_params = {}
-    #     design_variables = {}
-    #     for key, value in variables.items():
-    #         if value["lower_bound"] is not None:
-    #             design_variables[key] = value
-    #         else:
-    #             fixed_params[key] = value
-
-    #     # Initialize initial guess
-    #     initial_guess = self.index_variables(design_variables)
-    #     self.design_variables_keys = list(initial_guess.keys())
-    #     self.initial_guess = np.array(list(initial_guess.values()))
-
-    #     # Index fixed variables
-    #     self.fixed_params = self.index_variables(fixed_params)
-
-    #     # Initialize bounds
-    #     lb, ub = self.get_given_bounds(design_variables)
-    #     self.bounds = (lb, ub)            
-
-    #     # Set initial guess for root finder
-    #     self.x0 = config["performance_analysis"]["initial_guess"]
-
-    #     # Set constraints to None
-    #     self.c_eq = None
-    #     self.c_ineq = None
-
-    #     # Initialize config copy
-    #     self.simulation_options = config["simulation_options"]
-    #     self.solver_options = config["performance_analysis"]["solver_options"] 
-
-    #     # Set fitness function
-    #     self.fitness = self.fitness_gradient_free
-
-    #     # Define variables (development variables) 
-    #     self.optimization_process = BlackBoxOptimization()
 
     def fitness(self, x):
-        
-        # TODO: Add if-statement
-
-        pass
-
-    # def fitness_gradient_free(self, x):
-    #     r"""
-    #     Evaluate the objective function and constraints at a given pint `x` for genetic algrothims.
-
-    #     Parameters
-    #     ----------
-    #     x : array-like
-    #         Vector of design variables.
-
-    #     Returns
-    #     -------
-    #     numpy.ndarray
-    #         An array containg the value of the objective function and constraints.
-    #     """
-
-    #     # Rename reference values
-    #     h0_in = self.boundary_conditions["h0_in"]
-    #     s_in = self.boundary_conditions["s_in"]
-    #     mass_flow = self.reference_values["mass_flow_ref"]
-    #     h_is = self.reference_values["h_out_s"]
-    #     d_is = self.reference_values["d_out_s"]
-    #     v0 = self.reference_values["v0"]
-    #     angle_range = self.reference_values["angle_range"]
-    #     angle_min = self.reference_values["angle_min"]
-
-    #     # Structure design variables to dictionary (Assume set of design variables)
-    #     design_variables = dict(zip(self.design_variables_keys, x))
-
-    #     # Contruct variables
-    #     variables = {**design_variables, **self.fixed_params}
-
-    #     # Calculate angular speed
-    #     specific_speed = variables["specific_speed"]
-    #     self.operation_point["omega"] = self.get_omega(
-    #         specific_speed, mass_flow, h0_in, d_is, h_is
-    #     )
-
-    #     # Calculate mean radius
-    #     blade_jet_ratio = variables["blade_jet_ratio"]
-    #     blade_speed = blade_jet_ratio * v0
-    #     self.geometry = {}
-    #     self.geometry["radius"] = blade_speed / self.boundary_conditions["omega"]
-
-    #     # Assign geometry design variables to geometry attribute
-    #     for key in INDEXED_VARIABLES:
-    #         self.geometry[key] = np.array(
-    #             [v for k, v in variables.items() if k.startswith(key)]
-    #         )
-    #         if key in ANGLE_KEYS:
-    #             self.geometry[key] = self.geometry[key] * angle_range + angle_min
-
-    #     self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
-    #     # Evaluate turbine model
-    #     solver, results = pa.compute_single_operation_point(
-    #         self.operation_point,
-    #         self.x0,
-    #         self.geometry,
-    #         self.simulation_options,fitness_gradient_based
-    #         self.solver_options,
-    #     )
-    #     if solver.success: 
-    #         self.results = results
-    #         self.geometry = results["geometry"]
-
-    #         # Evaluate objective function
-    #         self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
-
-    #         # Evaluate additional constraints
-    #         # self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
-    #         #     / self.geometry["A_out"][0:-1].values})
-            
-    #         self.results["additional_constraints"] = {"interspace_area_ratio": self.geometry["A_in"][1:].values 
-    #                                                   / self.geometry["A_out"][:-1].values}
-            
-    #         # Evaluate constraints
-    #         c_eq = self.evaluate_constraints(self.eq_constraints)
-    #         c_ineq = self.evaluate_constraints(self.ineq_constraints)
-
-    #         violation_all = np.concatenate((c_eq, np.maximum(c_ineq, 0)))
-    #         violation_max = np.max(np.abs(violation_all)) if len(violation_all) > 0 else 0.0
-
-    #         # Include constriants in objective function
-    #         self.f = self.f + 100*(sum(c_eq**2) + sum(c_ineq[c_ineq > 0]**2)) 
-
-    #         # Update optimization ptrocess object
-    #         self.optimization_process.update_optimization_process(results, converged = True, f = self.f, violation = violation_max, vars_scaled=solver.problem.vars_scaled)
-    #     else:
-    #         self.f = jnp.nan
-    #         self.optimization_process.update_optimization_process(results, converged = False)
-        
-    #     # Combine objective functions and constraint
-    #     objective_and_constraints = psv.combine_objective_and_constraints(
-    #         self.f, self.c_eq, self.c_ineq
-    #     )
-
-    #     self.optimization_process.print_optimization_process()
-
-    #     return objective_and_constraints
-
-    def fitness_gradient_based(self, x):
         r"""
         Evaluate the objective function and constraints at a given pint `x`.
 
@@ -610,8 +482,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             if key in ANGLE_KEYS:
                 self.geometry[key] = self.geometry[key] * angle_range + angle_min
 
-
-
         self.geometry = geom.prepare_geometry(self.geometry, self.radius_type)
         self.geometry = geom.calculate_full_geometry(self.geometry)
 
@@ -624,40 +494,46 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.model_options,
             self.reference_values,
         )
-        # print("These are the results")
-        # utils.print_dict(self.results)
 
         # Evaluate objective function
         self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
 
         # Evaluate additional constraints
         self.results["additional_constraints"] = {"interspace_area_ratio": self.geometry["A_in"][1:] / self.geometry["A_out"][0:-1]}
-
+        self.output_dict = {}
+        self.output_dict.update({"efficiency": self.obj_func})
         self.output_dict.update(self.results["residuals"])
+
         # Evaluate constraints
         self.c_eq = jnp.array(list(self.results["residuals"].values()))
         self.c_eq = jnp.append(self.c_eq, self.evaluate_constraints(self.eq_constraints))
         self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
-    
         objective_and_constraints = jnp.concatenate([self.f, self.c_eq, self.c_ineq])  
-
-        # print(self.c_eq)
-
-        # print(self.c_ineq)
-
         self.output = objective_and_constraints
-        # # Combine objective functions and constraint
-        # objective_and_constraints = psv.combine_objective_and_constraints(
-        #     self.f, self.c_eq, self.c_ineq
-        # )
-
-        # print("Objectives and Constraints")
-        # print(objective_and_constraints)
-
-        
 
         return objective_and_constraints
     
+
+    def gradient(self, x):
+
+        # Use JAX for automatic differentiation
+        method = self.solver_options["derivative_method"]
+        if method == "jax":   
+            grad = jax.jacfwd(self.fitness, argnums=0)(x)
+
+        # Approximate gradient with finite differences
+        else:  
+            fun = lambda x: self.fitness(x)
+            grad = psv.numerical_differentiation.approx_gradient(
+                fun,
+                x,
+                f0=fun(x),
+                method=method,
+                abs_step=self.solver_options["derivative_abs_step"],
+            )
+
+        return grad
+
 
     def get_objective_function(self, objective):
         """
@@ -1256,3 +1132,36 @@ def build_config(filename, performance_map, solver_options, initial_guess):
                                         "initial_guess" : initial_guess,}}
     
     return config
+
+
+def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
+    """
+    Checks if the initial guess is within the given bounds and clips it if necessary.
+    
+    Parameters
+    ----------
+    initial_guess : numpy.ndarray
+        Initial guess for the optimization variables.
+    bounds : tuple of numpy.ndarray
+        A tuple containing two arrays: lower bounds and upper bounds.
+    variable_names : list of str
+        List of variable names corresponding to the design variables.
+        
+    Returns
+    -------
+    numpy.ndarray
+        Adjusted initial guess.
+    """
+    lb, ub = bounds
+    for i, (x, l, u) in enumerate(zip(initial_guess, lb, ub)):
+        if not l <= x <= u:
+            clipped = True
+            # Use JAX's .at method to modify the array
+            initial_guess = initial_guess.at[i].set(jnp.clip(x, l, u))
+            warnings.warn(
+                f"Variable '{variable_names[i]}' was out of bounds ({x} not in [{l}, {u}]). "
+                f"Clipped to {initial_guess[i]}.",
+                UserWarning
+            )
+
+    return initial_guess

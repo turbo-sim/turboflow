@@ -5,9 +5,9 @@ from scipy import interpolate
 import jax.numpy as jnp
 import jax
 
-from turboflow import math
-from turboflow.axial_turbine import flow_model as fm
-from turboflow.axial_turbine import deviation_model as dm
+from .. import math
+from . import flow_model as fm
+from . import deviation_model as dm
 
 CHOKING_CRITERIONS = [
     "critical_mass_flow_rate",
@@ -257,10 +257,6 @@ def get_mach_crit(gamma, eta):
         + jnp.sqrt((1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta))
     ) / (4 * alpha - 2)
     Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
-
-    # print("This is Ma_crit")
-    # print(Ma_crit, T_hat_crit)
-    
     return Ma_crit
 
 

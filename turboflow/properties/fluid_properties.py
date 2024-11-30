@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
 import copy
 
-from turboflow.pysolver_view import (
+from ..pysolver_view import (
     NonlinearSystemSolver,
     NonlinearSystemProblem,
     OptimizationProblem,

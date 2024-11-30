@@ -1,4 +1,5 @@
 import os
+import copy
 import warnings
 import numpy as np
 from scipy.optimize import minimize
@@ -373,6 +374,7 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
     solver_options = default_options | solver_options
 
     # Solve the problem
+    problem = copy.deepcopy(problem)
     problem = pg.problem(problem)
     algorithm = pg.algorithm(pg.ipopt())
     algorithm_handle = algorithm.extract(pg.ipopt)
@@ -477,6 +479,7 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
         )
     
     # Solve the problem
+    problem = copy.deepcopy(problem)
     problem = pg.problem(problem)
     algorithm = pg.algorithm(ppnf.snopt7(library=lib, minor_version=7))
     algorithm_handle = algorithm.extract(ppnf.snopt7)

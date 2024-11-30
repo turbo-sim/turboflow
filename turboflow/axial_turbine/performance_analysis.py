@@ -8,27 +8,33 @@ import numpy as np
 import pandas as pd
 import CoolProp as cp
 import matplotlib.pyplot as plt
+import jax
+import jax.numpy as jnp
 
-from turboflow import math
-from turboflow import pysolver_view as psv
-from turboflow import utilities as utils
-from turboflow import properties as props
-from turboflow.axial_turbine import geometry_model as geom
-from turboflow.axial_turbine import flow_model as flow
-from turboflow.axial_turbine import choking_criterion as ch
-from turboflow.axial_turbine import deviation_model as dm
 from scipy.stats import qmc
 from scipy import optimize
 
-from turboflow.properties import perfect_gas_props
-import jax
-import jax.numpy as jnp
+from .. import math
+from .. import pysolver_view as psv
+from .. import utilities as utils
+from .. import properties as props
+from . import geometry_model as geom
+from . import flow_model as flow
+from . import choking_criterion as ch
+from . import deviation_model as dm
+from ..properties import perfect_gas_props
+
+
+jax.config.update(
+    "jax_enable_x64", True
+)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
 
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 """
 Available solvers for performance analysis.
 """
+
 
 def compute_performance(
     operation_points,
@@ -147,12 +153,12 @@ def compute_performance(
 
         # Compute performance
         solver, results = compute_single_operation_point(
-                            operation_point,
-                            initial_guess,
-                            config["geometry"],
-                            config["simulation_options"],
-                            config["performance_analysis"]["solver_options"],
-                            )
+            operation_point,
+            initial_guess,
+            config["geometry"],
+            config["simulation_options"],
+            config["performance_analysis"]["solver_options"],
+        )
 
         # Retrieve solver data
         solver_status = {
@@ -166,7 +172,7 @@ def compute_performance(
             "norm_step": solver.convergence_history["norm_step"][-1],
         }
 
-        # Collect results 
+        # Collect results
         # operation_point_data.append([operation_point])
         # overall_data.append(results["overall"])
         # plane_data.append(utils.flatten_dict(results["planes"]))
@@ -178,7 +184,9 @@ def compute_performance(
         # solver_container.append(solver)
 
         operation_point_data.append(pd.DataFrame([operation_point]))
-        overall_data.append(pd.DataFrame.from_dict(results["overall"], orient='index').T)
+        overall_data.append(
+            pd.DataFrame.from_dict(results["overall"], orient="index").T
+        )
         plane_data.append(utils.flatten_dataframe(pd.DataFrame(results["planes"])))
         cascade_data.append(utils.flatten_dataframe(pd.DataFrame(results["cascades"])))
         stage_data.append(utils.flatten_dataframe(pd.DataFrame(results["stage"])))
@@ -194,30 +202,30 @@ def compute_performance(
         #         print(f" Computation of point {i+1}/{len(operation_points)} failed")
         #         print(f" Error: {e}")
 
-            # # Retrieve solver data
-            # solver = None
-            # solver_status = {"completed": False}
+        # # Retrieve solver data
+        # solver = None
+        # solver_status = {"completed": False}
 
-            # # Collect data
-            # # operation_point_data.append(pd.DataFrame([operation_point]))
-            # # overall_data.append(pd.DataFrame([{}]))
-            # # plane_data.append(pd.DataFrame([{}]))
-            # # cascade_data.append(pd.DataFrame([{}]))
-            # # stage_data.append(pd.DataFrame([{}]))
-            # # geometry_data.append(pd.DataFrame([{}]))
-            # # solver_data.append(pd.DataFrame([solver_status]))
-            # # solution_data.append([])
-            # # solver_container.append(solver)
+        # # Collect data
+        # # operation_point_data.append(pd.DataFrame([operation_point]))
+        # # overall_data.append(pd.DataFrame([{}]))
+        # # plane_data.append(pd.DataFrame([{}]))
+        # # cascade_data.append(pd.DataFrame([{}]))
+        # # stage_data.append(pd.DataFrame([{}]))
+        # # geometry_data.append(pd.DataFrame([{}]))
+        # # solver_data.append(pd.DataFrame([solver_status]))
+        # # solution_data.append([])
+        # # solver_container.append(solver)
 
-            # operation_point_data.append([operation_point])
-            # overall_data.append([{}])
-            # plane_data.append([{}])
-            # cascade_data.append([{}])
-            # stage_data.append([{}])
-            # geometry_data.append([{}])
-            # solver_data.append([solver_status])
-            # solution_data.append([])
-            # solver_container.append(solver)
+        # operation_point_data.append([operation_point])
+        # overall_data.append([{}])
+        # plane_data.append([{}])
+        # cascade_data.append([{}])
+        # stage_data.append([{}])
+        # geometry_data.append([{}])
+        # solver_data.append([solver_status])
+        # solution_data.append([])
+        # solver_container.append(solver)
 
     # Dictionary to hold concatenated dataframes
 
@@ -276,6 +284,7 @@ def compute_performance(
 
     return solver_container
 
+
 def compute_single_operation_point(
     operating_point,
     initial_guess,
@@ -323,37 +332,41 @@ def compute_single_operation_point(
     solver_options = copy.deepcopy(solver_options)
 
     # Get initial guess from sample of hearistic guesses
-    initial_guesses = get_initial_guess(initial_guess, 
-                                        problem, 
-                                        problem.boundary_conditions, 
-                                        problem.geometry, 
-                                        problem.fluid, 
-                                        simulation_options["choking_criterion"], 
-                                        simulation_options["deviation_model"]) 
+    initial_guesses = get_initial_guess(
+        initial_guess,
+        problem,
+        problem.boundary_conditions,
+        problem.geometry,
+        problem.fluid,
+        simulation_options["choking_criterion"],
+        simulation_options["deviation_model"],
+    )
 
     # Get solver method array
-    solver_methods = [solver_options["method"]] + [method for method in SOLVER_MAP.keys() if method != solver_options["method"]]
+    solver_methods = [solver_options["method"]] + [
+        method for method in SOLVER_MAP.keys() if method != solver_options["method"]
+    ]
 
     for initial_guess in initial_guesses:
         initial_guess_scaled = problem.scale_values(initial_guess)
         x0 = np.array(list(initial_guess_scaled.values()))
-        problem.keys = initial_guess_scaled.keys() 
+        problem.keys = initial_guess_scaled.keys()
         for method in solver_methods:
             solver_options["method"] = method
             solver = psv.NonlinearSystemSolver(problem, **solver_options)
-            try: 
+            try:
                 solver.solve(x0)
             except Exception as e:
                 if solver.func_count == 0:
-                    raise e 
+                    raise e
                 print(f" Error during solving: {e}")
                 solver.success = False
             if solver.success:
-                    break
-            
+                break
+
         if solver.success:
-                    break
-    
+            break
+
     # initial_guesses = [initial_guess] + get_heuristic_guess_input(
     # problem.geometry["number_of_cascades"]
     # )
@@ -366,18 +379,18 @@ def compute_single_operation_point(
     #         success = False
     #         x0 = problem.get_initial_guess(
     #             initial_guess
-    #         ) 
+    #         )
     #         print(f" Trying to solve the problem using {SOLVER_MAP[method]} method")
     #         solver_options["method"] = method
 
     #         solver = psv.NonlinearSystemSolver(problem, **solver_options)
     #         # TODO: Roberto: add the option to use optimizers as solver depending on the method specified?
 
-    #         try: 
+    #         try:
     #             solver.solve(problem.x0)
     #         except Exception as e:
     #             if solver.func_count == 0:
-    #                 raise e 
+    #                 raise e
     #             print(f" Error during solving: {e}")
     #             solver.success = False
     #         if solver.success:
@@ -529,23 +542,53 @@ def validate_operation_point(op_point):
             f"Missing fields: {missing}, Extra fields: {extra}"
         )
 
-def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, fluid, choking_criterion, deviation_model):
+
+def get_initial_guess(
+    initial_guess,
+    problem,
+    boundary_conditions,
+    geometry,
+    fluid,
+    choking_criterion,
+    deviation_model,
+):
 
     # Rename variables
     number_of_cascades = geometry["number_of_cascades"]
     # Three types of initial guess:
-        # 1. Full guess
-        # 2. Input for heuristic guess
-        # 4. Input for generatic heuristic guess based on latin hypercube sampling
+    # 1. Full guess
+    # 2. Input for heuristic guess
+    # 4. Input for generatic heuristic guess based on latin hypercube sampling
     # Check which guess is given
-    valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [f"ma_{i+1}" for i in range(number_of_cascades)] 
+    valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [
+        f"ma_{i+1}" for i in range(number_of_cascades)
+    ]
     valid_keys_2 = ["efficiency_tt", "efficiency_ke", "ma", "n_samples"]
-    valid_keys_3 = ["w_out", "s_out", "beta_out", "w_crit_throat","s_crit_throat",]
-    valid_keys_3 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3]
-    valid_keys_4 = ["w_out", "s_out", "beta_out", "v_crit_in", "w_crit_throat","s_crit_throat",]
-    valid_keys_4 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4]
+    valid_keys_3 = [
+        "w_out",
+        "s_out",
+        "beta_out",
+        "w_crit_throat",
+        "s_crit_throat",
+    ]
+    valid_keys_3 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3
+    ]
+    valid_keys_4 = [
+        "w_out",
+        "s_out",
+        "beta_out",
+        "v_crit_in",
+        "w_crit_throat",
+        "s_crit_throat",
+    ]
+    valid_keys_4 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4
+    ]
     valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
-    valid_keys_5 = ["v_in"] + [f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5]
+    valid_keys_5 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5
+    ]
     check = []
     check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
     check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
@@ -557,30 +600,60 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
         if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
             initial_guesses = []
             for i in range(len(initial_guess["efficiency_tt"])):
-                ma = np.array([initial_guess[f"ma_{j+1}"][i] for j in range(number_of_cascades)])
-                heuristic_guess = get_heuristic_guess(initial_guess["efficiency_tt"][i], initial_guess["efficiency_ke"][i], ma, boundary_conditions, geometry, fluid, deviation_model)
+                ma = np.array(
+                    [initial_guess[f"ma_{j+1}"][i] for j in range(number_of_cascades)]
+                )
+                heuristic_guess = get_heuristic_guess(
+                    initial_guess["efficiency_tt"][i],
+                    initial_guess["efficiency_ke"][i],
+                    ma,
+                    boundary_conditions,
+                    geometry,
+                    fluid,
+                    deviation_model,
+                )
                 initial_guesses.append(heuristic_guess)
         else:
-            ma = np.array([initial_guess[f"ma_{j+1}"] for j in range(number_of_cascades)])
-            heuristic_guess = get_heuristic_guess(initial_guess["efficiency_tt"], initial_guess["efficiency_ke"], ma, boundary_conditions, geometry, fluid, deviation_model)
+            ma = np.array(
+                [initial_guess[f"ma_{j+1}"] for j in range(number_of_cascades)]
+            )
+            heuristic_guess = get_heuristic_guess(
+                initial_guess["efficiency_tt"],
+                initial_guess["efficiency_ke"],
+                ma,
+                boundary_conditions,
+                geometry,
+                fluid,
+                deviation_model,
+            )
             initial_guesses = [heuristic_guess]
     elif check[1]:
-        bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [initial_guess["ma"] for i in range(number_of_cascades)]
+        bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [
+            initial_guess["ma"] for i in range(number_of_cascades)
+        ]
         n_samples = initial_guess["n_samples"]
         heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
         norm_residuals = np.array([])
         failures = 0
         for heuristic_input in heuristic_inputs:
             try:
-                ma = [heuristic_input[i+2] for i in range(number_of_cascades)]
-                heuristic_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
+                ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
+                heuristic_guess = get_heuristic_guess(
+                    heuristic_input[0],
+                    heuristic_input[1],
+                    ma,
+                    boundary_conditions,
+                    geometry,
+                    fluid,
+                    deviation_model,
+                )
                 x = problem.scale_values(heuristic_guess)
                 problem.keys = x.keys()
                 x0 = np.array(list(x.values()))
                 residual = problem.residual(x0)
                 norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
             except:
-                failures += 1 
+                failures += 1
                 norm_residuals = np.append(norm_residuals, np.nan)
 
         print(f"Generating heuristic inital guesses from latin hypercube sampling")
@@ -588,8 +661,16 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
         print(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
         heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
         initial_guess = dict(zip(valid_keys_1, heuristic_input))
-        ma = [heuristic_input[i+2] for i in range(number_of_cascades)]
-        initial_guess = get_heuristic_guess(heuristic_input[0], heuristic_input[1],  ma, boundary_conditions, geometry, fluid, deviation_model)
+        ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
+        initial_guess = get_heuristic_guess(
+            heuristic_input[0],
+            heuristic_input[1],
+            ma,
+            boundary_conditions,
+            geometry,
+            fluid,
+            deviation_model,
+        )
         initial_guesses = [initial_guess]
     elif check[2]:
         initial_guesses = [initial_guess]
@@ -598,20 +679,35 @@ def get_initial_guess(initial_guess, problem, boundary_conditions, geometry, flu
     elif check[4]:
         initial_guesses = [initial_guess]
     else:
-        raise ValueError("Initial guess must be a dictionary, which require a certain set of keys. See documentation for more information")
+        raise ValueError(
+            "Initial guess must be a dictionary, which require a certain set of keys. See documentation for more information"
+        )
 
     # Check that set of initial guess correspond with choking_criteria
     for initial_guess, i in zip(initial_guesses, range(len(initial_guesses))):
         if choking_criterion == "critical_mach_number":
-            initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("v_crit_in")}
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not key.startswith("v_crit_in")
+            }
         elif choking_criterion == "critical_mass_flow_rate":
-            initial_guess = {key: val for key, val in initial_guess.items() if not key.startswith("beta_crit_throat")}
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not key.startswith("beta_crit_throat")
+            }
         elif choking_criterion == "critical_isentropic_throat":
-            initial_guess = {key: val for key, val in initial_guess.items() if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))}
-        
+            initial_guess = {
+                key: val
+                for key, val in initial_guess.items()
+                if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))
+            }
+
         initial_guesses[i] = initial_guess
 
     return initial_guesses
+
 
 # ------------------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------------------ #
@@ -726,8 +822,10 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
             self.reference_values,
         )
 
-        return jnp.array(list(self.results["residuals"].values())) ## TODO: This should be a JAX array with residual values
-    
+        return jnp.array(
+            list(self.results["residuals"].values())
+        )  ## TODO: This should be a JAX array with residual values
+
     def gradient(self, x):
         return jax.jacfwd(self.residual, argnums=0)(x)
 
@@ -775,7 +873,6 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
         state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
 
-
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
@@ -788,14 +885,12 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
         state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
 
-
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
 
         # Calculate exit static properties for a isenthalpic expansion
         # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
         state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
-
 
         s_isenthalpic = state_out_h["s"]
 
@@ -861,7 +956,6 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
                 )
 
         return scaled_variables
-
 
 
 def print_simulation_summary(solvers):
@@ -1062,22 +1156,38 @@ def print_operation_points(operation_points):
         print(line)
     return formatted_output
 
+
 def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
 
     # props = fluid.get_props(call, prop1*scale, prop2)
-    props = perfect_gas_props(str(call), prop1*scale, prop2)
+    props = perfect_gas_props(str(call), prop1 * scale, prop2)
 
-    return  props["h"] - h0 + 0.5*Ma**2*props["speed_sound"]**2 
+    return props["h"] - h0 + 0.5 * Ma**2 * props["speed_sound"] ** 2
+
 
 def get_unknown(prop1, scale, h0, Ma, fluid, call, prop2):
 
     "call is either cp.DmassP_INPUTS (find Dmass based on a pressure) or cp.PSmass_INPUTS (find p based on a Smass)"
 
-    sol = optimize.root_scalar(calculate_enthalpy_residual_1, args = (scale, h0, Ma, fluid, call, prop2), method = "secant", x0 = prop1)
+    sol = optimize.root_scalar(
+        calculate_enthalpy_residual_1,
+        args=(scale, h0, Ma, fluid, call, prop2),
+        method="secant",
+        x0=prop1,
+    )
 
-    return sol.root*scale
+    return sol.root * scale
 
-def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions, geometry, fluid, deviation_model):
+
+def get_heuristic_guess(
+    efficiency_tt,
+    efficiency_ke,
+    mach,
+    boundary_conditions,
+    geometry,
+    fluid,
+    deviation_model,
+):
 
     p0_first = boundary_conditions["p0_in"]
     T0_first = boundary_conditions["T0_in"]
@@ -1090,7 +1200,6 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
     # stag_first = fluid.get_props(cp.PT_INPUTS, p0_first, T0_first)
     stag_first = perfect_gas_props("PT_INPUTS", p0_first, T0_first)
 
-
     h0_first = stag_first["h"]
     s_first = stag_first["s"]
     d0_first = stag_first["d"]
@@ -1098,24 +1207,25 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
     # Calculate final exit enthalpy for isentropic expansion
     # static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
     static_is = perfect_gas_props("PSmass_INPUTS", p_final, s_first)
-    
 
     h_final_s = static_is["h"]
     a_final_s = static_is["speed_sound"]
 
     # Calculate spouting velocity
-    v0 = np.sqrt(2*(h0_first-h_final_s))
+    v0 = np.sqrt(2 * (h0_first - h_final_s))
 
     # Calculate exit enthalpy
-    efficiency_ts = efficiency_tt/(1+efficiency_tt*efficiency_ke)
+    efficiency_ts = efficiency_tt / (1 + efficiency_tt * efficiency_ke)
     h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
-    v_final = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
+    v_final = np.sqrt(
+        2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt)
+    )
     h_final = h0_final - 0.5 * v_final**2
 
     # Calculate exit static state for expansion with guessed efficiency
     # static_properties_exit = fluid.get_props(cp.HmassP_INPUTS, h_final, p_final)
     static_properties_exit = perfect_gas_props("HmassP_INPUTS", h_final, p_final)
-    
+
     s_final = static_properties_exit["s"]
 
     # Assume linear entropy distribution
@@ -1150,13 +1260,14 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
 
         # Calculate exit pressure
         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
-        h0_rel_out = rothalpy + 0.5*blade_speed_out**2
-        p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
+        h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
+        p_out = get_unknown(
+            1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out
+        )
 
         # Calculate exit state
         # static_out = fluid.get_props(cp.PSmass_INPUTS, p_out, s_out)
         static_out = perfect_gas_props("PSmass_INPUTS", p_out, s_out)
-
 
         h_out = static_out["h"]
         a_out = static_out["speed_sound"]
@@ -1164,36 +1275,37 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
         gamma_out = static_out["gamma"]
 
         # Calculate exit velocity
-        w_out = np.sqrt(2*(h0_rel_out - h_out))
-        
+        w_out = np.sqrt(2 * (h0_rel_out - h_out))
+
         # Calculate critical mach
         # static_props_is = fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
         static_props_is = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
 
-
         h_out_s = static_props_is["h"]
-        eta = (h0_rel_out-h_out)/(h0_rel_out-h_out_s)
+        eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
         ma_crit = 1.0
 
-        # Calculate exit flow angle 
-        beta_out = (-1)**i*dm.get_subsonic_deviation(
-                ma_out, ma_crit, {"A_throat" : A_throat, "A_out" : A_out}, deviation_model
-            )
-        
+        # Calculate exit flow angle
+        beta_out = (-1) ** i * dm.get_subsonic_deviation(
+            ma_out, ma_crit, {"A_throat": A_throat, "A_out": A_out}, deviation_model
+        )
+
         # Calculate mass flow rate
-        mass_flow = d_out * w_out*math.cosd(beta_out) * A_out
-        
-         # Calculate critical state
+        mass_flow = d_out * w_out * math.cosd(beta_out) * A_out
+
+        # Calculate critical state
         w_throat_crit = a_out * ma_crit
         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
         s_throat_crit = s_out
         # static_state_throat_crit = fluid.get_props(cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
-        static_state_throat_crit = perfect_gas_props("HmassSmass_INPUTS", h_throat_crit, s_throat_crit)
-        
+        static_state_throat_crit = perfect_gas_props(
+            "HmassSmass_INPUTS", h_throat_crit, s_throat_crit
+        )
+
         rho_throat_crit = static_state_throat_crit["d"]
         m_crit = w_throat_crit * rho_throat_crit * A_throat
         w_m_in_crit = m_crit / d_in / A_in
-        v_in_crit = w_m_in_crit/math.cosd(alpha_in)
+        v_in_crit = w_m_in_crit / math.cosd(alpha_in)
 
         # Store initial guess
         index = f"_{i+1}"
@@ -1201,8 +1313,7 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
             {
                 "w_out" + index: w_out,
                 "s_out" + index: s_out,
-                "beta_out"
-                + index: (-1)**i * math.arccosd(A_throat / A_out),
+                "beta_out" + index: (-1) ** i * math.arccosd(A_throat / A_out),
                 "v_crit_in" + index: v_in_crit,
                 "w_crit_throat" + index: w_throat_crit,
                 "s_crit_throat" + index: s_throat_crit,
@@ -1213,29 +1324,35 @@ def get_heuristic_guess(efficiency_tt, efficiency_ke,  mach, boundary_conditions
         if i != (number_of_cascades - 1):
             A_next = geometry["A_in"][i + 1]
             radius_mean_next = geometry["radius_mean_in"][i + 1]
-            velocity_triangle_out = flow.evaluate_velocity_triangle_out(blade_speed_out, w_out, beta_out)
+            velocity_triangle_out = flow.evaluate_velocity_triangle_out(
+                blade_speed_out, w_out, beta_out
+            )
             v_m_in = velocity_triangle_out["v_m"] * A_out / A_next
             v_t_in = velocity_triangle_out["v_t"] * radius_mean_out / radius_mean_next
             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
             alpha_in = math.arctand(v_t_in / v_m_in)
-            blade_speed_in = angular_speed * ((i+1) % 2) * radius_mean_next
-            velocity_triangle_in = flow.evaluate_velocity_triangle_in(blade_speed_in, v_in, alpha_in)
-            h0_in = h_out + 0.5*velocity_triangle_out["v"]**2
+            blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
+            velocity_triangle_in = flow.evaluate_velocity_triangle_in(
+                blade_speed_in, v_in, alpha_in
+            )
+            h0_in = h_out + 0.5 * velocity_triangle_out["v"] ** 2
             h_in = h0_in - 0.5 * v_in**2
-            rothalpy = h_in + 0.5*velocity_triangle_in["w"]**2 - 0.5*blade_speed_in**2
+            rothalpy = (
+                h_in + 0.5 * velocity_triangle_in["w"] ** 2 - 0.5 * blade_speed_in**2
+            )
             s_in = s_out
             # static_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
-            static_in = perfect_gas_props("HmassSmass_INPUTS"
-                                          
-                                          , h_in, s_in)
-
+            static_in = perfect_gas_props("HmassSmass_INPUTS", h_in, s_in)
 
             d_in = static_in["d"]
 
     # Calculate inlet velocity from
-    initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
+    initial_guess["v_in"] = mass_flow / (
+        d0_first * geometry["A_in"][0] * math.cosd(alpha_first)
+    )
 
     return initial_guess
+
 
 def latin_hypercube_sampling(bounds, n_samples):
     """
@@ -1250,15 +1367,14 @@ def latin_hypercube_sampling(bounds, n_samples):
     """
     n_variables = len(bounds)
     # Create a Latin Hypercube Sampler
-    sampler = qmc.LatinHypercube(d=n_variables, seed = 1)
-    
+    sampler = qmc.LatinHypercube(d=n_variables, seed=1)
+
     # Generate samples in the unit hypercube
     unit_hypercube_samples = sampler.random(n=n_samples)
-    
+
     # Scale the samples to the provided bounds
     lower_bounds = np.array([b[0] for b in bounds])
     upper_bounds = np.array([b[1] for b in bounds])
     scaled_samples = qmc.scale(unit_hypercube_samples, lower_bounds, upper_bounds)
 
     return scaled_samples
-
