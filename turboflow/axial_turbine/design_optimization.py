@@ -386,7 +386,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.output_dict.update({"efficiency": self.obj_func})
             
         # TODO: define jacobian here
-        self.gradient = jax.jacfwd(self.fitness, argnums=0)
+        # self.gradient = jax.jacfwd(self.fitness, argnums=0)
+
 
     # def init_gradient_free(self, config):
         
@@ -623,8 +624,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.model_options,
             self.reference_values,
         )
-        print("These are the results")
-        utils.print_dict(self.results)
+        # print("These are the results")
+        # utils.print_dict(self.results)
 
         # Evaluate objective function
         self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
@@ -650,7 +651,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         #     self.f, self.c_eq, self.c_ineq
         # )
 
+        # print("Objectives and Constraints")
         # print(objective_and_constraints)
+
+        
 
         return objective_and_constraints
     

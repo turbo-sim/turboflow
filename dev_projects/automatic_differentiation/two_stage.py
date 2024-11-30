@@ -50,7 +50,7 @@ elif MODE == "design_optimization":
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
-    file_path = os.path.join('output', f"2stage_trial_jax_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    file_path = os.path.join('output', f"2stage_trial_kofs_FD_1e-3_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     with open(file_path, 'wb') as file:
         # Serialize the object and write it to the file
