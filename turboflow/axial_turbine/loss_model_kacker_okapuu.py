@@ -131,13 +131,19 @@ def get_profile_loss(flow_parameters, geometry):
 
     # Compute losses related to shock effects at the inlet of the cascade
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
-    a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
-    # Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_in - p_in) / (p0rel_out - p_out)
+    # a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+    a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+    
+
     Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
-    Y_shock = math.smooth_maximum(0, Y_shock)  # TODO: smoothing
+    # Y_shock = math.smooth_maximum(0.0, Y_shock)  # TODO: smoothing
+    Y_shock = jnp.maximum(0.0, Y_shock)  # TODO: smoothing
+
 
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
+
+
 
     # Yp_reaction and Yp_impulse according to Aungier correlation
     # These formulas are valid for 40<abs(angle_out)<80
@@ -151,23 +157,29 @@ def get_profile_loss(flow_parameters, geometry):
     Yp_impulse = impulse_blades(s / c, angle_out_bis)
 
     # Formula according to Kacker-Okapuu
-    Y_p = Yp_reaction - abs(theta_in / beta_out) * (theta_in / beta_out) * (
+    Y_p = Yp_reaction - math.smooth_abs(theta_in / beta_out) * (theta_in / beta_out) * (
         Yp_impulse - Yp_reaction
     )
+
 
     # Limit the extrapolation of the profile loss to avoid negative values for
     # blade profiles with little deflection
     # Low limit to 80% of the axial entry nozzle profile loss
     # This value is completely arbitrary
-    Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+    # Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+    Y_p =jnp.maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
 
     # Avoid unphysical effect on the thickness by defining the variable aa
-    aa = math.smooth_maximum(0, -theta_in / beta_out)  # TODO: smoothing
+    # aa = math.smooth_maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
+    aa = jnp.maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
+    
     Y_p = Y_p * ((t_max / c) / 0.2) ** aa
     Y_p = 0.914 * (2 / 3 * Y_p * Kp + Y_shock)
 
     # Corrected profile loss coefficient
     Y_p = f_Re * f_Ma * Y_p
+
+    # Y_p = 0
 
     return Y_p
 

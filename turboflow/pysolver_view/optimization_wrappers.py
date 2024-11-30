@@ -380,11 +380,20 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
     population = pg.population(problem, size=1)
     population.set_x(0, x0)
 
-    # # Example data (replace with your actual computation)
+    # Example data (replace with your actual computation)
+    # print("x0", x0)
+ 
+          
+    # lb, ub = problem.get_bounds()
+    # print("Upper and lower bounds")
+    # for i in range(len(x0)):
+    #     if x0[i] < lb[i] or x0[i] > ub[i]:
+    #         print(lb[i], x0[i], ub[i])
+
     # fitness = problem.fitness(x0)
     # gradient = problem.gradient(x0)
     
-    # # Assume N (rows) and M (columns) for Jacobian are known or computed
+    # Assume N (rows) and M (columns) for Jacobian are known or computed
     # N = len(fitness)  # Number of rows in Jacobian
     # M = len(gradient) // N  # Number of columns in Jacobian
     

@@ -25,6 +25,10 @@ from ..pysolver_view import (
 )
 import re
 
+# TODO: find a cleaner way to validate using JAX
+# TODO: could it be better to specify a use_jax = True/False?
+# TODO: We should have the option to use automatic differentiation and/or jit compilation
+DERIVATIVE_METHODS = DERIVATIVE_METHODS + ["jax"]
 
 class OperationPoints(BaseModel):
     """
