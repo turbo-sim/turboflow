@@ -5,9 +5,9 @@ from scipy import interpolate
 import jax.numpy as jnp
 import jax
 
-from turboflow import math
-from turboflow.axial_turbine import flow_model as fm
-from turboflow.axial_turbine import deviation_model as dm
+from .. import math
+from . import flow_model as fm
+from . import deviation_model as dm
 
 CHOKING_CRITERIONS = [
     "critical_mass_flow_rate",

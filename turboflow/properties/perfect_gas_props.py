@@ -1,16 +1,16 @@
 # This script should be used in turboflow for thermodynamic property calculations 
 
-from . import perfect_gas_props_func1
+from . import perfect_gas_props_functions
 from ..utilities import print_dict
 import jax.numpy as jnp
 
 # Import property calculation functions into a dictionary for easy access
 property_calculators = {
-    "HmassSmass_INPUTS": perfect_gas_props_func1.calculate_properties_hs,
-    "PSmass_INPUTS": perfect_gas_props_func1.calculate_properties_Ps,
-    "PT_INPUTS": perfect_gas_props_func1.calculate_properties_PT,
-    "HmassP_INPUTS": perfect_gas_props_func1.calculate_properties_hP,
-    "DmassHmass_INPUTS": perfect_gas_props_func1.calculate_properties_rhoh
+    "HmassSmass_INPUTS": perfect_gas_props_functions.calculate_properties_hs,
+    "PSmass_INPUTS": perfect_gas_props_functions.calculate_properties_Ps,
+    "PT_INPUTS": perfect_gas_props_functions.calculate_properties_PT,
+    "HmassP_INPUTS": perfect_gas_props_functions.calculate_properties_hP,
+    "DmassHmass_INPUTS": perfect_gas_props_functions.calculate_properties_rhoh
 }
 
 # Fluid Constants (Change for different fluids; values are for air)

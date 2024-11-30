@@ -8,14 +8,14 @@ import jax
 jax.config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 
-from turboflow import math
-from turboflow import utilities as utils
-from turboflow.axial_turbine import loss_model as lm
-from turboflow.axial_turbine import deviation_model as dm
-from turboflow.axial_turbine import choking_criterion as cm
+from .. import math
+from .. import utilities as utils
+from . import loss_model as lm
+from . import deviation_model as dm
+from . import choking_criterion as cm
 
 import turboflow as tf
-from turboflow.properties import perfect_gas_props
+from ..properties import perfect_gas_props
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]

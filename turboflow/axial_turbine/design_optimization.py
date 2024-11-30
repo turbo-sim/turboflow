@@ -5,8 +5,9 @@ import datetime
 import os
 import copy
 import yaml
-import pickle
+import dill
 import warnings
+
 from .. import pysolver_view as psv
 from .. import utilities as utils
 from . import geometry_model as geom
@@ -17,6 +18,8 @@ from . import performance_analysis as pa
 from .. properties import perfect_gas_props
 import jax
 import jax.numpy as jnp
+jax.config.update("jax_enable_x64", True)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
+
 
 from functools import reduce
 
@@ -158,35 +161,6 @@ def compute_optimal_turbine(
     solver.solve(problem.initial_guess)
 
 
-    # dfs = {
-    #     "operation point": pd.DataFrame(
-    #         {key: [evaluate_jax_array(val)] for key, val in problem.boundary_conditions.items()}
-    #     ),
-    #     "overall": pd.DataFrame(problem.results["overall"], index=[0]),
-    #     "planes": pd.DataFrame(problem.results["planes"]),
-    #     "cascades": pd.DataFrame(problem.results["cascades"]),
-    #     "stage": pd.DataFrame(problem.results["stage"]),
-    #     "geometry": pd.DataFrame(
-    #         {key: pd.Series(val) for key, val in problem.geometry.items()}
-    #     ),
-    #     "solver": pd.DataFrame(
-    #         {
-    #             "completed": pd.Series(True, index=[0]),
-    #             "success": pd.Series(solver.success, index=[0]),
-    #             "message": pd.Series(solver.message, index=[0]),
-    #             "grad_count": solver.convergence_history["grad_count"],
-    #             "func_count": solver.convergence_history["func_count"],
-    #             "func_count_total": solver.convergence_history["func_count_total"],
-    #             "objective_value": solver.convergence_history["objective_value"],
-    #             "constraint_violation": solver.convergence_history[
-    #                 "constraint_violation"
-    #             ],
-    #             "norm_step": solver.convergence_history["norm_step"],
-    #         },
-    #         index=range(len(solver.convergence_history["grad_count"])),
-    #     ),
-    # }
-
     dfs = {
         "operation point": pd.DataFrame(
             {key: [evaluate_jax_array(val)] for key, val in problem.boundary_conditions.items()}
@@ -232,19 +206,29 @@ def compute_optimal_turbine(
         if out_filename == None:
             current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             out_filename = f"design_optimization_{current_time}"
+        
+        out_filenames = [out_filename, "design_optimization_latest"]
+        for out_filename in out_filenames:
 
-        # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-        config_data = utils.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+            # Export simulation configuration as YAML file
+            config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+            config_data = utils.convert_numpy_to_python(config_data, precision=12)
+            config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+            with open(config_file, "w") as file:
+                yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
 
-        # Export optimal turbine in excel file
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            for sheet_name, df in dfs.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=True)
+            # Export optimal turbine in excel file
+            filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+            with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+                for sheet_name, df in dfs.items():
+                    df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+            # Export optimal turbine as dill object
+            filepath = os.path.join(out_dir, f"{out_filename}.pkl")
+            solver.problem = None
+            with open(filepath, 'wb') as file:
+                # Serialize the object and write it to the file
+                dill.dump(solver, file)
 
     return solver        
 
