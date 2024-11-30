@@ -4,7 +4,7 @@ Created on Wed Sep 20 13:05:13 2023
 
 @author: laboan
 """
-
+# %%
 import numpy as np
 import pandas as pd
 import os
@@ -46,11 +46,11 @@ elif MODE == "design_optimization":
     # Compute optimal turbine
 
     operation_points = config["operation_points"]
-    # fitness_func, x, x_keys, grad_jax, grad_FD = tf.fitness_gradient(config)
+    # fitness_func, x, x_keys, grad_jax, grad_FD = tf.fitness_gradient(config, 1e-9)
 
     solver = tf.compute_optimal_turbine(config, export_results=True)
 
-    file_path = os.path.join('output', f"2stage_trial_kofs_FD_1e-3_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
+    file_path = os.path.join('output', f"2stage_trial_kofs_FD_1e-6_tol1e-8_{config['design_optimization']['solver_options']['method']}.pkl")
     # Open a file in write-binary mode
     with open(file_path, 'wb') as file:
         # Serialize the object and write it to the file
@@ -62,3 +62,4 @@ elif MODE == "design_optimization":
     # fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     # fig, ax = tf.plot_functions.plot_velocity_triangle(solver.problem.results["planes"])
 
+# %%

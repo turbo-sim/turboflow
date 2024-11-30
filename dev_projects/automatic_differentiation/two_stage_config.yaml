@@ -176,12 +176,12 @@ design_optimization:
   radius_type : "constant_mean"
   # multistarts : 0
   solver_options: 
-    # library: scipy  
-    # method: slsqp
-    library: pygmo  
-    method: ipopt
+    library: scipy  
+    method: slsqp
+    # library: pygmo  
+    # method: ipopt
     derivative_method: 2-point 
-    derivative_abs_step: 1e-3
+    derivative_abs_step: 1e-6
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient"
