@@ -119,6 +119,13 @@ def compute_optimal_turbine(
     # Initialize problem object
     problem = CascadesOptimizationProblem(config)
 
+    # Check that the initial guess is within bounds and clip if necessary
+    problem.initial_guess = check_and_clip_initial_guess(
+        problem.initial_guess,
+        problem.bounds,
+        problem.design_variables_keys
+    )
+
     # Perform initial function call to initialize problem
     # This populates the arrays of equality and inequality constraints
     # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
@@ -133,60 +140,62 @@ def compute_optimal_turbine(
     # Solve optimization problem for initial guess x0
     solver.solve(problem.initial_guess)
 
-    dfs = {
-        "operation point": pd.DataFrame(
-            {key: pd.Series(val) 
-             for key, val in problem.boundary_conditions.items()},
-        ),
-        "overall": pd.DataFrame(problem.results["overall"], index=[0]),
-        "planes": pd.DataFrame(problem.results["planes"]),
-        "cascades": pd.DataFrame(problem.results["cascades"]),
-        "stage": pd.DataFrame(problem.results["stage"]),
-        "geometry": pd.DataFrame(
-            {key: pd.Series(val) for key, val in problem.geometry.items()}
-        ),
-        "solver": pd.DataFrame(
-            {
-                "completed": pd.Series(True, index=[0]),
-                "success": pd.Series(solver.success, index=[0]),
-                "message": pd.Series(solver.message, index=[0]),
-                "grad_count": solver.convergence_history["grad_count"],
-                "func_count": solver.convergence_history["func_count"],
-                "func_count_total": solver.convergence_history["func_count_total"],
-                "objective_value": solver.convergence_history["objective_value"],
-                "constraint_violation": solver.convergence_history[
-                    "constraint_violation"
-                ],
-                "norm_step": solver.convergence_history["norm_step"],
-            },
-            index=range(len(solver.convergence_history["grad_count"])),
-        ),
-    }
+    # dfs = {
+    #     "operation point": pd.DataFrame(
+    #         {key: pd.Series(val) 
+    #          for key, val in problem.boundary_conditions.items()},
+    #     ),
+    #     "overall": pd.DataFrame(problem.results["overall"], index=[0]),
+    #     "planes": pd.DataFrame(problem.results["planes"]),
+    #     "cascades": pd.DataFrame(problem.results["cascades"]),
+    #     "stage": pd.DataFrame(problem.results["stage"]),
+    #     "geometry": pd.DataFrame(
+    #         {key: pd.Series(val) for key, val in problem.geometry.items()}
+    #     ),
+    #     "solver": pd.DataFrame(
+    #         {
+    #             "completed": pd.Series(True, index=[0]),
+    #             "success": pd.Series(solver.success, index=[0]),
+    #             "message": pd.Series(solver.message, index=[0]),
+    #             "grad_count": solver.convergence_history["grad_count"],
+    #             "func_count": solver.convergence_history["func_count"],
+    #             "func_count_total": solver.convergence_history["func_count_total"],
+    #             "objective_value": solver.convergence_history["objective_value"],
+    #             "constraint_violation": solver.convergence_history[
+    #                 "constraint_violation"
+    #             ],
+    #             "norm_step": solver.convergence_history["norm_step"],
+    #         },
+    #         index=range(len(solver.convergence_history["grad_count"])),
+    #     ),
+    # }
 
-    if export_results:
-        # Create a directory to save simulation results
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+    # if export_results:
+    #     # Create a directory to save simulation results
+    #     if not os.path.exists(out_dir):
+    #         os.makedirs(out_dir)
 
-        # Define filename with unique date-time identifier
-        if out_filename == None:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            out_filename = f"design_optimization_{current_time}"
+    #     # Define filename with unique date-time identifier
+    #     if out_filename == None:
+    #         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    #         out_filename = f"design_optimization_{current_time}"
 
-        # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-        config_data = utils.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+    #     # Export simulation configuration as YAML file
+    #     config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+    #     config_data = utils.convert_numpy_to_python(config_data, precision=12)
+    #     config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+    #     with open(config_file, "w") as file:
+    #         yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
 
-        # Export optimal turbine in excel file
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            for sheet_name, df in dfs.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=True)
+    #     # Export optimal turbine in excel file
+    #     filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+    #     with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+    #         for sheet_name, df in dfs.items():
+    #             df.to_excel(writer, sheet_name=sheet_name, index=True)
 
     return solver        
+
+
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
     """
@@ -623,8 +632,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.model_options,
             self.reference_values,
         )
-        print("These are the results")
-        utils.print_dict(self.results)
+        # print("These are the results")
+        # utils.print_dict(self.results)
 
         # Evaluate objective function
         self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
@@ -1252,3 +1261,36 @@ def build_config(filename, performance_map, solver_options, initial_guess):
                                         "initial_guess" : initial_guess,}}
     
     return config
+
+
+def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
+    """
+    Checks if the initial guess is within the given bounds and clips it if necessary.
+    
+    Parameters
+    ----------
+    initial_guess : numpy.ndarray
+        Initial guess for the optimization variables.
+    bounds : tuple of numpy.ndarray
+        A tuple containing two arrays: lower bounds and upper bounds.
+    variable_names : list of str
+        List of variable names corresponding to the design variables.
+        
+    Returns
+    -------
+    numpy.ndarray
+        Adjusted initial guess.
+    """
+    lb, ub = bounds
+    clipped = False
+    for i, (x, l, u) in enumerate(zip(initial_guess, lb, ub)):
+        if not l <= x <= u:
+            clipped = True
+            initial_guess[i] = np.clip(x, l, u)
+            print(f"Warning: Variable '{variable_names[i]}' was out of bounds "
+                  f"({x} not in [{l}, {u}]). Clipped to {initial_guess[i]}.")
+    
+    if not clipped:
+        print("Initial guess is within bounds.")
+    
+    return initial_guess

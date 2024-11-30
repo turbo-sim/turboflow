@@ -257,10 +257,6 @@ def get_mach_crit(gamma, eta):
         + jnp.sqrt((1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta))
     ) / (4 * alpha - 2)
     Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
-
-    print("This is Mach Critical")
-    print(Ma_crit, T_hat_crit)
-
     return Ma_crit
 
 
