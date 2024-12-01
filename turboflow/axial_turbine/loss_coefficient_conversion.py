@@ -70,13 +70,14 @@ def convert_kinetic_energy_to_stagnation_pressure_loss(Ma, gamma, delta_phi2, li
     float
         The computed value of the stagnation pressure loss ($Y$).
     """
-    Ma_lim = jnp.sqrt(2/(gamma - 1) * (1-delta_phi2) / (delta_phi2 + 1e-6))
-    Ma = math.smooth_minimum(Ma, 0.9*Ma_lim)
-    exp = (gamma - 1) / gamma
-    p2_p02 = (1 + (gamma - 1) / 2 * Ma ** 2) ** (-1 / exp)
-    Y = 1 / (1 - p2_p02) * (((1 - delta_phi2 * p2_p02 ** (-exp)) / (1 - delta_phi2)) ** (-1 / exp) - 1)
-    if limit_output:
-        Y = math.smooth_minimum(Y, 1.0- + 0.*Y, method="logsumexp")
+    Ma_lim = jnp.sqrt(2.0 / (gamma - 1.0) * (1-delta_phi2) / (delta_phi2 + 1e-4))
+    Ma = math.smooth_minimum(Ma, 0.95*Ma_lim)
+    exp = (gamma - 1.0) / gamma
+    p2_p02 = (1.0 + (gamma - 1.0) / 2.0 * Ma ** 2) ** (-1.0 / exp)
+    Y = 1.0 / (1.0 - p2_p02) * (((1.0 - delta_phi2 * p2_p02 ** (-exp)) / (1.0 - delta_phi2)) ** (-1.0 / exp) - 1.0)
+    Y = jnp.minimum(Y, 1.00 + 0.0*Y)
+    # if limit_output:
+    #     Y = math.smooth_minimum(Y, 1.00 + 0.0*Y, method="logsumexp")
     return Y
 
 
