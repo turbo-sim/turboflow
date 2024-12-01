@@ -178,15 +178,15 @@ design_optimization:
   solver_options: 
     # library: scipy  
     # method: slsqp
-    library: pygmo  
-    method: ipopt
-    derivative_method: jax
-    derivative_abs_step: 1e-3
+    # library: pygmo  
+    # method: ipopt
+    # derivative_method: jax
+    # derivative_abs_step: 1e-3
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient"
-    tolerance: 1e-6
-    max_iterations: 1000
+    # tolerance: 1e-8
+    # max_iterations: 1000
     extra_options:
       limited_memory_max_history: 100
     # options : 

@@ -14,12 +14,12 @@ OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Read case summary
-DATAFILE = "./cases_summary.xlsx"
+DATAFILE = "./two_stage_tol_1e-6.xlsx"
 case_data = pd.read_excel(DATAFILE)
 
-# # Run cases based on list of tags
-# filter = ["ipopt"]
-# case_data = case_data[case_data["method"].isin(filter)]
+# Run cases based on list of tags
+# filter = []
+# case_data = case_data[case_data["stages"].isin(filter)]
 
 # # Run cases based on case number
 # case_data = case_data[case_data["case"].isin([2, 3, 4])]
@@ -48,11 +48,13 @@ for i, row in case_data.iterrows():
 
     # Compute optimal turbine
     operation_points = config["operation_points"]
-    out_dir = os.path.join(OUTPUT_DIR, f"case_{row['case']}_{row['stages']}stage_{row['method']}")
+    out_dir = os.path.join(OUTPUT_DIR, f"case_{row['case']}_{row['stages']}stage_{row['method']}_{row['derivative_method']}_{row['derivative_abs_step']}_{row['tolerance']}")
     solver = tf.compute_optimal_turbine(config,
                                         out_dir=out_dir,
                                         # out_filename=,
                                         export_results=True)
+    
+    
 
     # # Load solver object example
     # with open('solver.dill', 'rb') as f: 
