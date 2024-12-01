@@ -406,14 +406,13 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
     if cascade_type == "stator":
-        B = 0
+        Y_cl = 0.0
     elif cascade_type == "rotor":
-        B = 0.37
+        # JAX gives problems for t_cl=0 (non-differentiable function)
+        # Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) ** 0.78
+        Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) # Linear approximation gives better solver convergence
     else:
-        print("Specify the type of cascade")
-
-    # Tip clearance loss coefficient
-    Y_cl = B * Z * c / H * (1e-9 + t_cl / H) ** 0.78  ## JAX giving problems for t_cl=0
+        raise ValueError("Specify the type of cascade")
 
     return Y_cl
 

@@ -5,7 +5,9 @@ import jax
 import jax.numpy as jnp
 
 from . import loss_model_kacker_okapuu as lm_ko
-from .loss_coefficient_conversion import convert_kinetic_energy_to_stagnation_pressure_loss
+from .loss_coefficient_conversion import (
+    convert_kinetic_energy_to_stagnation_pressure_loss,
+)
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 
@@ -88,6 +90,7 @@ def compute_losses(input_parameters):
     Y_s = get_secondary_loss(flow_parameters, geometry, delta_height)
 
     # Tip clearance loss coefficient
+    # Y_cl = 0.0
     Y_cl = lm_ko.get_tip_clearance_loss(flow_parameters, geometry)
 
     # Incidence loss coefficient
@@ -95,6 +98,7 @@ def compute_losses(input_parameters):
     Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des)
 
     # Penetration depth to blade height ratio
+    # ZTE = 0.0
     ZTE = get_penetration_depth(flow_parameters, geometry, delta_height)
 
     # Correct profile losses according to penetration depth
@@ -207,93 +211,28 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
         Incidence loss coefficient.
     """
 
+    # Rename parameters
     beta_in = flow_parameters["beta_in"]
     gamma = flow_parameters["gamma_out"]
     Ma_rel_out = flow_parameters["Ma_rel_out"]
-
     le = geometry["leading_edge_diameter"]
     s = geometry["pitch"]
     We = geometry["leading_edge_wedge_angle"]
     theta_in = geometry["leading_edge_angle"]
     theta_out = math.arccosd(geometry["A_throat"] / geometry["A_out"])
+    type = geometry["cascade_type"]
 
-    chi = get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des)
-
-    dPhip = get_incidence_profile_loss_increment(chi)
-
-    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(Ma_rel_out, gamma, dPhip, limit_output=True)
+    # Evaluate incidence model
+    chi = get_incidence_parameter(
+        le, s, We, theta_in, theta_out, beta_in, beta_des, type
+    )
+    delta_phi2 = get_incidence_profile_loss_increment(chi)
+    # Y_inc = delta_phi2
+    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(
+        Ma_rel_out, gamma, delta_phi2, limit_output=True
+    )
 
     return Y_inc
-
-
-def get_penetration_depth(flow_parameters, geometry, delta_height):
-    r"""
-    Calculated the penetration depth of the passage vortex separation line relative to the blade span.
-
-    The endwall inlet boundary layer generate a vortex which propagtes through the cascade section,
-    and the spanwise penetration of this vortex affect the magnutude of the secondary loss coefficient.
-    This function approximate the vortex penetration depth to the blade span by the correlation developed by :cite:`benner_empirical_2006-1`.
-
-    The quantity is calculated as:
-
-    .. math::
-
-        \frac{\mathrm{Z_{te}}}{H} = \frac{0.10F_t^{0.79}}{\sqrt{CR}\left(\frac{H}{c}\right)^{0.55}} + 32.70\frac{\delta^*}{H}^2
-
-    where:
-
-        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.
-        - :math:`H` is the mean height.
-        - :math:`c` is the chord.
-        - :math:`\delta^*` is the inlet endwall boundary layer displacement thickness.
-        - :math:`\beta_\mathrm{out}` is the exit relative flow angle.
-        - :math:`F_t` is the tangential loading coefficient.
-
-    The tangiential loading coefficient is calculated by a separate function (`F_t`).
-
-    Parameters
-    ----------
-    flow_parameters : dict
-        Dictionary containing flow-related parameters.
-    geometry : dict
-        Dictionary with geometric parameters.
-    delta_height : float
-        The inlet endwall boundary layer displacement thickness relative to the mean blade height.
-
-    Returns
-    -------
-    float
-        Spanwise penetration depth of the passage vortex relative to the mean blade height.
-
-    """
-
-    # TODO: explain smoothing/blending tricks
-
-    beta_in = flow_parameters["beta_in"]
-    beta_out = flow_parameters["beta_out"]
-    axial_chord = geometry["axial_chord"]
-    pitch = geometry["pitch"]
-    chord = geometry["chord"]
-    height = geometry["height"]
-
-    CR = math.cosd(beta_in) / math.cosd(
-        beta_out
-    )  # Convergence ratio from Benner et al.[2006]
-
-    BSx = axial_chord / pitch  # Axial blade solidity
-    delta_height = (
-        delta_height  # Boundary layer displacement thickness relative to blade height
-    )
-    AR = height / chord  # Aspect ratio
-
-    Ft = F_t(BSx, beta_in, beta_out)
-
-    Z_TE = 0.10 * Ft**0.79 / jnp.sqrt(CR) / (AR) ** 0.55 + 32.70 * delta_height**2
-
-    Z_TE = min(Z_TE, 0.99)  # TODO: smoothing
-
-    return Z_TE
-
 
 
 def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.5):
@@ -414,7 +353,9 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
     _chi = chi_extrapolation
     loss = func_1(_chi)
     coeffs_slope = jnp.array([i * a for i, a in enumerate(coeffs_1[::-1], start=1)])
-    slope = jnp.sum(jnp.array([a * _chi ** (i - 1) for i, a in enumerate(coeffs_slope, start=1)]))
+    slope = jnp.sum(
+        jnp.array([a * _chi ** (i - 1) for i, a in enumerate(coeffs_slope, start=1)])
+    )
     loss_extrap = loss + slope * (chi - _chi)
     loss_increment = jnp.where(chi > _chi, loss_extrap, loss_poly)
 
@@ -426,7 +367,9 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
     return loss_increment
 
 
-def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
+def get_incidence_parameter(
+    le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type
+):
     r"""
     Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`.
 
@@ -470,19 +413,87 @@ def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
     """
 
     # chi = (
-    #     ((le + 1e-9) / s) ** (-0.05)
-    #     * (We + 1e-9) ** (-0.2)
-    #     * ((math.cosd(theta_in) / math.cosd(theta_out)) + 1e-9) ** (-1.4)
-    #     * (abs(beta_in) - abs(beta_des))
+    #     (le / s) ** (-0.05)
+    #     * (We) ** (-0.2)
+    #     * ((math.cosd(theta_in) / math.cosd(theta_out))) ** (-1.4)
+    #     * (math.smooth_abs(beta_in, "quadratic", epsilon=1e-1) - math.smooth_abs(beta_des,"quadratic", epsilon=1e-1)) # Absolute function give problem with JAX differentiation, so use smooth abs
     # )
-    chi = (
-        (le / s) ** (-0.05)
-        * (We) ** (-0.2)
-        * ((math.cosd(theta_in) / math.cosd(theta_out))) ** (-1.4)
-        * (math.smooth_abs(beta_in, "quadratic", epsilon=1e-1) - math.smooth_abs(beta_des,"quadratic", epsilon=1e-1)) # Absolute function give problem with JAX differentiation, so use smooth abs
-    )
+   
+    # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
+    if cascade_type == "stator":
+        delta_beta = -(beta_in - beta_des)
+    elif cascade_type == "rotor":
+        delta_beta = +(beta_in - beta_des)
+    else:
+        raise ValueError("Specify the type of cascade")
+
+    cosine_ratio = math.cosd(theta_in) / math.cosd(theta_out)
+    chi = (le / s) ** (-0.05) * (We) ** (-0.2) * cosine_ratio ** (-1.4) * delta_beta
 
     return chi
+
+
+def get_penetration_depth(flow_parameters, geometry, delta_height):
+    r"""
+    Calculated the penetration depth of the passage vortex separation line relative to the blade span.
+
+    The endwall inlet boundary layer generate a vortex which propagtes through the cascade section,
+    and the spanwise penetration of this vortex affect the magnutude of the secondary loss coefficient.
+    This function approximate the vortex penetration depth to the blade span by the correlation developed by :cite:`benner_empirical_2006-1`.
+
+    The quantity is calculated as:
+
+    .. math::
+
+        \frac{\mathrm{Z_{te}}}{H} = \frac{0.10F_t^{0.79}}{\sqrt{CR}\left(\frac{H}{c}\right)^{0.55}} + 32.70\frac{\delta^*}{H}^2
+
+    where:
+
+        - :math:`CR = \frac{\cos(\beta_\mathrm{in})}{\cos(\beta_\mathrm{out})}` is the convergence ratio.
+        - :math:`H` is the mean height.
+        - :math:`c` is the chord.
+        - :math:`\delta^*` is the inlet endwall boundary layer displacement thickness.
+        - :math:`\beta_\mathrm{out}` is the exit relative flow angle.
+        - :math:`F_t` is the tangential loading coefficient.
+
+    The tangiential loading coefficient is calculated by a separate function (`F_t`).
+
+    Parameters
+    ----------
+    flow_parameters : dict
+        Dictionary containing flow-related parameters.
+    geometry : dict
+        Dictionary with geometric parameters.
+    delta_height : float
+        The inlet endwall boundary layer displacement thickness relative to the mean blade height.
+
+    Returns
+    -------
+    float
+        Spanwise penetration depth of the passage vortex relative to the mean blade height.
+
+    """
+
+    beta_in = flow_parameters["beta_in"]
+    beta_out = flow_parameters["beta_out"]
+    axial_chord = geometry["axial_chord"]
+    pitch = geometry["pitch"]
+    chord = geometry["chord"]
+    height = geometry["height"]
+
+    # Convergence ratio from Benner et al.[2006]
+    CR = math.cosd(beta_in) / math.cosd(beta_out)
+
+    # Axial blade solidity
+    BSx = axial_chord / pitch
+
+    # Aspect ratio
+    AR = height / chord
+    Ft = F_t(BSx, beta_in, beta_out)
+    Z_TE = 0.10 * Ft**0.79 / jnp.sqrt(CR) / (AR) ** 0.55 + 32.70 * delta_height**2
+    Z_TE = jnp.minimum(Z_TE, 0.99)  # TODO: smoothing
+
+    return Z_TE
 
 
 def F_t(BSx, beta_in, beta_out):
@@ -520,11 +531,11 @@ def F_t(BSx, beta_in, beta_out):
     a_m = math.arctand(0.5 * (math.tand(beta_in) + math.tand(beta_out)))
 
     F_t = (
-        2
-        * 1
+        2.0
+        * 1.0
         / BSx
         * math.cosd(a_m) ** 2
-        * (abs(math.tand(beta_in)) + abs(math.tand(beta_out)))
+        * (jnp.abs(math.tand(beta_in)) + jnp.abs(math.tand(beta_out)))
     )
 
     return F_t
