@@ -85,7 +85,7 @@ design_optimization:
       lower_bound : [0.6, 0.6, 0.6, 0.6]
       upper_bound : [0.9, 0.9, 0.9, 0.9]
     hub_tip_ratio_out :
-      value : [0.715999, 0.674840, 0.63851147, 0.6100000 ] #0.597547073  ]
+      value : [0.715999, 0.674840, 0.63851147, 0.6100000 ]
       # value : [0.715999, 0.674840, 0.715999, 0.674840]
       lower_bound : [0.6, 0.6, 0.6, 0.6]
       upper_bound : [0.9, 0.9, 0.9, 0.9]
@@ -187,8 +187,8 @@ design_optimization:
     update_on: "gradient"
     # tolerance: 1e-8
     # max_iterations: 1000
-    extra_options:
-      limited_memory_max_history: 100
+    # extra_options:
+    #   limited_memory_max_history: 15
     # options : 
     #   gen : 200
     #   pop_size : 20

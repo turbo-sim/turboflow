@@ -175,32 +175,40 @@ design_optimization:
 
   radius_type : "constant_mean"
   # multistarts : 0
+
+
   solver_options: 
-<<<<<<< HEAD:dev_projects/automatic_differentiation/two_stage_config.yaml
-    library: scipy  
-    method: slsqp
-    # library: pygmo  
-    # method: ipopt
-    derivative_method: 2-point 
-    derivative_abs_step: 1e-6
-=======
     # library: scipy  
     # method: slsqp
-    library: pygmo  
-    method: ipopt
-    derivative_method: jax
-    derivative_abs_step: 1e-3
->>>>>>> c0eeb8b4bb2b112322000cead0babe60628e1175:dev_projects/automatic_differentiation/config_files/two_stage_config.yaml
+<<<<<<< HEAD
+    # library: pygmo  
+    # method: ipopt
+    # derivative_method: jax
+    # derivative_abs_step: 1e-3
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient"
-    tolerance: 1e-6
-    max_iterations: 1000
+    # tolerance: 1e-8
+    # max_iterations: 1000
     extra_options:
       limited_memory_max_history: 100
     # options : 
     #   gen : 200
     #   pop_size : 20
     #   seed : 2
+=======
+    library: pygmo  
+    method: ipopt
+    derivative_method: jax
+    derivative_abs_step: 1e-3
+    print_convergence: False
+    plot_convergence: False 
+    update_on: "gradient"
+    tolerance: 1e-6
+    max_iterations: 1000
+    # extra_options:
+    #   limited_memory_max_history: 10
+
+>>>>>>> 8f7a3e2bee9756bbab9ead8ab12cb98f36d6b9ff
 
 

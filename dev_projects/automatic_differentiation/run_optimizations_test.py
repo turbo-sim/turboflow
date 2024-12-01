@@ -18,7 +18,7 @@ logger = tf.create_logger(name="run_optimizations", path=f"{OUTPUT_DIR}/logs", u
 tf.print_package_info(logger)
 
 # Read case summary
-DATAFILE = "./three_stage.xlsx"
+DATAFILE = "./two_stage_tol_1e-6.xlsx"
 case_data = pd.read_excel(DATAFILE)
 
 # # Run cases based on list of tags
@@ -26,7 +26,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-case_data = case_data[case_data["case"].isin([61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90])]
+case_data = case_data[case_data["case"].isin([])]
 # case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases

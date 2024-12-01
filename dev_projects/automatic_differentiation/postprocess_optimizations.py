@@ -11,7 +11,7 @@ OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Read case summary
-DATAFILE = "./cases_summary.xlsx"
+DATAFILE = "./two_stage_tol_1e-6.xlsx"
 case_data = pd.read_excel(DATAFILE)
 
 # # Run cases based on list of tags
@@ -19,7 +19,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-case_data = case_data[case_data["case"].isin([100, 101])]
+# case_data = case_data[case_data["case"].isin([100, 101])]
 
 # Loop over cases
 results_list = []

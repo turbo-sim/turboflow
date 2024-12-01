@@ -170,17 +170,17 @@ design_optimization:
   radius_type : "constant_mean"
   # multistarts : 0
   solver_options: 
-    library: scipy
-    method: slsqp
+    # library: scipy
+    # method: slsqp
     # library: pygmo  
     # method: ipopt
-    derivative_method: 2-point 
-    derivative_abs_step: 1e-9
+    # derivative_method: 2-point 
+    # derivative_abs_step: 1e-9
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient"
-    tolerance: 1e-8
-    max_iterations: 1000
+    # tolerance: 1e-8
+    # max_iterations: 1000
     # options : 
     #   gen : 200
     #   pop_size : 20
