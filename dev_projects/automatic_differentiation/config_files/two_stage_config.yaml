@@ -175,6 +175,8 @@ design_optimization:
 
   radius_type : "constant_mean"
   # multistarts : 0
+
+
   solver_options: 
     # library: scipy  
     # method: slsqp
@@ -182,16 +184,13 @@ design_optimization:
     method: ipopt
     derivative_method: jax
     derivative_abs_step: 1e-3
-    print_convergence: True 
+    print_convergence: False
     plot_convergence: False 
     update_on: "gradient"
     tolerance: 1e-6
     max_iterations: 1000
-    extra_options:
-      limited_memory_max_history: 100
-    # options : 
-    #   gen : 200
-    #   pop_size : 20
-    #   seed : 2
+    # extra_options:
+    #   limited_memory_max_history: 10
+
 
 

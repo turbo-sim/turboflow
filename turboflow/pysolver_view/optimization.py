@@ -15,7 +15,6 @@ from . import optimization_wrappers as _opt
 from .pysolver_utilities import savefig_in_formats
 
 
-
 # Define valid libraries and their corresponding methods
 OPTIMIZATION_LIBRARIES = {
     "scipy": _opt.minimize_scipy,
@@ -386,10 +385,8 @@ class OptimizationSolver:
         # Use problem gradient method if it exists
         if hasattr(self.problem, "gradient"):
             grad = self.problem.gradient(x)
-            # print("Using AD")
         else:
             # Fall back to finite differences
-            # print("Falling back to FD")
             fun = lambda x: self.fitness(x, called_from_grad=True)
             grad = numerical_differentiation.approx_gradient(
                 fun,
@@ -421,6 +418,24 @@ class OptimizationSolver:
 
         return grad
 
+    def _handle_output(self, message):
+        """
+        Handles output by printing to the screen or logging it.
+
+        Parameters
+        ----------
+        message : str
+            The message to output.
+        log_only : bool, optional
+            If True, only logs the message (ignores `self.display`). Default is False.
+        """
+        if self.logger:
+            for line in message.splitlines():
+                self.logger.info(line)
+                
+        if self.display and not self.logger:
+            print(message)
+
     def _write_header(self):
         """
         Print a formatted header for the optimization report.
@@ -446,15 +461,9 @@ class OptimizationSolver:
             separator,
         ]
 
-        # Display to stdout
-        if self.display:
-            for line in lines_to_output:
-                print(line)
-
-        # Write to log
-        if self.logger:
-            for line in lines_to_output:
-                self.logger.info(line)
+        # Print or log content
+        for line in lines_to_output:
+            self._handle_output(line)
 
         # Store text in memory
         self.solution_report.extend(lines_to_output)
@@ -509,14 +518,7 @@ class OptimizationSolver:
 
         # Current convergence message
         status = f" {self.grad_count:13d}{self.func_count:13d}{self.cache['f']:+16.3e}{violation_max:+18.3e}{norm_step:+18.3e} "
-
-        # Display to stdout
-        if self.display:
-            print(status)
-
-        # Write to log
-        if self.logger:
-            self.logger.info(status)
+        self._handle_output(status)
 
         # Store text in memory
         self.solution_report.append(status)
@@ -558,15 +560,9 @@ class OptimizationSolver:
             lines_to_output += solution_vars
         lines_to_output += [separator, ""]
 
-        # Display to stdout
-        if self.display:
-            for line in lines_to_output:
-                print(line)
-
-        # Write to log
-        if self.logger:
-            for line in lines_to_output:
-                self.logger.info(line)
+        # Print or log content
+        for line in lines_to_output:
+            self._handle_output(line)
 
         # Store text in memory
         self.solution_report.extend(lines_to_output)
