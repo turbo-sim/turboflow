@@ -13,25 +13,25 @@ tf.set_plot_options()
 OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Create logger to save results
+logger = tf.create_logger(name="run_optimizations", path=f"{OUTPUT_DIR}/logs", use_datetime=True, to_console=True)
+tf.print_package_info(logger)
+
 # Read case summary
-DATAFILE = "./two_stage_tol_1e-6.xlsx"
+DATAFILE = "./cases_summary.xlsx"
 case_data = pd.read_excel(DATAFILE)
 
-# Run cases based on list of tags
-# filter = []
-# case_data = case_data[case_data["stages"].isin(filter)]
+# # Run cases based on list of tags
+# filter = ["ipopt"]
+# case_data = case_data[case_data["method"].isin(filter)]
 
-# # Run cases based on case number
-# case_data = case_data[case_data["case"].isin([2, 3, 4])]
-
-# # Run cases based on numerical value
-# case_data = case_data[np.isclose(case_data["max_iterations"], 500)]
-
+# Run cases based on case number
+case_data = case_data[case_data["case"].isin([100, 101, 102])]
+# case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases
-print("Cases scheduled for simulation:")
-print(", ".join(case_data["case"].astype(str)))
-solver = None
+logger.info("Cases scheduled for simulation:")
+logger.info(", ".join(case_data["case"].astype(str)))
 for i, row in case_data.iterrows():
 
     # Load configuration file
@@ -43,24 +43,29 @@ for i, row in case_data.iterrows():
     for var in vars:
         config["design_optimization"]["solver_options"][var] = row[var]
 
-    # Print config to check
-    # tf.print_dict(config)
+     # Log config details
+    logger.info("-" * 80)
+    logger.info(f"Running {row['config_file']} with solver settings:")
+    tf.log_dict(logger, config["design_optimization"]["solver_options"])
+    logger.info("-" * 80)
 
     # Compute optimal turbine
     operation_points = config["operation_points"]
-    out_dir = os.path.join(OUTPUT_DIR, f"case_{row['case']}_{row['stages']}stage_{row['method']}_{row['derivative_method']}_{row['derivative_abs_step']}_{row['tolerance']}")
+    out_dir = os.path.join(OUTPUT_DIR, f"case_{row['case']}")
+    out_filename = os.path.splitext(row['config_file'])[0]  # No .yaml extension
     solver = tf.compute_optimal_turbine(config,
                                         out_dir=out_dir,
-                                        # out_filename=,
-                                        export_results=True)
-    
-    
+                                        out_filename=out_filename,
+                                        export_results=True,
+                                        logger=logger)
 
-    # # Load solver object example
-    # with open('solver.dill', 'rb') as f: 
-    #     solver = dill.load(f)
-    # config_filename = f"./output/folder_name/config_file.yaml"
-    # config = tf.load_config(config_file, print_summary=False)
-    # problem = tf.CascadesOptimizationProblem(config)
-    # problem.fitness(solver.x_final)
+#     # # Load solver object example
+#     # with open('solver.dill', 'rb') as f: 
+#     #     solver = dill.load(f)
+#     # config_filename = f"./output/folder_name/config_file.yaml"
+#     # config = tf.load_config(config_file, print_summary=False)
+#     # problem = tf.CascadesOptimizationProblem(config)
+#     # problem.fitness(solver.x_final)
+
+
 

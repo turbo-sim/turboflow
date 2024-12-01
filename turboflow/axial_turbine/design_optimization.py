@@ -116,6 +116,7 @@ def compute_optimal_turbine(
     out_filename=None,
     out_dir="output",
     export_results=True,
+    logger=None,
 ):
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -155,7 +156,7 @@ def compute_optimal_turbine(
     solver_config = config["design_optimization"]["solver_options"]
 
     # Initialize solver object using keyword-argument dictionary unpacking
-    solver = psv.OptimizationSolver(problem, **solver_config)
+    solver = psv.OptimizationSolver(problem, **solver_config, logger=logger)
 
     # Solve optimization problem for initial guess x0
     solver.solve(problem.initial_guess)
@@ -186,6 +187,7 @@ def compute_optimal_turbine(
                 "completed": pd.Series(True, index=[0]),
                 "success": pd.Series(solver.success, index=[0]),
                 "message": pd.Series(solver.message, index=[0]),
+                "elapsed_time": pd.Series(solver.elapsed_time, index=[0]),
                 "grad_count": evaluate_jax_array(solver.convergence_history["grad_count"]),
                 "func_count": evaluate_jax_array(solver.convergence_history["func_count"]),
                 "func_count_total": evaluate_jax_array(solver.convergence_history["func_count_total"]),
@@ -204,10 +206,10 @@ def compute_optimal_turbine(
 
         # Define filename with unique date-time identifier
         if out_filename == None:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            out_filename = f"design_optimization_{current_time}"
-        
-        out_filenames = [out_filename, "design_optimization_latest"]
+            out_filename = "optimization"
+
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        out_filenames = [f"{out_filename}_{current_time}", f"{out_filename}_latest"]
         for out_filename in out_filenames:
 
             # Export simulation configuration as YAML file
@@ -1123,7 +1125,6 @@ def build_config(filename, performance_map, solver_options, initial_guess):
                      "tip_clearance", "throat_location_fraction"]
     boundary_conditions = {key :  val for key, val in obj.problem.boundary_conditions.items() if key in bc_keys}
     geometry = {key : val for key, val in obj.problem.geometry.items() if key in geometry_keys}
-    print(obj.problem.geometry)
     config = {"geometry" : geometry,
               "simulation_options" : obj.problem.model_options,
               "operation_points" : boundary_conditions,
@@ -1155,7 +1156,6 @@ def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
     lb, ub = bounds
     for i, (x, l, u) in enumerate(zip(initial_guess, lb, ub)):
         if not l <= x <= u:
-            clipped = True
             # Use JAX's .at method to modify the array
             initial_guess = initial_guess.at[i].set(jnp.clip(x, l, u))
             warnings.warn(

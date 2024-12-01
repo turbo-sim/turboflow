@@ -288,6 +288,24 @@ class NonlinearSystemSolver:
 
         return np.atleast_1d(jacobian)
 
+    def _handle_output(self, message):
+        """
+        Handles output by printing to the screen or logging it.
+
+        Parameters
+        ----------
+        message : str
+            The message to output.
+        log_only : bool, optional
+            If True, only logs the message (ignores `self.display`). Default is False.
+        """
+        if self.logger:
+            for line in message.splitlines():
+                self.logger.info(line)
+                
+        if self.display and not self.logger:
+            print(message)
+
     def _write_header(self):
         """
         Print a formatted header for the root finding report.
@@ -311,15 +329,9 @@ class NonlinearSystemSolver:
             separator,
         ]
 
-        # Display to stdout
-        if self.display:
-            for line in lines_to_output:
-                print(line)
-
-        # Write to log
-        if self.logger:
-            for line in lines_to_output:
-                self.logger.info(line)
+        # Print or log content
+        for line in lines_to_output:
+            self._handle_output(line)
 
         # Store text in memory
         self.solution_report.extend(lines_to_output)
@@ -365,14 +377,7 @@ class NonlinearSystemSolver:
 
         # Current convergence message
         status = f" {self.func_count:15d}{self.grad_count:15d}{norm_residual:24.6e}{norm_step:24.6e} "
-
-        # Display to stdout
-        if self.display:
-            print(status)
-
-        # Write to log
-        if self.logger:
-            self.logger.info(status)
+        self._handle_output(status)
 
         # Store text in memory
         self.solution_report.append(status)
@@ -411,16 +416,10 @@ class NonlinearSystemSolver:
             lines_to_output += solution_vars
         lines_to_output += [separator, ""]
 
-        # Display to stdout
-        if self.display:
-            for line in lines_to_output:
-                print(line)
-
-        # Write to log
-        if self.logger:
-            for line in lines_to_output:
-                self.logger.info(line)
-
+        # Print or log content
+        for line in lines_to_output:
+            self._handle_output(line)
+            
         # Store text in memory
         self.solution_report.extend(lines_to_output)
 
