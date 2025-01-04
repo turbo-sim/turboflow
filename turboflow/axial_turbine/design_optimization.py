@@ -355,10 +355,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         
         # Update design point 
         if isinstance(config["operation_points"], (list, np.ndarray)):
-            self.operation_point = config["operation_points"][0]
+            self.operation_point = config["operation_points"][0].copy()
             self.update_boundary_conditions(config["operation_points"][0])
         else:
-            self.operation_point = config["operation_points"]
+            self.operation_point = config["operation_points"].copy()
             self.update_boundary_conditions(config["operation_points"])
 
         # Adjust given variables according to choking model (remove excess variables)

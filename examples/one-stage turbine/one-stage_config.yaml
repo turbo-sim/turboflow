@@ -1,16 +1,16 @@
 turbomachinery: axial_turbine
 operation_points: 
   fluid_name: air          # Fluid
-  T0_in: 295.6             # Inlet total pressure
-  p0_in: 13.8e4            # Inlet total temperature
+  T0_in: 295.6             # Inlet total pressure (Inlet total temperature)
+  p0_in: 13.8e4            # Inlet total temperature (Inlet total pressure)
   p_out : 13.8e4/2.298     # Exit static pressure
-  omega: 1627              # Flow angle at first stator
-  alpha_in: 0              # Rotational speed
+  omega: 1627              # Flow angle at first stator (Rotational speed)
+  alpha_in: 0              # Rotational speed (Flow angle at first stator)
 
 
 simulation_options: 
   deviation_model : aungier 
-  choking_citerion : evaluate_cascade_throat
+  choking_criterion : critical_mach_number
   rel_step_fd: 1e-4 
   loss_model:  
     model: benner  

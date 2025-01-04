@@ -1,0 +1,116 @@
+# Compressor Zhang et al. "A method to select loss correlations for centrifugal compressor performance prediction"
+turbomachinery: centrifugal_compressor
+operation_points: 
+    fluid_name: air
+    T0_in: 273.15 + 15
+    p0_in: 101325
+    mass_flow_rate : 0.45
+    omega: 52000*2*np.pi/60
+    alpha_in: 0
+
+simulation_options: 
+  slip_model : wiesner 
+  loss_model:
+    impeller: 
+      model: oh  
+      loss_coefficient: static_enthalpy_loss
+    vaneless_diffuser: 
+      model: oh  
+      loss_coefficient: static_enthalpy_loss
+    vaned_diffuser: 
+      model: custom  
+      loss_coefficient: static_enthalpy_loss
+  # loss_model:
+  #   model: isentropic  
+  #   loss_coefficient: static_enthalpy_loss  
+  vaneless_diffuser_model : algebraic
+  rel_step_fd : 1e-4
+  factors: 
+    skin_friction : 0.002
+    wall_heat_flux : 0.00
+    wake_width : 0.366
+  # choking_criterion : no_throat
+  choking_criterion : evaluate_throat
+  
+performance_analysis :
+  performance_map: 
+    fluid_name: water 
+    T0_in: 273.15 + 15 +110
+    p0_in: 101325
+    mass_flow_rate: np.linspace(0.5, 0.25, 30)*0.75
+    omega: 52000*2*np.pi/60*np.array([0.75,0.9,0.95, 1.0])
+    alpha_in: 0 
+  solver_options: 
+    method: hybr  
+    tolerance: 1e-8  
+    max_iterations: 100  
+    derivative_method: 2-point  
+    derivative_abs_step: 1e-6  
+    plot_convergence: False
+    print_convergence : True
+  # initial_guess :
+  #   efficiency_tt : [0.9, 0.8] 
+  #   phi_out : [0.2, 0.5]
+  # initial_guess :
+  #   efficiency_impeller : 0.85
+  #   phi_impeller : 0.4
+  #   Ma_vaned_diffuser : 0.1
+  initial_guess :
+    efficiency_impeller : (0.3, 0.95) 
+    phi_impeller : (0.1, 0.8)
+    Ma_vaned_diffuser : (0.1, 0.4)
+    n_samples : 100
+  # initial_guess :
+  #     v_in_impeller: 85.3356068398654
+  #     w_throat_impeller: 137.89217290576872 
+  #     w_out_impeller: 137.89217290576872 
+  #     beta_out_impeller: -48.403824725190525 
+  #     s_out_impeller: 3893.531986735667
+  #     v_out_vaneless_diffuser: 275.421400198415 
+  #     s_out_vaneless_diffuser: 3896.4056527991916 
+  #     alpha_out_vaneless_diffuser: 72.30714011067647 
+  #     v_out_vaned_diffuser: 65.23016734654192
+  #     w_throat_vaned_diffuser: 100.0
+  #     s_out_vaned_diffuser: 3896.4056527959165
+
+
+
+geometry:
+  # Impeller required, and first (while IGV are not available)
+  # Components are evaluated in the same order as here
+  impeller :
+    radius_hub_in: 40.9/2*1e-3
+    radius_tip_in: 85.6/2*1e-3
+    radius_out : 143/2*1e-3
+    width_out : 6.29e-3
+    leading_edge_angle : (43.6+60)/2
+    trailing_edge_angle : -24.5
+    number_of_blades : 12
+    length_axial : 45e-3
+    length_meridional : 45e-3
+    tip_clearance : 0.2e-3
+    area_throat_ratio : 0.5
+  vaneless_diffuser :
+    radius_out : 150.22/2*1e-3
+    radius_in : 143/2*1e-3
+    width_in : 6.29e-3
+    width_out : 6.29e-3
+  vaned_diffuser :
+    radius_out : 183.76/2*1e-3
+    radius_in : 150.22/2*1e-3
+    width_in : 6.29e-3
+    width_out : 6.29e-3
+    leading_edge_angle : 77.77 # From NASA compressors
+    trailing_edge_angle : 34.0 # From NASA compressors
+    number_of_vanes : 21
+    opening : 2*np.pi*183.76/2*1e-3
+    throat_location_factor : 1.0
+    area_throat_ratio : 0.5
+  # volute :
+  #   radius_out : 0.04
+  #   radius_in : 150.22/2*1e-3
+  #   radius_scroll : 0.04 # Assume constant volume in cone
+  #   width_in : 6.29e-3
+
+  
+  

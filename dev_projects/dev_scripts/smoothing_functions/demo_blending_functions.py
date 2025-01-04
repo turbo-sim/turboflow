@@ -2,12 +2,6 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-
-desired_path = os.path.abspath("../..")
-
-if desired_path not in sys.path:
-    sys.path.append(desired_path)
-
 import turboflow as tf
 
 
@@ -165,7 +159,7 @@ ax.set_ylabel(r"$y$ value")
 ax.set_xscale("linear")
 ax.set_yscale("linear")
 linestyles = ["-", "--", ":"]
-colors = tf.utils.COLORS_MATLAB
+colors = tf.COLORS_MATLAB
 for i, n in enumerate([2, 3, 4]):
     for j, m in enumerate([2, 3, 4]):
         sigma = sigmoid_rational(x, n=n, m=m)

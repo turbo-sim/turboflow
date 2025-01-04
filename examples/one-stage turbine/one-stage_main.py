@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define mode 
-MODE = "design_optimzation"
+# MODE = "design_optimzation"
+MODE = "performance_analysis"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
-config = tf.load_config(CONFIG_FILE, print_summary=False)
+config = tf.load_config(CONFIG_FILE, print_summary=True)
 
 if MODE == "performance_analysis":
     
@@ -24,12 +25,13 @@ if MODE == "performance_analysis":
         stop_on_failure=True,
     )
 
+    print(solvers[0].problem.results["overall"]["efficiency_ts"])
+
 elif MODE == "performance_map":
 
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, config, export_results=True)
-
 
 elif MODE == "design_optimzation":
 
