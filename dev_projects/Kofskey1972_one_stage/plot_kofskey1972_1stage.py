@@ -647,16 +647,9 @@ elif Case == "error_plot":
 elif Case == "test":
 
     # Load performance data
-    # filename_1 = "output/performance_analysis_2024-07-20_12-24-44.xlsx" 
-    # filename_2 = "output/performance_analysis_2024-07-19_14-44-28.xlsx"
-    # filename_1 = "output/performance_analysis_2024-07-20_17-39-40.xlsx" # Lagrange, 5/6
-    # filename_2 = "output/performance_analysis_2024-07-20_17-33-26.xlsx" # Critical mach, Madrid correlation, 5/6
-    # filename_3 = "output/performance_analysis_2024-07-20_17-47-54.xlsx" # Critical mach, Lasse correlation, 5/6
-    # filename_1 = "output/performance_analysis_2024-07-20_20-01-58.xlsx" # Lagrange, 1.0
-    # filename_2 = "output/performance_analysis_2024-07-20_19-57-29.xlsx" # Critical mach, Lasse correlation, 1.0
-    # filename_2 = "output/performance_analysis_2024-07-20_20-05-38.xlsx" # Critical mach, Madrid correlation, 1.0
     filename_1 = "output/performance_map_evaluate_cascade_throat.xlsx"
     filename_2 = "output/performance_analysis_2024-03-13_23-14-55.xlsx"
+    # filename_2 = "output/performance_analysis_2024-08-19_13-10-18.xlsx" # Test
 
     data_1 = tf.plot_functions.load_data(filename_1)
     data_2 = tf.plot_functions.load_data(filename_2)

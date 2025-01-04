@@ -3,11 +3,13 @@ import sys
 import copy
 import numpy as np
 import pandas as pd
+import datetime
+import yaml
 import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 1
+CASE = 2
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
@@ -17,25 +19,25 @@ config = tf.load_config(CONFIG_FILE, print_summary=False)
 x0 = {'w_out_1': 269.6435093424158, 's_out_1': 3788.641302695732, 'beta_out_1': 65.65842671865852, 'w_crit_throat_1': 279.71286825479615, 's_crit_throat_1': 3789.0143623778667, 'w_out_2': 252.31227942324745, 's_out_2': 3799.953046296435, 'beta_out_2': -60.71759067762759, 'w_crit_throat_2': 269.1791334389948, 's_crit_throat_2': 3801.2010069338785, 'v_in': 80.82061185428421}
 # Run calculations
 if CASE == 1:
+
     # Compute performance map according to config file
     operation_points = config["operation_points"]
     solvers = tf.compute_performance(
         operation_points,
         config,
-        export_results=False,
+        export_results=True,
         stop_on_failure=True,
     )
 
     print(solvers[0].problem.results["overall"]["mass_flow_rate"])
     print(solvers[0].problem.results["overall"]["efficiency_ts"])
-    print(solvers[0].problem.vars_real)
+    print(solvers[0].problem.results["overall"]["specific_speed"])
 
 elif CASE == 2:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, 
                                      config, 
-                                     out_filename='performance_map_evaluate_cascade_throat',
                                      export_results=True)
 
 elif CASE == 3:
@@ -73,10 +75,33 @@ elif CASE == 3:
 
 elif CASE == 4:
     operation_points = config["operation_points"]
+    solver = tf.compute_optimal_turbine(config, export_results=False)
+    # solver.problem.optimization_process.export_optimization_process(config)
+    # timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    # tf.save_to_pickle(solver, "pickle_sga")
+
+
+elif CASE == 5:
+    operation_points = config["operation_points"]
     solver = tf.compute_optimal_turbine(config, export_results=True)
-    solver.problem.results["overall"]["mass_flow_rate"]
-    solver.problem.results["overall"]["efficiency_ts"]
-    # fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+    tf.save_to_pickle(solver, filename = "pickle_ipopt", out_dir = "output")
+
+elif CASE == 6:
+
+    filename_slsqp = "pickle_file_test_slsqp.pkl"
+
+    performance_map = config["performance_analysis"]["performance_map"]
+    solver_options = config["performance_analysis"]["solver_options"]
+    ig = config["performance_analysis"]["initial_guess"]
+
+    config = tf.build_config(filename_slsqp, performance_map, solver_options, ig)
+    solvers = tf.compute_performance(
+        config["operation_points"],
+        config,
+        export_results=False,
+        stop_on_failure=True,
+    )
+
 
 # Show plots
 # plt.show()
