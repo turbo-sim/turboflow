@@ -1029,7 +1029,7 @@ def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_s
     
     # Create fig and ax if not provided
     if fig is None or ax is None:
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
     # Set labels 
     if labels == None:
@@ -1047,7 +1047,7 @@ def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_s
         ax.plot(range(num_vars), rel_change, linestyle = 'none', marker=markers[i], markersize=markersizes[i], label=labels[i], color=colors[i])
 
     # Adding labels and titles
-    ax.set_ylabel('Relative Change from Initial Guess', fontsize = fontsize)
+    ax.set_ylabel('Relative change from initial guess', fontsize = fontsize)
     ax.legend(fontsize = fontsize)
     ax.grid(False)
     ax.minorticks_off()
@@ -1059,9 +1059,7 @@ def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_s
 
     return fig, ax
 
-import matplotlib.pyplot as plt
-
-def plot_convergence_process(data, plot_together=True, colors=None, linestyles=None, labels=None):
+def plot_convergence_process(data, plot_together=True, colors=None, linestyles=None, labels=None, linewidth = 1.5, fontsize = 12):
     """
     Plots the convergence process for multiple optimization algorithms.
     
@@ -1129,11 +1127,14 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
         labels = list(data.keys())
 
     if plot_together:
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+        figs = [fig]
         ax = [ax1, ax2]
+        ax[0].set_xticklabels([])
     else:
-        fig, ax1 = plt.subplots(1, 1, figsize=(14, 6))
+        fig1, ax1 = plt.subplots(1, 1, figsize=(14, 6))
         fig2, ax2 = plt.subplots(1, 1, figsize=(14, 6))
+        figs = [fig1, fig2]
         ax = [ax1, ax2]
         ax[0].set_xlabel('Iterations')
 
@@ -1142,21 +1143,24 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
         objective = algo_data['objective']
         constraint_violation = algo_data['constraint_violation']
 
-        ax[0].plot(iterations, objective, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
-        ax[1].plot(iterations, constraint_violation, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
+        ax[0].plot(iterations, objective, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}', linewidth = linewidth)
+        ax[1].plot(iterations, constraint_violation, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}', linewidth = linewidth)
 
-    ax[0].set_ylabel('Objective Value')
-    ax[0].legend()
+    ax[0].set_ylabel('Objective value', fontsize = fontsize)
     ax[0].grid(True)
+    ax[0].legend(fontsize = fontsize)
 
-    ax[1].set_xlabel('Iterations')
-    ax[1].set_ylabel('Constraint Violation')
-    ax[1].legend()
+    ax[1].set_xlabel('Iterations', fontsize = fontsize)
+    ax[1].set_ylabel('Constraint violation', fontsize = fontsize)
     ax[1].grid(True)
+    if not plot_together:
+        ax[1].legend(fontsize = fontsize)
 
+    ax[0].tick_params(labelsize=fontsize)
+    ax[1].tick_params(labelsize=fontsize)
     plt.tight_layout()
 
-    return fig, fig2, ax
+    return figs, ax
 
 
 
