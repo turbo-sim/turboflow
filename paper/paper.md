@@ -33,7 +33,7 @@ bibliography: paper.bib
 # Summary
 
 TurboFlow is a Python package for meanline modeling of turbomachinery, providing a comprehensive framework for on- and off-design performance analysis and design optimization. It employs an equation-oriented model formulation, making it compatible with gradient-based equation solvers and optimization algorithms for efficient computations. The package features a modular architecture that allows for seamless integration of various submodels, enabling users to 
-select and combine different models for calculating losses, flow angles and choking, tailoring the analysis to specific needs. The strcuture also facilitate for users to implement other submodels for these purposes. 
+select and combine different models for calculating losses, flow angles and choking, tailoring the analysis to specific needs. The structure also facilitate for users to implement other submodels for these purposes. 
 TurboFlow provides access to advanced equations of state for real gas fluid properties by interfacing to the CoolProp library. The accuracy and computational robustness of the implemented models have been demonstrated through comprehensive validation against experimental data.  
 
 TurboFlow comes with comprehensive documentation, including installation guides, tutorials, detailed model descriptions and a complete API reference. 
