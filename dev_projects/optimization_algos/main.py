@@ -12,10 +12,16 @@ import turboflow as tf
 CASE = 2
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
+# CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
+CONFIG_FILE = os.path.abspath("output/black_box_optimization_2024-08-25_19-10-52.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
-if CASE == 1:
+if CASE == 0:
+    problem = tf.CascadesOptimizationProblem(config)
+    problem.fitness(problem.initial_guesses[0])
+    tf.save_to_pickle(problem, "initial_guess")
+
+elif CASE == 1:
     operation_points = config["operation_points"]
     solver = tf.compute_optimal_turbine(config, export_results=False)
     # solver.problem.optimization_process.export_optimization_process(config)
@@ -24,9 +30,10 @@ if CASE == 1:
 
 elif CASE == 2:
     operation_points = config["operation_points"]
-    solver = tf.compute_optimal_turbine(config, export_results=True)
+    solver = tf.compute_optimal_turbine(config, export_results=False)
+    # print(solver.problem.results["overall"]["efficiency_ts"])
     # solver.problem.optimization_process.export_optimization_process(config)
-    tf.save_to_pickle(solver, filename = f"pickle_2stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
+    tf.save_to_pickle(solver, filename = f"pickle_2stage_BB_{config['design_optimization']['solver_options']['method']}_new", out_dir = "output")
 
 elif CASE == 3:
 
@@ -37,7 +44,7 @@ elif CASE == 3:
     ig = config["performance_analysis"]["initial_guess"]
 
     config = tf.build_config(filename_slsqp, performance_map, solver_options, ig)
-    operation_points = config["performance_analysis"]["performance_map"]
+    operation_points = config["performance_analysis"]["operation_points"]
     solvers = tf.compute_performance(
         operation_points,
         config,
