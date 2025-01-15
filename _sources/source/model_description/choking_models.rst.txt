@@ -7,8 +7,8 @@ The model can predict choked flow in three different ways. The prinicples for th
 
 .. _isentropic_throat:
 
-Isentropic throat model
-------------------------------
+Isentropic throat
+------------------
 
 This model predict choked flow by evaluating the throat of the cascade, and set the mach number to be equal to the exit plane at subsonic conditions, and equal to one at supersonic conditions:  
 
@@ -42,7 +42,7 @@ the entropy at the inlet of the plane. However, when assuming an isentropic thro
 .. _evaluate_cascade_critical:
 
 Calculate maximum mass flow rate
-------------------------------
+---------------------------------
 
 This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat. 
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:
@@ -68,8 +68,8 @@ where
 
 .. _evaluate_throat:
 
-Evaluate cascade throat model
-------------------------------
+Critical mach number
+---------------------
 
 This model predict choked flow by evaluating the throat of the cascade, and set the flow angle at the exit plane according to the deviation model at subsonic conditions, while at supersonic conditions the
 the throat mach number equals the critical mach number:
