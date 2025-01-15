@@ -62,7 +62,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#compute-performance-at-a-single-point">Compute performance at a single point</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#compute-performance-at-a-set-of-points">Compute performance at a set of points</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#compute-performance-across-a-performance-map">Compute performance across a performance map</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#options-for-compute-performance">Options for compute_performance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#export-results">Export results</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#plotting-results">Plotting results</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#plot-single-line">Plot single line</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#plot-several-lines">Plot several lines</a></li>
@@ -130,7 +130,6 @@ Performance prediction is excecuted in three steps:</p>
 <span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="c1"># Evaluate turbomachinery</span>
@@ -143,7 +142,7 @@ Performance prediction is excecuted in three steps:</p>
 <li><p><a class="reference internal" href="#single-point"><span class="std std-ref">Compute performance at a single point</span></a></p></li>
 <li><p><a class="reference internal" href="#set-of-points"><span class="std std-ref">Compute performance at a set of points</span></a></p></li>
 <li><p><a class="reference internal" href="#performance-map"><span class="std std-ref">Compute performance across a performance map</span></a></p></li>
-<li><p><a class="reference internal" href="#options"><span class="std std-ref">Options for compute_performance</span></a></p></li>
+<li><p><a class="reference internal" href="#options"><span class="std std-ref">Export results</span></a></p></li>
 <li><p><a class="reference internal" href="#plotting"><span class="std std-ref">Plotting results</span></a></p></li>
 </ul>
 </div></blockquote>
@@ -172,7 +171,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 
 <span class="n">simulation_options</span><span class="p">:</span> <span class="c1"># Optional</span>
     <span class="n">deviation_model</span> <span class="p">:</span> <span class="n">aungier</span>  <span class="c1"># Optional</span>
-    <span class="n">choking_model</span> <span class="p">:</span> <span class="n">evaluate_cascade_critical</span> <span class="c1"># Optional</span>
+    <span class="n">choking_criterion</span> <span class="p">:</span> <span class="n">critical_mach_number</span> <span class="c1"># Optional</span>
     <span class="n">rel_step_fd</span><span class="p">:</span> <span class="mf">1e-4</span>  <span class="c1"># Optional</span>
     <span class="n">loss_model</span><span class="p">:</span>  <span class="c1"># Optional</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">benner</span>  <span class="c1"># Optional</span>
@@ -201,6 +200,11 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
         <span class="n">derivative_abs_step</span><span class="p">:</span> <span class="mf">1e-6</span>  <span class="c1"># Optional</span>
         <span class="n">print_convergence</span><span class="p">:</span> <span class="kc">True</span> <span class="c1"># Optional</span>
         <span class="n">plot_convergence</span><span class="p">:</span> <span class="kc">False</span> <span class="c1"># Optional</span>
+    <span class="n">initial_guess</span> <span class="p">:</span>
+        <span class="n">efficiency_tt</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]</span>
+        <span class="n">efficiency_ke</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]</span>
+        <span class="n">ma_1</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]</span>
+        <span class="n">ma_2</span> <span class="p">:</span> <span class="p">[</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]</span>
 
 <span class="n">geometry</span><span class="p">:</span> <span class="c1"># Required</span>
     <span class="n">cascade_type</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;stator&quot;</span><span class="p">,</span> <span class="s2">&quot;rotor&quot;</span><span class="p">]</span> <span class="c1"># Required</span>
@@ -258,7 +262,6 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 <span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="c1"># Compute performance at operation point</span>
@@ -294,7 +297,6 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 <span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="c1"># Compute performance at operation points</span>
@@ -328,20 +330,18 @@ at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</
 <span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="c1"># Compute performance at operation points</span>
 </pre></div>
 </div>
 </section>
-<section id="options-for-compute-performance">
-<span id="options"></span><h2>Options for compute_performance<a class="headerlink" href="#options-for-compute-performance" title="Link to this heading"></a></h2>
+<section id="export-results">
+<span id="options"></span><h2>Export results<a class="headerlink" href="#export-results" title="Link to this heading"></a></h2>
 <p>When calling <cite>turboflow.compute_performance()</cite>, there are some keyword arguments available:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
-    <span class="n">initial_guess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">out_dir</span> <span class="o">=</span> <span class="s2">&quot;output&quot;</span><span class="p">,</span>
     <span class="n">out_filename</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -349,22 +349,6 @@ at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The <strong>initial_guess</strong> variable is used for the first operation point. If given, it must be a dictionary with the following keys:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><cite>enthalpy_loss_fractions</cite>: a list of assumed fractions of enthalpy loss that occurs for each cascade.</p></li>
-<li><p><cite>eta_ts</cite>: the assumed total-to-static efficiency.</p></li>
-<li><p><cite>eta_tt</cite>: the assumed total-to-total efficiency.</p></li>
-<li><p><cite>Ma_crit</cite>: the assumed critical mash number.</p></li>
-</ul>
-</div></blockquote>
-<p>Alternatively, it can be a comprehensive dictionary with the full set of initial guesses directly supplied to the solver.
-This requires careful attention to ensure the initial guess aligns with the entire configuration file, necessitating a
-thorough understanding of the various variables and setup. If an initial guess is not provided, a default guess will be
-used. For subsequent operation points, the function leverages the solution from the nearest previously computed operation
-point as the initial guess. This strategy is based on the heuristic that similar operation points tend to exhibit similar
-performance characteristics, thereby enhancing the speed and robustness of the convergence process.In cases where the
-solution fails to converge, a range of initial guesses is utilized to attempt alternative solutions.</p>
 <p>If <strong>export_results</strong> is set to True, the simulation data is exported as an Excel file. The file is saved either to a
 specified directory (<strong>out_dir</strong>) or to the default directory “output”. The default filename (<strong>out_filename</strong>) is <cite>performance_analysis_{current_time}</cite>,
 where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minute}_{second}</cite>.</p>

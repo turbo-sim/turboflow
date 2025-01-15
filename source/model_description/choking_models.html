@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Choking models &mdash; turboflow v0.1.12 documentation</title>
+  <title>Choking criterion &mdash; turboflow v0.1.12 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -65,9 +65,9 @@
 <li class="toctree-l2"><a class="reference internal" href="loss_coefficients.html">Loss coefficients</a></li>
 <li class="toctree-l2"><a class="reference internal" href="loss_models.html">Loss models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Choking models</a><ul>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Choking criterion</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#isentropic-throat-model">Isentropic throat model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#calculate-critical-state-model">Calculate critical state model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#calculate-maximum-mass-flow-rate">Calculate maximum mass flow rate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#evaluate-cascade-throat-model">Evaluate cascade throat model</a></li>
 </ul>
 </li>
@@ -95,7 +95,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../model_description.html">Model Description</a></li>
-      <li class="breadcrumb-item active">Choking models</li>
+      <li class="breadcrumb-item active">Choking criterion</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/source/model_description/choking_models.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -105,8 +105,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="choking-models">
-<span id="id1"></span><h1>Choking models<a class="headerlink" href="#choking-models" title="Link to this heading"></a></h1>
+  <section id="choking-criterion">
+<span id="choking-models"></span><h1>Choking criterion<a class="headerlink" href="#choking-criterion" title="Link to this heading"></a></h1>
 <p>The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following.</p>
 <section id="isentropic-throat-model">
 <span id="isentropic-throat"></span><h2>Isentropic throat model<a class="headerlink" href="#isentropic-throat-model" title="Link to this heading"></a></h2>
@@ -134,8 +134,8 @@
 <p>When the term to the right is zero (isentropic), the mach number is unity for an accelerating flow at the most narrow section (<span class="math notranslate nohighlight">\(dA = 0\)</span>). In order for this model to be consitent, the throat entropy must be set equal to
 the entropy at the inlet of the plane. However, when assuming an isentropic throat, the critical mass flow rate will be overestimated.</p>
 </section>
-<section id="calculate-critical-state-model">
-<span id="evaluate-cascade-critical"></span><h2>Calculate critical state model<a class="headerlink" href="#calculate-critical-state-model" title="Link to this heading"></a></h2>
+<section id="calculate-maximum-mass-flow-rate">
+<span id="evaluate-cascade-critical"></span><h2>Calculate maximum mass flow rate<a class="headerlink" href="#calculate-maximum-mass-flow-rate" title="Link to this heading"></a></h2>
 <p>This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat.
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:</p>
 <div class="math notranslate nohighlight">
@@ -167,10 +167,19 @@ the throat mach number equals the critical mach number:</p>
     &amp; \beta_\text{out} = \beta_\text{deviation model} \text{    } &amp;&amp; \text{if } \text{Ma}_\text{out}&lt;\text{Ma}^* \\
     &amp; \mathrm{Ma_{throat}} = \text{Ma}^* &amp;&amp; \text{if } \text{Ma}_\text{out} \ge \text{Ma}^*
 \end{align}\end{split}\]</div>
-<p>The critical mach number is calculated from a correlation for the critical mach number as a function of the loss coefficient. The correlation is developed using an algebraic nozzle model to calulate the critical mach
-number for different values of the loss coefficient, and use linear regression.</p>
+<p>The critical mach number is calculated by an analytical equation valid for perfect gas behaviour:</p>
 <div class="math notranslate nohighlight">
-\[\]</div>
+\[\text{Ma}^*=\left(\frac{2}{\gamma-1}\right)^{1/2}\left[\frac{4 \alpha-2}{(2 \alpha+\phi^2-3) + \sqrt{(1+\phi^2)^{2}+4 \alpha(1+\alpha-3 \phi^2)}} - 1\right]^{1/2}\]</div>
+<p>where</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\mathrm{Ma}\)</span> is the mach number.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Delta \phi = 1-\phi^2\)</span> is the kinetic energy loss coefficient.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span> is the specific heat ratio.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha = \gamma/(\gamma -1)\)</span> (for simplicity).</p></li>
+<li><p>Superscript <span class="math notranslate nohighlight">\(^*\)</span> refer to the critical state.</p></li>
+</ul>
+</div></blockquote>
 </section>
 </section>
 
