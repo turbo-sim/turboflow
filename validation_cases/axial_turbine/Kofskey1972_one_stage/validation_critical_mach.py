@@ -9,8 +9,8 @@ save_figs = True
 error_bars = False
 
 # Load performance data
-filename_1 = "output/performance_analysis_2024-09-05_11-28-10.xlsx" # Critical mach
-filename_2 = "output/performance_analysis_2024-03-13_23-14-55.xlsx" # Critical mass flow
+filename_1 = "results/performance_analysis_2024-09-05_11-28-10.xlsx" # Critical mach
+filename_2 = "results/performance_analysis_2024-03-13_23-14-55.xlsx" # Critical mass flow
 
 data_1 = tf.plot_functions.load_data(filename_1)
 data_2 = tf.plot_functions.load_data(filename_2)
