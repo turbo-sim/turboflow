@@ -67,7 +67,7 @@
 <li class="toctree-l2"><a class="reference internal" href="deviation_models.html">Deviation models</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Choking criterion</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#isentropic-throat">Isentropic throat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#calculate-maximum-mass-flow-rate">Calculate maximum mass flow rate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#maximum-mass-flow-rate">Maximum mass flow rate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#critical-mach-number">Critical mach number</a></li>
 </ul>
 </li>
@@ -134,8 +134,8 @@
 <p>When the term to the right is zero (isentropic), the mach number is unity for an accelerating flow at the most narrow section (<span class="math notranslate nohighlight">\(dA = 0\)</span>). In order for this model to be consitent, the throat entropy must be set equal to
 the entropy at the inlet of the plane. However, when assuming an isentropic throat, the critical mass flow rate will be overestimated.</p>
 </section>
-<section id="calculate-maximum-mass-flow-rate">
-<span id="evaluate-cascade-critical"></span><h2>Calculate maximum mass flow rate<a class="headerlink" href="#calculate-maximum-mass-flow-rate" title="Link to this heading"></a></h2>
+<section id="maximum-mass-flow-rate">
+<span id="evaluate-cascade-critical"></span><h2>Maximum mass flow rate<a class="headerlink" href="#maximum-mass-flow-rate" title="Link to this heading"></a></h2>
 <p>This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat.
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:</p>
 <div class="math notranslate nohighlight">

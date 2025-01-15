@@ -41,8 +41,8 @@ the entropy at the inlet of the plane. However, when assuming an isentropic thro
 
 .. _evaluate_cascade_critical:
 
-Calculate maximum mass flow rate
----------------------------------
+Maximum mass flow rate
+-----------------------
 
 This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat. 
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:
