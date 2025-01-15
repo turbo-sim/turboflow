@@ -45,7 +45,7 @@ This section describes the different configuration options available in TurboFlo
     - `ainley_mathieson`:  see :ref:`ainley_mathieson` for model details.
     - `zero_deviation`: see :ref:`zero_deviation` for model details.
 
-.. dropdown:: Choking criterion
+.. dropdown:: Choking Criterion
     :animate: fade-in-slide-down
 
     These are the valid choking citerion options:
