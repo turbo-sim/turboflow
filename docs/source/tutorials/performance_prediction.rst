@@ -24,7 +24,6 @@ Illustrated by a code example:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Evaluate turbomachinery
@@ -67,7 +66,7 @@ while the rest is optional. Here is an example of how the confiugration file cou
 
     simulation_options: # Optional
         deviation_model : aungier  # Optional
-        choking_model : evaluate_cascade_critical # Optional
+        choking_criterion : critical_mach_number # Optional
         rel_step_fd: 1e-4  # Optional
         loss_model:  # Optional
             model: benner  # Optional
@@ -96,6 +95,11 @@ while the rest is optional. Here is an example of how the confiugration file cou
             derivative_abs_step: 1e-6  # Optional
             print_convergence: True # Optional
             plot_convergence: False # Optional
+        initial_guess :
+            efficiency_tt : [0.9, 0.8] 
+            efficiency_ke : [0.2, 0.1]
+            ma_1 : [0.8, 0.8]
+            ma_2 : [0.8, 0.8]
 
     geometry: # Required
         cascade_type: ["stator", "rotor"] # Required
@@ -161,7 +165,6 @@ After loading the configuration file, the operation point is extracted from the 
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation point
@@ -202,7 +205,6 @@ After loading the configuration file, the operation points are extracted from th
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation points
@@ -244,14 +246,13 @@ After loading the configuration file, the performance map is extracted from the 
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation points
 
 .. _options:
 
-Options for compute_performance
+Export results
 ---------------------------------------
 When calling `turboflow.compute_performance()`, there are some keyword arguments available:
 
@@ -260,27 +261,11 @@ When calling `turboflow.compute_performance()`, there are some keyword arguments
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         out_dir = "output",
         out_filename = None,
         stop_on_failure=False,
     ) 
-
-The **initial_guess** variable is used for the first operation point. If given, it must be a dictionary with the following keys:
-
-        - `enthalpy_loss_fractions`: a list of assumed fractions of enthalpy loss that occurs for each cascade.
-        - `eta_ts`: the assumed total-to-static efficiency.
-        - `eta_tt`: the assumed total-to-total efficiency.
-        - `Ma_crit`: the assumed critical mash number.
-
-Alternatively, it can be a comprehensive dictionary with the full set of initial guesses directly supplied to the solver. 
-This requires careful attention to ensure the initial guess aligns with the entire configuration file, necessitating a 
-thorough understanding of the various variables and setup. If an initial guess is not provided, a default guess will be 
-used. For subsequent operation points, the function leverages the solution from the nearest previously computed operation 
-point as the initial guess. This strategy is based on the heuristic that similar operation points tend to exhibit similar 
-performance characteristics, thereby enhancing the speed and robustness of the convergence process.In cases where the 
-solution fails to converge, a range of initial guesses is utilized to attempt alternative solutions.
 
 If **export_results** is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
 specified directory (**out_dir**) or to the default directory “output”. The default filename (**out_filename**) is `performance_analysis_{current_time}`, 

@@ -55,7 +55,7 @@ The remaining input is optional. Here is an example of how the configuration fil
 
     simulation_options: # Optional
         deviation_model : aungier  # Optional
-        choking_model : evaluate_cascade_critical # Optional
+        choking_criterion : critical_mach_number # Optional
         rel_step_fd: 1e-4  # Optional
         loss_model:  # Optional
             model: benner  # Optional
@@ -214,12 +214,11 @@ To compute the optimal turbine, simply provide the configuration file to the fun
 
     CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
     config = tf.load_config(CONFIG_FILE) # Load configuration file 
-
     solver = tf.compute_optimal_turbine(
         out_filename=None,
         out_dir="output",
         export_results=True,
-    ):
+    )
 
 If `export_results` is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
 specified directory (`out_dir`) or to the default directory "output". The default filename (`out_filename`) is `design_optimization_{current_time}`, 
@@ -257,7 +256,7 @@ from the solution of optimization problem:
         export_results=True,
     ):
     
-    fig, ax = tf.plot_functions.plot_velocity_triangles(solvers.problem.results["plane"])
+    fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solvers.problem.results["plane"])
 
 Here is an example of how the velocity triangle plots looks:
 

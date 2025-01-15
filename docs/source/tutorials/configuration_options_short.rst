@@ -45,14 +45,14 @@ This section describes the different configuration options available in TurboFlo
     - `ainley_mathieson`:  see :ref:`ainley_mathieson` for model details.
     - `zero_deviation`: see :ref:`zero_deviation` for model details.
 
-.. dropdown:: Choking Models
+.. dropdown:: Choking criterion
     :animate: fade-in-slide-down
 
-    These are the valid choking model options:
+    These are the valid choking citerion options:
 
-    - `evaluate_cascade_critical`: see :ref:`evaluate_cascade_critical` for model details.
-    - `evaluate_cascade_throat`: see :ref:`evaluate_throat` for model details.
-    - `evaluate_cascade_isentropic_throat`: see :ref:`isentropic_throat` for model details.
+    - `critical_mass_flow_rate`: see :ref:`evaluate_cascade_critical` for model details.
+    - `critical_mach_number`: see :ref:`evaluate_throat` for model details.
+    - `critical_isentropic_throat`: see :ref:`isentropic_throat` for model details.
 
 
 .. dropdown:: Objective Functions
