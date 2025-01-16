@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Performance prediction &mdash; turboflow v0.1.12 documentation</title>
+  <title>Performance prediction &mdash; turboflow v0.1.14 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -18,7 +18,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=825059f5"></script>
+        <script src="../../_static/documentation_options.js?v=eda14d21"></script>
         <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script>let toggleHintShow = 'Click to show';</script>
@@ -273,17 +273,17 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 <p>To perform performance prediction at a set of operation points, the <cite>operation_points</cite> section in the configuration file should be a list of operating points:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">operation_points</span><span class="p">:</span>
     <span class="o">-</span> <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># First point</span>
-        <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
-        <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
-        <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">2.0</span>
-        <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
-        <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+      <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+      <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+      <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">2.0</span>
+      <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+      <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
     <span class="o">-</span> <span class="n">fluid_name</span><span class="p">:</span> <span class="n">air</span> <span class="c1"># Second point</span>
-        <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
-        <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
-        <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">3.0</span>
-        <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
-        <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
+      <span class="n">T0_in</span><span class="p">:</span> <span class="mf">295.6</span>
+      <span class="n">p0_in</span><span class="p">:</span> <span class="mf">13.8e4</span>
+      <span class="n">p_out</span> <span class="p">:</span> <span class="mf">13.8e4</span><span class="o">/</span><span class="mf">3.0</span>
+      <span class="n">omega</span><span class="p">:</span> <span class="mi">1627</span>
+      <span class="n">alpha_in</span><span class="p">:</span> <span class="mi">0</span>
 </pre></div>
 </div>
 <p>After loading the configuration file, the operation points are extracted from the configuration file, and provided to <cite>turboflow.compute_performance</cite>:</p>
@@ -326,7 +326,7 @@ at 90%, 100% and 110% of the design angular speed (<cite>omega</cite> = 1627).</
 
 <span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
-<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;perfomance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;perfomance_map&quot;</span><span class="p">]</span> <span class="c1"># Extract perfomance map</span>
+<span class="n">operation_points</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;performance_map&quot;</span><span class="p">]</span> <span class="c1"># Extract perfomance map</span>
 <span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
     <span class="n">operation_points</span><span class="p">,</span>
     <span class="n">config</span><span class="p">,</span>
@@ -366,9 +366,10 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
 </div></blockquote>
 <p>The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (<cite>x_key</cite> and <cite>y_key</cite>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span> <span class="c1"># datset</span>
@@ -376,11 +377,13 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
     <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span> <span class="c1"># y-axis key</span>
     <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio&quot;</span><span class="p">,</span> <span class="c1"># axis x-label</span>
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span> <span class="c1"># axis y-label</span>
-    <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="c1"># axis title</span>
-    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
-    <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Turbine mass flow rate&quot;</span><span class="p">,</span> <span class="c1"># axis title</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;figures&quot;</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
     <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>The subsequent subsections gives a more detailed description of how to setup up the various plots.</p>
@@ -388,9 +391,10 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
 <span id="single-line"></span><h3>Plot single line<a class="headerlink" href="#plot-single-line" title="Link to this heading"></a></h3>
 <p>To plot a single line, simply specify the list <cite>y_keys</cite> with one key:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span> <span class="c1"># datset</span>
@@ -398,20 +402,23 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
     <span class="n">y_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">],</span> <span class="c1"># y-axis key</span>
     <span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;Total-to-static pressure ratio&quot;</span><span class="p">,</span> <span class="c1"># axis x-label</span>
     <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Mass flow rate [kg/s]&quot;</span><span class="p">,</span> <span class="c1"># axis y-label</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Mass flow rate&quot;</span><span class="p">,</span> <span class="c1"># axis title</span>
-    <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
-    <span class="n">outdir</span><span class="o">=</span><span class="n">outdir</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Turbine mass flow rate&quot;</span><span class="p">,</span> <span class="c1"># axis title</span>
+    <span class="n">filename</span><span class="o">=</span><span class="s2">&quot;mass_flow_rate&quot;</span><span class="p">,</span> <span class="c1"># filename if figure should be saved</span>
+    <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;figures&quot;</span><span class="p">,</span> <span class="c1"># output directory if figure should be saved</span>
     <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Note that if the excel file contain a whole performance map (e.g. a range of pressure ratios and
 angular speed), it is convenient to filter out a subset of this file (e.g. results at one specific angular speed). Here is an example, where
 the data is filtered based on a specific angular speed:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="c1"># Plot mass flow rate</span>
 <span class="n">subsets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">,</span> <span class="mi">1627</span><span class="p">]</span>
@@ -427,6 +434,8 @@ the data is filtered based on a specific angular speed:</p>
     <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
     <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p><cite>subsets</cite> is used to filter a subset of the original dataset. It is constructed as a list, where the first element is
@@ -439,9 +448,10 @@ parameter that you want to include in your subset.</p>
 <span id="id3"></span><h3>Plot several lines<a class="headerlink" href="#plot-several-lines" title="Link to this heading"></a></h3>
 <p>To plot several lines, To plot a single line, simply specify the list <cite>y_keys</cite> with several keys:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="c1"># Plot mass flow rate</span>
 <span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">,</span> <span class="mi">1627</span><span class="p">]</span>
@@ -460,6 +470,8 @@ parameter that you want to include in your subset.</p>
     <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
     <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>This example would give the following figure:</p>
@@ -468,9 +480,11 @@ parameter that you want to include in your subset.</p>
 values for the selected parameter. In this example, the mass flow
 rate is plotted as a function of total-to-static pressure ratio, at different subsets of angular speed:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="c1"># Plot mass flow rate</span>
 <span class="n">subsets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mi">1627</span><span class="p">)</span>
@@ -487,6 +501,8 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
     <span class="n">outdir</span> <span class="o">=</span> <span class="s2">&quot;figures&quot;</span><span class="p">,</span>
     <span class="n">save_figs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>resulting in this figure:</p>
@@ -497,12 +513,13 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
 <p>Stacked plots can be convenient to illustrate the different loss coefficients at different operating points. Stacked plots
 are made by specifying <cite>stack = True</cite></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
-<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_function</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
+<span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;output/performance_analysis_2024-01-01_01-01-01.xlsx&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="c1"># Load results data</span>
 
 <span class="c1"># Plot mass flow rate</span>
-<span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">[</span><span class="mi">1627</span><span class="p">]</span>
+<span class="n">subset</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1627</span><span class="p">]</span>
 <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Profile losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Tip clearance losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Secondary flow losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Trailing edge losses&quot;</span><span class="p">,</span> <span class="s2">&quot;Incidence losses&quot;</span><span class="p">]</span>
 <span class="n">fig1</span><span class="p">,</span> <span class="n">ax1</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_lines</span><span class="p">(</span>
     <span class="n">data</span><span class="p">,</span>
@@ -524,6 +541,8 @@ are made by specifying <cite>stack = True</cite></p>
     <span class="n">outdir</span><span class="o">=</span><span class="s2">&quot;figures&quot;</span><span class="p">,</span>
     <span class="n">save_figs</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>This would result in this figure:</p>

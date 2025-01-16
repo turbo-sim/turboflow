@@ -179,17 +179,17 @@ To perform performance prediction at a set of operation points, the `operation_p
 
     operation_points: 
         - fluid_name: air # First point
-            T0_in: 295.6
-            p0_in: 13.8e4
-            p_out : 13.8e4/2.0
-            omega: 1627
-            alpha_in: 0
+          T0_in: 295.6
+          p0_in: 13.8e4
+          p_out : 13.8e4/2.0
+          omega: 1627
+          alpha_in: 0
         - fluid_name: air # Second point
-            T0_in: 295.6
-            p0_in: 13.8e4
-            p_out : 13.8e4/3.0
-            omega: 1627
-            alpha_in: 0
+          T0_in: 295.6
+          p0_in: 13.8e4
+          p_out : 13.8e4/3.0
+          omega: 1627
+          alpha_in: 0
 
 After loading the configuration file, the operation points are extracted from the configuration file, and provided to `turboflow.compute_performance`:
 
@@ -242,7 +242,7 @@ After loading the configuration file, the performance map is extracted from the 
 
     CONFIG_FILE = os.path.abspath("my_configuration.yaml")
     config = tf.load_config(CONFIG_FILE) # Load configuration file
-    operation_points = config["perfomance_analysis"]["perfomance_map"] # Extract perfomance map
+    operation_points = config["performance_analysis"]["performance_map"] # Extract perfomance map
     solvers = tf.compute_performance(
         operation_points,
         config,
@@ -289,9 +289,10 @@ The plots are made by loading the Excel file with the simulated data, and specif
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data, # datset  
@@ -299,11 +300,13 @@ The plots are made by loading the Excel file with the simulated data, and specif
         y_keys=["mass_flow_rate"], # y-axis key
         xlabel="Total-to-static pressure ratio", # axis x-label
         ylabel="Mass flow rate [kg/s]", # axis y-label
-        title=title, # axis title
-        filename=filename, # filename if figure should be saved
-        outdir=outdir, # output directory if figure should be saved
+        title="Turbine mass flow rate", # axis title
+        filename="mass_flow_rate", # filename if figure should be saved
+        outdir="figures", # output directory if figure should be saved
         save_figs=True,
     )
+
+    plt.show()
 
 The subsequent subsections gives a more detailed description of how to setup up the various plots. 
 
@@ -317,9 +320,10 @@ To plot a single line, simply specify the list `y_keys` with one key:
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data, # datset  
@@ -327,11 +331,13 @@ To plot a single line, simply specify the list `y_keys` with one key:
         y_keys=["mass_flow_rate"], # y-axis key
         xlabel="Total-to-static pressure ratio", # axis x-label
         ylabel="Mass flow rate [kg/s]", # axis y-label
-        title="Mass flow rate", # axis title
-        filename=filename, # filename if figure should be saved
-        outdir=outdir, # output directory if figure should be saved
+        title="Turbine mass flow rate", # axis title
+        filename="mass_flow_rate", # filename if figure should be saved
+        outdir="figures", # output directory if figure should be saved
         save_figs=True,
     )
+
+    plt.show()
 
 Note that if the excel file contain a whole performance map (e.g. a range of pressure ratios and
 angular speed), it is convenient to filter out a subset of this file (e.g. results at one specific angular speed). Here is an example, where 
@@ -340,9 +346,10 @@ the data is filtered based on a specific angular speed:
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subsets = ["omega", 1627]
@@ -358,6 +365,8 @@ the data is filtered based on a specific angular speed:
         outdir = "figures",
         save_figs=True,
     )
+
+    plt.show()
 
 `subsets` is used to filter a subset of the original dataset. It is constructed as a list, where the first element is 
 a string that specifies the parameter you want to use to filter the data. The subsequent elements are the values of the selected
@@ -378,9 +387,10 @@ To plot several lines, To plot a single line, simply specify the list `y_keys` w
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subset = ["omega", 1627] 
@@ -400,6 +410,8 @@ To plot several lines, To plot a single line, simply specify the list `y_keys` w
         save_figs=True,
     )
 
+    plt.show()
+
 This example would give the following figure:
 
 .. image:: ../images/static_pressure.png
@@ -412,9 +424,11 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subsets = ["omega"] + list(np.array([0.7, 0.9, 1])*1627)
@@ -432,6 +446,8 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
         save_figs=True,
     )
 
+    plt.show()
+
 resulting in this figure:
 
 .. image:: ../images/mass_flow_rate.png
@@ -448,12 +464,13 @@ are made by specifying `stack = True`
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
-    subset = ["omega"] + list[1627]
+    subset = ["omega"] + [1627]
     labels = ["Profile losses", "Tip clearance losses", "Secondary flow losses", "Trailing edge losses", "Incidence losses"]
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
@@ -475,6 +492,8 @@ are made by specifying `stack = True`
         outdir="figures",
         save_figs = True,
     )
+
+    plt.show()
 
 This would result in this figure:
 
