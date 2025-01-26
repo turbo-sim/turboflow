@@ -55,7 +55,7 @@ The remaining input is optional. Here is an example of how the configuration fil
 
     simulation_options: # Optional
         deviation_model : aungier  # Optional
-        choking_model : evaluate_cascade_critical # Optional
+        choking_criterion : critical_mach_number # Optional
         rel_step_fd: 1e-4  # Optional
         loss_model:  # Optional
             model: benner  # Optional
@@ -126,19 +126,19 @@ The remaining input is optional. Here is an example of how the configuration fil
                 value : [0.83, 0.17]
                 lower_bound : [0.72, 0.06]
                 upper_bound : [0.94, 0.28]
-            v*_in : # Optional
+            v_crit_in : # Optional
                 value : [0.4, 0.4]
                 lower_bound : [0.1, 0.1]
                 upper_bound : [1.0, 1.0]
-            beta*_throat : # Optional
+            beta_crit_throat : # Optional
                 value : [0.83, 0.17]
                 lower_bound : [0.72, 0.06]
                 upper_bound : [0.94, 0.28]
-            w*_throat : # Optional
+            w_crit_throat : # Optional
                 value : [0.65, 0.65]
                 lower_bound : [0.1, 0.1]
                 upper_bound : [1.0, 1.0]
-            s*_throat : # Optional
+            s_crit_throat : # Optional
                 value : [0.15, 0.15]
                 lower_bound : [0.0, 0.0]
                 upper_bound : [0.32, 0.32]
@@ -154,24 +154,25 @@ The remaining input is optional. Here is an example of how the configuration fil
                 value : ["stator", "rotor"]
         constraints : # Optional
             - variable : overall.mass_flow_rate  # Optional
-                type : "="
-                value : 2.5
-                normalize : True 
-            - variable : additional_constraints.interstage_flaring  # Optional
-                type : "="
-                value : 1
-                normalize : True
+              type : "="
+              value : 2.5
+              normalize : True 
+            - variable : additional_constraints.interspace_area_ratio  # Optional
+              type : "="
+              value : 1
+              normalize : True
         radius_type : "constant_mean" # Optional
         solver_options: # Optional
-            library: pygmo # Optional
-            method: ipopt # Optional
-            tolerance: 1e-3 # Optional
-            max_iterations: 100 # Optional
+            library: scipy # Optional
+            method: slsqp # Optional
             derivative_method: 2-point # Optional
             derivative_abs_step: 1e-6 # Optional
             print_convergence: True # Optional
             plot_convergence: True # Optional
             update_on: "gradient" # Optional
+            options : # Optional
+                tol: 1e-3 # Optional
+                max_iter: 100 # Optional
 
 The `design_optimization` section contains information on the objective function, constraints and design variables:
 
@@ -214,12 +215,11 @@ To compute the optimal turbine, simply provide the configuration file to the fun
 
     CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
     config = tf.load_config(CONFIG_FILE) # Load configuration file 
-
     solver = tf.compute_optimal_turbine(
         out_filename=None,
         out_dir="output",
         export_results=True,
-    ):
+    )
 
 If `export_results` is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
 specified directory (`out_dir`) or to the default directory "output". The default filename (`out_filename`) is `design_optimization_{current_time}`, 
@@ -257,7 +257,7 @@ from the solution of optimization problem:
         export_results=True,
     ):
     
-    fig, ax = tf.plot_functions.plot_velocity_triangles(solvers.problem.results["plane"])
+    fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solver.problem.results["plane"])
 
 Here is an example of how the velocity triangle plots looks:
 
@@ -287,7 +287,7 @@ from the solution of the optimization problem:
         export_results=True,
     ):
 
-    fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers.problem.geometry)
+    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
 
 Here is an example of how the plot look:
 

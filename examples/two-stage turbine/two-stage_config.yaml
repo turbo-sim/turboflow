@@ -8,7 +8,7 @@ operation_points:
   omega: 1627              # Rotational speed
 
 simulation_options:
-  choking_citerion : evaluate_cascade_critical 
+  choking_criterion : critical_mass_flow_rate 
   deviation_model : aungier
   rel_step_fd: 1e-3
   loss_model:
@@ -26,7 +26,7 @@ performance_analysis :
     alpha_in: 0 
   solver_options:
     method: hybr
-    tolerance: 1e-8
+    tolerance: 1e-6
     max_iterations: 100
     derivative_method: "2-point"
     derivative_abs_step: 1e-6  
@@ -36,7 +36,7 @@ performance_analysis :
     n_samples : 100
     efficiency_tt : (0.7, 0.99)
     efficiency_ke : (0.2, 0.6)
-    ma : (0.5, 1.2)
+    ma : (0.2, 1.2)
 
 
 geometry:

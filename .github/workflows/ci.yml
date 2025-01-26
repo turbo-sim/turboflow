@@ -104,7 +104,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install poetry
-        poetry install --no-dev
+        poetry install --only=main
 
     - name: Publish to PyPI
       env:

@@ -222,7 +222,7 @@ def compute_performance(
             out_filename = f"performance_analysis_{current_time}"
 
         # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+        config_data = {k: v for k, v in config.items() if v is not None}  # Filter empty entries
         config_data = utils.convert_numpy_to_python(config_data, precision=12)
         config_file = os.path.join(out_dir, f"{out_filename}.yaml")
         with open(config_file, "w") as file:

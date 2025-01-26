@@ -151,6 +151,7 @@ design_optimization:
       type : ">"
       value : -10
       normalize : True
+
   radius_type : "constant_mean"
   solver_options: 
     library: scipy 

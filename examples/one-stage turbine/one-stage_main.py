@@ -1,14 +1,8 @@
 import os
-import sys
-import copy
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define mode 
-MODE = "design_optimzation"
-# MODE = "performance_analysis"
+MODE = "performance_analysis"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
@@ -37,4 +31,6 @@ elif MODE == "design_optimzation":
 
     # Compute optimal turbine
     operation_points = config["operation_points"]
-    solver = tf.compute_optimal_turbine(config, export_results=False)
+    solver = tf.compute_optimal_turbine(config, export_results=True)
+    fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
+    fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solver.problem.results["plane"])

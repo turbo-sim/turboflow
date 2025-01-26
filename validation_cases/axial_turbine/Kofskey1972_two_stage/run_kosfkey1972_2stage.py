@@ -12,7 +12,7 @@ import turboflow as tf
 import copy
 
 # Define running option
-CASE = 0
+CASE = 1
 # Load configuration file
 CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
@@ -83,15 +83,15 @@ if CASE == 0:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=x0,
         export_results=True,
         stop_on_failure=True,
     )
 
+
 elif CASE == 1:
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
-    solvers = tf.compute_performance(operation_points, config, initial_guess=x0)
+    solvers = tf.compute_performance(operation_points, config,  export_results=True)
 
 elif CASE == 2:
 
@@ -112,3 +112,10 @@ elif CASE == 2:
 
     # Compute performance at experimental operating points
     tf.compute_performance(operation_points, config, initial_guess=x0)
+
+elif CASE == 3:
+
+    operation_points = config["operation_points"]
+    solver = tf.compute_optimal_turbine(config, export_results=False)
+    solver.problem.optimization_process.export_optimization_process(config)
+    tf.save_to_pickle(solver, filename = "pickle_sga", out_dir = "output")

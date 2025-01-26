@@ -431,14 +431,14 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Initialize initial guess
         initial_guess = self.index_variables(design_variables)
         self.design_variables_keys = list(initial_guess.keys())
-        self.initial_guess = np.array(list(initial_guess.values()))
+        self.initial_guesses = [np.array(list(initial_guess.values()))]
 
         # Index fixed variables
         self.fixed_params = self.index_variables(fixed_params)
 
         # Initialize bounds
         lb, ub = self.get_given_bounds(design_variables)
-        self.bounds = (lb, ub)            
+        self.bounds = (lb, ub)          
 
         # Set initial guess for root finder
         self.x0 = config["performance_analysis"]["initial_guess"]
