@@ -12,7 +12,7 @@ import turboflow as tf
 CASE = 2
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("kofskey1972_2stage.yaml")
+CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 if CASE == 1:
@@ -24,9 +24,9 @@ if CASE == 1:
 
 elif CASE == 2:
     operation_points = config["operation_points"]
-    solver = tf.compute_optimal_turbine(config, export_results=True)
+    solver = tf.compute_optimal_turbine(config, export_results=False)
     # solver.problem.optimization_process.export_optimization_process(config)
-    tf.save_to_pickle(solver, filename = f"pickle_2stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
+    # tf.save_to_pickle(solver, filename = f"pickle_2stage_{config['design_optimization']['solver_options']['method']}", out_dir = "output")
 
 elif CASE == 3:
 
