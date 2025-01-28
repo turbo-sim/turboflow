@@ -343,18 +343,18 @@ if __name__ == '__main__':
         ax_1.plot(states['radius_ratio'], states['T'], label=f"$C_f = {Cf:0.3f}$", color=colors[i])
         ax_1.legend(loc='lower right')
 
-        # # Plot the Mach number distribution
-        # ax_2.plot(states['radius_ratio'], states['Ma'], label=f"$C_f = {Cf:0.3f}$", color=colors[i])
-        # ax_2.legend(loc='upper right')
+        # Plot the Mach number distribution
+        ax_2.plot(states['radius_ratio'], states['Ma'], label=f"$C_f = {Cf:0.3f}$", color=colors[i])
+        ax_2.legend(loc='upper right')
 
-        # # Plot streamlines
-        # for j in range(len(theta)):
-        #     x = states['r'] * np.cos(states['theta'] + theta[j])
-        #     y = states['r'] * np.sin(states['theta'] + theta[j])
-        #     if j == 0:
-        #         plt.plot(x, y, label=f"$C_f = {Cf:0.3f}$", color=colors[i])
-        #     else:
-        #         plt.plot(x, y, color=colors[i])
+        # Plot streamlines
+        for j in range(len(theta)):
+            x = states['r'] * np.cos(states['theta'] + theta[j])
+            y = states['r'] * np.sin(states['theta'] + theta[j])
+            if j == 0:
+                plt.plot(x, y, label=f"$C_f = {Cf:0.3f}$", color=colors[i])
+            else:
+                plt.plot(x, y, color=colors[i])
 
 
 
