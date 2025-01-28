@@ -37,7 +37,7 @@ performance_analysis :
     max_iterations: 100
     derivative_method: "2-point"
     derivative_abs_step: 1e-6  
-    print_convergence: False
+    print_convergence: True
     plot_convergence: False
   initial_guess :
     n_samples : 100
@@ -53,12 +53,14 @@ geometry:
   radius_tip_out : [0.118415, 0.121325, 0.124015, 0.127195]                                                
   pitch: [1.8294e-2, 1.524e-2, 1.484e-2, 1.451e-2]                              
   chord: [2.616e-2, 2.606e-2, 2.182e-2, 2.408e-2]                               
-  maximum_thickness: [0.505e-2, 0.447e-2, 0.328e-2, 0.280e-2]                       
+  # maximum_thickness: [0.505e-2, 0.447e-2, 0.328e-2, 0.280e-2] 
+  maximum_thickness : [0.00475402, 0.00461979, 0.00375273, 0.00391366]                      
   opening: [0.747503242e-2, 0.735223377e-2, 0.803714627e-2, 0.963363217e-2]
   leading_edge_wedge_angle: [50.0, 50.0, 50.0, 50.0]                                                          
   leading_edge_diameter: [2*0.127e-2, 2*0.081e-2, 2*0.097e-2, 2*0.081e-2]                
   trailing_edge_thickness: [0.050e-2, 0.050e-2, 0.050e-2, 0.050e-2]                        
-  stagger_angle: [43.03, -31.05, 28.72, -21.75]                                 
+  # stagger_angle: [43.03, -31.05, 28.72, -21.75]   
+  stagger_angle : [ 33.1913617,  -30.24566208,  29.1492884,  -24.43371029]                              
   leading_edge_angle: [0.0, 29.6, -26.1, 13.9]                                      
   tip_clearance: [0.0, 0.030e-2,0.0,0.038e-2]                                   
   throat_location_fraction: [5/6, 5/6, 5/6, 5/6]

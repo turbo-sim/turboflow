@@ -1,14 +1,14 @@
 .. _choking_models:
 
-Choking models
+Choking criterion
 ======================
 
 The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following. 
 
 .. _isentropic_throat:
 
-Isentropic throat model
-------------------------------
+Isentropic throat
+------------------
 
 This model predict choked flow by evaluating the throat of the cascade, and set the mach number to be equal to the exit plane at subsonic conditions, and equal to one at supersonic conditions:  
 
@@ -41,8 +41,8 @@ the entropy at the inlet of the plane. However, when assuming an isentropic thro
 
 .. _evaluate_cascade_critical:
 
-Calculate critical state model
-------------------------------
+Maximum mass flow rate
+-----------------------
 
 This model predict choked flow by calculating the maximum mass flow rate at the throat section of the cascade, and thereby the critical state at the throat, while consdering losses at the throat. 
 When the exit plane mach number is less than the critical, the flow angle is settled by a deviation model, while at supercritical flow, the flow angle is calculated from the critical mass flow rate:
@@ -68,8 +68,8 @@ where
 
 .. _evaluate_throat:
 
-Evaluate cascade throat model
-------------------------------
+Critical mach number
+---------------------
 
 This model predict choked flow by evaluating the throat of the cascade, and set the flow angle at the exit plane according to the deviation model at subsonic conditions, while at supersonic conditions the
 the throat mach number equals the critical mach number:
@@ -82,10 +82,21 @@ the throat mach number equals the critical mach number:
     \end{align}
 
 
-The critical mach number is calculated from a correlation for the critical mach number as a function of the loss coefficient. The correlation is developed using an algebraic nozzle model to calulate the critical mach
-number for different values of the loss coefficient, and use linear regression. 
+The critical mach number is calculated by an analytical equation valid for perfect gas behaviour:
 
 .. math::
+
+    \text{Ma}^*=\left(\frac{2}{\gamma-1}\right)^{1/2}\left[\frac{4 \alpha-2}{(2 \alpha+\phi^2-3) + \sqrt{(1+\phi^2)^{2}+4 \alpha(1+\alpha-3 \phi^2)}} - 1\right]^{1/2}
+
+where 
+
+    - :math:`\mathrm{Ma}` is the mach number.
+    - :math:`\Delta \phi = 1-\phi^2` is the kinetic energy loss coefficient. 
+    - :math:`\gamma` is the specific heat ratio.
+    - :math:`\alpha = \gamma/(\gamma -1)` (for simplicity).
+    - Superscript :math:`^*` refer to the critical state. 
+
+
 
 
 

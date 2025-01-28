@@ -25,27 +25,17 @@ performance_analysis :
     alpha_in: 0 
   solver_options: 
     method: hybr  
-    tolerance: 1e-8  
+    tolerance: 1e-6  
     max_iterations: 100  
     derivative_method: 2-point  
     derivative_abs_step: 1e-6
-    print_convergence : False  
+    print_convergence : True  
     plot_convergence: False
   initial_guess :
     n_samples : 100
     efficiency_tt : (0.7, 0.99)
     efficiency_ke : (0.05, 0.4)
     ma : (0.4, 1.2)
-  # initial_guess :
-  #   efficiency_tt : [0.9, 0.8] 
-  #   efficiency_ke : [0.1, 0.1]
-  #   ma_1 : [0.8, 0.8]
-  #   ma_2 : [0.8, 0.8]
-  # initial_guess :
-  #   efficiency_tt : [0.9, 0.8]
-  #   efficiency_ke : [0.13888888888888884, 0.1785714285714286]
-  #   ma_1 : [0.8, 0.8]
-  #   ma_2 : [0.8, 0.8]
 
 
 geometry:
@@ -73,64 +63,127 @@ design_optimization:
     scale : 1
     type : maximize
   variables :
+    # specific_speed : # Limited 
+    #   value : 0.713756
+    #   lower_bound : 0.5
+    #   upper_bound : 1.5
+    # blade_jet_ratio : # Limited
+    #   value : 0.466501
+    #   lower_bound : 0.3
+    #   upper_bound : 0.8
+    # hub_tip_ratio_in :
+    #   value : [0.715999, 0.715999]
+    #   lower_bound : [0.6, 0.6]
+    #   upper_bound : [0.9, 0.9]
+    # hub_tip_ratio_out :
+    #   value : [0.715999, 0.674840]
+    #   lower_bound : [0.6, 0.6]
+    #   upper_bound : [0.9, 0.9]
+    # aspect_ratio :
+    #   # value : [1.285550, 1.402149]
+    #   value : [1.285550, 2.0]
+    #   lower_bound : [1.0, 1.0]
+    #   upper_bound : [2.0, 2.0]
+    # pitch_chord_ratio :
+    #   value : [0.699312, 0.584804]
+    #   lower_bound : [0.5, 0.5]
+    #   upper_bound : [1.10, 1.10]
+    # trailing_edge_thickness_opening_ratio : 
+    #   value : [0.066889, 0.068007]
+    #   lower_bound : [0.05, 0.05]
+    #   upper_bound : [0.2, 0.2]
+    # leading_edge_angle : # (-70-15)
+    #   # value : [0.5, 0.66444444]
+    #   value : [0.58333333, 0.66444444]
+    #   lower_bound : [0.11111111, 0.41666667]
+    #   upper_bound : [0.58333333, 0.88888889]
+    # gauging_angle : # (55-75)
+    #   value : [0.86601513, 0.16024573]
+    #   lower_bound : [0.80555556, 0.08333333]
+    #   upper_bound : [0.91666667, 0.19444444]
+    # v_in :
+    #   value : 0.22715060950254562
+    #   lower_bound : 0.001
+    #   upper_bound : 0.5
+    # w_out : 
+    #   value : [0.7560168311370046, 0.714178597145251]
+    #   lower_bound : [0.1, 0.1]
+    #   upper_bound : [1.0, 1.0]
+    # s_out : 
+    #   value : [0.02393594702543656, 0.07236629937075202]
+    #   lower_bound : [0.0, 0.0]
+    #   upper_bound : [0.32, 0.32]
+    # beta_out : 
+    #   value : [0.8650417242559838, 0.16150395974996423]
+    #   lower_bound : [0.72, 0.06]
+    #   upper_bound : [0.94, 0.28]
+    # w_crit_throat : 
+    #   value : [0.954641310153918, 0.8901549785503726]
+    #   lower_bound : [0.1, 0.1]
+    #   upper_bound : [1.0, 1.0]
+    # s_crit_throat : 
+    #   value : [0.04006361313218885, 0.09614205881131721]
+    #   lower_bound : [0.0, 0.0]
+    #   upper_bound : [0.32, 0.32]
     specific_speed : # Limited 
-      value : 0.713756
+      value : 0.5719122380735249
       lower_bound : 0.5
       upper_bound : 1.5
     blade_jet_ratio : # Limited
-      value : 0.466501
+      value : 0.6890364472959469
       lower_bound : 0.3
       upper_bound : 0.8
     hub_tip_ratio_in :
-      value : [0.715999, 0.715999]
+      value : [0.6947210326981131, 0.7158133855997557]
       lower_bound : [0.6, 0.6]
       upper_bound : [0.9, 0.9]
     hub_tip_ratio_out :
-      value : [0.715999, 0.674840]
+      value : [0.7932830099307197, 0.7990961437746937]
       lower_bound : [0.6, 0.6]
       upper_bound : [0.9, 0.9]
     aspect_ratio :
-      value : [1.285550, 1.402149]
+      value : [1.0795954048965093, 1.911851816123533]
       lower_bound : [1.0, 1.0]
       upper_bound : [2.0, 2.0]
     pitch_chord_ratio :
-      value : [0.699312, 0.584804]
+      value : [0.8868415329106343, 0.9264890513717426]
       lower_bound : [0.5, 0.5]
       upper_bound : [1.10, 1.10]
     trailing_edge_thickness_opening_ratio : 
-      value : [0.066889, 0.068007]
+      value : [0.10074653729099596, 0.10183352551652441]
       lower_bound : [0.05, 0.05]
       upper_bound : [0.2, 0.2]
     leading_edge_angle : # (-70-15)
-      value : [0.5, 0.66444444]
+      # value : [0.5, 0.66444444]
+      value : [0.38048802648793073, 0.423114019402373]
       lower_bound : [0.11111111, 0.41666667]
       upper_bound : [0.58333333, 0.88888889]
     gauging_angle : # (55-75)
-      value : [0.86601513, 0.16024573]
+      value : [0.9016587392898618, 0.09836635308981512]
       lower_bound : [0.80555556, 0.08333333]
       upper_bound : [0.91666667, 0.19444444]
     v_in :
-      value : 0.22715060950254562
+      value : 0.488396019451874
       lower_bound : 0.001
       upper_bound : 0.5
     w_out : 
-      value : [0.7560168311370046, 0.714178597145251]
+      value : [0.4369698395951954, 0.9606480788677436]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
     s_out : 
-      value : [0.02393594702543656, 0.07236629937075202]
+      value : [0.07463192289710846, 0.0370198479916222]
       lower_bound : [0.0, 0.0]
       upper_bound : [0.32, 0.32]
     beta_out : 
-      value : [0.8650417242559838, 0.16150395974996423]
+      value : [0.8926684783587263, 0.18770584747245264]
       lower_bound : [0.72, 0.06]
       upper_bound : [0.94, 0.28]
     w_crit_throat : 
-      value : [0.954641310153918, 0.8901549785503726]
+      value : [0.5253741709795661, 0.7643789371914328]
       lower_bound : [0.1, 0.1]
       upper_bound : [1.0, 1.0]
     s_crit_throat : 
-      value : [0.04006361313218885, 0.09614205881131721]
+      value : [0.0004463807500249672, 0.2524069065590371]
       lower_bound : [0.0, 0.0]
       upper_bound : [0.32, 0.32]
     throat_location_fraction : 
@@ -161,31 +214,15 @@ design_optimization:
       value : -10
       normalize : True
   radius_type : "constant_mean"
-  multistarts : 100
   solver_options: 
-    library: pygmo 
-    method: snopt
+    library: scipy 
+    method: slsqp
     derivative_method: 2-point 
     derivative_abs_step: 1e-6 
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient" 
-    options : 
-    #   iprint : 2
-      # gen : 200
-      # pop_size : 20
-      # seed : 3
-      # tol: 1e-1 # Optional
-      Iterations limit: 200 # Optional
-      # constr_viol_tol : 1e-5
-      # tol : 1e-3
-      # print_level : 5
-      # acceptable_tol : 1.0
-      # acceptable_iter : 8
-      # acceptable_constr_viol_tol : 1e-4
-      # acceptable_compl_inf_tol : 1e-4
-      # acceptable_obj_change_tol : 1e-4
-      # max_iter : 100
+
 
   
 

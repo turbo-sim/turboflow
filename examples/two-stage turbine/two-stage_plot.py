@@ -5,18 +5,13 @@ Created on Thu Oct 26 09:12:16 2023
 @author: laboan
 """
 
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
 import turboflow as tf
-import matplotlib.patches as patches
-
 
 RESULTS_PATH = "output"
 
 # Get the name of the latest results file
-filename = tf.utils.find_latest_results_file(RESULTS_PATH)
+filename = tf.utilities.find_latest_results_file(RESULTS_PATH)
 
 save_figs = False
 show_figures = True
@@ -33,7 +28,7 @@ fig1, ax1 = tf.plot_functions.plot_lines(
     colors='k',
     filename = 'mass_flow_rate',
     outdir = "figures",
-    save_figs=True,
+    save_figs=save_figs,
 )
 
 # Print design speed line
@@ -50,7 +45,7 @@ fig1, ax1 = tf.plot_functions.plot_lines(
     labels = labels,
     filename='static_pressure',
     outdir = "figures",
-    save_figs=True,
+    save_figs=save_figs,
 )
 
 # Print stacked losses
@@ -72,9 +67,8 @@ fig1, ax1 = tf.plot_functions.plot_lines(
     stack=True,
     filename="loss_coefficients",
     outdir="figures",
-    save_figs = True,
+    save_figs = save_figs,
 )
-
 
 
 # Show figures

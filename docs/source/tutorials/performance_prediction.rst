@@ -24,7 +24,6 @@ Illustrated by a code example:
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Evaluate turbomachinery
@@ -67,7 +66,7 @@ while the rest is optional. Here is an example of how the confiugration file cou
 
     simulation_options: # Optional
         deviation_model : aungier  # Optional
-        choking_model : evaluate_cascade_critical # Optional
+        choking_criterion : critical_mach_number # Optional
         rel_step_fd: 1e-4  # Optional
         loss_model:  # Optional
             model: benner  # Optional
@@ -96,6 +95,11 @@ while the rest is optional. Here is an example of how the confiugration file cou
             derivative_abs_step: 1e-6  # Optional
             print_convergence: True # Optional
             plot_convergence: False # Optional
+        initial_guess :
+            efficiency_tt : [0.9, 0.8] 
+            efficiency_ke : [0.2, 0.1]
+            ma_1 : [0.8, 0.8]
+            ma_2 : [0.8, 0.8]
 
     geometry: # Required
         cascade_type: ["stator", "rotor"] # Required
@@ -161,7 +165,6 @@ After loading the configuration file, the operation point is extracted from the 
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation point
@@ -176,17 +179,17 @@ To perform performance prediction at a set of operation points, the `operation_p
 
     operation_points: 
         - fluid_name: air # First point
-            T0_in: 295.6
-            p0_in: 13.8e4
-            p_out : 13.8e4/2.0
-            omega: 1627
-            alpha_in: 0
+          T0_in: 295.6
+          p0_in: 13.8e4
+          p_out : 13.8e4/2.0
+          omega: 1627
+          alpha_in: 0
         - fluid_name: air # Second point
-            T0_in: 295.6
-            p0_in: 13.8e4
-            p_out : 13.8e4/3.0
-            omega: 1627
-            alpha_in: 0
+          T0_in: 295.6
+          p0_in: 13.8e4
+          p_out : 13.8e4/3.0
+          omega: 1627
+          alpha_in: 0
 
 After loading the configuration file, the operation points are extracted from the configuration file, and provided to `turboflow.compute_performance`:
 
@@ -202,7 +205,6 @@ After loading the configuration file, the operation points are extracted from th
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation points
@@ -240,18 +242,17 @@ After loading the configuration file, the performance map is extracted from the 
 
     CONFIG_FILE = os.path.abspath("my_configuration.yaml")
     config = tf.load_config(CONFIG_FILE) # Load configuration file
-    operation_points = config["perfomance_analysis"]["perfomance_map"] # Extract perfomance map
+    operation_points = config["performance_analysis"]["performance_map"] # Extract perfomance map
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         stop_on_failure=True,
     ) # Compute performance at operation points
 
 .. _options:
 
-Options for compute_performance
+Export results
 ---------------------------------------
 When calling `turboflow.compute_performance()`, there are some keyword arguments available:
 
@@ -260,27 +261,11 @@ When calling `turboflow.compute_performance()`, there are some keyword arguments
     solvers = tf.compute_performance(
         operation_points,
         config,
-        initial_guess=None,
         export_results=True,
         out_dir = "output",
         out_filename = None,
         stop_on_failure=False,
     ) 
-
-The **initial_guess** variable is used for the first operation point. If given, it must be a dictionary with the following keys:
-
-        - `enthalpy_loss_fractions`: a list of assumed fractions of enthalpy loss that occurs for each cascade.
-        - `eta_ts`: the assumed total-to-static efficiency.
-        - `eta_tt`: the assumed total-to-total efficiency.
-        - `Ma_crit`: the assumed critical mash number.
-
-Alternatively, it can be a comprehensive dictionary with the full set of initial guesses directly supplied to the solver. 
-This requires careful attention to ensure the initial guess aligns with the entire configuration file, necessitating a 
-thorough understanding of the various variables and setup. If an initial guess is not provided, a default guess will be 
-used. For subsequent operation points, the function leverages the solution from the nearest previously computed operation 
-point as the initial guess. This strategy is based on the heuristic that similar operation points tend to exhibit similar 
-performance characteristics, thereby enhancing the speed and robustness of the convergence process.In cases where the 
-solution fails to converge, a range of initial guesses is utilized to attempt alternative solutions.
 
 If **export_results** is set to True, the simulation data is exported as an Excel file. The file is saved either to a 
 specified directory (**out_dir**) or to the default directory “output”. The default filename (**out_filename**) is `performance_analysis_{current_time}`, 
@@ -304,9 +289,10 @@ The plots are made by loading the Excel file with the simulated data, and specif
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data, # datset  
@@ -314,11 +300,13 @@ The plots are made by loading the Excel file with the simulated data, and specif
         y_keys=["mass_flow_rate"], # y-axis key
         xlabel="Total-to-static pressure ratio", # axis x-label
         ylabel="Mass flow rate [kg/s]", # axis y-label
-        title=title, # axis title
-        filename=filename, # filename if figure should be saved
-        outdir=outdir, # output directory if figure should be saved
+        title="Turbine mass flow rate", # axis title
+        filename="mass_flow_rate", # filename if figure should be saved
+        outdir="figures", # output directory if figure should be saved
         save_figs=True,
     )
+
+    plt.show()
 
 The subsequent subsections gives a more detailed description of how to setup up the various plots. 
 
@@ -332,9 +320,10 @@ To plot a single line, simply specify the list `y_keys` with one key:
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     fig1, ax1 = tf.plot_functions.plot_lines(
         data, # datset  
@@ -342,11 +331,13 @@ To plot a single line, simply specify the list `y_keys` with one key:
         y_keys=["mass_flow_rate"], # y-axis key
         xlabel="Total-to-static pressure ratio", # axis x-label
         ylabel="Mass flow rate [kg/s]", # axis y-label
-        title="Mass flow rate", # axis title
-        filename=filename, # filename if figure should be saved
-        outdir=outdir, # output directory if figure should be saved
+        title="Turbine mass flow rate", # axis title
+        filename="mass_flow_rate", # filename if figure should be saved
+        outdir="figures", # output directory if figure should be saved
         save_figs=True,
     )
+
+    plt.show()
 
 Note that if the excel file contain a whole performance map (e.g. a range of pressure ratios and
 angular speed), it is convenient to filter out a subset of this file (e.g. results at one specific angular speed). Here is an example, where 
@@ -355,9 +346,10 @@ the data is filtered based on a specific angular speed:
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subsets = ["omega", 1627]
@@ -373,6 +365,8 @@ the data is filtered based on a specific angular speed:
         outdir = "figures",
         save_figs=True,
     )
+
+    plt.show()
 
 `subsets` is used to filter a subset of the original dataset. It is constructed as a list, where the first element is 
 a string that specifies the parameter you want to use to filter the data. The subsequent elements are the values of the selected
@@ -393,9 +387,10 @@ To plot several lines, To plot a single line, simply specify the list `y_keys` w
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subset = ["omega", 1627] 
@@ -415,6 +410,8 @@ To plot several lines, To plot a single line, simply specify the list `y_keys` w
         save_figs=True,
     )
 
+    plt.show()
+
 This example would give the following figure:
 
 .. image:: ../images/static_pressure.png
@@ -427,9 +424,11 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
+    import numpy as np
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
     subsets = ["omega"] + list(np.array([0.7, 0.9, 1])*1627)
@@ -447,6 +446,8 @@ rate is plotted as a function of total-to-static pressure ratio, at different su
         save_figs=True,
     )
 
+    plt.show()
+
 resulting in this figure:
 
 .. image:: ../images/mass_flow_rate.png
@@ -463,12 +464,13 @@ are made by specifying `stack = True`
 .. code-block:: python
 
     import turboflow as tf
+    import matplotlib.pyplot as plt
 
-    filename = "performance_analysis_2024-01-01_01-01-01.xlsx"
-    data = tf.plot_function.load_data(filename) # Load results data
+    filename = "output/performance_analysis_2024-01-01_01-01-01.xlsx"
+    data = tf.plot_functions.load_data(filename) # Load results data
 
     # Plot mass flow rate
-    subset = ["omega"] + list[1627]
+    subset = ["omega"] + [1627]
     labels = ["Profile losses", "Tip clearance losses", "Secondary flow losses", "Trailing edge losses", "Incidence losses"]
     fig1, ax1 = tf.plot_functions.plot_lines(
         data,
@@ -490,6 +492,8 @@ are made by specifying `stack = True`
         outdir="figures",
         save_figs = True,
     )
+
+    plt.show()
 
 This would result in this figure:
 
