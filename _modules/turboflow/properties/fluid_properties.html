@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>turboflow.properties.fluid_properties &mdash; turboflow v0.1.14 documentation</title>
+  <title>turboflow.properties.fluid_properties &mdash; turboflow v0.1.15 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/togglebutton.css?v=13237357" />
@@ -17,7 +17,7 @@
   
         <script src="../../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../../_static/documentation_options.js?v=eda14d21"></script>
+        <script src="../../../_static/documentation_options.js?v=49d9c938"></script>
         <script src="../../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script>let toggleHintShow = 'Click to show';</script>
@@ -1466,115 +1466,7 @@
 
 
 
-<span class="c1"># def compute_properties_metastable_rhoT(rho, T, fluid):</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-<span class="c1">#     Compute the thermodynamic properties of a fluid using the Helmholtz</span>
-<span class="c1">#     energy equation of state. All properties thermodynamic properties can</span>
-<span class="c1">#     be derived as combinations of the Helmholtz energy and its</span>
-<span class="c1">#     derivatives with respect to density and pressure.</span>
 
-<span class="c1">#     This function can be used to estimate metastable properties using the</span>
-<span class="c1">#     equation of state beyond the saturation lines.</span>
-<span class="c1">#     &quot;&quot;&quot;</span>
-
-<span class="c1">#     # Update thermodynamic state</span>
-<span class="c1">#     fluid.update(CP.DmassT_INPUTS, rho, T)</span>
-
-<span class="c1">#     # Get fluid constant properties</span>
-<span class="c1">#     R = fluid.gas_constant()</span>
-<span class="c1">#     M = fluid.molar_mass()</span>
-<span class="c1">#     T_crit = fluid.T_critical()</span>
-<span class="c1">#     rho_crit = fluid.rhomass_critical()</span>
-
-<span class="c1">#     # Compute reduced variables</span>
-<span class="c1">#     tau = T_crit / T</span>
-<span class="c1">#     delta = rho / rho_crit</span>
-
-<span class="c1">#     # Compute from the Helmholtz energy derivatives</span>
-<span class="c1">#     alpha = fluid.alpha0() + fluid.alphar()</span>
-<span class="c1">#     dalpha_dTau = fluid.dalpha0_dTau() + fluid.dalphar_dTau()</span>
-<span class="c1">#     dalpha_dDelta = fluid.dalpha0_dDelta() + fluid.dalphar_dDelta()</span>
-<span class="c1">#     d2alpha_dTau2 = fluid.d2alpha0_dTau2() + fluid.d2alphar_dTau2()</span>
-<span class="c1">#     d2alpha_dDelta2 = fluid.d2alpha0_dDelta2() + fluid.d2alphar_dDelta2()</span>
-<span class="c1">#     d2alpha_dDelta_dTau = fluid.d2alpha0_dDelta_dTau() + fluid.d2alphar_dDelta_dTau()</span>
-
-<span class="c1">#     # Compute thermodynamic properties from Helmholtz energy EOS</span>
-<span class="c1">#     properties = {}</span>
-<span class="c1">#     properties[&#39;T&#39;] = T</span>
-<span class="c1">#     properties[&#39;p&#39;] = (R/M)*T*rho*delta*dalpha_dDelta</span>
-<span class="c1">#     properties[&#39;rhomass&#39;] = rho</span>
-<span class="c1">#     properties[&#39;umass&#39;] = (R/M)*T*(tau*dalpha_dTau)</span>
-<span class="c1">#     properties[&#39;hmass&#39;] = (R/M)*T*(tau*dalpha_dTau+delta*dalpha_dDelta)</span>
-<span class="c1">#     properties[&#39;smass&#39;] = (R/M)*(tau*dalpha_dTau - alpha)</span>
-<span class="c1">#     properties[&#39;gibbsmass&#39;] = (R/M)*T*(alpha + delta*dalpha_dDelta)</span>
-<span class="c1">#     properties[&#39;cvmass&#39;] = (R/M)*(-tau**2*d2alpha_dTau2)</span>
-<span class="c1">#     properties[&#39;cpmass&#39;] = (R/M)*(-tau**2*d2alpha_dTau2 + (delta*dalpha_dDelta - delta*tau*d2alpha_dDelta_dTau)**2/(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2))</span>
-<span class="c1">#     properties[&#39;gamma&#39;] = properties[&#39;cpmass&#39;]/properties[&#39;cvmass&#39;]</span>
-<span class="c1">#     properties[&#39;compressibility_factor&#39;] = delta*dalpha_dDelta</span>
-<span class="c1">#     properties[&#39;speed_sound&#39;] = ((R/M)*T*(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2 - (delta*dalpha_dDelta - delta*tau*d2alpha_dDelta_dTau)**2/(tau**2*d2alpha_dTau2)))**0.5</span>
-<span class="c1">#     properties[&#39;isentropic_bulk_modulus&#39;] = rho*(R/M)*T*(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2 - (delta*dalpha_dDelta - delta*tau*d2alpha_dDelta_dTau)**2/(tau**2*d2alpha_dTau2))</span>
-<span class="c1">#     properties[&#39;isentropic_compressibility&#39;] = 1 / properties[&quot;isentropic_bulk_modulus&quot;]</span>
-<span class="c1">#     properties[&#39;isothermal_bulk_modulus&#39;] = (R/M)*T*rho*(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2)</span>
-<span class="c1">#     properties[&#39;isothermal_compressibility&#39;] = 1/((R/M)*T*rho*(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2))</span>
-<span class="c1">#     properties[&#39;isobaric_expansion_coefficient&#39;] = 1/T*(delta*dalpha_dDelta - delta*tau*d2alpha_dDelta_dTau)/(2*delta*dalpha_dDelta + delta**2*d2alpha_dDelta2)</span>
-<span class="c1">#     properties[&#39;viscosity&#39;] = fluid.viscosity()</span>
-<span class="c1">#     properties[&#39;conductivity&#39;] = fluid.conductivity()</span>
-<span class="c1">#     properties[&#39;Q&#39;] = np.nan</span>
-<span class="c1">#     properties[&#39;quality_mass&#39;] = np.nan</span>
-<span class="c1">#     properties[&#39;quality_volume&#39;] = np.nan</span>
-
-<span class="c1">#     return properties</span>
-
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">fluid</span> <span class="o">=</span> <span class="n">Fluid</span><span class="p">(</span><span class="s2">&quot;Water&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="s2">&quot;HEOS&quot;</span><span class="p">)</span>
-
-    <span class="c1"># # Properties of liquid water</span>
-    <span class="c1"># props_stable = fluid.set_state(CP.PT_INPUTS, 101325, 300)</span>
-    <span class="c1"># print()</span>
-    <span class="c1"># print(&quot;Properties of liquid water&quot;)</span>
-    <span class="c1"># print(f&quot;{&#39;Property&#39;:35} {&#39;value&#39;:6}&quot;)</span>
-    <span class="c1"># for key, value in props_stable.items():</span>
-    <span class="c1">#     print(f&quot;{key:35} {value:.6e}&quot;)</span>
-
-    <span class="c1"># # Properties of water/steam mixture</span>
-    <span class="c1"># props = fluid.set_state(CP.QT_INPUTS, 0.5, 300)</span>
-    <span class="c1"># print()</span>
-    <span class="c1"># print(&quot;Properties of water/steam mixture&quot;)</span>
-    <span class="c1"># print(f&quot;{&#39;Property&#39;:35} {&#39;value&#39;:6}&quot;)</span>
-    <span class="c1"># for key, value in props.items():</span>
-    <span class="c1">#     print(f&quot;{key:35} {value:.6e}&quot;)</span>
-
-    <span class="c1"># # Get subset of properties for meanline code</span>
-    <span class="c1"># props = fluid.compute_properties_meanline(CP.QT_INPUTS, 0.5, 300)</span>
-    <span class="c1"># print()</span>
-    <span class="c1"># print(&quot;Properties for the meanline code&quot;)</span>
-    <span class="c1"># print(f&quot;{&#39;Property&#39;:15} {&#39;value&#39;:6}&quot;)</span>
-    <span class="c1"># for key, value in props.items():</span>
-    <span class="c1">#     print(f&quot;{key:15} {value:.6e}&quot;)</span>
-
-    <span class="c1"># #</span>
-    <span class="c1"># props = compute_properties_metastable_rhoT(10, 500, fluid.abstractstate)</span>
-    <span class="c1"># print(&quot;Metastable properties of water&quot;)</span>
-    <span class="c1"># print(f&quot;{&#39;Property&#39;:35} {&#39;value&#39;:6}&quot;)</span>
-    <span class="c1"># for key, value in props.items():</span>
-    <span class="c1">#     print(f&quot;{key:35} {value:.6e}&quot;)</span>
-
-    <span class="c1"># Check that the metastable property calculations match in the single-phase region</span>
-    <span class="n">p</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="mi">101325</span><span class="p">,</span> <span class="mi">300</span>
-    <span class="n">props_stable</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">CP</span><span class="o">.</span><span class="n">PT_INPUTS</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Properties of water at p=</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s2"> Pa and T=</span><span class="si">{</span><span class="n">T</span><span class="si">}</span><span class="s2"> K&quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Property&#39;</span><span class="si">:</span><span class="s2">35</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Equilibrium&#39;</span><span class="si">:</span><span class="s2">&gt;15</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Metastable&#39;</span><span class="si">:</span><span class="s2">&gt;15</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Deviation&#39;</span><span class="si">:</span><span class="s2">&gt;15</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">props_metastable</span> <span class="o">=</span> <span class="n">fluid</span><span class="o">.</span><span class="n">set_state_metastable_rhoT</span><span class="p">(</span>
-        <span class="n">props_stable</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">],</span> <span class="n">props_stable</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">]</span>
-    <span class="p">)</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">props_stable</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">value_stable</span> <span class="o">=</span> <span class="n">props_stable</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="n">value_metastable</span> <span class="o">=</span> <span class="n">props_metastable</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">:</span><span class="s2">35</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value_stable</span><span class="si">:</span><span class="s2">+15.6e</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value_metastable</span><span class="si">:</span><span class="s2">+15.6e</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="p">(</span><span class="n">value_stable</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">value_metastable</span><span class="p">)</span><span class="o">/</span><span class="n">value_stable</span><span class="si">:</span><span class="s2">+15.6e</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
 </pre></div>
 
            </div>
