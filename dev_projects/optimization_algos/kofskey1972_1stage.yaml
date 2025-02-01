@@ -36,16 +36,6 @@ performance_analysis :
     efficiency_tt : (0.7, 0.99)
     efficiency_ke : (0.05, 0.4)
     ma : (0.4, 1.2)
-  # initial_guess :
-  #   efficiency_tt : [0.9, 0.8] 
-  #   efficiency_ke : [0.1, 0.1]
-  #   ma_1 : [0.8, 0.8]
-  #   ma_2 : [0.8, 0.8]
-  # initial_guess :
-  #   efficiency_tt : [0.9, 0.8]
-  #   efficiency_ke : [0.13888888888888884, 0.1785714285714286]
-  #   ma_1 : [0.8, 0.8]
-  #   ma_2 : [0.8, 0.8]
 
 
 geometry:
@@ -232,22 +222,7 @@ design_optimization:
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient" 
-    options : 
-    #   iprint : 2
-      # gen : 200
-      # pop_size : 20
-      # seed : 3
-      # tol: 1e-1 # Optional
-      Iterations limit: 200 # Optional
-      # constr_viol_tol : 1e-5
-      # tol : 1e-3
-      # print_level : 5
-      # acceptable_tol : 1.0
-      # acceptable_iter : 8
-      # acceptable_constr_viol_tol : 1e-4
-      # acceptable_compl_inf_tol : 1e-4
-      # acceptable_obj_change_tol : 1e-4
-      # max_iter : 100
+
 
   
 

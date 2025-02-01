@@ -11,7 +11,6 @@ if not os.path.exists(fig_dir):
 
 # Define the distance parameter
 chi = np.linspace(-20, 20, 1000)
-
 # Define the loss coefficient_increment
 loss_1 = tf.get_incidence_profile_loss_increment(
     chi, chi_extrapolation=10, loss_limit=None
@@ -31,7 +30,8 @@ ax = fig.gca()
 # ax.set_ylabel("$\Delta \phi_{p}^2$ - Loss coefficient increment")
 ax.set_xscale("linear")
 ax.set_yscale("linear")
-ax.set_ylim([0, 1])
+ax.set_ylim([0, 0.1])
+ax.set_xlim([-5,5])
 
 # Plot simulation data
 ax.plot(chi, loss_1, 'k', linewidth=1.25, label="Original correlation")

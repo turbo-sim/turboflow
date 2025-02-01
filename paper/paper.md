@@ -32,13 +32,15 @@ bibliography: paper.bib
 
 # Summary
 
-TurboFlow is a Python package for meanline modeling of turbomachinery, providing a comprehensive framework for on- and off-design performance analysis and design optimization. It employs an equation-oriented model formulation, making it compatible with gradient-based equation solvers and optimization algorithms for efficient computations. The package features a modular architecture that allows for seamless integration of various submodels, enabling users to 
-select and combine different models for calculating losses, flow angles and choking, tailoring the analysis to specific needs. The structure also facilitate for users to implement other submodels for these purposes. 
+Meanline modeling is a fundamental approach used in the design and analysis of axial turbines [@dixon_fluid_2014]. The method simplifies the analysis by assuming that the flow is uniform, and incorporates semi-empirical correlations to estimate performance. This approach allows for a reasonably accurate approximation at low computational cost. 
+
+TurboFlow is a Python package for meanline modeling of axial turbines, providing a comprehensive framework for on- and off-design performance analysis and design optimization. It employs an equation-oriented model formulation, making it compatible with gradient-based equation solvers and optimization algorithms for efficient computations. The package features a modular architecture that allows for seamless integration of various submodels, enabling users to 
+select and combine different models for calculating losses, flow angles and choking, tailoring the analysis to specific needs. The structure also facilitates the implementation of other submodels for these purposes. 
 TurboFlow provides access to advanced equations of state for real gas fluid properties by interfacing to the CoolProp library. The accuracy and computational robustness of the implemented models have been demonstrated through comprehensive validation against experimental data.  
 
-TurboFlow comes with comprehensive documentation, including installation guides, tutorials, detailed model descriptions and a complete API reference. 
-This extensive resource ensures that users can easily learn how to use the package and apply it effectively in their projects. For more details, visit the [documentation pages](https://turbo-sim.github.io/TurboFlow/).
-Additionally, the package includes preconfigured examples that demonstrate performance analysis and design optimization. These examples serve as practical guides and starting point for users to apply TurboFlow to their own projects. 
+TurboFlow comes with comprehensive documentation, including installation guides, tutorials, model descriptions and a complete API reference. 
+This extensive resource ensures that users can easily learn how to use the package and apply it effectively in their projects. For more details, visit the [documentation pages](https://turbo-sim.github.io/turboflow/).
+Additionally, the package includes preconfigured examples that demonstrate performance analysis and design optimization. These examples serve as practical guides for users to apply TurboFlow to their own projects. 
 
 The package source code is hosted in a [Github repository](https://github.com/turbo-sim/TurboFlow) [@turboflow]. Through Github Actions, an automated test suite is included, which checks the functionality of the performance analysis and design optimization, as well as all submodels. It enables continuous integration, ensuring that code changes are systematically tested and validated. This comprehensive testing framework provides confidence that the code works as expected, maintaining the reliability of the package with each update.
 
@@ -46,10 +48,9 @@ With these features, TurboFlow should present a reliable and flexible tool for r
 
 # Statement of need
 
-Meanline models are essential for simulation of turbomachinery [@dixon_fluid_2014]. For design processes, they enable rapid evaluation of design concepts
-and are used to establish key geometrical parameters. The preliminary design forms the basis for subsequent refined design steps, and is crucial for achieving high-efficiency turbomachinery [@macchi_organic_2017]. Furthermore, meanline models offer a method to quickly, yet accurately, predict performance, making them well-suited for system-level analyses involving turbomachines, both at design and off-design conditions.
+Meanline models are essential for simulation of turbomachinery [@dixon_fluid_2014]. For design processes, they enable rapid evaluation of design concepts and are used to establish key geometrical parameters. The preliminary design forms the basis for subsequent refined design steps, and is crucial for achieving high-efficiency turbomachinery [@macchi_organic_2017]. Furthermore, meanline models offer a method to quickly, yet accurately, predict performance, making them well-suited for system-level analyses involving turbomachines, both at design and off-design conditions.
 
-Despite the importance of these models, there is no established reference meanline tool for turbomachinery modeling available. Altough there are several commercial tools available:
+Despite the importance of these models, there is no established reference meanline tool for turbomachinery modeling available. Although there are several commercial tools available:
 
 - CFturbo [@noauthor_cfturbo_nodate]
 - AxSTREAM [@noauthor_axstream_nodate]
@@ -60,9 +61,9 @@ these are closed source, limiting the ability to modify, extend, or debug the mo
 
 Several meanline models developed in academic settings also suffer from being closed source:
 
-- zTurbo from TU-delft [@pini_preliminary_2013]
+- zTurbo from TU-Delft [@pini_preliminary_2013]
 - axTur from Politecnico di Milano [@macchi_organic_2017]
-- OTAC from Nasa Glenn research Center [@hendricks_meanline_2016]
+- OTAC from NASA Glenn Research Center [@hendricks_meanline_2016]
 
 The few open-source meanline models that do exist come with significant limitations in terms of programming language, model formulation and restricted functionality. These models and their features are summarized in the following table: 
 
@@ -79,12 +80,11 @@ While legacy languages like FORTRAN77 might be more accessible, they fall short 
 TurboFlow addresses these gaps with a robust, open-source framework for meanline turbomachinery modeling. It combines performance analysis and design optimization within a flexible, modular 
 architecture, accommodating various submodels seamlessly. This flexibility allows for the integration of new submodels, giving users the options to tailor the analysis for their application. 
 The model adopts an equation-oriented formulation, allowing integration with gradient-based solvers and offering the potential for faster convergence compared to methods based on the sequential model formulation.
-TurboFlow’s open source framework enables other researchers and industry practitioners to use and contribute to its development, positioning it as the first community-driven effort in 
-turbomachinery meanline modeling. Through a collaborative effort, TurboFlow can be expanded with new models and features, having a significant potential to advance turbomachinery meanline modeling.
+TurboFlow’s open-source framework enables other researchers and industry practitioners to use and contribute to its development, positioning it as the first community-driven effort in turbomachinery meanline modeling. Through a collaborative effort, TurboFlow can be expanded with other types of turbomachinery and features, having a significant potential to advance turbomachinery meanline modeling.
 
 # Acknowledgment
 The research leading to the presented work has received funding from the EEA/Norway Grants and the Technology Agency of the Czech Republic within the KAPPA Program. 
 Project code TO01000160. This work also received funding from the European Union’s Horizon 2020 research and innovation program under the Marie Skłodowska-Curie 
-grant agreement No 899987. The financial support is gratefully acknowledged.
+grant agreement No. 899987. The financial support is gratefully acknowledged.
 
 # References
