@@ -963,7 +963,8 @@ def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
         (le / s) ** (-0.05)
         * (We) ** (-0.2)
         * (math.cosd(theta_in) / math.cosd(theta_out)) ** (-1.4)
-        * (abs(beta_in) - abs(beta_des))
+        * (beta_in - beta_des)
+        # * (abs(beta_in) - abs(beta_des))
     )
     return chi
 
