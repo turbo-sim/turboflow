@@ -1093,7 +1093,8 @@
         <span class="p">(</span><span class="n">le</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.05</span><span class="p">)</span>
         <span class="o">*</span> <span class="p">(</span><span class="n">We</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">)</span>
         <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.4</span><span class="p">)</span>
-        <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">beta_in</span><span class="p">)</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">beta_des</span><span class="p">))</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">beta_in</span> <span class="o">-</span> <span class="n">beta_des</span><span class="p">)</span>
+        <span class="c1"># * (abs(beta_in) - abs(beta_des))</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">chi</span></div>
 
