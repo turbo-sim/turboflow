@@ -1,8 +1,0 @@
-Roberto 02.11.2024
-
-Performance data to be digitized
-Use performance data expressed in terms of corrected total enthalpy change and corrected mass flow rate
-
-
-Check if windage losses are excluded from the performance. Windage losses are significant, but I do not remember how they are accounted for in the experimental data
-

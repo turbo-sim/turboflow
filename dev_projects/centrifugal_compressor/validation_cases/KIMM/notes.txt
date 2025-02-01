@@ -1,3 +1,0 @@
-Roberto 02.11.2024
-
-See also: "A method to select loss correlations for centrifugal compressor performance prediction" for geometry
