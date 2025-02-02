@@ -1,0 +1,359 @@
+turbomachinery: axial_turbine
+operation_points:
+  fluid_name: air
+  T0_in: 295.6
+  p0_in: 138000.0
+  p_out: 60052.21932114883
+  omega: 1627.0
+  alpha_in: 0.0
+simulation_options:
+  deviation_model: aungier
+  blockage_model: 0.0
+  choking_criterion: critical_mach_number
+  rel_step_fd: 0.0001
+  loss_model:
+    model: benner
+    loss_coefficient: stagnation_pressure
+    custom_value: 0.0
+    inlet_displacement_thickness_height_ratio: 0.011
+    tuning_factors:
+      profile: 1.0
+      incidence: 1.0
+      secondary: 1.0
+      trailing: 1.0
+      clearance: 1.0
+geometry:
+  cascade_type:
+  - stator
+  - rotor
+  radius_hub_in:
+  - 0.084785
+  - 0.084785
+  radius_hub_out:
+  - 0.084785
+  - 0.081875
+  radius_tip_in:
+  - 0.118415
+  - 0.118415
+  radius_tip_out:
+  - 0.118415
+  - 0.121325
+  pitch:
+  - 0.018294
+  - 0.01524
+  chord:
+  - 0.02616
+  - 0.02606
+  stagger_angle:
+  - 43.03
+  - -31.05
+  opening:
+  - 0.00747503242
+  - 0.00735223377
+  leading_edge_angle:
+  - 0.0
+  - 29.6
+  leading_edge_wedge_angle:
+  - 50.0
+  - 50.0
+  leading_edge_diameter:
+  - 0.00254
+  - 0.00162
+  trailing_edge_thickness:
+  - 0.0005
+  - 0.0005
+  maximum_thickness:
+  - 0.00505
+  - 0.00447
+  tip_clearance:
+  - 0.0
+  - 0.0003
+  throat_location_fraction:
+  - 1.0
+  - 1.0
+performance_analysis:
+  performance_map:
+    fluid_name: air
+    T0_in: 295.6
+    p0_in: 138000.0
+    p_out:
+    - 86250.0
+    - 82419.60183767228
+    - 78914.9560117302
+    - 75696.20253164555
+    - 72729.72972972972
+    - 69986.99609882965
+    - 67443.6090225564
+    - 65078.59733978235
+    - 62873.83177570093
+    - 60813.5593220339
+    - 58884.02625820569
+    - 57073.17073170731
+    - 55370.37037037037
+    - 53766.23376623376
+    - 52252.42718446601
+    - 50821.52974504249
+    - 49466.91176470589
+    - 48182.632050134285
+    - 46963.35078534031
+    - 45804.255319148935
+    - 44700.99667774086
+    - 43649.635036496344
+    - 42646.59270998415
+    - 41688.61347792409
+    - 40772.72727272727
+    - 39896.21942179392
+    - 39056.60377358491
+    - 38251.59914712153
+    - 37479.10863509749
+    - 36737.20136518771
+    - 36024.096385542165
+    - 35338.1483913329
+    - 34677.83505154639
+    - 34041.74573055028
+    - 33428.571428571435
+    - 32837.09579011592
+    - 32266.187050359713
+    - 31714.79080730701
+    - 31181.923522595596
+    - 30666.666666666668
+    omega: 1627.0
+    alpha_in: 0.0
+  solver_options:
+    method: lm
+    tolerance: 1.0e-08
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: 1.0e-06
+    print_convergence: true
+    plot_convergence: false
+  initial_guess:
+    efficiency_tt:
+    - 0.9
+    - 0.8
+    efficiency_ke:
+    - 0.2
+    - 0.1
+    ma_1:
+    - 0.8
+    - 0.8
+    ma_2:
+    - 0.8
+    - 0.8
+design_optimization:
+  objective_function:
+    variable: overall.efficiency_ts
+    type: maximize
+    scale: 1.0
+  variables:
+    v_in:
+      value: 0.227150609503
+      lower_bound: 0.001
+      upper_bound: 0.5
+    w_out:
+      value:
+      - 0.756016831137
+      - 0.714178597145
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s_out:
+      value:
+      - 0.023935947025
+      - 0.072366299371
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    beta_out:
+      value:
+      - 0.865041724256
+      - 0.16150395975
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    v_crit_in:
+      value:
+      - 0.4
+      - 0.4
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    beta_crit_throat:
+      value:
+      - 0.83
+      - 0.17
+      lower_bound:
+      - 0.72
+      - 0.06
+      upper_bound:
+      - 0.94
+      - 0.28
+    w_crit_throat:
+      value:
+      - 0.954641310154
+      - 0.89015497855
+      lower_bound:
+      - 0.1
+      - 0.1
+      upper_bound:
+      - 1.0
+      - 1.0
+    s_crit_throat:
+      value:
+      - 0.040063613132
+      - 0.096142058811
+      lower_bound:
+      - 0.0
+      - 0.0
+      upper_bound:
+      - 0.32
+      - 0.32
+    specific_speed:
+      value: 0.713756
+      lower_bound: 0.5
+      upper_bound: 1.5
+    blade_jet_ratio:
+      value: 0.466501
+      lower_bound: 0.3
+      upper_bound: 0.8
+    hub_tip_ratio_in:
+      value:
+      - 0.715999
+      - 0.715999
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
+    hub_tip_ratio_out:
+      value:
+      - 0.715999
+      - 0.67484
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
+    aspect_ratio:
+      value:
+      - 1.28555
+      - 1.402149
+      lower_bound:
+      - 1.0
+      - 1.0
+      upper_bound:
+      - 2.0
+      - 2.0
+    pitch_chord_ratio:
+      value:
+      - 0.699312
+      - 0.584804
+      lower_bound:
+      - 0.5
+      - 0.5
+      upper_bound:
+      - 1.1
+      - 1.1
+    trailing_edge_thickness_opening_ratio:
+      value:
+      - 0.066889
+      - 0.068007
+      lower_bound:
+      - 0.05
+      - 0.05
+      upper_bound:
+      - 0.2
+      - 0.2
+    leading_edge_angle:
+      value:
+      - 0.5
+      - 0.66444444
+      lower_bound:
+      - 0.11111111
+      - 0.41666667
+      upper_bound:
+      - 0.58333333
+      - 0.88888889
+    gauging_angle:
+      value:
+      - 0.86601513
+      - 0.16024573
+      lower_bound:
+      - 0.80555556
+      - 0.08333333
+      upper_bound:
+      - 0.91666667
+      - 0.19444444
+    throat_location_fraction:
+      value:
+      - 0.833333333333
+      - 0.833333333333
+      lower_bound: null
+      upper_bound: null
+    leading_edge_diameter:
+      value:
+      - 0.00254
+      - 0.00162
+      lower_bound: null
+      upper_bound: null
+    leading_edge_wedge_angle:
+      value:
+      - 50.0
+      - 50.0
+      lower_bound: null
+      upper_bound: null
+    tip_clearance:
+      value:
+      - 0.0
+      - 0.0003
+      lower_bound: null
+      upper_bound: null
+    cascade_type:
+      value:
+      - stator
+      - rotor
+      lower_bound: null
+      upper_bound: null
+  constraints:
+  - variable: overall.mass_flow_rate
+    type: '='
+    value: 2.721057
+    normalize: true
+  - variable: additional_constraints.interspace_area_ratio
+    type: '='
+    value: 1.0
+    normalize: true
+  - variable: geometry.flaring_angle
+    type: <
+    value: 10.0
+    normalize: true
+  - variable: geometry.flaring_angle
+    type: '>'
+    value: -10.0
+    normalize: true
+  solver_options:
+    library: scipy
+    method: nelder-mead
+    derivative_method: 2-point
+    derivative_abs_step: null
+    print_convergence: true
+    plot_convergence: false
+    update_on: gradient
+    tolerance: 1.0e-06
+    max_iterations: 500
+    extra_options: {}
+  radius_type: constant_mean

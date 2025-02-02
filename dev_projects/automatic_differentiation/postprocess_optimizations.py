@@ -11,7 +11,7 @@ OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Read case summary
-DATAFILE = "./two_stage_tol_1e-6.xlsx"
+DATAFILE = "./cases_summary.xlsx"
 case_data = pd.read_excel(DATAFILE)
 
 # # Run cases based on list of tags
@@ -19,7 +19,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-# case_data = case_data[case_data["case"].isin([100, 101])]
+case_data = case_data[case_data["case"].isin([46,48,49,50,51,52,53,54,55,56,58,59,60])]
 
 # Loop over cases
 results_list = []
@@ -40,9 +40,9 @@ for i, row in case_data.iterrows():
         "tolerance": row['tolerance'],
         "objective_value": df['objective_value'].iloc[-1],
         "constraint_violation": df['constraint_violation'].iloc[-1],
-        "grad_count": df['grad_count'].iloc[-1],
-        "func_count": df['func_count'].iloc[-1],
-        "func_count_total": df['func_count_total'].iloc[-1],
+        "grad_evaluations": df['grad_count'].iloc[-1],
+        "func_evaluations": df['func_count'].iloc[-1],
+        "model_evaluations": df['func_count_total'].iloc[-1],
         "elapsed_time": df['elapsed_time'].iloc[0],
         "success": df['success'].iloc[0],
         "message": df['message'].iloc[0],
@@ -55,6 +55,6 @@ for i, row in case_data.iterrows():
 results_df = pd.DataFrame(results_list)
 
 # Optionally save the DataFrame to a CSV or Excel file
-results_df.to_excel(os.path.join(OUTPUT_DIR, "consolidated_results.xlsx"), index=False)
+results_df.to_excel(os.path.join(OUTPUT_DIR, "consolidated_results_2stage_updated.xlsx"), index=False)
 
 

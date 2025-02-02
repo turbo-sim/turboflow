@@ -22,11 +22,11 @@ performance_analysis :
     fluid_name: air 
     T0_in: 295.6
     p0_in: 13.8e4
-    p_out: 13.8e4/np.linspace(1.6, 4.5, 40)
-    omega: 1627 
+    p_out: 13.8e4/np.linspace(1.1, 5.0, 100)
+    omega: [1.1*1627, 1.0*1627, 0.9*1627, 0.7*1627, 0.5*1627, 0.3*1627] 
     alpha_in: 0 
   solver_options:
-    method: lm 
+    method: hybr 
     tolerance: 1e-8  
     max_iterations: 100 
     derivative_method: 2-point  
@@ -55,7 +55,7 @@ geometry:
   trailing_edge_thickness : [0.050e-2, 0.050e-2]
   maximum_thickness : [0.505e-2, 0.447e-2]
   tip_clearance: [0.00, 0.030e-2]
-  throat_location_fraction: [1, 1] # Should be changed
+  throat_location_fraction: [5/6, 5/6]
   
 
 design_optimization:
