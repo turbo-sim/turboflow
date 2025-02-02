@@ -212,7 +212,7 @@ and rounds numerical values to the specified precision.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.utilities.file_utils.create_logger">
-<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">create_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_datetime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#create_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.create_logger" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">create_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_datetime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_console</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#create_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.create_logger" title="Link to this definition"></a></dt>
 <dd><p>Creates and configures a logging object for recording logs during program execution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -223,6 +223,8 @@ and rounds numerical values to the specified precision.</p>
 will be created in the current working directory (cwd).</p>
 </dd>
 <dt><strong>use_datetime</strong><span class="classifier">bool, optional</span></dt><dd><p>Determines whether the log filename should have a unique datetime identifier appended. Default is True.</p>
+</dd>
+<dt><strong>to_console</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to print log messages to the console. Default is True.</p>
 </dd>
 </dl>
 </dd>
@@ -282,6 +284,30 @@ handles concurrency in multi-instance environments.</p></li>
 <dd class="field-even"><p>The Python object that was stored in the pickle file.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.file_utils.log_dict">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">log_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#log_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.log_dict" title="Link to this definition"></a></dt>
+<dd><p>Logs a dictionary recursively, preserving formatting and indentation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>logger</strong><span class="classifier">logging.Logger</span></dt><dd><p>The logger instance to use for logging.</p>
+</dd>
+<dt><strong>dictionary</strong><span class="classifier">dict</span></dt><dd><p>The dictionary to log.</p>
+</dd>
+<dt><strong>indent</strong><span class="classifier">int, optional</span></dt><dd><p>The level of indentation for nested dictionaries, by default 0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.utilities.file_utils.log_line_by_line">
+<span class="sig-prename descclassname"><span class="pre">turboflow.utilities.file_utils.</span></span><span class="sig-name descname"><span class="pre">log_line_by_line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/utilities/file_utils.html#log_line_by_line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.utilities.file_utils.log_line_by_line" title="Link to this definition"></a></dt>
+<dd><p>Logs each line of a multi-line string separately to preserve formatting.</p>
 </dd></dl>
 
 <dl class="py function">

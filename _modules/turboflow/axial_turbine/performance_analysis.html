@@ -124,6 +124,7 @@
     <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute and export the performance of each specified operation point to an Excel file.</span>
@@ -239,6 +240,7 @@
                                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
                                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;simulation_options&quot;</span><span class="p">],</span>
                                 <span class="n">config</span><span class="p">[</span><span class="s2">&quot;performance_analysis&quot;</span><span class="p">][</span><span class="s2">&quot;solver_options&quot;</span><span class="p">],</span>
+                                <span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span><span class="p">,</span> 
                                 <span class="p">)</span>
 
             <span class="c1"># Retrieve solver data</span>
@@ -328,7 +330,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Performance data successfully written to </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># Print final report</span>
-    <span class="n">print_simulation_summary</span><span class="p">(</span><span class="n">solver_container</span><span class="p">)</span>
+    <span class="n">print_simulation_summary</span><span class="p">(</span><span class="n">solver_container</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">solver_container</span></div>
 
@@ -341,6 +343,7 @@
     <span class="n">geometry</span><span class="p">,</span>
     <span class="n">simulation_options</span><span class="p">,</span>
     <span class="n">solver_options</span><span class="p">,</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.</span>
@@ -399,7 +402,7 @@
         <span class="n">problem</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">initial_guess_scaled</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="n">solver_methods</span><span class="p">:</span>
             <span class="n">solver_options</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
-            <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">)</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">NonlinearSystemSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_options</span><span class="p">,</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span> 
                 <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">x0</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -938,7 +941,7 @@
 
 <div class="viewcode-block" id="print_simulation_summary">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.performance_analysis.html#turboflow.axial_turbine.performance_analysis.print_simulation_summary">[docs]</a>
-<span class="k">def</span> <span class="nf">print_simulation_summary</span><span class="p">(</span><span class="n">solvers</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">print_simulation_summary</span><span class="p">(</span><span class="n">solvers</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print a formatted footer summarizing the performance of all operation points.</span>
 
@@ -1007,11 +1010,14 @@
         <span class="n">lines_to_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot; No valid calculation times available.&quot;</span><span class="p">)</span>
 
     <span class="n">lines_to_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">separator</span><span class="p">)</span>
-    <span class="n">lines_to_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
     <span class="c1"># Display to stdout</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines_to_output</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines_to_output</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines_to_output</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
 
 
 

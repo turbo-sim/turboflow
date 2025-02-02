@@ -204,7 +204,7 @@
 
 <div class="viewcode-block" id="create_logger">
 <a class="viewcode-back" href="../../../source/api/turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.create_logger">[docs]</a>
-<span class="k">def</span> <span class="nf">create_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_datetime</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">create_logger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_datetime</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">to_console</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates and configures a logging object for recording logs during program execution.</span>
 
@@ -217,6 +217,8 @@
 <span class="sd">        will be created in the current working directory (cwd).</span>
 <span class="sd">    use_datetime : bool, optional</span>
 <span class="sd">        Determines whether the log filename should have a unique datetime identifier appended. Default is True.</span>
+<span class="sd">    to_console : bool, optional</span>
+<span class="sd">        Whether to print log messages to the console. Default is True.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -258,8 +260,45 @@
     <span class="c1"># Create logger object</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
 
+    <span class="c1"># Console handler (optional)</span>
+    <span class="k">if</span> <span class="n">to_console</span><span class="p">:</span>
+        <span class="n">console_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+        <span class="n">console_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+        <span class="n">console_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">console_handler</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">logger</span></div>
 
+
+
+<div class="viewcode-block" id="log_line_by_line">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.log_line_by_line">[docs]</a>
+<span class="k">def</span> <span class="nf">log_line_by_line</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Logs each line of a multi-line string separately to preserve formatting.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>  <span class="c1"># Skip empty lines</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="log_dict">
+<a class="viewcode-back" href="../../../source/api/turboflow.utilities.file_utils.html#turboflow.utilities.file_utils.log_dict">[docs]</a>
+<span class="k">def</span> <span class="nf">log_dict</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">dictionary</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Logs a dictionary recursively, preserving formatting and indentation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    logger : logging.Logger</span>
+<span class="sd">        The logger instance to use for logging.</span>
+<span class="sd">    dictionary : dict</span>
+<span class="sd">        The dictionary to log.</span>
+<span class="sd">    indent : int, optional</span>
+<span class="sd">        The level of indentation for nested dictionaries, by default 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatted_output</span> <span class="o">=</span> <span class="n">print_dict</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="n">indent</span><span class="p">,</span> <span class="n">return_output</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">formatted_output</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="find_latest_results_file">

@@ -139,6 +139,7 @@
     <span class="n">out_filename</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">out_dir</span><span class="o">=</span><span class="s2">&quot;output&quot;</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the optimal turbine configuration based on the specified optimization problem.</span>
@@ -174,7 +175,7 @@
     <span class="n">success</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">ig</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">initial_guesses</span><span class="p">:</span>
         <span class="c1"># Initialize solver object using keyword-argument dictionary unpacking</span>
-        <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">OptimizationSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_config</span><span class="p">)</span>
+        <span class="n">solver</span> <span class="o">=</span> <span class="n">psv</span><span class="o">.</span><span class="n">OptimizationSolver</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">solver_config</span><span class="p">,</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span><span class="p">)</span>
         
          <span class="c1"># Solve optimization problem for initial guess x0</span>
         <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">ig</span><span class="p">)</span>
