@@ -107,7 +107,7 @@ def compare_contents_or_files(file_or_content_1, file_or_content_2):
     return file_or_content_1 == file_or_content_2
 
 
-def create_logger(name, path=None, use_datetime=True):
+def create_logger(name, path=None, use_datetime=True, to_console=True):
     """
     Creates and configures a logging object for recording logs during program execution.
 
@@ -120,6 +120,8 @@ def create_logger(name, path=None, use_datetime=True):
         will be created in the current working directory (cwd).
     use_datetime : bool, optional
         Determines whether the log filename should have a unique datetime identifier appended. Default is True.
+    to_console : bool, optional
+        Whether to print log messages to the console. Default is True.
 
     Returns
     -------
@@ -161,8 +163,39 @@ def create_logger(name, path=None, use_datetime=True):
     # Create logger object
     logger = logging.getLogger()
 
+    # Console handler (optional)
+    if to_console:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(console_handler)
+
     return logger
 
+
+def log_line_by_line(logger, text):
+    """Logs each line of a multi-line string separately to preserve formatting."""
+    for line in text.splitlines():
+        if line.strip():  # Skip empty lines
+            logger.info(line)
+
+
+def log_dict(logger, dictionary, indent=0):
+    """
+    Logs a dictionary recursively, preserving formatting and indentation.
+
+    Parameters
+    ----------
+    logger : logging.Logger
+        The logger instance to use for logging.
+    dictionary : dict
+        The dictionary to log.
+    indent : int, optional
+        The level of indentation for nested dictionaries, by default 0.
+    """
+    formatted_output = print_dict(dictionary, indent=indent, return_output=True)
+    for line in formatted_output.splitlines():
+        logger.info(line)
 
 def find_latest_results_file(results_path, prefix="performance_analysis_"):
     """

@@ -48,6 +48,7 @@ def compute_optimal_turbine(
     out_filename=None,
     out_dir="output",
     export_results=True,
+    logger = None,
 ):
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -83,7 +84,7 @@ def compute_optimal_turbine(
     success = []
     for ig in problem.initial_guesses:
         # Initialize solver object using keyword-argument dictionary unpacking
-        solver = psv.OptimizationSolver(problem, **solver_config)
+        solver = psv.OptimizationSolver(problem, **solver_config, logger = logger)
         
          # Solve optimization problem for initial guess x0
         solver.solve(ig)

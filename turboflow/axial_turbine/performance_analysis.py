@@ -33,6 +33,7 @@ def compute_performance(
     out_dir="output",
     stop_on_failure=False,
     export_results=True,
+    logger = None,
 ):
     r"""
     Compute and export the performance of each specified operation point to an Excel file.
@@ -148,6 +149,7 @@ def compute_performance(
                                 config["geometry"],
                                 config["simulation_options"],
                                 config["performance_analysis"]["solver_options"],
+                                logger = logger, 
                                 )
 
             # Retrieve solver data
@@ -237,7 +239,7 @@ def compute_performance(
         print(f" Performance data successfully written to {filepath}")
 
     # Print final report
-    print_simulation_summary(solver_container)
+    print_simulation_summary(solver_container, logger)
 
     return solver_container
 
@@ -247,6 +249,7 @@ def compute_single_operation_point(
     geometry,
     simulation_options,
     solver_options,
+    logger = None,
 ):
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
@@ -305,7 +308,7 @@ def compute_single_operation_point(
         problem.keys = list(initial_guess_scaled.keys())
         for method in solver_methods:
             solver_options["method"] = method
-            solver = psv.NonlinearSystemSolver(problem, **solver_options)
+            solver = psv.NonlinearSystemSolver(problem, **solver_options, logger = logger)
             try: 
                 solver.solve(x0)
             except Exception as e:
@@ -814,7 +817,7 @@ class CascadesNonlinearSystemProblem(psv.NonlinearSystemProblem):
 
 
 
-def print_simulation_summary(solvers):
+def print_simulation_summary(solvers, logger):
     """
     Print a formatted footer summarizing the performance of all operation points.
 
@@ -883,11 +886,14 @@ def print_simulation_summary(solvers):
         lines_to_output.append(" No valid calculation times available.")
 
     lines_to_output.append(separator)
-    lines_to_output.append("")
 
     # Display to stdout
-    for line in lines_to_output:
-        print(line)
+    if logger:
+        for line in lines_to_output:
+            logger.info(line)
+    else:
+        for line in lines_to_output:
+            print(line)
 
 
 def print_boundary_conditions(BC):
