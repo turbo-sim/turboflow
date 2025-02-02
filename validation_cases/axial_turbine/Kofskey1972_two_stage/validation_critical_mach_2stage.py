@@ -5,19 +5,18 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 show_figures = True
-error_bars = False
 save_figs = True
 
 # Load performance data
-filename_1 = "output/performance_analysis_2024-09-05_12-41-12.xlsx" # Critical mach
-filename_2 = "output/performance_analysis_2024-03-14_00-30-26.xlsx" # Critical mass flow
+# Load performance data
+filename_1 = "output/performance_map_critical_mach.xlsx" # Critical mach
+filename_2 = "output/performance_map.xlsx" # Critical mass flow
 
 data_1 = tf.plot_functions.load_data(filename_1)
 data_2 = tf.plot_functions.load_data(filename_2)
 
 subsets = ["omega"] + list(1627*np.array([0.7, 1.0]))
 colors = plt.get_cmap('magma')(np.linspace(0.2, 0.7, 2))
-# fig1, ax1 = plt.subplots()
 fig1, ax1 = tf.plot_functions.plot_lines(
     data_1,
     x_key="PR_ts",
@@ -27,8 +26,6 @@ fig1, ax1 = tf.plot_functions.plot_lines(
     ylabel="Mass flow rate [kg/s]",
     colors=colors,
     linestyles=['-']*2,
-    # fig = fig1,
-    # ax = ax1, 
     filename = 'mass_flow_rate',
     outdir = "figures",
     save_figs=False,
@@ -120,8 +117,8 @@ fig2, ax2 = tf.plot_functions.plot_lines(
     save_figs=False,
 )
 
-lables = ["$0.7 \cdot \Omega_\mathrm{des}$, New model", "$1.0 \cdot \Omega_\mathrm{des}$, New model", 
-            "$0.7 \cdot \Omega_\mathrm{des}$, Previous model", "$1.0 \cdot \Omega_\mathrm{des}$, Previous model", 
+lables = ["$0.7 \cdot \Omega_\mathrm{des}$, Critical mach", "$1.0 \cdot \Omega_\mathrm{des}$, Critical mach", 
+            "$0.7 \cdot \Omega_\mathrm{des}$, Critical mass", "$1.0 \cdot \Omega_\mathrm{des}$, Critical mass", 
             "$0.7 \cdot \Omega_\mathrm{des}$, Experimental data", "$1.0 \cdot \Omega_\mathrm{des}$, Experimental data"]
 ax1.legend(labels = lables, ncols = 1, loc = 'lower right', fontsize = 13)
 ax2.legend(labels = lables, ncols = 1, loc = 'lower right', fontsize = 13)
@@ -138,37 +135,9 @@ ax1.tick_params(labelsize=fontsize)
 ax2.tick_params(labelsize=fontsize)
 
 
-# ax2.set_xlim([2.1, 5.4])
-# ax2.set_ylim([60, 90])
-
-if error_bars:
-
-    data_exp_70 = data_exp["Sheet1"][data_exp["Sheet1"]["speed_percent"] == 70]
-    data_exp_100 = data_exp["Sheet1"][data_exp["Sheet1"]["speed_percent"] == 100]
-
-    # Percentage error (as a parameter)
-    percentage_error_mass_flow_70 = 1.75 # For example, 10%
-    percentage_error_mass_flow_100 = 1.25  # For example, 10%
-    percentage_error_torque_70 = 5.0  # For example, 10%
-    percentage_error_torque_100 = 2.5  # For example, 10%
-
-
-    # Calculate absolute errors based on the percentage error
-    error_mass_flow_70 = (percentage_error_mass_flow_70 / 100) * data_exp_70["mass_flow_rate"]
-    error_mass_flow_100 = (percentage_error_mass_flow_100 / 100) * data_exp_100["mass_flow_rate"]
-    error_torque_70 = (percentage_error_torque_70 / 100) * data_exp_70["torque"]
-    error_torque_100 = (percentage_error_torque_100 / 100) * data_exp_100["torque"]
-
-    # Create the plot with error bars
-    ax1.errorbar(data_exp_70["pressure_ratio_ts"], data_exp_70["mass_flow_rate"], yerr=error_mass_flow_70, fmt=' ',color = colors[0], alpha=0.25, capsize=5, label='Data with error bars')
-    ax1.errorbar(data_exp_100["pressure_ratio_ts"], data_exp_100["mass_flow_rate"], yerr=error_mass_flow_100, fmt=' ',color = colors[1], alpha=0.25, capsize=5, label='Data with error bars')
-    ax2.errorbar(data_exp_70["pressure_ratio_ts"], data_exp_70["torque"], yerr=error_torque_70, fmt=' ',color = colors[0], alpha=0.25, capsize=5, label='Data with error bars')
-    ax2.errorbar(data_exp_100["pressure_ratio_ts"], data_exp_100["torque"], yerr=error_torque_100, fmt=' ',color = colors[1], alpha=0.25, capsize=5, label='Data with error bars')
-
-
 if save_figs:
-    filename1 = 'validation_mass_flow_kofskey_1972_2stage'
-    filename2 = 'validation_torque_kofskey_1972_2stage'
+    filename1 = 'figures/validation_critical_mach_mass_flow'
+    filename2 = 'figures/validation_critical_mach_torque'
     tf.plot_functions.savefig_in_formats(fig1, filename1, formats=[".png",".eps"])
     tf.plot_functions.savefig_in_formats(fig2, filename2, formats=[".png",".eps"])
 

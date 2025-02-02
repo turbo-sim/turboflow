@@ -1,9 +1,0 @@
-Validation files Kofskey 1974 
-------------------------------
-Performance map: performance_analysis_2024-03-13_23-07-30
-error map: performance_analysis_2024-03-15_22-26-05
-
-1963 revs:
-----------
-Performance map: performance_analysis_2024-03-16_20-10-25
-error map: performance_analysis_2024-03-16_20-20-51

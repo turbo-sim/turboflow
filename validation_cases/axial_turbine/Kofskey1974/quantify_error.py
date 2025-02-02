@@ -2,10 +2,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-filename_exp = "./experimental_data_kofskey1974_raw.xlsx"
-# filename_sim = "output\performance_analysis_2024-03-16_20-20-51.xlsx"
-filename_sim = "output\performance_analysis_2024-07-11_20-00-05.xlsx"
+# Set filenames
+filename_exp = "experimental_data/experimental_data_kofskey1974_raw.xlsx"
+filename_sim = "output/experimental_points.xlsx"
 
+# Define percentage limits
 limits = [2.5, 5, 10]
 
 
@@ -19,19 +20,20 @@ def count(values, lim):
     percentage_below_lim = (below_lim_count / total_count) * 100
     return percentage_below_lim
 
-
+# Load simulation data
 speed_percent = np.flip([105, 100, 90, 70])
 data_sim = pd.read_excel(filename_sim, sheet_name=["overall"])
 data_sim = data_sim["overall"]
 
+# Load experimental data
 data_exp = pd.read_excel(filename_exp, sheet_name="Interpolated pr_ts")
 data_exp = data_exp[data_exp["speed_percent"].isin(speed_percent)]
 data_exp = data_exp[~data_exp["pressure_ratio_ts_interp"].isna()].reset_index()
 
+# Initalize dictionary to store results
 mass_flow_rate_error = {}
 torque_error = {}
 alpha_error = {}
-
 mass_flow_rate_count = {}
 torque_count = {}
 alpha_count = {}
@@ -78,16 +80,6 @@ for speed in speed_percent:
         count(alpha_error[speed], limits[1]),
         count(alpha_error[speed], limits[2]),
     ]
-
-print("\n")
-print("Mass flow rate")
-print(mass_flow_rate_count)
-print("\n")
-print("Torque")
-print(torque_count)
-print("\n")
-print("Flow angle")
-print(alpha_count)
 
 # Count overall error
 print(

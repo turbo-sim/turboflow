@@ -13,47 +13,26 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import turboflow as tf
 
-# Define running option
-CASE = 2
+# Define running case
+CASE = "experimental_points"
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("kofskey1974.yaml")
+CONFIG_FILE = os.path.abspath("Kofskey1974.yaml")
 config = tf.load_config(CONFIG_FILE)
 
-
-x0 = {'w_out_1': 302.34152618268644, 's_out_1': 3907.4582642372093, 'beta_out_1': 68.2353652893051, 'w_crit_throat_1': 305.3268020186889, 's_crit_throat_1': 3907.5663389138763, 'w_out_2': 202.5739869228336, 's_out_2': 3914.239812962878, 'beta_out_2': -53.39832785308828, 'w_crit_throat_2': 348.2994050296265, 's_crit_throat_2': 3931.0657896251896, 'v_in': 75.3926819503091}
-
-
-# Run calculations
-if CASE == 1:
-    # Compute performance map according to config file
-    operation_points = config["operation_points"]
-    solvers = tf.compute_performance(
-        operation_points,
-        config,
-        export_results=False,
-        stop_on_failure=True,
-    )
-
-    print(solvers[0].problem.results["overall"]["mass_flow_rate"])
-    print(solvers[0].problem.results["overall"]["efficiency_ts"])
-    print(solvers[0].problem.vars_real)
-
-elif CASE == 2:
+if CASE == "performance_map":
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     tf.compute_performance(operation_points, 
-                           config, 
-                           out_filename='performance_map_evaluate_cascade_throat',
-                            stop_on_failure=False,
-                            export_results=True,
-                           )
+                            config, 
+                            out_filename="performance_map",
+                            export_results=True)
 
-elif CASE == 3:
+elif CASE == "experimental_points":
 
     # Load experimental dataset
     data = pd.read_excel(
-        "./experimental_data_kofskey1974_raw.xlsx", sheet_name="Interpolated pr_ts"
+        "experimental_data/experimental_data_kofskey1974_raw.xlsx", sheet_name="Interpolated pr_ts"
     )
     data = data[~data["pressure_ratio_ts_interp"].isna()]
     pressure_ratio_exp = data[data["speed_percent"].isin([105, 100, 90, 70])][
@@ -74,4 +53,8 @@ elif CASE == 3:
         operation_points.append(current_point)
 
     # Compute performance at experimental operating points
-    tf.compute_performance(operation_points, config, initial_guess=x0)
+    tf.compute_performance(operation_points, 
+                            config, 
+                            out_filename="experimental_points",
+                            export_results=True)
+
