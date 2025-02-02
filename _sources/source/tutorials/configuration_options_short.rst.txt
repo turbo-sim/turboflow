@@ -54,6 +54,10 @@ This section describes the different configuration options available in TurboFlo
     - `critical_mach_number`: see :ref:`evaluate_throat` for model details.
     - `critical_isentropic_throat`: see :ref:`isentropic_throat` for model details.
 
+    .. note::
+
+        The package does not currently support supersonic cascades (cascades where both inlet and exit are supersonic).
+
 
 .. dropdown:: Objective Functions
     :animate: fade-in-slide-down

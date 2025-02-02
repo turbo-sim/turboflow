@@ -3,11 +3,11 @@
 Design optimization
 =========================================================
 
-This section guides you through the process of optimizing the design of turbomachinery using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
+This section guides you through the process of optimizing the design of axial turbines using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
 Design optimization is excecuted in two steps:
 
     1. Load configuration file.
-    2. Compute optimal turbomachinery.
+    2. Compute optimal turbine.
 
 Illustrated by a code example:
 
@@ -21,7 +21,7 @@ Illustrated by a code example:
     config = tf.load_config(CONFIG_FILE) # Load configuration file 
     solver = tf.compute_optimal_turbine(config, export_results=True) # Compute optimal turbine
 
-This page describes the main functionalities and options available when designing turbomachinery using turboflow:
+This page describes the main functionalities and options available when designing turbines using turboflow:
 
     - :ref:`configuration_setup_optimization`
     - :ref:`compute_optimal_turbine`
@@ -240,7 +240,7 @@ Plotting functions are provided to graphically illustrate the simulated data:
 Plot velocity triangles
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This function plots the velocity triangles at each plane of the turbomahcinery. The plot is initialized by providing the plane specific data
+This function plots the velocity triangles at each plane of the axial turbine. The plot is initialized by providing the plane specific data
 from the solution of optimization problem:
 
 .. code-block:: python

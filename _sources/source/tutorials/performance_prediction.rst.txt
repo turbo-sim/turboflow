@@ -3,11 +3,11 @@
 Performance prediction
 =====================================================
 
-In this section, you will learn how to use TurboFlow to predict the performance of turbomachinery. This includes setting up the configuration file, running the analysis, and interpreting the results.
+In this section, you will learn how to use TurboFlow to predict the performance of axial turbines. This includes setting up the configuration file, running the analysis, and interpreting the results.
 Performance prediction is excecuted in three steps:
 
     1. Load configuration file.
-    2. Define operating points where the turbomachinery should be evaluated.
+    2. Define operating points where the turbine should be evaluated.
     3. Compute performance.
 
 Illustrated by a code example:
@@ -26,9 +26,9 @@ Illustrated by a code example:
         config,
         export_results=True,
         stop_on_failure=True,
-    ) # Evaluate turbomachinery
+    ) # Evaluate turbine
 
-This page describes the main functionalities and options available when simulating performance of turbomachinery:
+This page describes the main functionalities and options available when simulating performance of axial turbines:
 
     - :ref:`configuration_setup`
     - :ref:`single_point`
@@ -49,7 +49,7 @@ In summary, these section are required:
 
     - `turbomachinery` : specifies the turbomachinery configuration.
     - `geometry`: all necessary geometrical variables.
-    - `operation_points`: operational points at which the turbomachinery should be evaluated.
+    - `operation_points`: operational points at which the turbine should be evaluated.
 
 while the rest is optional. Here is an example of how the confiugration file could look for a one-stage axial turbine:
 

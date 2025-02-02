@@ -110,12 +110,12 @@
              
   <section id="performance-prediction">
 <span id="id1"></span><h1>Performance prediction<a class="headerlink" href="#performance-prediction" title="Link to this heading"></a></h1>
-<p>In this section, you will learn how to use TurboFlow to predict the performance of turbomachinery. This includes setting up the configuration file, running the analysis, and interpreting the results.
+<p>In this section, you will learn how to use TurboFlow to predict the performance of axial turbines. This includes setting up the configuration file, running the analysis, and interpreting the results.
 Performance prediction is excecuted in three steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Load configuration file.</p></li>
-<li><p>Define operating points where the turbomachinery should be evaluated.</p></li>
+<li><p>Define operating points where the turbine should be evaluated.</p></li>
 <li><p>Compute performance.</p></li>
 </ol>
 </div></blockquote>
@@ -132,10 +132,10 @@ Performance prediction is excecuted in three steps:</p>
     <span class="n">config</span><span class="p">,</span>
     <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="n">stop_on_failure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="p">)</span> <span class="c1"># Evaluate turbomachinery</span>
+<span class="p">)</span> <span class="c1"># Evaluate turbine</span>
 </pre></div>
 </div>
-<p>This page describes the main functionalities and options available when simulating performance of turbomachinery:</p>
+<p>This page describes the main functionalities and options available when simulating performance of axial turbines:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#configuration-setup"><span class="std std-ref">Configuration setup</span></a></p></li>
@@ -156,7 +156,7 @@ to simulate performance across a perfomance map, the <cite>performance_map</cite
 <div><ul class="simple">
 <li><p><cite>turbomachinery</cite> : specifies the turbomachinery configuration.</p></li>
 <li><p><cite>geometry</cite>: all necessary geometrical variables.</p></li>
-<li><p><cite>operation_points</cite>: operational points at which the turbomachinery should be evaluated.</p></li>
+<li><p><cite>operation_points</cite>: operational points at which the turbine should be evaluated.</p></li>
 </ul>
 </div></blockquote>
 <p>while the rest is optional. Here is an example of how the confiugration file could look for a one-stage axial turbine:</p>

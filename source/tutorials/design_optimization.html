@@ -106,12 +106,12 @@
              
   <section id="design-optimization">
 <span id="id1"></span><h1>Design optimization<a class="headerlink" href="#design-optimization" title="Link to this heading"></a></h1>
-<p>This section guides you through the process of optimizing the design of turbomachinery using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
+<p>This section guides you through the process of optimizing the design of axial turbines using TurboFlow. You will learn how to define optimization objectives, set constraints, and utilize the optimization algorithm to achieve the best design.
 Design optimization is excecuted in two steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
 <li><p>Load configuration file.</p></li>
-<li><p>Compute optimal turbomachinery.</p></li>
+<li><p>Compute optimal turbine.</p></li>
 </ol>
 </div></blockquote>
 <p>Illustrated by a code example:</p>
@@ -124,7 +124,7 @@ Design optimization is excecuted in two steps:</p>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_optimal_turbine</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">export_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Compute optimal turbine</span>
 </pre></div>
 </div>
-<p>This page describes the main functionalities and options available when designing turbomachinery using turboflow:</p>
+<p>This page describes the main functionalities and options available when designing turbines using turboflow:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#configuration-setup-optimization"><span class="std std-ref">Configuration setup</span></a></p></li>
@@ -333,7 +333,7 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
 </div></blockquote>
 <section id="plot-velocity-triangles">
 <span id="id3"></span><h3>Plot velocity triangles<a class="headerlink" href="#plot-velocity-triangles" title="Link to this heading"></a></h3>
-<p>This function plots the velocity triangles at each plane of the turbomahcinery. The plot is initialized by providing the plane specific data
+<p>This function plots the velocity triangles at each plane of the axial turbine. The plot is initialized by providing the plane specific data
 from the solution of optimization problem:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>

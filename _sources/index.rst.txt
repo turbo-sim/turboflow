@@ -1,6 +1,6 @@
 
 =========================================================
-TurboFlow: Meanline Modelling of Turbomachinery
+TurboFlow: Meanline Modelling of Axial Turbines
 =========================================================
 
 .. .. image:: https://example.com/logo.png
@@ -15,14 +15,14 @@ TurboFlow: Meanline Modelling of Turbomachinery
 Overview
 ========
 
-TurboFlow is a Python package for mean-line modelling of turbomachinery. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, 
+TurboFlow is a Python package for mean-line modelling of axial turbines. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, 
 and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
 
 Features
 ========
 
-- **Performance Prediction:** Accurately predict the performance of turbomachinery based on various input parameters.
-- **Design Optimization:** Optimize preliminary turbomachinery design to achieve optimal performance metrics.
+- **Performance Prediction:** Accurately predict the performance of axial turbines based on various input parameters.
+- **Design Optimization:** Optimize preliminary axial turbine design to achieve optimal performance metrics.
 - **Equation-oriented problem formulation:** Equation-oriented problem formulation for performance analysis and design optimization.
 - **Model consitency:** The model is consistent for both performance prediction and design optimization.
 - **Efficient solution:** The model adopts gradient-based root-finding and optimization solver.

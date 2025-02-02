@@ -108,6 +108,10 @@
   <section id="choking-criterion">
 <span id="choking-models"></span><h1>Choking criterion<a class="headerlink" href="#choking-criterion" title="Link to this heading"></a></h1>
 <p>The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The package does not currently support supersonic cascades (cascades where both inlet and exit are supersonic).</p>
+</div>
 <section id="isentropic-throat">
 <span id="id1"></span><h2>Isentropic throat<a class="headerlink" href="#isentropic-throat" title="Link to this heading"></a></h2>
 <p>This model predict choked flow by evaluating the throat of the cascade, and set the mach number to be equal to the exit plane at subsonic conditions, and equal to one at supersonic conditions:</p>
