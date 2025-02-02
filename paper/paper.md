@@ -1,5 +1,5 @@
 ---
-title: 'TurboFlow: Meanline Modelling of Turbomachinery'
+title: 'TurboFlow: Meanline Modelling of Axial Turbines'
 tags:
   - python
   - turbomachinery
@@ -77,7 +77,7 @@ The few open-source meanline models that do exist come with significant limitati
 The use of diverse programming languages, such as MATLAB and FORTRAN77, presents accessibility and compatibility issues. MATLAB-based models are proprietary, which limit their accessibility to those with MATLAB licenses.
 While legacy languages like FORTRAN77 might be more accessible, they fall short in terms of modern features and extensive community support. Consequently, models developed with these languages are less efficient to develop and less attractive to potential contributors, hampering development and collaboration. Furthermore, models adopting a sequential model formulation, solve sets of model equations sequentially through multiple nested iterations. This approach can lead to unreliable convergence and prolonged execution times due to the high number of model equations evaluations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency. Lastly, the functionalities provided by existing models differ, with some focusing solely on performance analysis and others on design optimization, yet no single open-source model offers a comprehensive solution for both. 
 
-TurboFlow addresses these gaps with a robust, open-source framework for meanline turbomachinery modeling. It combines performance analysis and design optimization within a flexible, modular 
+TurboFlow addresses these gaps with a robust, open-source framework for meanline modeling. It combines performance analysis and design optimization within a flexible, modular 
 architecture, accommodating various submodels seamlessly. This flexibility allows for the integration of new submodels, giving users the options to tailor the analysis for their application. 
 The model adopts an equation-oriented formulation, allowing integration with gradient-based solvers and offering the potential for faster convergence compared to methods based on the sequential model formulation.
 TurboFlow’s open-source framework enables other researchers and industry practitioners to use and contribute to its development, positioning it as the first community-driven effort in turbomachinery meanline modeling. Through a collaborative effort, TurboFlow can be expanded with other types of turbomachinery and features, having a significant potential to advance turbomachinery meanline modeling.

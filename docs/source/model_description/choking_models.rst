@@ -3,7 +3,11 @@
 Choking criterion
 ======================
 
-The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following. 
+The model can predict choked flow in three different ways. The prinicples for the different methods are explained in the following.
+
+.. note::
+
+    The package does not currently support supersonic cascades (cascades where both inlet and exit are supersonic).
 
 .. _isentropic_throat:
 
@@ -95,6 +99,8 @@ where
     - :math:`\gamma` is the specific heat ratio.
     - :math:`\alpha = \gamma/(\gamma -1)` (for simplicity).
     - Superscript :math:`^*` refer to the critical state. 
+
+
 
 
 
