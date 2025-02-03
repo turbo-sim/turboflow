@@ -1,6 +1,6 @@
 .. _publications:
 
-Affiliated Papers and Author Contributions
+Papers and Author Contributions
 ==========================================
 
 This section lists the scientific papers affiliated with the code and provides an overview of the contributions made by the developers and authors.
@@ -8,12 +8,11 @@ This section lists the scientific papers affiliated with the code and provides a
 Affiliated Papers
 -----------------
 
-The following paper is affiliated with the code, having been used for validation of the model:
+The following paper is affiliated with the code, having been used for validation through performance analysis:
 
 - **Equation-Oriented Meanline Method for Axial Compressors and Turbines**  
   *L. B. Anderson, R. Agromayor, F. Haglind, L. O. Nord*  
-  [DOI: 10.1115/1.4057239](https://asmedigitalcollection.asme.org/turbomachinery/article/147/4/041002/1206960/Equation-Oriented-Meanline-Method-for-Axial)
-
+  DOI: `[10.1115/1.4057239](https://asmedigitalcollection.asme.org/turbomachinery/article/147/4/041002/1206960/Equation-Oriented-Meanline-Method-for-Axial)`
 Author Contributions
 ---------------------
 
