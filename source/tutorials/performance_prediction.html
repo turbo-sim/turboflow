@@ -67,12 +67,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#plot-single-line">Plot single line</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#plot-several-lines">Plot several lines</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stacked-plots">Stacked plots</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plot-velocity-triangles">Plot velocity triangles</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#plot-axial-radial-plane">Plot axial-radial plane</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="design_optimization.html">Design optimization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="configuration_options_short.html">Configuration Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logging.html">Export logs and pickling</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../model_description.html">Model Description</a></li>
@@ -356,12 +359,14 @@ where current_time is a string formatted as <cite>{year}{month}{day}{hour}{minut
 </section>
 <section id="plotting-results">
 <span id="plotting"></span><h2>Plotting results<a class="headerlink" href="#plotting-results" title="Link to this heading"></a></h2>
-<p>A plotting function is provided to graphically illustrate the simulated data. It supports various types of plots, including:</p>
+<p>Plotting functions are provided to graphically illustrate the simulated data. It supports various types of plots, including:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><a class="reference internal" href="#single-line"><span class="std std-ref">Plot single line</span></a>, e.g. mass flow rate as a function of pressure ratio</p></li>
 <li><p><a class="reference internal" href="#plot-several-lines"><span class="std std-ref">Plot several lines</span></a>, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed</p></li>
 <li><p><a class="reference internal" href="#stacked-plots"><span class="std std-ref">Stacked plots</span></a>, e.g. stacked loss coefficients as a function of pressure ratio</p></li>
+<li><p><a class="reference internal" href="#plot-velocity-triangles-pa"><span class="std std-ref">Plot velocity triangles</span></a></p></li>
+<li><p><a class="reference internal" href="#plot-axial-radial-plane-pa"><span class="std std-ref">Plot axial-radial plane</span></a></p></li>
 </ul>
 </div></blockquote>
 <p>The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (<cite>x_key</cite> and <cite>y_key</cite>):</p>
@@ -547,6 +552,48 @@ are made by specifying <cite>stack = True</cite></p>
 </div>
 <p>This would result in this figure:</p>
 <a class="reference internal image-reference" href="../../_images/loss_coefficients.png"><img alt="../../_images/loss_coefficients.png" src="../../_images/loss_coefficients.png" style="width: 465.59999999999997px; height: 343.34999999999997px;" /></a>
+</section>
+<section id="plot-velocity-triangles">
+<span id="plot-velocity-triangles-pa"></span><h3>Plot velocity triangles<a class="headerlink" href="#plot-velocity-triangles" title="Link to this heading"></a></h3>
+<p>This function plots the velocity triangles of an axial-turbine for a certain operation point. The plot is initialized by providing a solver object:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="c1"># Perform analysis</span>
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span> <span class="c1"># Get absolute path of the configuration file</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># PLot velocity triangles</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_axial_radial_plane</span><span class="p">(</span><span class="n">solvers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">geometry</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here is an example of how the velocity triangle plots looks:</p>
+<a class="reference internal image-reference" href="../../_images/plot_velocity_triangles.png"><img alt="../../_images/plot_velocity_triangles.png" src="../../_images/plot_velocity_triangles.png" style="width: 480.0px; height: 360.0px;" /></a>
+</section>
+<section id="plot-axial-radial-plane">
+<span id="plot-axial-radial-plane-pa"></span><h3>Plot axial-radial plane<a class="headerlink" href="#plot-axial-radial-plane" title="Link to this heading"></a></h3>
+<p>This function plots the geometry of an axial-turbine in the axial-radial plane. The plot is initialized by providing a solver object:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">turboflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="c1"># Perform analysis</span>
+<span class="n">CONFIG_FILE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s2">&quot;my_configuration.yaml&quot;</span><span class="p">)</span> <span class="c1"># Get absolute path of the configuration file</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">load_config</span><span class="p">(</span><span class="n">CONFIG_FILE</span><span class="p">)</span> <span class="c1"># Load configuration file</span>
+<span class="n">solvers</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compute_performance</span><span class="p">(</span>
+    <span class="n">operation_points</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot geometry in the axial-radial plane</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">plot_functions</span><span class="o">.</span><span class="n">plot_velocity_triangles_planes</span><span class="p">(</span><span class="n">solvers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">results</span><span class="p">[</span><span class="s2">&quot;plane&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Here is an example of how the plot look:</p>
+<a class="reference internal image-reference" href="../../_images/plot_axial_radial_plane.png"><img alt="../../_images/plot_axial_radial_plane.png" src="../../_images/plot_axial_radial_plane.png" style="width: 480.0px; height: 360.0px;" /></a>
 </section>
 </section>
 </section>
