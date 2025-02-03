@@ -454,7 +454,7 @@ class DictionaryValidationError(Exception):
             return f"{self.message} Key: '{self.key}', Value: {self.value}"
         return self.message
     
-def save_to_pickle(obj, filename = "pickle_file", out_dir = "output"):
+def save_to_pickle(obj, filename = "pickle_file", path = "output/logs", use_datetime = None):
     """
     Save a Python object to a pickle file.
 
@@ -462,8 +462,18 @@ def save_to_pickle(obj, filename = "pickle_file", out_dir = "output"):
     :param filename: The name of the file where the object will be saved (with .pkl extension).
     """
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = os.path.join(out_dir, f"{filename}_{timestamp}.pkl")
+    # Create logs directory if it does not exist
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+     # Define file name and path
+    if use_datetime:
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = os.path.join(path, f"{filename}_{current_time}.pkl")
+    else:
+        filename = os.path.join(path, f"{filename}.pkl")
+
+    # Save object
     with open(filename, 'wb') as file:
         pickle.dump(obj, file)
     print(f"Object successfully saved to {filename}")
