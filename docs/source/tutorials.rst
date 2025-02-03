@@ -16,4 +16,5 @@ to help you fully utilize TurboFlow's capabilities in your projects.
    tutorials/performance_prediction
    tutorials/design_optimization
    tutorials/configuration_options_short
+   tutorials/logging
 

@@ -255,7 +255,7 @@ from the solution of optimization problem:
         out_filename=None,
         out_dir="output",
         export_results=True,
-    ):
+    )
     
     fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solver.problem.results["plane"])
 
@@ -285,7 +285,7 @@ from the solution of the optimization problem:
         out_filename=None,
         out_dir="output",
         export_results=True,
-    ):
+    )
 
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
 

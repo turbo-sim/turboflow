@@ -278,11 +278,13 @@ The **stop_on_failure** breaks the analysis if one of the operation points fails
 Plotting results
 ------------------
 
-A plotting function is provided to graphically illustrate the simulated data. It supports various types of plots, including:
+Plotting functions are provided to graphically illustrate the simulated data. It supports various types of plots, including:
 
     - :ref:`single_line`, e.g. mass flow rate as a function of pressure ratio
     - :ref:`plot_several_lines`, e.g. mass flow rate as a function of pressure ratio at sifferent rotational speed
     - :ref:`stacked_plots`, e.g. stacked loss coefficients as a function of pressure ratio
+    - :ref:`plot_velocity_triangles_PA`
+    - :ref:`plot_axial_radial_plane_PA`
 
 The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (`x_key` and `y_key`):
 
@@ -498,4 +500,60 @@ are made by specifying `stack = True`
 This would result in this figure:
 
 .. image:: ../images/loss_coefficients.png
+    :scale: 15%
+
+.. _plot_velocity_triangles_PA:
+
+Plot velocity triangles
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function plots the velocity triangles of an axial-turbine for a certain operation point. The plot is initialized by providing a solver object:
+
+.. code-block:: python
+
+    import os
+    import turboflow as tf
+    
+    # Perform analysis
+    CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
+    config = tf.load_config(CONFIG_FILE) # Load configuration file 
+    solvers = tf.compute_performance(
+        operation_points,
+        config,
+    )
+    
+    # PLot velocity triangles
+    fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers[0].problem.geometry)
+
+Here is an example of how the velocity triangle plots looks:
+
+.. image:: ../images/plot_velocity_triangles.png
+    :scale: 15%
+
+.. _plot_axial_radial_plane_PA:
+
+Plot axial-radial plane
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function plots the geometry of an axial-turbine in the axial-radial plane. The plot is initialized by providing a solver object:
+
+.. code-block:: python
+
+    import os
+    import turboflow as tf
+    
+    # Perform analysis
+    CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
+    config = tf.load_config(CONFIG_FILE) # Load configuration file 
+    solvers = tf.compute_performance(
+        operation_points,
+        config,
+    )
+    
+    # Plot geometry in the axial-radial plane
+    fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solvers[0].problem.results["plane"])
+
+Here is an example of how the plot look:
+
+.. image:: ../images/plot_axial_radial_plane.png
     :scale: 15%

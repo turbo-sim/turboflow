@@ -2,7 +2,7 @@ import os
 import turboflow as tf
 
 # Define mode 
-MODE = "design_optimzation"
+MODE = "performance_analysis"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
@@ -30,11 +30,17 @@ if MODE == "performance_analysis":
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers[0].problem.geometry)
     fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solvers[0].problem.results["plane"])
 
+    # Save to pickle
+    tf.save_to_pickle(solvers[0], filename = "pickle_file", path = "output/pickle", use_datetime=False)
+    
 elif MODE == "performance_map":
 
     # Compute performance map according to config file
     operation_points = config["performance_analysis"]["performance_map"]
     solvers = tf.compute_performance(operation_points, config, export_results=True, logger = logger)
+
+    # Save to pickle
+    tf.save_to_pickle(solvers, filename = "pickle_file", path = "output/pickle", use_datetime=True)
 
 elif MODE == "design_optimzation":
 
@@ -43,3 +49,6 @@ elif MODE == "design_optimzation":
     solver = tf.compute_optimal_turbine(config, export_results=True, logger = logger)
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solver.problem.results["plane"])
+
+    # Save to pickle
+    tf.save_to_pickle(solver, filename = "pickle_file", path = "output/pickle", use_datetime=True)
