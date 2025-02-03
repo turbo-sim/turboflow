@@ -286,7 +286,7 @@ Plotting functions are provided to graphically illustrate the simulated data. It
     - :ref:`plot_velocity_triangles_PA`
     - :ref:`plot_axial_radial_plane_PA`
 
-The plots are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (`x_key` and `y_key`):
+The first three types are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (`x_key` and `y_key`):
 
 .. code-block:: python
 

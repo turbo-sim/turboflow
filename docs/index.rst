@@ -45,6 +45,7 @@ Contents:
    source/glossary
    source/bibliography
    source/api/turboflow
+   source/publications
    source/developer_guide
 
 
