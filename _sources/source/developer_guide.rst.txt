@@ -56,7 +56,7 @@ This installation guide is intended for developers who wish to contribute to or 
 
    .. code-block:: bash
 
-      conda install poetry
+      conda install poetry 
 
    Poetry is a powerful dependency manager that offers separation of user and developer dependencies, ensuring that only the necessary packages are installed based on the user's intent. Additionally, it simplifies the process of adding, updating, and removing dependencies, making it easier to maintain the project's requirements.
 
@@ -64,7 +64,7 @@ This installation guide is intended for developers who wish to contribute to or 
 
    .. code-block:: bash
 
-      poetry install
+      poetry install --with=dev
 
 7. **Verify the installation by running the following command**:
 
