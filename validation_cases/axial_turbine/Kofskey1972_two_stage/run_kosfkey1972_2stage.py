@@ -25,7 +25,7 @@ if CASE == "peformance_map":
     # operation_points = config["operation_points"]
     solvers = tf.compute_performance(operation_points, 
                                      config, 
-                                     out_filename="performance_map_test",
+                                     out_filename="performance_map_critical_mach",
                                      export_results=True)
 
 elif CASE == "experimental_points":
