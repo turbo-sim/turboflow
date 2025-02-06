@@ -447,13 +447,14 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     gamma = flow_parameters["gamma_out"]
     Ma_rel_out = flow_parameters["Ma_rel_out"]
 
+    cascade_type = ["cascade_type"]
     le = geometry["leading_edge_diameter"]
     s = geometry["pitch"]
     We = geometry["leading_edge_wedge_angle"]
     theta_in = geometry["leading_edge_angle"]
     theta_out = math.arccosd(geometry["A_throat"] / geometry["A_out"])
 
-    chi = get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des)
+    chi = get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type)
 
     dPhip = get_incidence_profile_loss_increment(chi)
 
@@ -916,7 +917,7 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
     return loss_increment
 
 
-def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
+def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type):
     r"""
     Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`.
 
@@ -959,11 +960,13 @@ def get_incidence_parameter(le, s, We, theta_in, theta_out, beta_in, beta_des):
         Incidence parameter.
     """
 
+    sign_factor = 2 * (cascade_type == "rotor") - 1
+
     chi = (
         (le / s) ** (-0.05)
         * (We) ** (-0.2)
         * (math.cosd(theta_in) / math.cosd(theta_out)) ** (-1.4)
-        * (beta_in - beta_des)
+        * sign_factor*(beta_in - beta_des)
         # * (abs(beta_in) - abs(beta_des))
     )
     return chi

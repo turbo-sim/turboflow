@@ -452,13 +452,14 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     beta_in = flow_parameters["beta_in"]  # Inlet relativ flow angle
     gamma = flow_parameters["gamma_out"]  # Specific heat ratio
 
+    cascade_type = geometry["cascade_type"]
     s = geometry["pitch"]  # Pitch
     le = geometry["leading_edge_diameter"]  # Leading edge diameter
     theta_in = geometry["leading_edge_angle"]  # Inlet metal angle
     theta_out = geometry["gauging_angle"]  # Exit metal angle
 
     # Compute incidence parameter
-    chi = get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des)
+    chi = get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des, cascade_type)
 
     # Check if incidence parameter is within the range of the experimental data
     if abs(chi) > 800:
@@ -757,7 +758,7 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     return f
 
 
-def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
+def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des, cascade_type):
     r"""
     Calculate the incidence parameter according to the correlation proposed by :cite:`moustapha_improved_1990`.
 
@@ -799,10 +800,12 @@ def get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des):
 
     # TODO: explain smoothing/blending tricks
 
+    sign_factor = 2 * (cascade_type == "rotor") - 1
+
     chi = (
         (le / s) ** (-1.6)
         * (math.cosd(theta_in) / math.cosd(theta_out)) ** (-2)
-        * (abs(beta_in) - abs(beta_des))
+        * sign_factor*(beta_in - beta_des)
     )
     return chi
 
