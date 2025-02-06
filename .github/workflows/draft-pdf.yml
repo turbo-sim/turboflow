@@ -1,7 +1,7 @@
 name: Draft PDF
 on:
   workflow_dispatch:  # This allows you to trigger the workflow manually
-
+  
 jobs:
   paper:
     runs-on: ubuntu-latest
@@ -16,7 +16,7 @@ jobs:
           # This should be the path to the paper within your repo.
           paper-path: paper/paper.md
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: paper
           # This is the output path where Pandoc will write the compiled
