@@ -240,3 +240,4 @@ design_optimization:
     update_on: gradient
     options: {}
   radius_type: constant_mean
+  multistarts: 0
