@@ -9,7 +9,7 @@ operation_points:
 
 
 simulation_options:
-  choking_criterion : critical_mach_number 
+  choking_criterion : critical_mass_flow_rate 
   deviation_model : aungier
   blockage_model : 0.00  
   rel_step_fd: 1e-3
@@ -29,9 +29,8 @@ performance_analysis :
     fluid_name: air
     T0_in: 298.9
     p0_in: 12.4e4
-    p_out: 12.4e4/np.linspace(2.0, 6.0, 60)
-    omega: 1627*np.array([0.7, 0.9, 1.0, 1.1])
-    # omega: 1627*np.array([1.1])
+    p_out: 12.4e4/np.linspace(6.0, 2.0, 40)
+    omega: 1627*np.array([1.1, 1.0, 0.9, 0.7])
     alpha_in: 0 
   solver_options:
     method: hybr

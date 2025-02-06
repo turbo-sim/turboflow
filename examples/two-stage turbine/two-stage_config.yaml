@@ -22,7 +22,7 @@ performance_analysis :
     T0_in: 298.9
     p0_in: 12.4e4
     p_out: 12.4e4/np.linspace(2.0, 6.0, 40)
-    omega: 1627
+    omega: 1627*np.array([0.7, 0.9, 1.0, 1.1])
     alpha_in: 0 
   solver_options:
     method: hybr
