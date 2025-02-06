@@ -7,9 +7,9 @@ operation_points:
   omega: 1627.0
   alpha_in: 0.0
 simulation_options:
-  deviation_model: aungier
+  deviation_model: zero_deviation
   blockage_model: 0.0
-  choking_criterion: critical_mach_number
+  choking_criterion: critical_mass_flow_rate
   rel_step_fd: 0.0001
   loss_model:
     model: benner
@@ -273,3 +273,4 @@ design_optimization:
     update_on: gradient
     options: {}
   radius_type: constant_mean
+  multistarts: 0

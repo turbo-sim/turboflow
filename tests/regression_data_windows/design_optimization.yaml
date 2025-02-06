@@ -1,18 +1,18 @@
 turbomachinery: axial_turbine
 operation_points:
-  fluid_name: air
-  T0_in: 295.6
-  p0_in: 138000.0
-  p_out: 60052.21932114883
-  omega: 1627.0
+  fluid_name: R125
+  T0_in: 463.15
+  p0_in: 3620000.0
+  p_out: 1585000.0
+  omega: 3810.0
   alpha_in: 0.0
 simulation_options:
-  deviation_model: aungier
+  deviation_model: zero_deviation
   blockage_model: 0.0
   choking_criterion: critical_isentropic_throat
   rel_step_fd: 0.0001
   loss_model:
-    model: benner
+    model: kacker_okapuu
     loss_coefficient: stagnation_pressure
     custom_value: 0.0
     inlet_displacement_thickness_height_ratio: 0.011
@@ -22,65 +22,8 @@ simulation_options:
       secondary: 1.0
       trailing: 1.0
       clearance: 1.0
-geometry:
-  cascade_type:
-  - stator
-  - rotor
-  radius_hub_in:
-  - 0.084785
-  - 0.084785
-  radius_hub_out:
-  - 0.084785
-  - 0.081875
-  radius_tip_in:
-  - 0.118415
-  - 0.118415
-  radius_tip_out:
-  - 0.118415
-  - 0.121325
-  pitch:
-  - 0.018294
-  - 0.01524
-  chord:
-  - 0.02616
-  - 0.02606
-  stagger_angle:
-  - 43.03
-  - -31.05
-  opening:
-  - 0.00747503242
-  - 0.00735223377
-  leading_edge_angle:
-  - 0.0
-  - 29.6
-  leading_edge_wedge_angle:
-  - 50.0
-  - 50.0
-  leading_edge_diameter:
-  - 0.00254
-  - 0.00162
-  trailing_edge_thickness:
-  - 0.0005
-  - 0.0005
-  maximum_thickness:
-  - 0.00505
-  - 0.00447
-  tip_clearance:
-  - 0.0
-  - 0.0003
-  throat_location_fraction:
-  - 1.0
-  - 1.0
 performance_analysis:
-  performance_map:
-    fluid_name: air
-    T0_in: 295.6
-    p0_in: 138000.0
-    p_out:
-    - 60000.00000000001
-    - 57500.0
-    omega: 1627.0
-    alpha_in: 0.0
+  performance_map: null
   solver_options:
     method: hybr
     tolerance: 1.0e-08
@@ -88,25 +31,13 @@ performance_analysis:
     derivative_method: 2-point
     derivative_abs_step: 1.0e-06
     print_convergence: true
-    plot_convergence: false
-  initial_guess:
-    efficiency_tt:
-    - 0.9
-    - 0.8
-    efficiency_ke:
-    - 0.138888888889
-    - 0.178571428571
-    ma_1:
-    - 0.8
-    - 0.8
-    ma_2:
-    - 0.8
-    - 0.8
+    plot_convergence: true
+  initial_guess: {}
 design_optimization:
   objective_function:
-    variable: overall.efficieny_ts
+    variable: overall.efficiency_ts
     type: maximize
-    scale: 1
+    scale: -10.0
   variables:
     v_in:
       value: 0.1
@@ -188,50 +119,78 @@ design_optimization:
       upper_bound: 10.0
     blade_jet_ratio:
       value: 0.5
-      lower_bound: null
-      upper_bound: null
+      lower_bound: 0.1
+      upper_bound: 0.9
     hub_tip_ratio_in:
       value:
       - 0.6
       - 0.6
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
     hub_tip_ratio_out:
       value:
       - 0.6
       - 0.6
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.6
+      - 0.6
+      upper_bound:
+      - 0.9
+      - 0.9
     aspect_ratio:
       value:
       - 1.5
       - 1.5
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 1.0
+      - 1.0
+      upper_bound:
+      - 2.0
+      - 2.0
     pitch_chord_ratio:
       value:
       - 0.9
       - 0.9
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.75
+      - 0.75
+      upper_bound:
+      - 1.1
+      - 1.1
     trailing_edge_thickness_opening_ratio:
       value:
       - 0.1
       - 0.1
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.05
+      - 0.05
+      upper_bound:
+      - 0.4
+      - 0.4
     leading_edge_angle:
       value:
       - 0.41
       - 0.5
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.41
+      - 0.08
+      upper_bound:
+      - 0.92
+      - 0.58
     gauging_angle:
       value:
       - 0.17
       - 0.94
-      lower_bound: null
-      upper_bound: null
+      lower_bound:
+      - 0.06
+      - 0.72
+      upper_bound:
+      - 0.28
+      - 0.94
     throat_location_fraction:
       value:
       - 1.0
@@ -262,10 +221,18 @@ design_optimization:
       - rotor
       lower_bound: null
       upper_bound: null
-  constraints: null
+  constraints:
+  - variable: overall.mass_flow_rate
+    type: '='
+    value: 10.66
+    normalize: true
+  - variable: additional_constraints.interspace_area_ratio
+    type: '='
+    value: 1.0
+    normalize: true
   solver_options:
     library: scipy
-    method: nelder-mead
+    method: slsqp
     derivative_method: 2-point
     derivative_abs_step: null
     print_convergence: true
@@ -273,3 +240,4 @@ design_optimization:
     update_on: gradient
     options: {}
   radius_type: constant_mean
+  multistarts: 0

@@ -12,7 +12,7 @@ simulation_options:
   choking_criterion: critical_mass_flow_rate
   rel_step_fd: 0.0001
   loss_model:
-    model: benner
+    model: moustapha
     loss_coefficient: stagnation_pressure
     custom_value: 0.0
     inlet_displacement_thickness_height_ratio: 0.011
@@ -273,3 +273,4 @@ design_optimization:
     update_on: gradient
     options: {}
   radius_type: constant_mean
+  multistarts: 0
