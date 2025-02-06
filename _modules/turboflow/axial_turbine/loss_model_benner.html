@@ -554,13 +554,14 @@
     <span class="n">gamma</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;gamma_out&quot;</span><span class="p">]</span>
     <span class="n">Ma_rel_out</span> <span class="o">=</span> <span class="n">flow_parameters</span><span class="p">[</span><span class="s2">&quot;Ma_rel_out&quot;</span><span class="p">]</span>
 
+    <span class="n">cascade_type</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cascade_type&quot;</span><span class="p">]</span>
     <span class="n">le</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_diameter&quot;</span><span class="p">]</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">]</span>
     <span class="n">We</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_wedge_angle&quot;</span><span class="p">]</span>
     <span class="n">theta_in</span> <span class="o">=</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;leading_edge_angle&quot;</span><span class="p">]</span>
     <span class="n">theta_out</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">arccosd</span><span class="p">(</span><span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_throat&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">geometry</span><span class="p">[</span><span class="s2">&quot;A_out&quot;</span><span class="p">])</span>
 
-    <span class="n">chi</span> <span class="o">=</span> <span class="n">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">We</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">)</span>
+    <span class="n">chi</span> <span class="o">=</span> <span class="n">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">We</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">,</span> <span class="n">cascade_type</span><span class="p">)</span>
 
     <span class="n">dPhip</span> <span class="o">=</span> <span class="n">get_incidence_profile_loss_increment</span><span class="p">(</span><span class="n">chi</span><span class="p">)</span>
 
@@ -1047,7 +1048,7 @@
 
 <div class="viewcode-block" id="get_incidence_parameter">
 <a class="viewcode-back" href="../../../source/api/turboflow.axial_turbine.loss_model_benner.html#turboflow.axial_turbine.loss_model_benner.get_incidence_parameter">[docs]</a>
-<span class="k">def</span> <span class="nf">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">We</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">get_incidence_parameter</span><span class="p">(</span><span class="n">le</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">We</span><span class="p">,</span> <span class="n">theta_in</span><span class="p">,</span> <span class="n">theta_out</span><span class="p">,</span> <span class="n">beta_in</span><span class="p">,</span> <span class="n">beta_des</span><span class="p">,</span> <span class="n">cascade_type</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`.</span>
 
@@ -1090,11 +1091,13 @@
 <span class="sd">        Incidence parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">sign_factor</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">cascade_type</span> <span class="o">==</span> <span class="s2">&quot;rotor&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
     <span class="n">chi</span> <span class="o">=</span> <span class="p">(</span>
         <span class="p">(</span><span class="n">le</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.05</span><span class="p">)</span>
         <span class="o">*</span> <span class="p">(</span><span class="n">We</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">0.2</span><span class="p">)</span>
         <span class="o">*</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_in</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cosd</span><span class="p">(</span><span class="n">theta_out</span><span class="p">))</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.4</span><span class="p">)</span>
-        <span class="o">*</span> <span class="p">(</span><span class="n">beta_in</span> <span class="o">-</span> <span class="n">beta_des</span><span class="p">)</span>
+        <span class="o">*</span> <span class="n">sign_factor</span><span class="o">*</span><span class="p">(</span><span class="n">beta_in</span> <span class="o">-</span> <span class="n">beta_des</span><span class="p">)</span>
         <span class="c1"># * (abs(beta_in) - abs(beta_des))</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">chi</span></div>
