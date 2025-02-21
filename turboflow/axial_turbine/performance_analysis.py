@@ -10,6 +10,7 @@ import CoolProp as cp
 import matplotlib.pyplot as plt
 import jax
 import jax.numpy as jnp
+import dill
 
 from scipy.stats import qmc
 from scipy import optimize
@@ -43,6 +44,7 @@ def compute_performance(
     out_dir="output",
     stop_on_failure=False,
     export_results=True,
+    logger=None
 ):
     r"""
     Compute and export the performance of each specified operation point to an Excel file.
@@ -131,11 +133,17 @@ def compute_performance(
     solver_container = []
 
     # Loop through all operation points
-    print_operation_points(operation_points)
+    message = print_operation_points(operation_points)
+    for line in message.splitlines():
+        logger.info(line)
+
     for i, operation_point in enumerate(operation_points):
-        print()
-        print(f" Computing operation point {i+1} of {len(operation_points)}")
-        print_boundary_conditions(operation_point)
+        logger.info("")
+        logger.info(f" Computing operation point {i+1} of {len(operation_points)}")
+
+        message = print_boundary_conditions(operation_point)
+        for line in message.splitlines():
+            logger.info(line)
 
         # try:
         # Define initial guess
@@ -148,7 +156,7 @@ def compute_performance(
                 operation_points[:i],  # Use up to the previous point
                 solution_data[:i],  # Use solutions up to the previous point
             )
-            print(f" Using solution from point {closest_index+1} as initial guess")
+            logger.info(f" Using solution from point {closest_index+1} as initial guess")
             initial_guess = closest_x
 
         # Compute performance
@@ -158,6 +166,7 @@ def compute_performance(
             config["geometry"],
             config["simulation_options"],
             config["performance_analysis"]["solver_options"],
+            logger=logger
         )
 
         # Retrieve solver data
@@ -254,6 +263,31 @@ def compute_performance(
     #     df.insert(0, "operation_point", range(1, 1 + len(df)))
 
     # Write dataframes to excel
+    # if export_results:
+    #     # Create a directory to save simulation results
+    #     if not os.path.exists(out_dir):
+    #         os.makedirs(out_dir)
+
+    #     # Define filename with unique date-time identifier
+    #     if out_filename == None:
+    #         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    #         out_filename = f"performance_analysis_{current_time}"
+
+    #     # Export simulation configuration as YAML file
+    #     config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+    #     config_data = utils.convert_numpy_to_python(config_data, precision=12)
+    #     config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+    #     with open(config_file, "w") as file:
+    #         yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+    #     # Export performance results in excel file
+    #     filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+    #     with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+    #         for sheet_name, df in dfs.items():
+    #             df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        
+
     if export_results:
         # Create a directory to save simulation results
         if not os.path.exists(out_dir):
@@ -261,26 +295,39 @@ def compute_performance(
 
         # Define filename with unique date-time identifier
         if out_filename == None:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            out_filename = f"performance_analysis_{current_time}"
+            out_filename = "performance"
 
-        # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-        config_data = utils.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        out_filenames = [f"{out_filename}_{current_time}", f"{out_filename}_latest"]
+        for out_filename in out_filenames:
 
-        # Export performance results in excel file
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            for sheet_name, df in dfs.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=False)
+            # Export simulation configuration as YAML file
+            config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+            config_data = utils.convert_numpy_to_python(config_data, precision=12)
+            config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+            with open(config_file, "w") as file:
+                yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
 
-        print(f" Performance data successfully written to {filepath}")
+            # Export optimal turbine in excel file
+            filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+            with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+                for sheet_name, df in dfs.items():
+                    df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+            # Export optimal turbine as dill object
+            filepath = os.path.join(out_dir, f"{out_filename}.pkl")
+            solver.problem = None
+            with open(filepath, 'wb') as file:
+                # Serialize the object and write it to the file
+                dill.dump(solver, file)
+
+        logger.info(f" Performance data successfully written to {filepath}")
 
     # Print final report
-    print_simulation_summary(solver_container)
+    message = print_simulation_summary(solver_container)
+
+    for line in message:
+        logger.info(line)
 
     return solver_container
 
@@ -291,6 +338,7 @@ def compute_single_operation_point(
     geometry,
     simulation_options,
     solver_options,
+    logger=None
 ):
     """
     Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
@@ -340,6 +388,7 @@ def compute_single_operation_point(
         problem.fluid,
         simulation_options["choking_criterion"],
         simulation_options["deviation_model"],
+        logger,
     )
 
     # Get solver method array
@@ -353,13 +402,13 @@ def compute_single_operation_point(
         problem.keys = initial_guess_scaled.keys()
         for method in solver_methods:
             solver_options["method"] = method
-            solver = psv.NonlinearSystemSolver(problem, **solver_options)
+            solver = psv.NonlinearSystemSolver(problem,logger=logger, **solver_options)
             try:
                 solver.solve(x0)
             except Exception as e:
                 if solver.func_count == 0:
                     raise e
-                print(f" Error during solving: {e}")
+                logger.info(f" Error during solving: {e}")
                 solver.success = False
             if solver.success:
                 break
@@ -399,7 +448,7 @@ def compute_single_operation_point(
     #         break
 
     if not solver.success:
-        print("WARNING: All attempts failed to converge")
+        logger.info("WARNING: All attempts failed to converge")
         # TODO: Add messages to Log file
 
     return solver, problem.results
@@ -551,6 +600,7 @@ def get_initial_guess(
     fluid,
     choking_criterion,
     deviation_model,
+    logger
 ):
 
     # Rename variables
@@ -656,9 +706,9 @@ def get_initial_guess(
                 failures += 1
                 norm_residuals = np.append(norm_residuals, np.nan)
 
-        print(f"Generating heuristic inital guesses from latin hypercube sampling")
-        print(f"Number of failures: {failures} out of {n_samples} samples")
-        print(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
+        logger.info(f"Generating heuristic inital guesses from latin hypercube sampling")
+        logger.info(f"Number of failures: {failures} out of {n_samples} samples")
+        logger.info(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
         heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
         initial_guess = dict(zip(valid_keys_1, heuristic_input))
         ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
@@ -1030,8 +1080,10 @@ def print_simulation_summary(solvers):
     lines_to_output.append("")
 
     # Display to stdout
-    for line in lines_to_output:
-        print(line)
+    # for line in lines_to_output:
+    #     print(line)
+
+    return lines_to_output
 
 
 def print_boundary_conditions(BC):
@@ -1054,21 +1106,27 @@ def print_boundary_conditions(BC):
         A dictionary containing the boundary conditions.
 
     """
-
     column_width = 25  # Adjust this to your desired width
-    print("-" * 80)
-    print(" Operating point: ")
-    print("-" * 80)
-    print(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
-    print(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
-    print(f" {'Total temperature in: ':<{column_width}} {BC['T0_in']-273.15:<.2f} degC")
-    print(f" {'Total pressure in: ':<{column_width}} {BC['p0_in']/1e5:<.3f} bar")
-    print(f" {'Static pressure out: ':<{column_width}} {BC['p_out']/1e5:<.3f} bar")
-    print(f" {'Angular speed: ':<{column_width}} {BC['omega']*60/2/np.pi:<.1f} RPM")
-    print("-" * 80)
-    print()
+    # Initialize a list to accumulate the lines
+    lines = []
+    # Add formatted lines to the list
+    lines.append("-" * 80)
+    lines.append(" Operating point: ")
+    lines.append("-" * 80)
+    lines.append(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
+    lines.append(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
+    lines.append(f" {'Total temperature in: ':<{column_width}} {BC['T0_in'] - 273.15:<.2f} degC")
+    lines.append(f" {'Total pressure in: ':<{column_width}} {BC['p0_in'] / 1e5:<.3f} bar")
+    lines.append(f" {'Static pressure out: ':<{column_width}} {BC['p_out'] / 1e5:<.3f} bar")
+    lines.append(f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / np.pi:<.1f} RPM")
+    lines.append("-" * 80)
+    lines.append("")
+    # Join all the lines into a single string separated by newline characters
+    result = "\n".join(lines)
 
+    return result
 
+    
 def print_operation_points(operation_points):
     """
     Prints a summary table of operation points scheduled for simulation.
@@ -1152,8 +1210,9 @@ def print_operation_points(operation_points):
     # Join the lines and print the output
     formatted_output = "\n".join(output_lines)
 
-    for line in output_lines:
-        print(line)
+    # for line in output_lines:
+    #     print(line)
+
     return formatted_output
 
 

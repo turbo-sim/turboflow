@@ -967,7 +967,7 @@ def combine_multiple_figures(figures, labels=None, markers=None, linestyles=None
 
 
 def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_solutions, 
-                              markers=None, colors=None, fig=None, ax=None, labels = None, variable_names = None, fontsize = 12, markersizes = 6):
+                              markers=None, colors=None, fig=None, ax=None, labels = None, variable_names = None, fontsize = 18, markersizes = 6):
     """
     Plots the relative change from the initial guess for each variable,
     along with the bounds as an error bar style plot.
@@ -1061,7 +1061,7 @@ def plot_optimization_results(initial_guess, lower_bounds, upper_bounds, final_s
 
 import matplotlib.pyplot as plt
 
-def plot_convergence_process(data, plot_together=True, colors=None, linestyles=None, labels=None):
+def plot_convergence_process(data, plot_together=True, colors=None, linestyles=None, labels=None, fontsize = 18):
     """
     Plots the convergence process for multiple optimization algorithms.
     
@@ -1129,32 +1129,46 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
         labels = list(data.keys())
 
     if plot_together:
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 12))
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(13, 12))
+        fig2 = None
         ax = [ax1, ax2]
     else:
         fig, ax1 = plt.subplots(1, 1, figsize=(14, 6))
         fig2, ax2 = plt.subplots(1, 1, figsize=(14, 6))
         ax = [ax1, ax2]
-        ax[0].set_xlabel('Iterations')
+        # ax[0].set_xlabel('Iterations', fontsize = 24)
 
     for idx, (algo, algo_data) in enumerate(data.items()):
         iterations = algo_data['iterations']
         objective = algo_data['objective']
         constraint_violation = algo_data['constraint_violation']
 
-        ax[0].plot(iterations, objective, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
-        ax[1].plot(iterations, constraint_violation, color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}')
+        ax[0].plot(iterations, objective, color=colors[idx], linestyle=linestyles[idx], linewidth=2)
+        ax[0].plot(iterations[-1], objective[-1], marker="o", markerfacecolor="w", color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}', markersize=6)
+        ax[1].plot(iterations, constraint_violation, color=colors[idx], linestyle=linestyles[idx], linewidth=2)
+        ax[1].plot(iterations[-1], constraint_violation[-1], marker="o", markerfacecolor="w", color=colors[idx], linestyle=linestyles[idx], label=f'{labels[idx]}', markersize=6)
 
-    ax[0].set_ylabel('Objective Value')
-    ax[0].legend()
+    
+    
+    ax[0].set_ylabel('Objective value', fontsize = 32)
+    ax[0].legend(fontsize = 24, loc='upper right')
     ax[0].grid(True)
 
-    ax[1].set_xlabel('Iterations')
-    ax[1].set_ylabel('Constraint Violation')
-    ax[1].legend()
+    ax[1].set_xlabel('Iterations', fontsize = 32)
+    ax[1].set_ylabel('Constraint violation', fontsize = 32)
+    # ax[1].legend(fontsize = 24, loc='upper right')
     ax[1].grid(True)
 
-    plt.tight_layout()
+    # Change font size of tick labels on both x and y axes
+    # ax[0].tick_params(axis='x', labelsize=24)  # Change x-axis tick label font size
+    ax[0].set_xticklabels([])
+    ax[0].tick_params(axis='y', labelsize=24)  # Change y-axis tick label font size
+    ax[1].tick_params(axis='x', labelsize=24)  # Change x-axis tick label font size
+    ax[1].tick_params(axis='y', labelsize=24)  # Change y-axis tick label font size
+
+    fig.tight_layout(pad=1)
+    if fig2 is not None:
+        fig2.tight_layout(pad=1)
 
     return fig, fig2, ax
 

@@ -419,16 +419,16 @@ def get_incidence_parameter(
     #     * (math.smooth_abs(beta_in, "quadratic", epsilon=1e-1) - math.smooth_abs(beta_des,"quadratic", epsilon=1e-1)) # Absolute function give problem with JAX differentiation, so use smooth abs
     # )
    
-    # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
+    # Address the change in suction/pressure surfaces
     if cascade_type == "stator":
-        delta_beta = -(beta_in - beta_des)
+        incidence = -(beta_in - beta_des)
     elif cascade_type == "rotor":
-        delta_beta = +(beta_in - beta_des)
+        incidence = +(beta_in - beta_des)
     else:
         raise ValueError("Specify the type of cascade")
 
     cosine_ratio = math.cosd(theta_in) / math.cosd(theta_out)
-    chi = (le / s) ** (-0.05) * (We) ** (-0.2) * cosine_ratio ** (-1.4) * delta_beta
+    chi = (le / s) ** (-0.05) * (We) ** (-0.2) * cosine_ratio ** (-1.4) * incidence
 
     return chi
 

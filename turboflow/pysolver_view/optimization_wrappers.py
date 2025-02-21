@@ -346,9 +346,9 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
         "hessian_approximation": "limited-memory",  # Options: 'exact', 'limited-memory'
         "limited_memory_update_type": "bfgs",  # Options: 'bfgs', 'sr1'
         "line_search_method": "filter",  # Options: 'filter', 'cg-penalty', 'penalty'
-        "limited_memory_max_history": 15,  # Max history for L-BFGS
+        "limited_memory_max_history": 10, # Max history for L-BFGS
         "max_iter": 500,  # Maximum number of iterations.
-        "tol": 1.0,  # Desired convergence tolerance (relative).
+        "tol": 1.0,  # Desired convergence tolerance (relative). # 1.0
         "dual_inf_tol": 1e6,  # Desired threshold for the dual infeasibility.
         "compl_inf_tol": 1e6,  # Desired threshold for the complementarity conditions
         "constr_viol_tol": 1e-6,  # Desired threshold for the constraint and variable bound violation.
@@ -442,12 +442,12 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
     # Define default solver options
     default_options = {
         "Major feasibility tolerance": 1e-6,
-        "Major optimality tolerance": 1.0,
+        "Major optimality tolerance": 1.0, # 1.0
         "Minor feasibility tolerance": 1e-6,
         "Iterations limit": 500,
         "Major iterations limit": 1e6,
         "Minor iterations limit": 1e6,
-        "Hessian updates": 30,
+        "Hessian updates": 20,
     }
 
     # Work with a copy to avoid side effects
@@ -464,7 +464,7 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
     # Define SNOPT iteration limit settings based on generic input
     max_iter = solver_options.pop("max_iterations")
     solver_options["Iterations limit"] = max_iter
-    solver_options["Major iterations limit"] = 10*max_iter
+    solver_options["Major iterations limit"] = max_iter
     solver_options["Minor iterations limit"] = 10*max_iter
 
     # Combine default and given options
