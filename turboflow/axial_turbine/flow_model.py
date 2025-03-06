@@ -305,12 +305,21 @@ def evaluate_cascade(
     results["plane"].loc[len(results["plane"]), inlet_plane.keys()] = inlet_plane
     results["plane"].loc[len(results["plane"]), exit_plane.keys()] = exit_plane
 
+    # Calculate centrifugal stress
+    u_t_in = angular_speed*geometry["radius_tip_in"]
+    u_t_out = angular_speed*geometry["radius_tip_out"]
+    u_t = (u_t_in + u_t_out)/2
+    r_h = 0.5*(geometry["radius_hub_in"] + geometry["radius_hub_out"])
+    r_t = 0.5*(geometry["radius_tip_in"] + geometry["radius_tip_out"])
+    centrifuga_stress = 0.5*u_t**2*(1-(r_h/r_t)**2)
+
     # Return cascade data in dataframe
     cascade_data = {
         **loss_dict,
         **critical_state,
         "dh_s": dh_is,
         "incidence": inlet_plane["beta"] - geometry["leading_edge_angle"],
+        "centrifugal_stress" : centrifuga_stress,
     }
 
     results["cascade"].loc[len(results["cascade"]), cascade_data.keys()] = cascade_data
