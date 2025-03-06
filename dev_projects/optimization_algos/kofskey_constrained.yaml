@@ -37,6 +37,7 @@ performance_analysis :
     efficiency_ke : (0.05, 0.4)
     ma : (0.4, 1.2)
 
+
 geometry:
   cascade_type: ["stator", "rotor"]
   radius_hub_in: [0.084785, 0.084785]
@@ -151,17 +152,24 @@ design_optimization:
       type : ">"
       value : -10
       normalize : True
+    - variable : overall.angular_speed
+      type : "="
+      value : 1627
+      normalize : True
+    - variable : cascade.centrifugal_stress
+      type : "<"
+      value : 9827*0.8
+      normalize : True
+    - variable : geometry.trailing_edge_thickness
+      type : ">"
+      value : 0.050e-2
+      normalize : True
   radius_type : "constant_mean"
   solver_options: 
-    library: pygmo   
-    method: snopt
+    library: scipy   
+    method: slsqp
     derivative_method: 2-point 
     derivative_abs_step: 1e-6 
     print_convergence: True 
     plot_convergence: False 
     update_on: "gradient" 
-
-
-  
-
-

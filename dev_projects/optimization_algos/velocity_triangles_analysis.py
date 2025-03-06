@@ -11,7 +11,7 @@ save_fig = False
 # Load object
 filename_slsqp = "output/pickle_slsqp_2024-08-19_14-30-05.pkl"
 filename_ipopt = "output/pickle_ipopt_2024-08-21_13-42-48.pkl"
-filename_snopt = "output/pickle_snopt_2024-08-19_20-45-38.pkl"
+filename_snopt = "output/pickle_SNOPT_tight_2025-02-16_18-12-04.pkl" # New
 filename_sga_20_new = "output/pickle_2stage_BB_sga_new_2024-10-31_18-19-51.pkl"
 filename_pso_30_new = "output/pickle_2stage_BB_pso_new_2024-11-06_01-08-01.pkl"
 filename_slsqp_BB_new = "output/pickle_2stage_BB_slsqp_new_2024-10-30_20-41-31.pkl"
