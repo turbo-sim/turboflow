@@ -30,7 +30,7 @@ colors = plt.get_cmap('magma')(np.linspace(0.1, 0.9, 2))
 
 # Plot axial-radial plane
 fig, ax = tf.plot_axial_radial_plane(ig_geometry, label = "Baseline", blade_color = "grey", plot_casing=False)
-fig, ax = tf.plot_axial_radial_plane(solver_90.problem.geometry, fig = fig, ax = ax, label = "Optimized", blade_color=colors[0], linestyle = "--", plot_rotation_ax= False, plot_casing=False)
+fig, ax = tf.plot_axial_radial_plane(solver_90.problem.geometry, fig = fig, ax = ax, label = "Restricted", blade_color=colors[0], linestyle = "--", plot_rotation_ax= False, plot_casing=False)
 ylims = ax.get_ylim()
 ax.legend(handletextpad=0.5, frameon=False, loc = "lower left")
 ax.set_ylim([ylims[0], ylims[1]*1.15])
@@ -89,17 +89,49 @@ def rearrange_arrays(*arrays):
     
     return result
 
+def zweifel(results, rotor = False):
+    i = 0
+    j = 0
+    if rotor:
+        i = 2
+        j = 1
+
+    N = 2*np.pi*results["geometry"]["radius_mean_out"].values[-1]/results["geometry"]["pitch"].values[j]
+    Y = results["overall"]["mass_flow_rate"].values[-1]/N*(results["plane"]["w_t"].values[i]-results["plane"]["w_t"].values[i+1])
+    Y_id = (results["plane"]["p0_rel"].values[i]-results["plane"]["p"].values[i+1])*results["geometry"]["axial_chord"].values[j]*results["geometry"]["height"].values[j]
+    return Y/Y_id
+
 # Print perfromance parameters
-results = [initial_guess.results, solver_90.problem.results]
+results = [solver_90.problem.results]
 for i, result in zip(range(len(results)), results):
     r = result["stage"]["reaction"] # reaction
     psi = (result["plane"]["v_t"].values[2] - result["plane"]["v_t"].values[3])/result["plane"]["blade_speed"].values[-1]
     phi = result["plane"]["v_m"].values[3]/result["plane"]["blade_speed"].values[-1]
+    stress = result["cascade"]["centrifugal_stress"].values[1]
+    omega = result["overall"]["angular_speed"]
+    mu = result["overall"]["blade_jet_ratio_mean"]
+    omega_s = result["overall"]["specific_speed"]
+    Ma_rel_s = result["plane"]["Ma_rel"].values[1]
+    Ma_rel_r = result["plane"]["Ma_rel"].values[3]
+    Z_s = zweifel(result, rotor = False)
+    Z_r = zweifel(result, rotor = True)    
+    blade_speed = result["plane"]["blade_speed"].values[-1]
     print("\n")
     print(f"Results {i}")
+    print(f'Total-to-total efficiency: {result["overall"]["efficiency_tt"]}')
+    print(f'Total-to-static efficiency: {result["overall"]["efficiency_ts"]}')
     print(f"Degree of reaction: {r}")
     print(f"Stage loading coefficient: {psi}")
     print(f"Flow coefficient: {phi}")
+    print(f"Centrifugal stress: {stress}")
+    print(f"Stator zweifel: {Z_s}")
+    print(f"Rotor zweifel: {Z_r}")
+    print(f"Stator exit mach number: {Ma_rel_s}")
+    print(f"Rotor exit mach number: {Ma_rel_r}")
+    print(f"Specific speed: {omega_s}")
+    print(f"Angular speed: {omega}")
+    print(f"Blade jet ratio: {mu}")
+    print(f"Blade speed: {blade_speed}")
 
 initial_fitness = -1*initial_guess.results["overall"]["efficiency_ts"].values[0]
 print((solver_90.convergence_history['objective_value'][-1]-initial_fitness)/initial_fitness*100)

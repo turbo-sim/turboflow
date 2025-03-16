@@ -77,6 +77,19 @@ def find_clusters(arr, err = 0.01):
 
     return clusters
 
+def zweifel(results, rotor = False):
+    i = 0
+    j = 0
+    if rotor:
+        i = 2
+        j = 1
+
+    N = 2*np.pi*results["geometry"]["radius_mean_out"].values[-1]/results["geometry"]["pitch"].values[j]
+    Y = results["overall"]["mass_flow_rate"].values[-1]/N*(results["plane"]["w_t"].values[i]-results["plane"]["w_t"].values[i+1])
+    Y_id = (results["plane"]["p0_rel"].values[i]-results["plane"]["p"].values[i+1])*results["geometry"]["axial_chord"].values[j]*results["geometry"]["height"].values[j]
+    return Y/Y_id
+
+
 # Filter the succesful solvers
 objective_functions = np.array([])
 successes = 0
@@ -96,7 +109,7 @@ for i in kill_solutions:
     del solver_container[i]
     del sols[i]
     objective_functions = np.delete(objective_functions, i)
-
+    
 # Define plot options
 markers = ["o", "x", ">", "<", "^", "v", "s", "*"]*8
 colors = plt.get_cmap('magma')(np.linspace(0.1, 0.9, len(solver_container)))
@@ -104,9 +117,9 @@ marker_sizes = [7]*len(solver_container)
 fontsize = 18
 
 # Sort solutions from least to most efficiency upgrade
-combined = list(zip(objective_functions, sols))
+combined = list(zip(objective_functions, sols, solver_container))
 combined_sorted = sorted(combined, key=lambda x: x[0], reverse=True)
-sorted_array, sorted_sols = zip(*combined_sorted)
+sorted_array, sorted_sols, solvers_sorted = zip(*combined_sorted)
 
 # Plot efficiency upgrade for each solution 
 fig1, ax1 = plt.subplots()
@@ -125,7 +138,7 @@ plt.tight_layout()
 # Calcaulate geometry for three selected solutions (unfortunately, the problem object for each sovler object was updated during the mutli-start optimization, so every problem is the same)
 selected_solutions = [0, 25, -1] # Selected solutions
 geoms = [] # Geometry list
-solv_alt = [initial_guess[13:], sols[selected_solutions[0]], sols[selected_solutions[1]], sols[selected_solutions[2]]] # Final x for selected solutions
+solv_alt = [initial_guess[13:], sorted_sols[selected_solutions[0]], sorted_sols[selected_solutions[1]], sorted_sols[selected_solutions[2]]] # Final x for selected solutions
 effs = [(sorted_array[selected_solutions[0]]-initial_efficiency)*-1, (sorted_array[selected_solutions[1]]-initial_efficiency)*-1, (sorted_array[selected_solutions[2]]-initial_efficiency)*-1] # Efficiency upgrade for selected solutions
 h0_in = solvers[0].problem.boundary_conditions["h0_in"] # Load boundary conditions
 mass_flow = solvers[0].problem.reference_values["mass_flow_ref"] # Load boundary conditions
@@ -159,9 +172,9 @@ for dv in solv_alt:
 
 # Plot axial-radial plane
 fig2, ax2 = tf.plot_axial_radial_plane(geoms[0], label = "Baseline", blade_color = "grey", plot_casing=False)
-fig2, ax2 = tf.plot_axial_radial_plane(geoms[1], fig = fig2, ax = ax2, label = f"$\Delta \eta = {effs[0]:.2f}$", blade_color = colors[selected_solutions[0]], plot_casing=False, plot_rotation_ax=False)
-fig2, ax2 = tf.plot_axial_radial_plane(geoms[2], fig = fig2, ax = ax2, blade_color = colors[selected_solutions[1]], label = f"$\Delta \eta = {effs[1]:.2f}$", plot_casing=False, plot_rotation_ax=False)
-fig2, ax2 = tf.plot_axial_radial_plane(geoms[3], fig = fig2, ax = ax2, blade_color = colors[selected_solutions[2]], label = f"$\Delta \eta = {effs[2]:.2f}$", plot_casing=False, plot_rotation_ax=False)
+fig2, ax2 = tf.plot_axial_radial_plane(geoms[1], fig = fig2, ax = ax2, label = f"Case {selected_solutions[0]}", blade_color = colors[selected_solutions[0]], plot_casing=False, plot_rotation_ax=False)
+fig2, ax2 = tf.plot_axial_radial_plane(geoms[2], fig = fig2, ax = ax2, blade_color = colors[selected_solutions[1]], label = f"Case {selected_solutions[1]}", plot_casing=False, plot_rotation_ax=False)
+fig2, ax2 = tf.plot_axial_radial_plane(geoms[3], fig = fig2, ax = ax2, blade_color = colors[selected_solutions[2]], label = f"Case {selected_solutions[2]}", plot_casing=False, plot_rotation_ax=False)
 ylims = ax2.get_ylim()
 ax2.legend(handletextpad=0.5, frameon=False, loc = "lower left")
 ax2.set_ylim([ylims[0], ylims[1]*1.15])
@@ -207,19 +220,40 @@ plt.annotate(
 # Calculate selected 
 if calculate_performance_parameters:
     for j,i in zip(range(len(selected_solutions)), selected_solutions):
-        solver_container[i].problem.fitness_gradient_based(solver_container[i].convergence_history["x"][-1])
-        results = solver_container[i].problem.results
+        solvers_sorted[i].problem.fitness_gradient_based(solvers_sorted[i].convergence_history["x"][-1])
+        results = solvers_sorted[i].problem.results
         r = results["stage"]["reaction"].values[0] # reaction
         psi = (results["plane"]["v_t"].values[2] - results["plane"]["v_t"].values[3])/results["plane"]["blade_speed"].values[-1]
         phi = results["plane"]["v_m"].values[3]/results["plane"]["blade_speed"].values[-1]
         stress = results["cascade"]["centrifugal_stress"].values[1]
+        omega = results["overall"]["angular_speed"]
+        mu = results["overall"]["blade_jet_ratio_mean"]
+        omega_s = results["overall"]["specific_speed"]
+        Ma_rel_s = results["plane"]["Ma_rel"].values[1]
+        Ma_rel_r = results["plane"]["Ma_rel"].values[3]
+        Z_s = zweifel(results, rotor = False)
+        Z_r = zweifel(results, rotor = True)
+        blade_speed = results["plane"]["blade_speed"].values[-1]
+
 
         print("\n")
         print(f"Efficiency upgrade: {effs[j]}")
+        print(f'Total-to-total efficiency: {results["overall"]["efficiency_tt"]}')
+        print(f'Total-to-static efficiency: {results["overall"]["efficiency_ts"]}')
+        print(f"Objective: {sorted_array[i]}")
         print(f"Degree of reaction: {r}")
         print(f"Stage loading coefficient: {psi}")
         print(f"Flow coefficient: {phi}")
         print(f"Centrifugal stress: {stress}")
+        print(f"Stator zweifel: {Z_s}")
+        print(f"Rotor zweifel: {Z_r}")
+        print(f"Stator exit mach number: {Ma_rel_s}")
+        print(f"Rotor exit mach number: {Ma_rel_r}")
+        print(f"Specific speed: {omega_s}")
+        print(f"Angular speed: {omega}")
+        print(f"Blade jet ratio: {mu}")
+        print(f"Blade speed: {blade_speed}")
+
 
     # Print initial guess
     solver_container[0].problem.fitness_gradient_based(initial_guess)
@@ -228,12 +262,30 @@ if calculate_performance_parameters:
     psi = (results["plane"]["v_t"].values[2] - results["plane"]["v_t"].values[3])/results["plane"]["blade_speed"].values[-1]
     phi = results["plane"]["v_m"].values[3]/results["plane"]["blade_speed"].values[-1]
     stress = results["cascade"]["centrifugal_stress"].values[1]
+    omega = results["overall"]["angular_speed"]
+    mu = results["overall"]["blade_jet_ratio_mean"]
+    omega_s = results["overall"]["specific_speed"]
+    Ma_rel_s = results["plane"]["Ma_rel"].values[1]
+    Ma_rel_r = results["plane"]["Ma_rel"].values[3]
+    Z_s = zweifel(results, rotor = False)
+    Z_r = zweifel(results, rotor = True)
+    blade_speed = results["plane"]["blade_speed"].values[-1]
     print("\n")
     print("Initial guess")
+    print(f'Total-to-total efficiency: {results["overall"]["efficiency_tt"]}')
+    print(f'Total-to-static efficiency: {results["overall"]["efficiency_ts"]}')
     print(f"Degree of reaction: {r}")
     print(f"Stage loading coefficient: {psi}")
     print(f"Flow coefficient: {phi}")
     print(f"Centrifugal stress: {stress}")
+    print(f"Stator zweifel: {Z_s}")
+    print(f"Rotor zweifel: {Z_r}")
+    print(f"Stator exit mach number: {Ma_rel_s}")
+    print(f"Rotor exit mach number: {Ma_rel_r}")
+    print(f"Specific speed: {omega_s}")
+    print(f"Angular speed: {omega}")
+    print(f"Blade jet ratio: {mu}")
+    print(f"Blade speed: {blade_speed}")
 
 if save_figs:
 
