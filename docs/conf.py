@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(".."))
 project = "turboflow"
 copyright = "2024, Lasse Borg Anderson and Roberto Agromayor"
 author = "Lasse Borg Anderson and Roberto Agromayor"
-release = "v0.1.16"
+release = "v0.1.17"
 
 # Define extensions
 extensions = [

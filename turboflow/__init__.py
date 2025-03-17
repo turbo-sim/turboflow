@@ -29,7 +29,7 @@ set_plot_options()
 
 
 # Package info
-__version__ = "0.1.16"
+__version__ = "0.1.17"
 PACKAGE_NAME = "turboflow"
 URL_GITHUB = "https://github.com/turbo-sim/turboflow"
 URL_DOCS = "https://turbo-sim.github.io/turboflow/"
