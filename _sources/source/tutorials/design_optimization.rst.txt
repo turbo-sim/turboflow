@@ -316,7 +316,7 @@ This function plots the geometry of an axial-turbine in the axial-tangential pla
     )
     
     # Plot geometry in the axial-tangential plane
-    fig, ax = tf.plot_functions.plot_view_axial_tangential(solvers[0].problem)
+    fig, ax = tf.plot_functions.plot_view_axial_tangential(solver.problem)
 
 Here is an example of how the plot look:
 
