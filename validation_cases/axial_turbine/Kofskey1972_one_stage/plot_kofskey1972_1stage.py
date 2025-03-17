@@ -133,7 +133,7 @@ if Case == "performance_map":
     )
 
     # Plot experimental points
-    filename = "experimental_data/experimental_data_Kofskey1972_1stage_interpolated.xlsx"
+    filename = "experimental_data/experimental_data_kofskey1972_1stage_interpolated.xlsx"
     validation_data = pd.read_excel(filename)
 
     # Define which angular speed lines that should be plotted

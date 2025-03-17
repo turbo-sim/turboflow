@@ -2,7 +2,7 @@ import os
 import turboflow as tf
 
 # Define mode 
-MODE = "performance_analysis"
+MODE = "design_optimzation"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
@@ -29,6 +29,7 @@ if MODE == "performance_analysis":
     # Plot turbine geometry and velocity triangles
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solvers[0].problem.geometry)
     fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solvers[0].problem.results["plane"])
+    fig, ax = tf.plot_functions.plot_view_axial_tangential(solvers[0].problem)
 
     # Save to pickle
     tf.save_to_pickle(solvers[0], filename = "pickle_file", path = "output/pickle", use_datetime=False)
@@ -49,6 +50,7 @@ elif MODE == "design_optimzation":
     solver = tf.compute_optimal_turbine(config, export_results=True, logger = logger)
     fig, ax = tf.plot_functions.plot_axial_radial_plane(solver.problem.geometry)
     fig, ax = tf.plot_functions.plot_velocity_triangles_planes(solver.problem.results["plane"])
+    fig, ax = tf.plot_functions.plot_view_axial_tangential(solver.problem)
 
     # Save to pickle
     tf.save_to_pickle(solver, filename = "pickle_file", path = "output/pickle", use_datetime=True)

@@ -219,22 +219,22 @@ if Case == "performance_map":
             title=legend_title,
         )
 
-        # Highlight design points
-        design_point_coordinates = [
-            design_point_result["pressure_ratio_ts"],
-            design_point_result["mass_flow_rate"],
-        ]
-        highlight_design_point(ax1, design_point_coordinates, [4.25, 2.46])
-        design_point_coordinates = [
-            design_point_result["pressure_ratio_ts"],
-            design_point_result["torque"],
-        ]
-        highlight_design_point(ax4, design_point_coordinates, [3.25, 165])
-        design_point_coordinates = [
-            design_point_result["pressure_ratio_ts"],
-            design_point_result["angle_exit_abs"],
-        ]
-        highlight_design_point(ax3, design_point_coordinates, [3.25, -25])
+    # Highlight design points
+    design_point_coordinates = [
+        design_point_result["pressure_ratio_ts"],
+        design_point_result["mass_flow_rate"],
+    ]
+    highlight_design_point(ax1, design_point_coordinates, [4.25, 2.46])
+    design_point_coordinates = [
+        design_point_result["pressure_ratio_ts"],
+        design_point_result["torque"],
+    ]
+    highlight_design_point(ax4, design_point_coordinates, [3.25, 165])
+    design_point_coordinates = [
+        design_point_result["pressure_ratio_ts"],
+        design_point_result["angle_exit_abs"],
+    ]
+    highlight_design_point(ax3, design_point_coordinates, [3.25, -25])
 
     # Manual settings
     # ax1.set_xlim([2.1, 5.4])
