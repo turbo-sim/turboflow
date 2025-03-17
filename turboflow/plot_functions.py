@@ -842,8 +842,6 @@ def plot_velocity_triangles_planes(plane):
 
     return fig, ax
 
-import matplotlib.pyplot as plt
-
 def combine_multiple_figures(figures, labels=None, markers=None, linestyles=None, colors=None, y_labels = None):
     """
     Combine multiple matplotlib figures into a single figure with custom labels, markers, linestyles, and colors.
@@ -1152,7 +1150,349 @@ def plot_convergence_process(data, plot_together=True, colors=None, linestyles=N
     return figs, ax
 
 
+def NURBS(P, p, U, u, W):
+    # ...
+    u = np.atleast_1d(u)
+    W = np.atleast_1d(W)
 
+    Nt = len(u)
+    dim, nn = P.shape  # nn = n+1 control points
+    n = nn - 1
+    m = n + p + 1      # total B-spline segments for initial p=0
+
+    # ** We now allocate with 'm' columns instead of 'nn': **
+    N = np.zeros((Nt, m))
+
+    # First step (p=0)
+    for i in range(m):
+        N[:, i] = ((u >= U[i]) & (u <= U[i+1])).astype(float)
+
+    current_p = 1
+    while m > (n + 1):
+        m -= 1
+        N_bis = np.zeros((Nt, m))
+
+        for i in range(m):
+            denom1 = (U[i + current_p] - U[i])
+            denom2 = (U[i + current_p + 1] - U[i + 1])
+            
+            if denom1 != 0:
+                n1 = ((u - U[i]) / denom1) * N[:, i]
+            else:
+                n1 = 0.0
+
+            if denom2 != 0:
+                n2 = ((U[i + current_p + 1] - u) / denom2) * N[:, i + 1]
+            else:
+                n2 = 0.0
+
+            n1 = np.nan_to_num(n1)
+            n2 = np.nan_to_num(n2)
+            N_bis[:, i] = n1 + n2
+
+        N = N_bis
+        current_p += 1
+
+    # At this point, N has shape (Nt, n+1).
+    # Compute rational basis
+    W_mat = np.tile(W, (Nt, 1))
+    numerator = N * W_mat
+    denominator = np.sum(numerator, axis=1, keepdims=True)
+    denominator = np.where(denominator == 0.0, 1e-14, denominator)
+    R = numerator / denominator
+
+    # Evaluate final curve in R^dim
+    r = R @ P.T  # shape (Nt, dim)
+
+    return r, R, N
+
+
+
+def plot_blade_profile(blade_parameters):
+    """
+    Python version of the MATLAB function [x, y] = plot_blade_profile(blade_parameters).
+
+    Given a dictionary `blade_parameters` with:
+      chord, stagger, theta_in, theta_out,
+      wedge_in, wedge_out, radius_in, radius_out,
+      d1, d2, d3, d4
+    it computes the shape of a 2D blade profile (x, y) by connecting
+    four NURBS segments:
+      (1) Leading edge arc (between points 1 and 2)
+      (2) Spline from point 2 to point 3
+      (3) Trailing edge arc (between points 3 and 4)
+      (4) Spline from point 4 back to point 1
+    
+    Returns:
+    --------
+    x, y : 1D numpy arrays
+        The concatenated coordinates of the blade in the plane.
+    """
+
+    # -- 1) Unpack parameters --
+    chord      = blade_parameters["chord"]        # Blade chord
+    stagger    = blade_parameters["stagger"]      # Stagger angle
+    theta_in   = blade_parameters["theta_in"]     # Inlet camber angle
+    theta_out  = blade_parameters["theta_out"]    # Outlet camber angle
+    wedge_in   = blade_parameters["wedge_in"]     # Leading edge wedge semiangle
+    wedge_out  = blade_parameters["wedge_out"]    # Trailing edge wedge semiangle
+    radius_in  = blade_parameters["radius_in"]    # Leading edge radius
+    radius_out = blade_parameters["radius_out"]   # Trailing edge radius
+    d1         = blade_parameters["d1"]
+    d2         = blade_parameters["d2"]
+    d3         = blade_parameters["d3"]
+    d4         = blade_parameters["d4"]
+
+    # -- 2) Points 1, 2, 3, 4 (the 'corners' of the blade) --
+    a1 = theta_in + wedge_in
+    x1 = radius_in*(1 - np.sin(a1))
+    y1 = radius_in*(    np.cos(a1))
+
+    a2 = theta_in - wedge_in
+    x2 = radius_in*(1 + np.sin(a2))
+    y2 = radius_in*(    -np.cos(a2))
+
+    a3 = theta_out + wedge_out
+    x3 = chord*np.cos(stagger) - radius_out*(1 - np.sin(a3))
+    y3 = chord*np.sin(stagger) - radius_out*(    np.cos(a3))
+
+    a4 = theta_out - wedge_out
+    x4 = chord*np.cos(stagger) - radius_out*(1 + np.sin(a4))
+    y4 = chord*np.sin(stagger) + radius_out*(    np.cos(a4))
+
+    # ---------------------------
+    # -- Segment 1: arc 1 -> 2 --
+    # ---------------------------
+    P0 = np.array([x1, y1])
+    P2 = np.array([x2, y2])
+    # Normal direction
+    n = P2 - P0
+    n = np.array([-n[1], n[0]])  # rotate 90 deg
+    n = n / np.linalg.norm(n)
+    a  = wedge_in
+    R  = radius_in
+    # Middle control point
+    P1 = (P0 + P2)/2.0 - R*np.cos(a)/np.tan(a)*n
+
+    # Combine into a matrix of shape (dim, n+1)
+    # Here: P0, P1, P2 => 3 control points for a 2nd-order NURBS
+    ctrl_pts = np.column_stack([P0, P1, P2])
+
+    # Weights
+    W = np.ones(3)
+    # The second control point gets weight = sin(a)
+    W[1] = np.sin(a)
+
+    # Parameter vector
+    u = np.linspace(0, 1, 100)
+    p = 2  # Quadratic
+    # Clamped knot vector: p+1 zeros, n-p equispaced, p+1 ones
+    # n = 2 => number of segments = 2, so for a Bezier we do
+    # U = [0,0, ..., 1,1], length = n+p+2 = 2+2+2=6
+    # Typically for a quadratic Bezier: [0,0,0,1,1,1]
+    U = np.concatenate([np.zeros(p), np.linspace(0,1, (3-p)), np.ones(p)])
+    # But strictly we want 3 control points => n=2 => n-p+2=2-2+2=2
+    # so U = [0,0, 1,1, 1,1]? We'll mimic the exact MATLAB approach:
+    # The MATLAB code does: U = [zeros(1,p), linspace(0,1,n-p+2), ones(1,p)]
+    # For n=2, p=2 => n-p+2=2 => U = [0,0, 0..1, 1,1] => [0,0,0,1,1,1]
+    U = np.array([0, 0, 0, 1, 1, 1], dtype=float)
+
+    # Evaluate NURBS
+    r12, _, _ = NURBS(ctrl_pts, p, U, u, W)
+
+    # -------------------------------------------------
+    # -- Segment 2: from point 2 -> point 3 (cubic)  --
+    # -------------------------------------------------
+    P0 = np.array([x2, y2])
+    P1 = P0 + d2*chord*np.array([np.cos(a2), np.sin(a2)])
+    P3 = np.array([x3, y3])
+    P2 = P3 - d3*chord*np.array([np.cos(a3), np.sin(a3)])
+
+    ctrl_pts = np.column_stack([P0, P1, P2, P3])
+    W = np.ones(4)
+    u = np.linspace(0, 1, 100)
+    p = 3  # cubic
+    # For a cubic Bezier with 4 control points, we have n=3 => n-p+2=3-3+2=2
+    # so the knot vector length is 4+3+1=8, typically [0,0,0,0,1,1,1,1]
+    U = np.array([0,0,0,0,1,1,1,1], dtype=float)
+
+    r23, _, _ = NURBS(ctrl_pts, p, U, u, W)
+
+    # -----------------------------
+    # -- Segment 3: arc 3 -> 4   --
+    # -----------------------------
+    P0 = np.array([x3, y3])
+    P2 = np.array([x4, y4])
+    # Normal direction
+    n = P2 - P0
+    n = np.array([-n[1], n[0]])
+    n = n / np.linalg.norm(n)
+    a  = wedge_out
+    R  = radius_out
+    P1 = (P0 + P2)/2.0 - R*np.cos(a)/np.tan(a)*n
+
+    ctrl_pts = np.column_stack([P0, P1, P2])
+    W = np.ones(3)
+    W[1] = np.sin(a)
+    u = np.linspace(0, 1, 100)
+    p = 2
+    U = np.array([0, 0, 0, 1, 1, 1], dtype=float)
+
+    r34, _, _ = NURBS(ctrl_pts, p, U, u, W)
+
+    # ------------------------------------------------
+    # -- Segment 4: from point 4 -> point 1 (cubic) --
+    # ------------------------------------------------
+    # We re-use the same approach as segment 2 (cubic)
+    P0 = np.array([x4, y4])
+    P1 = P0 - d1*chord*np.array([np.cos(a4), np.sin(a4)])
+    P3 = np.array([x1, y1])
+    P2 = P3 + d4*chord*np.array([np.cos(a1), np.sin(a1)])
+
+    ctrl_pts = np.column_stack([P0, P1, P2, P3])
+    W = np.ones(4)
+    u = np.linspace(0, 1, 100)
+    p = 3
+    U = np.array([0,0,0,0,1,1,1,1], dtype=float)
+
+    r41, _, _ = NURBS(ctrl_pts, p, U, u, W)
+
+    # -- Combine segments --
+    r = np.vstack([r12, r23, r34, r41])
+    x = r[:, 0]
+    y = r[:, 1]
+
+    return x, y
+
+
+def plot_view_axial_tangential(problem_structure, 
+                               fig = None, 
+                               ax = None, 
+                               repeats = 3,
+                               color = 'k', 
+                               linestyle = "-", 
+                               label = ""):
+    """
+    Optional: Python version of the MATLAB function plot_view_axial_tangential.
+    Demonstrates how a multi-stage turbine might be visualized in an axial-tangential view,
+    using repeated calls to plot_blade_profile for rotor/stator rows.
+
+    turbine_data is a dictionary expected to have structure:
+       turbine_data['cascade'] = list of dicts, each with
+         {
+           's': ...,         # pitch
+           'cs': ...,        # spacing between cascades
+           'c': ...,         # chord
+           'b': ...,         # axial spacing
+           'stagger': ...,
+           'theta_in': ...,
+           'theta_out': ...,
+           't_max': ...,
+           't_te': ...,
+         }
+       turbine_data['overall'] = {
+           'axial_length': ...,
+           'n_stages': ...,
+       }
+       turbine_data['stage'] = {
+           'R': [reaction_values],
+       }
+
+    This function is included mainly to show how one might replicate
+    the high-level plotting. It references internal design logic
+    that is specific to your original MATLAB code.
+    """
+
+    # Load data from problem structure
+    geometry = problem_structure.geometry
+    results = problem_structure.results
+
+    # Extract data from turbine_data
+    s = geometry['pitch']
+    cs = geometry['axial_chord']
+    c = geometry['chord']
+    stagger = geometry['stagger_angle']
+    theta_in = geometry['leading_edge_angle']
+    theta_out = geometry['gauging_angle']
+    t_max = geometry['maximum_thickness']
+    t_te = geometry['trailing_edge_thickness']
+    n_cascades = geometry['number_of_cascades']
+    reaction = np.array(results['stage']['reaction'].values)  # one per stage
+    
+    dx = 0.1  # Axial spacing between cascades relative to max axial chord
+    dx = dx * max(cs)
+    L = np.sum(cs) + np.sum(dx*np.ones(n_cascades-1))
+
+    # Create figure
+    if fig == None:
+        fig, ax = plt.subplots()
+        ax.set_aspect('equal', 'box')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.yaxis.set_ticks([])
+        ax.set_xlim([0.0, L*1.1])
+        ax.grid(False)
+        ax.tick_params(axis='x', which='both', top=False, labeltop=False)
+        ax.set_xlabel("Axial direction")
+
+    # Now actually plot the blades
+    x_0 = 0.0
+    for j in range(n_cascades):
+        # Build a dictionary of blade parameters
+        if reaction[j//2] < 0.25 and ((j+1) % 2 == 0):
+            # "Impulse blade" parameters for rotor
+            blade_params = {
+                'chord': c[j],
+                'stagger': stagger[j]*np.pi/180,
+                'theta_in': theta_in[j]*np.pi/180,
+                'theta_out': theta_out[j]*np.pi/180,
+                'wedge_in': 10.0 * np.pi/180,
+                'wedge_out': 10.0 * np.pi/180,
+                'radius_in': 1.0 * t_te[j],
+                'radius_out': 1.0 * t_te[j],
+                'd1': 0.60,
+                'd2': 0.40,
+                'd3': 0.40,
+                'd4': 0.60
+            }
+        else:
+            # "Reaction blade" parameters
+            blade_params = {
+                'chord': c[j],
+                'stagger': stagger[j]*np.pi/180,
+                'theta_in': theta_in[j]*np.pi/180,
+                'theta_out': theta_out[j]*np.pi/180,
+                'wedge_in': 10.0 * np.pi/180,
+                'wedge_out': 7.5 * np.pi/180,
+                'radius_in': 0.50 * t_max[j],
+                'radius_out': 1.0 * t_te[j],
+                'd1': 0.30,
+                'd2': 0.30,
+                'd3': 0.30,
+                'd4': 0.30
+            }
+
+        # Get blade coordinates
+        bx, by = plot_blade_profile(blade_params)
+
+        # Plot multiple blade passages in the tangential direction
+        for k in range(repeats):
+            sign = -(-1) ** k
+            # sign = 1
+            if j == 0 and k == 0:
+                ax.plot(bx + x_0, by + s[j]*((1+k)//2), color = color, linestyle = linestyle, label  = label, linewidth=1.0)
+            else:
+                ax.plot(bx + x_0, by + sign*s[j]*((1+k)//2), color = color, linestyle = linestyle, label='_nolegend_', linewidth=1.0)
+
+        # Move x_0 to the next cascade
+        x_0 += dx + cs[j]
+
+        fig.tight_layout()
+    
+    plt.show()
+
+    return fig, ax 
 
 
 
