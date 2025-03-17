@@ -285,6 +285,7 @@ Plotting functions are provided to graphically illustrate the simulated data. It
     - :ref:`stacked_plots`, e.g. stacked loss coefficients as a function of pressure ratio
     - :ref:`plot_velocity_triangles_PA`
     - :ref:`plot_axial_radial_plane_PA`
+    - :ref:`plot_axial_tangential_plane_PA`
 
 The first three types are made by loading the Excel file with the simulated data, and specify the x and y parameter in the plot (`x_key` and `y_key`):
 
@@ -556,4 +557,32 @@ This function plots the geometry of an axial-turbine in the axial-radial plane. 
 Here is an example of how the plot look:
 
 .. image:: ../images/plot_axial_radial_plane.png
+    :scale: 15%
+
+.. _plot_axial_tangential_plane_PA:
+
+Plot axial-tangential plane
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function plots the geometry of an axial-turbine in the axial-tangential plane. The plot is initialized by providing a solver object:
+
+.. code-block:: python
+
+    import os
+    import turboflow as tf
+    
+    # Perform analysis
+    CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
+    config = tf.load_config(CONFIG_FILE) # Load configuration file 
+    solvers = tf.compute_performance(
+        operation_points,
+        config,
+    )
+    
+    # Plot geometry in the axial-tangential plane
+    fig, ax = tf.plot_functions.plot_view_axial_tangential(solvers[0].problem)
+
+Here is an example of how the plot look:
+
+.. image:: ../images/blade_profiles.png
     :scale: 15%

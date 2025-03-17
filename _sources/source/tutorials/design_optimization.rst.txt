@@ -234,6 +234,7 @@ Plotting functions are provided to graphically illustrate the simulated data:
 
     - :ref:`plot_velocity_triangles`: `turboflow.plot_velocity_triangles`
     - :ref:`plot_axial_radial_plane`: `turboflow.plot_axial_radial_plane`
+    - :ref:`plot_axial_tangential_plane`: `turboflow.plot_view_axial_tangential`
 
 .. _plot_velocity_triangles:
 
@@ -292,4 +293,32 @@ from the solution of the optimization problem:
 Here is an example of how the plot look:
 
 .. image:: ../images/plot_axial_radial_plane.png
+    :scale: 15%
+
+.. _plot_axial_tangential_plane:
+
+Plot axial-tangential plane
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function plots the geometry of an axial-turbine in the axial-tangential plane. The plot is initialized by providing a solver object:
+
+.. code-block:: python
+
+    import os
+    import turboflow as tf
+    
+    CONFIG_FILE = os.path.abspath("my_configuration.yaml") # Get absolute path of the configuration file
+    config = tf.load_config(CONFIG_FILE) # Load configuration file 
+    solver = tf.compute_optimal_turbine(
+        out_filename=None,
+        out_dir="output",
+        export_results=True,
+    )
+    
+    # Plot geometry in the axial-tangential plane
+    fig, ax = tf.plot_functions.plot_view_axial_tangential(solvers[0].problem)
+
+Here is an example of how the plot look:
+
+.. image:: ../images/blade_profiles.png
     :scale: 15%

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>turboflow.plot_functions module &mdash; turboflow v0.1.15 documentation</title>
+  <title>turboflow.plot_functions module &mdash; turboflow v0.1.16 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=13237357" />
@@ -18,7 +18,7 @@
   
         <script src="../../_static/jquery.js?v=5d32c60e"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../../_static/documentation_options.js?v=49d9c938"></script>
+        <script src="../../_static/documentation_options.js?v=7e214352"></script>
         <script src="../../_static/doctools.js?v=9a2dae69"></script>
         <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script>let toggleHintShow = 'Click to show';</script>
@@ -67,6 +67,7 @@
 <li class="toctree-l3"><a class="reference internal" href="turboflow.math.html">turboflow.math module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="turboflow.config_validation.html">turboflow.config_validation module</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">turboflow.plot_functions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.NURBS"><code class="docutils literal notranslate"><span class="pre">NURBS()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.combine_multiple_figures"><code class="docutils literal notranslate"><span class="pre">combine_multiple_figures()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.find_column"><code class="docutils literal notranslate"><span class="pre">find_column()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.get_column"><code class="docutils literal notranslate"><span class="pre">get_column()</span></code></a></li>
@@ -74,12 +75,14 @@
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.get_subset"><code class="docutils literal notranslate"><span class="pre">get_subset()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.load_data"><code class="docutils literal notranslate"><span class="pre">load_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_axial_radial_plane"><code class="docutils literal notranslate"><span class="pre">plot_axial_radial_plane()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_blade_profile"><code class="docutils literal notranslate"><span class="pre">plot_blade_profile()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_convergence_process"><code class="docutils literal notranslate"><span class="pre">plot_convergence_process()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_lines"><code class="docutils literal notranslate"><span class="pre">plot_lines()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_optimization_results"><code class="docutils literal notranslate"><span class="pre">plot_optimization_results()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangle"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangle()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangle_stage"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangle_stage()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_velocity_triangles_planes"><code class="docutils literal notranslate"><span class="pre">plot_velocity_triangles_planes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.plot_view_axial_tangential"><code class="docutils literal notranslate"><span class="pre">plot_view_axial_tangential()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#turboflow.plot_functions.savefig_in_formats"><code class="docutils literal notranslate"><span class="pre">savefig_in_formats()</span></code></a></li>
 </ul>
 </li>
@@ -118,6 +121,11 @@
              
   <section id="module-turboflow.plot_functions">
 <span id="turboflow-plot-functions-module"></span><h1>turboflow.plot_functions module<a class="headerlink" href="#module-turboflow.plot_functions" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.NURBS">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">NURBS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">u</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#NURBS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.NURBS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="turboflow.plot_functions.combine_multiple_figures">
 <span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">combine_multiple_figures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">figures</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#combine_multiple_figures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.combine_multiple_figures" title="Link to this definition"></a></dt>
@@ -323,6 +331,28 @@ axial-radial plane.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_blade_profile">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_blade_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blade_parameters</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_blade_profile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_blade_profile" title="Link to this definition"></a></dt>
+<dd><p>Python version of the MATLAB function [x, y] = plot_blade_profile(blade_parameters).</p>
+<dl class="simple">
+<dt>Given a dictionary <cite>blade_parameters</cite> with:</dt><dd><p>chord, stagger, theta_in, theta_out,
+wedge_in, wedge_out, radius_in, radius_out,
+d1, d2, d3, d4</p>
+</dd>
+</dl>
+<p>it computes the shape of a 2D blade profile (x, y) by connecting
+four NURBS segments:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Leading edge arc (between points 1 and 2)</p></li>
+<li><p>Spline from point 2 to point 3</p></li>
+<li><p>Trailing edge arc (between points 3 and 4)</p></li>
+<li><p>Spline from point 4 back to point 1</p></li>
+</ol>
+</div></blockquote>
 </dd></dl>
 
 <dl class="py function">
@@ -543,6 +573,45 @@ The DataFrame should have the following keys:
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="turboflow.plot_functions.plot_view_axial_tangential">
+<span class="sig-prename descclassname"><span class="pre">turboflow.plot_functions.</span></span><span class="sig-name descname"><span class="pre">plot_view_axial_tangential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem_structure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repeats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'k'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linestyle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'-'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/turboflow/plot_functions.html#plot_view_axial_tangential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#turboflow.plot_functions.plot_view_axial_tangential" title="Link to this definition"></a></dt>
+<dd><p>Optional: Python version of the MATLAB function plot_view_axial_tangential.
+Demonstrates how a multi-stage turbine might be visualized in an axial-tangential view,
+using repeated calls to plot_blade_profile for rotor/stator rows.</p>
+<dl>
+<dt>turbine_data is a dictionary expected to have structure:</dt><dd><dl>
+<dt>turbine_data[‘cascade’] = list of dicts, each with</dt><dd><dl class="simple">
+<dt>{</dt><dd><p>‘s’: …,         # pitch
+‘cs’: …,        # spacing between cascades
+‘c’: …,         # chord
+‘b’: …,         # axial spacing
+‘stagger’: …,
+‘theta_in’: …,
+‘theta_out’: …,
+‘t_max’: …,
+‘t_te’: …,</p>
+</dd>
+</dl>
+<p>}</p>
+</dd>
+<dt>turbine_data[‘overall’] = {</dt><dd><p>‘axial_length’: …,
+‘n_stages’: …,</p>
+</dd>
+</dl>
+<p>}
+turbine_data[‘stage’] = {</p>
+<blockquote>
+<div><p>‘R’: [reaction_values],</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+<p>This function is included mainly to show how one might replicate
+the high-level plotting. It references internal design logic
+that is specific to your original MATLAB code.</p>
 </dd></dl>
 
 <dl class="py function">
