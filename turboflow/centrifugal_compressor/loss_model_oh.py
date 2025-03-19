@@ -128,6 +128,10 @@ def compute_impeller_losses(input_parameters):
     Y_parasitic = Y_lk + Y_df + Y_rc
     Y_tot = Y_inc + Y_bld + Y_sf + Y_cl + Y_mix + Y_parasitic
 
+    delta_W = 2*np.pi*2*r_out*v_t_out/(z*L_b)
+    W_max = (w_in + w_out+delta_W)/2
+    D_eq = W_max/w_out
+
     # Scale loss coefficent
     loss_dict = {"incidence" : Y_inc,
                  "blade_loading" : Y_bld,
@@ -137,6 +141,7 @@ def compute_impeller_losses(input_parameters):
                  "leakage" : Y_lk,
                  "recirculation" : Y_rc,
                  "disk_friction" : Y_df,
+                 "D_eq" : D_eq,
                  "loss_total" : Y_tot,
                  }
     
@@ -156,6 +161,7 @@ def compute_parasitic_losses(input_parameters):
     w_in = input_parameters["inlet_plane"]["w"]
     d_in = input_parameters["inlet_plane"]["d"]
     h0_in = input_parameters["inlet_plane"]["h0"]
+    u_in = input_parameters["inlet_plane"]["blade_speed"]
 
     # Load exit plane
     v_t_out = input_parameters["exit_plane"]["v_t"]
@@ -178,8 +184,13 @@ def compute_parasitic_losses(input_parameters):
     r_mean_in = input_parameters["geometry"]["radius_mean_in"]
 
     # Recirculation losses (Oh)
-    Df = 1 - w_out/w_in + 0.75*(h0_out - h0_in)*w_out/((z/np.pi*(1-r_in_tip/r_out)+2*r_in_tip/r_out)*w_in*u_out**2)
-    Y_rc = 8e-5*np.sinh(3.5*(alpha_out*np.pi/180)**3)*Df**2*u_out**2
+    # Df = 1 - w_out/w_in + 0.75*(h0_out - h0_in)*w_out/((z/np.pi*(1-r_in_tip/r_out)+2*r_in_tip/r_out)*w_in*u_out**2)
+    # Y_rc = 8e-5*np.sinh(3.5*(alpha_out*np.pi/180)**3)*Df**2*u_out**2
+
+    # # Recirculation losses (Coppage)
+    Df = 1 - w_out/w_in + 0.75*(abs(u_out*v_t_out) - abs(u_in*v_t_in))*w_out/((z/np.pi*(1-r_in_tip/r_out)+2*r_in_tip/r_out)*w_in*u_out**2)
+    Y_rc = 0.02*np.sqrt(math.tand(alpha_out))*Df**2*u_out**2 # Error in exponent in paper?
+
 
     # Disk friction losses (Dailey and Nece)
     Re = d_out*u_out*r_out/mu_out
