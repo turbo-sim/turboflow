@@ -4,13 +4,15 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 
-impeller = "A"
+impeller = "O"
 save_figs = False
+print_errors = True
 
 files_exp = {
     "A" : "validation_cases\Eckardt\eckardt_impeller_A\eckardt_impeller_A.xlsx",
     "O" : "validation_cases\Eckardt\eckardt_impeller_O\eckardt_impeller_O.xlsx",
 }
+
 
 files_sim = {
     "A" : {
@@ -19,8 +21,9 @@ files_sim = {
             "eta" : "output\performance_analysis_2024-11-27_12-22-24.xlsx"
         },
         "zhang" : {
-            "PR" : "output\performance_analysis_2024-11-27_12-19-07.xlsx",
-            "eta" : "output\performance_analysis_2024-11-27_12-21-35.xlsx"
+
+            "PR" : "output\performance_analysis_2024-12-03_11-06-19.xlsx",
+            "eta" : "output\performance_analysis_2024-12-03_11-04-49.xlsx"
         }
     },
     "O" : {
@@ -29,8 +32,8 @@ files_sim = {
             "eta" : "output\performance_analysis_2024-11-27_12-24-47.xlsx"
         },
         "zhang" : {
-            "PR" : "output\performance_analysis_2024-11-27_12-25-47.xlsx",
-            "eta" : "output\performance_analysis_2024-11-27_12-25-47.xlsx" 
+            "PR" : "output\performance_analysis_2024-12-03_11-02-32.xlsx",
+            "eta" : "output\performance_analysis_2024-12-03_11-02-32.xlsx" 
         }
     }
 }
@@ -55,10 +58,20 @@ data_exp["pr_tt"]["error_pr_oh"] = err_PR_oh
 data_exp["eta_tt"]["error_eta_zhang"] = err_eta_zhang
 data_exp["pr_tt"]["error_pr_zhang"] = err_PR_zhang
 
+if print_errors:
+    print(f"Average PR error oh: {np.average(abs(err_PR_oh))}")
+    print(f"Max PR error oh: {np.max(abs(err_PR_oh))}")
+    print(f"Average eta error oh: {np.average(abs(err_eta_oh))}")
+    print(f"Max eta error oh: {np.max(abs(err_eta_oh))}")
+    print(f"Average PR error zhang: {np.average(abs(err_PR_zhang))}")
+    print(f"Max PR error zhang: {np.max(abs(err_PR_zhang))}")
+    print(f"Average eta error zhang: {np.average(abs(err_eta_zhang))}")
+    print(f"Max eta error zhang: {np.max(abs(err_eta_zhang))}")
+
 # Eta
 omegas = [10e3, 12e3, 14e3, 16e3]
-color_map = 'viridis'
-colors = [plt.get_cmap(color_map)(i / (len(omegas) - 1)) for i in range(len(omegas))]
+color_map = 'magma'
+colors = plt.get_cmap(color_map)(np.linspace(0.2, 0.8, len(omegas)))
 markers = ["o", "^", "s", "*"]
 subsets = ["rpm"] + omegas
 fig1, ax1 = tf.plot_functions.plot_lines(
@@ -134,6 +147,7 @@ marker_legend1 = ax1.legend(handles=marker_handles, loc='upper center', bbox_to_
 marker_legend2 = ax2.legend(handles=marker_handles, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=2, frameon=False)
 fig1.subplots_adjust(top=0.9)
 fig2.subplots_adjust(top=0.9)
+
 
 if save_figs:
     tf.plot_functions.savefig_in_formats(fig2, f"figures/error_impeller{impeller}_PR_tt", formats=[".png",".eps"])
