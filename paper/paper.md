@@ -69,7 +69,7 @@ The few open-source meanline models that do exist come with significant limitati
 | Reference                          | Year | Programming language | Model formulation     | Functionalities      | 
 |------------------------------------|------|----------------------|-----------------------|----------------------|
 | [@genrup_reduced-order_2005]       | 2005 | MATLAB (proprietary) | Sequential            | Performance analysis |
-| [@denton_multallopen_2017]         | 2017 | FORTRAN77 (legacy)   | Non/iterative         | Inverse design       |
+| [@denton_multallopen_2017]         | 2017 | FORTRAN77 (legacy)   | Non-iterative         | Inverse design       |
 | [@agromayor_preliminary_2019]      | 2019 | MATLAB (proprietary) | Equation-oriented     | Design optimization  |
 | [@brind_data-driven_2024]          | 2024 | Python               | Non-iterative         | Inverse design       |
 
