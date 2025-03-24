@@ -66,12 +66,12 @@ Several meanline models developed in academic settings also suffer from being cl
 
 The few open-source meanline models that do exist come with significant limitations in terms of programming language, model formulation and restricted functionality. These models and their features are summarized in the following table: 
 
-| Reference                          | Year | Programming language | Model formulation     | Functionalities      | 
-|------------------------------------|------|----------------------|-----------------------|----------------------|
-| [@genrup_reduced-order_2005]       | 2005 | MATLAB (proprietary) | Sequential            | Performance analysis |
-| [@denton_multallopen_2017]         | 2017 | FORTRAN77 (legacy)   | Non-iterative         | Inverse design       |
-| [@agromayor_preliminary_2019]      | 2019 | MATLAB (proprietary) | Equation-oriented     | Design optimization  |
-| [@brind_data-driven_2024]          | 2024 | Python               | Non-iterative         | Inverse design       |
+| Reference                     | Programming language | Model formulation | Functionalities      | 
+|-------------------------------|----------------------|-------------------|----------------------|
+| [@genrup_reduced-order_2005]  | MATLAB (proprietary) | Sequential        | Performance analysis |
+| [@denton_multallopen_2017]    | FORTRAN77 (legacy)   | Non-iterative     | Inverse design       |
+| [@agromayor_preliminary_2019] | MATLAB (proprietary) | Equation-oriented | Design optimization  |
+| [@brind_data-driven_2024]     | Python               | Non-iterative     | Inverse design       |
 
 The use of diverse programming languages, such as MATLAB and FORTRAN77, presents accessibility and compatibility issues. MATLAB-based models, such as those by [@genrup_reduced-order_2005] and [@agromayor_preliminary_2019], are proprietary, which limit their accessibility to those with MATLAB licenses. While legacy languages like FORTRAN77, as used by [@denton_multallopen_2017], might be more accessible, they fall short in terms of modern features and extensive community support. Consequently, models developed with these languages are less efficient to develop and less attractive to potential contributors, hampering development and collaboration. Furthermore, models adopting a sequential model formulation, solve sets of model equations sequentially through multiple nested iterations. This approach can lead to unreliable convergence and prolonged execution times due to the high number of model equations evaluations required. In contrast, an equation-oriented model formulation solves a larger set of equations simultaneously, enhancing reliability and computational efficiency. Lastly, existing models vary in functionality. The model from [@genrup_reduced-order_2005] is dedicated to performance analysis, whereas [@agromayor_preliminary_2019] focuses on design optimization. On the other hand, [@brind_data-driven_2024] and [@denton_multallopen_2017] employ an inverse design methodology, where the geometry is derived from specified performance parameters (e.g., flow coefficient, loading coefficient, degree of reaction), rendering them unsuitable for performance prediction for a given geometry. Consequently, no single open-source model currently provides a comprehensive solution that integrates both performance analysis and design optimization.
 
