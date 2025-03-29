@@ -348,6 +348,8 @@ def _minimize_pygmo_ipopt(problem, x0, options):
         "limited_memory_max_history": 30,  # bfgs
         "max_iter": 100,
         "tol": 1e-3,
+        "print_level": 0,
+        "acceptable_iter": 20,
     }
     options = options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | options

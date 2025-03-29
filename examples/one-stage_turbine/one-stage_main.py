@@ -1,8 +1,9 @@
 import os
 import turboflow as tf
+import matplotlib.pyplot as plt
 
 # Define mode 
-MODE = "design_optimzation"
+MODE = "design_optimization"
 
 # Load configuration file
 CONFIG_FILE = os.path.abspath("one-stage_config.yaml")
@@ -43,7 +44,7 @@ elif MODE == "performance_map":
     # Save to pickle
     tf.save_to_pickle(solvers, filename = "pickle_file", path = "output/pickle", use_datetime=True)
 
-elif MODE == "design_optimzation":
+elif MODE == "design_optimization":
 
     # Compute optimal turbine
     operation_points = config["operation_points"]
@@ -54,3 +55,6 @@ elif MODE == "design_optimzation":
 
     # Save to pickle
     tf.save_to_pickle(solver, filename = "pickle_file", path = "output/pickle", use_datetime=True)
+
+# Show figures
+plt.show()

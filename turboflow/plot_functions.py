@@ -531,7 +531,7 @@ def plot_axial_radial_plane(geometry):
     ax.set_aspect("equal")
     lims = ax.get_ylim()
     ax.set_ylim([0, lims[-1]])
-    plt.show()
+    # plt.show()
 
     return fig, ax
 
@@ -838,7 +838,7 @@ def plot_velocity_triangles_planes(plane):
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines["left"].set_visible(False)
-    plt.show()
+    # plt.show()
 
     return fig, ax
 
@@ -1490,7 +1490,7 @@ def plot_view_axial_tangential(problem_structure,
 
         fig.tight_layout()
     
-    plt.show()
+    # plt.show()
 
     return fig, ax 
 
