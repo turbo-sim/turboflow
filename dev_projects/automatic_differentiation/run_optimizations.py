@@ -26,7 +26,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-case_data = case_data[case_data["case"].isin([86,87,88,89,90])]
+case_data = case_data[case_data["case"].isin([1])]
 # case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases

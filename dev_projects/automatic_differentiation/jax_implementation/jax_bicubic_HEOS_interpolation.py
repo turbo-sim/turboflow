@@ -29,7 +29,7 @@ complex128=jnp.dtype('complex128')
 #Select the property to interpolate. For example iDmass, iSmass and iT
 #The variable names use the symbol D, but can represent any required 
 #keyed output by changing this line.
-iD=cp.iSmass
+iD=cp.iT
 #Grid size in h direction
 N=50
 #Grid size in log(P) direction
@@ -100,11 +100,11 @@ P=jnp.exp(L)
 PP,hh=jnp.meshgrid(P,h)
 deltah=h[1]-h[0]
 deltaL=L[1]-L[0]
-D=jnp.zeros((N,M),dtype=float64)
-dDdL=jnp.zeros_like(D)
-dDdh=jnp.zeros_like(D)
-d2DdhdL=jnp.zeros_like(D)
-bicubic_coefficients=jnp.zeros((N,M,16),dtype=float64)
+D=jnp.zeros((N,M),dtype=float64) # For storing values of D property which is entropy here
+dDdL=jnp.zeros_like(D) # For storing values of partial derivative of D property w.r.t L property 
+dDdh=jnp.zeros_like(D) # For storing values of partial derivative of D property w.r.t h property 
+d2DdhdL=jnp.zeros_like(D) # For storing values of cross partial derivative of D property w.r.t h and L property
+bicubic_coefficients=jnp.zeros((N,M,16),dtype=float64) 
 
 
 #First, get the property values and derivatives from the equation of state.
@@ -129,7 +129,7 @@ for i,hi in enumerate(h):
             else:
                 print("WARNING!!: Defaulting to not using two phase derivatives as the current property is not specified. Adjoust the code above this print.")
             if use_two_phase_deriv and f.phase()==cp.iphase_twophase:
-                dDdP=f.first_two_phase_deriv(iD,cp.iP,cp.iHmass)
+                dDdP=f.first_two_phase_deriv(iD,cp.iP,cp.iHmass) # dDdP at constant h
                 dDdhtemp=f.first_two_phase_deriv(iD,cp.iHmass,cp.iP)
                 d2DdPdh=f.second_two_phase_deriv(iD,cp.iP,cp.iHmass,cp.iHmass,cp.iP)
             else:
@@ -162,8 +162,8 @@ for i,hi in enumerate(h):
 # compilation. This approach was used because is simpler for a proof of concept
 @jax.jit
 def bicubic_interpolant(h,P):
-    ii=((h-hmin)/(hmax-hmin)*(N-1))
-    i=ii.astype(int)
+    ii=((h-hmin)/(hmax-hmin)*(N-1)) 
+    i=ii.astype(int) # Cell number (in which cell we are)
     x=ii-i
     L=jnp.log(P)
     jj=((L-Lmin)/(Lmax-Lmin)*(M-1))

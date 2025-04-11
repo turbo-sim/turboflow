@@ -26,7 +26,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-case_data = case_data[case_data["case"].isin([1,2])]
+case_data = case_data[case_data["case"].isin([1])]
 # case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases
@@ -50,9 +50,6 @@ for i, row in case_data.iterrows():
         # config["operation_points"][var] = row[var]
 
     operation_points_list.append(operation_points)
-
-    
-    
 
     # Compute optimal turbine
     # operation_points = config["operation_points"]
