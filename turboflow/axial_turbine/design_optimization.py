@@ -48,6 +48,7 @@ def compute_optimal_turbine(
     out_filename=None,
     out_dir="output",
     export_results=True,
+    initial_guess = None,
 ):
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -74,6 +75,8 @@ def compute_optimal_turbine(
     # Perform initial function call to initialize problem
     # This populates the arrays of equality and inequality constraints
     # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
+    if initial_guess is not None:
+        problem.initial_guesses = [np.array(initial_guess)]
     problem.fitness(problem.initial_guesses[0])
 
     # Load solver configuration
