@@ -8,133 +8,256 @@ turbomachinery: centrifugal_compressor
 #     omega: 14000*2*np.pi/60
 #     alpha_in: 0
 
-# For mass flow rate data
-operation_points:
+# Pressure ratio data
+operation_points: 
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 2.5142
+    mass_flow_rate: 2.5175
     omega: 10000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 5.98125
+    mass_flow_rate: 3.02453
     omega: 12000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 6.78409
+    mass_flow_rate: 3.53027
     omega: 14000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 4.21534
+    mass_flow_rate: 4.23505
     omega: 16000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 3.10227
+    mass_flow_rate: 3.10586
     omega: 10000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 5.2892
+    mass_flow_rate: 3.87816
     omega: 12000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 6.09205
+    mass_flow_rate: 4.56075
     omega: 14000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 5.325
+    mass_flow_rate: 5.34315
     omega: 16000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 3.81818
+    mass_flow_rate: 3.8277
     omega: 10000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 4.48807
+    mass_flow_rate: 4.49707
     omega: 12000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 5.32841
+    mass_flow_rate: 5.34378
     omega: 14000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 6.1125
+    mass_flow_rate: 6.12606
     omega: 16000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 4.59034
+    mass_flow_rate: 4.59817
     omega: 10000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 3.87273
+    mass_flow_rate: 5.30175
     omega: 12000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 4.54602
+    mass_flow_rate: 6.10493
     omega: 14000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 6.89659
+    mass_flow_rate: 6.91558
     omega: 16000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 5.02841
+    mass_flow_rate: 5.04023
     omega: 10000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 3.01364
+    mass_flow_rate: 5.99258
     omega: 12000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 3.51477
+    mass_flow_rate: 6.79877
     omega: 14000*2*np.pi/60
     alpha_in: 0
   - fluid_name: air
     T0_in: 288.15
     p0_in: 101325
-    mass_flow_rate: 7.18295
+    mass_flow_rate: 7.19985
     omega: 16000*2*np.pi/60
     alpha_in: 0
+
+# # For eta data
+# operation_points:
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 2.5142
+#     omega: 10000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 5.98125
+#     omega: 12000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 6.78409
+#     omega: 14000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 4.21534
+#     omega: 16000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 3.10227
+#     omega: 10000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 5.2892
+#     omega: 12000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 6.09205
+#     omega: 14000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 5.325
+#     omega: 16000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 3.81818
+#     omega: 10000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 4.48807
+#     omega: 12000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 5.32841
+#     omega: 14000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 6.1125
+#     omega: 16000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 4.59034
+#     omega: 10000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 3.87273
+#     omega: 12000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 4.54602
+#     omega: 14000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 6.89659
+#     omega: 16000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 5.02841
+#     omega: 10000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 3.01364
+#     omega: 12000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 3.51477
+#     omega: 14000*2*np.pi/60
+#     alpha_in: 0
+#   - fluid_name: air
+#     T0_in: 288.15
+#     p0_in: 101325
+#     mass_flow_rate: 7.18295
+#     omega: 16000*2*np.pi/60
+#     alpha_in: 0
 
 simulation_options: 
   slip_model : wiesner 
   loss_model:
-    model : oh
+    model : zhang_set1
     loss_coefficient : static_enthalpy_loss
     # impeller: 
     #   model: zhang_set1  
