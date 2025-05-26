@@ -112,6 +112,11 @@ def compute_optimal_turbine(
         # Initialize solver object using keyword-argument dictionary unpacking
         solver = psv.OptimizationSolver(problem, **solver_config)
         
+        if x0 is None:
+            out_dir = f"{out_dir_base}/multistart_{i}"
+        else:
+            out_dir = out_dir_base
+
         # Solve optimization problem for initial guess x0
         solver.solve(ig)
         solver_container.solver_container.append(solver)
@@ -146,9 +151,6 @@ def compute_optimal_turbine(
             ),
         }
 
-        # Create spearate subfolders in Multistart cases
-        # if N_multistarts > 1:
-        out_dir = f"{out_dir_base}/multistart_{i}"
 
         if export_results:
             # Create a directory to save simulation results

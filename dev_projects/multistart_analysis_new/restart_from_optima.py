@@ -13,7 +13,7 @@ config = tf.load_config(CONFIG_FILE, print_summary=False)
 config["design_optimization"]["multistarts"] = 0
 
 # Walk through all subdirectories
-for root, dirs, files in os.walk(OUT_DIR):
+for i, (root, dirs, files) in enumerate(os.walk(OUT_DIR)):
     for file in files:
         if file == f"{IN_FILE}.pkl":
 
@@ -26,9 +26,9 @@ for root, dirs, files in os.walk(OUT_DIR):
             # Rerun optimization from x_final
             solver = tf.compute_optimal_turbine(
                 config,
-                out_dir=OUT_DIR,
+                out_dir=f"{OUT_DIR}/multistart_{i-1}",
                 out_filename=OUT_FILE,
                 export_results=True,
-                x0=x_final
+                x0=x_final,
             )
 

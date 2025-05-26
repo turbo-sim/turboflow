@@ -19,3 +19,9 @@ solver = tf.compute_optimal_turbine(
 )
 
 tf.save_to_pickle(solver, filename="multistart_container", out_dir=OUT_DIR)
+
+
+# is defined somewhere
+# solver
+# kkt_data = solver.evaluate_kkt_conditions(solver.x_final, 5*solver.options["tolerance"])
+# optimality = kkt_data["first_order_optimality"]
