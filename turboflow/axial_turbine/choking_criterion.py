@@ -246,7 +246,7 @@ def get_mach_crit(gamma, eta):
         Critical Mach number.
     """
     alpha = gamma / (gamma - 1)
-    eta = math.smooth_maximum(0.00, eta, method="logsumexp")  # Prevent negative efficiency
+    eta = math.smooth_maximum(0.30, eta, method="logsumexp")  # Prevent negative efficiency
     eta = math.smooth_minimum(1.01, eta, method="logsumexp")  # Prevent too high values
     T_hat_crit = (2*alpha + eta - 3 + np.sqrt((1+eta)**2 + 4*alpha*(1+alpha-3*eta))) / (4*alpha - 2)
     Ma_crit = np.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
