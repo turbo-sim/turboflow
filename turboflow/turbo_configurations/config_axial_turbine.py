@@ -18,7 +18,7 @@ from ..axial_turbine import (
     DEVIATION_MODELS,
     RADIUS_TYPE,
 )
-from ..pysolver_view import (
+from pysolver_view import (
     SOLVER_OPTIONS,
     VALID_LIBRARIES_AND_METHODS,
     DERIVATIVE_METHODS,
@@ -346,7 +346,11 @@ class SolverOptionsOptimization(BaseModel):
     print_convergence: bool = True
     plot_convergence: bool = False
     update_on: UpdateOnEnum = "gradient"
-    options : Dict = {}
+    tolerance: float = 1e-6
+    problem_scale : float = None
+    max_iterations: int = 200
+    extra_options : Dict = {}
+
 
     @model_validator(mode="after")
     def check_solver_method(self) -> Self:

@@ -17,7 +17,7 @@ from ..centrifugal_compressor import (
     SLIP_MODELS,
     CHOKING_CRITERIONS,
 )
-from ..pysolver_view import (
+from pysolver_view import (
     SOLVER_OPTIONS,
     VALID_LIBRARIES_AND_METHODS,
     DERIVATIVE_METHODS,

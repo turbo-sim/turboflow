@@ -43,13 +43,13 @@ def convert_numpy_to_python(data, precision=10):
     ):
         return int(data.item())
 
-    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+    elif isinstance(data, (np.float16, np.float32, np.float64)):
         return round(float(data.item()), precision)
 
     elif isinstance(data, np.bool_):
         return bool(data.item())
 
-    elif isinstance(data, (np.str_, np.unicode_)):
+    elif isinstance(data, (np.str_)):
         return str(data.item())
 
     # This will handle Python built-in types and other types that are not numpy.
@@ -421,7 +421,7 @@ class DictionaryValidationError(Exception):
             return f"{self.message} Key: '{self.key}', Value: {self.value}"
         return self.message
     
-def save_to_pickle(obj, filename = "pickle_file", out_dir = "output"):
+def save_to_pickle(obj, filename = "pickle_file", out_dir = "output", add_timestamp=True):
     """
     Save a Python object to a pickle file.
 
@@ -430,7 +430,11 @@ def save_to_pickle(obj, filename = "pickle_file", out_dir = "output"):
     """
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    filename = os.path.join(out_dir, f"{filename}_{timestamp}.pkl")
+    if add_timestamp:
+        filename = os.path.join(out_dir, f"{filename}_{timestamp}.pkl")
+    else:
+        filename = os.path.join(out_dir, f"{filename}.pkl")
+
     with open(filename, 'wb') as file:
         pickle.dump(obj, file)
     print(f"Object successfully saved to {filename}")

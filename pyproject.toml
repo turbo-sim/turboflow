@@ -10,22 +10,25 @@ documentation = "https://turbo-sim.github.io/TurboFlow/"
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
-numpy = "^1.26.4"
-scipy = "^1.13.1"
-matplotlib = "^3.9.0"
-pandas = "^2.2.2"
-openpyxl = "^3.1.2"
+python = ">=3.10,<3.14"
+numpy = "^2.2.4"
+scipy = "^1.15.2"
+matplotlib = "^3.10.1"
+pandas = "^2.2.3"
+openpyxl = "^3.1.5"
 CoolProp = "^6.6.0"
-PyYAML = "^6.0.1"
+PyYAML = "^6.0.2"
 toml = "^0.10.2"
 pydantic = "^2.7.2"
 cycler = "^0.12.1"
+pysolver_view = "^0.6.1"
+#pysolver_view = { path = "../pysolver_view/", develop = true }
+
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"
-black = "^24.4.2"
-pytest = "^8.2.1"
+black = "^25.1.0"
+pytest = "^8.3.5"
 pyzotero = "^1.5.19"
 numpydoc = "^1.7.0"
 sphinx = "^7.3.7"
@@ -37,7 +40,13 @@ sphinxawesome-theme = "^5.1.5"
 sphinx-design = "^0.6.0"
 sphinx-togglebutton = "^0.3.2"
 bump2version = "^1.0.1"
+imageio = {extras = ["ffmpeg"], version = "^2.37.0"}
+
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+# Rememeber to add --tags when publishing a new version
+# git push origin main --tags

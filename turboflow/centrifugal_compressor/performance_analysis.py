@@ -9,8 +9,10 @@ import pandas as pd
 import CoolProp as cp
 import matplotlib.pyplot as plt
 
+import pysolver_view as psv
+
+
 from .. import math
-from .. import pysolver_view as psv
 from .. import utilities as utils
 from .. import properties as props
 from . import geometry_model as geom

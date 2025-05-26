@@ -51,7 +51,11 @@ def compute_optimal_turbine(
     out_filename=None,
     out_dir="output",
     export_results=True,
+<<<<<<< HEAD
     x0=None,
+=======
+    initial_guess = None,
+>>>>>>> 872defd83cf52131afab0ce3defcdfe2251d34c1
 ):
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -94,6 +98,7 @@ def compute_optimal_turbine(
             raise ValueError("problem.initial_guesses must be a NumPy array or a list of NumPy arrays.")
 
     # Perform initial function call to initialize problem
+<<<<<<< HEAD
     problem.fitness(initial_guesses[0])
 
 
@@ -102,6 +107,13 @@ def compute_optimal_turbine(
     # # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
     # initial_guesses = x0 if x0 is not None else problem.initial_guesses
     # problem.fitness(initial_guesses[0])
+=======
+    # This populates the arrays of equality and inequality constraints
+    # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
+    if initial_guess is not None:
+        problem.initial_guesses = [np.array(initial_guess)]
+    problem.fitness(problem.initial_guesses[0])
+>>>>>>> 872defd83cf52131afab0ce3defcdfe2251d34c1
 
     # Load solver configuration
     solver_config = config["design_optimization"]["solver_options"]
@@ -112,11 +124,6 @@ def compute_optimal_turbine(
         # Initialize solver object using keyword-argument dictionary unpacking
         solver = psv.OptimizationSolver(problem, **solver_config)
         
-        if x0 is None:
-            out_dir = f"{out_dir_base}/multistart_{i}"
-        else:
-            out_dir = out_dir_base
-
         # Solve optimization problem for initial guess x0
         solver.solve(ig)
         solver_container.solver_container.append(solver)
@@ -151,6 +158,9 @@ def compute_optimal_turbine(
             ),
         }
 
+        # Create spearate subfolders in Multistart cases
+        # if N_multistarts > 1:
+        out_dir = f"{out_dir_base}/multistart_{i}"
 
         if export_results:
             # Create a directory to save simulation results
