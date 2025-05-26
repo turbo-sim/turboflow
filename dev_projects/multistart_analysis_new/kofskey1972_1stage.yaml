@@ -154,7 +154,7 @@ design_optimization:
   radius_type : "constant_mean"
 
   # multistarts : 0
-  multistarts : 2
+  multistarts : 100
 
 
   solver_options: 
@@ -168,7 +168,7 @@ design_optimization:
     plot_convergence: False
     update_on: "gradient" 
     tolerance: 1e-6
-    max_iterations: 10
+    max_iterations: 200
     problem_scale: 10.00
 
 
