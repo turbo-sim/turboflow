@@ -17,9 +17,8 @@ from .plot_functions import *
 from .config_validation import *
 
 # Import subpackages
-from .pysolver_view import *
 from .properties import *
-from .cycles import *
+# from .cycles import *
 from .utilities import *
 
 from .axial_turbine import compute_performance, compute_optimal_turbine
@@ -40,7 +39,7 @@ BREAKLINE = 80 * "-"
 
 def print_banner():
     """Prints a banner."""
-    banner = """
+    banner = r"""
         ______ __  __ ____   ____   ____   ______ __    ____  _       __
        /_  __// / / // __ \ / __ ) / __ \ / ____// /   / __ \| |     / /
         / /  / / / // /_/ // __  |/ / / // /_   / /   / / / /| | /| / / 

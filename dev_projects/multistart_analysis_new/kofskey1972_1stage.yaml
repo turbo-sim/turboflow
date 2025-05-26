@@ -153,8 +153,8 @@ design_optimization:
       normalize : True
   radius_type : "constant_mean"
 
-  multistarts : 0
-  # multistarts : 2
+  # multistarts : 0
+  multistarts : 2
 
 
   solver_options: 
@@ -170,4 +170,5 @@ design_optimization:
     tolerance: 1e-6
     max_iterations: 10
     problem_scale: 10.00
+
 

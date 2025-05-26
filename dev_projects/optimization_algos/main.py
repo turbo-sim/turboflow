@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 import turboflow as tf
 
 # Define running option
-CASE = 2
+CASE = 1
 
 # Load configuration file
-CONFIG_FILE = os.path.abspath("kofskey_constrained.yaml")
-# CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
+# CONFIG_FILE = os.path.abspath("kofskey_constrained.yaml")
+CONFIG_FILE = os.path.abspath("kofskey1972_1stage.yaml")
 config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 if CASE == 0:
@@ -34,7 +34,6 @@ elif CASE == 2:
     tf.save_to_pickle(solver, filename = f"real_case_90p", out_dir = "output")
 
 elif CASE == 3:
-
     operation_points = config["operation_points"]
     solvers = tf.compute_performance(operation_points, config, export_results=False)
     print(solvers[0].problem.results["cascade"]["centrifugal_stress"])

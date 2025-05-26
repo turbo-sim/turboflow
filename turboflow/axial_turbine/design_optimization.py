@@ -4,8 +4,11 @@ import CoolProp as cp
 import datetime
 import os
 import yaml
+import copy
 import pickle
-from .. import pysolver_view as psv
+import pysolver_view as psv
+
+
 from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
@@ -48,6 +51,7 @@ def compute_optimal_turbine(
     out_filename=None,
     out_dir="output",
     export_results=True,
+    x0=None,
 ):
     r"""
     Calculate the optimal turbine configuration based on the specified optimization problem.
@@ -69,78 +73,124 @@ def compute_optimal_turbine(
     """
 
     # Initialize problem object
+
     problem = CascadesOptimizationProblem(config)
 
+    # Determine initial guesses
+    if x0 is not None:
+        if isinstance(x0, np.ndarray):
+            initial_guesses = [x0]
+        elif isinstance(x0, list) and all(isinstance(x, np.ndarray) for x in x0):
+            initial_guesses = x0
+        else:
+            raise ValueError("x0 must be a NumPy array or a list of NumPy arrays.")
+    else:
+        ig = problem.initial_guesses
+        if isinstance(ig, np.ndarray):
+            initial_guesses = [ig]
+        elif isinstance(ig, list) and all(isinstance(x, np.ndarray) for x in ig):
+            initial_guesses = ig
+        else:
+            raise ValueError("problem.initial_guesses must be a NumPy array or a list of NumPy arrays.")
+
     # Perform initial function call to initialize problem
-    # This populates the arrays of equality and inequality constraints
-    # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
-    problem.fitness(problem.initial_guesses[0])
+    problem.fitness(initial_guesses[0])
+
+
+    # # Perform initial function call to initialize problem
+    # # This populates the arrays of equality and inequality constraints
+    # # TODO: it might be more intuitive to create a new method called initialize_problem() that generates the initial guess and evaluates the fitness() function with it
+    # initial_guesses = x0 if x0 is not None else problem.initial_guesses
+    # problem.fitness(initial_guesses[0])
 
     # Load solver configuration
     solver_config = config["design_optimization"]["solver_options"]
-
     solver_container = SolverContainer()
     success = []
-    for ig in problem.initial_guesses:
+    out_dir_base = copy.copy(out_dir)
+    for i, ig in enumerate(initial_guesses):
         # Initialize solver object using keyword-argument dictionary unpacking
         solver = psv.OptimizationSolver(problem, **solver_config)
         
-         # Solve optimization problem for initial guess x0
+        # Solve optimization problem for initial guess x0
         solver.solve(ig)
         solver_container.solver_container.append(solver)
         success.append(solver.success)
 
-    dfs = {
-        "operation point": pd.DataFrame(
-            {key: pd.Series(val) for key, val in problem.boundary_conditions.items()}
-        ),
-        "overall": pd.DataFrame(problem.results["overall"], index=[0]),
-        "plane": problem.results["plane"],
-        "cascade": problem.results["cascade"],
-        "stage": problem.results["stage"],
-        "geometry": pd.DataFrame(
-            {key: pd.Series(val) for key, val in problem.geometry.items()}
-        ),
-        "solver": pd.DataFrame(
-            {
-                "completed": pd.Series(True, index=[0]),
-                "success": pd.Series(solver.success, index=[0]),
-                "message": pd.Series(solver.message, index=[0]),
-                "grad_count": solver.convergence_history["grad_count"],
-                "func_count": solver.convergence_history["func_count"],
-                "func_count_total": solver.convergence_history["func_count_total"],
-                "objective_value": solver.convergence_history["objective_value"],
-                "constraint_violation": solver.convergence_history[
-                    "constraint_violation"
-                ],
-                "norm_step": solver.convergence_history["norm_step"],
-            },
-            index=range(len(solver.convergence_history["grad_count"])),
-        ),
-    }
+        dfs = {
+            "operation point": pd.DataFrame(
+                {key: pd.Series(val) for key, val in problem.boundary_conditions.items()}
+            ),
+            "overall": pd.DataFrame(problem.results["overall"], index=[0]),
+            "plane": problem.results["plane"],
+            "cascade": problem.results["cascade"],
+            "stage": problem.results["stage"],
+            "geometry": pd.DataFrame(
+                {key: pd.Series(val) for key, val in problem.geometry.items()}
+            ),
+            "solver": pd.DataFrame(
+                {
+                    "completed": pd.Series(True, index=[0]),
+                    "success": pd.Series(solver.success, index=[0]),
+                    "message": pd.Series(solver.message, index=[0]),
+                    "grad_count": solver.convergence_history["grad_count"],
+                    "func_count": solver.convergence_history["func_count"],
+                    "func_count_total": solver.convergence_history["func_count_total"],
+                    "objective_value": solver.convergence_history["objective_value"],
+                    "constraint_violation": solver.convergence_history[
+                        "constraint_violation"
+                    ],
+                    "norm_step": solver.convergence_history["norm_step"],
+                },
+                index=range(len(solver.convergence_history["grad_count"])),
+            ),
+        }
 
-    if export_results:
-        # Create a directory to save simulation results
-        if not os.path.exists(out_dir):
-            os.makedirs(out_dir)
+        # Create spearate subfolders in Multistart cases
+        # if N_multistarts > 1:
+        out_dir = f"{out_dir_base}/multistart_{i}"
 
-        # Define filename with unique date-time identifier
-        if out_filename == None:
-            current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            out_filename = f"design_optimization_{current_time}"
+        if export_results:
+            # Create a directory to save simulation results
+            os.makedirs(out_dir, exist_ok=True)
 
-        # Export simulation configuration as YAML file
-        config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
-        config_data = utils.convert_numpy_to_python(config_data, precision=12)
-        config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-        with open(config_file, "w") as file:
-            yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+            # # Define filename with unique date-time identifier
+            # if out_filename == None:
+            #     current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            #     out_filename = f"design_optimization_{current_time}"
 
-        # Export optimal turbine in excel file
-        filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-        with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
-            for sheet_name, df in dfs.items():
-                df.to_excel(writer, sheet_name=sheet_name, index=True)
+            # Export simulation configuration as YAML file
+            config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+            config_data = utils.convert_numpy_to_python(config_data, precision=12)
+            config_file = os.path.join(out_dir, f"{out_filename}.yaml")
+            with open(config_file, "w") as file:
+                yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+
+            # Export optimal turbine in excel file
+            filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
+            with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+                for sheet_name, df in dfs.items():
+                    df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+            # Export the convergence history
+            solver.print_convergence_history(
+                savefile=True,
+                filename=f"{out_filename}_convergence.txt",
+                output_dir=out_dir)
+
+            # Create a comprehensive optimization report
+            solver.print_optimization_report(
+                    tol=5*config["design_optimization"]["solver_options"]["tolerance"],
+                    include_design_variables=True,
+                    include_constraints=True,
+                    include_kkt_conditions=True,
+                    include_multipliers=True,
+                    savefile=True,
+                    filename=f"{out_filename}_report.txt",
+                    output_dir=out_dir)
+            
+            # Save current solver as pickle object:
+            utils.save_to_pickle(solver, filename=out_filename, out_dir=out_dir, add_timestamp=False)
 
     if len(solver_container.solver_container) == 1:
         return solver_container.solver_container[0]
@@ -231,7 +281,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         """
 
         # Get list of design variables
-        self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
+        self.obj_func = config["design_optimization"]["objective_function"]
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
             config["design_optimization"]["constraints"]
@@ -311,13 +361,21 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize a range of initial guesses for multistart optimization
         starts = config["design_optimization"]["multistarts"]
+        initial_point = np.array(list(initial_guess.values()))
         if starts > 0:
             bounds = [(lower, upper) for lower, upper in zip(lb, ub)]
-            initial_guesses = pa.latin_hypercube_sampling(bounds, starts)
-            self.initial_guesses = np.insert(initial_guesses, 0, np.array(list(initial_guess.values())), axis = 0)
+            samples = pa.latin_hypercube_sampling(bounds, starts)
+            # Convert each row of the LHS result to a 1D array and prepend the initial point
+            self.initial_guesses = [initial_point] + [samples[i, :] for i in range(samples.shape[0])]
         else:
-            self.initial_guesses = [np.array(list(initial_guess.values()))]            
-
+            self.initial_guesses = [initial_point]
+        # if starts > 0:
+        #     bounds = [(lower, upper) for lower, upper in zip(lb, ub)]
+        #     initial_guesses = pa.latin_hypercube_sampling(bounds, starts)
+        #     self.initial_guesses = np.insert(initial_guesses, 0, np.array(list(initial_guess.values())), axis = 0)
+        # else:
+        #     self.initial_guesses = [np.array(list(initial_guess.values()))]   
+           
         # Adjust set of independent variables according to choking model
         self.independent_variables = [
             key
@@ -525,7 +583,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.geometry = results["geometry"]
 
             # Evaluate objective function
-            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+            # self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+            self.f = self.get_objective_function(self.results, self.obj_func)
+            self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
 
             # Evaluate additional constraints
             self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
@@ -622,7 +682,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
             self.geometry = results["geometry"]
 
             # Evaluate objective function
-            self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+            # self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+            self.f = self.get_objective_function(self.results, self.obj_func)
 
             # Evaluate additional constraints
             self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:].values
@@ -719,7 +780,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         # Evaluate objective function
-        self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+        # self.f = self.get_nested_value(self.results, self.obj_func["variable"])[0]/self.obj_func["scale"] # self.obj.func on the form "key.column"
+        self.f = self.get_objective_function(self.results, self.obj_func)
 
         # Evaluate additional constraints
         self.results["additional_constraints"] = pd.DataFrame({"interspace_area_ratio": self.geometry["A_in"][1:]
@@ -737,7 +799,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         return objective_and_constraints
 
-    def get_objective_function(self, objective):
+    def get_objective_function(self, results, objective):
         """
         Change scale for the objective function depending on its type.
         If objective function should be maximized, the sign of the scale is changed. 
@@ -752,11 +814,14 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         dict
             dictionary containing modified scale of the objective function
         """
-
-        if objective["type"] == "maximize":
-            objective["scale"] *= -1
-
-        return objective
+        value = self.get_nested_value(results, objective["variable"])[0]/objective["scale"]
+        type = objective["type"]
+        if type == "minimize":
+            return value
+        elif type == "maximize":
+            return -value
+        else:
+            raise ValueError(f"Unknown objective function type: {type}")
 
     def index_variables(self, variables):
         """
@@ -1268,7 +1333,7 @@ class BlackBoxOptimization:
         champion_x = solver.convergence_history["x"][champion_i]
         solver.problem.fitness(champion_x)
 
-    def export_optimization_process(self, config):
+    def export_optimization_process(self, config, out_dir="output"):
         overall_data = []
         plane_data = []
         cascade_data = []
@@ -1303,7 +1368,6 @@ class BlackBoxOptimization:
         }
         
         # Create a directory to save simulation results
-        out_dir = "output"
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         out_filename = f"black_box_optimization_{timestamp}"
 
