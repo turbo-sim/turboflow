@@ -31,7 +31,7 @@ elif CASE == 1:
 elif CASE == 2:
     operation_points = config["operation_points"]
     solver = tf.compute_optimal_turbine(config, export_results=False)
-    tf.save_to_pickle(solver, filename = f"real_case_90p", out_dir = "output")
+    tf.save_to_pickle(solver, filename = f"pickle_multistart_slsqp", out_dir = "output")
 
 elif CASE == 3:
     operation_points = config["operation_points"]
