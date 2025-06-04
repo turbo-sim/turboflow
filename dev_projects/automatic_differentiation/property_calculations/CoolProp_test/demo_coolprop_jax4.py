@@ -78,7 +78,19 @@ def get_props_custom_jvp_jvp(fluid, input_state, primals, tangents):
     delta_prop1 = 1e-5 * fluid.reference_state[prop1_name]
     delta_prop2 = 1e-5 * fluid.reference_state[prop2_name]
 
-    # alpha = jnp.sqrt((prop1_dot/delta_prop1)**2 + (prop2_dot/delta_prop2)**2)
+    alpha = jnp.sqrt((prop1_dot/delta_prop1)**2 + (prop2_dot/delta_prop2)**2)
+
+    # prop1_dot = float(prop1_dot)
+    # prop2_dot = float(prop2_dot)
+    # alpha = float(alpha)
+
+    # prop1_dot = float(jax.lax.stop_gradient(prop1_dot))
+    # prop2_dot = float(jax.lax.stop_gradient(prop2_dot))
+    # alpha = float(jax.lax.stop_gradient(alpha))
+
+    # prop1_dot = float(prop1_dot.item())
+    # prop2_dot = float(prop2_dot.item())
+    # alpha = float(alpha.item())
 
     # print(tf.INPUT_PAIR_MAP)
 
@@ -86,35 +98,36 @@ def get_props_custom_jvp_jvp(fluid, input_state, primals, tangents):
 
     # Compute finite difference approximations for partial derivatives
     properties_base = fluid.get_props(input_state, prop1, prop2).to_dict()
-    properties_dprop1 = fluid.get_props( input_state, prop1 + delta_prop1, prop2).to_dict()
-    properties_dprop2 = fluid.get_props( input_state, prop1, prop2 + delta_prop2).to_dict()
-    
-    # # Compute partial derivatives
-    df_dprop1 = {
-    key: 0 if (
-        properties_base[key] is None or
-        properties_dprop1[key] is None or
-        isinstance(properties_base[key], str) or
-        isinstance(properties_dprop1[key], str) or
-        np.isnan(properties_base[key]) or
-        np.isnan(properties_dprop1[key])
-    )
-    else (properties_dprop1[key] - properties_base[key]) / delta_prop1
-    for key in properties_base
-    }
+    # properties_dprop1 = fluid.get_props( input_state, prop1 + delta_prop1, prop2).to_dict()
+    # properties_dprop2 = fluid.get_props( input_state, prop1, prop2 + delta_prop2).to_dict()
+    properties_dprop_full = fluid.get_props(input_state, prop1 + (prop1_dot/alpha), prop2 + (prop2_dot/alpha)).to_dict()
 
-    df_dprop2 = {
-    key: 0 if (
-        properties_base[key] is None or
-        properties_dprop2[key] is None or
-        isinstance(properties_base[key], str) or
-        isinstance(properties_dprop2[key], str) or
-        np.isnan(properties_base[key]) or
-        np.isnan(properties_dprop2[key])
-    )
-    else (properties_dprop2[key] - properties_base[key]) / delta_prop2
-    for key in properties_base
-    }
+    # # Compute partial derivatives
+    # df_dprop1 = {
+    # key: 0 if (
+    #     properties_base[key] is None or
+    #     properties_dprop1[key] is None or
+    #     isinstance(properties_base[key], str) or
+    #     isinstance(properties_dprop1[key], str) or
+    #     np.isnan(properties_base[key]) or
+    #     np.isnan(properties_dprop1[key])
+    # )
+    # else (properties_dprop1[key] - properties_base[key]) / delta_prop1
+    # for key in properties_base
+    # }
+
+    # df_dprop2 = {
+    # key: 0 if (
+    #     properties_base[key] is None or
+    #     properties_dprop2[key] is None or
+    #     isinstance(properties_base[key], str) or
+    #     isinstance(properties_dprop2[key], str) or
+    #     np.isnan(properties_base[key]) or
+    #     np.isnan(properties_dprop2[key])
+    # )
+    # else (properties_dprop2[key] - properties_base[key]) / delta_prop2
+    # for key in properties_base
+    # }
 
     properties_base = {
         key: 0. if (
@@ -127,31 +140,31 @@ def get_props_custom_jvp_jvp(fluid, input_state, primals, tangents):
         for key in properties_base
     }
 
-    # properties_dprop_full = {
-    #     key: 0. if (
-    #         properties_dprop_full[key] is None or
-    #         isinstance(properties_dprop_full[key], str) or
-    #         isinstance(properties_dprop_full[key], bool) or
-    #         np.isnan(properties_dprop_full[key])
-    #     )
-    #     else properties_dprop_full[key]
-    #     for key in properties_dprop_full
-    # }
+    properties_dprop_full = {
+        key: 0. if (
+            properties_dprop_full[key] is None or
+            isinstance(properties_dprop_full[key], str) or
+            isinstance(properties_dprop_full[key], bool) or
+            np.isnan(properties_dprop_full[key])
+        )
+        else properties_dprop_full[key]
+        for key in properties_dprop_full
+    }
 
     
 
 
     # Compute JVP (directional derivative)
-    jvp = {
-        key: df_dprop1[key] * prop1_dot + df_dprop2[key] * prop2_dot
-        for key in properties_base
-    }
-
     # jvp = {
-    #     key: alpha*(properties_dprop_full[key]
-    #                 - properties_base[key])
+    #     key: df_dprop1[key] * prop1_dot + df_dprop2[key] * prop2_dot
     #     for key in properties_base
     # }
+
+    jvp = {
+        key: alpha*(properties_dprop_full[key]
+                    - properties_base[key])
+        for key in properties_base
+    }
 
     # print("jvp", jvp)
     

@@ -37,10 +37,10 @@ M=50
 #Fluid selection
 name="CO2"
 #Grid boundaries
-hmin=1e5
-hmax=10e5
-Pmin=1e6
-Pmax=1e8
+hmin=200000  # units - J/kg
+hmax=600000 # units - J/kg
+Pmin=20*1e5 # units - Pa
+Pmax=200*1e5 # units - Pa
 #Number of random points to test the error
 Npoints=50000
 #Number of times to repeat the computation. used to stabilize the timing of  
