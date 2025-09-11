@@ -87,17 +87,17 @@ def plot_grad_comparison(config, step_sizes):
     all_x = np.array(all_x)
     all_y = np.array(all_y)
 
-    # Fit a linear regression model to calculate R-squared
-    regressor = LinearRegression()
-    regressor.fit(all_x.reshape(-1, 1), all_y)  # Fit to the data
-    y_pred = regressor.predict(all_x.reshape(-1, 1))
+    # # Fit a linear regression model to calculate R-squared
+    # regressor = LinearRegression()
+    # regressor.fit(all_x.reshape(-1, 1), all_y)  # Fit to the data
+    # y_pred = regressor.predict(all_x.reshape(-1, 1))
     
-    # Calculate R-squared
-    ss_total = np.sum((all_y - np.mean(all_y))**2)
-    ss_residual = np.sum((all_y - y_pred)**2)
-    r_squared = 1 - (ss_residual / ss_total)
+    # # Calculate R-squared
+    # ss_total = np.sum((all_y - np.mean(all_y))**2)
+    # ss_residual = np.sum((all_y - y_pred)**2)
+    # r_squared = 1 - (ss_residual / ss_total)
 
-    print(f"R² = {r_squared:.2f}")
+    # print(f"R² = {r_squared:.2f}")
     
     # Calculate the maximum absolute deviation from the y=x line
     max_abs_deviation = np.max(deviations)
@@ -112,15 +112,15 @@ def plot_grad_comparison(config, step_sizes):
     print(f"FD Gradient (at max deviation): {max_fd_grad:.4e}")
 
     # Display R-squared and maximum deviation in the legend
-    ax.text(0.7, 0.9, f"R² = {r_squared:.2f}\nMax Abs Deviation = {max_abs_deviation:.4e}", 
-            transform=ax.transAxes, fontsize=12, color='red')
+    # ax.text(0.7, 0.9, f"R² = {r_squared:.2f}\nMax Abs Deviation = {max_abs_deviation:.4e}", 
+    #         transform=ax.transAxes, fontsize=12, color='red')
 
     # Optionally, draw a rectangle to highlight the zoomed region on the main plot
     mark_inset(ax, ax_inset, loc1=2, loc2=1, fc="none", ec="red")
     
     # Display the plot
     ax.legend()
-
+   
     fig.tight_layout(pad=1)
 
     return fig, ax
@@ -132,7 +132,7 @@ config = tf.load_config(CONFIG_FILE, print_summary=False)
 
 # Plot gradient validation
 fig, ax = plot_grad_comparison(config, [1e-3, 1e-6, 1e-9])   
-filename = "gradient_verification"
+filename = "gradient_verification_updated"
 filepath = os.path.join(dir_figs, filename)
 tf.savefig_in_formats(fig, filepath)
 

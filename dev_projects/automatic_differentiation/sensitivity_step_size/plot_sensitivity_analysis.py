@@ -70,9 +70,9 @@ columns_to_plot = ["efficiency_blade_jet_ratio", "efficiency_beta_out_1", "effic
 fig, ax = plot_grad_deviation_step_size(gradient_deviation_dataframe, columns_to_plot)
 
 # Save the plot
-filename = "gradient_deviation_multiple_columns_with_grid"
+filename = "gradient_deviation_multiple_columns_with_grid_updated"
 filepath = os.path.join(dir_figs, filename)
-fig.savefig(filepath)
+tf.savefig_in_formats(fig, filepath)
 
 plt.show()
 

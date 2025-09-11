@@ -2,7 +2,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import turboflow as tf
+import os
 
+dir_figs = "figures"
+os.makedirs(dir_figs, exist_ok=True)
 
 tf.set_plot_options()
 
@@ -51,7 +54,7 @@ for idx, omega in enumerate(unique_omegas):
     
     # Filter data for the current omega
     sim_x = df["PR_ts"][df["angular_speed"] == omega]
-    sim_y = df["efficiency_ts"][df["angular_speed"] == omega]
+    sim_y = df["mass_flow_rate"][df["angular_speed"] == omega]
     
     # Plot the simulation line with the chosen color
     line, = ax.plot(sim_x, sim_y, color=colors[idx], label=f'{int(np.round((omega/1627)*100))}')
@@ -62,7 +65,7 @@ for idx, omega in enumerate(unique_omegas):
     
     # Experimental data for the current omega
     exp_x = df_exp["pressure_ratio_ts"][np.isclose(df_exp["omega"], omega)]
-    exp_y = df_exp["efficiency_ts"][np.isclose(df_exp["omega"], omega)]
+    exp_y = df_exp["mass_flow_rate"][np.isclose(df_exp["omega"], omega)]
     
     # Define markers for experimental points (circle, square, triangle, diamond)
     markers = ['o', 's', '^', 'D']  
@@ -74,7 +77,7 @@ for idx, omega in enumerate(unique_omegas):
 
 # Set the labels for axes
 ax.set_xlabel(r'Total-to-static pressure ratio [$p_{0,\text{in}} / p_{\text{out}}$]', fontsize=22)
-ax.set_ylabel(r'Total-to-static efficiency($\%$)', fontsize=22)
+ax.set_ylabel(r'Mass flow rate [kg/s]', fontsize=22)
 ax.tick_params(axis='x', labelsize=14)
 ax.tick_params(axis='y', labelsize=14)
 
@@ -84,17 +87,20 @@ labels = labels_sim + labels_exp
 
 # Add the legend to the plot with the requested location (lower right) and title
 # Set the number of columns to 2 for the legend: one column for simulation lines, another for experimental points
-legend = ax.legend(handles=handles, labels=labels, title="Percent of design\nangular speed", loc="lower left", fontsize=10, ncol=2)
+legend = ax.legend(handles=handles, labels=labels, title="Percent of design\nangular speed", loc="lower right", fontsize=10, ncol=2)
 
 # Center the title of the legend manually
 legend.get_title().set_horizontalalignment('center')
 
 # Optionally, you can adjust the y-axis limits
-ax.set_ylim([40, 90])
+ax.set_ylim([2.55, 2.85])
 ax.set_xlim([1.4, 4.7])
 
 # Adjust the layout to make room for the legend
 plt.tight_layout()
+filename = "mass_flow_rate_validation_updated"
+filepath = os.path.join(dir_figs, filename)
+tf.savefig_in_formats(fig, filepath)
 
 # Show the plot
 plt.show()

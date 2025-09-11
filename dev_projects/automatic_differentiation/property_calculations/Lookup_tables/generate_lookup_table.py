@@ -18,7 +18,7 @@ import pandas as pd
 #https://jax.readthedocs.io/en/latest/sharded-computation.html
 
 from jax.experimental import mesh_utils
-from jax.sharding import Mesh, PartitionSpec , NamedSharding
+from jax.sharding import Mesh, PartitionSpec, NamedSharding
 
 import CoolProp.CoolProp as cp
 import matplotlib.pyplot as plt

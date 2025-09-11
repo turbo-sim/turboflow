@@ -10,10 +10,15 @@ documentation = "https://turbo-sim.github.io/TurboFlow/"
 
 
 [tool.poetry.dependencies]
-python = "^3.11"
-numpy = "^1.26.4"
-scipy = "^1.13.1"
-matplotlib = "^3.9.0"
+python = ">=3.11,<3.14"
+numpy = "^2.3.0"
+scipy = "^1.16.1"
+jax = "^0.6.0"
+jaxlib = "^0.6.0"
+equinox = "^0.12.0"
+diffrax = "^0.7.0"
+optimistix = "^0.0.10"
+matplotlib = "^3.10.6"
 pandas = "^2.2.2"
 openpyxl = "^3.1.2"
 CoolProp = "^6.6.0"
@@ -21,6 +26,8 @@ PyYAML = "^6.0.1"
 toml = "^0.10.2"
 pydantic = "^2.7.2"
 cycler = "^0.12.1"
+#jaxprop = "0.3.0"
+jaxprop = { path = "../jaxprop/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

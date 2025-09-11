@@ -93,44 +93,79 @@ def compute_bicubic_coefficients_of_ij(i, j, f, fx, fy, fxy):
 
 #     return interpolant_fn
 
-@partial(jit, static_argnums=(5, 6))  # Nh and Np are static
+# @partial(jit, static_argnums=(5, 6))  # Nh and Np are static # static arguments are all except h, P
+# def bicubic_interpolant(h, P, h_vals, P_vals, coeffs, Nh, Np, hmin, hmax, Lmin, Lmax):
+#     """
+#     Evaluate the bicubic interpolant at (h, P) using precomputed coefficients.
+#     """
+#     # Normalize
+#     norm_h = (h - hmin) / (hmax - hmin)
+#     norm_P = (P - Lmin) / (Lmax - Lmin)
+
+#     # Flatten grid arrays
+#     h_vals_flat = jnp.ravel(h_vals)
+#     P_vals_flat = jnp.ravel(P_vals)
+
+#     # Find surrounding grid indices
+#     i = jnp.clip(jnp.searchsorted(h_vals_flat, h) - 1, 0, Nh - 2)
+#     j = jnp.clip(jnp.searchsorted(P_vals_flat, P) - 1, 0, Np - 2)
+
+#     # Relative differences in normalized space
+#     h_base = (h_vals_flat[i] - hmin) / (hmax - hmin)
+#     P_base = (P_vals_flat[j] - Lmin) / (Lmax - Lmin)
+#     h_diff = norm_h - h_base
+#     P_diff = norm_P - P_base
+
+#     # Fetch bicubic coefficients
+#     coeff = coeffs[i, j]
+
+#     # Evaluate bicubic polynomial
+#     result = (
+#         coeff[0] + coeff[1] * h_diff + coeff[2] * P_diff + coeff[3] * h_diff * P_diff +
+#         coeff[4] * h_diff**2 + coeff[5] * h_diff * P_diff**2 +
+#         coeff[6] * P_diff**2 + coeff[7] * h_diff**2 * P_diff +
+#         coeff[8] * h_diff**3 + coeff[9] * h_diff**2 * P_diff +
+#         coeff[10] * h_diff * P_diff**2 + coeff[11] * h_diff**3 * P_diff +
+#         coeff[12] * P_diff**3 + coeff[13] * h_diff * P_diff**3 +
+#         coeff[14] * h_diff**3 * P_diff**2 + coeff[15] * h_diff**2 * P_diff**3
+#     )
+
+#     return result
+
+@partial(jit, static_argnums=(5, 6))
 def bicubic_interpolant(h, P, h_vals, P_vals, coeffs, Nh, Np, hmin, hmax, Lmin, Lmax):
     """
     Evaluate the bicubic interpolant at (h, P) using precomputed coefficients.
     """
-    # Normalize
-    norm_h = (h - hmin) / (hmax - hmin)
-    norm_P = (P - Lmin) / (Lmax - Lmin)
+    # Log-transform P
+    L = jnp.log(P)
 
-    # Flatten grid arrays
-    h_vals_flat = jnp.ravel(h_vals)
-    P_vals_flat = jnp.ravel(P_vals)
+    # Normalize positions to [0, 1] cell coordinates
+    ii = ((h - hmin) / (hmax - hmin) * (Nh - 1))
+    i = ii.astype(int)
+    x = ii - i
 
-    # Find surrounding grid indices
-    i = jnp.clip(jnp.searchsorted(h_vals_flat, h) - 1, 0, Nh - 2)
-    j = jnp.clip(jnp.searchsorted(P_vals_flat, P) - 1, 0, Np - 2)
+    jj = ((L - Lmin) / (Lmax - Lmin) * (Np - 1))
+    j = jj.astype(int)
+    y = jj - j
 
-    # Relative differences in normalized space
-    h_base = (h_vals_flat[i] - hmin) / (hmax - hmin)
-    P_base = (P_vals_flat[j] - Lmin) / (Lmax - Lmin)
-    h_diff = norm_h - h_base
-    P_diff = norm_P - P_base
-
-    # Fetch bicubic coefficients
-    coeff = coeffs[i, j]
 
     # Evaluate bicubic polynomial
-    result = (
-        coeff[0] + coeff[1] * h_diff + coeff[2] * P_diff + coeff[3] * h_diff * P_diff +
-        coeff[4] * h_diff**2 + coeff[5] * h_diff * P_diff**2 +
-        coeff[6] * P_diff**2 + coeff[7] * h_diff**2 * P_diff +
-        coeff[8] * h_diff**3 + coeff[9] * h_diff**2 * P_diff +
-        coeff[10] * h_diff * P_diff**2 + coeff[11] * h_diff**3 * P_diff +
-        coeff[12] * P_diff**3 + coeff[13] * h_diff * P_diff**3 +
-        coeff[14] * h_diff**3 * P_diff**2 + coeff[15] * h_diff**2 * P_diff**3
-    )
+    result = jnp.zeros_like(h)  # use h shape
+    x_pow = jnp.ones_like(h)    # x^0
+
+    for m in range(4):  # m = x power
+        y_pow = jnp.ones_like(h)  # y^0 initially
+        for n in range(4):  # n = y power
+            c = coeffs[i, j, 4 * n + m]
+            result += c * x_pow * y_pow
+            y_pow = y_pow * y
+        x_pow = x_pow * x
+
 
     return result
+
+
 
 @jax.jit
 def inverse_interpolant_scalar_hD(h, D):

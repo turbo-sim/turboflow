@@ -31,16 +31,16 @@ complex128=jnp.dtype('complex128')
 #keyed output by changing this line.
 iD=cp.iT
 #Grid size in h direction
-N=50
+N=10
 #Grid size in log(P) direction
-M=50
+M=10
 #Fluid selection
 name="CO2"
 #Grid boundaries
-hmin=1e5
-hmax=10e5
-Pmin=1e6
-Pmax=1e8
+hmin=200000 #1e5
+hmax=600000 #10e5
+Pmin=20*1e5 #1e6
+Pmax=200*1e5 #1e8
 #Number of random points to test the error
 Npoints=50000
 #Number of times to repeat the computation. used to stabilize the timing of  
@@ -146,16 +146,26 @@ for i,hi in enumerate(h):
             pass
 
 #Because the derivative are not on an unitary grid, they must be rescaled when
-#computing the bicubic coefficients            
+#computing the bicubic coefficients 
+# print(d2DdhdL*deltah*deltaL)           
 t0=time.time()
 for i,hi in enumerate(h):
     if i%(N/progress_checkpoints)<1:print('Progress: %f %% done in %f s'%(i/N*100,time.time()-t0))
-    for j,Pj in enumerate(P):
+    for j,Pj in enumerate(P): 
         temp=compute_bicubic_coefficients_of_ij(i,j,D,dDdh*deltah,
                                                       dDdL*deltaL,
                                                       d2DdhdL*deltah*deltaL)
         bicubic_coefficients=bicubic_coefficients.at[i,j,:].set(temp)
 
+# print(bicubic_coefficients)
+# print(bicubic_coefficients.shape)
+
+# print(
+#     f"Nh (number of h points): {N}\n"
+#     f"Np (number of P points): {M}\n"
+#     f"hmin: {hmin:.3e}, hmax: {hmax:.3e}\n"
+#     f"Lmin (log(Pmin)): {Lmin:.3e}, Lmax (log(Pmax)): {Lmax:.3e}\n"
+# )
 #%% JIT INTERPOLANT specialized with respect to a fixed bicubic coefficient map
 # This can be made more flexible using the static arguments capability of jax,
 # the values passed from the global variables become hard coded during the
@@ -311,6 +321,8 @@ def inverse_interpolant_scalar_DP(D, P):
 #Use the jax vectorization for this function
 inverse_interpolant=jax.vmap(inverse_interpolant_scalar_hD)
 #%% CHECK CORRECTNESS OF BICUBIC INTERPOLATION PROCESS
+print(P)
+
 checks=[(h[-2]+1e-4      ,P[-3]+1e-4      ,'Check at node N-1+eps,M-2+eps'),
         (h[-2]-1e-4      ,P[-3]-1e-4      ,'Check at node N-1-eps,N-2-eps'),
         (.5*(h[-2]+h[-3]),.5*(P[-3]+P[-4]),'Check midnode N-1.5,M-2.5')]

@@ -3,20 +3,24 @@ import matplotlib.pyplot as plt
 import CoolProp.CoolProp as CP
 import copy
 
-from ..pysolver_view import (
+import jax
+from functools import partial
+jax.config.update("jax_traceback_filtering", "off")
+
+from turboflow.pysolver_view import (
     NonlinearSystemSolver,
     NonlinearSystemProblem,
     OptimizationProblem,
     OptimizationSolver,
 )
 
-# from turboflow.properties import perfect_gas_props_func1
 
 # Define property aliases
 PROPERTY_ALIAS = {
     "P": "p",
     "rho": "rhomass",
     "d": "rhomass",
+    "dmass": "rhomass",
     "u": "umass",
     "h": "hmass",
     "s": "smass",
@@ -26,6 +30,22 @@ PROPERTY_ALIAS = {
     "Z": "compressibility_factor",
     "mu": "viscosity",
     "k": "conductivity",
+}
+
+# # Create a lookup table to convert strings to integers
+input_state_map = {
+    "HmassSmass_INPUTS": 0.0,
+    "PSmass_INPUTS": 1.0,
+    "PT_INPUTS": 2.0,
+    "HmassP_INPUTS": 3.0,
+    "DmassHmass_INPUTS": 4.0
+}
+
+FLUID_MAP = {
+    "CO2": 0.0,
+    "H2O": 1.0,
+    "Air": 2.0,
+    # Add more fluids as needed
 }
 
 # Dynamically add INPUTS fields to the module
@@ -81,14 +101,6 @@ DmolarSmolar_INPUTS = CP.DmolarSmolar_INPUTS
 DmassUmass_INPUTS = CP.DmassUmass_INPUTS
 DmolarUmolar_INPUTS = CP.DmolarUmolar_INPUTS
 
-# # Import property calculation functions into a dictionary for easy access
-# property_calculators = {
-#     "HmassSmass_INPUTS": perfect_gas_props_func1.calculate_properties_hs,
-#     "PSmass_INPUTS": perfect_gas_props_func1.calculate_properties_Ps,
-#     "PT_INPUTS": perfect_gas_props_func1.calculate_properties_PT,
-#     "HmassP_INPUTS": perfect_gas_props_func1.calculate_properties_hP,
-#     "DmassHmass_INPUTS": perfect_gas_props_func1.calculate_properties_rhoh
-# }
 
 # Define dictionary with dynamically generated fields
 PHASE_INDEX = {attr: getattr(CP, attr) for attr in dir(CP) if attr.startswith("iphase")}
@@ -96,6 +108,27 @@ INPUT_PAIRS = {attr: getattr(CP, attr) for attr in dir(CP) if attr.endswith("_IN
 PHASE_INDEX = sorted(PHASE_INDEX.items(), key=lambda x: x[1])
 INPUT_PAIRS = sorted(INPUT_PAIRS.items(), key=lambda x: x[1])
 
+INPUT_TYPE_MAP = {v: k for k, v in INPUT_PAIRS}
+ 
+# Convert each input key to a tuple of FluidState variable names
+# Capitalized names that should not be lowercased
+preserve_case = {'T', 'Q'}
+ 
+def extract_vars(name):
+    base = name.replace("_INPUTS", "")
+    parts = []
+    current = base[0]
+    for c in base[1:]:
+        if c.isupper():
+            parts.append(current)
+            current = c
+        else:
+            current += c
+    parts.append(current)
+    return tuple(p if p in preserve_case else p.lower() for p in parts)
+
+ 
+INPUT_PAIR_MAP = {k: extract_vars(v) for k, v in INPUT_TYPE_MAP.items()}
 
 def _generate_coolprop_input_table():
     """Create table of input pairs as string to be copy-pasted in Sphinx documentation"""
@@ -281,10 +314,13 @@ class Fluid:
     def __init__(
         self,
         name,
+        # fluid_id,
         backend="HEOS",
         exceptions=True,
         identifier=None,
     ):
+        # self.fluid_id = fluid_id
+        # self.name = {v: k for k, v in FLUID_MAP.items()}[self.fluid_id]
         self.name = name
         self.backend = backend
         self._AS = CP.AbstractState(backend, name)
@@ -292,11 +328,13 @@ class Fluid:
         self.converged_flag = False
         self.identifier = identifier
         self.properties = {}
+        self.aliases = {} # Added Extra - Added to avoid Attribute Error
+        
 
         # Initialize variables
         self.sat_liq = None
         self.sat_vap = None
-        self.spinodal_liq = None
+        self.spinodal_liq = None    
         self.spinodal_vap = None
         self.pseudo_critical_line = None
         self.q_mesh = None
@@ -324,6 +362,12 @@ class Fluid:
         rho_crit, T_crit = self._AS.rhomass_critical(), self._AS.T_critical()
         self.set_state(DmassT_INPUTS, rho_crit, T_crit, generalize_quality=False)
         return FluidState(self)
+    
+    def compute_reference_state(self, input_type, prop_1, prop_2):
+        """Calculate the reference properties"""
+        self.reference_state = self.set_state(input_type, prop_1, prop_2, generalize_quality=False)
+        
+        return self.reference_state    
 
     def _compute_triple_point_liquid(self):
         """Calculate the properties at the triple point (liquid state)"""
@@ -334,21 +378,6 @@ class Fluid:
         """Calculate the properties at the triple point (vapor state)"""
         self.set_state(QT_INPUTS, 1.00, self._AS.Ttriple(), generalize_quality=False)
         return FluidState(self)
-    
-    # def perfect_gas_props(self, input_state, prop1, prop2):
-    #     """Calculate properties based on the specified input state."""
-        
-    #     # Retrieve the appropriate calculation function
-    #     calculate_properties = property_calculators.get(input_state)
-        
-    #     if calculate_properties is None:
-    #         raise ValueError(f"Unknown input state: {input_state}")
-
-    #     # Call the corresponding property calculation function 
-    #     properties = calculate_properties(prop1, prop2)
-        
-    #     return properties
-
 
     def get_props(self, input_type, prop_1, prop_2, generalize_quality=True):
         return self.set_state(
@@ -486,7 +515,7 @@ class Fluid:
 
         # Basic properties of the two-phase mixture
         T_mix = self._AS.T()
-        p_mix = self._AS.p()
+        p_mix = self._AS.p() 
         rho_mix = self._AS.rhomass()
         u_mix = self._AS.umass()
         h_mix = self._AS.hmass()
@@ -529,8 +558,17 @@ class Fluid:
         cv_mix = mass_frac_L * cv_L + mass_frac_V * cv_V
 
         # Transport properties of the two-phase mixture
-        k_mix = vol_frac_L * k_L + vol_frac_V * k_V
-        mu_mix = vol_frac_L * mu_L + vol_frac_V * mu_V
+        if 0 < self._AS.Q() < 1:
+            # k_mix = self._AS.conductivity()
+            # mu_mix = self._AS.viscosity()
+            k_mix = 1.0
+            mu_mix = 1.0
+        else:
+            k_mix = vol_frac_L * k_L + vol_frac_V * k_V
+            mu_mix = vol_frac_L * mu_L + vol_frac_V * mu_V
+
+        # k_mix = vol_frac_L * k_L + vol_frac_V * k_V
+        # mu_mix = vol_frac_L * mu_L + vol_frac_V * mu_V
 
         # Compressibility factor of the two-phase mixture
         M = self._AS.molar_mass()
@@ -905,6 +943,8 @@ class Fluid:
             self._set_visibility(axes, "triple_point_vapor", False)
 
         return axes
+    
+    
 
 
 def compute_saturation_line(fluid, N_points=100):
@@ -1414,17 +1454,119 @@ if __name__ == "__main__":
     #     print(f"{key:35} {value:.6e}")
 
     # Check that the metastable property calculations match in the single-phase region
-    p, T = 101325, 300
-    props_stable = fluid.set_state(CP.PT_INPUTS, p, T)
-    print()
-    print(f"Properties of water at p={p} Pa and T={T} K")
-    print(f"{'Property':35} {'Equilibrium':>15} {'Metastable':>15} {'Deviation':>15}")
-    props_metastable = fluid.set_state_metastable_rhoT(
-        props_stable["rho"], props_stable["T"]
-    )
-    for key in props_stable.keys():
-        value_stable = props_stable[key]
-        value_metastable = props_metastable[key]
-        print(
-            f"{key:35} {value_stable:+15.6e} {value_metastable:+15.6e} {(value_stable - value_metastable)/value_stable:+15.6e}"
+    ### Commenting this part
+
+    # p, T = 101325, 300
+    # props_stable = fluid.set_state(CP.PT_INPUTS, p, T)
+    # print()
+    # print(f"Properties of water at p={p} Pa and T={T} K")
+    # print(f"{'Property':35} {'Equilibrium':>15} {'Metastable':>15} {'Deviation':>15}")
+    # props_metastable = fluid.set_state_metastable_rhoT(
+    #     props_stable["rho"], props_stable["T"]
+    # )
+    # for key in props_stable.keys():
+    #     value_stable = props_stable[key]
+    #     value_metastable = props_metastable[key]
+    #     print(
+    #         f"{key:35} {value_stable:+15.6e} {value_metastable:+15.6e} {(value_stable - value_metastable)/value_stable:+15.6e}"
+    #     )
+
+
+@partial(jax.custom_jvp, nondiff_argnums= (0, 1))
+def  get_props_custom_jvp(fluid, input_state, prop1, prop2):
+    # input_state = input_state_map[input_state]
+
+    # fluid = Fluid(fluid_name)
+    properties_base = fluid.get_props(input_state, prop1, prop2).to_dict()
+    properties_base = {
+        key: 0. if (
+            properties_base[key] is None or
+            isinstance(properties_base[key], str) or
+            np.isnan(properties_base[key])
         )
+        else properties_base[key]
+        for key in properties_base
+    }
+
+    return properties_base
+    
+
+# Define the forward-mode JVP function for perfect_gas_props
+# Define the JVP function
+@get_props_custom_jvp.defjvp
+def get_props_custom_jvp_jvp(fluid, input_state, primals, tangents):
+
+    # print ("Custom JVP is being used....")
+
+    prop1, prop2 = primals
+    prop1_dot, prop2_dot = tangents  # Directional derivatives
+    
+    prop1_name, prop2_name = INPUT_PAIR_MAP[input_state]
+
+
+    # Small step for finite difference
+
+    # delta_prop1 = 1e-5 * fluid.reference_state[prop1_name]
+    # delta_prop2 = 1e-5 * fluid.reference_state[prop2_name]
+
+    delta_prop1 = 1e-6 
+    delta_prop2 = 1e-6
+    
+
+    # Compute finite difference approximations for partial derivatives
+    properties_base = fluid.get_props(input_state, prop1, prop2).to_dict()
+    properties_dprop1 = fluid.get_props( input_state, prop1 + delta_prop1, prop2).to_dict()
+    properties_dprop2 = fluid.get_props( input_state, prop1, prop2 + delta_prop2).to_dict()
+
+    # delta = 1e-3
+    # properties_combined = fluid.get_props( input_state, prop1 + delta*prop1_dot, prop2 + delta*prop2_dot).to_dict()
+
+    # Compute partial derivatives
+    df_dprop1 = {
+    key: 0 if (
+        properties_base[key] is None or
+        properties_dprop1[key] is None or
+        isinstance(properties_base[key], str) or
+        isinstance(properties_dprop1[key], str) or
+        np.isnan(properties_base[key]) or
+        np.isnan(properties_dprop1[key])
+    )
+    else (properties_dprop1[key] - properties_base[key]) / delta_prop1
+    for key in properties_base
+    }
+
+    df_dprop2 = {
+    key: 0 if (
+        properties_base[key] is None or
+        properties_dprop2[key] is None or
+        isinstance(properties_base[key], str) or
+        isinstance(properties_dprop2[key], str) or
+        np.isnan(properties_base[key]) or
+        np.isnan(properties_dprop2[key])
+    )
+    else (properties_dprop2[key] - properties_base[key]) / delta_prop2
+    for key in properties_base
+    }
+
+    properties_base = {
+        key: 0. if (
+            properties_base[key] is None or
+            isinstance(properties_base[key], str) or
+            isinstance(properties_base[key], bool) or
+            np.isnan(properties_base[key])
+        )
+        else properties_base[key]
+        for key in properties_base
+    }
+
+
+    # Compute JVP (directional derivative)
+    jvp = {
+        key: df_dprop1[key] * prop1_dot + df_dprop2[key] * prop2_dot
+        for key in properties_base
+    }
+
+    # print("jvp", jvp)
+    
+    return properties_base, jvp
+

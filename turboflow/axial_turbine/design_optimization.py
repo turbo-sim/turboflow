@@ -7,6 +7,7 @@ import copy
 import yaml
 import dill
 import warnings
+import turboflow as tf
 
 from .. import pysolver_view as psv
 from .. import utilities as utils
@@ -16,6 +17,7 @@ from .. import properties as props
 from . import performance_analysis as pa
 
 from .. properties import perfect_gas_props
+# from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
 import jax
 import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
@@ -795,9 +797,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         T0_in = design_point["T0_in"]
         p_out = design_point["p_out"]
 
+        # Compute reference property values for finite difference step
+        # state_in_stag = self.fluid.compute_reference_state(cp.PT_INPUTS, p0_in, T0_in)
+
         # Compute stagnation properties at inlet
         # state_in_stag  = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
+        # state_in_stag  = tf.get_props_custom_jvp(self.fluid, cp.PT_INPUTS, p0_in, T0_in)
+        
+
         state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
+
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
@@ -808,6 +817,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Calculate exit static properties for a isentropic expansion
         # state_out_s  = self.fluid.get_props(cp.PSmass_INPUTS, p_out, state_in_stag.s)
+        # state_out_s  = tf.get_props_custom_jvp(self.fluid, cp.PSmass_INPUTS, p_out, state_in_stag["s"])
         state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
         
         h_isentropic = state_out_s["h"]
@@ -815,6 +825,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Calculate exit static properties for a isenthalpic expansion
         # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, state_in_stag.h, p_out)
+        # state_out_h = tf.get_props_custom_jvp(self.fluid, cp.HmassP_INPUTS, state_in_stag["h"], p_out)
+
         state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
         s_isenthalpic = state_out_h["s"]
 

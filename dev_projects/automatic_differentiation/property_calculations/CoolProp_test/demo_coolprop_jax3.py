@@ -174,6 +174,6 @@ jax.config.update("jax_traceback_filtering", "off")
 
 grad_func = jax.jacrev(get_props_custom_jvp, argnums=(2, 3))
 gradients = grad_func(fluid, input_state, prop1, prop2)
-print(gradients)
+tf.print_dict(gradients)
 
 ###############     TESTING CODE  END     ###############
