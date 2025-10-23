@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import dill
+# import dill
 
 import turboflow as tf
 
@@ -14,8 +14,8 @@ OUTPUT_DIR = "output"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Create logger to save results
-logger = tf.create_logger(name="run_optimizations", path=f"{OUTPUT_DIR}/logs", use_datetime=True, to_console=True)
-tf.print_package_info(logger)
+# logger = tf.create_logger(name="run_optimizations", path=f"{OUTPUT_DIR}/logs", use_datetime=True, to_console=True)
+# tf.print_package_info(logger)
 
 # Read case summary
 DATAFILE = "./cases_summary.xlsx"
@@ -31,24 +31,24 @@ case_data = case_data[case_data["case"].isin([1]
 # case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases
-logger.info("Cases scheduled for simulation:")
-logger.info(", ".join(case_data["case"].astype(str)))
+# logger.info("Cases scheduled for simulation:")
+# logger.info(", ".join(case_data["case"].astype(str)))
 for i, row in case_data.iterrows():
 
     # Load configuration file
     config_file = f"./config_files/{row['config_file']}"
-    config = tf.load_config(config_file, print_summary=False)
+    config = tf.read_configuration_file(config_file)
 
     # Load config parameters from Excel file
     vars = ["library", "method", "derivative_method", "derivative_abs_step", "tolerance", "max_iterations"]
     for var in vars:
         config["design_optimization"]["solver_options"][var] = row[var]
 
-     # Log config details
-    logger.info("-" * 80)
-    logger.info(f"Running {row['config_file']} with solver settings:")
-    tf.log_dict(logger, config["design_optimization"]["solver_options"])
-    logger.info("-" * 80)
+    #  # Log config details
+    # logger.info("-" * 80)
+    # logger.info(f"Running {row['config_file']} with solver settings:")
+    # tf.log_dict(logger, config["design_optimization"]["solver_options"])
+    # logger.info("-" * 80)
 
     # Compute optimal turbine
     operation_points = config["operation_points"]
@@ -58,7 +58,7 @@ for i, row in case_data.iterrows():
                                         out_dir=out_dir,
                                         out_filename=out_filename,
                                         export_results=True,
-                                        logger=logger)
+                                        logger=None)
 
 #     # # Load solver object example
 #     # with open('solver.dill', 'rb') as f: 

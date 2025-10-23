@@ -20,6 +20,9 @@ from .. properties import perfect_gas_props
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
 import jax
 import jax.numpy as jnp
+import jaxprop as jxp
+import jaxprop.perfect_gas as pg
+
 jax.config.update("jax_enable_x64", True)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
 
 
@@ -790,7 +793,21 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.boundary_conditions = design_point.copy()
 
         # Initialize fluid object
-        self.fluid = props.Fluid(design_point["fluid_name"])
+        # self.fluid = props.Fluid(design_point["fluid_name"])
+        self.fluid = jxp.FluidPerfectGas(design_point["fluid_name"], design_point["T0_in"], design_point["p_out"]) # Using jaxprop perfect gas model
+        # self.fluid = jxp.FluidJAX(design_point["fluid_name"]) # Using jaxprop coolprop model
+        
+        # self.fluid = jxp.FluidBicubic(
+        #     fluid_name=design_point["fluid_name"],
+        #     backend="HEOS",
+        #     h_min=20e3,
+        #     h_max=600e3,
+        #     p_min=0.2e5,
+        #     p_max=1.5e5,
+        #     N_h=100,
+        #     N_p=100,
+        #     table_dir="fluid_tables",
+        #     )
 
         # Rename variables
         p0_in = design_point["p0_in"]
@@ -805,10 +822,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # state_in_stag  = tf.get_props_custom_jvp(self.fluid, cp.PT_INPUTS, p0_in, T0_in)
         
 
-        state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
+        # state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
+        state_in_stag = self.fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in) 
+        # tf.print_dict(state_in_stag)
 
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
+
 
         # Store the inlet stagnation (h,s) for the first stage
         # TODO: Improve logic of implementation?
@@ -818,20 +838,27 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Calculate exit static properties for a isentropic expansion
         # state_out_s  = self.fluid.get_props(cp.PSmass_INPUTS, p_out, state_in_stag.s)
         # state_out_s  = tf.get_props_custom_jvp(self.fluid, cp.PSmass_INPUTS, p_out, state_in_stag["s"])
-        state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+        # state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+        state_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in) 
         
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
+
+        # print(f"h_isentropic: {h_isentropic}")
 
         # Calculate exit static properties for a isenthalpic expansion
         # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, state_in_stag.h, p_out)
         # state_out_h = tf.get_props_custom_jvp(self.fluid, cp.HmassP_INPUTS, state_in_stag["h"], p_out)
 
-        state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
+        # state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
+        state_out_h = self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out) # Using jaxprop perfect gas model
+
         s_isenthalpic = state_out_h["s"]
 
         # Calculate spouting velocity
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
+
+        # print(f"v0: {v0}, h0_in: {h0_in}, h_isentropic: {h_isentropic}")
 
         mass_flow_rate = None  # Initialize mass_flow_rate to None
         # Try to find mass_flow_rate from eq_constraints

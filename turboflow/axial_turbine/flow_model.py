@@ -18,6 +18,9 @@ import turboflow as tf
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
 from ..properties import perfect_gas_props
 
+import jaxprop as jxp
+import jaxprop.perfect_gas as pg
+
 
 # List of valid options
 BLOCKAGE_MODELS = ["flat_plate_turbulent"]
@@ -198,10 +201,10 @@ def evaluate_axial_turbine(
                 alpha_in,
                 v_in,
             ) = evaluate_cascade_interspace(
-                exit_plane["h0"], # TODO plane_out
+                exit_plane["enthalpy0"], # TODO plane_out
                 exit_plane["v_m"],
                 exit_plane["v_t"],
-                exit_plane["d"],
+                exit_plane["density"],
                 geometry_cascade["radius_mean_out"],
                 geometry_cascade["A_out"],
                 exit_plane["blockage"],
@@ -224,7 +227,7 @@ def evaluate_axial_turbine(
        
 
     # Add exit pressure error to residuals
-    p_calc = exit_plane["p"]
+    p_calc = exit_plane["pressure"]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
 
@@ -353,11 +356,13 @@ def evaluate_cascade(
 
     # props_is = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, exit_plane["p"], inlet_plane["s"])
 
-    props_is = perfect_gas_props("PSmass_INPUTS", exit_plane["p"], inlet_plane["s"])
+    # props_is = perfect_gas_props("PSmass_INPUTS", exit_plane["p"], inlet_plane["s"])
     # props_is = perfect_gas_props_custom_jvp("PSmass_INPUTS", exit_plane["p"], inlet_plane["s"])
+
+    props_is = fluid.get_state(jxp.PSmass_INPUTS, exit_plane["pressure"], inlet_plane["entropy"])
     
 
-    dh_is = exit_plane["h"] - props_is["h"]
+    dh_is = exit_plane["enthalpy"] - props_is["enthalpy"]
 
     # Evaluate critical state
     residuals_critical, critical_state = cm.evaluate_choking(
@@ -450,8 +455,10 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # static_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h, s)
 
-    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
-    
+    # static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    # print("h, s:", h, s)
+    static_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h, s)
+
     rho = static_properties["d"]
     mu = static_properties["mu"]
     a = static_properties["a"]
@@ -461,7 +468,9 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
 
     # stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0, s)
 # 
-    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    # stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0, s)
+    
     
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
@@ -472,7 +481,8 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     # relative_stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0_rel, s)
     
 
-    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    # relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    relative_stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, s)
 
 
     relative_stagnation_properties = utils.add_string_to_keys(
@@ -596,7 +606,8 @@ def evaluate_cascade_exit(
 
     # static_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h, s)
 
-    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    # static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    static_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h, s)
     
 
     rho = static_properties["d"]
@@ -610,7 +621,8 @@ def evaluate_cascade_exit(
     # stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0, s)
 
 
-    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    # stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0, s)
     
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
@@ -620,7 +632,8 @@ def evaluate_cascade_exit(
 
     # relative_stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0_rel, s)
 
-    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    # relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    relative_stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, s)
     
     relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
@@ -637,13 +650,17 @@ def evaluate_cascade_exit(
 
     # relative_stagnation_isentropic_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
 
-    relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+    # relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+
+    relative_stagnation_isentropic_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, inlet_plane["entropy"])
+    
     
     # relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
     # relative_static_isentropic_properties = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
-    relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
+    # relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_state(jxp.PSmass_INPUTS, static_properties["p"], inlet_plane["entropy"])
 
     # Compute mass flow rate
     blockage_factor = compute_blockage_boundary_layer(blockage, Re, chord, opening)
@@ -655,9 +672,9 @@ def evaluate_cascade_exit(
         "geometry": geometry,
         "loss_model": loss_model,
         "flow": {
-            "p0_rel_in": inlet_plane["p0_rel"],
-            "p0_rel_out": relative_stagnation_properties["p0_rel"],
-            "p_in": inlet_plane["p"],
+            "p0_rel_in": inlet_plane["pressure0_rel"],
+            "p0_rel_out": relative_stagnation_properties["pressure0_rel"],
+            "p_in": inlet_plane["pressure"],
             "p_out": static_properties["p"],
             "h_out": static_properties["h"],
             "beta_out": beta,
@@ -773,7 +790,8 @@ def evaluate_cascade_throat(
 
     # static_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h, s)
 
-    static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    # static_properties = perfect_gas_props("HmassSmass_INPUTS", h, s)
+    static_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h, s)
     
     rho = static_properties["d"]
     mu = static_properties["mu"]
@@ -785,7 +803,8 @@ def evaluate_cascade_throat(
 
     # stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0, s)
 
-    stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    # stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0, s)
+    stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0, s)
     
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
@@ -795,7 +814,8 @@ def evaluate_cascade_throat(
 
     # relative_stagnation_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0_rel, s)
 
-    relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    # relative_stagnation_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, s)
+    relative_stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, s)
     
     relative_stagnation_properties = utils.add_string_to_keys(
         relative_stagnation_properties, "0_rel"
@@ -812,13 +832,15 @@ def evaluate_cascade_throat(
     
     # relative_stagnation_isentropic_properties = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h0_rel, inlet_plane["s"])
 
-    relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+    # relative_stagnation_isentropic_properties = perfect_gas_props("HmassSmass_INPUTS", h0_rel, inlet_plane["s"])
+    relative_stagnation_isentropic_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, inlet_plane["entropy"])
 
     # relative_static_isentropic_properties = fluid.get_props(cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
     # relative_static_isentropic_properties = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, static_properties["p"], inlet_plane["s"])
 
-    relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
+    # relative_static_isentropic_properties = perfect_gas_props("PSmass_INPUTS", static_properties["p"], inlet_plane["s"])
+    relative_static_isentropic_properties = fluid.get_state(jxp.PSmass_INPUTS, static_properties["pressure"], inlet_plane["entropy"])
 
 
     # Compute mass flow rate
@@ -831,9 +853,9 @@ def evaluate_cascade_throat(
         "geometry": geometry,
         "loss_model": loss_model,
         "flow": {
-            "p0_rel_in": inlet_plane["p0_rel"],
-            "p0_rel_out": relative_stagnation_properties["p0_rel"],
-            "p_in": inlet_plane["p"],
+            "p0_rel_in": inlet_plane["pressure0_rel"],
+            "p0_rel_out": relative_stagnation_properties["pressure0_rel"],
+            "p_in": inlet_plane["pressure"],
             "p_out": static_properties["p"],
             "h_out": static_properties["h"],
             "beta_out": beta,
@@ -967,8 +989,9 @@ def evaluate_cascade_interspace(
 
     # stagnation_properties = tf.get_props_custom_jvp(fluid, cp.DmassHmass_INPUTS, rho_in, h_in)
 
-    stagnation_properties = perfect_gas_props("DmassHmass_INPUTS", rho_in, h_in)
-    
+    # stagnation_properties = perfect_gas_props("DmassHmass_INPUTS", rho_in, h_in)
+    stagnation_properties = fluid.get_state(jxp.DmassHmass_INPUTS, rho_in, h_in)
+
     s_in = stagnation_properties["s"]
 
     return h0_in, s_in, alpha_in, v_in
@@ -1255,7 +1278,7 @@ def compute_stage_performance(results):
 
     # Calculate the degree of reaction for each stage using list comprehension
     # h = results["plane"]["h"].values
-    h = results["planes"]["h"]
+    h = results["planes"]["enthalpy"]
     R = jnp.array(
         [
             (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])
@@ -1293,9 +1316,9 @@ def compute_overall_performance(results, geometry):
     d_out_s = results["reference_values"]["d_out_s"]
 
     # Calculation of overall performance
-    p = results["planes"]["p"]
-    p0 = results["planes"]["p0"]
-    h0 = results["planes"]["h0"]
+    p = results["planes"]["pressure"]
+    p0 = results["planes"]["pressure0"]
+    h0 = results["planes"]["enthalpy0"]
     v_out = results["planes"]["v"][-1]
     u_out = results["planes"]["blade_speed"][-1]
     mass_flow = results["planes"]["mass_flow"][-1]

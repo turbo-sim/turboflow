@@ -21,11 +21,11 @@ optimistix = "^0.0.10"
 matplotlib = "^3.10.6"
 pandas = "^2.2.2"
 openpyxl = "^3.1.2"
-CoolProp = "^6.6.0"
 PyYAML = "^6.0.1"
 toml = "^0.10.2"
 pydantic = "^2.7.2"
 cycler = "^0.12.1"
+dill = "^0.4.0"
 #jaxprop = "0.3.0"
 jaxprop = { path = "../jaxprop/", develop = true }
 

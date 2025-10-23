@@ -360,6 +360,96 @@ for irepeat in range(Nrepeats):
 print("Inverse (h-D) evaluation with jax cubic in %.4e seconds/point"%((time.time()-t0)/Nrepeats/Npoints))
 err_rev=(P_rev/Prand-1)#error of reverse interpolation
 
+#%% EXTRA PLOTS: Density, Temperature, Entropy vs Enthalpy & Pressure
+
+# Reference values
+P_ref = 50e5   # Pa (50 bar)
+h_ref = 400e3  # J/kg (example: 400 kJ/kg)
+
+# Define ranges
+h_range = jnp.linspace(hmin, hmax, 300)
+P_range = jnp.linspace(Pmin, Pmax, 300)
+
+# Initialize arrays
+density_vs_h, T_vs_h, s_vs_h = [], [], []
+density_vs_P, T_vs_P, s_vs_P = [], [], []
+
+# --- Properties vs Enthalpy at fixed P_ref ---
+for hi in h_range:
+    try:
+        f.update(cp.HmassP_INPUTS, float(hi), float(P_ref))
+        density_vs_h.append(f.keyed_output(cp.iDmass))
+        T_vs_h.append(f.keyed_output(cp.iT))
+        s_vs_h.append(f.keyed_output(cp.iSmass))
+    except:
+        density_vs_h.append(jnp.nan)
+        T_vs_h.append(jnp.nan)
+        s_vs_h.append(jnp.nan)
+
+# --- Properties vs Pressure at fixed h_ref ---
+for Pi in P_range:
+    try:
+        f.update(cp.HmassP_INPUTS, float(h_ref), float(Pi))
+        density_vs_P.append(f.keyed_output(cp.iDmass))
+        T_vs_P.append(f.keyed_output(cp.iT))
+        s_vs_P.append(f.keyed_output(cp.iSmass))
+    except:
+        density_vs_P.append(jnp.nan)
+        T_vs_P.append(jnp.nan)
+        s_vs_P.append(jnp.nan)
+
+# Convert to arrays
+density_vs_h = jnp.array(density_vs_h)
+T_vs_h = jnp.array(T_vs_h)
+s_vs_h = jnp.array(s_vs_h)
+
+density_vs_P = jnp.array(density_vs_P)
+T_vs_P = jnp.array(T_vs_P)
+s_vs_P = jnp.array(s_vs_P)
+
+# --- Plot Properties vs Enthalpy ---
+plt.figure(figsize=(12, 8))
+plt.subplot(3, 1, 1)
+plt.plot(h_range/1e3, density_vs_h, 'b-')
+plt.ylabel("Density [kg/m³]")
+plt.title(f"Properties vs Enthalpy at P = {P_ref/1e5:.1f} bar")
+plt.grid(True)
+
+plt.subplot(3, 1, 2)
+plt.plot(h_range/1e3, T_vs_h, 'r-')
+plt.ylabel("Temperature [K]")
+plt.grid(True)
+
+plt.subplot(3, 1, 3)
+plt.plot(h_range/1e3, s_vs_h, 'g-')
+plt.xlabel("Enthalpy [kJ/kg]")
+plt.ylabel("Entropy [J/kg-K]")
+plt.grid(True)
+
+plt.tight_layout()
+
+# --- Plot Properties vs Pressure ---
+plt.figure(figsize=(12, 8))
+plt.subplot(3, 1, 1)
+plt.plot(P_range/1e5, density_vs_P, 'b-')
+plt.ylabel("Density [kg/m³]")
+plt.title(f"Properties vs Pressure at h = {h_ref/1e3:.1f} kJ/kg")
+plt.grid(True)
+
+plt.subplot(3, 1, 2)
+plt.plot(P_range/1e5, T_vs_P, 'r-')
+plt.ylabel("Temperature [K]")
+plt.grid(True)
+
+plt.subplot(3, 1, 3)
+plt.plot(P_range/1e5, s_vs_P, 'g-')
+plt.xlabel("Pressure [bar]")
+plt.ylabel("Entropy [J/kg-K]")
+plt.grid(True)
+
+plt.tight_layout()
+plt.show()
+
 
 #reverse jax interpolation on multi-core
 #First we create the mesh of processors. It is important to note that the 
@@ -453,3 +543,4 @@ elif iD==cp.iSmass:
 elif iD==cp.iT:
     ax3.set_title("log10 of relative error on Temperature")
 plt.grid(True)
+

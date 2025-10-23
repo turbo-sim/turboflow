@@ -25,6 +25,8 @@ from . import choking_criterion as ch
 from . import deviation_model as dm
 from ..properties import perfect_gas_props
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
+import jaxprop as jxp
+import jaxprop.perfect_gas as pg
 
 import turboflow as tf
 
@@ -915,7 +917,9 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions = operation_point
 
         # Initialize fluid object
-        self.fluid = props.Fluid(operation_point["fluid_name"], exceptions=True)
+        # self.fluid = props.Fluid(operation_point["fluid_name"], exceptions=True)
+        # self.fluid = jxp.FluidPerfectGas(operation_point["fluid_name"], operation_point["T0_in"], p_out = operation_point["p_out"]) # Using jaxprop perfect gas model
+        self.fluid = jxp.FluidJAX(operation_point["fluid_name"]) # Using jaxprop coolprop model
 
         # Rename variables
         p0_in = operation_point["p0_in"]
@@ -923,7 +927,7 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         p_out = operation_point["p_out"]
 
         # Compute reference property values for finite difference step
-        state_in_stag = self.fluid.compute_reference_state(cp.PT_INPUTS, p0_in, T0_in) 
+        # state_in_stag = self.fluid.compute_reference_state(cp.PT_INPUTS, p0_in, T0_in) 
 
         # Compute stagnation properties at inlet
         # state_in_stag = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
@@ -931,6 +935,7 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # state_in_stag = tf.get_props_custom_jvp(self.fluid, cp.PT_INPUTS, p0_in, T0_in)
 
         # state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
+        state_in_stag = self.fluid.get_props(jxp.PT_INPUTS, p0_in, T0_in)
 
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
@@ -943,7 +948,8 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # Calculate exit static properties for a isentropic expansion
         # state_out_s = self.fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
 
-        state_out_s = tf.get_props_custom_jvp(self.fluid, cp.PSmass_INPUTS, p_out, s_in)
+        # state_out_s = tf.get_props_custom_jvp(self.fluid, cp.PSmass_INPUTS, p_out, s_in)
+        state_out_s = self.fluid.get_props(jxp.PSmass_INPUTS, p_out, s_in)
 
         # state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
 
@@ -953,9 +959,10 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # Calculate exit static properties for a isenthalpic expansion
         # state_out_h = self.fluid.get_props(cp.HmassP_INPUTS, h0_in, p_out)
 
-        state_out_h = tf.get_props_custom_jvp(self.fluid, cp.HmassP_INPUTS, h0_in, p_out)
+        # state_out_h = tf.get_props_custom_jvp(self.fluid, cp.HmassP_INPUTS, h0_in, p_out)
 
         # state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
+        state_out_h = self.fluid.get_props(jxp.HmassSmass_INPUTS, h0_in, p_out)
 
         s_isenthalpic = state_out_h["s"]
 
@@ -1240,9 +1247,10 @@ def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
         except AttributeError:
             raise ValueError(f"Invalid CoolProp input type: {call}")
 
-    props = tf.get_props_custom_jvp(fluid, call, prop1*scale, prop2)
+    # props = tf.get_props_custom_jvp(fluid, call, prop1*scale, prop2)
 
     # props = perfect_gas_props(str(call), prop1 * scale, prop2)
+    props = fluid.get_props(jxp.call, prop1 * scale, prop2)
 
     return props["h"] - h0 + 0.5 * Ma**2 * props["speed_sound"] ** 2
 
@@ -1281,9 +1289,10 @@ def get_heuristic_guess(
     # Calculate first stagnation properties
     # stag_first = fluid.get_props(cp.PT_INPUTS, p0_first, T0_first)
 
-    stag_first = tf.get_props_custom_jvp(fluid, cp.PT_INPUTS, p0_first, T0_first)
+    # stag_first = tf.get_props_custom_jvp(fluid, cp.PT_INPUTS, p0_first, T0_first)
 
     # stag_first = perfect_gas_props("PT_INPUTS", p0_first, T0_first)
+    stag_first = fluid.get_props(jxp.PT_INPUTS, p0_first, T0_first)
 
     h0_first = stag_first["h"]
     s_first = stag_first["s"]
@@ -1292,9 +1301,10 @@ def get_heuristic_guess(
     # Calculate final exit enthalpy for isentropic expansion
     # static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
 
-    static_is = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_final, s_first)
+    # static_is = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_final, s_first)
 
     # static_is = perfect_gas_props("PSmass_INPUTS", p_final, s_first)
+    static_is = fluid.get_props(jxp.PSmass_INPUTS, p_final, s_first)
 
     h_final_s = static_is["h"]
     a_final_s = static_is["speed_sound"]
@@ -1313,11 +1323,12 @@ def get_heuristic_guess(
     # Calculate exit static state for expansion with guessed efficiency
     # static_is = fluid.get_props(cp.PSmass_INPUTS, p_final, s_first)
 
-    static_properties_exit = tf.get_props_custom_jvp(fluid, cp.HmassP_INPUTS, h_final, p_final)
+    # static_properties_exit = tf.get_props_custom_jvp(fluid, cp.HmassP_INPUTS, h_final, p_final)
 
     # static_is = tf.get_props_custom_jvp(cp.PSmass_INPUTS, p_final, s_first)
 
     # static_properties_exit = perfect_gas_props("HmassP_INPUTS", h_final, p_final)
+    static_properties_exit = fluid.get_props(jxp.HmassP_INPUTS, h_final, p_final)
 
     s_final = static_properties_exit["s"]
 
@@ -1361,9 +1372,10 @@ def get_heuristic_guess(
         # Calculate exit state
         # static_out = fluid.get_props(cp.PSmass_INPUTS, p_out, s_out)
 
-        static_out = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_out, s_out)
+        # static_out = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_out, s_out)
 
         # static_out = perfect_gas_props("PSmass_INPUTS", p_out, s_out)
+        static_out = fluid.get_props(jxp.PSmass_INPUTS, p_out, s_out)
 
         h_out = static_out["h"]
         a_out = static_out["speed_sound"]
@@ -1376,9 +1388,10 @@ def get_heuristic_guess(
         # Calculate critical mach
         # static_props_is = fluid.get_props(cp.PSmass_INPUTS, p_out, s_in)
 
-        static_props_is = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_out, s_in)
+        # static_props_is = tf.get_props_custom_jvp(fluid, cp.PSmass_INPUTS, p_out, s_in)
 
         # static_props_is = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
+        static_props_is = fluid.get_props(jxp.PSmass_INPUTS, p_out, s_in)
 
         h_out_s = static_props_is["h"]
         eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
@@ -1398,11 +1411,12 @@ def get_heuristic_guess(
         s_throat_crit = s_out
         # static_state_throat_crit = fluid.get_props(cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
 
-        static_state_throat_crit = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        # static_state_throat_crit = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
 
         # static_state_throat_crit = perfect_gas_props(
         #     "HmassSmass_INPUTS", h_throat_crit, s_throat_crit
         # )
+        static_state_throat_crit = fluid.get_props(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
 
         rho_throat_crit = static_state_throat_crit["d"]
         m_crit = w_throat_crit * rho_throat_crit * A_throat
@@ -1445,9 +1459,10 @@ def get_heuristic_guess(
             s_in = s_out
             # static_in = fluid.get_props(cp.HmassSmass_INPUTS, h_in, s_in)
 
-            static_in = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h_in, s_in)
+            # static_in = tf.get_props_custom_jvp(fluid, cp.HmassSmass_INPUTS, h_in, s_in)
 
             # static_in = perfect_gas_props("HmassSmass_INPUTS", h_in, s_in)
+            static_in = fluid.get_props(jxp.HmassSmass_INPUTS, h_in, s_in)
 
             d_in = static_in["d"]
 

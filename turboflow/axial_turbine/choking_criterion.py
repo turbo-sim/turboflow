@@ -175,10 +175,10 @@ def critical_mach_number(
 
     # Evaluate critical mach
     Y_tot = loss_dict["loss_total"]
-    eta = (throat_plane["h0_rel"] - throat_plane["h"]) / (
-        throat_plane["h0_rel"] - throat_plane["h_is"]
+    eta = (throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]) / (
+        throat_plane["enthalpy0_rel"] - throat_plane["h_is"]
     )
-    critical_mach = get_mach_crit(throat_plane["gamma"], eta)
+    critical_mach = get_mach_crit(throat_plane["heat_capacity_ratio"], eta)
 
     # Evaluate if flow cascade is choked or not an add choking residual
     if exit_plane["Ma_rel"] <= critical_mach:
