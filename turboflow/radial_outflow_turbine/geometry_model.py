@@ -25,7 +25,6 @@ import jax.numpy as jnp
 from turboflow.radial_outflow_turbine import blade_parametrization as bp
 
 
-
 # ---------------------------
 # Small helpers (JAX-only)
 # ---------------------------
