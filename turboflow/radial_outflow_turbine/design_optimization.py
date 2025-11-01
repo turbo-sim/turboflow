@@ -794,20 +794,20 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize fluid object
         # self.fluid = props.Fluid(design_point["fluid_name"])
-        # self.fluid = jxp.FluidPerfectGas(design_point["fluid_name"], design_point["T0_in"], design_point["p_out"]) # Using jaxprop perfect gas model
+        self.fluid = jxp.FluidPerfectGas(design_point["fluid_name"], design_point["T0_in"], design_point["p_out"]) # Using jaxprop perfect gas model
         # self.fluid = jxp.FluidJAX(design_point["fluid_name"]) # Using jaxprop coolprop model
         
-        self.fluid = jxp.FluidBicubic(
-            fluid_name=design_point["fluid_name"],
-            backend="HEOS",
-            h_min=20e3,
-            h_max=600e3,
-            p_min=0.2e5,
-            p_max=1.5e5,
-            N_h=100,
-            N_p=100,
-            table_dir="fluid_tables",
-            )
+        # self.fluid = jxp.FluidBicubic(
+        #     fluid_name=design_point["fluid_name"],
+        #     backend="HEOS",
+        #     h_min=20e3,
+        #     h_max=600e3,
+        #     p_min=0.2e5,
+        #     p_max=1.5e5,
+        #     N_h=100,
+        #     N_p=100,
+        #     table_dir="fluid_tables",
+        #     )
 
         # Rename variables
         p0_in = design_point["p0_in"]

@@ -28,6 +28,8 @@ cycler = "^0.12.1"
 dill = "^0.4.0"
 #jaxprop = "0.3.0"
 jaxprop = { path = "../jaxprop/", develop = true }
+#nurbspy = "^1.2.1"
+nurbspy = { path = "../nurbspy/", develop = true }
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

@@ -307,9 +307,9 @@ def calculate_full_geometry(geometry):
     # existing formula (unchanged):
     gauging_angle = math.arccosd(A_throat / A_out) * jnp.asarray([(-1) ** i for i in range(number_of_cascades)])
 
-    axial_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
+    meridional_chord = geom["chord"] * math.cosd(geom["stagger_angle"])
 
-    flaring_angle = math.arctand((height_out - height_in) / axial_chord / 2)
+    flaring_angle = math.arctand((height_out - height_in) / meridional_chord / 2)
 
     aspect_ratio                   = height / geom["chord"]
     pitch_chord_ratio              = geom["pitch"] / geom["chord"]
@@ -322,7 +322,7 @@ def calculate_full_geometry(geometry):
     new_parameters = {
         "number_of_stages": number_of_stages,
         "number_of_cascades": number_of_cascades,
-        "axial_chord": axial_chord,
+        "meridional_chord": meridional_chord,
         "radius_mean_in": radius_mean_in,
         "radius_mean_out": radius_mean_out,
         "radius_mean_throat": radius_mean_throat,

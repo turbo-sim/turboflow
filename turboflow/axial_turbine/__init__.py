@@ -1,8 +1,8 @@
 from .performance_analysis import *
 from .design_optimization import *
 from .deviation_model import *
-from .geometry_model import *
-from .geometry_model1 import *
+# from .geometry_model import *
+# from .geometry_model1 import *
 from .geometry_model2 import *
 from .flow_model import *
 from .choking_criterion import *

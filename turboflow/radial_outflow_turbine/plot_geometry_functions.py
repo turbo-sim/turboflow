@@ -148,14 +148,14 @@ def _is_axial_geom(G: dict) -> bool:
 def _axial_rows_from_geom(G: dict):
     """
     Normalize axial geometry dict -> list of per-row records with synthetic axial placement.
-    Uses calculate_full_geometry outputs if available (e.g., axial_chord, radius_mean_in).
+    Uses calculate_full_geometry outputs if available (e.g., meridional_chord, radius_mean_in).
     """
     n = len(G["cascade_type"])
-    axial_chord = jnp.asarray(G.get("axial_chord", G["chord"]), dtype=float)
+    meridional_chord = jnp.asarray(G.get("meridional_chord", G["chord"]), dtype=float)
     gap_frac = 0.15  # spacing between cascades as fraction of local axial chord
-    gaps = gap_frac * axial_chord
-    x_starts = jnp.cumsum(jnp.concatenate([[0.0], (axial_chord + gaps)[:-1]]))
-    x_ends = x_starts + axial_chord
+    gaps = gap_frac * meridional_chord
+    x_starts = jnp.cumsum(jnp.concatenate([[0.0], (meridional_chord + gaps)[:-1]]))
+    x_ends = x_starts + meridional_chord
 
     rows = []
     for i in range(n):
@@ -220,7 +220,7 @@ def plot_meridional_tangential(
     # ---------------- AXIAL INPUT (JAX-only) ----------------
     if _is_axial_geom(full_geom):
         # JAX arrays
-        chord_ax = jnp.asarray(full_geom.get("axial_chord", full_geom["chord"]), dtype=float)
+        chord_ax = jnp.asarray(full_geom.get("meridional_chord", full_geom["chord"]), dtype=float)
         pitch    = jnp.asarray(full_geom["pitch"], dtype=float)
         chord    = jnp.asarray(full_geom["chord"], dtype=float)
         stagger  = jnp.deg2rad(jnp.asarray(full_geom["stagger_angle"], dtype=float))
@@ -316,8 +316,8 @@ def plot_meridional_tangential(
         xy_max = max(xy_max, float(max(abs(r1), abs(r2)) * 1.05))
 
     ax.set_title(title)
-    ax.set_xlim(-xy_max, +xy_max)
-    ax.set_ylim(-xy_max, +xy_max)
+    # ax.set_xlim(-xy_max, +xy_max)
+    ax.set_ylim(0.0, +xy_max)
     ax.legend(loc="best", fontsize=8)
 
     # Make it fill the available canvas nicely
@@ -393,7 +393,7 @@ def plot_meridional(
         r_sh_in  = jnp.asarray(full_geom.get("radius_shroud_in",  r_t_in),  dtype=float)
         r_sh_out = jnp.asarray(full_geom.get("radius_shroud_out", r_t_out), dtype=float)
 
-        chord_ax = jnp.asarray(full_geom.get("axial_chord", full_geom["chord"]), dtype=float)
+        chord_ax = jnp.asarray(full_geom.get("meridional_chord", full_geom["chord"]), dtype=float)
         n = len(full_geom["cascade_type"])
 
         # Axial placement with small gaps (JAX-safe concat)
@@ -628,6 +628,7 @@ def plot_meridional_hybrid(
 
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(11.0, 6.0), dpi=140)
+    ax.set_aspect('equal')
     cmap = plt.get_cmap("tab10")
     def row_color(i): return cmap(i % 10)
 
@@ -682,8 +683,8 @@ def plot_meridional_hybrid(
             tip_in  = float(row_a["radius_tip_in"])
             tip_out = float(row_a["radius_tip_out"])
 
-            if "axial_chord" in row_a:
-                c_ax = float(row_a["axial_chord"])
+            if "meridional_chord" in row_a:
+                c_ax = float(row_a["meridional_chord"])
             elif "chord" in row_a and "stagger_angle" in row_a:
                 c_ax = float(row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"])))
             else:
@@ -719,8 +720,8 @@ def plot_meridional_hybrid(
             tip_in  = float(row_a["radius_tip_in"])
             tip_out = float(row_a["radius_tip_out"])
 
-            if "axial_chord" in row_a:
-                c_ax = float(row_a["axial_chord"])
+            if "meridional_chord" in row_a:
+                c_ax = float(row_a["meridional_chord"])
             elif "chord" in row_a and "stagger_angle" in row_a:
                 c_ax = float(row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"])))
             else:
@@ -786,10 +787,10 @@ def plot_meridional_hybrid(
     left_edge  = z_center - half_span_radial
     right_edge = max(s_axial, z_center + half_span_radial)
     ax.set_xlim(left_edge - 0.8 * radial_width, right_edge + 0.05 * radial_width)
+    ax.set_ylim(0.0, None)  # auto top
 
     ax.set_title(title)
     ax.set_xlabel("Station coordinate (z for radial, x for axial) [m]")
     ax.set_ylabel("Radius r [m]")
-    ax.margins(y=0.03)
     plt.tight_layout()
     plt.show()

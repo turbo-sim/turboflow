@@ -321,6 +321,38 @@ def is_dict_empty(data):
         return all(is_dict_empty(v) for v in data.values()) if data else True
     return False  # Not a dictionary
 
+def _is_numeric_arrayable(x):
+    if isinstance(x, (bool, np.bool_)):  # treat as numeric
+        return True
+    if isinstance(x, (int, float, np.integer, np.floating)):
+        return True
+    if isinstance(x, (np.ndarray,)):
+        return np.issubdtype(x.dtype, np.number) or x.dtype == np.bool_
+    # jnp arrays count as numeric too
+    try:
+        import jax.numpy as jnp
+        if isinstance(x, jnp.ndarray):
+            return True
+    except Exception:
+        pass
+    return False
+
+def combine_dict_list_safely(dict_list):
+    """
+    Combine a list of dicts into arrays WITHOUT sending strings into JAX.
+    Numeric keys -> jnp arrays; non-numeric keys -> Python lists.
+    """
+    keys = set().union(*(d.keys() for d in dict_list))
+    out = {}
+    for k in keys:
+        vals = [d[k] for d in dict_list if k in d]
+        if all(_is_numeric_arrayable(v) for v in vals):
+            out[k] = jnp.concatenate([jnp.atleast_1d(v) for v in vals])
+        else:
+            # keep metadata/text as simple Python list (or np.array(dtype=object))
+            out[k] = list(vals)
+    return out
+
 def combine_to_dict_of_arrays(dict_list):
     """
     Combines a list of dictionaries into a dictionary of concatenated JAX arrays.
@@ -333,7 +365,8 @@ def combine_to_dict_of_arrays(dict_list):
             raise ValueError("All dictionaries must have the same keys.")
  
     # Concatenate values for each key across all dictionaries
-    combined_dict = {key: jnp.concatenate([jnp.atleast_1d(d[key]) for d in dict_list]) for key in keys}
+    # combined_dict = {key: jnp.concatenate([jnp.atleast_1d(d[key]) for d in dict_list]) for key in keys}
+    combined_dict = combine_dict_list_safely(dict_list)
 
     return combined_dict
 
