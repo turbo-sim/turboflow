@@ -47,13 +47,13 @@ def convert_numpy_to_python(data, precision=10):
     ):
         return int(data.item())
 
-    elif isinstance(data, (np.float_, np.float16, np.float32, np.float64)):
+    elif isinstance(data, (np.float16, np.float32, np.float64)):
         return round(float(data.item()), precision)
 
     elif isinstance(data, np.bool_):
         return bool(data.item())
 
-    elif isinstance(data, (np.str_, np.unicode_)):
+    elif isinstance(data, (np.str_)):
         return str(data.item())
 
     # This will handle Python built-in types and other types that are not numpy.

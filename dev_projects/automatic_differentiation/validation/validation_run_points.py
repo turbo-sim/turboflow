@@ -13,6 +13,10 @@ tf.set_plot_options()
 OUTPUT_DIR = "output_points"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+
+import jaxprop as jxp
+
+print(jxp.INPUT_PAIR_MAP)
 # Create logger to save results
 logger = tf.create_logger(name="run_validation_cases", path="logs", use_datetime=True, to_console=True)
 tf.print_package_info(logger)
@@ -26,7 +30,7 @@ case_data = pd.read_excel(DATAFILE)
 # case_data = case_data[case_data["method"].isin(filter)]
 
 # Run cases based on case number
-case_data = case_data[case_data["case"].isin([5])]
+case_data = case_data[case_data["case"].isin([1])]
 # case_data = case_data[case_data["case"].isin([200, 201, 300, 301])]
 
 # Loop over cases

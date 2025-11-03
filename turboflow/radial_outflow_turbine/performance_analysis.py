@@ -567,64 +567,96 @@ def get_initial_guess(
 
     return initial_guesses
 
-def _unwrap_yaml_geometry_rows(geometry):
+def _unwrap_yaml_geometry_rows(geometry_like):
     """
-    Recursively search 'geometry' for row dicts that contain 'cascade_type'.
-    Accepts:
-      - list of single-key wrappers: [{'stator_1': {...}}, {'rotor_1': {...}}]
-      - dict of named blocks: {'stator_1': {...}, 'rotor_1': {...}}
-      - nested combos (lists/dicts), and ignores non-dict metadata.
-    Returns a flat list of row dicts (each must have 'cascade_type').
+    Normalize 'geometry' into a flat list[dict], each row having at least 'cascade_type'.
+    Accepts: full config dict (with 'geometry'), dict {'rows': ...}, dict of named rows,
+    list of named-row dicts (e.g. [{'stator_1': {...}}, {'rotor_1': {...}}]),
+    or already flat list of row dicts.
+    Ignores non-row keys (e.g. 'turbomachinery', 'operation_points', ...).
     """
-    rows = []
+    # If full config, pick 'geometry'
+    if isinstance(geometry_like, dict) and "geometry" in geometry_like:
+        geometry = geometry_like["geometry"]
+    else:
+        geometry = geometry_like
 
-    def _collect(obj, path="geometry"):
-        # Row already in final shape
-        if isinstance(obj, dict) and "cascade_type" in obj:
-            rows.append(obj)
-            return
+    # Accept wrapper {'rows': ...}
+    if isinstance(geometry, dict) and "rows" in geometry:
+        geometry = geometry["rows"]
 
-        if isinstance(obj, dict):
-            # If single-key wrapper like {'stator_1': {...}}
-            if len(obj) == 1:
-                (k, v), = obj.items()
-                _collect(v, f"{path}->{k}")
-                return
+    # Case: dict of {name: row_dict} (filter only dicts w/ cascade_type)
+    if isinstance(geometry, dict):
+        rows = []
+        for name, row in geometry.items():
+            if not isinstance(row, dict):
+                continue
+            if "cascade_type" in row:
+                rows.append({"name": name, **row})
+        if rows:
+            return rows
+        # If we didn’t collect anything here, fall through to error later.
 
-            # Otherwise, walk all values to find rows within
-            found_any = False
-            for k, v in obj.items():
-                if isinstance(v, (dict, list)):
-                    before = len(rows)
-                    _collect(v, f"{path}->{k}")
-                    found_any |= (len(rows) > before)
-                # non-dict/list (e.g., numbers/strings) are ignored as metadata
-            # If nothing was found inside this dict, just ignore it silently
-            return
+    # Case: list/tuple – flatten any {name: row_dict} entries
+    if isinstance(geometry, (list, tuple)):
+        rows = []
+        for item in geometry:
+            if isinstance(item, dict) and "cascade_type" in item:
+                rows.append(item)
+            elif isinstance(item, dict) and len(item) == 1:
+                name, row = next(iter(item.items()))
+                if isinstance(row, dict) and "cascade_type" in row:
+                    rows.append({"name": name, **row})
+            # else: ignore non-row entries silently
+        if rows:
+            return rows
+        raise ValueError("No valid row entries with 'cascade_type' found in geometry list.")
 
-        if isinstance(obj, list):
-            for i, item in enumerate(obj):
-                _collect(item, f"{path}[{i}]")
-            return
+    raise TypeError(f"'geometry' must be list/tuple or dict; got {type(geometry).__name__}")
 
-        # Scalars or unknowns are ignored
 
-    _collect(geometry)
+def _coerce_rows_list(rows_like):
+    """
+    Final guard: ensure we return a *flat* list[dict] with 'cascade_type'.
+    Also collapses one-level nested lists, and unwraps {name: row} dicts.
+    """
+    # Flatten one nesting layer if needed
+    if isinstance(rows_like, list) and len(rows_like) == 1 and isinstance(rows_like[0], list):
+        rows_like = rows_like[0]
 
-    if not rows:
-        raise ValueError(
-            "Could not find any geometry row dicts with 'cascade_type' "
-            "in the provided 'geometry'. Please check the YAML structure."
-        )
+    out = []
+    # If dict -> iterate values
+    iterable = rows_like.values() if isinstance(rows_like, dict) else rows_like
 
-    # Final sanity check
-    for i, row in enumerate(rows):
-        if not isinstance(row, dict):
-            raise TypeError(f"Collected row {i} is not a dict (got {type(row)}).")
-        if "cascade_type" not in row:
-            raise KeyError(f"Collected row {i} is missing 'cascade_type'.")
+    for item in iterable:
+        if isinstance(item, dict) and "cascade_type" in item:
+            out.append(item)
+        elif isinstance(item, dict) and len(item) == 1:
+            _, inner = next(iter(item.items()))
+            if isinstance(inner, dict) and "cascade_type" in inner:
+                out.append(inner)
+            else:
+                raise TypeError("Found a named block whose value is not a valid row dict.")
+        elif isinstance(item, list):
+            # Accept a nested list, but items inside must be dict rows
+            for sub in item:
+                if isinstance(sub, dict) and "cascade_type" in sub:
+                    out.append(sub)
+                elif isinstance(sub, dict) and len(sub) == 1:
+                    _, inner = next(iter(sub.items()))
+                    if isinstance(inner, dict) and "cascade_type" in inner:
+                        out.append(inner)
+                    else:
+                        raise TypeError("Nested named block is not a valid row dict.")
+                else:
+                    raise TypeError("Nested list contains a non-row item.")
+        else:
+            raise TypeError("Geometry contains an item that is neither a row dict nor a named-row dict.")
 
-    return rows
+    if not out:
+        raise ValueError("After coercion, no valid geometry rows with 'cascade_type' were found.")
+    return out
+
 
 # ------------------------------------------------------------------------------------------ #
 # ------------------------------------------------------------------------------------------ #
@@ -639,9 +671,10 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
     def __init__(self, geometry, simulation_options):
         # Unwrap YAML-named rows (stator_1, rotor_1, ...)
         unwrapped_rows = _unwrap_yaml_geometry_rows(geometry)
+        rows_list = _coerce_rows_list(unwrapped_rows)
 
         # Prepare + compute full geometry using the expected row format
-        prepared = geom.prepare_radial_outflow_geometry(unwrapped_rows)
+        prepared = geom.prepare_radial_outflow_geometry(rows_list)
         self.geometry = geom.calculate_full_radial_outflow_geometry(prepared)
 
         # Optional: keep your numeric guard if you added it

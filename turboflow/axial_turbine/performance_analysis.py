@@ -918,8 +918,20 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
 
         # Initialize fluid object
         # self.fluid = props.Fluid(operation_point["fluid_name"], exceptions=True)
-        # self.fluid = jxp.FluidPerfectGas(operation_point["fluid_name"], operation_point["T0_in"], p_out = operation_point["p_out"]) # Using jaxprop perfect gas model
-        self.fluid = jxp.FluidJAX(operation_point["fluid_name"]) # Using jaxprop coolprop model
+        # self.fluid = jxp.FluidPerfectGas(operation_point["fluid_name"], operation_point["T0_in"], operation_point["p_out"]) # Using jaxprop perfect gas model
+        # self.fluid = jxp.FluidJAX(operation_point["fluid_name"]) # Using jaxprop coolprop model
+        self.fluid = jxp.FluidBicubic(
+            fluid_name=operation_point["fluid_name"],
+            backend="HEOS",
+            h_min=20e3,
+            h_max=600e3,
+            p_min=0.2e5,
+            p_max=1.5e5,
+            N_h=100,
+            N_p=100,
+            table_dir="fluid_tables",
+            )
+
 
         # Rename variables
         p0_in = operation_point["p0_in"]
@@ -962,7 +974,7 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # state_out_h = tf.get_state_custom_jvp(self.fluid, cp.HmassP_INPUTS, h0_in, p_out)
 
         # state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
-        state_out_h = self.fluid.get_state(jxp.HmassSmass_INPUTS, h0_in, p_out)
+        state_out_h = self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out)
 
         s_isenthalpic = state_out_h["s"]
 
@@ -1250,7 +1262,8 @@ def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
     # props = tf.get_state_custom_jvp(fluid, call, prop1*scale, prop2)
 
     # props = perfect_gas_props(str(call), prop1 * scale, prop2)
-    props = fluid.get_state(jxp.call, prop1 * scale, prop2)
+    print(call)
+    props = fluid.get_state(call, prop1 * scale, prop2)
 
     return props["h"] - h0 + 0.5 * Ma**2 * props["speed_sound"] ** 2
 
