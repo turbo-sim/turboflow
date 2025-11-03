@@ -66,4 +66,5 @@ venv/
 
 # Results folders
 **/output/
+**/output*/
 **/results/
