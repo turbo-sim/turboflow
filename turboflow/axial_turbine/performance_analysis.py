@@ -18,12 +18,12 @@ from scipy import optimize
 from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
-from .. import properties as props
+# from .. import properties as props
 from . import geometry_model as geom
 from . import flow_model as flow
 from . import choking_criterion as ch
 from . import deviation_model as dm
-from ..properties import perfect_gas_props
+# from ..properties import perfect_gas_props
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
 import jaxprop as jxp
 import jaxprop.perfect_gas as pg

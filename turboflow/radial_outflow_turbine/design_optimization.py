@@ -13,10 +13,10 @@ from .. import pysolver_view as psv
 from .. import utilities as utils
 from . import geometry_model as geom
 from . import flow_model as flow
-from .. import properties as props
+# from .. import properties as props
 from . import performance_analysis as pa
 
-from .. properties import perfect_gas_props
+# from .. properties import perfect_gas_props
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
 import jax
 import jax.numpy as jnp

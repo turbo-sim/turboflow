@@ -16,7 +16,7 @@ from . import choking_criterion as cm
 
 import turboflow as tf
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
-from ..properties import perfect_gas_props
+# from ..properties import perfect_gas_props
 
 import jaxprop as jxp
 import jaxprop.perfect_gas as pg

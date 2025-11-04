@@ -1,17 +1,13 @@
 import os
 import yaml
 import copy
-import time
 import datetime
 import itertools
 import numpy as np
 import pandas as pd
-import CoolProp as cp
-import matplotlib.pyplot as plt
 import jax
 import jax.numpy as jnp
 import dill
-import numbers
 
 from scipy.stats import qmc
 from scipy import optimize
@@ -19,31 +15,20 @@ from scipy import optimize
 from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
-from .. import properties as props
-from . import geometry_model as geom
+from . import geometry_model_axial as geom
 from . import flow_model as flow
-from . import choking_criterion as ch
 from . import deviation_model as dm
-from ..properties import perfect_gas_props
-# from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props
 import jaxprop as jxp
 import jaxprop.perfect_gas as pg
 
 import turboflow as tf
 
-
-jax.config.update(
-    "jax_enable_x64", True
-)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
-
+jax.config.update("jax_enable_x64", True)  # 64-bit for scientific computing
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
-"""
-Available solvers for performance analysis.
-"""
 
 # -------------------------------------------------------------------
-# NEW: helpers to fail fast on non-numeric contamination
+# helpers to fail fast on non-numeric contamination
 # -------------------------------------------------------------------
 NUMERIC = (int, float, np.floating)
 
@@ -51,9 +36,6 @@ def _is_num(x):
     return isinstance(x, NUMERIC)
 
 def assert_numeric_operation_point(op):
-    """
-    Raise with a precise key if any OP value is not numeric (except 'fluid_name').
-    """
     for k, v in op.items():
         if k == "fluid_name":
             if not isinstance(v, str):
@@ -62,46 +44,162 @@ def assert_numeric_operation_point(op):
         if not _is_num(v):
             raise TypeError(f"operation_point['{k}'] must be numeric, got {v!r} ({type(v)})")
 
-def assert_numeric_geometry(geom_dict):
+def _prune_vars_to_match_choking(initial_guess: dict, components: list, global_choking: str) -> dict:
     """
-    Walks the prepared geometry (dict of arrays/scalars). Allows known text keys
-    (e.g. 'cascade_type', 'camberline_type'); everything else must be numeric
-    scalars/arrays. Raises with the exact offending path.
+    Keep only the unknowns required by each component's choking model.
+    Always keep: v_in and per-component w_out_i, s_out_i, beta_out_i.
+    For choking model per component i:
+      - critical_mach_number: keep w_crit_throat_i, s_crit_throat_i; drop v_crit_in_i
+      - critical_isentropic_throat: keep w_crit_throat_i; drop v_crit_in_i, s_crit_throat_i
+      - critical_mass_flow_rate: keep v_crit_in_i, w_crit_throat_i, s_crit_throat_i
     """
-    ALLOW_STR_KEYS = {"cascade_type", "camberline_type"}
-    for k, v in geom_dict.items():
-        if k in ALLOW_STR_KEYS:
-            continue
-        if isinstance(v, (list, tuple, np.ndarray)):
-            for i, val in enumerate(v):
-                if isinstance(val, dict):
-                    for kk, vv in val.items():
-                        if kk in ALLOW_STR_KEYS:
-                            continue
-                        if isinstance(vv, (list, tuple, np.ndarray)):
-                            if not np.all([_is_num(x) for x in vv]):
-                                raise TypeError(f"geometry['{k}'][{i}]['{kk}'] contains non-numerics: {vv}")
-                        else:
-                            if not _is_num(vv):
-                                raise TypeError(f"geometry['{k}'][{i}]['{kk}'] must be numeric, got {vv!r} ({type(vv)})")
-                else:
-                    if not _is_num(val):
-                        raise TypeError(f"geometry['{k}'][{i}] must be numeric, got {val!r} ({type(val)})")
-        elif isinstance(v, dict):
-            for kk, vv in v.items():
-                if kk in ALLOW_STR_KEYS:
-                    continue
-                if isinstance(vv, (list, tuple, np.ndarray)):
-                    if not np.all([_is_num(x) for x in vv]):
-                        raise TypeError(f"geometry['{k}']['{kk}'] contains non-numerics: {vv}")
-                else:
-                    if not _is_num(vv):
-                        raise TypeError(f"geometry['{k}']['{kk}'] must be numeric, got {vv!r} ({type(vv)})")
+    out = {}
+    out["v_in"] = initial_guess.get("v_in", None)
+    n = len([c for c in components if c.get("component_type", "").lower() == "axial_cascade" or "geometry" in c])
+
+    for i in range(n):
+        tag = f"_{i+1}"
+        # always needed per component
+        for base in ("w_out", "s_out", "beta_out"):
+            k = base + tag
+            if k in initial_guess:
+                out[k] = initial_guess[k]
+
+        # resolve the choking model for this component
+        comp_opts = (components[i].get("model_options") or {})
+        crit = comp_opts.get("choking_criterion", global_choking)
+
+        if crit == "critical_mach_number":
+            # keep: w_crit_throat_i, s_crit_throat_i
+            for k in (f"w_crit_throat{tag}", f"s_crit_throat{tag}"):
+                if k in initial_guess:
+                    out[k] = initial_guess[k]
+            # drop v_crit_in_i (do nothing)
+        elif crit == "critical_isentropic_throat":
+            # keep only w_crit_throat_i
+            k = f"w_crit_throat{tag}"
+            if k in initial_guess:
+                out[k] = initial_guess[k]
+        elif crit == "critical_mass_flow_rate":
+            # keep all three
+            for k in (f"v_crit_in{tag}", f"w_crit_throat{tag}", f"s_crit_throat{tag}"):
+                if k in initial_guess:
+                    out[k] = initial_guess[k]
         else:
-            if not _is_num(v):
-                raise TypeError(f"geometry['{k}'] must be numeric, got {v!r} ({type(v)})")
+            # default conservative: keep none of the extra critical vars
+            pass
+
+    # remove None if v_in was missing
+    out = {k: v for k, v in out.items() if v is not None}
+    return out
+
+def _expand_ratios(performance_map: dict) -> dict:
+    """
+    In map mode, allow specifying p_out via ratios to p0_in:
+      - p_out_ratio_range: [r_min, r_max]
+      - p_out_ratio_points: N
+      - OR p_out_ratio_values: [r1, r2, ...]
+    Returns a *new* map dict with 'p_out_ratio' as a list of ratios (if provided).
+    Does nothing if neither field is present.
+    """
+    pm = dict(performance_map)  # shallow copy
+
+    if "p_out_ratio_values" in pm:
+        ratios = list(pm["p_out_ratio_values"])
+        pm["p_out_ratio"] = ratios
+
+    elif "p_out_ratio_range" in pm and "p_out_ratio_points" in pm:
+        lo, hi = pm["p_out_ratio_range"]
+        n = int(pm["p_out_ratio_points"])
+        ratios = np.linspace(lo, hi, n).tolist()
+        pm["p_out_ratio"] = ratios
+
+    # Clean helper keys (optional)
+    for k in ("p_out_ratio_values", "p_out_ratio_range", "p_out_ratio_points"):
+        if k in pm:
+            del pm[k]
+
+    return pm
+
+# --- put near the other helpers in performance_analysis.py ---
+
+def _eval_item_if_str(x, ctx):
+    """Evaluate x if it's a string expression; recurse into lists/tuples.
+    If evaluation fails or it's plain text (like 'air'), return original.
+    """
+    import numpy as np
+
+    def _looks_like_expr(s: str) -> bool:
+        # Heuristic: treat as expression if it references numpy or has math operators/paren/brackets
+        expr_tokens = ("np.", "(", ")", "[", "]", "*", "/", "+", "-", "**")
+        return any(t in s for t in expr_tokens)
+
+    if isinstance(x, str):
+        if not _looks_like_expr(x):
+            # Not an expression (likely plain text like "air") → leave as-is
+            return x
+        try:
+            return eval(x, {"__builtins__": {}, "np": np}, ctx)
+        except (NameError, SyntaxError, AttributeError, TypeError, ZeroDivisionError):
+            # If anything goes wrong, fall back to original string
+            return x
+    elif isinstance(x, list):
+        return [_eval_item_if_str(e, ctx) for e in x]
+    elif isinstance(x, tuple):
+        return tuple(_eval_item_if_str(e, ctx) for e in x)
+    else:
+        return x
 
 
+def _evaluate_map_expressions(performance_map):
+    """
+    Evaluate simple NumPy/math expressions embedded as strings in the map.
+    Supports references to already-present numeric keys (e.g., 'p0_in') and 'np'.
+    Leaves plain text (e.g., 'air') untouched.
+    """
+    import numpy as np
+
+    pm = dict(performance_map)  # shallow copy
+
+    # Build context with simple numeric values (scalars) so expressions can reference them, e.g., p0_in
+    ctx = {k: v for k, v in pm.items() if isinstance(v, (int, float))}
+    # Optionally include numeric lists so they can also be referenced
+    ctx.update({k: v for k, v in pm.items()
+                if isinstance(v, list) and all(isinstance(e, (int, float)) for e in v)})
+
+    for k, v in list(pm.items()):
+        evaluated = _eval_item_if_str(v, ctx)
+
+        # Convert numpy arrays to native lists for downstream code
+        if hasattr(evaluated, "tolist"):
+            evaluated = evaluated.tolist()
+
+        pm[k] = evaluated
+
+        # Refresh context if we just created something numeric that others might reference
+        if isinstance(evaluated, (int, float)):
+            ctx[k] = evaluated
+        elif isinstance(evaluated, list) and all(isinstance(e, (int, float)) for e in evaluated):
+            ctx[k] = evaluated
+
+    return pm
+
+
+def _numpy_to_native(x):
+    """Convert numpy arrays to nested Python lists; leave scalars alone."""
+    import numpy as np
+    if hasattr(x, "tolist"):
+        return x.tolist()
+    elif isinstance(x, (list, tuple)):
+        return type(x)(_numpy_to_native(e) for e in x)
+    else:
+        return x
+
+
+
+# ===================================================================
+# Public entry: performance over a set/map of operation points
+# ===================================================================
 def compute_performance(
     operation_points,
     config,
@@ -115,38 +213,28 @@ def compute_performance(
     Compute and export the performance of each specified operation point to an Excel file.
     """
 
-    # Check if geometry is provided
-    if config["geometry"] is None:
-        raise ValueError("Geometry is not provided")
+    # Expect components list in config
+    if not config.get("components"):
+        raise ValueError("No 'components' found in config. Provide a list of components.")
 
-    # Check the type of operation_points argument
+    # Ranges → list of operation points
     if isinstance(operation_points, dict):
-        # Convert ranges to a list of operation points
         operation_points = generate_operation_points(operation_points)
     elif not isinstance(operation_points, (list, np.ndarray)):
-        msg = "operation_points must be either list of dicts or a dict with ranges."
-        raise TypeError(msg)
+        raise TypeError("operation_points must be either list of dicts or a dict with ranges.")
 
-    # Validate all operation points (keys)
-    for operation_point in operation_points:
-        validate_operation_point(operation_point)
-
-    # NEW: validate types (no strings except fluid_name)
+    # Validate
     for op in operation_points:
+        validate_operation_point(op)
         assert_numeric_operation_point(op)
 
-    # Initialize lists to hold dataframes for each operation point
-    operation_point_data = []
-    overall_data = []
-    plane_data = []
-    cascade_data = []
-    stage_data = []
-    solver_data = []
-    solution_data = []
-    geometry_data = []
+    # Collectors
+    operation_point_data, overall_data = [], []
+    plane_data, cascade_data, stage_data = [], [], []
+    solver_data, solution_data, geometry_data = [], [], []
     solver_container = []
 
-    # Loop through all operation points
+    # Pretty print OPs
     message = print_operation_points(operation_points)
     for line in message.splitlines():
         logger.info(line)
@@ -154,35 +242,32 @@ def compute_performance(
     for i, operation_point in enumerate(operation_points):
         logger.info("")
         logger.info(f" Computing operation point {i+1} of {len(operation_points)}")
-
-        message = print_boundary_conditions(operation_point)
-        for line in message.splitlines():
+        for line in print_boundary_conditions(operation_point).splitlines():
             logger.info(line)
 
-        # Define initial guess
+        # Initial guess selection
         if i == 0:
-            # Use default initial guess for the first operation point
-            initial_guess = config["performance_analysis"]["initial_guess"]
+            initial_guess_cfg = extract_initial_guess_from_components(config["components"])
         else:
             closest_x, closest_index = find_closest_operation_point(
                 operation_point,
-                operation_points[:i],  # Use up to the previous point
-                solution_data[:i],     # Use solutions up to the previous point
+                operation_points[:i],
+                solution_data[:i],
             )
             logger.info(f" Using solution from point {closest_index+1} as initial guess")
-            initial_guess = closest_x
+            initial_guess_cfg = closest_x
 
-        # Compute performance
+        # Solve one OP
         solver, results = compute_single_operation_point(
             operation_point,
-            initial_guess,
-            config["geometry"],
-            config["simulation_options"],
+            initial_guess_cfg,
+            config["components"],                       # << components list
+            config.get("simulation_options", {}),       # global fallbacks
             config["performance_analysis"]["solver_options"],
             logger=logger
         )
 
-        # Retrieve solver data
+        # Solver summary
         solver_status = {
             "completed": True,
             "success": solver.success,
@@ -194,66 +279,62 @@ def compute_performance(
             "norm_step": solver.convergence_history["norm_step"][-1],
         }
 
-        # Collect results
+        # Collect
         operation_point_data.append(pd.DataFrame([operation_point]))
-        overall_data.append(
-            pd.DataFrame.from_dict(results["overall"], orient="index").T
-        )
+        overall_data.append(pd.DataFrame.from_dict(results["overall"], orient="index").T)
         plane_data.append(utils.flatten_dataframe(pd.DataFrame(results["planes"])))
         cascade_data.append(utils.flatten_dataframe(pd.DataFrame(results["cascades"])))
         stage_data.append(utils.flatten_dataframe(pd.DataFrame(results["stage"])))
-        geometry_data.append(utils.flatten_dataframe(pd.DataFrame(results["geometry"])))
+        # geometry: flatten per-component results
+        geom_rows_df = pd.DataFrame(results["geometry_components"])
+        geometry_data.append(utils.flatten_dataframe(geom_rows_df))
         solver_data.append(pd.DataFrame([solver_status]))
         solution_data.append(solver.problem.vars_real)
         solver_container.append(solver)
 
-    # Dictionary to hold concatenated dataframes
+    # Export dataframes
     dfs = {
         "operation point": pd.concat(operation_point_data, ignore_index=True),
-        "overall": pd.concat(overall_data, ignore_index=True),
-        "plane": pd.concat(plane_data, ignore_index=True),
-        "cascade": pd.concat(cascade_data, ignore_index=True),
-        "stage": pd.concat(stage_data, ignore_index=True),
-        "geometry": pd.concat(geometry_data, ignore_index=True),
-        "solver": pd.concat(solver_data, ignore_index=True),
+        "overall":         pd.concat(overall_data, ignore_index=True),
+        "plane":           pd.concat(plane_data, ignore_index=True),
+        "cascade":         pd.concat(cascade_data, ignore_index=True),
+        "stage":           pd.concat(stage_data, ignore_index=True),
+        "geometry":        pd.concat(geometry_data, ignore_index=True),
+        "solver":          pd.concat(solver_data, ignore_index=True),
     }
 
     if export_results:
-        # Create a directory to save simulation results
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
 
-        # Define filename with unique date-time identifier
         if out_filename is None:
             out_filename = "performance"
 
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         out_filenames = [f"{out_filename}_{current_time}", f"{out_filename}_latest"]
-        for out_filename in out_filenames:
 
-            # Export simulation configuration as YAML file
-            config_data = {k: v for k, v in config.items() if v}  # Filter empty entries
+        for fname in out_filenames:
+            # dump config (as provided)
+            config_data = {k: v for k, v in config.items() if v}
             config_data = utils.convert_numpy_to_python(config_data, precision=12)
-            config_file = os.path.join(out_dir, f"{out_filename}.yaml")
-            with open(config_file, "w") as file:
-                yaml.dump(config_data, file, default_flow_style=False, sort_keys=False)
+            with open(os.path.join(out_dir, f"{fname}.yaml"), "w") as f:
+                yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
 
-            # Export optimal turbine in excel file
-            filepath = os.path.join(out_dir, f"{out_filename}.xlsx")
-            with pd.ExcelWriter(filepath, engine="openpyxl") as writer:
+            # excel bundle
+            filepath_xlsx = os.path.join(out_dir, f"{fname}.xlsx")
+            with pd.ExcelWriter(filepath_xlsx, engine="openpyxl") as writer:
                 for sheet_name, df in dfs.items():
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
 
-            # Export optimal turbine as dill object
-            filepath = os.path.join(out_dir, f"{out_filename}.pkl")
+            # pickle solver (lightweight)
+            filepath_pkl = os.path.join(out_dir, f"{fname}.pkl")
             solver.problem = None
-            with open(filepath, 'wb') as file:
-                # Serialize the object and write it to the file
-                dill.dump(solver, file)
+            with open(filepath_pkl, 'wb') as f:
+                dill.dump(solver, f)
 
-        logger.info(f" Performance data successfully written to {filepath}")
+        logger.info(f" Performance data successfully written to {filepath_xlsx}")
 
-    # Print final report
+    # Footer summary
     message = print_simulation_summary(solver_container)
     for line in message:
         logger.info(line)
@@ -261,47 +342,98 @@ def compute_performance(
     return solver_container
 
 
+# ===================================================================
+# One operation point
+# ===================================================================
+
 def compute_single_operation_point(
     operating_point,
     initial_guess,
-    geometry,
+    components,            # << list of component dicts (from YAML)
     simulation_options,
     solver_options,
     logger=None
 ):
     """
-    Compute an operation point for a given set of boundary conditions using multiple solver methods and initial guesses.
+    Compute one operation point for given boundary conditions.
     """
 
-    # Initialize problem object
-    problem = AxialTurbineProblem(geometry, simulation_options)
-    # Update BC
+    problem = AxialTurbineProblem(components, simulation_options)
     problem.update_boundary_conditions(operating_point)
     solver_options = copy.deepcopy(solver_options)
 
-    # Get initial guess from sample of heuristic guesses
+    # Build initial guesses (component-wise first; fall back to legacy)
     initial_guesses = get_initial_guess(
         initial_guess,
         problem,
         problem.boundary_conditions,
-        problem.geometry,
+        problem.geometry_components_arrayview,  # dict-of-arrays view for legacy heuristic
         problem.fluid,
-        simulation_options["choking_criterion"],
-        simulation_options["deviation_model"],
+        simulation_options.get("choking_criterion", "critical_mach_number"),
+        simulation_options.get("deviation_model", "aungier"),
         logger,
+        components=problem.components,
     )
 
-    # Get solver method array
+    # ---- PRUNE unknowns to match each component's choking criterion ----
+    # Always keep v_in and, per component i, keep w_out_i, s_out_i, beta_out_i.
+    # Then, depending on choking model:
+    #   - critical_mach_number:       keep w_crit_throat_i, s_crit_throat_i
+    #   - critical_isentropic_throat: keep w_crit_throat_i
+    #   - critical_mass_flow_rate:    keep v_crit_in_i, w_crit_throat_i, s_crit_throat_i
+    per_comp_choking = []
+    global_choking = simulation_options.get("choking_criterion", "critical_mach_number")
+    for i, comp in enumerate(problem.components):
+        comp_opts = comp.get("model_options") or {}
+        per_comp_choking.append(comp_opts.get("choking_criterion", global_choking))
+
+    pruned_initial_guesses = []
+    n_comp = len(problem.components)
+    for ig in initial_guesses:
+        pruned = {}
+        if "v_in" in ig:
+            pruned["v_in"] = ig["v_in"]
+
+        for i in range(n_comp):
+            tag = f"_{i+1}"
+
+            # always needed per component
+            for base in ("w_out", "s_out", "beta_out"):
+                k = base + tag
+                if k in ig:
+                    pruned[k] = ig[k]
+
+            crit = per_comp_choking[i]
+            if crit == "critical_mach_number":
+                for k in (f"w_crit_throat{tag}", f"s_crit_throat{tag}"):
+                    if k in ig:
+                        pruned[k] = ig[k]
+            elif crit == "critical_isentropic_throat":
+                k = f"w_crit_throat{tag}"
+                if k in ig:
+                    pruned[k] = ig[k]
+            elif crit == "critical_mass_flow_rate":
+                for k in (f"v_crit_in{tag}", f"w_crit_throat{tag}", f"s_crit_throat{tag}"):
+                    if k in ig:
+                        pruned[k] = ig[k]
+            else:
+                # unknown criterion -> keep only the base 3 (already done)
+                pass
+
+        pruned_initial_guesses.append(pruned)
+
+    initial_guesses = pruned_initial_guesses
+    # -------------------------------------------------------------------
+
     solver_methods = [solver_options["method"]] + [
-        method for method in SOLVER_MAP.keys() if method != solver_options["method"]
+        m for m in SOLVER_MAP.keys() if m != solver_options["method"]
     ]
 
-    for initial_guess in initial_guesses:
-        initial_guess_scaled = problem.scale_values(initial_guess)
+    for ig in initial_guesses:
+        initial_guess_scaled = problem.scale_values(ig)
         x0 = np.array(list(initial_guess_scaled.values()))
         problem.keys = initial_guess_scaled.keys()
 
-        # NEW: fail fast on non-finite initial guess
         if not np.all(np.isfinite(x0)):
             bad = {k: v for k, v in zip(problem.keys, x0) if not np.isfinite(v)}
             raise ValueError(f"Initial guess contains non-finite values: {bad}")
@@ -318,7 +450,6 @@ def compute_single_operation_point(
                 solver.success = False
             if solver.success:
                 break
-
         if solver.success:
             break
 
@@ -328,405 +459,76 @@ def compute_single_operation_point(
     return solver, problem.results
 
 
-def find_closest_operation_point(current_op_point, operation_points, solution_data):
-    """
-    Find the solution vector and index of the closest operation point in the historical data.
-    """
-    min_distance = float("inf")
-    closest_point_x = None
-    closest_index = None
-
-    for i, op_point in enumerate(operation_points):
-        distance = get_operation_point_distance(current_op_point, op_point)
-        if distance < min_distance:
-            min_distance = distance
-            closest_point_x = solution_data[i]
-            closest_index = i
-
-    return closest_point_x, closest_index
-
-
-def get_operation_point_distance(point_1, point_2, delta=1e-8):
-    """
-    Calculate the normalized distance between two operation points.
-    """
-    deviation_array = []
-    for key in point_1:
-        if isinstance(point_1[key], (int, float)) and key in point_2:
-            value_1 = point_1[key]
-            value_2 = point_2[key]
-
-            if key == "alpha_in":
-                deviation = np.abs(value_1 - value_2) / 90
-            else:
-                max_val = max(abs(value_1), abs(value_2), delta)
-                deviation = abs(value_1 - value_2) / max_val
-
-            deviation_array.append(deviation)
-
-    return np.linalg.norm(deviation_array)
-
-
-def generate_operation_points(performance_map):
-    """
-    Generates list of operation points from a map (Cartesian product).
-    """
-    # Make sure all values in the performance_map are iterables
-    performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
-
-    # Reorder performance map keys so first sweep is always through pressure
-    priority_keys = ["p0_in", "p_out"]
-    other_keys = [k for k in performance_map.keys() if k not in priority_keys]
-    keys_order = other_keys + priority_keys
-    performance_map = {
-        k: performance_map[k] for k in keys_order if k in performance_map
-    }
-
-    # Create all combinations of operation points
-    keys, values = zip(*performance_map.items())
-    operation_points = [
-        dict(zip(keys, combination)) for combination in itertools.product(*values)
-    ]
-
-    return operation_points
-
-
-def validate_operation_point(op_point):
-    """
-    Validates that an operation point has exactly the required fields.
-    """
-    REQUIRED_FIELDS = {"fluid_name", "p0_in", "T0_in", "p_out", "alpha_in", "omega"}
-    fields = set(op_point.keys())
-    if fields != REQUIRED_FIELDS:
-        missing = REQUIRED_FIELDS - fields
-        extra = fields - REQUIRED_FIELDS
-        raise ValueError(
-            f"Operation point validation error: "
-            f"Missing fields: {missing}, Extra fields: {extra}"
-        )
-
-
-def get_initial_guess(
-    initial_guess,
-    problem,
-    boundary_conditions,
-    geometry,
-    fluid,
-    choking_criterion,
-    deviation_model,
-    logger
-):
-    # Rename variables
-    number_of_cascades = geometry["number_of_cascades"]
-    # Three types of initial guess:
-    valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [
-        f"ma_{i+1}" for i in range(number_of_cascades)
-    ]
-    valid_keys_2 = ["efficiency_tt", "efficiency_ke", "ma", "n_samples"]
-    valid_keys_3 = [
-        "w_out",
-        "s_out",
-        "beta_out",
-        "w_crit_throat",
-        "s_crit_throat",
-    ]
-    valid_keys_3 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3
-    ]
-    valid_keys_4 = [
-        "w_out",
-        "s_out",
-        "beta_out",
-        "v_crit_in",
-        "w_crit_throat",
-        "s_crit_throat",
-    ]
-    valid_keys_4 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4
-    ]
-    valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
-    valid_keys_5 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5
-    ]
-    check = []
-    check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_5) == set(list(initial_guess.keys())))
-
-    if check[0]:
-        if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
-            initial_guesses = []
-            for i in range(len(initial_guess["efficiency_tt"])):
-                ma = np.array(
-                    [initial_guess[f"ma_{j+1}"][i] for j in range(number_of_cascades)]
-                )
-                heuristic_guess = get_heuristic_guess(
-                    initial_guess["efficiency_tt"][i],
-                    initial_guess["efficiency_ke"][i],
-                    ma,
-                    boundary_conditions,
-                    geometry,
-                    fluid,
-                    deviation_model,
-                )
-                initial_guesses.append(heuristic_guess)
-        else:
-            ma = np.array(
-                [initial_guess[f"ma_{j+1}"] for j in range(number_of_cascades)]
-            )
-            heuristic_guess = get_heuristic_guess(
-                initial_guess["efficiency_tt"],
-                initial_guess["efficiency_ke"],
-                ma,
-                boundary_conditions,
-                geometry,
-                fluid,
-                deviation_model,
-            )
-            initial_guesses = [heuristic_guess]
-    elif check[1]:
-        bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [
-            initial_guess["ma"] for i in range(number_of_cascades)
-        ]
-        n_samples = initial_guess["n_samples"]
-        heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
-        norm_residuals = np.array([])
-        failures = 0
-        for heuristic_input in heuristic_inputs:
-            try:
-                ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
-                heuristic_guess = get_heuristic_guess(
-                    heuristic_input[0],
-                    heuristic_input[1],
-                    ma,
-                    boundary_conditions,
-                    geometry,
-                    fluid,
-                    deviation_model,
-                )
-                x = problem.scale_values(heuristic_guess)
-                problem.keys = x.keys()
-                x0 = np.array(list(x.values()))
-                residual = problem.residual(x0)
-                norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
-            except:
-                failures += 1
-                norm_residuals = np.append(norm_residuals, np.nan)
-
-        logger.info(f"Generating heuristic inital guesses from latin hypercube sampling")
-        logger.info(f"Number of failures: {failures} out of {n_samples} samples")
-        logger.info(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
-        heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
-        initial_guess = dict(zip(valid_keys_1, heuristic_input))
-        ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
-        initial_guess = get_heuristic_guess(
-            heuristic_input[0],
-            heuristic_input[1],
-            ma,
-            boundary_conditions,
-            geometry,
-            fluid,
-            deviation_model,
-        )
-        initial_guesses = [initial_guess]
-    elif check[2]:
-        initial_guesses = [initial_guess]
-    elif check[3]:
-        initial_guesses = [initial_guess]
-    elif check[4]:
-        initial_guesses = [initial_guess]
-    else:
-        raise ValueError(
-            "Initial guess must be a dictionary, which require a certain set of keys. See documentation for more information"
-        )
-
-    # Check that set of initial guess correspond with choking_criteria
-    for initial_guess, i in zip(initial_guesses, range(len(initial_guesses))):
-        if choking_criterion == "critical_mach_number":
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not key.startswith("v_crit_in")
-            }
-        elif choking_criterion == "critical_mass_flow_rate":
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not key.startswith("beta_crit_throat")
-            }
-        elif choking_criterion == "critical_isentropic_throat":
-            initial_guess = {
-                key: val
-                for key, val in initial_guess.items()
-                if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))
-            }
-
-        initial_guesses[i] = initial_guess
-
-    return initial_guesses
-
-def _unwrap_yaml_geometry_rows(geometry_like):
-    """
-    Normalize 'geometry' into a flat list[dict], each row having at least 'cascade_type'.
-    Accepts: full config dict (with 'geometry'), dict {'rows': ...}, dict of named rows,
-    list of named-row dicts (e.g. [{'stator_1': {...}}, {'rotor_1': {...}}]),
-    or already flat list of row dicts.
-    Ignores non-row keys (e.g. 'turbomachinery', 'operation_points', ...).
-    """
-    # If full config, pick 'geometry'
-    if isinstance(geometry_like, dict) and "geometry" in geometry_like:
-        geometry = geometry_like["geometry"]
-    else:
-        geometry = geometry_like
-
-    # Accept wrapper {'rows': ...}
-    if isinstance(geometry, dict) and "rows" in geometry:
-        geometry = geometry["rows"]
-
-    # Case: dict of {name: row_dict} (filter only dicts w/ cascade_type)
-    if isinstance(geometry, dict):
-        rows = []
-        for name, row in geometry.items():
-            if not isinstance(row, dict):
-                continue
-            if "cascade_type" in row:
-                rows.append({"name": name, **row})
-        if rows:
-            return rows
-        # If we didn’t collect anything here, fall through to error later.
-
-    # Case: list/tuple – flatten any {name: row_dict} entries
-    if isinstance(geometry, (list, tuple)):
-        rows = []
-        for item in geometry:
-            if isinstance(item, dict) and "cascade_type" in item:
-                rows.append(item)
-            elif isinstance(item, dict) and len(item) == 1:
-                name, row = next(iter(item.items()))
-                if isinstance(row, dict) and "cascade_type" in row:
-                    rows.append({"name": name, **row})
-            # else: ignore non-row entries silently
-        if rows:
-            return rows
-        raise ValueError("No valid row entries with 'cascade_type' found in geometry list.")
-
-    raise TypeError(f"'geometry' must be list/tuple or dict; got {type(geometry).__name__}")
-
-
-def _coerce_rows_list(rows_like):
-    """
-    Final guard: ensure we return a *flat* list[dict] with 'cascade_type'.
-    Also collapses one-level nested lists, and unwraps {name: row} dicts.
-    """
-    # Flatten one nesting layer if needed
-    if isinstance(rows_like, list) and len(rows_like) == 1 and isinstance(rows_like[0], list):
-        rows_like = rows_like[0]
-
-    out = []
-    # If dict -> iterate values
-    iterable = rows_like.values() if isinstance(rows_like, dict) else rows_like
-
-    for item in iterable:
-        if isinstance(item, dict) and "cascade_type" in item:
-            out.append(item)
-        elif isinstance(item, dict) and len(item) == 1:
-            _, inner = next(iter(item.items()))
-            if isinstance(inner, dict) and "cascade_type" in inner:
-                out.append(inner)
-            else:
-                raise TypeError("Found a named block whose value is not a valid row dict.")
-        elif isinstance(item, list):
-            # Accept a nested list, but items inside must be dict rows
-            for sub in item:
-                if isinstance(sub, dict) and "cascade_type" in sub:
-                    out.append(sub)
-                elif isinstance(sub, dict) and len(sub) == 1:
-                    _, inner = next(iter(sub.items()))
-                    if isinstance(inner, dict) and "cascade_type" in inner:
-                        out.append(inner)
-                    else:
-                        raise TypeError("Nested named block is not a valid row dict.")
-                else:
-                    raise TypeError("Nested list contains a non-row item.")
-        else:
-            raise TypeError("Geometry contains an item that is neither a row dict nor a named-row dict.")
-
-    if not out:
-        raise ValueError("After coercion, no valid geometry rows with 'cascade_type' were found.")
-    return out
-
-
-# ------------------------------------------------------------------------------------------ #
-# ------------------------------------------------------------------------------------------ #
-# ------------------------------------------------------------------------------------------ #
-
-
+# ===================================================================
+# Problem definition (component-wise)
+# ===================================================================
 class AxialTurbineProblem(psv.NonlinearSystemProblem):
     """
-    Nonlinear system problem for cascade series analysis (radial-outflow compatible).
+    Nonlinear system problem for a component-wise axial turbine analysis.
     """
 
-    def __init__(self, geometry, simulation_options):
-        # Unwrap YAML-named rows (stator_1, rotor_1, ...)
-        unwrapped_rows = _unwrap_yaml_geometry_rows(geometry)
-        rows_list = _coerce_rows_list(unwrapped_rows)
+    def __init__(self, components, simulation_options):
+        """
+        components: list of component dicts from YAML (with geometry, model_options, initial_guess)
+        """
+        # Keep components (needed for per-component model options & IG)
+        self.components = components
 
-        # Prepare + compute full geometry using the expected row format
-        prepared = geom.prepare_radial_outflow_geometry(rows_list)
-        self.geometry = geom.calculate_full_radial_outflow_geometry(prepared)
+        # Build full geometry per component (list of dicts)
+        # Your geometry model should return a list[dict], each with scalars for that component
+        self.geometry_components = geom.calculate_full_geometry(components)
 
-        # Optional: keep your numeric guard if you added it
-        # assert_numeric_geometry(self.geometry)
+        # Also build a dict-of-arrays "arrayview" (legacy consumers)
+        self.geometry_components_arrayview = self._to_array_geometry(self.geometry_components)
 
-        self.model_options = simulation_options
+        self.model_options = simulation_options  # global fallbacks
         self.keys = []
+
+    def _to_array_geometry(self, rows):
+        """
+        Convert list[dict] (per component) → dict of arrays (per key).
+        Useful to feed legacy helpers like get_heuristic_guess (expects dict-of-arrays).
+        """
+        # Gather all keys
+        all_keys = set().union(*[row.keys() for row in rows])
+        array_geom = {"number_of_cascades": len(rows), "number_of_stages": max(0, len(rows)//2)}
+        for k in all_keys:
+            if k in ("cascade_type",):
+                array_geom[k] = [row.get(k) for row in rows]
+            else:
+                vals = [row.get(k) for row in rows]
+                # keep numeric arrays only if all present
+                array_geom[k] = vals
+        return array_geom
 
     def residual(self, x):
         """
-        Evaluate the system of equations for a given set of decision variables.
+        Evaluate residuals for given decision variables.
         """
         try:
-            # Create dictionary of scaled variables
             self.vars_scaled = dict(zip(self.keys, x))
-
-            # Create dictionary of real variables
             self.vars_real = self.scale_values(self.vars_scaled, to_normalized=False)
 
-            # Evaluate cascade series
-            self.results = flow.evaluate_axial_turbine(
+            # Evaluate component-wise turbine (stator → interspace → rotor)
+            # Evaluate component-wise turbine (stator → interspace → rotor)
+
+            self.results = flow.evaluate_axial_turbine_componentwise(
                 self.vars_scaled,
                 self.boundary_conditions,
-                self.geometry,
+                self.geometry_components,  # <-- this is already components
                 self.fluid,
-                self.model_options,
                 self.reference_values,
+                self.components,
+                self.model_options,
             )
 
-            return jnp.array(
-                list(self.results["residuals"].values())
-            )
+
+            return jnp.array(list(self.results["residuals"].values()))
         except Exception as e:
-            # NEW: compact diagnostics to pinpoint type contamination quickly
             bc_types = {k: type(v).__name__ for k, v in getattr(self, "boundary_conditions", {}).items()}
-            # Show first ~10 geometry entries type & shape
-            geom_items = list(self.geometry.items())
-            preview = {}
-            for k, v in geom_items[:10]:
-                if isinstance(v, (list, tuple, np.ndarray)):
-                    try:
-                        shp = np.array(v, dtype=object).shape
-                    except Exception:
-                        shp = None
-                    preview[k] = (type(v).__name__, shp)
-                else:
-                    preview[k] = (type(v).__name__, None)
-
             raise TypeError(
                 f"Residual failed: {e}\n"
                 f"  OP types: {bc_types}\n"
-                f"  First geometry entries (type,shape): {preview}\n"
                 f"  Keys in vars_scaled: {list(self.vars_scaled.keys())}"
             ) from e
 
@@ -735,48 +537,43 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
 
     def update_boundary_conditions(self, operation_point):
         """
-        Update boundary conditions and compute reference values.
+        Set boundary conditions and reference values.
         """
-        # Validate OP types before using
         assert_numeric_operation_point(operation_point)
-
-        # Define current operating point
         self.boundary_conditions = operation_point
 
-        # Initialize fluid object
-        self.fluid = jxp.FluidJAX(operation_point["fluid_name"])  # Using jaxprop CoolProp model
+        # Fluid
+        self.fluid = jxp.FluidJAX(operation_point["fluid_name"])
 
-        # Rename variables
+        # Short-hands
         p0_in = operation_point["p0_in"]
         T0_in = operation_point["T0_in"]
         p_out = operation_point["p_out"]
 
-        # Stagnation properties at inlet
-        state_in_stag = self.fluid.get_props(jxp.PT_INPUTS, p0_in, T0_in)
+        # Inlet stagnation
+        state_in_stag = self.fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in)
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
 
-        # Store inlet stagnation (h,s)
         self.boundary_conditions["h0_in"] = h0_in
         self.boundary_conditions["s_in"] = s_in
 
-        # Exit static properties (isentropic)
-        state_out_s = self.fluid.get_props(jxp.PSmass_INPUTS, p_out, s_in)
+        # Exit static (isentropic)
+        state_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
 
-        # Exit static properties (isenthalpic)
-        state_out_h = self.fluid.get_props(jxp.HmassSmass_INPUTS, h0_in, p_out)
+        # Exit static (isenthalpic) for s_range
+        state_out_h = self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out)
         s_isenthalpic = state_out_h["s"]
 
         # Spouting velocity
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
 
-        # Reference mass flow rate
-        A_out = self.geometry["A_out"][-1]
-        mass_flow_ref = A_out * v0 * d_isentropic
+        # Reference mass flow uses last component exit area
+        A_out_last = self.geometry_components[-1]["A_out"]
+        mass_flow_ref = A_out_last * v0 * d_isentropic
 
-        # Reference values
         self.reference_values = {
             "s_range": s_isenthalpic - s_in,
             "s_min": s_in,
@@ -788,22 +585,17 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
             "angle_min": -90,
         }
 
-        return
-
     def scale_values(self, variables, to_normalized=True):
         """
         Convert values between normalized and real values.
         """
-        # Load parameters
         v0 = self.reference_values["v0"]
         s_range = self.reference_values["s_range"]
         s_min = self.reference_values["s_min"]
         angle_range = self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
 
-        # Define dictionary of scaled values
         scaled_variables = {}
-
         for key, val in variables.items():
             if key.startswith("v") or key.startswith("w"):
                 scaled_variables[key] = val / v0 if to_normalized else val * v0
@@ -817,66 +609,230 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
                     if to_normalized
                     else val * angle_range + angle_min
                 )
-
         return scaled_variables
 
 
+# ===================================================================
+# Initial guess handling
+# ===================================================================
+def extract_initial_guess_from_components(components):
+    """
+    Try to build a *component-wise* initial guess dict from YAML components.
+    If not enough info is present, return a minimal marker so get_initial_guess()
+    falls back to heuristic construction.
+    """
+    ig = {}
+
+    # Optional: v_in could be present globally; usually it isn't.
+    # We'll leave it to heuristic if not specified.
+
+    # We do *not* expect full cascade decision variables in YAML;
+    # we primarily extract per-component Mach hints and efficiencies to seed heuristic.
+    eff_tt = None
+    eff_ke = None
+    ma_list = []
+
+    for comp in components:
+        ig_c = comp.get("initial_guess", {}) or {}
+        if eff_tt is None and "efficiency_tt" in ig_c:
+            eff_tt = ig_c["efficiency_tt"]
+        if eff_ke is None and "efficiency_ke" in ig_c:
+            eff_ke = ig_c["efficiency_ke"]
+
+        # try common keys for Mach at outlet of this component
+        ma = (
+            ig_c.get("ma")
+            or ig_c.get("ma_out")
+            or ig_c.get("ma_rel_out")
+            or ig_c.get("ma_exit")
+            or ig_c.get("ma_2")   # legacy
+            or ig_c.get("ma_1")   # legacy, if only one present
+        )
+        ma_list.append(ma if isinstance(ma, (int, float)) else None)
+
+    # If we got at least one of eff_tt/eff_ke or any ma hint, return this marker dict.
+    # get_initial_guess() will detect and run the heuristic path with these hints.
+    marker = {}
+    if eff_tt is not None:
+        marker["efficiency_tt"] = eff_tt
+    if eff_ke is not None:
+        marker["efficiency_ke"] = eff_ke
+    if any(m is not None for m in ma_list):
+        # keep None for missing; heuristic will fill defaults
+        for i, m in enumerate(ma_list):
+            marker[f"ma_{i+1}"] = 0.8 if m is None else m
+
+    return marker if marker else {"_empty_": True}
+
+
+def get_initial_guess(
+    initial_guess,
+    problem,
+    boundary_conditions,
+    geometry_arrayview,   # dict of arrays (legacy helper needs this)
+    fluid,
+    choking_criterion,
+    deviation_model,
+    logger,
+    components=None,      # full components list (unused here, but handy if needed)
+):
+    """
+    Returns a list of initial-guess dicts ready for scaling.
+    Priority:
+      1) If caller passed a dict of decision variables (w_out_i, s_out_i, beta_out_i, ...): use directly.
+      2) If caller passed component-wise *hints* (eff_tt/eff_ke and ma_i): run heuristic once.
+      3) Fall back to legacy patterns (LHS etc.).
+    """
+    number_of_cascades = geometry_arrayview["number_of_cascades"]
+
+    # Case 1: already a dict of decision variables with keys like v_in, w_out_1, s_out_1, ...
+    has_direct_keys = any(k.startswith(("v_", "w_", "s_", "b_")) or k == "v_in" for k in initial_guess.keys())
+    if has_direct_keys and "_empty_" not in initial_guess:
+        return [initial_guess]
+
+    # Case 2: component-wise hints (eff_tt, eff_ke, ma_i)
+    hint_eff_tt = initial_guess.get("efficiency_tt", 0.88)
+    hint_eff_ke = initial_guess.get("efficiency_ke", 0.10)
+    ma = np.array([
+        initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)
+    ], dtype=float)
+
+    # Use heuristic builder (works on dict-of-arrays geometry)
+    heuristic_guess = get_heuristic_guess(
+        hint_eff_tt,
+        hint_eff_ke,
+        ma,
+        boundary_conditions,
+        geometry_arrayview,
+        fluid,
+        deviation_model,
+    )
+    return [heuristic_guess]
+
+
+# ===================================================================
+# Misc. utilities (OPs, printing, heuristic etc.)
+# ===================================================================
+def find_closest_operation_point(current_op_point, operation_points, solution_data):
+    min_distance, closest_point_x, closest_index = float("inf"), None, None
+    for i, op_point in enumerate(operation_points):
+        d = get_operation_point_distance(current_op_point, op_point)
+        if d < min_distance:
+            min_distance, closest_point_x, closest_index = d, solution_data[i], i
+    return closest_point_x, closest_index
+
+def get_operation_point_distance(point_1, point_2, delta=1e-8):
+    deviation_array = []
+    for key in point_1:
+        if isinstance(point_1[key], (int, float)) and key in point_2:
+            v1, v2 = point_1[key], point_2[key]
+            if key == "alpha_in":
+                deviation = np.abs(v1 - v2) / 90
+            else:
+                max_val = max(abs(v1), abs(v2), delta)
+                deviation = abs(v1 - v2) / max_val
+            deviation_array.append(deviation)
+    return np.linalg.norm(deviation_array)
+
+def generate_operation_points(performance_map):
+    """
+    Generates list of operation points from a map (Cartesian product).
+    Supports:
+      - direct p_out arrays/lists
+      - expressions in strings (np.linspace, arithmetic referencing p0_in, etc.)
+      - your existing absolute fields
+    """
+    # 1) Evaluate any string expressions
+    performance_map = _evaluate_map_expressions(performance_map)
+
+    # 2) Ensure iterables
+    performance_map = {k: utils.ensure_iterable(v) for k, v in performance_map.items()}
+
+    # 3) Build Cartesian product (your original logic)
+    priority_keys = ["p0_in", "p_out"]
+    other_keys = [k for k in performance_map.keys() if k not in priority_keys]
+    keys_order = other_keys + [k for k in priority_keys if k in performance_map]
+    perf_map_ordered = {k: performance_map[k] for k in keys_order}
+
+    keys, values = zip(*perf_map_ordered.items())
+    base_combos = itertools.product(*values)
+
+    operation_points = []
+    for combo in base_combos:
+        op = dict(zip(keys, combo))
+        if "p_out" not in op:
+            raise ValueError("Each operation point must define 'p_out' (directly or via expression).")
+        operation_points.append(op)
+
+    return operation_points
+
+
+def validate_operation_point(op_point):
+    REQUIRED_FIELDS = {"fluid_name", "p0_in", "T0_in", "p_out", "alpha_in", "omega"}
+    fields = set(op_point.keys())
+    if fields != REQUIRED_FIELDS:
+        missing = REQUIRED_FIELDS - fields
+        extra = fields - REQUIRED_FIELDS
+        raise ValueError(
+            f"Operation point validation error: Missing fields: {missing}, Extra fields: {extra}"
+        )
+
 def print_simulation_summary(solvers):
     """
-    Print a formatted footer summarizing the performance of all operation points.
+    Return a list of pretty-printed lines summarizing all operation points.
+    Never returns None.
     """
-    # Initialize times list and track failed points
+    width = 80
+    sep = "-" * width
+
     times = []
     failed_points = []
 
+    # Collect stats robustly
     for i, solver in enumerate(solvers):
-        if solver and hasattr(solver, "elapsed_time"):
-            times.append(solver.elapsed_time)
-            if not solver.success:
-                failed_points.append(i)
-        else:
+        if solver is None:
             failed_points.append(i)
+            continue
+        # success flag
+        ok = getattr(solver, "success", False)
+        if not ok:
+            failed_points.append(i)
+        # elapsed time (may be None)
+        t = getattr(solver, "elapsed_time", None)
+        if t is not None:
+            try:
+                times.append(float(t))
+            except Exception:
+                pass  # ignore non-castable timings silently
 
-    times = np.asarray(times)
     total_points = len(solvers)
 
-    width = 80
-    separator = "-" * width
-    lines_to_output = [
+    lines = [
         "",
-        separator,
+        sep,
         "Final summary of performance analysis calculations".center(width),
-        separator,
+        sep,
         f" Simulation successful for {total_points - len(failed_points)} out of {total_points} points",
     ]
 
     if failed_points:
-        lines_to_output.append(
-            f"Failed operation points: {', '.join(map(str, failed_points))}"
-        )
+        lines.append(f" Failed operation points: {', '.join(map(str, failed_points))}")
 
-    if times.size > 0:
-        lines_to_output.extend(
-            [
-                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
-                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
-                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
-                f" Total calculation time for all operation points: {np.sum(times):.3f} seconds",
-            ]
-        )
+    if times:
+        lines.extend([
+            f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+            f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+            f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+            f" Total calculation time for all operation points:   {np.sum(times):.3f} seconds",
+        ])
     else:
-        lines_to_output.append(" No valid calculation times available.")
+        lines.append(" No valid calculation times available.")
 
-    lines_to_output.append(separator)
-    lines_to_output.append("")
-
-    return lines_to_output
-
+    lines.append(sep)
+    lines.append("")
+    return lines
 
 def print_boundary_conditions(BC):
-    """
-    Pretty-print the boundary conditions.
-    """
     column_width = 25
     lines = []
     lines.append("-" * 80)
@@ -890,22 +846,16 @@ def print_boundary_conditions(BC):
     lines.append(f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / np.pi:<.1f} RPM")
     lines.append("-" * 80)
     lines.append("")
-    result = "\n".join(lines)
-    return result
-
+    return "\n".join(lines)
 
 def print_operation_points(operation_points):
-    """
-    Prints a summary table of operation points scheduled for simulation.
-    """
     length = 80
     index_width = 8
-    output_lines = [
+    output = [
         "-" * length,
         " Summary of operation points scheduled for simulation",
         "-" * length,
     ]
-
     field_specs = {
         "fluid_name": {"name": "Fluid", "unit": "", "width": 8},
         "alpha_in": {"name": "angle_in", "unit": "[deg]", "width": 10, "decimals": 1},
@@ -914,16 +864,13 @@ def print_operation_points(operation_points):
         "p_out": {"name": "p_out", "unit": "[kPa]", "width": 12, "decimals": 2},
         "omega": {"name": "omega", "unit": "[RPM]", "width": 12, "decimals": 0},
     }
-
     header_str = f"{'Index':>{index_width}}"
     unit_str = f"{'':>{index_width}}"
-
     for spec in field_specs.values():
         header_str += f" {spec['name']:>{spec['width']}}"
         unit_str += f" {spec['unit']:>{spec['width']}}"
-
-    output_lines.append(header_str)
-    output_lines.append(unit_str)
+    output.append(header_str)
+    output.append(unit_str)
 
     def convert_units(key, value):
         if key == "T0_in":
@@ -936,47 +883,31 @@ def print_operation_points(operation_points):
             return value / 1.0e3
         return value
 
-    for index, op_point in enumerate(operation_points, start=1):
+    for index, op in enumerate(operation_points, start=1):
         row = [f"{index:>{index_width}}"]
         for key, spec in field_specs.items():
-            value = convert_units(key, op_point[key])
-            if isinstance(value, float):
-                row.append(f"{value:>{spec['width']}.{spec['decimals']}f}")
+            val = convert_units(key, op[key])
+            if isinstance(val, float):
+                row.append(f"{val:>{spec['width']}.{spec['decimals']}f}")
             else:
-                row.append(f"{value:>{spec['width']}}")
-        output_lines.append(" ".join(row))
-
-    output_lines.append("-" * length)
-    formatted_output = "\n".join(output_lines)
-    return formatted_output
-
+                row.append(f"{val:>{spec['width']}}")
+        output.append(" ".join(row))
+    output.append("-" * length)
+    return "\n".join(output)
 
 # -------------------------------------------------------------------
-# FIXED: proper enum resolution for jaxprop/CoolProp calls
+# Enthalpy helper (kept for heuristic)
 # -------------------------------------------------------------------
 def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
-    """
-    Residual for enthalpy balance given a guessed prop1 (scaled).
-    `call` can be 'DmassP_INPUTS', 'PSmass_INPUTS', etc.
-    Resolves first via jaxprop (preferred), then CoolProp.
-    """
     if isinstance(call, str):
         call_attr = getattr(jxp, call, None)
         if call_attr is None:
-            try:
-                call_attr = getattr(cp, call)
-            except AttributeError:
-                raise ValueError(f"Invalid input type: {call}")
+            raise ValueError(f"Invalid input type: {call}")
         call = call_attr
-
-    props = fluid.get_props(call, prop1 * scale, prop2)
+    props = fluid.get_state(call, prop1 * scale, prop2)
     return props["h"] - h0 + 0.5 * Ma**2 * props["speed_sound"] ** 2
 
-
 def get_unknown(prop1, scale, h0, Ma, fluid, call, prop2):
-    """
-    Find prop1 (scaled by 'scale') such that enthalpy residual is zero.
-    """
     sol = optimize.root_scalar(
         calculate_enthalpy_residual_1,
         args=(scale, h0, Ma, fluid, call, prop2),
@@ -984,7 +915,6 @@ def get_unknown(prop1, scale, h0, Ma, fluid, call, prop2):
         x0=prop1,
     )
     return sol.root * scale
-
 
 def get_heuristic_guess(
     efficiency_tt,
@@ -997,21 +927,18 @@ def get_heuristic_guess(
 ):
     p0_first = boundary_conditions["p0_in"]
     T0_first = boundary_conditions["T0_in"]
-    p_final = boundary_conditions["p_out"]
+    p_final  = boundary_conditions["p_out"]
     angular_speed = boundary_conditions["omega"]
-    alpha_first = boundary_conditions["alpha_in"]
+    alpha_first   = boundary_conditions["alpha_in"]
     number_of_cascades = geometry["number_of_cascades"]
 
-    # First stagnation properties
-    stag_first = fluid.get_props(jxp.PT_INPUTS, p0_first, T0_first)
-    h0_first = stag_first["h"]
-    s_first = stag_first["s"]
-    d0_first = stag_first["d"]
+    # Inlet stagnation
+    stag_first = fluid.get_state(jxp.PT_INPUTS, p0_first, T0_first)
+    h0_first, s_first, d0_first = stag_first["h"], stag_first["s"], stag_first["d"]
 
     # Final isentropic
-    static_is = fluid.get_props(jxp.PSmass_INPUTS, p_final, s_first)
-    h_final_s = static_is["h"]
-    a_final_s = static_is["speed_sound"]
+    static_is = fluid.get_state(jxp.PSmass_INPUTS, p_final, s_first)
+    h_final_s, a_final_s = static_is["h"], static_is["speed_sound"]
 
     # Spouting velocity
     v0 = np.sqrt(2 * (h0_first - h_final_s))
@@ -1019,24 +946,20 @@ def get_heuristic_guess(
     # Exit enthalpy with guessed efficiency
     efficiency_ts = efficiency_tt / (1 + efficiency_tt * efficiency_ke)
     h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
-    v_final = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
-    h_final = h0_final - 0.5 * v_final**2
+    v_final  = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
+    h_final  = h0_final - 0.5 * v_final**2
 
-    # Exit static state for expansion with guessed efficiency
-    static_properties_exit = fluid.get_props(jxp.HmassP_INPUTS, h_final, p_final)
+    # Exit static with guessed efficiency
+    static_properties_exit = fluid.get_state(jxp.HmassP_INPUTS, h_final, p_final)
     s_final = static_properties_exit["s"]
 
-    # Linear entropy distribution
+    # Linear s distribution across cascades
     entropy_distribution = np.linspace(s_first, s_final, number_of_cascades + 1)[1:]
 
-    # Initial guess dictionary
     initial_guess = {}
 
-    # Initialize inlet calculation
-    s_in = s_first
-    rothalpy = h0_first
-    alpha_in = alpha_first
-    d_in = d0_first
+    # init
+    s_in, rothalpy, alpha_in, d_in = s_first, h0_first, alpha_first, d0_first
 
     for i in range(number_of_cascades):
         geometry_cascade = {
@@ -1045,111 +968,89 @@ def get_heuristic_guess(
             if key not in ["number_of_cascades", "number_of_stages"]
         }
 
-        radius_mean_in = geometry_cascade["radius_mean_in"]
-        radius_mean_throat = geometry_cascade["radius_mean_throat"]
         radius_mean_out = geometry_cascade["radius_mean_out"]
         A_throat = geometry_cascade["A_throat"]
-        A_out = geometry_cascade["A_out"]
-        A_in = geometry_cascade["A_in"]
+        A_out    = geometry_cascade["A_out"]
+        A_in     = geometry_cascade["A_in"]
 
-        # Entropy and Mach for this cascade
-        s_out = entropy_distribution[i]
+        # s & Ma for this cascade
+        s_out  = entropy_distribution[i]
         ma_out = mach[i]
 
-        # Exit pressure from guessed Ma (via PS with guessed s_out)
         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
-        p_out = get_unknown(
-            1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out
-        )
+        p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
 
-        # Exit state
-        static_out = fluid.get_props(jxp.PSmass_INPUTS, p_out, s_out)
-        h_out = static_out["h"]
-        a_out = static_out["speed_sound"]
-        d_out = static_out["d"]
-        gamma_out = static_out["gamma"]
+        static_out = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_out)
+        h_out, a_out, d_out, gamma_out = static_out["h"], static_out["speed_sound"], static_out["d"], static_out["gamma"]
 
-        # Exit velocity
         w_out = np.sqrt(2 * (h0_rel_out - h_out))
 
-        # Critical Mach (placeholder 1.0; model available if wanted)
-        static_props_is = fluid.get_props(jxp.PSmass_INPUTS, p_out, s_in)
+        # Critical Mach (placeholder 1.0)
+        static_props_is = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
         h_out_s = static_props_is["h"]
         eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
         ma_crit = 1.0
 
-        # Exit flow angle
-        beta_out = (-1) ** i * dm.get_subsonic_deviation(
+        # Exit flow angle (subsonic)
+        beta_out = (-1) ** i * dm.get_subsonic_deviation(  # access via flow module if exported, else import dm at top
             ma_out, ma_crit, {"A_throat": A_throat, "A_out": A_out}, deviation_model
         )
 
-        # Mass flow rate
+        # Mass flow
         mass_flow = d_out * w_out * math.cosd(beta_out) * A_out
 
-        # Critical state at throat (for guess)
+        # Critical at throat (for guess)
         w_throat_crit = a_out * ma_crit
         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
         s_throat_crit = s_out
-        static_state_throat_crit = fluid.get_props(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
-        rho_throat_crit = static_state_throat_crit["d"]
+        state_throat  = fluid.get_state(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        rho_throat_crit = state_throat["d"]
         m_crit = w_throat_crit * rho_throat_crit * A_throat
         w_m_in_crit = m_crit / d_in / A_in
         v_in_crit = w_m_in_crit / math.cosd(alpha_in)
 
-        # Store initial guess
-        index = f"_{i+1}"
+        # Store
+        idx = f"_{i+1}"
         initial_guess.update(
             {
-                "w_out" + index: w_out,
-                "s_out" + index: s_out,
-                "beta_out" + index: (-1) ** i * math.arccosd(A_throat / A_out),
-                "v_crit_in" + index: v_in_crit,
-                "w_crit_throat" + index: w_throat_crit,
-                "s_crit_throat" + index: s_throat_crit,
+                "w_out" + idx: w_out,
+                "s_out" + idx: s_out,
+                "beta_out" + idx: (-1) ** i * math.arccosd(A_throat / A_out),
+                "v_crit_in" + idx: v_in_crit,
+                "w_crit_throat" + idx: w_throat_crit,
+                "s_crit_throat" + idx: s_throat_crit,
             }
         )
 
-        # Update variables for next cascade
+        # Propagate to next inlet (simple interspace)
         if i != (number_of_cascades - 1):
             A_next = geometry["A_in"][i + 1]
             radius_mean_next = geometry["radius_mean_in"][i + 1]
-            velocity_triangle_out = flow.evaluate_velocity_triangle_out(
-                blade_speed_out, w_out, beta_out
-            )
-            v_m_in = velocity_triangle_out["v_m"] * A_out / A_next
-            v_t_in = velocity_triangle_out["v_t"] * radius_mean_out / radius_mean_next
+            vt = w_out * math.sind(beta_out) + blade_speed_out
+            vm = w_out * math.cosd(beta_out)
+            v_m_in = vm * A_out / A_next
+            v_t_in = vt * radius_mean_out / radius_mean_next
             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
             alpha_in = math.arctand(v_t_in / v_m_in)
             blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
-            velocity_triangle_in = flow.evaluate_velocity_triangle_in(
-                blade_speed_in, v_in, alpha_in
-            )
-            h0_in = h_out + 0.5 * velocity_triangle_out["v"] ** 2
+            w_t = v_t_in - blade_speed_in
+            w_m = v_m_in
+            w = np.sqrt(w_t**2 + w_m**2)
+            h0_in = h_out + 0.5 * (vt**2 + vm**2)
             h_in = h0_in - 0.5 * v_in**2
-            rothalpy = (
-                h_in + 0.5 * velocity_triangle_in["w"] ** 2 - 0.5 * blade_speed_in**2
-            )
+            rothalpy = h_in + 0.5 * w**2 - 0.5 * blade_speed_in**2
             s_in = s_out
-            static_in = fluid.get_props(jxp.HmassSmass_INPUTS, h_in, s_in)
-            d_in = static_in["d"]
+            d_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)["d"]
 
     # Inlet velocity from mass flow
-    initial_guess["v_in"] = mass_flow / (
-        d0_first * geometry["A_in"][0] * math.cosd(alpha_first)
-    )
-
+    initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
     return initial_guess
 
-
 def latin_hypercube_sampling(bounds, n_samples):
-    """
-    Generates samples using Latin Hypercube Sampling.
-    """
     n_variables = len(bounds)
     sampler = qmc.LatinHypercube(d=n_variables, seed=1)
-    unit_hypercube_samples = sampler.random(n=n_samples)
+    unit_samples = sampler.random(n=n_samples)
     lower_bounds = np.array([b[0] for b in bounds])
     upper_bounds = np.array([b[1] for b in bounds])
-    scaled_samples = qmc.scale(unit_hypercube_samples, lower_bounds, upper_bounds)
-    return scaled_samples
+    return qmc.scale(unit_samples, lower_bounds, upper_bounds)
