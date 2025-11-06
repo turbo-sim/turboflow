@@ -8,11 +8,13 @@ operation_points:
   alpha_in: 0
 
 simulation_options: 
-  deviation_model : aungier 
-  choking_criterion : critical_mach_number # evaluate_cascade_throat, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
+  deviation_model : aungier
+  # choking_criterion : critical_mach_number # evaluate_cascade_throat, evaluate_cascade_throat, evaluate_cascade_isentropic_throat  # Optional
+  choking_criterion : critical_mach_number
   rel_step_fd: 1e-4 
   loss_model:  
     model: benner  
+    # model: isentropic  
     loss_coefficient: stagnation_pressure  
 
 performance_analysis :
@@ -153,8 +155,8 @@ design_optimization:
       normalize : True
   radius_type : "constant_mean"
 
-  # multistarts : 0
-  multistarts : 100
+  multistarts : 0
+  # multistarts : 100
 
 
   solver_options: 
@@ -162,13 +164,13 @@ design_optimization:
     method: slsqp
     # library: pygmo
     # method: ipopt
-    derivative_method: 2-point 
+    derivative_method: 3-point 
     derivative_abs_step: 1e-6
     print_convergence: True 
-    plot_convergence: False
+    plot_convergence: True
     update_on: "gradient" 
-    tolerance: 1e-6
-    max_iterations: 200
-    problem_scale: 10.00
+    tolerance: 1e-9
+    max_iterations: 300
+    # problem_scale: None
 
 

@@ -3,7 +3,7 @@ import turboflow as tf
 
 # Define output directory
 tf.print_banner()
-OUT_DIR = "results"
+OUT_DIR = "results_bis"
 OUT_FILE = "design_optimization"
 
 # Load configuration file
@@ -25,3 +25,4 @@ tf.save_to_pickle(solver, filename="multistart_container", out_dir=OUT_DIR)
 # solver
 # kkt_data = solver.evaluate_kkt_conditions(solver.x_final, 5*solver.options["tolerance"])
 # optimality = kkt_data["first_order_optimality"]
+

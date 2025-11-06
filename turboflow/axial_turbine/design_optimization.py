@@ -182,7 +182,7 @@ def compute_optimal_turbine(
 
             # Create a comprehensive optimization report
             solver.print_optimization_report(
-                    tol=5*config["design_optimization"]["solver_options"]["tolerance"],
+                    tol=50*config["design_optimization"]["solver_options"]["tolerance"],
                     include_design_variables=True,
                     include_constraints=True,
                     include_kkt_conditions=True,

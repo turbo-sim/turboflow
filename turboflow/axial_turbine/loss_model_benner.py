@@ -408,16 +408,45 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
     if cascade_type == "stator":
-        B = 0
+        Y_cl = 0.0
     elif cascade_type == "rotor":
-        B = 0.37
+        # JAX gives problems for t_cl=0 (non-differentiable function)
+        # Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) ** 0.78
+        Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) # Linear approximation gives better solver convergence
     else:
-        print("Specify the type of cascade")
-
-    # Tip clearance loss coefficient
-    Y_cl = B * Z * c / H * (t_cl / H) ** 0.78
+        raise ValueError("Specify the type of cascade")
 
     return Y_cl
+
+    # beta_out = flow_parameters["beta_out"]
+    # beta_in = flow_parameters["beta_in"]
+
+    # H = geometry["height"]
+    # c = geometry["chord"]
+    # t_cl = geometry["tip_clearance"]
+    # cascade_type = geometry["cascade_type"]
+
+    # # Calculate blade loading parameter Z
+    # angle_m = math.arctand((math.tand(beta_in) + math.tand(beta_out)) / 2)
+    # Z = (
+    #     4
+    #     * (math.tand(beta_in) - math.tand(beta_out)) ** 2
+    #     * math.cosd(beta_out) ** 2
+    #     / math.cosd(angle_m)
+    # )
+
+    # # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
+    # if cascade_type == "stator":
+    #     B = 0
+    # elif cascade_type == "rotor":
+    #     B = 0.37
+    # else:
+    #     print("Specify the type of cascade")
+
+    # # Tip clearance loss coefficient
+    # Y_cl = B * Z * c / H * (t_cl / H) ** 0.78
+
+    # return Y_cl
 
 
 def get_incidence_loss(flow_parameters, geometry, beta_des):
