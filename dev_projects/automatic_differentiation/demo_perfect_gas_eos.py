@@ -28,30 +28,30 @@ print(fluid.constants)
 # Property calculation using (p, T)
 P0 = 101_325.0  # Pa
 T0 = 300.0      # K
-state_PT = fluid.get_props(jxp.PT_INPUTS, P0, T0)
+state_PT = fluid.get_state(jxp.PT_INPUTS, P0, T0)
 print(f"\nState from PT (p = {P0:.0f} Pa, T = {T0:.2f} K)")
 print(state_PT)
 
 # Property calculation using (h, s)
 H = state_PT["h"]
 S = state_PT["s"]
-state_hs = fluid.get_props(jxp.HmassSmass_INPUTS, H, S)
+state_hs = fluid.get_state(jxp.HmassSmass_INPUTS, H, S)
 print("\nState from HmassSmass (h, s)")
 print(state_hs)
 
 # Property calculation using (h, p)
-state_hP = fluid.get_props(jxp.HmassP_INPUTS, H, P0)
+state_hP = fluid.get_state(jxp.HmassP_INPUTS, H, P0)
 print("\nState from HmassP (h, p)")
 print(state_hP)
 
 # Property calculation using (p, s)
-state_Ps = fluid.get_props(jxp.PSmass_INPUTS, P0, S)
+state_Ps = fluid.get_state(jxp.PSmass_INPUTS, P0, S)
 print("\nState from PSmass (p, s)")
 print(state_Ps)
 
 # Property calculation using (rho, h)
 rho0 = state_PT["rho"]
-state_rhoh = fluid.get_props(jxp.DmassHmass_INPUTS, rho0, H)
+state_rhoh = fluid.get_state(jxp.DmassHmass_INPUTS, rho0, H)
 print("\nState from DmassHmass (rho, h)")
 print(state_rhoh)
 
