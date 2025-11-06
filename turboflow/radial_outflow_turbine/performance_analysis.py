@@ -15,7 +15,8 @@ from scipy import optimize
 from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
-from . import geometry_model_axial as geom
+# from . import geometry_model_axial as geom
+from . import geometry_model_radial as geom
 from . import flow_model as flow
 from . import deviation_model as dm
 import jaxprop as jxp
@@ -194,6 +195,39 @@ def _numpy_to_native(x):
         return type(x)(_numpy_to_native(e) for e in x)
     else:
         return x
+
+# --- add this small helper near the other helpers (top of file is fine) ---
+
+def _infer_num_cascades(geometry_arrayview, components=None):
+    """
+    Return the number of cascades robustly.
+
+    Priority:
+      1) If components (list) is provided -> len(components)
+      2) If geometry_arrayview['number_of_cascades'] is an int -> that value
+      3) If geometry_arrayview['number_of_cascades'] is a list/array -> its length
+      4) Fallback: length of any representative geometry array (A_in, A_out, chord, pitch)
+    """
+    # 1) Components list (radial/axial component-wise)
+    if components is not None and isinstance(components, (list, tuple)):
+        return len(components)
+
+    if isinstance(geometry_arrayview, dict):
+        val = geometry_arrayview.get("number_of_cascades", None)
+        # 2) explicit integer
+        if isinstance(val, (int, np.integer)):
+            return int(val)
+        # 3) list/array -> length
+        if isinstance(val, (list, tuple, np.ndarray)):
+            return len(val)
+
+        # 4) try common geometry arrays
+        for key in ("A_in", "A_out", "chord", "pitch"):
+            v = geometry_arrayview.get(key, None)
+            if isinstance(v, (list, tuple, np.ndarray)):
+                return len(v)
+
+    raise ValueError("Could not infer number_of_cascades from geometry/components.")
 
 
 
@@ -664,50 +698,207 @@ def extract_initial_guess_from_components(components):
 
     return marker if marker else {"_empty_": True}
 
-
 def get_initial_guess(
     initial_guess,
     problem,
     boundary_conditions,
-    geometry_arrayview,   # dict of arrays (legacy helper needs this)
+    geometry,          # dict-of-arrays "arrayview"
     fluid,
     choking_criterion,
     deviation_model,
     logger,
-    components=None,      # full components list (unused here, but handy if needed)
+    components=None,   # <-- keep this arg, we use it to infer cascade count
 ):
-    """
-    Returns a list of initial-guess dicts ready for scaling.
-    Priority:
-      1) If caller passed a dict of decision variables (w_out_i, s_out_i, beta_out_i, ...): use directly.
-      2) If caller passed component-wise *hints* (eff_tt/eff_ke and ma_i): run heuristic once.
-      3) Fall back to legacy patterns (LHS etc.).
-    """
-    number_of_cascades = geometry_arrayview["number_of_cascades"]
+    # Robust cascade count (works for axial + radial)
+    number_of_cascades = _infer_num_cascades(geometry, components=components)
 
-    # Case 1: already a dict of decision variables with keys like v_in, w_out_1, s_out_1, ...
-    has_direct_keys = any(k.startswith(("v_", "w_", "s_", "b_")) or k == "v_in" for k in initial_guess.keys())
-    if has_direct_keys and "_empty_" not in initial_guess:
-        return [initial_guess]
+    # Three types of initial guess:
+    valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [
+        f"ma_{i+1}" for i in range(number_of_cascades)
+    ]
+    valid_keys_2 = ["efficiency_tt", "efficiency_ke", "ma", "n_samples"]
+    valid_keys_3 = [
+        "w_out",
+        "s_out",
+        "beta_out",
+        "w_crit_throat",
+        "s_crit_throat",
+    ]
+    valid_keys_3 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3
+    ]
+    valid_keys_4 = [
+        "w_out",
+        "s_out",
+        "beta_out",
+        "v_crit_in",
+        "w_crit_throat",
+        "s_crit_throat",
+    ]
+    valid_keys_4 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4
+    ]
+    valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
+    valid_keys_5 = ["v_in"] + [
+        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5
+    ]
+    check = []
+    check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
+    check.append(set(valid_keys_5) == set(list(initial_guess.keys())))
 
-    # Case 2: component-wise hints (eff_tt, eff_ke, ma_i)
-    hint_eff_tt = initial_guess.get("efficiency_tt", 0.88)
-    hint_eff_ke = initial_guess.get("efficiency_ke", 0.10)
-    ma = np.array([
-        initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)
-    ], dtype=float)
+    if check[0]:
+        if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
+            initial_guesses = []
+            for i in range(len(initial_guess["efficiency_tt"])):
+                ma = np.array(
+                    [initial_guess.get(f"ma_{j+1}", 0.80) if not isinstance(initial_guess.get(f"ma_{j+1}", 0.80), (list, np.ndarray))
+                     else initial_guess[f"ma_{j+1}"][i]
+                     for j in range(number_of_cascades)]
+                )
+                heuristic_guess = get_heuristic_guess(
+                    initial_guess["efficiency_tt"][i],
+                    initial_guess["efficiency_ke"][i],
+                    ma,
+                    boundary_conditions,
+                    geometry,
+                    fluid,
+                    deviation_model,
+                )
+                initial_guesses.append(heuristic_guess)
+        else:
+            ma = np.array(
+                [initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)]
+            )
+            heuristic_guess = get_heuristic_guess(
+                initial_guess["efficiency_tt"],
+                initial_guess["efficiency_ke"],
+                ma,
+                boundary_conditions,
+                geometry,
+                fluid,
+                deviation_model,
+            )
+            initial_guesses = [heuristic_guess]
 
-    # Use heuristic builder (works on dict-of-arrays geometry)
-    heuristic_guess = get_heuristic_guess(
-        hint_eff_tt,
-        hint_eff_ke,
-        ma,
-        boundary_conditions,
-        geometry_arrayview,
-        fluid,
-        deviation_model,
-    )
-    return [heuristic_guess]
+    elif check[1]:
+        # bounds: [eff_tt_low,eff_tt_high], [eff_ke_low,eff_ke_high], [ma_low,ma_high] * n_casc
+        bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [
+            initial_guess["ma"] for _ in range(number_of_cascades)
+        ]
+        n_samples = int(initial_guess["n_samples"])
+        heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
+        norm_residuals = np.array([])
+        failures = 0
+        for heuristic_input in heuristic_inputs:
+            try:
+                ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
+                heuristic_guess = get_heuristic_guess(
+                    heuristic_input[0],
+                    heuristic_input[1],
+                    ma,
+                    boundary_conditions,
+                    geometry,
+                    fluid,
+                    deviation_model,
+                )
+                x = problem.scale_values(heuristic_guess)
+                problem.keys = x.keys()
+                x0 = np.array(list(x.values()))
+                residual = problem.residual(x0)
+                norm_residuals = np.append(norm_residuals, np.linalg.norm(residual))
+            except Exception:
+                failures += 1
+                norm_residuals = np.append(norm_residuals, np.nan)
+
+        logger.info("Generating heuristic inital guesses from latin hypercube sampling")
+        logger.info(f"Number of failures: {failures} out of {n_samples} samples")
+        logger.info(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
+        heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
+        ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
+        initial_guess = get_heuristic_guess(
+            heuristic_input[0],
+            heuristic_input[1],
+            ma,
+            boundary_conditions,
+            geometry,
+            fluid,
+            deviation_model,
+        )
+        initial_guesses = [initial_guess]
+
+    elif check[2]:
+        initial_guesses = [initial_guess]
+
+    elif check[3]:
+        initial_guesses = [initial_guess]
+
+    elif check[4]:
+        initial_guesses = [initial_guess]
+
+    else:
+        raise ValueError(
+            "Initial guess must be a dictionary with one of the supported key sets. "
+            "See documentation for details."
+        )
+
+    # Filter keys based on choking criterion
+    for ig, i in zip(initial_guesses, range(len(initial_guesses))):
+        if choking_criterion == "critical_mach_number":
+            ig = {key: val for key, val in ig.items() if not key.startswith("v_crit_in")}
+        elif choking_criterion == "critical_mass_flow_rate":
+            ig = {key: val for key, val in ig.items() if not key.startswith("beta_crit_throat")}
+        elif choking_criterion == "critical_isentropic_throat":
+            ig = {key: val for key, val in ig.items() if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))}
+        initial_guesses[i] = ig
+
+    return initial_guesses
+
+# def get_initial_guess(
+#     initial_guess,
+#     problem,
+#     boundary_conditions,
+#     geometry_arrayview,   # dict of arrays (legacy helper needs this)
+#     fluid,
+#     choking_criterion,
+#     deviation_model,
+#     logger,
+#     components=None,      # full components list (unused here, but handy if needed)
+# ):
+#     """
+#     Returns a list of initial-guess dicts ready for scaling.
+#     Priority:
+#       1) If caller passed a dict of decision variables (w_out_i, s_out_i, beta_out_i, ...): use directly.
+#       2) If caller passed component-wise *hints* (eff_tt/eff_ke and ma_i): run heuristic once.
+#       3) Fall back to legacy patterns (LHS etc.).
+#     """
+#     number_of_cascades = geometry_arrayview["number_of_cascades"]
+
+#     # Case 1: already a dict of decision variables with keys like v_in, w_out_1, s_out_1, ...
+#     has_direct_keys = any(k.startswith(("v_", "w_", "s_", "b_")) or k == "v_in" for k in initial_guess.keys())
+#     if has_direct_keys and "_empty_" not in initial_guess:
+#         return [initial_guess]
+
+#     # Case 2: component-wise hints (eff_tt, eff_ke, ma_i)
+#     hint_eff_tt = initial_guess.get("efficiency_tt", 0.88)
+#     hint_eff_ke = initial_guess.get("efficiency_ke", 0.10)
+#     ma = np.array([
+#         initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)
+#     ], dtype=float)
+
+#     # Use heuristic builder (works on dict-of-arrays geometry)
+#     heuristic_guess = get_heuristic_guess(
+#         hint_eff_tt,
+#         hint_eff_ke,
+#         ma,
+#         boundary_conditions,
+#         geometry_arrayview,
+#         fluid,
+#         deviation_model,
+#     )
+#     return [heuristic_guess]
 
 
 # ===================================================================
@@ -921,24 +1112,29 @@ def get_heuristic_guess(
     efficiency_ke,
     mach,
     boundary_conditions,
-    geometry,
+    geometry,          # dict-of-arrays "arrayview"
     fluid,
     deviation_model,
 ):
+    # --- robust cascade count (works for axial & radial) ---
+    num_casc = _infer_num_cascades(geometry)
+
     p0_first = boundary_conditions["p0_in"]
     T0_first = boundary_conditions["T0_in"]
     p_final  = boundary_conditions["p_out"]
     angular_speed = boundary_conditions["omega"]
     alpha_first   = boundary_conditions["alpha_in"]
-    number_of_cascades = geometry["number_of_cascades"]
 
-    # Inlet stagnation
+    # First stagnation properties
     stag_first = fluid.get_state(jxp.PT_INPUTS, p0_first, T0_first)
-    h0_first, s_first, d0_first = stag_first["h"], stag_first["s"], stag_first["d"]
+    h0_first = stag_first["h"]
+    s_first  = stag_first["s"]
+    d0_first = stag_first["d"]
 
     # Final isentropic
-    static_is = fluid.get_state(jxp.PSmass_INPUTS, p_final, s_first)
-    h_final_s, a_final_s = static_is["h"], static_is["speed_sound"]
+    static_is   = fluid.get_state(jxp.PSmass_INPUTS, p_final, s_first)
+    h_final_s   = static_is["h"]
+    a_final_s   = static_is["speed_sound"]
 
     # Spouting velocity
     v0 = np.sqrt(2 * (h0_first - h_final_s))
@@ -946,106 +1142,270 @@ def get_heuristic_guess(
     # Exit enthalpy with guessed efficiency
     efficiency_ts = efficiency_tt / (1 + efficiency_tt * efficiency_ke)
     h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
-    v_final  = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
-    h_final  = h0_final - 0.5 * v_final**2
 
-    # Exit static with guessed efficiency
+    v_final = np.sqrt(
+        2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt)
+    )
+    h_final = h0_final - 0.5 * v_final**2
+
+    # Exit static state for expansion with guessed efficiency
     static_properties_exit = fluid.get_state(jxp.HmassP_INPUTS, h_final, p_final)
     s_final = static_properties_exit["s"]
 
-    # Linear s distribution across cascades
-    entropy_distribution = np.linspace(s_first, s_final, number_of_cascades + 1)[1:]
+    # Linear entropy distribution
+    entropy_distribution = np.linspace(s_first, s_final, int(num_casc) + 1)[1:]
 
+    # Initial guess dictionary
     initial_guess = {}
 
-    # init
-    s_in, rothalpy, alpha_in, d_in = s_first, h0_first, alpha_first, d0_first
+    # Initialize inlet calculation
+    s_in = s_first
+    rothalpy = h0_first
+    alpha_in = alpha_first
+    d_in = d0_first
 
-    for i in range(number_of_cascades):
+    # Ensure 'mach' is iterable of length num_casc
+    if isinstance(mach, (list, tuple, np.ndarray)):
+        if len(mach) != num_casc:
+            raise ValueError(f"'mach' length {len(mach)} != number of cascades {num_casc}")
+        mach_list = list(mach)
+    else:
+        mach_list = [mach] * num_casc
+
+    for i in range(num_casc):
         geometry_cascade = {
             key: values[i]
             for key, values in geometry.items()
             if key not in ["number_of_cascades", "number_of_stages"]
         }
 
-        radius_mean_out = geometry_cascade["radius_mean_out"]
+        radius_mean_in     = geometry_cascade["radius_mean_in"]
+        radius_mean_throat = geometry_cascade["radius_mean_throat"]
+        radius_mean_out    = geometry_cascade["radius_mean_out"]
         A_throat = geometry_cascade["A_throat"]
         A_out    = geometry_cascade["A_out"]
         A_in     = geometry_cascade["A_in"]
 
-        # s & Ma for this cascade
-        s_out  = entropy_distribution[i]
-        ma_out = mach[i]
+        # Entropy and Mach for this cascade
+        s_out = entropy_distribution[i]
+        ma_out = mach_list[i]
 
+        # Exit pressure from guessed Ma (via PS with guessed s_out)
         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
-        p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
+        p_out = get_unknown(
+            1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out
+        )
 
+        # Exit state
         static_out = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_out)
-        h_out, a_out, d_out, gamma_out = static_out["h"], static_out["speed_sound"], static_out["d"], static_out["gamma"]
+        h_out   = static_out["h"]
+        a_out   = static_out["speed_sound"]
+        d_out   = static_out["d"]
+        gamma_out = static_out["gamma"]
 
+        # Exit velocity
         w_out = np.sqrt(2 * (h0_rel_out - h_out))
 
-        # Critical Mach (placeholder 1.0)
+        # Critical Mach (placeholder 1.0; model available if wanted)
         static_props_is = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
         h_out_s = static_props_is["h"]
         eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
         ma_crit = 1.0
 
-        # Exit flow angle (subsonic)
-        beta_out = (-1) ** i * dm.get_subsonic_deviation(  # access via flow module if exported, else import dm at top
+        # Exit flow angle (subsonic deviation model)
+        beta_out = (-1) ** i * dm.get_subsonic_deviation(
             ma_out, ma_crit, {"A_throat": A_throat, "A_out": A_out}, deviation_model
         )
 
-        # Mass flow
+        # Mass flow rate
         mass_flow = d_out * w_out * math.cosd(beta_out) * A_out
 
-        # Critical at throat (for guess)
+        # Critical state at throat (for guess)
         w_throat_crit = a_out * ma_crit
         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
         s_throat_crit = s_out
-        state_throat  = fluid.get_state(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
-        rho_throat_crit = state_throat["d"]
+        static_state_throat_crit = fluid.get_state(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+        rho_throat_crit = static_state_throat_crit["d"]
         m_crit = w_throat_crit * rho_throat_crit * A_throat
         w_m_in_crit = m_crit / d_in / A_in
         v_in_crit = w_m_in_crit / math.cosd(alpha_in)
 
-        # Store
-        idx = f"_{i+1}"
+        # Store initial guess
+        index = f"_{i+1}"
         initial_guess.update(
             {
-                "w_out" + idx: w_out,
-                "s_out" + idx: s_out,
-                "beta_out" + idx: (-1) ** i * math.arccosd(A_throat / A_out),
-                "v_crit_in" + idx: v_in_crit,
-                "w_crit_throat" + idx: w_throat_crit,
-                "s_crit_throat" + idx: s_throat_crit,
+                "w_out" + index: w_out,
+                "s_out" + index: s_out,
+                "beta_out" + index: (-1) ** i * math.arccosd(A_throat / A_out),
+                "v_crit_in" + index: v_in_crit,
+                "w_crit_throat" + index: w_throat_crit,
+                "s_crit_throat" + index: s_throat_crit,
             }
         )
 
-        # Propagate to next inlet (simple interspace)
-        if i != (number_of_cascades - 1):
+        # Update variables for next cascade
+        if i != (num_casc - 1):
             A_next = geometry["A_in"][i + 1]
             radius_mean_next = geometry["radius_mean_in"][i + 1]
-            vt = w_out * math.sind(beta_out) + blade_speed_out
-            vm = w_out * math.cosd(beta_out)
-            v_m_in = vm * A_out / A_next
-            v_t_in = vt * radius_mean_out / radius_mean_next
+            velocity_triangle_out = flow.evaluate_velocity_triangle_out(
+                blade_speed_out, w_out, beta_out
+            )
+            v_m_in = velocity_triangle_out["v_m"] * A_out / A_next
+            v_t_in = velocity_triangle_out["v_t"] * radius_mean_out / radius_mean_next
             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
             alpha_in = math.arctand(v_t_in / v_m_in)
             blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
-            w_t = v_t_in - blade_speed_in
-            w_m = v_m_in
-            w = np.sqrt(w_t**2 + w_m**2)
-            h0_in = h_out + 0.5 * (vt**2 + vm**2)
+            velocity_triangle_in = flow.evaluate_velocity_triangle_in(
+                blade_speed_in, v_in, alpha_in
+            )
+            h0_in = h_out + 0.5 * velocity_triangle_out["v"] ** 2
             h_in = h0_in - 0.5 * v_in**2
-            rothalpy = h_in + 0.5 * w**2 - 0.5 * blade_speed_in**2
+            rothalpy = (
+                h_in + 0.5 * velocity_triangle_in["w"] ** 2 - 0.5 * blade_speed_in**2
+            )
             s_in = s_out
-            d_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)["d"]
+            static_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)
+            d_in = static_in["d"]
 
     # Inlet velocity from mass flow
-    initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
+    initial_guess["v_in"] = mass_flow / (
+        d0_first * geometry["A_in"][0] * math.cosd(alpha_first)
+    )
+
     return initial_guess
+
+
+# def get_heuristic_guess(
+#     efficiency_tt,
+#     efficiency_ke,
+#     mach,
+#     boundary_conditions,
+#     geometry,
+#     fluid,
+#     deviation_model,
+# ):
+#     p0_first = boundary_conditions["p0_in"]
+#     T0_first = boundary_conditions["T0_in"]
+#     p_final  = boundary_conditions["p_out"]
+#     angular_speed = boundary_conditions["omega"]
+#     alpha_first   = boundary_conditions["alpha_in"]
+#     number_of_cascades = geometry["number_of_cascades"]
+
+#     # Inlet stagnation
+#     stag_first = fluid.get_state(jxp.PT_INPUTS, p0_first, T0_first)
+#     h0_first, s_first, d0_first = stag_first["h"], stag_first["s"], stag_first["d"]
+
+#     # Final isentropic
+#     static_is = fluid.get_state(jxp.PSmass_INPUTS, p_final, s_first)
+#     h_final_s, a_final_s = static_is["h"], static_is["speed_sound"]
+
+#     # Spouting velocity
+#     v0 = np.sqrt(2 * (h0_first - h_final_s))
+
+#     # Exit enthalpy with guessed efficiency
+#     efficiency_ts = efficiency_tt / (1 + efficiency_tt * efficiency_ke)
+#     h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
+#     v_final  = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
+#     h_final  = h0_final - 0.5 * v_final**2
+
+#     # Exit static with guessed efficiency
+#     static_properties_exit = fluid.get_state(jxp.HmassP_INPUTS, h_final, p_final)
+#     s_final = static_properties_exit["s"]
+
+#     # Linear s distribution across cascades
+#     entropy_distribution = np.linspace(s_first, s_final, number_of_cascades + 1)[1:]
+
+#     initial_guess = {}
+
+#     # init
+#     s_in, rothalpy, alpha_in, d_in = s_first, h0_first, alpha_first, d0_first
+
+#     for i in range(number_of_cascades):
+#         geometry_cascade = {
+#             key: values[i]
+#             for key, values in geometry.items()
+#             if key not in ["number_of_cascades", "number_of_stages"]
+#         }
+
+#         radius_mean_out = geometry_cascade["radius_mean_out"]
+#         A_throat = geometry_cascade["A_throat"]
+#         A_out    = geometry_cascade["A_out"]
+#         A_in     = geometry_cascade["A_in"]
+
+#         # s & Ma for this cascade
+#         s_out  = entropy_distribution[i]
+#         ma_out = mach[i]
+
+#         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
+#         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
+#         p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
+
+#         static_out = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_out)
+#         h_out, a_out, d_out, gamma_out = static_out["h"], static_out["speed_sound"], static_out["d"], static_out["gamma"]
+
+#         w_out = np.sqrt(2 * (h0_rel_out - h_out))
+
+#         # Critical Mach (placeholder 1.0)
+#         static_props_is = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
+#         h_out_s = static_props_is["h"]
+#         eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
+#         ma_crit = 1.0
+
+#         # Exit flow angle (subsonic)
+#         beta_out = (-1) ** i * dm.get_subsonic_deviation(  # access via flow module if exported, else import dm at top
+#             ma_out, ma_crit, {"A_throat": A_throat, "A_out": A_out}, deviation_model
+#         )
+
+#         # Mass flow
+#         mass_flow = d_out * w_out * math.cosd(beta_out) * A_out
+
+#         # Critical at throat (for guess)
+#         w_throat_crit = a_out * ma_crit
+#         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
+#         s_throat_crit = s_out
+#         state_throat  = fluid.get_state(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
+#         rho_throat_crit = state_throat["d"]
+#         m_crit = w_throat_crit * rho_throat_crit * A_throat
+#         w_m_in_crit = m_crit / d_in / A_in
+#         v_in_crit = w_m_in_crit / math.cosd(alpha_in)
+
+#         # Store
+#         idx = f"_{i+1}"
+#         initial_guess.update(
+#             {
+#                 "w_out" + idx: w_out,
+#                 "s_out" + idx: s_out,
+#                 "beta_out" + idx: (-1) ** i * math.arccosd(A_throat / A_out),
+#                 "v_crit_in" + idx: v_in_crit,
+#                 "w_crit_throat" + idx: w_throat_crit,
+#                 "s_crit_throat" + idx: s_throat_crit,
+#             }
+#         )
+
+#         # Propagate to next inlet (simple interspace)
+#         if i != (number_of_cascades - 1):
+#             A_next = geometry["A_in"][i + 1]
+#             radius_mean_next = geometry["radius_mean_in"][i + 1]
+#             vt = w_out * math.sind(beta_out) + blade_speed_out
+#             vm = w_out * math.cosd(beta_out)
+#             v_m_in = vm * A_out / A_next
+#             v_t_in = vt * radius_mean_out / radius_mean_next
+#             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
+#             alpha_in = math.arctand(v_t_in / v_m_in)
+#             blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
+#             w_t = v_t_in - blade_speed_in
+#             w_m = v_m_in
+#             w = np.sqrt(w_t**2 + w_m**2)
+#             h0_in = h_out + 0.5 * (vt**2 + vm**2)
+#             h_in = h0_in - 0.5 * v_in**2
+#             rothalpy = h_in + 0.5 * w**2 - 0.5 * blade_speed_in**2
+#             s_in = s_out
+#             d_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)["d"]
+
+#     # Inlet velocity from mass flow
+#     initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
+#     return initial_guess
 
 def latin_hypercube_sampling(bounds, n_samples):
     n_variables = len(bounds)
