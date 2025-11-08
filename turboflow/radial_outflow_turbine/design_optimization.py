@@ -11,7 +11,10 @@ import turboflow as tf
 
 from .. import pysolver_view as psv
 from .. import utilities as utils
-from . import geometry_model as geom
+# from . import geometry_model as geom
+from . import geometry_model_axial as geom
+# from . import geometry_model_radial as geom
+
 from . import flow_model as flow
 # from .. import properties as props
 from . import performance_analysis as pa
@@ -327,6 +330,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Get list of design variables
         config = copy.deepcopy(config)
+
+        
         self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
@@ -1219,8 +1224,6 @@ def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
             )
 
     return initial_guess
-
-
 
 
 def compute_hessians_jax(fitness_function, x, lower_triangular=True):
