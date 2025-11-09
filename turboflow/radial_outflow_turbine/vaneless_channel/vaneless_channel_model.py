@@ -17,56 +17,6 @@ from .friction_models import FrictionModel, make_friction_model
 from .heat_models import HeatTransferModel, make_heat_model
 jxp.set_plot_options(grid=False)
 
-# Helper functions
-
-# ---- NEW helper: tolerant geometry coercion ----
-def _geometry_from_config(geom_cfg: dict) -> dict:
-    """
-    Accept either the full geometric set (z_*, r_*, b_*, phi_*, td_*)
-    or the minimal {r_in, r_out, A_in, A_out}. Fill missing fields with safe defaults.
-    All returned values are plain Python scalars/arrays; VanelessChannel.from_dict
-    will convert to jax arrays.
-    """
-    out = dict(geom_cfg)  # shallow copy
-
-    # If areas provided -> compute b_in/out
-    if ("A_in" in out) and ("r_in" in out) and ("b_in" not in out):
-        out["b_in"] = float(out["A_in"]) / (2.0 * jnp.pi * float(out["r_in"]))
-    if ("A_out" in out) and ("r_out" in out) and ("b_out" not in out):
-        out["b_out"] = float(out["A_out"]) / (2.0 * jnp.pi * float(out["r_out"]))
-
-    # Defaults for coordinates/angles if missing
-    r_in  = float(out.get("r_in",  0.10))
-    r_out = float(out.get("r_out", 0.10))
-    z_in  = float(out.get("z_in",  0.0))
-    # pick a reasonable axial length; avoid zero
-    default_L = max(abs(r_out - r_in), 0.05)
-    z_out = float(out.get("z_out", z_in + default_L))
-
-    out.setdefault("z_in",   z_in)
-    out.setdefault("z_out",  z_out)
-    out.setdefault("phi_in", 0.0)
-    out.setdefault("phi_out", 0.0)
-
-    # Tangent distances; keep small but >0 to avoid NURBS degeneracy
-    td_def = 0.2 * max(abs(out["z_out"] - out["z_in"]), 0.05)
-    out.setdefault("td_in",  td_def)
-    out.setdefault("td_out", td_def)
-
-    # Sanity: must have b_in/out at this point
-    if "b_in" not in out or "b_out" not in out:
-        raise ValueError(
-            "Geometry requires either (b_in,b_out) or (A_in,A_out) together with (r_in,r_out)."
-        )
-    # Also must have r_in/r_out
-    if "r_in" not in out or "r_out" not in out:
-        raise ValueError("Geometry requires r_in and r_out.")
-
-    # Drop A_in/A_out if they were only intermediates
-    out.pop("A_in", None)
-    out.pop("A_out", None)
-    return out
-
 
 # -------------------------
 # Define Equinox modules
@@ -85,7 +35,7 @@ class Geometry(eqx.Module):
 
 
 class OperatingConditions(eqx.Module):
-    # stored in static form internally
+    # always stored in static form internally
     p_in: Float[Array, ""]
     h_in: Float[Array, ""]
     v_in: Float[Array, ""]
@@ -94,14 +44,15 @@ class OperatingConditions(eqx.Module):
     @classmethod
     def from_dict(cls, config: dict, fluid):
         """
-        Initialize from:
-          (A) static:      p_in, h_in, v_in, alpha_in
-          (B) stagnation:  p0_in, T0_in, Ma_in, alpha_in
-          (C) mixed:       p_in, h0_in, v_m_in, v_t_in  (alpha/v rebuilt)
+        Initialize either from static or stagnation inputs.
+        The 'operating_conditions' section of the config must
+        contain either (p_in, h_in, v_in, alpha_in) or
+        (p0_in, T0_in, Ma_in, alpha_in).
         """
+
         oc = config["operating_conditions"]
 
-        # (A) Static form
+        # Option 1: static inputs
         if all(k in oc for k in ["p_in", "h_in", "v_in", "alpha_in"]):
             return cls(
                 p_in=jnp.array(oc["p_in"]),
@@ -110,8 +61,8 @@ class OperatingConditions(eqx.Module):
                 alpha_in=jnp.array(oc["alpha_in"]),
             )
 
-        # (B) Stagnation + Mach
-        if all(k in oc for k in ["p0_in", "T0_in", "Ma_in", "alpha_in"]):
+        # Option 2: stagnation inputs
+        elif all(k in oc for k in ["p0_in", "T0_in", "Ma_in", "alpha_in"]):
             p, h, v = convert_stagnation_to_static(
                 jnp.array(oc["p0_in"]),
                 jnp.array(oc["T0_in"]),
@@ -125,31 +76,15 @@ class OperatingConditions(eqx.Module):
                 alpha_in=jnp.array(oc["alpha_in"]),
             )
 
-        # (C) Mixed: p_in & h0_in with velocity components (what your flow model provides)
-        if all(k in oc for k in ["p_in", "h0_in", "v_m_in", "v_t_in"]):
-            v_m = jnp.array(oc["v_m_in"])
-            v_t = jnp.array(oc["v_t_in"])
-            v   = jnp.sqrt(v_m**2 + v_t**2)
-            # alpha in DEGREES (class convention)
-            alpha = jnp.rad2deg(jnp.arctan2(v_t, v_m))
-            h0 = jnp.array(oc["h0_in"])
-            h  = h0 - 0.5 * v**2
-            return cls(
-                p_in=jnp.array(oc["p_in"]),
-                h_in=h,
-                v_in=v,
-                alpha_in=alpha,
+        else:
+            provided = list(oc.keys())
+            raise ValueError(
+                "Invalid operating conditions configuration.\n"
+                "Expected either:\n"
+                "  - (p_in, h_in, v_in, alpha_in)  [static form], or\n"
+                "  - (p0_in, T0_in, Ma_in, alpha_in)  [stagnation form].\n"
+                f"Provided keys: {provided}"
             )
-
-        # Otherwise: error message lists provided keys
-        raise ValueError(
-            "Invalid operating conditions configuration.\n"
-            "Expected one of:\n"
-            "  (A) p_in, h_in, v_in, alpha_in\n"
-            "  (B) p0_in, T0_in, Ma_in, alpha_in\n"
-            "  (C) p_in, h0_in, v_m_in, v_t_in\n"
-            f"Provided keys: {list(oc.keys())}"
-        )
 
 
 class SolverOptions(eqx.Module):
@@ -179,29 +114,33 @@ class VanelessChannel(eqx.Module):
 
     @classmethod
     def from_dict(cls, config: dict, fluid):
-        """Create VanelessChannel from a nested dictionary."""
-        def to_jax_dict(d: dict) -> dict:
-            return {k: jnp.array(v) if isinstance(v, (int, float)) else v for k, v in d.items()}
+        """Create VanelessDiffuser from a nested dictionary."""
 
-        # Models
+        # Helper to convert dict values to JAX arrays
+        def to_jax_dict(d: dict) -> dict:
+            return {
+                k: jnp.array(v) if isinstance(v, (int, float)) else v
+                for k, v in d.items()
+            }
+
+        # Create friction and heat transfer models
         friction_cfg = config["model_options"]["friction_model"]
         friction_model = make_friction_model(friction_cfg)
         heat_cfg = config["model_options"]["heat_model"]
         heat_model = make_heat_model(heat_cfg)
-        model_options = ModelOptions(heat_transfer=heat_model, friction=friction_model)
-
-        # --- NEW: tolerant geometry coercion ---
-        geom_cfg = _geometry_from_config(config["geometry"])
+        model_options = ModelOptions(
+            heat_transfer=heat_model,
+            friction=friction_model,
+        )
 
         return cls(
             name=config["name"],
-            geometry=Geometry(**to_jax_dict(geom_cfg)),
+            geometry=Geometry(**to_jax_dict(config["geometry"])),
             operating_conditions=OperatingConditions.from_dict(config, fluid),
             model_options=model_options,
             solver_options=SolverOptions(**config.get("solver_options", {})),
             fluid=fluid,
         )
-
 
     def evaluate(self):
         """Solve the vaneless diffuser flow problem."""
@@ -212,11 +151,7 @@ class VanelessChannel(eqx.Module):
             self.solver_options,
             self.fluid,
         )
-    
-    def make_geometry(self):
-        geom_handle = make_vaneless_channel_geometry(self.geometry)
-        return geom_handle
-    
+
     def plot_geometry(
         self,
         fig=None,
@@ -842,7 +777,6 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
 
     # Reparametrize midline by arclength
     u_of_s, s_total = channel_midline.reparametrize_by_arclength(tol=tol)
-    s_total = s_total*(1.0 - 100.*tol)  # Prevent NURBS extrapolation!!!
 
     # Construct the channel width curve control points
     P_width = jnp.array(
@@ -910,7 +844,6 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
             "r_hub": r_hub,
             "curvature": curvature,
             "s_total": s_total,
-            "m_total": s_total,
             "area_ratio": A / A_in,
             "radius_ratio": r / r_in,
         }
@@ -1159,8 +1092,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
     # Rename from ODE terminology to physical variables
     params, fluid, geom_handle, model_options = args
     m_total = params["m_total"]
-    # m_coord = jnp.minimum(t, m_total*0.9999)  # Prevent NURBS extrapolation
-    m_coord = t
+    m_coord = jnp.minimum(t, m_total - 1e-6)  # Prevent NURBS extrapolation
     (
         v_m,
         v_t,
@@ -1175,20 +1107,6 @@ def evaluate_vaneless_channel_ode(t, y, args):
         s_int,
         theta,
     ) = y
-
-    # # --- Debug print section ---
-    # jax.debug.print(
-    #     "t = {t:.4e}, m = {m:.4e}, m_tot = {m_tot:.4e}, "
-    #     "v_m = {v_m:.4e}, v_t = {v_t:.4e}, h = {h:.4e}, p = {p:.4e}, eta = {eta:.4e}",
-    #     t=t,
-    #     m=m_coord,
-    #     m_tot= m_total,
-    #     v_m=v_m,
-    #     v_t=v_t,
-    #     h=h,
-    #     p=p,
-    #     eta=eta,
-    # )
 
     # Calculate velocity magnitude and direction
     v = jnp.sqrt(v_t**2 + v_m**2)
@@ -1232,7 +1150,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
 
     # Compute skin friction according to Aungier loss model
     cf_wall, cf_diff, cf_curv, E = model_options.friction.get_cf_components(
-        m_coord, m_total, b, params["b_in"], A, dAds, curvature, alpha, params["alpha_in"], Re
+        Re, b, A, dAds, params["alpha_in"], params["b_in"], m_total, curvature, alpha
     )
 
     # Original Augier formulation with an asymmetrical loss distribution
@@ -1240,8 +1158,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
     tau_t = 0.5 * d * v**2 * (cf_wall * jnp.sin(jnp.deg2rad(alpha)))
 
     # # Alternative formulation with a symmetrical loss distribution
-    # tau_m = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.cos(alpha)
-    # tau_t = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.sin(alpha)
+    # tau_m = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.cos(alpha)
+    # tau_t = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.sin(alpha)
 
     # Compute heat transfer at the walls
     q_w, htc = model_options.heat_transfer.compute_heat_transfer(
