@@ -14,15 +14,16 @@ class FrictionModel(eqx.Module):
 
     def get_cf_components(
         self,
-        Re: Float[Array, ""],
+        m_coord: Float[Array, ""],
+        m_total: Float[Array, ""],
         b: Float[Array, ""],
+        b_in: Float[Array, ""],
         A: Float[Array, ""],
         dA_dm: Float[Array, ""],
-        alpha_in: Float[Array, ""],
-        b_in: Float[Array, ""],
-        L_total: Float[Array, ""],
         curvature: Float[Array, ""],
         alpha: Float[Array, ""],
+        alpha_in: Float[Array, ""],
+        Re: Float[Array, ""],
     ):
         """Return cf_wall, cf_diffusion, cf_curvature, E"""
         raise NotImplementedError
@@ -58,20 +59,21 @@ class AungierFriction(FrictionModel):
 
     def get_cf_components(
         self,
-        Re: Float[Array, ""],
+        m_coord: Float[Array, ""],
+        m_total: Float[Array, ""],
         b: Float[Array, ""],
+        b_in: Float[Array, ""],
         A: Float[Array, ""],
         dA_dm: Float[Array, ""],
-        alpha_in: Float[Array, ""],
-        b_in: Float[Array, ""],
-        L_total: Float[Array, ""],
         curvature: Float[Array, ""],
         alpha: Float[Array, ""],
+        alpha_in: Float[Array, ""],
+        Re: Float[Array, ""],
     ):
         # --- Call your existing helper functions directly ---
         D_h = 2.0 * b
-        cf_wall = get_cf_wall(Re, self.roughness, D_h)
-        cf_diff, E = get_cf_diffusion(b, A, dA_dm, alpha_in, b_in, L_total)
+        cf_wall = get_cf_wall(Re, self.roughness, D_h, m_coord, m_total)
+        cf_diff, E = get_cf_diffusion(b, A, dA_dm, alpha_in, b_in, m_total)
         cf_curv = get_cf_curvature(b, curvature, alpha)
         return cf_wall, cf_diff, cf_curv, E
 
@@ -144,7 +146,7 @@ def make_friction_model(cfg: dict) -> FrictionModel:
 # -------------------------
 # Define core functions
 # -------------------------
-def get_cf_wall(Re, roughness, diameter):
+def get_cf_wall(Re, roughness, diameter, x, L_total):
     """Compute the Fanning friction factor with a smooth laminar-turbulent transition.
 
     The function returns a continuous Fanning friction factor over all Reynolds numbers.
@@ -178,6 +180,16 @@ def get_cf_wall(Re, roughness, diameter):
     term = 6.9 / jnp.maximum(Re, 1.0) + (roughness / diameter / 3.7) ** 1.11
     f_D = (-1.8 * jnp.log10(term)) ** -2  # Darcy friction factor
     Cf_turbulent = f_D / 4.0  # Convert to Fanning friction factor
+    # Cf_turbulent = 2.0*Cf_turbulent
+
+    # Entrance-region correction for developing turbulent flow
+    # Suggested by AI (ChatGPT) based on the empirical relation
+    #   Cf_x = Cf_fd * [1 + 0.25 * (D/x)^0.5]
+    # attributed to Kays & Crawford (Convective Heat and Mass Transfer)
+    # TODO: Verify that this correlation is indeed reported in the cited reference
+    x_over_D = jnp.maximum(x / diameter, 0.001)  # Avoid singularity at x=0
+    Cf_corr_factor = 1.0 + 0.25 * jnp.sqrt(1.0 / x_over_D)
+    Cf_turbulent = Cf_corr_factor*Cf_turbulent
 
     # Smooth blending using tanh (transition centered at Re=2300)
     transition_width = 500.0  # Controls smoothness (smaller = sharper transition)

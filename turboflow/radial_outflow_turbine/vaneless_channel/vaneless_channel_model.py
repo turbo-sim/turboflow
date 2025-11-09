@@ -212,7 +212,11 @@ class VanelessChannel(eqx.Module):
             self.solver_options,
             self.fluid,
         )
-
+    
+    def make_geometry(self):
+        geom_handle = make_vaneless_channel_geometry(self.geometry)
+        return geom_handle
+    
     def plot_geometry(
         self,
         fig=None,
@@ -838,6 +842,7 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
 
     # Reparametrize midline by arclength
     u_of_s, s_total = channel_midline.reparametrize_by_arclength(tol=tol)
+    s_total = s_total*(1.0 - 100.*tol)  # Prevent NURBS extrapolation!!!
 
     # Construct the channel width curve control points
     P_width = jnp.array(
@@ -905,6 +910,7 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
             "r_hub": r_hub,
             "curvature": curvature,
             "s_total": s_total,
+            "m_total": s_total,
             "area_ratio": A / A_in,
             "radius_ratio": r / r_in,
         }
@@ -1153,7 +1159,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
     # Rename from ODE terminology to physical variables
     params, fluid, geom_handle, model_options = args
     m_total = params["m_total"]
-    m_coord = jnp.minimum(t, m_total - 1e-6)  # Prevent NURBS extrapolation
+    # m_coord = jnp.minimum(t, m_total*0.9999)  # Prevent NURBS extrapolation
+    m_coord = t
     (
         v_m,
         v_t,
@@ -1168,6 +1175,20 @@ def evaluate_vaneless_channel_ode(t, y, args):
         s_int,
         theta,
     ) = y
+
+    # # --- Debug print section ---
+    # jax.debug.print(
+    #     "t = {t:.4e}, m = {m:.4e}, m_tot = {m_tot:.4e}, "
+    #     "v_m = {v_m:.4e}, v_t = {v_t:.4e}, h = {h:.4e}, p = {p:.4e}, eta = {eta:.4e}",
+    #     t=t,
+    #     m=m_coord,
+    #     m_tot= m_total,
+    #     v_m=v_m,
+    #     v_t=v_t,
+    #     h=h,
+    #     p=p,
+    #     eta=eta,
+    # )
 
     # Calculate velocity magnitude and direction
     v = jnp.sqrt(v_t**2 + v_m**2)
@@ -1211,7 +1232,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
 
     # Compute skin friction according to Aungier loss model
     cf_wall, cf_diff, cf_curv, E = model_options.friction.get_cf_components(
-        Re, b, A, dAds, params["alpha_in"], params["b_in"], m_total, curvature, alpha
+        m_coord, m_total, b, params["b_in"], A, dAds, curvature, alpha, params["alpha_in"], Re
     )
 
     # Original Augier formulation with an asymmetrical loss distribution
@@ -1219,8 +1240,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
     tau_t = 0.5 * d * v**2 * (cf_wall * jnp.sin(jnp.deg2rad(alpha)))
 
     # # Alternative formulation with a symmetrical loss distribution
-    # tau_m = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.cos(alpha)
-    # tau_t = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.sin(alpha)
+    # tau_m = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.cos(alpha)
+    # tau_t = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.sin(alpha)
 
     # Compute heat transfer at the walls
     q_w, htc = model_options.heat_transfer.compute_heat_transfer(
