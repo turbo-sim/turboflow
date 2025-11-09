@@ -34,34 +34,33 @@ BLOCKAGE_MODELS = ["flat_plate_turbulent"]
 def evaluate_axial_turbine_componentwise(
     variables: Dict[str, Any],
     boundary_conditions: Dict[str, Any],
-    geom_list: List[Dict[str, Any]],                 # list[dict], one per component
+    geom_list: List[Dict[str, Any]],                 # geometry for *cascades only* (in cascade order)
     fluid: Any,
     reference_values: Dict[str, Any],
-    components: List[Dict[str, Any]] | None = None,  # original YAML components (to read per-component model_options)
-    model_options_global: Dict[str, Any] | None = None,  # global fallbacks
-    benner_requires_throat: bool = True,  # kept for compatibility (now enforced inside BladeRow.from_dict)
+    components: List[Dict[str, Any]] | None = None,  # full YAML components (mixed types)
+    model_options_global: Dict[str, Any] | None = None,
+    benner_requires_throat: bool = True,
 ):
     """
-    Orchestrates the stator→interspace→rotor sequence using BladeRow objects.
-    Returns the same structure as the original implementation.
+    Iterate the full component list (axial_cascade and vaneless_channel).
+    - For axial_cascade: build a BladeRow from geom_list[cascade_idx] and evaluate
+    - For vaneless_channel: solve VanelessChannel using its own geometry + options and
+      update the inlet state, but do not create planes (keeps 4-plane-per-stage pattern)
     """
-
-    n_comp = len(geom_list)
-    names  = [c.get("name", f"component_{i+1}") for i, c in enumerate(geom_list)]
-    ctypes = [str(c["cascade_type"]).lower() for c in geom_list]
+    assert components is not None, "components list (mixed types) must be provided"
 
     # Inlet (from BCs)
     h0_in    = boundary_conditions["h0_in"]
     s_in     = boundary_conditions["s_in"]
-    alpha_in = boundary_conditions["alpha_in"]
+    alpha_in = boundary_conditions["alpha_in"]   # may be radians (from BC)
     omega_bc = boundary_conditions["omega"]
 
     # Reference scales
-    v0          = reference_values["v0"]
+    v0 = reference_values["v0"]
 
-    planes_seq: List[Dict[str, Any]] = []
+    planes_seq:   List[Dict[str, Any]] = []
     cascades_seq: List[Dict[str, Any]] = []
-    residuals: Dict[str, Any] = {}
+    residuals:    Dict[str, Any] = {}
 
     # inlet absolute speed (scaled → unscaled)
     v_in = variables["v_in"] * v0
@@ -69,73 +68,155 @@ def evaluate_axial_turbine_componentwise(
     # Prepare initial inlet payload
     inlet = {"h0": h0_in, "s": s_in, "alpha": alpha_in, "v": v_in}
 
-    # Build BladeRow objects per component (merges model options & validates geometry)
-    rows: List[BladeRow] = []
-    for i, g in enumerate(geom_list):
-        per_opts = (components[i].get("model_options", {}) if (components and i < len(components)) else {})
-        config_i = {
-            "name": names[i],
-            "cascade_type": ctypes[i],
-            "geometry": g,
-            "model_options": per_opts,
-        }
-        row = BladeRow.from_dict(config_i, fluid=fluid, model_options_global=model_options_global)
-        rows.append(row)
+    # --- helper to normalize alpha to degrees for the channel (if needed)
+    def _alpha_deg(a):
+        # if looks like radians (|a| <= ~pi), convert to degrees
+        return jnp.degrees(a) if jnp.abs(a) <= (jnp.pi * 1.01) else a
 
-    # Component-wise loop (now delegated to BladeRow.evaluate)
-    for i, row in enumerate(rows):
-        tag = f"_{i+1}"
-        is_rotor = ("rotor" in row.cascade_type)
-        omega_i = jnp.array(omega_bc if is_rotor else 0.0)
+    # Iterate mixed components; track a *cascade* index separately
+    cascade_idx = 0
+    cascade_types: List[str] = []
+    cascade_geoms_for_rows: List[BladeRow] = []
 
-        # Unscale per-row unknowns + extract choking variables for this row
-        row_vars, choking_vars = _extract_row_vars_and_choking(variables, i + 1, reference_values)
+    for comp_i, comp in enumerate(components):
+        ctype = str(comp.get("component_type", "")).lower()
+        name  = comp.get("name", f"component_{comp_i+1}")
 
-        # Evaluate this blade row (inlet→exit, +losses, +choking)
-        planes, cascade, res_i, handoff = row.evaluate(
-            inlet_state=inlet,
-            row_vars=row_vars,
-            omega=omega_i,
-            reference_values=reference_values,
-            choking_vars=choking_vars,
-        )
+        # ---------- Axial cascade ----------
+        if ctype == "axial_cascade":
+            # geometry for this cascade comes from geom_list[cascade_idx]
+            if cascade_idx >= len(geom_list):
+                raise IndexError("Provided 'geom_list' has fewer cascade geometries than axial_cascade components.")
 
-        planes_seq += planes
-        cascades_seq.append(cascade)
-        residuals.update(_suffix_keys(res_i, tag))
+            geom_cascade = geom_list[cascade_idx]
+            cascade_types.append(str(geom_cascade["cascade_type"]).lower())
 
-        # Interspace mapping if current is stator and next is rotor, else pass-through
-        if i < n_comp - 1:
-            next_ctype = rows[i + 1].cascade_type
-            if ("stator" in row.cascade_type) and ("rotor" in next_ctype):
-                h0_in, s_in, alpha_in, v_in = _evaluate_vaneless_interspace(
-                fluid=fluid,
-                handoff=handoff,
-                row_out_geom=row.geometry,                   # current row geom (dict)
-                row_in_geom_next=rows[i+1].geometry,         # next row geom (dict)
-                boundary_conditions=boundary_conditions,
-                interspace_options=model_options_global.get("vaneless", {}) if model_options_global else None,)
-                inlet = {"h0": h0_in, "s": s_in, "alpha": alpha_in, "v": v_in}
+            # Build BladeRow using per-component model_options
+            per_opts = comp.get("model_options", {}) or {}
+            config_row = {
+                "name": name,
+                "cascade_type": geom_cascade["cascade_type"],
+                "geometry": geom_cascade,
+                "model_options": per_opts,
+            }
+            row = BladeRow.from_dict(config_row, fluid=fluid, model_options_global=model_options_global)
+
+            # Unscale decision variables *by cascade index* (tags _1, _2, ...)
+            tag_idx = cascade_idx + 1
+            row_vars, choking_vars = _extract_row_vars_and_choking(variables, tag_idx, reference_values)
+
+            # Rotor rows rotate; stators do not
+            is_rotor = ("rotor" in row.cascade_type)
+            omega_i  = jnp.array(omega_bc if is_rotor else 0.0)
+
+            # Evaluate row
+            planes, cascade, res_i, handoff = row.evaluate(
+                inlet_state=inlet,
+                row_vars=row_vars,
+                omega=omega_i,
+                reference_values=reference_values,
+                choking_vars=choking_vars,
+            )
+
+            # Collect
+            planes_seq += planes
+            cascades_seq.append(cascade)
+            residuals.update(_suffix_keys(res_i, f"_{tag_idx}"))
+
+            # Next inlet = last plane state (absolute)
+            exit_plane = planes[-1]
+            inlet = {
+                "h0":    exit_plane["enthalpy0"],
+                "s":     exit_plane["entropy0"],
+                "alpha": exit_plane["alpha"],   # (BladeRow uses degrees; keep as-is)
+                "v":     exit_plane["v"],
+            }
+
+            cascade_idx += 1
+            continue
+
+        # ---------- Vaneless channel ----------
+        if ctype == "vaneless_channel":
+            # Build a config for VanelessChannel using the component's own geometry/options
+            # + our current inlet state mapped to *static* OC
+            geometry_cfg = comp.get("geometry", {})
+            model_opts   = (comp.get("model_options") or
+                            (model_options_global or {}).get("vaneless", {}).get("model_options") or {})
+            solver_opts  = (comp.get("solver_options") or
+                            (model_options_global or {}).get("vaneless", {}).get("solver_options") or {})
+
+            # Convert inlet to static: h_in, p_in; v_in magnitude + alpha_in (deg)
+            v_mag  = inlet["v"]
+            alphaD = _alpha_deg(inlet["alpha"])
+            h_in   = inlet["h0"] - 0.5 * v_mag**2
+            st     = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, inlet["s"])
+            p_in   = st["p"]
+
+            config_ch = {
+                "name": name,
+                "geometry": geometry_cfg,
+                "model_options": (
+                    model_opts if model_opts else
+                    {"friction_model": {"type": "aungier", "roughness": 1.0e-6, "Re_transition": 2300.0, "Re_width": 500.0},
+                     "heat_model": {"type": "adiabatic"}}
+                ),
+                "solver_options": (
+                    solver_opts if solver_opts else
+                    {"solver_name": "Dopri5", "adjoint_name": "DirectAdjoint",
+                     "rtol": 1e-6, "atol": 1e-6, "n_points": 50, "max_steps": 200, "throw": True}
+                ),
+                "operating_conditions": {
+                    "p_in": p_in,
+                    "h_in": h_in,
+                    "v_in": v_mag,
+                    "alpha_in": alphaD,   # degrees, as required by VanelessChannel
+                },
+            }
+
+            channel  = VanelessChannel.from_dict(config_ch, fluid)
+            sol      = channel.evaluate()
+
+            # Map channel outlet → updated inlet (no planes added)
+            v_m_out = sol["v_m"][-1]
+            v_t_out = sol["v_t"][-1]
+            v_out   = jnp.sqrt(v_m_out**2 + v_t_out**2)
+            alpha   = math.arctand(v_t_out / v_m_out)  # returns degrees in your math helpers
+
+            # h0/s: prefer direct if present; else reconstruct
+            if "h0" in sol:
+                h0_out = sol["h0"][-1]
+            elif "h" in sol:
+                h0_out = sol["h"][-1] + 0.5 * v_out**2
             else:
-                exit_plane = planes[-1]
-                inlet = {
-                    "h0":    exit_plane["enthalpy0"],
-                    "s":     exit_plane["entropy0"],
-                    "alpha": exit_plane["alpha"],
-                    "v":     exit_plane["v"],
-                }
+                h0_out = inlet["h0"]
+
+            if "s" in sol:
+                s_out = sol["s"][-1]
+            elif ("p" in sol) and ("T" in sol):
+                st_out = fluid.get_state(jxp.PT_INPUTS, sol["p"][-1], sol["T"][-1])
+                s_out  = st_out["s"]
+            else:
+                s_out = inlet["s"]
+
+            inlet = {"h0": h0_out, "s": s_out, "alpha": alpha, "v": v_out}
+            continue
+
+        # ---------- Unknown component ----------
+        raise ValueError(f"Unsupported component_type: {ctype}")
 
     # Collect arrays (unchanged)
     planes   = tf.combine_to_dict_of_arrays(planes_seq)
     cascades = tf.combine_to_dict_of_arrays(cascades_seq)
 
-    # Outlet pressure residual (unchanged)
+    # Outlet pressure residual uses the *last cascade* exit static pressure
+    if not planes_seq:
+        raise RuntimeError("No cascades evaluated; cannot compute outlet residuals/overall KPIs.")
     p_calc = planes_seq[-1]["pressure"]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
 
-    # Stage & overall KPIs (unchanged)
-    stage   = compute_stage_performance_componentwise(planes, ctypes)
+    # Stage & overall KPIs (unchanged; pass *cascade* types only)
+    stage   = compute_stage_performance_componentwise(planes, [c["cascade_type"] for c in geom_list])
     overall = compute_overall_performance_componentwise(planes, boundary_conditions, reference_values, geom_list[-1])
 
     return {
@@ -145,11 +226,10 @@ def evaluate_axial_turbine_componentwise(
         "overall": overall,
         "residuals": residuals,
         "independent_variables": variables,
-        "component_names": names,
-        "component_types": ctypes,
-        "geometry_components": geom_list,
+        "component_names": [c.get("name", f"component_{i+1}") for i, c in enumerate(components)],
+        "component_types": [str(c.get("component_type", "")).lower() for c in components],
+        "geometry_components": geom_list,  # cascades-only geometry list
     }
-
 
 # ============================================================
 # Helpers for the top-level orchestrator

@@ -62,7 +62,7 @@ def _prune_vars_to_match_choking(initial_guess: dict, components: list, global_c
     """
     out = {}
     out["v_in"] = initial_guess.get("v_in", None)
-    n = len([c for c in components if c.get("component_type", "").lower() == "axial_cascade" or "geometry" in c])
+    n = sum(1 for c in components if str(c.get("component_type","")).lower() == "axial_cascade")
 
     for i in range(n):
         tag = f"_{i+1}"
@@ -206,35 +206,28 @@ def _numpy_to_native(x):
 
 def _infer_num_cascades(geometry_arrayview, components=None):
     """
-    Return the number of cascades robustly.
-
-    Priority:
-      1) If components (list) is provided -> len(components)
-      2) If geometry_arrayview['number_of_cascades'] is an int -> that value
-      3) If geometry_arrayview['number_of_cascades'] is a list/array -> its length
-      4) Fallback: length of any representative geometry array (A_in, A_out, chord, pitch)
+    Return the number of *axial cascades*.
+    When components is provided, count only items with component_type == 'axial_cascade'.
+    Otherwise use geometry_arrayview['number_of_cascades'] or geometry array lengths.
     """
-    # 1) Components list (radial/axial component-wise)
+
     if components is not None and isinstance(components, (list, tuple)):
-        return len(components)
+        def _is_cascade(c):
+            return str(c.get("component_type", "")).lower() == "axial_cascade"
+        return sum(1 for c in components if _is_cascade(c))
 
     if isinstance(geometry_arrayview, dict):
         val = geometry_arrayview.get("number_of_cascades", None)
-        # 2) explicit integer
         if isinstance(val, (int, np.integer)):
             return int(val)
-        # 3) list/array -> length
         if isinstance(val, (list, tuple, np.ndarray)):
             return len(val)
-
-        # 4) try common geometry arrays
         for key in ("A_in", "A_out", "chord", "pitch"):
             v = geometry_arrayview.get(key, None)
             if isinstance(v, (list, tuple, np.ndarray)):
                 return len(v)
 
     raise ValueError("Could not infer number_of_cascades from geometry/components.")
-
 
 
 # ===================================================================
@@ -415,35 +408,43 @@ def compute_single_operation_point(
         components=problem.components,
     )
 
-    # ---- PRUNE unknowns to match each component's choking criterion ----
-    # Always keep v_in and, per component i, keep w_out_i, s_out_i, beta_out_i.
-    # Then, depending on choking model:
-    #   - critical_mach_number:       keep w_crit_throat_i, s_crit_throat_i
-    #   - critical_isentropic_throat: keep w_crit_throat_i
-    #   - critical_mass_flow_rate:    keep v_crit_in_i, w_crit_throat_i, s_crit_throat_i
-    per_comp_choking = []
+    if not initial_guesses or not isinstance(initial_guesses[0], dict):
+        raise ValueError(
+            "Initial guess construction returned no valid guesses. "
+            "Provide either the heuristic keys: "
+            "  {'efficiency_tt', 'efficiency_ke', 'ma_1..ma_N'} "
+            "or the direct keys (which must include 'v_in'): "
+            "  {'v_in', 'w_out_i', 's_out_i', 'beta_out_i', ...} per cascade."
+        )
+
+    # ---- PRUNE unknowns to match each cascade's choking criterion ----
+    cascade_indices = problem.cascade_comp_indices
     global_choking = simulation_options.get("choking_criterion", "critical_mach_number")
-    for i, comp in enumerate(problem.components):
-        comp_opts = comp.get("model_options") or {}
-        per_comp_choking.append(comp_opts.get("choking_criterion", global_choking))
+
+    per_cascade_choking = []
+    for idx in cascade_indices:
+        comp_opts = (problem.components[idx].get("model_options") or {})
+        per_cascade_choking.append(comp_opts.get("choking_criterion", global_choking))
 
     pruned_initial_guesses = []
-    n_comp = len(problem.components)
+    n_casc = problem.num_cascades
+
     for ig in initial_guesses:
         pruned = {}
         if "v_in" in ig:
             pruned["v_in"] = ig["v_in"]
 
-        for i in range(n_comp):
+        # tags _1, _2, ... are per-cascade order
+        for i in range(n_casc):
             tag = f"_{i+1}"
 
-            # always needed per component
+            # always keep these per cascade
             for base in ("w_out", "s_out", "beta_out"):
                 k = base + tag
                 if k in ig:
                     pruned[k] = ig[k]
 
-            crit = per_comp_choking[i]
+            crit = per_cascade_choking[i]
             if crit == "critical_mach_number":
                 for k in (f"w_crit_throat{tag}", f"s_crit_throat{tag}"):
                     if k in ig:
@@ -457,12 +458,13 @@ def compute_single_operation_point(
                     if k in ig:
                         pruned[k] = ig[k]
             else:
-                # unknown criterion -> keep only the base 3 (already done)
+                # unknown criterion -> only the base three are kept
                 pass
 
         pruned_initial_guesses.append(pruned)
 
     initial_guesses = pruned_initial_guesses
+    # -------------------------------------------------------------------
     # -------------------------------------------------------------------
 
     solver_methods = [solver_options["method"]] + [
@@ -508,37 +510,32 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
     """
 
     def __init__(self, components, simulation_options):
-        """
-        components: list of component dicts from YAML (with geometry, model_options, initial_guess)
-        """
-        # Keep components (needed for per-component model options & IG)
         self.components = components
-
-        # Build full geometry per component (list of dicts)
-        # Your geometry model should return a list[dict], each with scalars for that component
-        self.geometry_components = geom.calculate_full_geometry(components)
-
-        # Also build a dict-of-arrays "arrayview" (legacy consumers)
-        self.geometry_components_arrayview = self._to_array_geometry(self.geometry_components)
-
-        self.model_options = simulation_options  # global fallbacks
+        self.model_options = simulation_options
         self.keys = []
 
+        # --- NEW: filter components by type ---
+        def _is_cascade(c):
+            return str(c.get("component_type", "")).lower() == "axial_cascade"
+
+        self.cascade_comp_indices = [i for i, c in enumerate(self.components) if _is_cascade(c)]
+        self.num_cascades = len(self.cascade_comp_indices)
+
+        # Build per-cascade geometry (list[dict]) using your existing geometry model
+        components_cascades = [self.components[i] for i in self.cascade_comp_indices]
+        self.geometry_components_cascades = geom.calculate_full_geometry(components_cascades)
+
+        # Dict-of-arrays arrayview for legacy helpers (cascades only)
+        self.geometry_components_arrayview = self._to_array_geometry(self.geometry_components_cascades)
+
     def _to_array_geometry(self, rows):
-        """
-        Convert list[dict] (per component) → dict of arrays (per key).
-        Useful to feed legacy helpers like get_heuristic_guess (expects dict-of-arrays).
-        """
-        # Gather all keys
-        all_keys = set().union(*[row.keys() for row in rows])
+        all_keys = set().union(*[row.keys() for row in rows]) if rows else set()
         array_geom = {"number_of_cascades": len(rows), "number_of_stages": max(0, len(rows)//2)}
         for k in all_keys:
             if k in ("cascade_type",):
                 array_geom[k] = [row.get(k) for row in rows]
             else:
-                vals = [row.get(k) for row in rows]
-                # keep numeric arrays only if all present
-                array_geom[k] = vals
+                array_geom[k] = [row.get(k) for row in rows]
         return array_geom
 
     def residual(self, x):
@@ -549,13 +546,10 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
             self.vars_scaled = dict(zip(self.keys, x))
             self.vars_real = self.scale_values(self.vars_scaled, to_normalized=False)
 
-            # Evaluate component-wise turbine (stator → interspace → rotor)
-            # Evaluate component-wise turbine (stator → interspace → rotor)
-
             self.results = flow.evaluate_axial_turbine_componentwise(
                 self.vars_scaled,
                 self.boundary_conditions,
-                self.geometry_components,  # <-- this is already components
+                self.geometry_components_cascades, 
                 self.fluid,
                 self.reference_values,
                 self.components,
@@ -611,7 +605,7 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         v0 = np.sqrt(2 * (h0_in - h_isentropic))
 
         # Reference mass flow uses last component exit area
-        A_out_last = self.geometry_components[-1]["A_out"]
+        A_out_last = self.geometry_components_cascades[-1]["A_out"]
         mass_flow_ref = A_out_last * v0 * d_isentropic
 
         self.reference_values = {
@@ -656,54 +650,39 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
 # Initial guess handling
 # ===================================================================
 def extract_initial_guess_from_components(components):
-    """
-    Try to build a *component-wise* initial guess dict from YAML components.
-    If not enough info is present, return a minimal marker so get_initial_guess()
-    falls back to heuristic construction.
-    """
     ig = {}
-
-    # Optional: v_in could be present globally; usually it isn't.
-    # We'll leave it to heuristic if not specified.
-
-    # We do *not* expect full cascade decision variables in YAML;
-    # we primarily extract per-component Mach hints and efficiencies to seed heuristic.
     eff_tt = None
     eff_ke = None
     ma_list = []
 
+    def _is_cascade(c):
+        return str(c.get("component_type", "")).lower() == "axial_cascade"
+
     for comp in components:
+        if not _is_cascade(comp):
+            continue
         ig_c = comp.get("initial_guess", {}) or {}
         if eff_tt is None and "efficiency_tt" in ig_c:
             eff_tt = ig_c["efficiency_tt"]
         if eff_ke is None and "efficiency_ke" in ig_c:
             eff_ke = ig_c["efficiency_ke"]
 
-        # try common keys for Mach at outlet of this component
         ma = (
-            ig_c.get("ma")
-            or ig_c.get("ma_out")
-            or ig_c.get("ma_rel_out")
-            or ig_c.get("ma_exit")
-            or ig_c.get("ma_2")   # legacy
-            or ig_c.get("ma_1")   # legacy, if only one present
+            ig_c.get("ma") or ig_c.get("ma_out") or ig_c.get("ma_rel_out")
+            or ig_c.get("ma_exit") or ig_c.get("ma_2") or ig_c.get("ma_1")
         )
         ma_list.append(ma if isinstance(ma, (int, float)) else None)
 
-    # If we got at least one of eff_tt/eff_ke or any ma hint, return this marker dict.
-    # get_initial_guess() will detect and run the heuristic path with these hints.
     marker = {}
     if eff_tt is not None:
         marker["efficiency_tt"] = eff_tt
     if eff_ke is not None:
         marker["efficiency_ke"] = eff_ke
-    if any(m is not None for m in ma_list):
-        # keep None for missing; heuristic will fill defaults
+    if ma_list:
         for i, m in enumerate(ma_list):
             marker[f"ma_{i+1}"] = 0.8 if m is None else m
 
     return marker if marker else {"_empty_": True}
-
 def get_initial_guess(
     initial_guess,
     problem,
@@ -715,55 +694,58 @@ def get_initial_guess(
     logger,
     components=None,   # <-- keep this arg, we use it to infer cascade count
 ):
+    import numpy as np
+
     # Robust cascade count (works for axial + radial)
     number_of_cascades = _infer_num_cascades(geometry, components=components)
 
-    # Three types of initial guess:
+    # If we only got the "_empty_" marker, synthesize a heuristic seed.
+    if isinstance(initial_guess, dict) and initial_guess.get("_empty_", False):
+        # Reasonable, solver-friendly defaults
+        ig_default = {
+            "efficiency_tt": 0.90,
+            "efficiency_ke": 0.20,
+        }
+        # provide per-cascade Mach hints; 0.8 is a typical starting value
+        for i in range(number_of_cascades):
+            ig_default[f"ma_{i+1}"] = 0.80
+        initial_guess = ig_default
+
+    # --- supported key sets ---
     valid_keys_1 = ["efficiency_tt", "efficiency_ke"] + [
         f"ma_{i+1}" for i in range(number_of_cascades)
     ]
     valid_keys_2 = ["efficiency_tt", "efficiency_ke", "ma", "n_samples"]
-    valid_keys_3 = [
-        "w_out",
-        "s_out",
-        "beta_out",
-        "w_crit_throat",
-        "s_crit_throat",
-    ]
-    valid_keys_3 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_3
-    ]
-    valid_keys_4 = [
-        "w_out",
-        "s_out",
-        "beta_out",
-        "v_crit_in",
-        "w_crit_throat",
-        "s_crit_throat",
-    ]
-    valid_keys_4 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_4
-    ]
-    valid_keys_5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
-    valid_keys_5 = ["v_in"] + [
-        f"{key}_{i+1}" for i in range(number_of_cascades) for key in valid_keys_5
-    ]
-    check = []
-    check.append(set(valid_keys_1) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_2) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_3) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_4) == set(list(initial_guess.keys())))
-    check.append(set(valid_keys_5) == set(list(initial_guess.keys())))
 
-    if check[0]:
+    # direct (must include v_in)
+    base3 = ["w_out", "s_out", "beta_out", "w_crit_throat", "s_crit_throat"]
+    valid_keys_3 = ["v_in"] + [f"{k}_{i+1}" for i in range(number_of_cascades) for k in base3]
+
+    base4 = ["w_out", "s_out", "beta_out", "v_crit_in", "w_crit_throat", "s_crit_throat"]
+    valid_keys_4 = ["v_in"] + [f"{k}_{i+1}" for i in range(number_of_cascades) for k in base4]
+
+    base5 = ["w_out", "s_out", "beta_out", "w_crit_throat"]
+    valid_keys_5 = ["v_in"] + [f"{k}_{i+1}" for i in range(number_of_cascades) for k in base5]
+
+    # Normalize input dict’s keys set
+    in_keys = set(list(initial_guess.keys()))
+
+    # ------------------------------
+    # Decide path & build guesses
+    # ------------------------------
+    initial_guesses = None
+
+    # Heuristic with explicit per-cascade ma_i
+    if set(valid_keys_1) == in_keys:
         if isinstance(initial_guess["efficiency_tt"], (list, np.ndarray)):
             initial_guesses = []
             for i in range(len(initial_guess["efficiency_tt"])):
-                ma = np.array(
-                    [initial_guess.get(f"ma_{j+1}", 0.80) if not isinstance(initial_guess.get(f"ma_{j+1}", 0.80), (list, np.ndarray))
-                     else initial_guess[f"ma_{j+1}"][i]
-                     for j in range(number_of_cascades)]
-                )
+                ma = np.array([
+                    initial_guess[f"ma_{j+1}"][i]
+                    if isinstance(initial_guess.get(f"ma_{j+1}", 0.80), (list, np.ndarray))
+                    else initial_guess.get(f"ma_{j+1}", 0.80)
+                    for j in range(number_of_cascades)
+                ])
                 heuristic_guess = get_heuristic_guess(
                     initial_guess["efficiency_tt"][i],
                     initial_guess["efficiency_ke"][i],
@@ -775,9 +757,7 @@ def get_initial_guess(
                 )
                 initial_guesses.append(heuristic_guess)
         else:
-            ma = np.array(
-                [initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)]
-            )
+            ma = np.array([initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)])
             heuristic_guess = get_heuristic_guess(
                 initial_guess["efficiency_tt"],
                 initial_guess["efficiency_ke"],
@@ -789,8 +769,8 @@ def get_initial_guess(
             )
             initial_guesses = [heuristic_guess]
 
-    elif check[1]:
-        # bounds: [eff_tt_low,eff_tt_high], [eff_ke_low,eff_ke_high], [ma_low,ma_high] * n_casc
+    # Heuristic via LHS box: {'eff_tt' range, 'eff_ke' range, 'ma' range, n_samples}
+    elif set(valid_keys_2) == in_keys:
         bounds = [initial_guess["efficiency_tt"], initial_guess["efficiency_ke"]] + [
             initial_guess["ma"] for _ in range(number_of_cascades)
         ]
@@ -798,12 +778,12 @@ def get_initial_guess(
         heuristic_inputs = latin_hypercube_sampling(bounds, n_samples)
         norm_residuals = np.array([])
         failures = 0
-        for heuristic_input in heuristic_inputs:
+        for sample in heuristic_inputs:
             try:
-                ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
+                ma = [sample[i + 2] for i in range(number_of_cascades)]
                 heuristic_guess = get_heuristic_guess(
-                    heuristic_input[0],
-                    heuristic_input[1],
+                    sample[0],
+                    sample[1],
                     ma,
                     boundary_conditions,
                     geometry,
@@ -819,46 +799,73 @@ def get_initial_guess(
                 failures += 1
                 norm_residuals = np.append(norm_residuals, np.nan)
 
-        logger.info("Generating heuristic inital guesses from latin hypercube sampling")
-        logger.info(f"Number of failures: {failures} out of {n_samples} samples")
-        logger.info(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
-        heuristic_input = heuristic_inputs[np.nanargmin(norm_residuals)]
-        ma = [heuristic_input[i + 2] for i in range(number_of_cascades)]
-        initial_guess = get_heuristic_guess(
-            heuristic_input[0],
-            heuristic_input[1],
+        if logger:
+            logger.info("Generating heuristic initial guesses from latin hypercube sampling")
+            logger.info(f"Number of failures: {failures} out of {n_samples} samples")
+            if np.isfinite(norm_residuals).any():
+                logger.info(f"Least norm of residuals: {np.nanmin(norm_residuals)}")
+
+        best = heuristic_inputs[np.nanargmin(norm_residuals)]
+        ma = [best[i + 2] for i in range(number_of_cascades)]
+        initial_guess_best = get_heuristic_guess(
+            best[0],
+            best[1],
             ma,
             boundary_conditions,
             geometry,
             fluid,
             deviation_model,
         )
+        initial_guesses = [initial_guess_best]
+
+    # Direct guesses (must include v_in)
+    elif set(valid_keys_3) == in_keys:
+        initial_guesses = [initial_guess]
+    elif set(valid_keys_4) == in_keys:
+        initial_guesses = [initial_guess]
+    elif set(valid_keys_5) == in_keys:
         initial_guesses = [initial_guess]
 
-    elif check[2]:
-        initial_guesses = [initial_guess]
-
-    elif check[3]:
-        initial_guesses = [initial_guess]
-
-    elif check[4]:
-        initial_guesses = [initial_guess]
-
-    else:
+    # If none matched, fail fast with a clear message
+    if initial_guesses is None:
         raise ValueError(
-            "Initial guess must be a dictionary with one of the supported key sets. "
-            "See documentation for details."
+            "Initial guess must match one of the supported key sets.\n"
+            "EITHER:\n"
+            "  (Heuristic) {'efficiency_tt','efficiency_ke','ma_1..ma_N'}\n"
+            "  (Heuristic LHS) {'efficiency_tt','efficiency_ke','ma','n_samples'}\n"
+            "OR (Direct; MUST include 'v_in')\n"
+            "  {'v_in', 'w_out_i','s_out_i','beta_out_i','w_crit_throat_i','s_crit_throat_i'}\n"
+            "  {'v_in', 'w_out_i','s_out_i','beta_out_i','w_crit_throat_i'}\n"
+            "  {'v_in', 'w_out_i','s_out_i','beta_out_i','v_crit_in_i','w_crit_throat_i','s_crit_throat_i'}\n"
+            f"Got keys: {sorted(in_keys)}"
         )
 
-    # Filter keys based on choking criterion
-    for ig, i in zip(initial_guesses, range(len(initial_guesses))):
+    # Filter keys based on global choking criterion (keep v_in intact)
+    pruned_list = []
+    for i, ig in enumerate(initial_guesses):
+        pruned = dict(ig)
         if choking_criterion == "critical_mach_number":
-            ig = {key: val for key, val in ig.items() if not key.startswith("v_crit_in")}
+            pruned = {k: v for k, v in pruned.items() if not k.startswith("v_crit_in")}
         elif choking_criterion == "critical_mass_flow_rate":
-            ig = {key: val for key, val in ig.items() if not key.startswith("beta_crit_throat")}
+            pruned = {k: v for k, v in pruned.items() if not k.startswith("beta_crit_throat")}
         elif choking_criterion == "critical_isentropic_throat":
-            ig = {key: val for key, val in ig.items() if not (key.startswith("v_crit_in") or key.startswith("s_crit_throat"))}
-        initial_guesses[i] = ig
+            pruned = {k: v for k, v in pruned.items()
+                      if not (k.startswith("v_crit_in") or k.startswith("s_crit_throat"))}
+        pruned_list.append(pruned)
+
+    initial_guesses = pruned_list
+
+    # ---- HARD GUARD: every guess must include v_in
+    missing_vin = [i for i, ig in enumerate(initial_guesses)
+                   if (not isinstance(ig, dict)) or ("v_in" not in ig)]
+    if missing_vin:
+        raise ValueError(
+            "Initial guess missing 'v_in' for the following guess indices: "
+            f"{missing_vin}. "
+            "When supplying direct per-cascade variables, include 'v_in'. "
+            "If you prefer not to, use the heuristic form "
+            "['efficiency_tt','efficiency_ke','ma_1..ma_N'] which computes 'v_in' automatically."
+        )
 
     return initial_guesses
 
