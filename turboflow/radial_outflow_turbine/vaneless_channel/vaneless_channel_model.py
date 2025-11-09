@@ -1171,7 +1171,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
 
     # Compute skin friction according to Aungier loss model
     cf_wall, cf_diff, cf_curv, E = model_options.friction.get_cf_components(
-        Re, b, A, dAds, params["alpha_in"], params["b_in"], m_total, curvature, alpha
+        m_coord, m_total, b, params["b_in"], A, dAds, curvature, alpha, params["alpha_in"], Re
     )
 
     # Original Augier formulation with an asymmetrical loss distribution
@@ -1179,8 +1179,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
     tau_t = 0.5 * d * v**2 * (cf_wall * jnp.sin(jnp.deg2rad(alpha)))
 
     # # Alternative formulation with a symmetrical loss distribution
-    # tau_m = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.cos(alpha)
-    # tau_t = 0.5 * d * v**2 * (cf_W  + cf_D + cf_C) * jnp.sin(alpha)
+    # tau_m = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.cos(alpha)
+    # tau_t = 0.5 * d * v**2 * (cf_wall  + cf_diff + cf_curv) * jnp.sin(alpha)
 
     # Compute heat transfer at the walls
     q_w, htc = model_options.heat_transfer.compute_heat_transfer(
