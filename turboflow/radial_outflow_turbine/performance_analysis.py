@@ -23,6 +23,12 @@ import jaxprop as jxp
 import jaxprop.perfect_gas as pg
 
 import turboflow as tf
+# NEW: bring in the triangle helpers from the BladeRow module
+from .blade_row import (
+    evaluate_velocity_triangle_out,
+    evaluate_velocity_triangle_in,
+)
+
 
 jax.config.update("jax_enable_x64", True)  # 64-bit for scientific computing
 
@@ -856,51 +862,6 @@ def get_initial_guess(
 
     return initial_guesses
 
-# def get_initial_guess(
-#     initial_guess,
-#     problem,
-#     boundary_conditions,
-#     geometry_arrayview,   # dict of arrays (legacy helper needs this)
-#     fluid,
-#     choking_criterion,
-#     deviation_model,
-#     logger,
-#     components=None,      # full components list (unused here, but handy if needed)
-# ):
-#     """
-#     Returns a list of initial-guess dicts ready for scaling.
-#     Priority:
-#       1) If caller passed a dict of decision variables (w_out_i, s_out_i, beta_out_i, ...): use directly.
-#       2) If caller passed component-wise *hints* (eff_tt/eff_ke and ma_i): run heuristic once.
-#       3) Fall back to legacy patterns (LHS etc.).
-#     """
-#     number_of_cascades = geometry_arrayview["number_of_cascades"]
-
-#     # Case 1: already a dict of decision variables with keys like v_in, w_out_1, s_out_1, ...
-#     has_direct_keys = any(k.startswith(("v_", "w_", "s_", "b_")) or k == "v_in" for k in initial_guess.keys())
-#     if has_direct_keys and "_empty_" not in initial_guess:
-#         return [initial_guess]
-
-#     # Case 2: component-wise hints (eff_tt, eff_ke, ma_i)
-#     hint_eff_tt = initial_guess.get("efficiency_tt", 0.88)
-#     hint_eff_ke = initial_guess.get("efficiency_ke", 0.10)
-#     ma = np.array([
-#         initial_guess.get(f"ma_{j+1}", 0.80) for j in range(number_of_cascades)
-#     ], dtype=float)
-
-#     # Use heuristic builder (works on dict-of-arrays geometry)
-#     heuristic_guess = get_heuristic_guess(
-#         hint_eff_tt,
-#         hint_eff_ke,
-#         ma,
-#         boundary_conditions,
-#         geometry_arrayview,
-#         fluid,
-#         deviation_model,
-#     )
-#     return [heuristic_guess]
-
-
 # ===================================================================
 # Misc. utilities (OPs, printing, heuristic etc.)
 # ===================================================================
@@ -1248,7 +1209,7 @@ def get_heuristic_guess(
         if i != (num_casc - 1):
             A_next = geometry["A_in"][i + 1]
             radius_mean_next = geometry["radius_mean_in"][i + 1]
-            velocity_triangle_out = flow.evaluate_velocity_triangle_out(
+            velocity_triangle_out = evaluate_velocity_triangle_out(
                 blade_speed_out, w_out, beta_out
             )
             v_m_in = velocity_triangle_out["v_m"] * A_out / A_next
@@ -1256,7 +1217,7 @@ def get_heuristic_guess(
             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
             alpha_in = math.arctand(v_t_in / v_m_in)
             blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
-            velocity_triangle_in = flow.evaluate_velocity_triangle_in(
+            velocity_triangle_in = evaluate_velocity_triangle_in(
                 blade_speed_in, v_in, alpha_in
             )
             h0_in = h_out + 0.5 * velocity_triangle_out["v"] ** 2
@@ -1274,138 +1235,6 @@ def get_heuristic_guess(
     )
 
     return initial_guess
-
-
-# def get_heuristic_guess(
-#     efficiency_tt,
-#     efficiency_ke,
-#     mach,
-#     boundary_conditions,
-#     geometry,
-#     fluid,
-#     deviation_model,
-# ):
-#     p0_first = boundary_conditions["p0_in"]
-#     T0_first = boundary_conditions["T0_in"]
-#     p_final  = boundary_conditions["p_out"]
-#     angular_speed = boundary_conditions["omega"]
-#     alpha_first   = boundary_conditions["alpha_in"]
-#     number_of_cascades = geometry["number_of_cascades"]
-
-#     # Inlet stagnation
-#     stag_first = fluid.get_state(jxp.PT_INPUTS, p0_first, T0_first)
-#     h0_first, s_first, d0_first = stag_first["h"], stag_first["s"], stag_first["d"]
-
-#     # Final isentropic
-#     static_is = fluid.get_state(jxp.PSmass_INPUTS, p_final, s_first)
-#     h_final_s, a_final_s = static_is["h"], static_is["speed_sound"]
-
-#     # Spouting velocity
-#     v0 = np.sqrt(2 * (h0_first - h_final_s))
-
-#     # Exit enthalpy with guessed efficiency
-#     efficiency_ts = efficiency_tt / (1 + efficiency_tt * efficiency_ke)
-#     h0_final = h0_first - efficiency_ts * (h0_first - h_final_s)
-#     v_final  = np.sqrt(2 * (h0_first - h_final_s - (h0_first - h0_final) / efficiency_tt))
-#     h_final  = h0_final - 0.5 * v_final**2
-
-#     # Exit static with guessed efficiency
-#     static_properties_exit = fluid.get_state(jxp.HmassP_INPUTS, h_final, p_final)
-#     s_final = static_properties_exit["s"]
-
-#     # Linear s distribution across cascades
-#     entropy_distribution = np.linspace(s_first, s_final, number_of_cascades + 1)[1:]
-
-#     initial_guess = {}
-
-#     # init
-#     s_in, rothalpy, alpha_in, d_in = s_first, h0_first, alpha_first, d0_first
-
-#     for i in range(number_of_cascades):
-#         geometry_cascade = {
-#             key: values[i]
-#             for key, values in geometry.items()
-#             if key not in ["number_of_cascades", "number_of_stages"]
-#         }
-
-#         radius_mean_out = geometry_cascade["radius_mean_out"]
-#         A_throat = geometry_cascade["A_throat"]
-#         A_out    = geometry_cascade["A_out"]
-#         A_in     = geometry_cascade["A_in"]
-
-#         # s & Ma for this cascade
-#         s_out  = entropy_distribution[i]
-#         ma_out = mach[i]
-
-#         blade_speed_out = angular_speed * (i % 2) * radius_mean_out
-#         h0_rel_out = rothalpy + 0.5 * blade_speed_out**2
-#         p_out = get_unknown(1.0, p0_first, h0_rel_out, ma_out, fluid, "PSmass_INPUTS", s_out)
-
-#         static_out = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_out)
-#         h_out, a_out, d_out, gamma_out = static_out["h"], static_out["speed_sound"], static_out["d"], static_out["gamma"]
-
-#         w_out = np.sqrt(2 * (h0_rel_out - h_out))
-
-#         # Critical Mach (placeholder 1.0)
-#         static_props_is = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
-#         h_out_s = static_props_is["h"]
-#         eta = (h0_rel_out - h_out) / (h0_rel_out - h_out_s)
-#         ma_crit = 1.0
-
-#         # Exit flow angle (subsonic)
-#         beta_out = (-1) ** i * dm.get_subsonic_deviation(  # access via flow module if exported, else import dm at top
-#             ma_out, ma_crit, {"A_throat": A_throat, "A_out": A_out}, deviation_model
-#         )
-
-#         # Mass flow
-#         mass_flow = d_out * w_out * math.cosd(beta_out) * A_out
-
-#         # Critical at throat (for guess)
-#         w_throat_crit = a_out * ma_crit
-#         h_throat_crit = h0_rel_out - 0.5 * w_throat_crit**2
-#         s_throat_crit = s_out
-#         state_throat  = fluid.get_state(jxp.HmassSmass_INPUTS, h_throat_crit, s_throat_crit)
-#         rho_throat_crit = state_throat["d"]
-#         m_crit = w_throat_crit * rho_throat_crit * A_throat
-#         w_m_in_crit = m_crit / d_in / A_in
-#         v_in_crit = w_m_in_crit / math.cosd(alpha_in)
-
-#         # Store
-#         idx = f"_{i+1}"
-#         initial_guess.update(
-#             {
-#                 "w_out" + idx: w_out,
-#                 "s_out" + idx: s_out,
-#                 "beta_out" + idx: (-1) ** i * math.arccosd(A_throat / A_out),
-#                 "v_crit_in" + idx: v_in_crit,
-#                 "w_crit_throat" + idx: w_throat_crit,
-#                 "s_crit_throat" + idx: s_throat_crit,
-#             }
-#         )
-
-#         # Propagate to next inlet (simple interspace)
-#         if i != (number_of_cascades - 1):
-#             A_next = geometry["A_in"][i + 1]
-#             radius_mean_next = geometry["radius_mean_in"][i + 1]
-#             vt = w_out * math.sind(beta_out) + blade_speed_out
-#             vm = w_out * math.cosd(beta_out)
-#             v_m_in = vm * A_out / A_next
-#             v_t_in = vt * radius_mean_out / radius_mean_next
-#             v_in = np.sqrt(v_m_in**2 + v_t_in**2)
-#             alpha_in = math.arctand(v_t_in / v_m_in)
-#             blade_speed_in = angular_speed * ((i + 1) % 2) * radius_mean_next
-#             w_t = v_t_in - blade_speed_in
-#             w_m = v_m_in
-#             w = np.sqrt(w_t**2 + w_m**2)
-#             h0_in = h_out + 0.5 * (vt**2 + vm**2)
-#             h_in = h0_in - 0.5 * v_in**2
-#             rothalpy = h_in + 0.5 * w**2 - 0.5 * blade_speed_in**2
-#             s_in = s_out
-#             d_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)["d"]
-
-#     # Inlet velocity from mass flow
-#     initial_guess["v_in"] = mass_flow / (d0_first * geometry["A_in"][0] * math.cosd(alpha_first))
-#     return initial_guess
 
 def latin_hypercube_sampling(bounds, n_samples):
     n_variables = len(bounds)
