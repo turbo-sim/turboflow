@@ -504,6 +504,15 @@ def compute_single_operation_point(
 # ===================================================================
 # Problem definition (component-wise)
 # ===================================================================
+
+
+# TODO Mapping between component name and object (Roberto 11.11.2025)
+# component_map = {
+#     "axial_cascade": BladeRow,
+#     "vaneless_channel": VanelessChannel,
+# }
+
+
 class AxialTurbineProblem(psv.NonlinearSystemProblem):
     """
     Nonlinear system problem for a component-wise axial turbine analysis.
@@ -524,6 +533,23 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
         # Build per-cascade geometry (list[dict]) using your existing geometry model
         components_cascades = [self.components[i] for i in self.cascade_comp_indices]
         self.geometry_components_cascades = geom.calculate_full_geometry(components_cascades)
+
+        # There should not be a single global function to generate the geometyr of the entire turbine, each component should have its own function to create geometry
+        
+        # TODO: before, we use to have a calculate full_geometry_function() because all components where the same
+        # Now, the full geometry of each component should be generated from the geometry dictionary specified in the YAML file
+
+
+        # TODO Initialize the objects only once (Roberto 11.11.2025)
+        # comp_objects = []
+        # for component in components:
+            # comp_object.append(component_map[component["component_type"]].from_dict(component))
+
+        # For performance analysis we can do component.create_geometry() only once because the geometry does not change
+        # For design optimization, the geometry has to be updated at every function evaluation
+        # For now, it might be sufficient to generate the geometry only once since we will do only performance analsysis in the TurboExpo paper
+        # Geometry generation can be part of the "from_dict()" method
+
 
         # Dict-of-arrays arrayview for legacy helpers (cascades only)
         self.geometry_components_arrayview = self._to_array_geometry(self.geometry_components_cascades)
@@ -546,6 +572,23 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
             self.vars_scaled = dict(zip(self.keys, x))
             self.vars_real = self.scale_values(self.vars_scaled, to_normalized=False)
 
+            # TODO Vars scaled should be a dictionary of dictionaries such that
+            # First indentation level is the component name
+            # Second indentation level is the variable key and value
+
+            # Consider this!
+            # One possibility that could be simple,r is to have a flat dictionary of key and values, where the key is "component_name_variable_name"
+
+            # TODO: We have to update the component values using the eqx.tree_at() method
+            # Some values we have to update from the vector "x" of independent variables, but some variables we have to update from the exit of the previous component
+            # component = eqx.tree_at(
+            #     lambda d: d.model_options.friction.Cf,  # path to field
+            #     component,
+            #     jnp.array(Cf),
+            # )
+
+            # TODO Very very important to use tree_at() to update the component, and not create a new one each time residual is called, otherwise the code will be very slow.
+
             self.results = flow.evaluate_axial_turbine_componentwise(
                 self.vars_scaled,
                 self.boundary_conditions,
@@ -555,6 +598,11 @@ class AxialTurbineProblem(psv.NonlinearSystemProblem):
                 self.components,
                 self.model_options,
             )
+
+            # TODO Maybe we do not really need an independent function for evaluate_turbomachine(), perhaps it is sufficient to have a for loop of the ocmponents where we call evaluate() and append output to the residual dicitonary
+            # for comp_i, comp in enumerate(components):
+            #     out_dict = comp_i.evaluate()
+            #     residuals.append(out_dict["residuals"])
 
 
             return jnp.array(list(self.results["residuals"].values()))
