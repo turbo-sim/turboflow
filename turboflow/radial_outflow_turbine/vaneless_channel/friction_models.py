@@ -78,6 +78,7 @@ class AungierFriction(FrictionModel):
         return cf_wall, cf_diff, cf_curv, E
 
 
+
 # ------------------------------------------------------------------
 # Factory
 # ------------------------------------------------------------------
@@ -190,6 +191,7 @@ def get_cf_wall(Re, roughness, diameter, x, L_total):
     x_over_D = jnp.maximum(x / diameter, 0.001)  # Avoid singularity at x=0
     Cf_corr_factor = 1.0 + 0.25 * jnp.sqrt(1.0 / x_over_D)
     Cf_turbulent = Cf_corr_factor*Cf_turbulent
+
 
     # Smooth blending using tanh (transition centered at Re=2300)
     transition_width = 500.0  # Controls smoothness (smaller = sharper transition)
