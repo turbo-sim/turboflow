@@ -297,6 +297,93 @@ def compute_blade_coordinates_radial(
     y = jnp.concatenate([y_lower, y_tr[::-1], y_upper[::-1]])
     return x, y, stagger, chord
 
+def compute_blade_coordinates_cartesian(
+    camberline_type,
+    x1,
+    y1,
+    beta1,
+    beta2,
+    chord_ax,
+    loc_max,
+    thickness_max,
+    thickness_trailing,
+    wedge_trailing,
+    radius_leading,
+    N_points,
+):
+    
+
+    print(
+            camberline_type,
+    x1,
+    y1,
+    beta1,
+    beta2,
+    chord_ax,
+    loc_max,
+    thickness_max,
+    thickness_trailing,
+    wedge_trailing,
+    radius_leading,
+    N_points,
+    
+    )
+    # Camberline
+    u = jnp.linspace(0.0, 1.0, N_points)
+    x_c, y_c, dydx, stagger, chord = compute_camberline_cartesian(
+        camberline_type, x1, y1, beta1, beta2, chord_ax, u
+    )
+
+    # Normalize along stagger
+    x_norm = (x_c - x1) / chord
+    y_norm = (y_c - y1) / chord
+    x_rot, _ = rotate_counterclockwise_2D(x_norm, y_norm, -stagger)
+    x_norm_rot = jnp.abs(x_rot)
+
+    # Thickness
+    half_t = compute_thickness_distribution_NACA_modified(
+        x_norm_rot,
+        chord,
+        loc_max,
+        thickness_max,
+        thickness_trailing,
+        wedge_trailing,
+        radius_leading,
+    )
+
+    # Impose thickness along ±normal
+    theta = jnp.arctan(dydx)
+    x_lower = x_c + half_t * jnp.sin(theta)
+    y_lower = y_c - half_t * jnp.cos(theta)
+    x_upper = x_c - half_t * jnp.sin(theta)
+    y_upper = y_c + half_t * jnp.cos(theta)
+
+    # Camberline endpoint
+    x2 = x1 + chord_ax
+    y2 = y1 + chord_ax * jnp.tan(stagger)
+
+    # Trailing-edge radius
+    radius_trailing = 0.5 * thickness_trailing / jnp.cos(wedge_trailing / 2.0)
+
+    # Center of curvature
+    x_c_te = x2 - radius_trailing * jnp.sin(wedge_trailing / 2.0) * jnp.cos(beta2)
+    y_c_te = y2 - radius_trailing * jnp.sin(wedge_trailing / 2.0) * jnp.sin(beta2)
+
+    # Arc sweep at TE
+    phi1 = (jnp.pi / 2.0 - wedge_trailing / 2.0) + beta2
+    phi2 = -(jnp.pi / 2.0 - wedge_trailing / 2.0) + beta2
+    seg_tr = N_points // 2
+    angle = jnp.linspace(phi1, phi2, seg_tr)
+
+    # Trailing edge arc
+    x_tr = x_c_te + radius_trailing * jnp.cos(angle)
+    y_tr = y_c_te + radius_trailing * jnp.sin(angle)
+
+    # Assemble blade coordinates
+    x = jnp.concatenate([x_lower, x_tr[::-1], x_upper[::-1]])
+    y = jnp.concatenate([y_lower, y_tr[::-1], y_upper[::-1]])
+
+    return x, y, stagger, chord
 
 # =============================
 # Linear (Cartesian) camberlines + conformal map

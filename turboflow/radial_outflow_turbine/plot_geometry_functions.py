@@ -213,53 +213,121 @@ def plot_meridional_tangential(
     """
 
     # Slightly larger, higher-DPI figure for clarity
-    fig, ax = plt.subplots(figsize=(8.5, 8.5), dpi=140)
+    fig, ax = plt.subplots(figsize=(6, 5), dpi=140)
     ax.set_aspect("equal", "box")
     ax.set_xlabel("Meridional (x or r·θ)")
     ax.set_ylabel("Tangential")
     # ---------------- AXIAL INPUT (JAX-only) ----------------
+    x1_global = 0.0
     if _is_axial_geom(full_geom):
-        # JAX arrays
-        chord_ax = jnp.asarray(full_geom.get("meridional_chord", full_geom["chord"]), dtype=float)
-        pitch    = jnp.asarray(full_geom["pitch"], dtype=float)
-        chord    = jnp.asarray(full_geom["chord"], dtype=float)
-        stagger  = jnp.deg2rad(jnp.asarray(full_geom["stagger_angle"], dtype=float))
 
+        # number of blade rows
         n = len(full_geom["cascade_type"])
+
+        # global geometry
+        y1_global = 0.0
+
+        # camberline type (global)
+        camberline_type = "linear_angle_change"
+
+        # thickness parameters (global)
+        loc_max = full_geom.get("maximum_thickness_location_fraction", 0.25)
+        t_max_array   = full_geom["maximum_thickness"]
+        t_te_array    = full_geom["trailing_edge_thickness"]
+        wedge   = full_geom.get("trailing_edge_wedge", 5.0)
+        r_le_array    = full_geom["leading_edge_diameter"] * 0.5
+
+        # Leading / trailing metal angles arrays (global but row-dependent sign)
+        cascade_types = full_geom["cascade_type"]  # list of strings
+        sgn_array = jnp.array([
+            +1.0 if str(ct).lower() == "stator" else -1.0
+            for ct in cascade_types
+        ])
+
+        sgn_array = 1.0
+        m1_array = sgn_array * (jnp.asarray(full_geom["leading_edge_angle"], dtype=float))
+        m2_array = sgn_array * (jnp.asarray(full_geom["gauging_angle"], dtype=float))
+
+        # chord_ax may be absent → fallback to chord
+        chord_ax_array = jnp.asarray(
+            full_geom.get("meridional_chord", full_geom["chord"]),
+            dtype=float,
+        )
+
+        pitch_array   = jnp.asarray(full_geom["pitch"], dtype=float)
+        chord_array   = jnp.asarray(full_geom["chord"], dtype=float)
+        stagger_array = jnp.deg2rad(jnp.asarray(full_geom["stagger_angle"], dtype=float))
+
+        # gaps and axial placement
         gap_frac = 0.15
-        gaps = gap_frac * chord_ax
+        gaps = gap_frac * chord_ax_array
 
-        # IMPORTANT: use jnp.array([...]) not Python lists in concatenate
-        x_starts  = jnp.cumsum(jnp.concatenate([jnp.array([0.0], dtype=float), (chord_ax + gaps)[:-1]]))
-        x_centers = x_starts + 0.5 * chord_ax
+        x_starts  = jnp.cumsum(
+            jnp.concatenate([jnp.array([0.0], dtype=float), (chord_ax_array + gaps)[:-1]])
+        )
+        x_centers = x_starts + 0.5 * chord_ax_array
 
-        # Consistent color per row
-        cmap = plt.get_cmap("tab10")
-        def row_color(i): return cmap(i % 10)
+        # plot colors
+        colors = ["darkorange", "steelblue"]
+        def row_color(i):
+            return colors[i % len(colors)]
 
+        # =========================================================
+        # Loop over blade rows
+        # =========================================================
         for i in range(n):
-            x_mid = float(x_centers[i])     # scalar for bounds
-            phi   = float(stagger[i])
-            c     = float(chord[i])
-            P     = float(pitch[i])
+
+            # -----------------------------------------
+            # Read per-row scalar parameters uniformly
+            # -----------------------------------------
+            c_ax = float(chord_ax_array[i])       # axial chord
+            phi  = float(stagger_array[i])        # stagger
+            P    = float(pitch_array[i])          # pitch
+            xmid = float(x_centers[i])            # axial offset
+
+            beta1 = jnp.deg2rad(m1_array[i])
+            beta2 = jnp.deg2rad(m2_array[i])
+            r_le = float(r_le_array[i])
+            t_te = float(t_te_array[i])
+            t_max = float(t_max_array[i])
+
             color = row_color(i)
 
-            # Representative blade line in B2B: x=axial, y=tangential
-            x_b = jnp.linspace(x_mid - 0.5 * c * jnp.cos(phi),
-                            x_mid + 0.5 * c * jnp.cos(phi), 250)
-            y_b = jnp.linspace(-0.5 * c * jnp.sin(phi),
-                                0.5 * c * jnp.sin(phi), 250)
+            # -----------------------------------------
+            # Compute blade geometry for this row
+            # -----------------------------------------
+            x_b, y_b, _, _ = bp.compute_blade_coordinates_cartesian(
+                camberline_type,
+                x1=xmid - 0.5 * c_ax,
+                y1=y1_global,
+                beta1=beta1,
+                beta2=beta2,
+                chord_ax=c_ax,
+                loc_max=loc_max,
+                thickness_max=t_max,
+                thickness_trailing=t_te,
+                wedge_trailing=jnp.deg2rad(wedge),
+                radius_leading=r_le,
+                N_points=200,
+            )
 
-            for k in (-1, 0, +1):
-                ax.plot(x_b, y_b + k * P, lw=1.2, color=color,
-                        label=(f"Row{i+1}" if k == 0 else None))
+            # -----------------------------------------
+            # Plot periodic copies
+            # -----------------------------------------
+            for k in (-1, 0, 1, 2, 3, 4, 5):
+                label = f"Row {i+1}" if k == 0 else None
+                ax.plot(x_b, y_b + k * P, color=color, lw=1.2, label=label)
 
-        ax.set_title(title)
+            x1_global += 1.1*c_ax
+
+        # finalize
+        ax.set_ylim([0, 3.5*P])
         ax.legend(loc="best", fontsize=8)
-        ax.margins(x=0.03, y=0.03)
-        plt.tight_layout()
-        plt.show()
-        return
+        ax.set_aspect("equal", adjustable="box")
+        plt.tight_layout(pad=1)
+
+        return fig, ax
+
 
     # ---------------- RADIAL INPUT (dict of named rows) ----------------
     if not isinstance(full_geom, dict):
@@ -271,10 +339,13 @@ def plot_meridional_tangential(
         raise KeyError(f"Rows not found: {missing}. Available: {list(full_geom.keys())}")
 
     # Color: consistent per row (use tab10 cycle deterministically)
-    cmap = plt.get_cmap("tab10")
-    def row_color(i): return cmap(i % 10)
+    # cmap = plt.get_cmap("tab10")
+    # def row_color(i): return cmap(i % 10)
+    colors = ["darkorange", "steelblue"]
+    def row_color(i): return colors[i % 2]
 
-    xy_max = 0.5
+
+    xy_max = 0.0
     for idx, rname in enumerate(rows):
         geom = full_geom[rname]
         if not _is_radial_geom(geom):
@@ -287,6 +358,14 @@ def plot_meridional_tangential(
         r1 = float(geom["r_in"]); r2 = float(geom["r_out"])
         N_blades = int(geom["N_blades"])
 
+        theta = jnp.linspace(0.0, 2.0*jnp.pi, 200)
+        x_circ = r1 * jnp.cos(theta)
+        y_circ = r1 * jnp.sin(theta)
+        ax.plot(x_circ, y_circ, "k-", linewidth=0.5)
+        x_circ = r2 * jnp.cos(theta)
+        y_circ = r2 * jnp.sin(theta)
+        ax.plot(x_circ, y_circ, "k-", linewidth=0.5)
+
         # YAML angles meridional → tangential; then sign per cascade_type
         sgn = +1.0 if str(geom.get("cascade_type","stator")).lower() == "stator" else -1.0
         m1 = sgn * (90.0 - float(geom["metal_angle_in"]))
@@ -298,11 +377,11 @@ def plot_meridional_tangential(
         t_max   = float(geom["maximum_thickness"])
         t_te    = float(geom["trailing_edge_thickness"])
         wedge   = _deg2rad(geom["trailing_edge_wedge"])
-        r_le    = float(geom["leading_edge_radius"])
+        r_le_array    = float(geom["leading_edge_radius"])
 
         x_b, y_b, *_ = bp.compute_blade_coordinates_radial(
             camberline_type, r1, r2, _deg2rad(m1), _deg2rad(m2), _deg2rad(theta0),
-            loc_max, t_max, t_te, wedge, r_le, N_points
+            loc_max, t_max, t_te, wedge, r_le_array, N_points
         )
 
         d_theta = 2.0 * jnp.pi / float(N_blades)
@@ -310,20 +389,22 @@ def plot_meridional_tangential(
             th = d_theta * i
             Xb, Yb = bp.rotate_counterclockwise_2D(x_b, y_b, th)
             # Use SAME color for all blades of this row
+            # ax.fill(Xb, Yb, color=color, alpha=0.15)
             ax.plot(Xb, Yb, lw=1.1, color=color, label=rname if i == 0 else None)
 
         # Keep reasonable bounds
-        xy_max = max(xy_max, float(max(abs(r1), abs(r2)) * 1.05))
+        xy_max = max(xy_max, float(max(abs(r1), abs(r2)) * 1.1))
 
-    ax.set_title(title)
-    # ax.set_xlim(-xy_max, +xy_max)
+    # ax.set_title(title)
+    ax.set_xlim(0.0, +xy_max)
     ax.set_ylim(0.0, +xy_max)
-    ax.legend(loc="best", fontsize=8)
+    # ax.legend(loc="best", fontsize=8)
 
     # Make it fill the available canvas nicely
-    ax.margins(x=0.02, y=0.02)
-    plt.tight_layout()
-    plt.show()
+    # ax.margins(x=0.05*xy_max, y=0.05*xy_max)
+    plt.tight_layout(pad=1)
+    # plt.show()
+    return fig, ax
 
 # ===============================================================
 # New plot: Meridional 
