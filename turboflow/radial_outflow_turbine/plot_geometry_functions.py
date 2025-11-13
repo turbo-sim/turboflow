@@ -629,8 +629,10 @@ def plot_meridional_hybrid(
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(11.0, 6.0), dpi=140)
     ax.set_aspect('equal')
-    cmap = plt.get_cmap("tab10")
-    def row_color(i): return cmap(i % 10)
+    # cmap = plt.get_cmap("tab10")
+    # def row_color(i): return cmap(i % 10)
+    colors = ["darkorange", "steelblue"]
+    def row_color(i): return colors[i % 2]
 
     # Axial block starts AFTER the last radial stage (+ extra spacing)
     radial_width   = 2.0 * half_span_radial if half_span_radial > 0 else 1.0
@@ -786,11 +788,12 @@ def plot_meridional_hybrid(
     radial_width = 2.0 * half_span_radial if half_span_radial > 0 else 1.0
     left_edge  = z_center - half_span_radial
     right_edge = max(s_axial, z_center + half_span_radial)
-    ax.set_xlim(left_edge - 0.8 * radial_width, right_edge + 0.05 * radial_width)
+    ax.set_xlim(left_edge - 2.25 * radial_width, right_edge + 2.25 * radial_width)
     ax.set_ylim(0.0, None)  # auto top
 
     ax.set_title(title)
     ax.set_xlabel("Station coordinate (z for radial, x for axial) [m]")
     ax.set_ylabel("Radius r [m]")
-    plt.tight_layout()
-    plt.show()
+    plt.tight_layout(pad=1)
+    # plt.show()
+    return fig, ax
