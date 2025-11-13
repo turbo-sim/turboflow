@@ -113,6 +113,16 @@ ALLOW_STR_KEYS = {
     "camberline_type",   # e.g. circular_arc, polynomial, modified_wiebe, etc
 }
 
+# at top-level with the other key sets
+VANELESS_REQUIRED = {
+    "r_in", "r_out", "b_in", "b_out",
+    # optional but commonly present:
+    # "z_in", "z_out", "phi_in", "phi_out", "td_in", "td_out"
+}
+VANELESS_OPTIONAL = {"z_in","z_out","phi_in","phi_out","td_in","td_out"}
+VANELESS_ALLOWED = VANELESS_REQUIRED | VANELESS_OPTIONAL
+
+
 def _extract_components(obj):
     """
     Accept either:
@@ -140,38 +150,46 @@ def _validate_single_component(c, index=0):
         raise ValueError(f"Component '{name}' missing 'component_type'.")
 
     geom = c["geometry"]
+
+    # --- vaneless branch ---
+    if ctype == "vaneless_channel":
+        utils.validate_keys(geom, VANELESS_REQUIRED, VANELESS_ALLOWED)
+        # numeric sanity
+        for k, v in geom.items():
+            if k in {"phi_in", "phi_out"}:
+                # angles can be negative; just ensure numeric scalar
+                if not isinstance(v, (int, float)) and not jnp.isscalar(v):
+                    raise TypeError(f"Component '{name}': '{k}' must be numeric.")
+                continue
+            if not isinstance(v, (int, float)) and not jnp.isscalar(v):
+                raise TypeError(f"Component '{name}': '{k}' must be numeric.")
+            if float(v) < 0.0 and k not in {"z_in", "z_out"}:
+                raise ValueError(f"Component '{name}': '{k}' must be non-negative. Got {v}.")
+        return
+
+    # --- cascade branch (stator/rotor) ---
     utils.validate_keys(geom, REQUIRED_GEOM_KEYS, ALLOWED_GEOM_KEYS)
 
-    # cascade_type
     ct = str(geom["cascade_type"]).lower()
     if ct not in VALID_TYPES:
         raise ValueError(
             f"Component '{name}' has invalid cascade_type='{ct}'. Only {sorted(VALID_TYPES)} allowed."
         )
 
-    # Numeric checks (angles allowed any sign)
     for k, v in geom.items():
-        # some keys we allow string type:
         if k in ALLOW_STR_KEYS:
             if not isinstance(v, str):
                 raise TypeError(f"Component '{name}': '{k}' must be a string (got {type(v)}: {v!r})")
             continue
-
-        # cascade_type we already validated earlier via VALID_TYPES check
         if k == "cascade_type":
             continue
-
-        # everything else MUST be numeric scalar
         if not isinstance(v, (int, float)) and not jnp.isscalar(v):
             raise TypeError(
                 f"Component '{name}': parameter '{k}' must be a numeric scalar (int/float). Got {type(v)}: {v!r}"
             )
-
-        # angles can be negative (only the ones you defined above in ANGLE_KEYS)
         if (k not in ANGLE_KEYS) and (float(v) < 0.0):
-            raise ValueError(
-                f"Component '{name}': parameter '{k}' must be non-negative. Got {v}."
-            )
+            raise ValueError(f"Component '{name}': parameter '{k}' must be non-negative. Got {v}.")
+
 
 def validate_turbine_geometry(yaml_or_components, display=False):
     """
@@ -332,12 +350,16 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     height_mean = 0.5 * (h_in + h_out)
     height_th   = jnp.asarray(height_throat, dtype=jnp.float64) if (height_throat is not None) else None
 
+    N_blades = int(prepared["N_blades"])
+    throat_area_per_passage = prepared.get("throat_area", None)
+
     # Areas
     A_in  = 2.0 * jnp.pi * r_in  * h_in
     A_out = 2.0 * jnp.pi * r_out * h_out
     A_throat = None
     if (r_throat is not None) and (height_throat is not None):
-        A_throat = 2.0 * jnp.pi * radius_hub_throat * height_th
+        # A_throat = 2.0 * jnp.pi * radius_hub_throat * height_th
+        A_throat =  N_blades * jnp.asarray(throat_area_per_passage, dtype=jnp.float64)
 
     # Meridional chord & flaring
     stagger_rad = jnp.deg2rad(stagger_deg)
@@ -458,6 +480,33 @@ def _compute_full_geometry_for_component(comp: Dict[str, Any], index: int, ncomp
     name = comp.get("name", f"component_{index+1}")
     component_type = comp.get("component_type", None)
     geom = comp["geometry"]
+
+    if component_type == "vaneless_channel":
+        r_in  = jnp.asarray(geom["r_in"], dtype=jnp.float64)
+        r_out = jnp.asarray(geom["r_out"], dtype=jnp.float64)
+        b_in  = jnp.asarray(geom["b_in"], dtype=jnp.float64)
+        b_out = jnp.asarray(geom["b_out"], dtype=jnp.float64)
+
+        A_in  = 2.0 * jnp.pi * r_in  * b_in
+        A_out = 2.0 * jnp.pi * r_out * b_out
+        r_mean = 0.5 * (r_in + r_out)
+        b_mean = 0.5 * (b_in + b_out)
+
+        out = {
+            "name": name,
+            "component_type": component_type,
+            "r_in": float(r_in), "r_out": float(r_out),
+            "b_in": float(b_in), "b_out": float(b_out),
+            "A_in": float(A_in), "A_out": float(A_out),
+            "radius_mean_in": float(r_in), "radius_mean_out": float(r_out),
+            "height_in": float(b_in), "height_out": float(b_out),
+            "height": float(b_mean),
+            # pass-through for solver models:
+            "phi_in": geom.get("phi_in"), "phi_out": geom.get("phi_out"),
+            "z_in": geom.get("z_in"), "z_out": geom.get("z_out"),
+            "td_in": geom.get("td_in"), "td_out": geom.get("td_out"),
+        }
+        return _to_native(out)
 
     prepared = prepare_radial_outflow_geometry(geom)
     meta = {"number_of_cascades": ncomp, "number_of_stages": max(0, ncomp // 2)}

@@ -485,7 +485,7 @@ def plot_meridional(
 
 def plot_meridional_hybrid(
     yaml_path: str,
-    title: str = "Hybrid turbine – meridional view",
+    title: str = "Hybrid turbine - meridional view",
     z_center: float = 0.0,         # shared axial center for ALL radial rows (unchanged)
     N_curve: int = 80,             # smoothness for radial bands
     label_kwargs: dict | None = None,
