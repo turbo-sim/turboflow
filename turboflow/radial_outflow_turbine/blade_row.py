@@ -81,7 +81,7 @@ def _validate_geometry_component(name: str, g: Dict[str, Any], require_throat: b
             raise ValueError(f"[{name}] Benner incidence requires: {throat_req}. Missing: {throat_missing}")
 
 
-@jax.jit
+# @jax.jit
 def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     # Promote to JAX arrays (float64 for consistency with the rest of the model)
     blade_speed = jnp.asarray(blade_speed, dtype=jnp.float64)
@@ -111,7 +111,7 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     }
 
 
-@jax.jit
+# @jax.jit
 def evaluate_velocity_triangle_out(blade_speed, w, beta):
     # Promote to JAX arrays (float64 for consistency)
     blade_speed = jnp.asarray(blade_speed, dtype=jnp.float64)
@@ -187,7 +187,7 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     blockage_factor = jnp.where(jnp.isinf(opening_arr), 0.0, blockage_factor)
     return blockage_factor
 
-@eqx.filter_jit
+# @eqx.filter_jit
 def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     # ---- inputs → float64 JAX arrays ----
     h0    = jnp.asarray(cascade_inlet_input["h0"],    dtype=jnp.float64)
@@ -548,6 +548,7 @@ def evaluate_cascade_throat(
     v = velocity_triangle["v"]
 
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
+    # print(h, rothalpy,blade_speed,w)
     static_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h, s)
 
     rho = static_properties["d"]

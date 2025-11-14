@@ -6,7 +6,7 @@ import jax.numpy as jnp
 import jax
 
 from .. import math
-from . import flow_model as fm
+from . import flow_model_update as fm
 from . import deviation_model as dm
 
 CHOKING_CRITERIONS = [
@@ -88,6 +88,130 @@ def evaluate_choking(
         )
 
 
+# def critical_mach_number(
+#     choking_input,
+#     inlet_plane,
+#     exit_plane,
+#     fluid,
+#     geometry,
+#     angular_speed,
+#     model_options,
+#     reference_values,
+# ):
+#     r"""
+
+#     Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the critical_mach_number choking model.
+
+#     This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated
+#     from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition,
+#     and by ensuring that the mach at the throat equals the critical at supercritical conditions.
+
+#     Parameters
+#     ----------
+#     choking_input : dict
+#         Dictionary containing scaled input parameters required for selected choking model. Required items are:
+
+#         - `w_crit_throat` : throat velocity.
+#         - `s_crit_throat` : throat entropy.
+#         - `beta_crit_throat` : throat relative flow angle.
+#     inlet_plane : dict
+#         Dictionary containing data on the inlet plane for the actual cascade operating condition.
+#     exit_plane : dict
+#         Dictionary containing data on the exit plane for the actual cascade operating condition.
+#     fluid : object
+#         A fluid object with methods for thermodynamic property calculations.
+#     geometry : dict
+#         Geometric parameters of the cascade.
+#     angular_speed : float
+#         Angular speed of the cascade.
+#     model_options : dict
+#         Options for the model used to evaluate choking.
+#     reference_values : dict
+#         Reference values used in the calculation, including the reference mass flow rate.
+
+#     Returns
+#     -------
+#     dict
+#         Dictionary containing the residuals of choking model:
+
+#         - `m*`: Mass flow rate residual.
+#         - `Y*`: Loss error residual.
+#         - `beta*`: Residual of the flow angle.
+#         - `choking`: Choking residual.
+#     dict
+#         Dictionary containing relevant information on the critical state and throat plane.
+
+#     """
+
+#     # Rename variables
+#     loss_model = model_options["loss_model"]
+#     blockage = model_options["blockage_model"]
+#     deviation_model = model_options["deviation_model"]
+#     A_throat = geometry["A_throat"]
+#     A_out = geometry["A_out"]
+#     v0 = reference_values["v0"]
+#     s_range = reference_values["s_range"]
+#     s_min = reference_values["s_min"]
+#     angle_range = reference_values["angle_range"]
+#     angle_min = reference_values["angle_min"]
+
+#     # Evaluate throat
+#     cascade_throat_input = {
+#         "w": choking_input["w_crit_throat"] * v0,
+#         "s": choking_input["s_crit_throat"] * s_range + s_min,
+#         "beta": jnp.sign(exit_plane["beta"])
+#         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
+#         "rothalpy": inlet_plane["rothalpy"],
+#     }
+#     throat_plane, loss_dict = fm.evaluate_cascade_throat(
+#         cascade_throat_input,
+#         fluid,
+#         geometry,
+#         inlet_plane,
+#         angular_speed,
+#         blockage,
+#         loss_model,
+#     )
+
+#     # Evaluate critical mach
+#     Y_tot = loss_dict["loss_total"]
+#     eta = (throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]) / (
+#         throat_plane["enthalpy0_rel"] - throat_plane["h_is"]
+#     )
+#     critical_mach = get_mach_crit(throat_plane["heat_capacity_ratio"], eta)
+
+#     # Evaluate if flow cascade is choked or not an add choking residual
+#     if exit_plane["Ma_rel"] <= critical_mach:
+#         beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
+#             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
+#         )
+
+#         # Compute error of guessed beta and deviation model
+#         choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
+#     else:
+#         choking_residual = throat_plane["Ma_rel"] - critical_mach
+
+#     # Evaluate resiudals
+#     residual_values = jnp.array(
+#         [
+#             (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / reference_values["mass_flow_ref"],
+#             throat_plane["loss_error"],
+#             choking_residual,
+#         ]
+#     )
+#     residual_keys = ["m*", "Y*", "beta*"]
+#     residuals_critical = dict(zip(residual_keys, residual_values))
+
+#     # Define output values
+#     critical_state = {
+#         "critical_mach": critical_mach,
+#     }
+#     throat_plane = {f"{key}_throat": val for key, val in throat_plane.items()}
+
+    
+
+#     return residuals_critical, {**critical_state, **throat_plane}
+
 def critical_mach_number(
     choking_input,
     inlet_plane,
@@ -99,70 +223,58 @@ def critical_mach_number(
     reference_values,
 ):
     r"""
+    Calculate condition for choking and evaluate whether or not the cascade is choked,
+    based on the critical_mach_number choking model.
 
-    Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the critical_mach_number choking model.
-
-    This choking model evaluates the cascade throat and checks if the throat mach number exceed the critical. The critical mach number is calculated
-    from a correlation depending on the throat loss coefficient. The exit flow angle is calculated by the selected deviation model at subsonic condition,
-    and by ensuring that the mach at the throat equals the critical at supercritical conditions.
-
-    Parameters
-    ----------
-    choking_input : dict
-        Dictionary containing scaled input parameters required for selected choking model. Required items are:
-
-        - `w_crit_throat` : throat velocity.
-        - `s_crit_throat` : throat entropy.
-        - `beta_crit_throat` : throat relative flow angle.
-    inlet_plane : dict
-        Dictionary containing data on the inlet plane for the actual cascade operating condition.
-    exit_plane : dict
-        Dictionary containing data on the exit plane for the actual cascade operating condition.
-    fluid : object
-        A fluid object with methods for thermodynamic property calculations.
-    geometry : dict
-        Geometric parameters of the cascade.
-    angular_speed : float
-        Angular speed of the cascade.
-    model_options : dict
-        Options for the model used to evaluate choking.
-    reference_values : dict
-        Reference values used in the calculation, including the reference mass flow rate.
-
-    Returns
-    -------
-    dict
-        Dictionary containing the residuals of choking model:
-
-        - `m*`: Mass flow rate residual.
-        - `Y*`: Loss error residual.
-        - `beta*`: Residual of the flow angle.
-        - `choking`: Choking residual.
-    dict
-        Dictionary containing relevant information on the critical state and throat plane.
-
+    This choking model evaluates the cascade throat and checks if the throat Mach number
+    exceeds the critical. The critical Mach number is calculated from a correlation
+    depending on the throat loss coefficient. The exit flow angle is calculated by the
+    selected deviation model at subsonic condition, and by ensuring that the Mach at the
+    throat equals the critical at supercritical conditions.
     """
 
-    # Rename variables
-    loss_model = model_options["loss_model"]
-    blockage = model_options["blockage_model"]
+    # ------------------------------------------------------------------
+    # Model options & geometry
+    # ------------------------------------------------------------------
+    loss_model      = model_options["loss_model"]
+    blockage        = model_options["blockage_model"]
     deviation_model = model_options["deviation_model"]
-    A_throat = geometry["A_throat"]
-    A_out = geometry["A_out"]
-    v0 = reference_values["v0"]
-    s_range = reference_values["s_range"]
-    s_min = reference_values["s_min"]
-    angle_range = reference_values["angle_range"]
-    angle_min = reference_values["angle_min"]
 
-    # Evaluate throat
+    A_throat = geometry["A_throat"]
+    A_out    = geometry["A_out"]
+
+    # Reference values
+    v0             = reference_values["v0"]
+    mass_flow_ref  = reference_values["mass_flow_ref"]
+
+    # ------------------------------------------------------------------
+    # IMPORTANT: choking_input is already in PHYSICAL units now
+    # (unscaled in _extract_row_vars_and_choking), so do NOT rescale
+    # by v0 or s_range here.
+    # ------------------------------------------------------------------
+    w_throat_raw = jnp.asarray(choking_input["w_crit_throat"], dtype=jnp.float64)
+    s_throat     = jnp.asarray(choking_input["s_crit_throat"], dtype=jnp.float64)
+
+    # Optional safety clipping on w at the throat (relative to v0)
+    # This prevents the solver from wandering into totally unphysical
+    # regions (e.g. |w| >> v0) that produce huge negative enthalpies.
+    w_min = 1.0e-3 * v0         # basically > 0
+    w_max = 5.0 * v0            # relative speed up to ~5× spouting velocity
+    w_throat = jnp.clip(w_throat_raw, w_min, w_max)
+
+    # Throat flow angle from geometric throat area ratio; sign from exit beta
+    beta_throat = jnp.sign(exit_plane["beta"]) * math.arccosd(A_throat / A_out)
+
+    # ------------------------------------------------------------------
+    # Evaluate throat plane
+    # ------------------------------------------------------------------
     cascade_throat_input = {
-        "w": choking_input["w_crit_throat"] * v0,
-        "s": choking_input["s_crit_throat"] * s_range + s_min,
-        "beta": jnp.sign(exit_plane["beta"])
-        * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
+        "w":        w_throat,
+        "s":        s_throat,
+        "beta":     beta_throat,
         "rothalpy": inlet_plane["rothalpy"],
     }
+
     throat_plane, loss_dict = fm.evaluate_cascade_throat(
         cascade_throat_input,
         fluid,
@@ -173,45 +285,55 @@ def critical_mach_number(
         loss_model,
     )
 
-    # Evaluate critical mach
+    # ------------------------------------------------------------------
+    # Critical Mach number from loss/efficiency
+    # ------------------------------------------------------------------
     Y_tot = loss_dict["loss_total"]
-    eta = (throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]) / (
+
+    eta = (
+        throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]
+    ) / (
         throat_plane["enthalpy0_rel"] - throat_plane["h_is"]
     )
+
     critical_mach = get_mach_crit(throat_plane["heat_capacity_ratio"], eta)
 
-    # Evaluate if flow cascade is choked or not an add choking residual
+    # ------------------------------------------------------------------
+    # Choking residual: subsonic vs. choked
+    # ------------------------------------------------------------------
     if exit_plane["Ma_rel"] <= critical_mach:
+        # Subsonic regime → use deviation model
         beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
         )
-
-        # Compute error of guessed beta and deviation model
         choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
     else:
+        # Choked regime → enforce M_throat_rel = M_crit
         choking_residual = throat_plane["Ma_rel"] - critical_mach
 
-    # Evaluate resiudals
+    # ------------------------------------------------------------------
+    # Residuals
+    # ------------------------------------------------------------------
     residual_values = jnp.array(
         [
-            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / reference_values["mass_flow_ref"],
+            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
             throat_plane["loss_error"],
             choking_residual,
-        ]
+        ],
+        dtype=jnp.float64,
     )
     residual_keys = ["m*", "Y*", "beta*"]
     residuals_critical = dict(zip(residual_keys, residual_values))
 
-    # Define output values
+    # ------------------------------------------------------------------
+    # Output critical state + throat plane (with suffix)
+    # ------------------------------------------------------------------
     critical_state = {
         "critical_mach": critical_mach,
     }
-    throat_plane = {f"{key}_throat": val for key, val in throat_plane.items()}
+    throat_plane_suffixed = {f"{key}_throat": val for key, val in throat_plane.items()}
 
-    
-
-    return residuals_critical, {**critical_state, **throat_plane}
-
+    return residuals_critical, {**critical_state, **throat_plane_suffixed}
 
 def get_mach_crit(gamma, eta):
     r"""
