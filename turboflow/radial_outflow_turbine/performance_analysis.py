@@ -15,6 +15,7 @@ from scipy import optimize
 from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
+
 # from . import geometry_model_axial as geom
 from . import geometry_model_radial as geom
 from . import flow_model as flow
@@ -23,6 +24,7 @@ import jaxprop as jxp
 import jaxprop.perfect_gas as pg
 
 import turboflow as tf
+
 # NEW: bring in the triangle helpers from the BladeRow module
 from .blade_row import (
     evaluate_velocity_triangle_out,
@@ -39,17 +41,23 @@ SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
 # -------------------------------------------------------------------
 NUMERIC = (int, float, np.floating)
 
+
 def _is_num(x):
     return isinstance(x, NUMERIC)
+
 
 def assert_numeric_operation_point(op):
     for k, v in op.items():
         if k == "fluid_name":
             if not isinstance(v, str):
-                raise TypeError(f"operation_point['fluid_name'] must be str, got {type(v)}")
+                raise TypeError(
+                    f"operation_point['fluid_name'] must be str, got {type(v)}"
+                )
             continue
         if not _is_num(v):
-            raise TypeError(f"operation_point['{k}'] must be numeric, got {v!r} ({type(v)})")
+            raise TypeError(
+                f"operation_point['{k}'] must be numeric, got {v!r} ({type(v)})"
+            )
 
 
 def _eval_item_if_str(x, ctx):
@@ -90,8 +98,13 @@ def _evaluate_map_expressions(performance_map):
     # Build context with simple numeric values (scalars) so expressions can reference them, e.g., p0_in
     ctx = {k: v for k, v in pm.items() if isinstance(v, (int, float))}
     # Optionally include numeric lists so they can also be referenced
-    ctx.update({k: v for k, v in pm.items()
-                if isinstance(v, list) and all(isinstance(e, (int, float)) for e in v)})
+    ctx.update(
+        {
+            k: v
+            for k, v in pm.items()
+            if isinstance(v, list) and all(isinstance(e, (int, float)) for e in v)
+        }
+    )
 
     for k, v in list(pm.items()):
         evaluated = _eval_item_if_str(v, ctx)
@@ -105,7 +118,9 @@ def _evaluate_map_expressions(performance_map):
         # Refresh context if we just created something numeric that others might reference
         if isinstance(evaluated, (int, float)):
             ctx[k] = evaluated
-        elif isinstance(evaluated, list) and all(isinstance(e, (int, float)) for e in evaluated):
+        elif isinstance(evaluated, list) and all(
+            isinstance(e, (int, float)) for e in evaluated
+        ):
             ctx[k] = evaluated
 
     return pm
@@ -120,7 +135,9 @@ def _numpy_to_native(x):
     else:
         return x
 
+
 # --- add this small helper near the other helpers (top of file is fine) ---
+
 
 def _infer_num_cascades(geometry_arrayview, components=None):
     """
@@ -130,8 +147,10 @@ def _infer_num_cascades(geometry_arrayview, components=None):
     """
 
     if components is not None and isinstance(components, (list, tuple)):
+
         def _is_cascade(c):
             return str(c.get("component_type", "")).lower() == "axial_cascade"
+
         return sum(1 for c in components if _is_cascade(c))
 
     if isinstance(geometry_arrayview, dict):
@@ -158,7 +177,7 @@ def compute_performance(
     out_dir="output",
     stop_on_failure=False,
     export_results=True,
-    logger=None
+    logger=None,
 ):
     r"""
     Compute and export the performance of each specified operation point to an Excel file.
@@ -166,13 +185,17 @@ def compute_performance(
 
     # Expect components list in config
     if not config.get("components"):
-        raise ValueError("No 'components' found in config. Provide a list of components.")
+        raise ValueError(
+            "No 'components' found in config. Provide a list of components."
+        )
 
     # Ranges → list of operation points
     if isinstance(operation_points, dict):
         operation_points = generate_operation_points(operation_points)
     elif not isinstance(operation_points, (list, np.ndarray)):
-        raise TypeError("operation_points must be either list of dicts or a dict with ranges.")
+        raise TypeError(
+            "operation_points must be either list of dicts or a dict with ranges."
+        )
 
     # Validate
     for op in operation_points:
@@ -198,24 +221,28 @@ def compute_performance(
 
         # Initial guess selection
         if i == 0:
-            initial_guess_cfg = extract_initial_guess_from_components(config["components"])
+            initial_guess_cfg = extract_initial_guess_from_components(
+                config["components"]
+            )
         else:
             closest_x, closest_index = find_closest_operation_point(
                 operation_point,
                 operation_points[:i],
                 solution_data[:i],
             )
-            logger.info(f" Using solution from point {closest_index+1} as initial guess")
+            logger.info(
+                f" Using solution from point {closest_index+1} as initial guess"
+            )
             initial_guess_cfg = closest_x
 
         # Solve one OP
         solver, results = compute_single_operation_point(
             operation_point,
             initial_guess_cfg,
-            config["components"],                       # << components list
-            config.get("simulation_options", {}),       # global fallbacks
+            config["components"],  # << components list
+            config.get("simulation_options", {}),  # global fallbacks
             config["performance_analysis"]["solver_options"],
-            logger=logger
+            logger=logger,
         )
 
         # Solver summary
@@ -232,7 +259,9 @@ def compute_performance(
 
         # Collect
         operation_point_data.append(pd.DataFrame([operation_point]))
-        overall_data.append(pd.DataFrame.from_dict(results["overall"], orient="index").T)
+        overall_data.append(
+            pd.DataFrame.from_dict(results["overall"], orient="index").T
+        )
         plane_data.append(utils.flatten_dataframe(pd.DataFrame(results["planes"])))
         cascade_data.append(utils.flatten_dataframe(pd.DataFrame(results["cascades"])))
         stage_data.append(utils.flatten_dataframe(pd.DataFrame(results["stage"])))
@@ -246,12 +275,12 @@ def compute_performance(
     # Export dataframes
     dfs = {
         "operation point": pd.concat(operation_point_data, ignore_index=True),
-        "overall":         pd.concat(overall_data, ignore_index=True),
-        "plane":           pd.concat(plane_data, ignore_index=True),
-        "cascade":         pd.concat(cascade_data, ignore_index=True),
-        "stage":           pd.concat(stage_data, ignore_index=True),
-        "geometry":        pd.concat(geometry_data, ignore_index=True),
-        "solver":          pd.concat(solver_data, ignore_index=True),
+        "overall": pd.concat(overall_data, ignore_index=True),
+        "plane": pd.concat(plane_data, ignore_index=True),
+        "cascade": pd.concat(cascade_data, ignore_index=True),
+        "stage": pd.concat(stage_data, ignore_index=True),
+        "geometry": pd.concat(geometry_data, ignore_index=True),
+        "solver": pd.concat(solver_data, ignore_index=True),
     }
 
     if export_results:
@@ -280,7 +309,7 @@ def compute_performance(
             # pickle solver (lightweight)
             filepath_pkl = os.path.join(out_dir, f"{fname}.pkl")
             solver.problem = None
-            with open(filepath_pkl, 'wb') as f:
+            with open(filepath_pkl, "wb") as f:
                 dill.dump(solver, f)
 
         logger.info(f" Performance data successfully written to {filepath_xlsx}")
@@ -418,13 +447,14 @@ def compute_performance(
 
 #     return solver, problem.results
 
+
 def compute_single_operation_point(
     operating_point,
-    initial_guess,              # kept for signature compatibility; ignored here
-    components,                 # list of component dicts (from YAML)
+    initial_guess,  # kept for signature compatibility; ignored here
+    components,  # list of component dicts (from YAML)
     simulation_options,
     solver_options,
-    logger=None
+    logger=None,
 ):
     """
     Compute one operation point using per-component initial guesses generated
@@ -438,7 +468,7 @@ def compute_single_operation_point(
     solver_options = copy.deepcopy(solver_options)
 
     # Short-hands
-    bc   = problem.boundary_conditions
+    bc = problem.boundary_conditions
     geom_rows = problem.geometry_components_cascades
     fluid = problem.fluid
     omega = bc["omega"]
@@ -449,10 +479,10 @@ def compute_single_operation_point(
     alpha_in_deg = np.degrees(alpha_in) if abs(alpha_in) <= np.pi * 1.01 else alpha_in
 
     inlet_seed = {
-        "h0":    bc["h0_in"],
-        "s":     bc["s_in"],
-        "alpha": alpha_in_deg,                   # degrees
-        "v":     0.5 * problem.reference_values["v0"],  # simple, robust seed
+        "h0": bc["h0_in"],
+        "s": bc["s_in"],
+        "alpha": alpha_in_deg,  # degrees
+        "v": 0.5 * problem.reference_values["v0"],  # simple, robust seed
     }
 
     # --- Build per-cascade initial guess (component-wise) ---
@@ -470,8 +500,8 @@ def compute_single_operation_point(
         g = geom_rows[row_count - 1]
 
         # rotor rows rotate; stators do not
-        is_rotor = ("rotor" in str(g.get("cascade_type","")).lower())
-        omega_i  = omega if is_rotor else 0.0
+        is_rotor = "rotor" in str(g.get("cascade_type", "")).lower()
+        omega_i = omega if is_rotor else 0.0
 
         # Build a BladeRow object matching this component
         cfg_row = {
@@ -479,29 +509,33 @@ def compute_single_operation_point(
             "cascade_type": g["cascade_type"],
             "geometry": g,
             "model_options": comp.get("model_options", {}),
-            "initial_guess": comp.get("initial_guess", {}),   # pass YAML per-row hints
+            "initial_guess": comp.get("initial_guess", {}),  # pass YAML per-row hints
         }
-        row = flow.BladeRow.from_dict(cfg_row, fluid=fluid, model_options_global=simulation_options)
+        row = flow.BladeRow.from_dict(
+            cfg_row, fluid=fluid, model_options_global=simulation_options
+        )
 
         # Ask the row to synthesize its own initial guess
         ig_row = row.build_initial_guess(
             inlet_state=inlet_seed,
             omega=jnp.array(omega_i),
-            choking_criterion=simulation_options.get("choking_criterion", "critical_mach_number"),
+            choking_criterion=simulation_options.get(
+                "choking_criterion", "critical_mach_number"
+            ),
         )
 
         # Append with solver-expected suffixes
         #   required by flow._extract_row_vars_and_choking(...)
-        row_guess_dict[f"w_out{tag}"]          = ig_row["w_out"]
-        row_guess_dict[f"s_out{tag}"]          = ig_row["s_out"]
-        row_guess_dict[f"beta_out{tag}"]       = ig_row["beta_out"]
+        row_guess_dict[f"w_out{tag}"] = ig_row["w_out"]
+        row_guess_dict[f"s_out{tag}"] = ig_row["s_out"]
+        row_guess_dict[f"beta_out{tag}"] = ig_row["beta_out"]
         # choking/support keys (safe to include; the solver prunes/uses as needed)
         if "w_crit_throat" in ig_row:
             row_guess_dict[f"w_crit_throat{tag}"] = ig_row["w_crit_throat"]
         if "s_crit_throat" in ig_row:
             row_guess_dict[f"s_crit_throat{tag}"] = ig_row["s_crit_throat"]
         if "v_crit_in" in ig_row:
-            row_guess_dict[f"v_crit_in{tag}"]     = ig_row["v_crit_in"]
+            row_guess_dict[f"v_crit_in{tag}"] = ig_row["v_crit_in"]
 
         # (Optional) You can advance inlet_seed here using a kinematic map if you want
         # tighter chaining between rows. For stability and simplicity, we leave inlet_seed
@@ -520,7 +554,7 @@ def compute_single_operation_point(
     # gather per-cascade choking type (component override beats global)
     per_cascade_choking = []
     for idx in cascade_indices:
-        comp_opts = (components[idx].get("model_options") or {})
+        comp_opts = components[idx].get("model_options") or {}
         per_cascade_choking.append(comp_opts.get("choking_criterion", global_choking))
 
     # rebuild a pruned dict in solver-expected shape
@@ -532,8 +566,8 @@ def compute_single_operation_point(
     for i in range(n_casc):
         tag = f"_{i+1}"
         # always required per row
-        pruned_guess[f"w_out{tag}"]    = row_guess_dict[f"w_out{tag}"]
-        pruned_guess[f"s_out{tag}"]    = row_guess_dict[f"s_out{tag}"]
+        pruned_guess[f"w_out{tag}"] = row_guess_dict[f"w_out{tag}"]
+        pruned_guess[f"s_out{tag}"] = row_guess_dict[f"s_out{tag}"]
         pruned_guess[f"beta_out{tag}"] = row_guess_dict[f"beta_out{tag}"]
 
         crit = per_cascade_choking[i].lower()
@@ -541,23 +575,33 @@ def compute_single_operation_point(
         if crit == "critical_mach_number":
             # uses throat M_rel=1 constraints → w_crit_throat, s_crit_throat
             if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
+                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[
+                    f"w_crit_throat{tag}"
+                ]
             if f"s_crit_throat{tag}" in row_guess_dict:
-                pruned_guess[f"s_crit_throat{tag}"] = row_guess_dict[f"s_crit_throat{tag}"]
+                pruned_guess[f"s_crit_throat{tag}"] = row_guess_dict[
+                    f"s_crit_throat{tag}"
+                ]
 
         elif crit == "critical_isentropic_throat":
             # only w_crit_throat
             if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
+                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[
+                    f"w_crit_throat{tag}"
+                ]
 
         elif crit == "critical_mass_flow_rate":
             # uses v_crit_in, w_crit_throat, s_crit_throat
             if f"v_crit_in{tag}" in row_guess_dict:
                 pruned_guess[f"v_crit_in{tag}"] = row_guess_dict[f"v_crit_in{tag}"]
             if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
+                pruned_guess[f"w_crit_throat{tag}"] = row_guess_dict[
+                    f"w_crit_throat{tag}"
+                ]
             if f"s_crit_throat{tag}" in row_guess_dict:
-                pruned_guess[f"s_crit_throat{tag}"] = row_guess_dict[f"s_crit_throat{tag}"]
+                pruned_guess[f"s_crit_throat{tag}"] = row_guess_dict[
+                    f"s_crit_throat{tag}"
+                ]
         else:
             # unknown criterion: no extra crit variables
             pass
@@ -603,7 +647,6 @@ def compute_single_operation_point(
     return solver, problem.results
 
 
-
 # ===================================================================
 # Problem definition (component-wise)
 # ===================================================================
@@ -630,36 +673,43 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         def _is_cascade(c):
             return str(c.get("component_type", "")).lower() == "axial_cascade"
 
-        self.cascade_comp_indices = [i for i, c in enumerate(self.components) if _is_cascade(c)]
+        self.cascade_comp_indices = [
+            i for i, c in enumerate(self.components) if _is_cascade(c)
+        ]
         self.num_cascades = len(self.cascade_comp_indices)
 
         # Build per-cascade geometry (list[dict]) using your existing geometry model
         components_cascades = [self.components[i] for i in self.cascade_comp_indices]
-        self.geometry_components_cascades = geom.calculate_full_geometry(components_cascades)
+        self.geometry_components_cascades = geom.calculate_full_geometry(
+            components_cascades
+        )
 
         # There should not be a single global function to generate the geometyr of the entire turbine, each component should have its own function to create geometry
-        
+
         # TODO: before, we use to have a calculate full_geometry_function() because all components where the same
         # Now, the full geometry of each component should be generated from the geometry dictionary specified in the YAML file
-
 
         # TODO Initialize the objects only once (Roberto 11.11.2025)
         # comp_objects = []
         # for component in components:
-            # comp_object.append(component_map[component["component_type"]].from_dict(component))
+        # comp_object.append(component_map[component["component_type"]].from_dict(component))
 
         # For performance analysis we can do component.create_geometry() only once because the geometry does not change
         # For design optimization, the geometry has to be updated at every function evaluation
         # For now, it might be sufficient to generate the geometry only once since we will do only performance analsysis in the TurboExpo paper
         # Geometry generation can be part of the "from_dict()" method
 
-
         # Dict-of-arrays arrayview for legacy helpers (cascades only)
-        self.geometry_components_arrayview = self._to_array_geometry(self.geometry_components_cascades)
+        self.geometry_components_arrayview = self._to_array_geometry(
+            self.geometry_components_cascades
+        )
 
     def _to_array_geometry(self, rows):
         all_keys = set().union(*[row.keys() for row in rows]) if rows else set()
-        array_geom = {"number_of_cascades": len(rows), "number_of_stages": max(0, len(rows)//2)}
+        array_geom = {
+            "number_of_cascades": len(rows),
+            "number_of_stages": max(0, len(rows) // 2),
+        }
         for k in all_keys:
             if k in ("cascade_type",):
                 array_geom[k] = [row.get(k) for row in rows]
@@ -695,7 +745,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             self.results = flow.evaluate_axial_turbine_componentwise(
                 self.vars_scaled,
                 self.boundary_conditions,
-                self.geometry_components_cascades, 
+                self.geometry_components_cascades,
                 self.fluid,
                 self.reference_values,
                 self.components,
@@ -707,10 +757,12 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             #     out_dict = comp_i.evaluate()
             #     residuals.append(out_dict["residuals"])
 
-
             return jnp.array(list(self.results["residuals"].values()))
         except Exception as e:
-            bc_types = {k: type(v).__name__ for k, v in getattr(self, "boundary_conditions", {}).items()}
+            bc_types = {
+                k: type(v).__name__
+                for k, v in getattr(self, "boundary_conditions", {}).items()
+            }
             raise TypeError(
                 f"Residual failed: {e}\n"
                 f"  OP types: {bc_types}\n"
@@ -819,8 +871,12 @@ def extract_initial_guess_from_components(components):
             eff_ke = ig_c["efficiency_ke"]
 
         ma = (
-            ig_c.get("ma") or ig_c.get("ma_out") or ig_c.get("ma_rel_out")
-            or ig_c.get("ma_exit") or ig_c.get("ma_2") or ig_c.get("ma_1")
+            ig_c.get("ma")
+            or ig_c.get("ma_out")
+            or ig_c.get("ma_rel_out")
+            or ig_c.get("ma_exit")
+            or ig_c.get("ma_2")
+            or ig_c.get("ma_1")
         )
         ma_list.append(ma if isinstance(ma, (int, float)) else None)
 
@@ -1021,6 +1077,7 @@ def extract_initial_guess_from_components(components):
 
 #     return initial_guesses
 
+
 # ===================================================================
 # Misc. utilities (OPs, printing, heuristic etc.)
 # ===================================================================
@@ -1031,6 +1088,7 @@ def find_closest_operation_point(current_op_point, operation_points, solution_da
         if d < min_distance:
             min_distance, closest_point_x, closest_index = d, solution_data[i], i
     return closest_point_x, closest_index
+
 
 def get_operation_point_distance(point_1, point_2, delta=1e-8):
     deviation_array = []
@@ -1044,6 +1102,7 @@ def get_operation_point_distance(point_1, point_2, delta=1e-8):
                 deviation = abs(v1 - v2) / max_val
             deviation_array.append(deviation)
     return np.linalg.norm(deviation_array)
+
 
 def generate_operation_points(performance_map):
     """
@@ -1072,7 +1131,9 @@ def generate_operation_points(performance_map):
     for combo in base_combos:
         op = dict(zip(keys, combo))
         if "p_out" not in op:
-            raise ValueError("Each operation point must define 'p_out' (directly or via expression).")
+            raise ValueError(
+                "Each operation point must define 'p_out' (directly or via expression)."
+            )
         operation_points.append(op)
 
     return operation_points
@@ -1087,6 +1148,7 @@ def validate_operation_point(op_point):
         raise ValueError(
             f"Operation point validation error: Missing fields: {missing}, Extra fields: {extra}"
         )
+
 
 def print_simulation_summary(solvers):
     """
@@ -1130,18 +1192,21 @@ def print_simulation_summary(solvers):
         lines.append(f" Failed operation points: {', '.join(map(str, failed_points))}")
 
     if times:
-        lines.extend([
-            f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
-            f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
-            f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
-            f" Total calculation time for all operation points:   {np.sum(times):.3f} seconds",
-        ])
+        lines.extend(
+            [
+                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
+                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
+                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
+                f" Total calculation time for all operation points:   {np.sum(times):.3f} seconds",
+            ]
+        )
     else:
         lines.append(" No valid calculation times available.")
 
     lines.append(sep)
     lines.append("")
     return lines
+
 
 def print_boundary_conditions(BC):
     column_width = 25
@@ -1151,13 +1216,22 @@ def print_boundary_conditions(BC):
     lines.append("-" * 80)
     lines.append(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
     lines.append(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
-    lines.append(f" {'Total temperature in: ':<{column_width}} {BC['T0_in'] - 273.15:<.2f} degC")
-    lines.append(f" {'Total pressure in: ':<{column_width}} {BC['p0_in'] / 1e5:<.3f} bar")
-    lines.append(f" {'Static pressure out: ':<{column_width}} {BC['p_out'] / 1e5:<.3f} bar")
-    lines.append(f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / np.pi:<.1f} RPM")
+    lines.append(
+        f" {'Total temperature in: ':<{column_width}} {BC['T0_in'] - 273.15:<.2f} degC"
+    )
+    lines.append(
+        f" {'Total pressure in: ':<{column_width}} {BC['p0_in'] / 1e5:<.3f} bar"
+    )
+    lines.append(
+        f" {'Static pressure out: ':<{column_width}} {BC['p_out'] / 1e5:<.3f} bar"
+    )
+    lines.append(
+        f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / np.pi:<.1f} RPM"
+    )
     lines.append("-" * 80)
     lines.append("")
     return "\n".join(lines)
+
 
 def print_operation_points(operation_points):
     length = 80
@@ -1206,6 +1280,7 @@ def print_operation_points(operation_points):
     output.append("-" * length)
     return "\n".join(output)
 
+
 # -------------------------------------------------------------------
 # Enthalpy helper (kept for heuristic)
 # -------------------------------------------------------------------
@@ -1217,6 +1292,7 @@ def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
         call = call_attr
     props = fluid.get_state(call, prop1 * scale, prop2)
     return props["h"] - h0 + 0.5 * Ma**2 * props["speed_sound"] ** 2
+
 
 # def get_unknown(prop1, scale, h0, Ma, fluid, call, prop2):
 #     sol = optimize.root_scalar(
@@ -1393,7 +1469,6 @@ def calculate_enthalpy_residual_1(prop1, scale, h0, Ma, fluid, call, prop2):
 #     )
 
 #     return initial_guess
-
 
 
 def latin_hypercube_sampling(bounds, n_samples):

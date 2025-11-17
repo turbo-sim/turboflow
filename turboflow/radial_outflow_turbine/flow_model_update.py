@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Tuple
 
 import jax
+
 jax.config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 
@@ -23,6 +24,7 @@ from .vaneless_channel import VanelessChannel
 # ============================================================
 # Helpers
 # ============================================================
+
 
 def _alpha_deg(a: jnp.ndarray) -> jnp.ndarray:
     """Ensure angle is in degrees (convert from radians if it looks like radians)."""
@@ -55,15 +57,15 @@ def _extract_row_vars_and_choking(
     """
     tag = f"_{index_1based}"
 
-    v0      = reference_values["v0"]
+    v0 = reference_values["v0"]
     s_range = reference_values["s_range"]
-    s_min   = reference_values["s_min"]
+    s_min = reference_values["s_min"]
     a_range = reference_values["angle_range"]
-    a_min   = reference_values["angle_min"]
+    a_min = reference_values["angle_min"]
 
     row_vars = {
-        "w_out":    variables[f"w_out{tag}"]    * v0,
-        "s_out":    variables[f"s_out{tag}"]    * s_range + s_min,
+        "w_out": variables[f"w_out{tag}"] * v0,
+        "s_out": variables[f"s_out{tag}"] * s_range + s_min,
         "beta_out": variables[f"beta_out{tag}"] * a_range + a_min,
     }
 
@@ -71,7 +73,9 @@ def _extract_row_vars_and_choking(
     if f"w_crit_throat{tag}" in variables:
         choking_vars["w_crit_throat"] = variables[f"w_crit_throat{tag}"] * v0
     if f"s_crit_throat{tag}" in variables:
-        choking_vars["s_crit_throat"] = variables[f"s_crit_throat{tag}"] * s_range + s_min
+        choking_vars["s_crit_throat"] = (
+            variables[f"s_crit_throat{tag}"] * s_range + s_min
+        )
     if "v_crit_in" in variables:
         choking_vars["v_crit_in"] = variables["v_crit_in"] * v0
 
@@ -82,11 +86,14 @@ def _extract_row_vars_and_choking(
 # Public API: evaluate an already-instantiated component list
 # ============================================================
 
+
 def evaluate_axial_turbine_componentwise(
-    variables: Dict[str, Any],                      # solver vars (normalized)
+    variables: Dict[str, Any],  # solver vars (normalized)
     boundary_conditions: Dict[str, Any],
-    comp_objects: List[Any],                        # BladeRow / VanelessChannel objects (in order)
-    geometry_components: List[Dict[str, Any]],      # component-wise geometry (same order as comp_objects)
+    comp_objects: List[Any],  # BladeRow / VanelessChannel objects (in order)
+    geometry_components: List[
+        Dict[str, Any]
+    ],  # component-wise geometry (same order as comp_objects)
     fluid: Any,
     reference_values: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -104,7 +111,7 @@ def evaluate_axial_turbine_componentwise(
 
     # ---------- inlet from boundary conditions ----------
     h0_in = boundary_conditions["h0_in"]
-    s_in  = boundary_conditions["s_in"]
+    s_in = boundary_conditions["s_in"]
     alpha_in_deg = _alpha_deg(boundary_conditions["alpha_in"])
 
     # inlet velocity from normalized var if present
@@ -114,9 +121,9 @@ def evaluate_axial_turbine_componentwise(
     omega_bc = boundary_conditions["omega"]
 
     # ---------- collectors ----------
-    planes_seq:   List[Dict[str, Any]] = []
+    planes_seq: List[Dict[str, Any]] = []
     cascades_seq: List[Dict[str, Any]] = []
-    residuals:    Dict[str, Any] = {}
+    residuals: Dict[str, Any] = {}
 
     row_counter = 0
     cascade_geoms: List[Dict[str, Any]] = []  # cascades only (for stage KPIs etc.)
@@ -138,8 +145,8 @@ def evaluate_axial_turbine_componentwise(
             )
 
             # rotor rows rotate; stators do not
-            is_rotor = ("rotor" in str(obj.cascade_type).lower())
-            omega_i  = jnp.asarray(omega_bc if is_rotor else 0.0, dtype=jnp.float64)
+            is_rotor = "rotor" in str(obj.cascade_type).lower()
+            omega_i = jnp.asarray(omega_bc if is_rotor else 0.0, dtype=jnp.float64)
 
             planes, cascade, res_i, handoff = obj.evaluate(
                 inlet_state=inlet,
@@ -156,10 +163,10 @@ def evaluate_axial_turbine_componentwise(
             # chain inlet for next component (absolute frame)
             exit_plane = planes[-1]
             inlet = {
-                "h0":    exit_plane["enthalpy0"],
-                "s":     exit_plane["entropy"],
+                "h0": exit_plane["enthalpy0"],
+                "s": exit_plane["entropy"],
                 "alpha": exit_plane["alpha"],  # already degrees
-                "v":     exit_plane["v"],
+                "v": exit_plane["v"],
             }
             continue
 
@@ -168,11 +175,11 @@ def evaluate_axial_turbine_componentwise(
         # =====================================================
         if isinstance(obj, VanelessChannel):
             # Map BladeRow-style inlet to channel operating conditions (static)
-            v_mag  = inlet["v"]
+            v_mag = inlet["v"]
             alphaD = _alpha_deg(inlet["alpha"])
-            h_in   = inlet["h0"] - 0.5 * v_mag**2
-            st     = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, inlet["s"])
-            p_in   = st["p"]
+            h_in = inlet["h0"] - 0.5 * v_mag**2
+            st = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, inlet["s"])
+            p_in = st["p"]
 
             # Call channel; expected to return either:
             #   (planes_ch, res_ch)  or  {"planes": ..., "residuals": ...}
@@ -181,7 +188,7 @@ def evaluate_axial_turbine_componentwise(
                     "p_in": p_in,
                     "h_in": h_in,
                     "v_in": v_mag,
-                    "alpha_in": alphaD,   # degrees
+                    "alpha_in": alphaD,  # degrees
                 },
                 fluid=fluid,
                 reference_values=reference_values,
@@ -202,10 +209,12 @@ def evaluate_axial_turbine_componentwise(
             # Update inlet to next component
             v_m_out = planes_ch[1]["v_m"]
             v_t_out = planes_ch[1]["v_t"]
-            v_out   = jnp.sqrt(v_m_out**2 + v_t_out**2)
-            alpha   = jnp.degrees(jnp.arctan2(v_t_out, v_m_out))
-            h0_out  = planes_ch[1].get("enthalpy0", planes_ch[1]["enthalpy"] + 0.5 * v_out**2)
-            s_out   = planes_ch[1].get("entropy", inlet["s"])
+            v_out = jnp.sqrt(v_m_out**2 + v_t_out**2)
+            alpha = jnp.degrees(jnp.arctan2(v_t_out, v_m_out))
+            h0_out = planes_ch[1].get(
+                "enthalpy0", planes_ch[1]["enthalpy"] + 0.5 * v_out**2
+            )
+            s_out = planes_ch[1].get("entropy", inlet["s"])
 
             inlet = {"h0": h0_out, "s": s_out, "alpha": alpha, "v": v_out}
             continue
@@ -213,13 +222,17 @@ def evaluate_axial_turbine_componentwise(
         # =====================================================
         # Unsupported component type
         # =====================================================
-        raise ValueError(f"Unsupported component object type at index {gi}: {type(obj).__name__}")
+        raise ValueError(
+            f"Unsupported component object type at index {gi}: {type(obj).__name__}"
+        )
 
     # ---------- aggregate & KPIs ----------
     if not planes_seq:
-        raise RuntimeError("No cascades evaluated; cannot compute outlet residuals/overall KPIs.")
+        raise RuntimeError(
+            "No cascades evaluated; cannot compute outlet residuals/overall KPIs."
+        )
 
-    planes   = tf.combine_to_dict_of_arrays(planes_seq)
+    planes = tf.combine_to_dict_of_arrays(planes_seq)
     cascades = tf.combine_to_dict_of_arrays(cascades_seq)
 
     # outlet pressure residual uses last cascade exit static pressure
@@ -228,7 +241,9 @@ def evaluate_axial_turbine_componentwise(
     residuals["p_out"] = p_error
 
     # stage & overall KPIs (using cascade-only geometries)
-    stage   = compute_stage_performance_componentwise(planes, [g["cascade_type"] for g in cascade_geoms])
+    stage = compute_stage_performance_componentwise(
+        planes, [g["cascade_type"] for g in cascade_geoms]
+    )
     overall = compute_overall_performance_componentwise(
         planes,
         boundary_conditions,
@@ -243,7 +258,9 @@ def evaluate_axial_turbine_componentwise(
         "overall": overall,
         "residuals": residuals,
         "independent_variables": variables,
-        "component_names": [getattr(o, "name", f"component_{i+1}") for i, o in enumerate(comp_objects)],
+        "component_names": [
+            getattr(o, "name", f"component_{i+1}") for i, o in enumerate(comp_objects)
+        ],
         "component_types": [
             (o.cascade_type if isinstance(o, BladeRow) else "vaneless_channel")
             for o in comp_objects
@@ -256,6 +273,7 @@ def evaluate_axial_turbine_componentwise(
 # Thin re-export for compatibility where needed
 # ============================================================
 
+
 def evaluate_cascade_throat(*args, **kwargs):
     return _blade_throat(*args, **kwargs)
 
@@ -263,6 +281,7 @@ def evaluate_cascade_throat(*args, **kwargs):
 # ============================================================
 # Stage & overall KPIs
 # ============================================================
+
 
 def compute_stage_performance_componentwise(planes, component_types):
     """
@@ -272,7 +291,9 @@ def compute_stage_performance_componentwise(planes, component_types):
     # count stator→rotor pairs
     pairs = 0
     for i in range(0, len(component_types) - 1):
-        if ("stator" in component_types[i].lower()) and ("rotor" in component_types[i+1].lower()):
+        if ("stator" in component_types[i].lower()) and (
+            "rotor" in component_types[i + 1].lower()
+        ):
             pairs += 1
     number_of_stages = pairs
     if number_of_stages == 0:
@@ -280,19 +301,23 @@ def compute_stage_performance_componentwise(planes, component_types):
 
     h = planes["enthalpy"]
     R = jnp.array(
-        [(h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])
-         for i in range(number_of_stages)]
+        [
+            (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])
+            for i in range(number_of_stages)
+        ]
     )
     return {"reaction": R}
 
 
-def compute_overall_performance_componentwise(planes, boundary_conditions, reference_values, last_geom):
+def compute_overall_performance_componentwise(
+    planes, boundary_conditions, reference_values, last_geom
+):
     """Overall KPIs using last cascade’s geometry for blade-jet ratios."""
     angular_speed = boundary_conditions["omega"]
     v0 = reference_values["v0"]
     h_out_s = reference_values["h_out_s"]
 
-    p  = planes["pressure"]
+    p = planes["pressure"]
     p0 = planes["pressure0"]
     h0 = planes["enthalpy0"]
     v_out = planes["v"][-1]
@@ -307,7 +332,7 @@ def compute_overall_performance_componentwise(planes, boundary_conditions, refer
     efficiency_tt = (h0_in - h0_out) / (h0_in - h_out_s - 0.5 * v_out**2) * 100
     efficiency_ts = (h0_in - h0_out) / (h0_in - h_out_s) * 100
     efficiency_ts_drop_kinetic = 0.5 * v_out**2 / (h0_in - h_out_s)
-    efficiency_ts_drop_losses  = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
+    efficiency_ts_drop_losses = 1.0 - efficiency_ts - efficiency_ts_drop_kinetic
     power = mass_flow * (h0_in - h0_out)
     torque = power / angular_speed
 
@@ -330,13 +355,20 @@ def compute_overall_performance_componentwise(planes, boundary_conditions, refer
         "h0_in": h0_in,
         "h0_out": h0_out,
         "h_out_s": jnp.array(h_out_s),
-        "specific_speed": angular_speed * (mass_flow / reference_values["d_out_s"]) ** 0.5
-                          / ((h0_in - h_out_s) ** 0.75),
-        "blade_jet_ratio_mean": jnp.array(angular_speed * last_geom["radius_mean_out"] / v0),
-        "blade_jet_ratio_hub": jnp.array(
-            angular_speed * last_geom.get("radius_hub_out", jnp.nan) / v0
-        ) if "radius_hub_out" in last_geom else jnp.nan,
-        "blade_jet_ratio_tip": jnp.array(
-            angular_speed * last_geom.get("radius_tip_out", jnp.nan) / v0
-        ) if "radius_tip_out" in last_geom else jnp.nan,
+        "specific_speed": angular_speed
+        * (mass_flow / reference_values["d_out_s"]) ** 0.5
+        / ((h0_in - h_out_s) ** 0.75),
+        "blade_jet_ratio_mean": jnp.array(
+            angular_speed * last_geom["radius_mean_out"] / v0
+        ),
+        "blade_jet_ratio_hub": (
+            jnp.array(angular_speed * last_geom.get("radius_hub_out", jnp.nan) / v0)
+            if "radius_hub_out" in last_geom
+            else jnp.nan
+        ),
+        "blade_jet_ratio_tip": (
+            jnp.array(angular_speed * last_geom.get("radius_tip_out", jnp.nan) / v0)
+            if "radius_tip_out" in last_geom
+            else jnp.nan
+        ),
     }

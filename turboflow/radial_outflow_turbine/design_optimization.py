@@ -11,22 +11,27 @@ import turboflow as tf
 
 from .. import pysolver_view as psv
 from .. import utilities as utils
+
 # from . import geometry_model as geom
 from . import geometry_model_axial as geom
+
 # from . import geometry_model_radial as geom
 
 from . import flow_model as flow
+
 # from .. import properties as props
 from . import performance_analysis as pa
 
 # from .. properties import perfect_gas_props
-# from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props 
+# from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props
 import jax
 import jax.numpy as jnp
 import jaxprop as jxp
 import jaxprop.perfect_gas as pg
 
-jax.config.update("jax_enable_x64", True)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
+jax.config.update(
+    "jax_enable_x64", True
+)  # By default jax uses 32 bit, for scientific computing we need 64 bit precision
 
 
 from functools import reduce
@@ -61,32 +66,33 @@ INDEXED_VARIABLES = [
 GENETIC_ALGORITHMS = psv.GENETIC_SOLVERS
 GRADIENT_ALGORITHMS = psv.GRADIENT_SOLVERS
 
-def fitness_gradient(config,step_size):
+
+def fitness_gradient(config, step_size):
     problem = CascadesOptimizationProblem(config)
 
     x = problem.initial_guess
     x_keys = problem.design_variables_keys
-    
+
     grad_jax = jax.jacfwd(problem.fitness, argnums=0)(x)
     grad_FD = psv.approx_gradient(
-                problem.fitness,
-                x,
-                f0=problem.fitness(x),
-                method="2-point",
-                # abs_step=config["design_optimization"]["solver_options"]["derivative_abs_step"],  ## TODO make sure it works when design variable takes value 0 * np.abs(x),
-                abs_step= step_size
-            )
+        problem.fitness,
+        x,
+        f0=problem.fitness(x),
+        method="2-point",
+        # abs_step=config["design_optimization"]["solver_options"]["derivative_abs_step"],  ## TODO make sure it works when design variable takes value 0 * np.abs(x),
+        abs_step=step_size,
+    )
     output_dict = problem.output_dict
 
     # Merge all dictionaries in the list into dict1
     for d in config["design_optimization"]["constraints"]:
-        variable_name = d['variable']
-        type_value = d['type']
+        variable_name = d["variable"]
+        type_value = d["type"]
 
         # To make the key unique, append or prepend the type to the variable name
         unique_key = f"{variable_name}_{type_value}"
 
-        output_dict[unique_key] = d['value']
+        output_dict[unique_key] = d["value"]
 
     output_dict["geometry.flaring_angle_<1"] = 1.0
     output_dict["geometry.flaring_angle_>1"] = 1.0
@@ -150,9 +156,7 @@ def compute_optimal_turbine(
 
     # Check that the initial guess is within bounds and clip if necessary
     problem.initial_guess = check_and_clip_initial_guess(
-        problem.initial_guess,
-        problem.bounds,
-        problem.design_variables_keys
+        problem.initial_guess, problem.bounds, problem.design_variables_keys
     )
 
     # Perform initial function call to initialize problem
@@ -169,26 +173,43 @@ def compute_optimal_turbine(
     # Solve optimization problem for initial guess x0
     solver.solve(problem.initial_guess)
 
-
     dfs = {
         "operation point": pd.DataFrame(
-            {key: [evaluate_jax_array(val)] for key, val in problem.boundary_conditions.items()}
+            {
+                key: [evaluate_jax_array(val)]
+                for key, val in problem.boundary_conditions.items()
+            }
         ),
         "overall": pd.DataFrame(
-            {key: evaluate_jax_array(val) for key, val in problem.results["overall"].items()},
+            {
+                key: evaluate_jax_array(val)
+                for key, val in problem.results["overall"].items()
+            },
             index=[0],
         ),
         "planes": pd.DataFrame(
-            {key: evaluate_jax_array(val) for key, val in problem.results["planes"].items()}
+            {
+                key: evaluate_jax_array(val)
+                for key, val in problem.results["planes"].items()
+            }
         ),
         "cascades": pd.DataFrame(
-            {key: evaluate_jax_array(val) for key, val in problem.results["cascades"].items()}
+            {
+                key: evaluate_jax_array(val)
+                for key, val in problem.results["cascades"].items()
+            }
         ),
         "stage": pd.DataFrame(
-            {key: evaluate_jax_array(val) for key, val in problem.results["stage"].items()}
+            {
+                key: evaluate_jax_array(val)
+                for key, val in problem.results["stage"].items()
+            }
         ),
         "geometry": pd.DataFrame(
-            {key: pd.Series(evaluate_jax_array(val)) for key, val in problem.geometry.items()}
+            {
+                key: pd.Series(evaluate_jax_array(val))
+                for key, val in problem.geometry.items()
+            }
         ),
         "solver": pd.DataFrame(
             {
@@ -196,12 +217,24 @@ def compute_optimal_turbine(
                 "success": pd.Series(solver.success, index=[0]),
                 "message": pd.Series(solver.message, index=[0]),
                 "elapsed_time": pd.Series(solver.elapsed_time, index=[0]),
-                "grad_count": evaluate_jax_array(solver.convergence_history["grad_count"]),
-                "func_count": evaluate_jax_array(solver.convergence_history["func_count"]),
-                "func_count_total": evaluate_jax_array(solver.convergence_history["func_count_total"]),
-                "objective_value": evaluate_jax_array(solver.convergence_history["objective_value"]),
-                "constraint_violation": evaluate_jax_array(solver.convergence_history["constraint_violation"]),
-                "norm_step": evaluate_jax_array(solver.convergence_history["norm_step"]),
+                "grad_count": evaluate_jax_array(
+                    solver.convergence_history["grad_count"]
+                ),
+                "func_count": evaluate_jax_array(
+                    solver.convergence_history["func_count"]
+                ),
+                "func_count_total": evaluate_jax_array(
+                    solver.convergence_history["func_count_total"]
+                ),
+                "objective_value": evaluate_jax_array(
+                    solver.convergence_history["objective_value"]
+                ),
+                "constraint_violation": evaluate_jax_array(
+                    solver.convergence_history["constraint_violation"]
+                ),
+                "norm_step": evaluate_jax_array(
+                    solver.convergence_history["norm_step"]
+                ),
             },
             index=range(len(solver.convergence_history["grad_count"])),
         ),
@@ -236,12 +269,11 @@ def compute_optimal_turbine(
             # Export optimal turbine as dill object
             filepath = os.path.join(out_dir, f"{out_filename}.pkl")
             solver.problem = None
-            with open(filepath, 'wb') as file:
+            with open(filepath, "wb") as file:
                 # Serialize the object and write it to the file
                 dill.dump(solver, file)
 
-    return solver        
-
+    return solver
 
 
 class CascadesOptimizationProblem(psv.OptimizationProblem):
@@ -316,7 +348,6 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         Get values from a dictionary of Dataframes
     """
 
-
     def __init__(self, config):
         r"""
         Initialize a CascadesOptimizationProblem.
@@ -331,14 +362,15 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Get list of design variables
         config = copy.deepcopy(config)
 
-        
-        self.obj_func = self.get_objective_function(config["design_optimization"]["objective_function"])
+        self.obj_func = self.get_objective_function(
+            config["design_optimization"]["objective_function"]
+        )
         self.radius_type = config["design_optimization"]["radius_type"]
         self.eq_constraints, self.ineq_constraints = self.get_constraints(
             config["design_optimization"]["constraints"]
         )
 
-        # Update design point 
+        # Update design point
         if isinstance(config["operation_points"], (list, jnp.ndarray)):
             self.update_boundary_conditions(config["operation_points"][0])
         else:
@@ -364,9 +396,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 for key, var in variables.items()
                 if not key.startswith("beta_crit_throat")
             }
-        elif (
-            self.model_options["choking_criterion"] == "critical_isentropic_throat"
-        ):
+        elif self.model_options["choking_criterion"] == "critical_isentropic_throat":
             variables = {
                 key: var
                 for key, var in variables.items()
@@ -408,7 +438,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         ]
         if self.model_options["choking_criterion"] == "critical_mach_number":
             self.independent_variables = [
-                var for var in self.independent_variables if not var.startswith("v_crit_in")
+                var
+                for var in self.independent_variables
+                if not var.startswith("v_crit_in")
             ]
         elif self.model_options["choking_criterion"] == "critical_mass_flow_rate":
             self.independent_variables = [
@@ -416,20 +448,14 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 for var in self.independent_variables
                 if not var.startswith("beta_crit_throat")
             ]
-        elif (
-            self.model_options["choking_criterion"] == "critical_isentropic_throat"
-        ):
+        elif self.model_options["choking_criterion"] == "critical_isentropic_throat":
             self.independent_variables = [
                 var
                 for var in self.independent_variables
-                if not (
-                    var.startswith("v_crit_in")
-                    or var.startswith("s_crit_throat")
-                )
+                if not (var.startswith("v_crit_in") or var.startswith("s_crit_throat"))
             ]
         else:
             raise ValueError("STOP")
-
 
     def fitness(self, x):
         r"""
@@ -483,14 +509,16 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
             # Extract the values for this key
             values = [v for k, v in variables.items() if k.startswith(key)]
-  
+
             # If the key corresponds to non-numeric data (like 'cascade_type'), store it as a regular list.
-            if all(isinstance(v, str) for v in values):  # check if all values are strings
+            if all(
+                isinstance(v, str) for v in values
+            ):  # check if all values are strings
                 self.geometry[key] = values  # store as a regular list
             else:
                 # Otherwise, convert to JAX array (for numeric values)
                 self.geometry[key] = jnp.array(values)
-            
+
             if key in ANGLE_KEYS:
                 self.geometry[key] = self.geometry[key] * angle_range + angle_min
 
@@ -508,33 +536,40 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
 
         # Evaluate objective function
-        self.f = jnp.atleast_1d(self.get_nested_value(self.results, self.obj_func["variable"])/self.obj_func["scale"]) # self.obj.func on the form "key.column"
+        self.f = jnp.atleast_1d(
+            self.get_nested_value(self.results, self.obj_func["variable"])
+            / self.obj_func["scale"]
+        )  # self.obj.func on the form "key.column"
 
         # Evaluate additional constraints
-        self.results["additional_constraints"] = {"interspace_area_ratio": self.geometry["A_in"][1:] / self.geometry["A_out"][0:-1]}
+        self.results["additional_constraints"] = {
+            "interspace_area_ratio": self.geometry["A_in"][1:]
+            / self.geometry["A_out"][0:-1]
+        }
         self.output_dict = {}
         self.output_dict.update({"efficiency": self.obj_func})
         self.output_dict.update(self.results["residuals"])
 
         # Evaluate constraints
         self.c_eq = jnp.array(list(self.results["residuals"].values()))
-        self.c_eq = jnp.append(self.c_eq, self.evaluate_constraints(self.eq_constraints))
+        self.c_eq = jnp.append(
+            self.c_eq, self.evaluate_constraints(self.eq_constraints)
+        )
         self.c_ineq = self.evaluate_constraints(self.ineq_constraints)
-        objective_and_constraints = jnp.concatenate([self.f, self.c_eq, self.c_ineq])  
+        objective_and_constraints = jnp.concatenate([self.f, self.c_eq, self.c_ineq])
         self.output = objective_and_constraints
 
         return objective_and_constraints
-    
 
     def gradient(self, x):
 
         # Use JAX for automatic differentiation
         method = self.solver_options["derivative_method"]
-        if method == "jax":   
+        if method == "jax":
             grad = jax.jacfwd(self.fitness, argnums=0)(x)
 
         # Approximate gradient with finite differences
-        else:  
+        else:
             fun = lambda x: self.fitness(x)
             grad = psv.numerical_differentiation.approx_gradient(
                 fun,
@@ -546,14 +581,11 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         return grad
 
-
     def hessians(self, x):
         return compute_hessians_jax(self.fitness, x, lower_triangular=True)
 
-
     def hessians_jax(self, x, lower_triangular=True):
         return compute_hessians_jax(self.fitness, x, lower_triangular=lower_triangular)
-
 
     def hessians_approx(self, x):
         H = psv.approx_jacobian_hessians(
@@ -561,18 +593,17 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         )
         return H
 
-
     def get_objective_function(self, objective):
         """
         Change scale for the objective function depending on its type.
-        If objective function should be maximized, the sign of the scale is changed. 
+        If objective function should be maximized, the sign of the scale is changed.
 
         Parameters
         ----------
         objective : dict
             dictionary containing variable name, type and scale of the objective function.
 
-        Returns 
+        Returns
         -------
         dict
             dictionary containing modified scale of the objective function
@@ -650,10 +681,10 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                 ub += [design_variables[key]["upper_bound"]]
 
         return lb, ub
-    
+
     def get_nested_value(self, d, path):
         """
-        Get values from a dictionary of Dataframes. 
+        Get values from a dictionary of Dataframes.
         Path is on the form `dataframe.column`, and returns `d[dataframe][column]`
 
         Parameters
@@ -665,22 +696,22 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         Returns
         -------
-        numpy.ndarray  
-           Array of specified values 
+        numpy.ndarray
+           Array of specified values
         """
 
-        keys = path.split('.')
+        keys = path.split(".")
 
         return jnp.array(d[keys[0]][keys[1]])
-    
+
     def evaluate_constraints(self, constraints_list):
         r"""
-        Evaluate constraints. 
+        Evaluate constraints.
 
         This function evaluates the constraints from the information in `constraints_list`.
-        Constraints are defined to be less than 0. 
+        Constraints are defined to be less than 0.
 
-        `constraints_list` is a list of dictionaries, where each dictionary have a `variable`, `scale` and `value` key. 
+        `constraints_list` is a list of dictionaries, where each dictionary have a `variable`, `scale` and `value` key.
 
         Parameters
         ----------
@@ -696,11 +727,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         for constraint in constraints_list:
             constraints = jnp.append(
                 constraints,
-                (self.get_nested_value(self.results, constraint["variable"]) - constraint["value"])
+                (
+                    self.get_nested_value(self.results, constraint["variable"])
+                    - constraint["value"]
+                )
                 / constraint["scale"],
             )
         return constraints
-
 
     def get_bounds(self):
         r"""
@@ -799,9 +832,11 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
 
         # Initialize fluid object
         # self.fluid = props.Fluid(design_point["fluid_name"])
-        self.fluid = jxp.FluidPerfectGas(design_point["fluid_name"], design_point["T0_in"], design_point["p_out"]) # Using jaxprop perfect gas model
+        self.fluid = jxp.FluidPerfectGas(
+            design_point["fluid_name"], design_point["T0_in"], design_point["p_out"]
+        )  # Using jaxprop perfect gas model
         # self.fluid = jxp.FluidJAX(design_point["fluid_name"]) # Using jaxprop coolprop model
-        
+
         # self.fluid = jxp.FluidBicubic(
         #     fluid_name=design_point["fluid_name"],
         #     backend="HEOS",
@@ -825,15 +860,13 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # Compute stagnation properties at inlet
         # state_in_stag  = self.fluid.get_props(cp.PT_INPUTS, p0_in, T0_in)
         # state_in_stag  = tf.get_props_custom_jvp(self.fluid, cp.PT_INPUTS, p0_in, T0_in)
-        
 
         # state_in_stag = perfect_gas_props("PT_INPUTS", p0_in, T0_in)
-        state_in_stag = self.fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in) 
+        state_in_stag = self.fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in)
         # tf.print_dict(state_in_stag)
 
         h0_in = state_in_stag["h"]
         s_in = state_in_stag["s"]
-
 
         # Store the inlet stagnation (h,s) for the first stage
         # TODO: Improve logic of implementation?
@@ -844,8 +877,8 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # state_out_s  = self.fluid.get_props(cp.PSmass_INPUTS, p_out, state_in_stag.s)
         # state_out_s  = tf.get_props_custom_jvp(self.fluid, cp.PSmass_INPUTS, p_out, state_in_stag["s"])
         # state_out_s = perfect_gas_props("PSmass_INPUTS", p_out, s_in)
-        state_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in) 
-        
+        state_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
+
         h_isentropic = state_out_s["h"]
         d_isentropic = state_out_s["d"]
 
@@ -856,7 +889,9 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         # state_out_h = tf.get_props_custom_jvp(self.fluid, cp.HmassP_INPUTS, state_in_stag["h"], p_out)
 
         # state_out_h = perfect_gas_props("HmassP_INPUTS", h0_in, p_out)
-        state_out_h = self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out) # Using jaxprop perfect gas model
+        state_out_h = self.fluid.get_state(
+            jxp.HmassP_INPUTS, h0_in, p_out
+        )  # Using jaxprop perfect gas model
 
         s_isenthalpic = state_out_h["s"]
 
@@ -1044,12 +1079,12 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
                         }
                     ]
         return eq_constraints, ineq_constraints
-    
+
     def __getstate__(self):
         # Create a copy of the object's state dictionary
         state = self.__dict__.copy()
         # Remove the unpickleable 'fluid' entry
-        state['fluid'] = None
+        state["fluid"] = None
         return state
 
     def __setstate__(self, state):
@@ -1057,6 +1092,7 @@ class CascadesOptimizationProblem(psv.OptimizationProblem):
         self.__dict__.update(state)
         # Recreate the 'fluid' attribute
         self.fluid = props.Fluid(self.boundary_conditions["fluid_name"])
+
 
 class BlackBoxOptimization:
 
@@ -1073,25 +1109,54 @@ class BlackBoxOptimization:
         self.root_finder_solutions = np.array([])
         self.failed_iterations = 0
         self.failed_iterations_percentage = 0
-    
-    def update_optimization_process(self, results, converged = True, f = None, violation = None, vars_scaled = None):
+
+    def update_optimization_process(
+        self, results, converged=True, f=None, violation=None, vars_scaled=None
+    ):
 
         if converged:
-            self.iterations_objective_function = np.append(self.iterations_objective_function, f)
-            self.iterations_efficiency = np.append(self.iterations_efficiency, results["overall"]["efficiency_ts"])
-            self.iterations_convergence = np.append(self.iterations_convergence, converged)
-            self.iterations_mass_flow_rate = np.append(self.iterations_mass_flow_rate, results["overall"]["mass_flow_rate"])
-            self.iterations_interspace_flaring = np.append(self.iterations_interspace_flaring, results["additional_constraints"]["interspace_area_ratio"])
-            self.iterations_flaring_1 = np.append(self.iterations_flaring_1, results["geometry"]["flaring_angle"].values[0])
-            self.iterations_flaring_2 = np.append(self.iterations_flaring_2, results["geometry"]["flaring_angle"].values[1])
+            self.iterations_objective_function = np.append(
+                self.iterations_objective_function, f
+            )
+            self.iterations_efficiency = np.append(
+                self.iterations_efficiency, results["overall"]["efficiency_ts"]
+            )
+            self.iterations_convergence = np.append(
+                self.iterations_convergence, converged
+            )
+            self.iterations_mass_flow_rate = np.append(
+                self.iterations_mass_flow_rate, results["overall"]["mass_flow_rate"]
+            )
+            self.iterations_interspace_flaring = np.append(
+                self.iterations_interspace_flaring,
+                results["additional_constraints"]["interspace_area_ratio"],
+            )
+            self.iterations_flaring_1 = np.append(
+                self.iterations_flaring_1,
+                results["geometry"]["flaring_angle"].values[0],
+            )
+            self.iterations_flaring_2 = np.append(
+                self.iterations_flaring_2,
+                results["geometry"]["flaring_angle"].values[1],
+            )
             self.constraint_violation = np.append(self.constraint_violation, violation)
-            self.root_finder_solutions = np.append(self.root_finder_solutions, vars_scaled)
+            self.root_finder_solutions = np.append(
+                self.root_finder_solutions, vars_scaled
+            )
         else:
-            self.iterations_objective_function = np.append(self.iterations_objective_function, np.nan)
+            self.iterations_objective_function = np.append(
+                self.iterations_objective_function, np.nan
+            )
             self.iterations_efficiency = np.append(self.iterations_efficiency, np.nan)
-            self.iterations_convergence = np.append(self.iterations_convergence, converged)
-            self.iterations_mass_flow_rate = np.append(self.iterations_mass_flow_rate, np.nan)
-            self.iterations_interspace_flaring = np.append(self.iterations_interspace_flaring, np.nan)
+            self.iterations_convergence = np.append(
+                self.iterations_convergence, converged
+            )
+            self.iterations_mass_flow_rate = np.append(
+                self.iterations_mass_flow_rate, np.nan
+            )
+            self.iterations_interspace_flaring = np.append(
+                self.iterations_interspace_flaring, np.nan
+            )
             self.iterations_flaring_1 = np.append(self.iterations_flaring_1, np.nan)
             self.iterations_flaring_2 = np.append(self.iterations_flaring_2, np.nan)
             self.constraint_violation = np.append(self.constraint_violation, np.nan)
@@ -1099,17 +1164,19 @@ class BlackBoxOptimization:
             self.failed_iterations += 1
 
         self.turbine_results.append(results)
-        self.failed_iterations_percentage = self.failed_iterations/len(self.iterations_objective_function)
+        self.failed_iterations_percentage = self.failed_iterations / len(
+            self.iterations_objective_function
+        )
 
     def print_optimization_process(self):
 
-        print(f'Iteration: {len(self.iterations_objective_function)}')
-        print(f'Objective function: {self.iterations_objective_function[-1]}')
-        print(f'Mass flow rate: {self.iterations_mass_flow_rate[-1]}')
-        print(f'Interspace flaring: {self.iterations_interspace_flaring[-1]}')
-        print(f'Stator flaring: {self.iterations_flaring_1[-1]}')
-        print(f'Rotor flaring: {self.iterations_flaring_2[-1]}')
-        print('\n')
+        print(f"Iteration: {len(self.iterations_objective_function)}")
+        print(f"Objective function: {self.iterations_objective_function[-1]}")
+        print(f"Mass flow rate: {self.iterations_mass_flow_rate[-1]}")
+        print(f"Interspace flaring: {self.iterations_interspace_flaring[-1]}")
+        print(f"Stator flaring: {self.iterations_flaring_1[-1]}")
+        print(f"Rotor flaring: {self.iterations_flaring_2[-1]}")
+        print("\n")
 
     def find_champion(self, solver):
 
@@ -1126,13 +1193,14 @@ class BlackBoxOptimization:
         geometry_data = []
 
         for i in range(len(self.turbine_results)):
-            solver_status = {"Success" : self.iterations_convergence[i],
-                        "Objective" : self.iterations_objective_function[i],
-                        "Efficiency" : self.iterations_efficiency[i],
-                        "Mass flow rate" : self.iterations_mass_flow_rate[i],
-                        "Interspace flaring" : self.iterations_interspace_flaring[i],
-                        "Flaring Stator" : self.iterations_flaring_1[i],
-                        "Flaring Rotor" : self.iterations_flaring_2[i],
+            solver_status = {
+                "Success": self.iterations_convergence[i],
+                "Objective": self.iterations_objective_function[i],
+                "Efficiency": self.iterations_efficiency[i],
+                "Mass flow rate": self.iterations_mass_flow_rate[i],
+                "Interspace flaring": self.iterations_interspace_flaring[i],
+                "Flaring Stator": self.iterations_flaring_1[i],
+                "Flaring Rotor": self.iterations_flaring_2[i],
             }
             results = self.turbine_results[i]
             overall_data.append(results["overall"])
@@ -1150,7 +1218,7 @@ class BlackBoxOptimization:
             "geometry": pd.concat(geometry_data, ignore_index=True),
             "solver": pd.concat(solver_data, ignore_index=True),
         }
-        
+
         # Create a directory to save simulation results
         out_dir = "output"
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -1171,33 +1239,56 @@ class BlackBoxOptimization:
 
 
 def build_config(filename, performance_map, solver_options, initial_guess):
-    
     """
     Build configuration from CascadesOptimizationProblem object
     """
 
     obj = utils.load_from_pickle(filename)
-    bc_keys = ["fluid_name", "T0_in", "p0_in", "p_out", "omega" , "alpha_in"]
-    geometry_keys = ["cascade_type", "radius_hub_in", "radius_hub_out", "radius_tip_in", "radius_tip_out", "pitch",
-                     "chord", "stagger_angle", "opening", "leading_edge_angle", "leading_edge_wedge_angle",
-                     "leading_edge_diameter", "trailing_edge_thickness", "maximum_thickness",
-                     "tip_clearance", "throat_location_fraction"]
-    boundary_conditions = {key :  val for key, val in obj.problem.boundary_conditions.items() if key in bc_keys}
-    geometry = {key : val for key, val in obj.problem.geometry.items() if key in geometry_keys}
-    config = {"geometry" : geometry,
-              "simulation_options" : obj.problem.model_options,
-              "operation_points" : boundary_conditions,
-              "performance_analysis" : {"perfromance_map" : performance_map,
-                                        "solver_options" : solver_options,
-                                        "initial_guess" : initial_guess,}}
-    
+    bc_keys = ["fluid_name", "T0_in", "p0_in", "p_out", "omega", "alpha_in"]
+    geometry_keys = [
+        "cascade_type",
+        "radius_hub_in",
+        "radius_hub_out",
+        "radius_tip_in",
+        "radius_tip_out",
+        "pitch",
+        "chord",
+        "stagger_angle",
+        "opening",
+        "leading_edge_angle",
+        "leading_edge_wedge_angle",
+        "leading_edge_diameter",
+        "trailing_edge_thickness",
+        "maximum_thickness",
+        "tip_clearance",
+        "throat_location_fraction",
+    ]
+    boundary_conditions = {
+        key: val
+        for key, val in obj.problem.boundary_conditions.items()
+        if key in bc_keys
+    }
+    geometry = {
+        key: val for key, val in obj.problem.geometry.items() if key in geometry_keys
+    }
+    config = {
+        "geometry": geometry,
+        "simulation_options": obj.problem.model_options,
+        "operation_points": boundary_conditions,
+        "performance_analysis": {
+            "perfromance_map": performance_map,
+            "solver_options": solver_options,
+            "initial_guess": initial_guess,
+        },
+    }
+
     return config
 
 
 def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
     """
     Checks if the initial guess is within the given bounds and clips it if necessary.
-    
+
     Parameters
     ----------
     initial_guess : numpy.ndarray
@@ -1206,7 +1297,7 @@ def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
         A tuple containing two arrays: lower bounds and upper bounds.
     variable_names : list of str
         List of variable names corresponding to the design variables.
-        
+
     Returns
     -------
     numpy.ndarray
@@ -1220,7 +1311,7 @@ def check_and_clip_initial_guess(initial_guess, bounds, variable_names):
             warnings.warn(
                 f"Variable '{variable_names[i]}' was out of bounds ({x} not in [{l}, {u}]). "
                 f"Clipped to {initial_guess[i]}.",
-                UserWarning
+                UserWarning,
             )
 
     return initial_guess
@@ -1266,6 +1357,3 @@ def compute_hessians_jax(fitness_function, x, lower_triangular=True):
         return H_lower_triangular
 
     return H_full
-
-
-

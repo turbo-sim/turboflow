@@ -5,7 +5,10 @@ import jax
 import jax.numpy as jnp
 
 from . import loss_model_kacker_okapuu as lm_ko
-from .loss_coefficient_conversion import convert_kinetic_energy_to_stagnation_pressure_loss
+from .loss_coefficient_conversion import (
+    convert_kinetic_energy_to_stagnation_pressure_loss,
+)
+
 
 def compute_losses(input_parameters):
     r"""
@@ -216,7 +219,7 @@ def compute_losses(input_parameters):
 
 #     The aspect ratio factor is calculated from the following correlation:
 
-#     .. math:: 
+#     .. math::
 
 #         far = \begin{cases}
 #                 1 - \frac{0.25 \sqrt{|2-H/c|}}{H/c} & \text{if } H/c < 2.0 \\
@@ -229,13 +232,13 @@ def compute_losses(input_parameters):
 
 #     .. math::
 
-#         Z = 4 (\tan(\beta_\mathrm{in}) - \tan(\beta_\mathrm{out}))^2\frac{\cos^2(\beta_\mathrm{out})}{\cos(\beta_m)} 
+#         Z = 4 (\tan(\beta_\mathrm{in}) - \tan(\beta_\mathrm{out}))^2\frac{\cos^2(\beta_\mathrm{out})}{\cos(\beta_m)}
 
 #     where:
 
 #         - :math:`\beta_\mathrm{in}` and :math:`\beta_\mathrm{out}` is the inlet and exit relative flow angle
 #         - :math:`\beta_m = \tan^{-1}(0.5(\tan(\beta_\mathrm{in})-\tan(\beta_\mathrm{out})))` is the mean gas angle.
-           
+
 #     Parameters
 #     ----------
 #     flow_parameters : dict
@@ -477,7 +480,9 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
         dPhi = -5.1734e-6 * chi + 7.6902e-9 * chi**2
 
     # Convert kinetic-energy loss coefficient to total pressure loss coeffcient
-    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(Ma_rel_out, gamma, dPhi, limit_output=True)
+    Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(
+        Ma_rel_out, gamma, dPhi, limit_output=True
+    )
 
     return Y_inc
 
@@ -560,7 +565,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 #     Use Aungier correlation to compute the pressure loss coefficient for nozzle blades :cite:`aungier_turbine_2006`.
 
 #     This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,
-#     and is a function of the pitch-to-chord ratio and exit relative flow angle. 
+#     and is a function of the pitch-to-chord ratio and exit relative flow angle.
 
 #     The correlation uses the following equations:
 
@@ -582,14 +587,14 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 #         & \mathrm{Y_{p,reaction}} = \begin{cases}
 #                 A + BX^2 + CX^3 && \text{if } \beta_\mathrm{tan} < 30 \\
 #                 A + B |X|^n && \text{if } \beta_\mathrm{tan} \geq 30
-#               \end{cases}   
+#               \end{cases}
 
 #     where:
 
 #         - :math:`s` is the pitch
 #         - :math:`c` is the chord
-#         - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. 
-        
+#         - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction.
+
 #     Parameters
 #     ----------
 #     r_sc : float
@@ -625,7 +630,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 #     Use Aungier correlation to compute the pressure loss coefficient for impulse blades :cite:`aungier_turbine_2006`.
 
 #     This correlation is a formula that reproduces the figures from the Ainley and Mathieson original figures :cite:`ainley_method_1951`,
-#     and is a function of the pitch-to-chord ratio and exit relative flow angle. 
+#     and is a function of the pitch-to-chord ratio and exit relative flow angle.
 
 #     The correlation uses the following equations:
 
@@ -640,14 +645,14 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 #                 0.3 + \frac{30 - \beta_\mathrm{tan}}{275} && \text{if } \beta_\mathrm{tan} \geq 30
 #               \end{cases} \\
 #         & C = 0.88 - \frac{\beta_\mathrm{tan}}{42.4} + \left(\frac{\beta_\mathrm{tan}}{72.8}\right)^2 \\
-#         & \mathrm{Y_{p,impulse}} = A + BX^2 - CX^3 
+#         & \mathrm{Y_{p,impulse}} = A + BX^2 - CX^3
 
 #     where:
 
 #         - :math:`s` is the pitch
 #         - :math:`c` is the chord
-#         - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction. 
-        
+#         - :math:`\beta_\mathrm{tan}` and :math:`\beta_\mathrm{ax}` is the exit relative flow angle with respect to tangential and axial direction.
+
 #     Parameters
 #     ----------
 #     r_sc : float
@@ -679,7 +684,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 #     Compute compressible flow correction factor according to Kacker and Okapuu loss model :cite:`kacker_mean_1982`.
 
 #     The correction factors :math:`\mathrm{K_1}`, :math:`\mathrm{K_2}` and :math:`\mathrm{K_p}` was introduced by :cite:`kacker_mean_1982` to correct previous correlation (:cite:`ainley_method_1951`)
-#     for effect of higher mach number and channel acceleration. The correction factors reduces the losses at higher mach number. Their definition follows: 
+#     for effect of higher mach number and channel acceleration. The correction factors reduces the losses at higher mach number. Their definition follows:
 
 #     .. math::
 
@@ -694,7 +699,7 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
 
 #         - :math:`\mathrm{Ma_{in}}` is the relative mach number at the cascade inlet.
 #         -  :math:`\mathrm{Ma_{out}}` is the relative mach number at the cascade exit.
-    
+
 #     Parameters
 #     ----------
 #     Ma_rel_in : float
