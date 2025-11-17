@@ -17,6 +17,7 @@ KEYS_LOSSES = [
     "loss_incidence",
 ]
 
+
 def _normalize_loss_options(loss_model_options):
     """
     Accept string or dict; return a dict with defaults.
@@ -37,7 +38,9 @@ def _normalize_loss_options(loss_model_options):
 
     # Custom model must have a value
     if opts["model"] == "custom" and "custom_value" not in opts:
-        raise ValueError("custom loss model requires 'custom_value' in loss_model_options")
+        raise ValueError(
+            "custom loss model requires 'custom_value' in loss_model_options"
+        )
 
     # Validate loss coefficient
     if opts["loss_coefficient"] not in LOSS_COEFFICIENTS:
@@ -68,8 +71,8 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Function mappings
     model_funcs = {
         "kacker_okapuu": ko.compute_losses,
-        "moustapha":     mo.compute_losses,
-        "benner":        br.compute_losses,
+        "moustapha": mo.compute_losses,
+        "benner": br.compute_losses,
     }
 
     if model in model_funcs:
@@ -105,15 +108,15 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Compute loss coefficient definition
     loss_coeff = opts["loss_coefficient"]
     if loss_coeff == "stagnation_pressure":
-        p0rel_in  = input_parameters["flow"]["p0_rel_in"]
+        p0rel_in = input_parameters["flow"]["p0_rel_in"]
         p0_rel_is = input_parameters["flow"]["p0_rel_is"]
         p0rel_out = input_parameters["flow"]["p0_rel_out"]
-        p_out     = input_parameters["flow"]["p_out"]
+        p_out = input_parameters["flow"]["p_out"]
         # definition using isentropic reference:
         Y_definition = (p0_rel_is - p0rel_out) / (p0rel_out - p_out)
     elif loss_coeff == "kinetic_energy":
-        w    = input_parameters["flow"]["w_out"]
-        h    = input_parameters["flow"]["h_out"]
+        w = input_parameters["flow"]["w_out"]
+        h = input_parameters["flow"]["h_out"]
         h_is = input_parameters["flow"]["h_is"]
         Y_definition = (h - h_is) / (0.5 * w**2)
     else:

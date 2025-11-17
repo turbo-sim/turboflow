@@ -15,6 +15,7 @@ CHOKING_CRITERIONS = [
     "critical_isentropic_throat",
 ]
 
+
 def evaluate_choking(
     choking_input,
     inlet_plane,
@@ -208,9 +209,9 @@ def evaluate_choking(
 #     }
 #     throat_plane = {f"{key}_throat": val for key, val in throat_plane.items()}
 
-    
 
 #     return residuals_critical, {**critical_state, **throat_plane}
+
 
 def critical_mach_number(
     choking_input,
@@ -236,16 +237,16 @@ def critical_mach_number(
     # ------------------------------------------------------------------
     # Model options & geometry
     # ------------------------------------------------------------------
-    loss_model      = model_options["loss_model"]
-    blockage        = model_options["blockage_model"]
+    loss_model = model_options["loss_model"]
+    blockage = model_options["blockage_model"]
     deviation_model = model_options["deviation_model"]
 
     A_throat = geometry["A_throat"]
-    A_out    = geometry["A_out"]
+    A_out = geometry["A_out"]
 
     # Reference values
-    v0             = reference_values["v0"]
-    mass_flow_ref  = reference_values["mass_flow_ref"]
+    v0 = reference_values["v0"]
+    mass_flow_ref = reference_values["mass_flow_ref"]
 
     # ------------------------------------------------------------------
     # IMPORTANT: choking_input is already in PHYSICAL units now
@@ -253,13 +254,13 @@ def critical_mach_number(
     # by v0 or s_range here.
     # ------------------------------------------------------------------
     w_throat_raw = jnp.asarray(choking_input["w_crit_throat"], dtype=jnp.float64)
-    s_throat     = jnp.asarray(choking_input["s_crit_throat"], dtype=jnp.float64)
+    s_throat = jnp.asarray(choking_input["s_crit_throat"], dtype=jnp.float64)
 
     # Optional safety clipping on w at the throat (relative to v0)
     # This prevents the solver from wandering into totally unphysical
     # regions (e.g. |w| >> v0) that produce huge negative enthalpies.
-    w_min = 1.0e-3 * v0         # basically > 0
-    w_max = 5.0 * v0            # relative speed up to ~5× spouting velocity
+    w_min = 1.0e-3 * v0  # basically > 0
+    w_max = 5.0 * v0  # relative speed up to ~5× spouting velocity
     w_throat = jnp.clip(w_throat_raw, w_min, w_max)
 
     # Throat flow angle from geometric throat area ratio; sign from exit beta
@@ -269,9 +270,9 @@ def critical_mach_number(
     # Evaluate throat plane
     # ------------------------------------------------------------------
     cascade_throat_input = {
-        "w":        w_throat,
-        "s":        s_throat,
-        "beta":     beta_throat,
+        "w": w_throat,
+        "s": s_throat,
+        "beta": beta_throat,
         "rothalpy": inlet_plane["rothalpy"],
     }
 
@@ -290,9 +291,7 @@ def critical_mach_number(
     # ------------------------------------------------------------------
     Y_tot = loss_dict["loss_total"]
 
-    eta = (
-        throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]
-    ) / (
+    eta = (throat_plane["enthalpy0_rel"] - throat_plane["enthalpy"]) / (
         throat_plane["enthalpy0_rel"] - throat_plane["h_is"]
     )
 
@@ -335,6 +334,7 @@ def critical_mach_number(
 
     return residuals_critical, {**critical_state, **throat_plane_suffixed}
 
+
 def get_mach_crit(gamma, eta):
     r"""
     Compute the critical Mach number for non-isentropic flow in a nozzle.
@@ -370,7 +370,9 @@ def get_mach_crit(gamma, eta):
     float
         Critical Mach number.
     """
-    eta = math.smooth_maximum(0.0, eta, method="logsumexp")  # Prevent negative efficiency
+    eta = math.smooth_maximum(
+        0.0, eta, method="logsumexp"
+    )  # Prevent negative efficiency
     alpha = gamma / (gamma - 1)
     T_hat_crit = (
         2 * alpha
@@ -419,7 +421,9 @@ def get_flow_capacity(Ma, gamma, eta):
     float
         Dimensionless mass flow rate.
     """
-    eta = math.smooth_maximum(0.0, eta, method="logsumexp")  # Prevent negative efficiency
+    eta = math.smooth_maximum(
+        0.0, eta, method="logsumexp"
+    )  # Prevent negative efficiency
     T_hat = (1 + (gamma - 1) / 2 * Ma**2) ** (-1)
     Phi = (
         jnp.sqrt(2 * gamma / (gamma - 1))
@@ -549,15 +553,17 @@ def critical_mass_flow_rate(
     )
 
     # Evaluate the Jacobian of the evaluate_critical_cascade function
-    J = jnp.array(jax.jacfwd(compute_critical_values, argnums=(0))(
-        x_crit,
-        inlet_plane,
-        fluid,
-        geometry,
-        angular_speed,
-        model_options,
-        reference_values,
-    )[0]).T
+    J = jnp.array(
+        jax.jacfwd(compute_critical_values, argnums=(0))(
+            x_crit,
+            inlet_plane,
+            fluid,
+            geometry,
+            angular_speed,
+            model_options,
+            reference_values,
+        )[0]
+    ).T
 
     # Rename gradients
     a11, a12, a21, a22, b1, b2 = (
@@ -592,7 +598,8 @@ def critical_mass_flow_rate(
 
     # Restructure critical state dictionary
     inlet_plane = {
-        f"critical_{key}_in": val for key, val in updated_critical_state["inlet_plane"].items()
+        f"critical_{key}_in": val
+        for key, val in updated_critical_state["inlet_plane"].items()
     }
     throat_plane = {
         f"critical_{key}_throat": val

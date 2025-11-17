@@ -43,7 +43,9 @@ def _extract_components(obj):
         return obj["components"]
     if isinstance(obj, list):
         return obj
-    raise TypeError("Input must be a YAML dict with 'components' or a list of components.")
+    raise TypeError(
+        "Input must be a YAML dict with 'components' or a list of components."
+    )
 
 
 # ==============
@@ -115,7 +117,9 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
     throat = (1 - frac) * r_in + frac * r_out
     Works with scalars or jax scalars.
     """
-    return (1.0 - throat_location_fraction) * radius_in + throat_location_fraction * radius_out
+    return (
+        1.0 - throat_location_fraction
+    ) * radius_in + throat_location_fraction * radius_out
 
 
 def _compute_full_geometry_for_component(comp):
@@ -131,44 +135,52 @@ def _compute_full_geometry_for_component(comp):
     g = comp["geometry"]
 
     # Pull scalars
-    cascade_type               = g["cascade_type"]                        # 'stator' or 'rotor'
-    radius_hub_in              = float(g["radius_hub_in"])
-    radius_hub_out             = float(g["radius_hub_out"])
-    radius_tip_in              = float(g["radius_tip_in"])
-    radius_tip_out             = float(g["radius_tip_out"])
-    pitch                      = float(g["pitch"])
-    chord                      = float(g["chord"])
-    stagger_angle              = float(g["stagger_angle"])
-    opening                    = float(g["opening"])
-    leading_edge_diameter      = float(g["leading_edge_diameter"])
-    leading_edge_wedge_angle   = float(g["leading_edge_wedge_angle"])
-    leading_edge_angle         = float(g["leading_edge_angle"])
-    trailing_edge_thickness    = float(g["trailing_edge_thickness"])
-    tip_clearance              = float(g["tip_clearance"])
-    maximum_thickness          = float(g["maximum_thickness"])
-    throat_location_fraction   = float(g["throat_location_fraction"])
+    cascade_type = g["cascade_type"]  # 'stator' or 'rotor'
+    radius_hub_in = float(g["radius_hub_in"])
+    radius_hub_out = float(g["radius_hub_out"])
+    radius_tip_in = float(g["radius_tip_in"])
+    radius_tip_out = float(g["radius_tip_out"])
+    pitch = float(g["pitch"])
+    chord = float(g["chord"])
+    stagger_angle = float(g["stagger_angle"])
+    opening = float(g["opening"])
+    leading_edge_diameter = float(g["leading_edge_diameter"])
+    leading_edge_wedge_angle = float(g["leading_edge_wedge_angle"])
+    leading_edge_angle = float(g["leading_edge_angle"])
+    trailing_edge_thickness = float(g["trailing_edge_thickness"])
+    tip_clearance = float(g["tip_clearance"])
+    maximum_thickness = float(g["maximum_thickness"])
+    throat_location_fraction = float(g["throat_location_fraction"])
 
     # Mean radii
-    radius_mean_in     = 0.5 * (radius_tip_in  + radius_hub_in)
-    radius_mean_out    = 0.5 * (radius_tip_out + radius_hub_out)
-    radius_hub_throat  = calculate_throat_radius(radius_hub_in, radius_hub_out, throat_location_fraction)
-    radius_tip_throat  = calculate_throat_radius(radius_tip_in, radius_tip_out, throat_location_fraction)
-    radius_mean_throat = calculate_throat_radius(radius_mean_in, radius_mean_out, throat_location_fraction)
+    radius_mean_in = 0.5 * (radius_tip_in + radius_hub_in)
+    radius_mean_out = 0.5 * (radius_tip_out + radius_hub_out)
+    radius_hub_throat = calculate_throat_radius(
+        radius_hub_in, radius_hub_out, throat_location_fraction
+    )
+    radius_tip_throat = calculate_throat_radius(
+        radius_tip_in, radius_tip_out, throat_location_fraction
+    )
+    radius_mean_throat = calculate_throat_radius(
+        radius_mean_in, radius_mean_out, throat_location_fraction
+    )
 
     # Shroud radii (tip + clearance)
-    radius_shroud_in     = radius_tip_in  + tip_clearance
-    radius_shroud_out    = radius_tip_out + tip_clearance
-    radius_shroud_throat = calculate_throat_radius(radius_shroud_in, radius_shroud_out, throat_location_fraction)
+    radius_shroud_in = radius_tip_in + tip_clearance
+    radius_shroud_out = radius_tip_out + tip_clearance
+    radius_shroud_throat = calculate_throat_radius(
+        radius_shroud_in, radius_shroud_out, throat_location_fraction
+    )
 
     # Heights
-    height_in     = radius_tip_in     - radius_hub_in
-    height_out    = radius_tip_out    - radius_hub_out
+    height_in = radius_tip_in - radius_hub_in
+    height_out = radius_tip_out - radius_hub_out
     height_throat = radius_tip_throat - radius_hub_throat
-    height        = 0.5 * (height_in + height_out)
+    height = 0.5 * (height_in + height_out)
 
     # Areas
-    A_in     = jnp.pi * (radius_tip_in**2  - radius_hub_in**2)
-    A_out    = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
+    A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
+    A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
     # Use opening definition: A_throat = (2*pi * r_mean_throat * h_throat) * (opening / pitch)
     A_throat = (2.0 * jnp.pi * radius_mean_throat * height_throat) * (opening / pitch)
 
@@ -179,26 +191,29 @@ def _compute_full_geometry_for_component(comp):
     # Axial chord and flaring angle
     meridional_chord = chord * math.cosd(stagger_angle)
     # Avoid divide-by-zero if meridional_chord==0
-    flaring_angle = math.arctand((height_out - height_in) / max(meridional_chord, 1e-12) / 2.0)
+    flaring_angle = math.arctand(
+        (height_out - height_in) / max(meridional_chord, 1e-12) / 2.0
+    )
 
     # Ratios
-    aspect_ratio                         = height / chord
-    pitch_chord_ratio                    = pitch / chord
-    solidity                             = 1.0 / pitch_chord_ratio
-    hub_tip_ratio_in                     = radius_hub_in  / radius_tip_in
-    hub_tip_ratio_out                    = radius_hub_out / radius_tip_out
-    hub_tip_ratio_throat                 = radius_hub_throat / max(radius_tip_throat, 1e-12)
-    maximum_thickness_chord_ratio        = maximum_thickness / chord
-    trailing_edge_thickness_opening_ratio= trailing_edge_thickness / max(opening, 1e-12)
-    tip_clearance_height_ratio           = tip_clearance / max(height, 1e-12)
-    leading_edge_diameter_chord_ratio    = leading_edge_diameter / chord
+    aspect_ratio = height / chord
+    pitch_chord_ratio = pitch / chord
+    solidity = 1.0 / pitch_chord_ratio
+    hub_tip_ratio_in = radius_hub_in / radius_tip_in
+    hub_tip_ratio_out = radius_hub_out / radius_tip_out
+    hub_tip_ratio_throat = radius_hub_throat / max(radius_tip_throat, 1e-12)
+    maximum_thickness_chord_ratio = maximum_thickness / chord
+    trailing_edge_thickness_opening_ratio = trailing_edge_thickness / max(
+        opening, 1e-12
+    )
+    tip_clearance_height_ratio = tip_clearance / max(height, 1e-12)
+    leading_edge_diameter_chord_ratio = leading_edge_diameter / chord
 
     # Full dict for this component
     full = {
         # identifiers
         "name": name,
         "component_type": component_type,
-
         # original geometry (echo back)
         "cascade_type": cascade_type,
         "radius_hub_in": radius_hub_in,
@@ -216,7 +231,6 @@ def _compute_full_geometry_for_component(comp):
         "tip_clearance": tip_clearance,
         "maximum_thickness": maximum_thickness,
         "throat_location_fraction": throat_location_fraction,
-
         # derived geometry
         "radius_mean_in": radius_mean_in,
         "radius_mean_out": radius_mean_out,
@@ -308,7 +322,9 @@ def check_turbine_geometry(geom_list, display=True):
     msgs.append("-" * report_width)
     msgs.append("Axial turbine geometry report (component-wise)".center(report_width))
     msgs.append("-" * report_width)
-    table_header = f" {'Component':<16}{'Parameter':<34}{'Value':>8}{'Range':>20}{'In range?':>12}"
+    table_header = (
+        f" {'Component':<16}{'Parameter':<34}{'Value':>8}{'Range':>20}{'In range?':>12}"
+    )
     msgs.append(table_header)
     msgs.append("-" * report_width)
 
@@ -334,15 +350,21 @@ def check_turbine_geometry(geom_list, display=True):
 
             in_range = (val >= lb) and (val <= ub)
             bounds = f"({lb:+0.4f}, {ub:+0.4f})"
-            msgs.append(f" {name:<16}{param:<32}{val:>+8.4f}{bounds:>24}{str(in_range):>12}")
+            msgs.append(
+                f" {name:<16}{param:<32}{val:>+8.4f}{bounds:>24}{str(in_range):>12}"
+            )
             if not in_range:
                 vars_outside.append(f"{name}:{param}")
 
     msgs.append("-" * report_width)
     if not vars_outside:
-        msgs.append(" Geometry report summary: All parameters are within recommended ranges.")
+        msgs.append(
+            " Geometry report summary: All parameters are within recommended ranges."
+        )
     else:
-        msgs.append(" Geometry report summary: Some parameters are outside recommended ranges.")
+        msgs.append(
+            " Geometry report summary: Some parameters are outside recommended ranges."
+        )
         for w in vars_outside:
             msgs.append(f"     - {w}")
     msgs.append("-" * report_width)

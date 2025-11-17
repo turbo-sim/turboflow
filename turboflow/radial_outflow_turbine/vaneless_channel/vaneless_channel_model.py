@@ -17,6 +17,7 @@ from jaxtyping import Array, Float, Scalar
 
 from .friction_models import FrictionModel, make_friction_model
 from .heat_models import HeatTransferModel, make_heat_model
+
 jxp.set_plot_options(grid=False)
 
 
@@ -927,7 +928,7 @@ def solve_vaneless_channel_model(
     # Compute inlet stagnation quantities
 
     # print(p_in, h_in, v_in, alpha_in)
-    
+
     state_in = fluid.get_state(jxp.HmassP_INPUTS, h_in, p_in)
     h0_in = h_in + 0.5 * v_in**2
     s0_in = state_in.s
@@ -1170,7 +1171,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
         b_in=params["b_in"],
         m_total=m_total,
         curvature=curvature,
-        alpha=alpha,)
+        alpha=alpha,
+    )
 
     # Original Augier formulation with an asymmetrical loss distribution
     tau_m = 0.5 * d * v**2 * (cf_wall * jnp.cos(jnp.deg2rad(alpha)) + cf_diff + cf_curv)
@@ -1191,7 +1193,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
         Cf=cf_wall,
         Dh=D_h,
     )
-    
+
     # Compute coefficient matrix
     M = jnp.asarray(
         [
@@ -1291,6 +1293,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
     }
 
     return rhs, out
+
 
 def compute_efficiency_derivatives(
     dh, dp, d, alpha, h0_in, h_in, cf_wall, cf_diff, cf_curv

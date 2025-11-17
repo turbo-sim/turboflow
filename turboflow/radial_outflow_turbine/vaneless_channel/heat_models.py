@@ -57,15 +57,19 @@ class HeatTransferModel(eqx.Module):
 # ---------------------------------------------------------------------
 class Adiabatic(HeatTransferModel):
     """Idealized adiabatic wall (no heat transfer)."""
+
     def compute_heat_transfer(self, *args, **kwargs):
         return jnp.array(0.0), jnp.array(0.0)
+
 
 # ---------------------------------------------------------------------
 # Reynolds analogy model
 # ---------------------------------------------------------------------
 class ReynoldsAnalogy(HeatTransferModel):
     """Reynolds analogy (Stanitz) heat transfer model."""
+
     T_wall: Float[Array, ""]
+
     def compute_heat_transfer(self, T0_fluid, rho, v, cp, k, mu, Cf, Dh):
         Re = jnp.maximum(rho * v * Dh / mu, 1.0)
         Pr = jnp.maximum(cp * mu / k, 1e-6)
@@ -73,6 +77,7 @@ class ReynoldsAnalogy(HeatTransferModel):
         htc = Nu * k / Dh
         q_w = htc * (self.T_wall - T0_fluid)
         return q_w, htc
+
 
 # ---------------------------------------------------------------------
 # Factory
@@ -86,7 +91,10 @@ def make_heat_model(cfg: dict) -> HeatTransferModel:
         # - 'reynolds_analogy' : Reynolds analogy model
         # - 'dittus_boelter'   : Empirical turbulent correlation
     """
-    valid_models = ("adiabatic", "reynolds_analogy", )
+    valid_models = (
+        "adiabatic",
+        "reynolds_analogy",
+    )
 
     # Require explicit model type
     if "type" not in cfg:

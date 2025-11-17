@@ -19,16 +19,19 @@ from turboflow.radial_outflow_turbine import geometry_model as radial_gm
 from turboflow.axial_turbine import geometry_model2 as axial_gm
 
 # ===============================================================
-# Public: loader 
+# Public: loader
 # ===============================================================
+
 
 def get_full_geometry_from_yaml(yaml_path: str) -> Dict[str, Dict[str, Any]]:
     """Load YAML and compute the full-geometry dictionary (row_name -> dict)."""
     return radial_gm.run_radial_outflow_pipeline_from_yaml(yaml_path)
 
+
 # ===============================================================
 # Public: original radial row plot
 # ===============================================================
+
 
 def plot_row_from_full_geometry(
     full_geom_by_name: Dict[str, Dict[str, Any]],
@@ -49,7 +52,9 @@ def plot_row_from_full_geometry(
     rows = [row_name] if isinstance(row_name, str) else list(row_name)
     missing = [r for r in rows if r not in full_geom_by_name]
     if missing:
-        raise KeyError(f"Rows not found: {missing}. Available: {list(full_geom_by_name.keys())}")
+        raise KeyError(
+            f"Rows not found: {missing}. Available: {list(full_geom_by_name.keys())}"
+        )
 
     fig, ax = plt.subplots(figsize=(7, 7))
     ax.set_aspect("equal", "box")
@@ -62,7 +67,8 @@ def plot_row_from_full_geometry(
         geom = full_geom_by_name[rname]
 
         camberline_type = geom["camberline_type"]
-        r1 = float(geom["r_in"]); r2 = float(geom["r_out"])
+        r1 = float(geom["r_in"])
+        r2 = float(geom["r_out"])
 
         # If YAML angles are meridional, convert to tangential:
         metal_angle1_deg = 90.0 - float(geom["metal_angle_in"])
@@ -81,10 +87,10 @@ def plot_row_from_full_geometry(
 
         # Thickness / profile (absolute LE radius)
         loc_max = float(geom["maximum_thickness_location_fraction"])
-        t_max   = float(geom["maximum_thickness"])
-        t_te    = float(geom["trailing_edge_thickness"])
-        wedge   = jnp.deg2rad(float(geom["trailing_edge_wedge"]))
-        r_le    = float(geom["leading_edge_radius"])
+        t_max = float(geom["maximum_thickness"])
+        t_te = float(geom["trailing_edge_thickness"])
+        wedge = jnp.deg2rad(float(geom["trailing_edge_wedge"]))
+        r_le = float(geom["leading_edge_radius"])
 
         # Camberline
         u = jnp.linspace(0.0, 1.0, max(2, N_points))
@@ -99,7 +105,11 @@ def plot_row_from_full_geometry(
         # Full blade
         x_b, y_b, *_ = bp.compute_blade_coordinates_radial(
             camberline_type,
-            r1, r2, metal_angle1, metal_angle2, theta0,
+            r1,
+            r2,
+            metal_angle1,
+            metal_angle2,
+            theta0,
             loc_max,
             t_max,
             t_te,
@@ -132,18 +142,28 @@ def plot_row_from_full_geometry(
     plt.tight_layout()
     plt.show()
 
+
 # ===============================================================
 # Helpers
 # ===============================================================
 
+
 def _is_axial_geom(G: dict) -> bool:
     """Predicate: does G look like the axial geometry dict (arrays per cascade)?"""
     required = [
-        "cascade_type", "radius_hub_in", "radius_hub_out",
-        "radius_tip_in", "radius_tip_out", "pitch", "chord",
-        "stagger_angle", "tip_clearance", "throat_location_fraction"
+        "cascade_type",
+        "radius_hub_in",
+        "radius_hub_out",
+        "radius_tip_in",
+        "radius_tip_out",
+        "pitch",
+        "chord",
+        "stagger_angle",
+        "tip_clearance",
+        "throat_location_fraction",
     ]
     return all(k in G for k in required) and hasattr(G["cascade_type"], "__len__")
+
 
 def _axial_rows_from_geom(G: dict):
     """
@@ -171,9 +191,14 @@ def _axial_rows_from_geom(G: dict):
             pitch=float(G["pitch"][i]),
             stagger_deg=float(G["stagger_angle"][i]),
             le_angle_deg=float(G["leading_edge_angle"][i]),
-            N_blades=int(round(
-                2.0*jnp.pi*float(G.get("radius_mean_in", G["radius_tip_in"])[i]) / float(G["pitch"][i])
-            )),
+            N_blades=int(
+                round(
+                    2.0
+                    * jnp.pi
+                    * float(G.get("radius_mean_in", G["radius_tip_in"])[i])
+                    / float(G["pitch"][i])
+                )
+            ),
             x_in=float(x_starts[i]),
             x_out=float(x_ends[i]),
             throat_frac=float(G["throat_location_fraction"][i]),
@@ -184,11 +209,17 @@ def _axial_rows_from_geom(G: dict):
         rows.append(row)
     return rows
 
+
 def _is_radial_geom(geom: dict) -> bool:
     """Predicate: does the per-row dict look radial?"""
-    return ("r_in" in geom and "r_out" in geom) or (geom.get("geometry_family", "").lower() == "radial")
+    return ("r_in" in geom and "r_out" in geom) or (
+        geom.get("geometry_family", "").lower() == "radial"
+    )
 
-def _deg2rad(x): return jnp.deg2rad(float(x))
+
+def _deg2rad(x):
+    return jnp.deg2rad(float(x))
+
 
 def _safe_array(a, name: str):
     try:
@@ -196,13 +227,15 @@ def _safe_array(a, name: str):
     except Exception:
         raise ValueError(f"Expected array-like for '{name}'")
 
+
 # ===============================================================
 # New plot: Meridional–Tangential (Blade-to-Blade) view
 # ===============================================================
 
+
 def plot_meridional_tangential(
-    full_geom,                    # EITHER dict-of-rows (radial) OR axial geometry dict
-    row_name=None,               # For radial: str | list[str]. For axial: ignored.
+    full_geom,  # EITHER dict-of-rows (radial) OR axial geometry dict
+    row_name=None,  # For radial: str | list[str]. For axial: ignored.
     N_points: int = 800,
     title: str = "Meridional–Tangential (Blade-to-Blade) view",
 ):
@@ -232,20 +265,21 @@ def plot_meridional_tangential(
 
         # thickness parameters (global)
         loc_max = full_geom.get("maximum_thickness_location_fraction", 0.25)
-        t_max_array   = full_geom["maximum_thickness"]
-        t_te_array    = full_geom["trailing_edge_thickness"]
-        wedge   = full_geom.get("trailing_edge_wedge", 5.0)
-        r_le_array    = full_geom["leading_edge_diameter"] * 0.5
+        t_max_array = full_geom["maximum_thickness"]
+        t_te_array = full_geom["trailing_edge_thickness"]
+        wedge = full_geom.get("trailing_edge_wedge", 5.0)
+        r_le_array = full_geom["leading_edge_diameter"] * 0.5
 
         # Leading / trailing metal angles arrays (global but row-dependent sign)
         cascade_types = full_geom["cascade_type"]  # list of strings
-        sgn_array = jnp.array([
-            +1.0 if str(ct).lower() == "stator" else -1.0
-            for ct in cascade_types
-        ])
+        sgn_array = jnp.array(
+            [+1.0 if str(ct).lower() == "stator" else -1.0 for ct in cascade_types]
+        )
 
         sgn_array = 1.0
-        m1_array = sgn_array * (jnp.asarray(full_geom["leading_edge_angle"], dtype=float))
+        m1_array = sgn_array * (
+            jnp.asarray(full_geom["leading_edge_angle"], dtype=float)
+        )
         m2_array = sgn_array * (jnp.asarray(full_geom["gauging_angle"], dtype=float))
 
         # chord_ax may be absent → fallback to chord
@@ -254,21 +288,26 @@ def plot_meridional_tangential(
             dtype=float,
         )
 
-        pitch_array   = jnp.asarray(full_geom["pitch"], dtype=float)
-        chord_array   = jnp.asarray(full_geom["chord"], dtype=float)
-        stagger_array = jnp.deg2rad(jnp.asarray(full_geom["stagger_angle"], dtype=float))
+        pitch_array = jnp.asarray(full_geom["pitch"], dtype=float)
+        chord_array = jnp.asarray(full_geom["chord"], dtype=float)
+        stagger_array = jnp.deg2rad(
+            jnp.asarray(full_geom["stagger_angle"], dtype=float)
+        )
 
         # gaps and axial placement
         gap_frac = 0.15
         gaps = gap_frac * chord_ax_array
 
-        x_starts  = jnp.cumsum(
-            jnp.concatenate([jnp.array([0.0], dtype=float), (chord_ax_array + gaps)[:-1]])
+        x_starts = jnp.cumsum(
+            jnp.concatenate(
+                [jnp.array([0.0], dtype=float), (chord_ax_array + gaps)[:-1]]
+            )
         )
         x_centers = x_starts + 0.5 * chord_ax_array
 
         # plot colors
         colors = ["darkorange", "steelblue"]
+
         def row_color(i):
             return colors[i % len(colors)]
 
@@ -280,10 +319,10 @@ def plot_meridional_tangential(
             # -----------------------------------------
             # Read per-row scalar parameters uniformly
             # -----------------------------------------
-            c_ax = float(chord_ax_array[i])       # axial chord
-            phi  = float(stagger_array[i])        # stagger
-            P    = float(pitch_array[i])          # pitch
-            xmid = float(x_centers[i])            # axial offset
+            c_ax = float(chord_ax_array[i])  # axial chord
+            phi = float(stagger_array[i])  # stagger
+            P = float(pitch_array[i])  # pitch
+            xmid = float(x_centers[i])  # axial offset
 
             beta1 = jnp.deg2rad(m1_array[i])
             beta2 = jnp.deg2rad(m2_array[i])
@@ -318,38 +357,48 @@ def plot_meridional_tangential(
                 label = f"Row {i+1}" if k == 0 else None
                 ax.plot(x_b, y_b + k * P, color=color, lw=1.2, label=label)
 
-            x1_global += 1.1*c_ax
+            x1_global += 1.1 * c_ax
 
         # finalize
-        ax.set_ylim([0, 3.5*P])
+        ax.set_ylim([0, 3.5 * P])
         ax.legend(loc="best", fontsize=8)
         ax.set_aspect("equal", adjustable="box")
         plt.tight_layout(pad=1)
 
         return fig, ax
 
-
     # ---------------- RADIAL INPUT (dict of named rows) ----------------
     if not isinstance(full_geom, dict):
-        raise TypeError("For radial use, pass the full-geometry dict-of-rows as in your current pipeline.")
+        raise TypeError(
+            "For radial use, pass the full-geometry dict-of-rows as in your current pipeline."
+        )
 
-    rows = [row_name] if isinstance(row_name, str) else (list(row_name) if row_name is not None else list(full_geom.keys()))
+    rows = (
+        [row_name]
+        if isinstance(row_name, str)
+        else (list(row_name) if row_name is not None else list(full_geom.keys()))
+    )
     missing = [r for r in rows if r not in full_geom]
     if missing:
-        raise KeyError(f"Rows not found: {missing}. Available: {list(full_geom.keys())}")
+        raise KeyError(
+            f"Rows not found: {missing}. Available: {list(full_geom.keys())}"
+        )
 
     # Color: consistent per row (use tab10 cycle deterministically)
     # cmap = plt.get_cmap("tab10")
     # def row_color(i): return cmap(i % 10)
     colors = ["darkorange", "steelblue"]
-    def row_color(i): return colors[i % 2]
 
+    def row_color(i):
+        return colors[i % 2]
 
     xy_max = 0.0
     for idx, rname in enumerate(rows):
         geom = full_geom[rname]
         if not _is_radial_geom(geom):
-            warnings.warn(f"[{rname}] does not look radial; skipping in this plot.", stacklevel=1)
+            warnings.warn(
+                f"[{rname}] does not look radial; skipping in this plot.", stacklevel=1
+            )
             continue
 
         color = row_color(idx)
@@ -359,7 +408,7 @@ def plot_meridional_tangential(
         r2 = float(geom["r_out"])
         N_blades = int(geom["N_blades"])
 
-        theta = jnp.linspace(0.0, 2.0*jnp.pi, 200)
+        theta = jnp.linspace(0.0, 2.0 * jnp.pi, 200)
         x_circ = r1 * jnp.cos(theta)
         y_circ = r1 * jnp.sin(theta)
         ax.plot(x_circ, y_circ, "k-", linewidth=0.5)
@@ -377,14 +426,24 @@ def plot_meridional_tangential(
 
         # thickness params
         loc_max = float(geom["maximum_thickness_location_fraction"])
-        t_max   = float(geom["maximum_thickness"])
-        t_te    = float(geom["trailing_edge_thickness"])
-        wedge   = _deg2rad(geom["trailing_edge_wedge"])
-        r_le_array    = float(geom["leading_edge_radius"])
+        t_max = float(geom["maximum_thickness"])
+        t_te = float(geom["trailing_edge_thickness"])
+        wedge = _deg2rad(geom["trailing_edge_wedge"])
+        r_le_array = float(geom["leading_edge_radius"])
 
         x_b, y_b, *_ = bp.compute_blade_coordinates_radial(
-            camberline_type, r1, r2, _deg2rad(m1), _deg2rad(m2), _deg2rad(theta0),
-            loc_max, t_max, t_te, wedge, r_le_array, N_points
+            camberline_type,
+            r1,
+            r2,
+            _deg2rad(m1),
+            _deg2rad(m2),
+            _deg2rad(theta0),
+            loc_max,
+            t_max,
+            t_te,
+            wedge,
+            r_le_array,
+            N_points,
         )
 
         d_theta = 2.0 * jnp.pi / float(N_blades)
@@ -409,17 +468,19 @@ def plot_meridional_tangential(
     # plt.show()
     return fig, ax
 
+
 # ===============================================================
-# New plot: Meridional 
+# New plot: Meridional
 # ===============================================================
 
+
 def plot_meridional(
-    full_geom,                    # EITHER axial dict OR radial dict-of-rows
-    row_name=None,               # For radial: str | list[str]. For axial: ignored.
+    full_geom,  # EITHER axial dict OR radial dict-of-rows
+    row_name=None,  # For radial: str | list[str]. For axial: ignored.
     title: str = "Meridional (side) view",
-    N_curve: int = 80,           # points along r for smooth band edges (radial)
-    z_center: float = 0.0,       # single shared axial center for ALL radial stages
-    label_kwargs=None,           # optional: text appearance settings
+    N_curve: int = 80,  # points along r for smooth band edges (radial)
+    z_center: float = 0.0,  # single shared axial center for ALL radial stages
+    label_kwargs=None,  # optional: text appearance settings
 ):
     """
     Unified meridional (side) view plot for axial and radial-outflow turbines.
@@ -446,7 +507,7 @@ def plot_meridional(
                 facecolor="white",
                 alpha=0.7,
                 edgecolor="none",
-                boxstyle="round,pad=0.25"
+                boxstyle="round,pad=0.25",
             ),
         }
 
@@ -466,39 +527,50 @@ def plot_meridional(
                 "fontsize": 9,
                 "ha": "center",
                 "va": "center",
-                "bbox": dict(facecolor="white", alpha=0.7, edgecolor="none", boxstyle="round,pad=0.25"),
+                "bbox": dict(
+                    facecolor="white",
+                    alpha=0.7,
+                    edgecolor="none",
+                    boxstyle="round,pad=0.25",
+                ),
             }
 
         # JAX arrays for radii
-        r_h_in  = jnp.asarray(full_geom["radius_hub_in"],  dtype=float)
+        r_h_in = jnp.asarray(full_geom["radius_hub_in"], dtype=float)
         r_h_out = jnp.asarray(full_geom["radius_hub_out"], dtype=float)
-        r_t_in  = jnp.asarray(full_geom["radius_tip_in"],  dtype=float)
+        r_t_in = jnp.asarray(full_geom["radius_tip_in"], dtype=float)
         r_t_out = jnp.asarray(full_geom["radius_tip_out"], dtype=float)
-        r_sh_in  = jnp.asarray(full_geom.get("radius_shroud_in",  r_t_in),  dtype=float)
+        r_sh_in = jnp.asarray(full_geom.get("radius_shroud_in", r_t_in), dtype=float)
         r_sh_out = jnp.asarray(full_geom.get("radius_shroud_out", r_t_out), dtype=float)
 
-        chord_ax = jnp.asarray(full_geom.get("meridional_chord", full_geom["chord"]), dtype=float)
+        chord_ax = jnp.asarray(
+            full_geom.get("meridional_chord", full_geom["chord"]), dtype=float
+        )
         n = len(full_geom["cascade_type"])
 
         # Axial placement with small gaps (JAX-safe concat)
         gap_frac = 0.15
         gaps = gap_frac * chord_ax
-        x_starts = jnp.cumsum(jnp.concatenate([jnp.array([0.0], dtype=float), (chord_ax + gaps)[:-1]]))
-        x_ends   = x_starts + chord_ax
-        x_mids   = 0.5 * (x_starts + x_ends)
+        x_starts = jnp.cumsum(
+            jnp.concatenate([jnp.array([0.0], dtype=float), (chord_ax + gaps)[:-1]])
+        )
+        x_ends = x_starts + chord_ax
+        x_mids = 0.5 * (x_starts + x_ends)
 
         # Consistent color per row
         cmap = plt.get_cmap("tab10")
-        def row_color(i): return cmap(i % 10)
+
+        def row_color(i):
+            return cmap(i % 10)
 
         for i in range(n):
             color = row_color(i)
 
             # Linear variation inlet→outlet
-            x   = jnp.linspace(float(x_starts[i]), float(x_ends[i]), 3)
-            r_h = jnp.linspace(float(r_h_in[i]),  float(r_h_out[i]), 3)
-            r_t = jnp.linspace(float(r_t_in[i]),  float(r_t_out[i]), 3)
-            r_sh= jnp.linspace(float(r_sh_in[i]), float(r_sh_out[i]), 3)
+            x = jnp.linspace(float(x_starts[i]), float(x_ends[i]), 3)
+            r_h = jnp.linspace(float(r_h_in[i]), float(r_h_out[i]), 3)
+            r_t = jnp.linspace(float(r_t_in[i]), float(r_t_out[i]), 3)
+            r_sh = jnp.linspace(float(r_sh_in[i]), float(r_sh_out[i]), 3)
 
             # Filled hub–tip band + outlines (+ optional shroud)
             ax.fill_between(x, r_h, r_t, alpha=0.12, color=color)
@@ -507,8 +579,10 @@ def plot_meridional(
             ax.plot(x, r_sh, lw=1.0, ls="--", color=color)
 
             # In-band label at mid-axial, mid-radius
-            r_mid = 0.5 * (0.5 * (float(r_h_in[i]) + float(r_h_out[i])) +
-                        0.5 * (float(r_t_in[i]) + float(r_t_out[i])))
+            r_mid = 0.5 * (
+                0.5 * (float(r_h_in[i]) + float(r_h_out[i]))
+                + 0.5 * (float(r_t_in[i]) + float(r_t_out[i]))
+            )
             row_name = f"{str(full_geom['cascade_type'][i]).capitalize()} {i+1}"
             ax.text(float(x_mids[i]), r_mid, row_name, **label_kwargs)
 
@@ -520,15 +594,21 @@ def plot_meridional(
 
     # ---------------- RADIAL GEOMETRY ----------------
     if not isinstance(full_geom, dict):
-        raise TypeError("For radial use, pass the full-geometry dict-of-rows produced by your radial pipeline.")
+        raise TypeError(
+            "For radial use, pass the full-geometry dict-of-rows produced by your radial pipeline."
+        )
 
     # Collect selected rows
-    rows = [row_name] if isinstance(row_name, str) else (
-        list(row_name) if row_name is not None else list(full_geom.keys())
+    rows = (
+        [row_name]
+        if isinstance(row_name, str)
+        else (list(row_name) if row_name is not None else list(full_geom.keys()))
     )
     missing = [r for r in rows if r not in full_geom]
     if missing:
-        raise KeyError(f"Rows not found: {missing}. Available: {list(full_geom.keys())}")
+        raise KeyError(
+            f"Rows not found: {missing}. Available: {list(full_geom.keys())}"
+        )
 
     for rname in rows:
         geom = full_geom[rname]
@@ -567,15 +647,16 @@ def plot_meridional(
     plt.tight_layout()
     plt.show()
 
+
 def plot_meridional_hybrid(
     yaml_path: str,
     title: str = "Hybrid turbine - meridional view",
-    z_center: float = 0.0,         # shared axial center for ALL radial rows (unchanged)
-    N_curve: int = 80,             # smoothness for radial bands
+    z_center: float = 0.0,  # shared axial center for ALL radial rows (unchanged)
+    N_curve: int = 80,  # smoothness for radial bands
     label_kwargs: dict | None = None,
-    gap_frac: float = 0.15,        # axial gap fraction between *axial* rows only
+    gap_frac: float = 0.15,  # axial gap fraction between *axial* rows only
     axial_fallback_chord_factor: float = 0.6,  # used if axial chord unavailable
-    gap_multiplier: float = 0.8,   # EXTRA spacing multiplier between radial and axial blocks
+    gap_multiplier: float = 0.8,  # EXTRA spacing multiplier between radial and axial blocks
 ):
     """
     Hybrid meridional plot from a single YAML:
@@ -593,7 +674,12 @@ def plot_meridional_hybrid(
             "fontsize": 9,
             "ha": "center",
             "va": "center",
-            "bbox": dict(facecolor="white", alpha=0.7, edgecolor="none", boxstyle="round,pad=0.25"),
+            "bbox": dict(
+                facecolor="white",
+                alpha=0.7,
+                edgecolor="none",
+                boxstyle="round,pad=0.25",
+            ),
         }
 
     # --- Load YAML ---
@@ -613,22 +699,41 @@ def plot_meridional_hybrid(
 
     # --- Classifiers ---
     def is_radial_row(d: dict) -> bool:
-        return all(k in d for k in ("r_in", "r_out", "blade_height_in", "blade_height_out"))
+        return all(
+            k in d for k in ("r_in", "r_out", "blade_height_in", "blade_height_out")
+        )
 
     def is_axial_std_row(d: dict) -> bool:
-        return all(k in d for k in ("radius_hub_in", "radius_hub_out", "radius_tip_in", "radius_tip_out"))
+        return all(
+            k in d
+            for k in (
+                "radius_hub_in",
+                "radius_hub_out",
+                "radius_tip_in",
+                "radius_tip_out",
+            )
+        )
 
     def is_axial_mean_row(d: dict) -> bool:
-        return all(k in d for k in ("r_mean_in", "r_mean_out", "blade_height_in", "blade_height_out"))
+        return all(
+            k in d
+            for k in ("r_mean_in", "r_mean_out", "blade_height_in", "blade_height_out")
+        )
 
     def is_axial_design_row(d: dict) -> bool:
         needed = [
-            "radius", "hub_tip_ratio_in", "hub_tip_ratio_out",
-            "aspect_ratio", "pitch_chord_ratio",
-            "gauging_angle", "leading_edge_angle",
+            "radius",
+            "hub_tip_ratio_in",
+            "hub_tip_ratio_out",
+            "aspect_ratio",
+            "pitch_chord_ratio",
+            "gauging_angle",
+            "leading_edge_angle",
             "trailing_edge_thickness_opening_ratio",
-            "leading_edge_diameter", "leading_edge_wedge_angle",
-            "tip_clearance", "throat_location_fraction",
+            "leading_edge_diameter",
+            "leading_edge_wedge_angle",
+            "tip_clearance",
+            "throat_location_fraction",
             "cascade_type",
         ]
         return all(k in d for k in needed)
@@ -642,7 +747,9 @@ def plot_meridional_hybrid(
 
     for item in rows:
         if not isinstance(item, dict) or len(item) != 1:
-            raise ValueError("Each entry in 'geometry' must be a single-key dict, e.g. {'stator_1': {...}}")
+            raise ValueError(
+                "Each entry in 'geometry' must be a single-key dict, e.g. {'stator_1': {...}}"
+            )
         name, data = next(iter(item.items()))
         if is_radial_row(data):
             ordered.append(("radial", name))
@@ -657,7 +764,9 @@ def plot_meridional_hybrid(
             ordered.append(("axial_mean", name))
             axial_mean_items.append({name: data})
         else:
-            warnings.warn(f"[{name}] row not recognized as radial/axial; skipping.", stacklevel=1)
+            warnings.warn(
+                f"[{name}] row not recognized as radial/axial; skipping.", stacklevel=1
+            )
 
     # --- Build full geometry for RADIAL subset (unchanged behavior) ---
     full_radial = {}
@@ -666,7 +775,9 @@ def plot_meridional_hybrid(
     if radial_items:
         cfg_r = {"geometry": radial_items}
         prepared_r = radial_gm.prepare_all_rows(cfg_r)
-        full_radial = radial_gm.calculate_full_geometries(prepared_r)  # {row_name: full_row_dict}
+        full_radial = radial_gm.calculate_full_geometries(
+            prepared_r
+        )  # {row_name: full_row_dict}
 
         for item in radial_items:
             nm = next(iter(item.keys()))
@@ -698,8 +809,10 @@ def plot_meridional_hybrid(
             nm, dat = next(iter(item.items()))
             axial_design_names.append(nm)
             ctype = str(dat["cascade_type"]).lower()
-            if ctype in ("0", "0.0"): ctype = "stator"
-            if ctype in ("1", "1.0"): ctype = "rotor"
+            if ctype in ("0", "0.0"):
+                ctype = "stator"
+            if ctype in ("1", "1.0"):
+                ctype = "rotor"
             ctypes.append(ctype)
             for k, v in dat.items():
                 if k == "cascade_type":
@@ -712,14 +825,16 @@ def plot_meridional_hybrid(
 
     # --- Plot ---
     fig, ax = plt.subplots(figsize=(11.0, 6.0), dpi=140)
-    ax.set_aspect('equal')
+    ax.set_aspect("equal")
     # cmap = plt.get_cmap("tab10")
     # def row_color(i): return cmap(i % 10)
     colors = ["darkorange", "steelblue"]
-    def row_color(i): return colors[i % 2]
+
+    def row_color(i):
+        return colors[i % 2]
 
     # Axial block starts AFTER the last radial stage (+ extra spacing)
-    radial_width   = 2.0 * half_span_radial if half_span_radial > 0 else 1.0
+    radial_width = 2.0 * half_span_radial if half_span_radial > 0 else 1.0
     z_last_radial_edge = z_center + half_span_radial
     base_gap = gap_multiplier * radial_width
     s_axial = z_last_radial_edge + base_gap
@@ -738,9 +853,9 @@ def plot_meridional_hybrid(
             if geom is None:
                 continue
 
-            r_in  = float(geom["r_in"])
+            r_in = float(geom["r_in"])
             r_out = float(geom["r_out"])
-            b_in  = float(geom["blade_height_in"])
+            b_in = float(geom["blade_height_in"])
             b_out = float(geom["blade_height_out"])
 
             s = jnp.linspace(0.0, 1.0, int(max(3, N_curve)))
@@ -748,11 +863,11 @@ def plot_meridional_hybrid(
             b = b_in + s * (b_out - b_in)
 
             z_front = z_center - 0.5 * b
-            z_back  = z_center + 0.5 * b
+            z_back = z_center + 0.5 * b
 
             ax.fill_betweenx(r, z_front, z_back, alpha=0.15, color=color)
             ax.plot(z_front, r, lw=1.3, color=color)
-            ax.plot(z_back,  r, lw=1.3, color=color)
+            ax.plot(z_back, r, lw=1.3, color=color)
 
             r_mid = 0.5 * (r_in + r_out)
             ax.text(z_center, r_mid, name.replace("_", " ").title(), **label_kwargs)
@@ -761,18 +876,23 @@ def plot_meridional_hybrid(
             color_idx += 1
             axial_std_counter += 1
 
-            row_a = {k: (v[axial_std_counter] if isinstance(v, jnp.ndarray) else v)
-                     for k, v in full_axial_std.items() if k != "cascade_type"}
+            row_a = {
+                k: (v[axial_std_counter] if isinstance(v, jnp.ndarray) else v)
+                for k, v in full_axial_std.items()
+                if k != "cascade_type"
+            }
 
-            hub_in  = float(row_a["radius_hub_in"])
+            hub_in = float(row_a["radius_hub_in"])
             hub_out = float(row_a["radius_hub_out"])
-            tip_in  = float(row_a["radius_tip_in"])
+            tip_in = float(row_a["radius_tip_in"])
             tip_out = float(row_a["radius_tip_out"])
 
             if "meridional_chord" in row_a:
                 c_ax = float(row_a["meridional_chord"])
             elif "chord" in row_a and "stagger_angle" in row_a:
-                c_ax = float(row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"])))
+                c_ax = float(
+                    row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"]))
+                )
             else:
                 mean_span = 0.5 * ((tip_in - hub_in) + (tip_out - hub_out))
                 c_ax = max(axial_fallback_chord_factor * float(mean_span), 1e-3)
@@ -798,18 +918,23 @@ def plot_meridional_hybrid(
             color_idx += 1
             axial_design_counter += 1
 
-            row_a = {k: (v[axial_design_counter] if isinstance(v, jnp.ndarray) else v)
-                     for k, v in full_axial_design.items() if k != "cascade_type"}
+            row_a = {
+                k: (v[axial_design_counter] if isinstance(v, jnp.ndarray) else v)
+                for k, v in full_axial_design.items()
+                if k != "cascade_type"
+            }
 
-            hub_in  = float(row_a["radius_hub_in"])
+            hub_in = float(row_a["radius_hub_in"])
             hub_out = float(row_a["radius_hub_out"])
-            tip_in  = float(row_a["radius_tip_in"])
+            tip_in = float(row_a["radius_tip_in"])
             tip_out = float(row_a["radius_tip_out"])
 
             if "meridional_chord" in row_a:
                 c_ax = float(row_a["meridional_chord"])
             elif "chord" in row_a and "stagger_angle" in row_a:
-                c_ax = float(row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"])))
+                c_ax = float(
+                    row_a["chord"] * jnp.cos(jnp.deg2rad(row_a["stagger_angle"]))
+                )
             else:
                 mean_span = 0.5 * ((tip_in - hub_in) + (tip_out - hub_out))
                 c_ax = max(axial_fallback_chord_factor * float(mean_span), 1e-3)
@@ -840,13 +965,15 @@ def plot_meridional_hybrid(
             b_in = float(data["blade_height_in"])
             b_out = float(data["blade_height_out"])
 
-            hub_in  = rmin - 0.5 * b_in
-            tip_in  = rmin + 0.5 * b_in
+            hub_in = rmin - 0.5 * b_in
+            tip_in = rmin + 0.5 * b_in
             hub_out = rmax - 0.5 * b_out
             tip_out = rmax + 0.5 * b_out
 
             if ("chord" in data) and ("stagger_angle" in data):
-                c_ax = float(data["chord"] * jnp.cos(jnp.deg2rad(data["stagger_angle"])))
+                c_ax = float(
+                    data["chord"] * jnp.cos(jnp.deg2rad(data["stagger_angle"]))
+                )
             else:
                 mean_span = 0.5 * (b_in + b_out)
                 c_ax = max(axial_fallback_chord_factor * float(mean_span), 1e-3)
@@ -870,7 +997,7 @@ def plot_meridional_hybrid(
 
     # ==== Axis limits ====
     radial_width = 2.0 * half_span_radial if half_span_radial > 0 else 1.0
-    left_edge  = z_center - half_span_radial
+    left_edge = z_center - half_span_radial
     right_edge = max(s_axial, z_center + half_span_radial)
     ax.set_xlim(left_edge - 2.25 * radial_width, right_edge + 2.25 * radial_width)
     ax.set_ylim(0.0, None)  # auto top

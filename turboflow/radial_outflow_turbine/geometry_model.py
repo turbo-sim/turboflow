@@ -33,19 +33,23 @@ from turboflow.radial_outflow_turbine import blade_parametrization as bp
 # Small helpers (JAX-only)
 # ---------------------------
 
+
 def _deg2rad(x):
     return jnp.asarray(x) * jnp.pi / 180.0
 
+
 def _rad2deg(x):
     return jnp.asarray(x) * 180.0 / jnp.pi
+
 
 def _normalize_stagger_rad(st):
     """Map stagger to (-pi/2, +pi/2] without changing the geometry. (JAX-only)"""
     st = jnp.asarray(st)
     st = (st + jnp.pi) % (2.0 * jnp.pi) - jnp.pi  # (-pi, pi]
-    st = jnp.where(st >  jnp.pi / 2.0, st - jnp.pi, st)
+    st = jnp.where(st > jnp.pi / 2.0, st - jnp.pi, st)
     st = jnp.where(st <= -jnp.pi / 2.0, st + jnp.pi, st)
     return st
+
 
 def _to_native(obj):
     """Recursively convert JAX scalars/arrays (and Python containers) to native Python types."""
@@ -62,10 +66,12 @@ def _to_native(obj):
         return type(obj)(_to_native(v) for v in obj)
     return obj
 
+
 def _safe_div(a, b, eps=1e-12):
     a = jnp.asarray(a, dtype=jnp.float64)
     b = jnp.asarray(b, dtype=jnp.float64)
     return a / jnp.maximum(b, eps)
+
 
 def _opt(row: Dict[str, Any], *names, default=None):
     """Return first present key among names, else default."""
@@ -78,6 +84,7 @@ def _opt(row: Dict[str, Any], *names, default=None):
 # ------------------------------------------------------------
 # Geometry preparation and full-geometry calculations
 # ------------------------------------------------------------
+
 
 def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -104,12 +111,12 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
 
     # Required
     cascade_type = row["cascade_type"]
-    N_blades     = int(row["N_blades"])
-    radius_mean_in         = jnp.asarray(row["radius_mean_in"], dtype=jnp.float64)
-    radius_mean_out        = jnp.asarray(row["radius_mean_out"], dtype=jnp.float64)
-    height_in    = jnp.asarray(row["blade_height_in"], dtype=jnp.float64)
-    height_out   = jnp.asarray(row["blade_height_out"], dtype=jnp.float64)
-    metal_angle_in_deg  = float(row["metal_angle_in"])
+    N_blades = int(row["N_blades"])
+    radius_mean_in = jnp.asarray(row["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out = jnp.asarray(row["radius_mean_out"], dtype=jnp.float64)
+    height_in = jnp.asarray(row["blade_height_in"], dtype=jnp.float64)
+    height_out = jnp.asarray(row["blade_height_out"], dtype=jnp.float64)
+    metal_angle_in_deg = float(row["metal_angle_in"])
     metal_angle_out_deg = float(row["metal_angle_out"])
     camberline_type = row["camberline_type"]
 
@@ -121,17 +128,19 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     # Camberline sampling
     u = jnp.linspace(0.0, 1.0, 400)
     # bp.compute_camberline_radial -> x, y, r, theta, metal_angle, phi, stagger, chord
-    _x, _y, _r, theta, _metal_angle, _phi, stagger_rad, chord = bp.compute_camberline_radial(
-        camberline_type, radius_mean_in, radius_mean_out, ma1, ma2, theta0, u
+    _x, _y, _r, theta, _metal_angle, _phi, stagger_rad, chord = (
+        bp.compute_camberline_radial(
+            camberline_type, radius_mean_in, radius_mean_out, ma1, ma2, theta0, u
+        )
     )
     stagger_rad = _normalize_stagger_rad(stagger_rad)
     stagger_deg = _rad2deg(stagger_rad)
     d_theta = theta[-1] - theta[0]
 
     # Pitches
-    pitch_in   = 2.0 * jnp.pi * radius_mean_in  / float(N_blades)
-    pitch_out  = 2.0 * jnp.pi * radius_mean_out / float(N_blades)
-    r_mean     = 0.5 * (radius_mean_in + radius_mean_out)
+    pitch_in = 2.0 * jnp.pi * radius_mean_in / float(N_blades)
+    pitch_out = 2.0 * jnp.pi * radius_mean_out / float(N_blades)
+    r_mean = 0.5 * (radius_mean_in + radius_mean_out)
     pitch_mean = 2.0 * jnp.pi * r_mean / float(N_blades)
 
     # Optional parameters
@@ -161,50 +170,52 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
             le_radius = float(le_frac) * float(chord)
 
     # Leading-edge wedge angle (pass-through from YAML; accept two common key names)
-    le_wedge_angle = _opt(row, "leading_edge_wedge_angle", "leading_edge_wedge", default=None)
+    le_wedge_angle = _opt(
+        row, "leading_edge_wedge_angle", "leading_edge_wedge", default=None
+    )
 
     # Pack prepared dictionary
     prepared = dict(row)
-    prepared.update({
-        "cascade_type": cascade_type,
-        "N_blades": N_blades,
-        "radius_mean_in": radius_mean_in,
-        "radius_mean_out": radius_mean_out,
-        "blade_height_in": height_in,
-        "blade_height_out": height_out,
-        "metal_angle_in": metal_angle_in_deg,
-        "metal_angle_out": metal_angle_out_deg,
-        "camberline_type": camberline_type,
-
-        # Derived here
-        "theta0": 0.0,                  # deg
-        "theta": theta,                 # rad array (keep for throat & checks)
-        "d_theta": d_theta,             # rad
-        "chord": chord,                 # m
-        "stagger_angle": stagger_deg,   # deg
-        "pitch_in": pitch_in,           # m
-        "pitch_out": pitch_out,         # m
-        "pitch_mean": pitch_mean,       # m
-
-        # Throat (optional)
-        "throat_location_fraction": throat_f,
-        "r_throat": r_throat,
-        "height_throat": height_throat,
-        "throat_opening": throat_opening,
-        "opening": throat_opening,
-        "throat_area": throat_area,
-
-        # Leading edge
-        "leading_edge_radius_abs": le_radius,          # absolute radius
-        "leading_edge_wedge_angle": le_wedge_angle,    # deg, pass-through from YAML
-        "leading_edge_angle": metal_angle_in_deg,      # deg, alias for incidence model
-    })
+    prepared.update(
+        {
+            "cascade_type": cascade_type,
+            "N_blades": N_blades,
+            "radius_mean_in": radius_mean_in,
+            "radius_mean_out": radius_mean_out,
+            "blade_height_in": height_in,
+            "blade_height_out": height_out,
+            "metal_angle_in": metal_angle_in_deg,
+            "metal_angle_out": metal_angle_out_deg,
+            "camberline_type": camberline_type,
+            # Derived here
+            "theta0": 0.0,  # deg
+            "theta": theta,  # rad array (keep for throat & checks)
+            "d_theta": d_theta,  # rad
+            "chord": chord,  # m
+            "stagger_angle": stagger_deg,  # deg
+            "pitch_in": pitch_in,  # m
+            "pitch_out": pitch_out,  # m
+            "pitch_mean": pitch_mean,  # m
+            # Throat (optional)
+            "throat_location_fraction": throat_f,
+            "r_throat": r_throat,
+            "height_throat": height_throat,
+            "throat_opening": throat_opening,
+            "opening": throat_opening,
+            "throat_area": throat_area,
+            # Leading edge
+            "leading_edge_radius_abs": le_radius,  # absolute radius
+            "leading_edge_wedge_angle": le_wedge_angle,  # deg, pass-through from YAML
+            "leading_edge_angle": metal_angle_in_deg,  # deg, alias for incidence model
+        }
+    )
 
     return _to_native(prepared)
 
 
-def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
-                                           meta: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def calculate_full_radial_outflow_geometry(
+    prepared: Dict[str, Any], meta: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """
     Complete the geometry using prepared values + pure geometric relations.
 
@@ -228,48 +239,54 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     """
 
     # Pull essentials as JAX scalars
-    radius_mean_in   = jnp.asarray(prepared["radius_mean_in"], dtype=jnp.float64)
-    radius_mean_out  = jnp.asarray(prepared["radius_mean_out"], dtype=jnp.float64)
-    h_in   = jnp.asarray(prepared["blade_height_in"], dtype=jnp.float64)
-    h_out  = jnp.asarray(prepared["blade_height_out"], dtype=jnp.float64)
-    chord  = jnp.asarray(prepared["chord"], dtype=jnp.float64)
-    pitch_in   = jnp.asarray(prepared["pitch_in"], dtype=jnp.float64)
-    pitch_out  = jnp.asarray(prepared["pitch_out"], dtype=jnp.float64)
+    radius_mean_in = jnp.asarray(prepared["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out = jnp.asarray(prepared["radius_mean_out"], dtype=jnp.float64)
+    h_in = jnp.asarray(prepared["blade_height_in"], dtype=jnp.float64)
+    h_out = jnp.asarray(prepared["blade_height_out"], dtype=jnp.float64)
+    chord = jnp.asarray(prepared["chord"], dtype=jnp.float64)
+    pitch_in = jnp.asarray(prepared["pitch_in"], dtype=jnp.float64)
+    pitch_out = jnp.asarray(prepared["pitch_out"], dtype=jnp.float64)
     pitch_mean = jnp.asarray(prepared["pitch_mean"], dtype=jnp.float64)
     stagger_deg = jnp.asarray(prepared["stagger_angle"], dtype=jnp.float64)
 
     # Optional throat items
-    r_throat        = prepared.get("r_throat", None)
-    height_throat   = prepared.get("height_throat", None)
-    throat_opening  = prepared.get("throat_opening", None)
-    throat_area     = prepared.get("throat_area", None)
+    r_throat = prepared.get("r_throat", None)
+    height_throat = prepared.get("height_throat", None)
+    throat_opening = prepared.get("throat_opening", None)
+    throat_area = prepared.get("throat_area", None)
 
     # Optional inputs for ratios
     t_max = jnp.asarray(prepared.get("maximum_thickness", 0.0), dtype=jnp.float64)
-    t_te  = jnp.asarray(prepared.get("trailing_edge_thickness", 0.0), dtype=jnp.float64)
+    t_te = jnp.asarray(prepared.get("trailing_edge_thickness", 0.0), dtype=jnp.float64)
     le_radius_abs = prepared.get("leading_edge_radius_abs", None)
     tip_clearance_height = prepared.get("tip_clearance_height", None)
 
     # Radii (hub-only vocabulary retained)
-    radius_hub_in   = radius_mean_in
-    radius_hub_out  = radius_mean_out
+    radius_hub_in = radius_mean_in
+    radius_hub_out = radius_mean_out
     radius_hub_mean = 0.5 * (radius_mean_in + radius_mean_out)
-    radius_hub_throat = jnp.asarray(r_throat, dtype=jnp.float64) if (r_throat is not None) else None
+    radius_hub_throat = (
+        jnp.asarray(r_throat, dtype=jnp.float64) if (r_throat is not None) else None
+    )
 
     # Heights
-    height_in   = h_in
-    height_out  = h_out
+    height_in = h_in
+    height_out = h_out
     height_mean = 0.5 * (h_in + h_out)
-    height_th   = jnp.asarray(height_throat, dtype=jnp.float64) if (height_throat is not None) else None
+    height_th = (
+        jnp.asarray(height_throat, dtype=jnp.float64)
+        if (height_throat is not None)
+        else None
+    )
 
     # Tip radii (same as hub for radial outflow cross-section here)
-    radius_tip_in   = radius_hub_in
-    radius_tip_out  = radius_hub_out
+    radius_tip_in = radius_hub_in
+    radius_tip_out = radius_hub_out
     radius_tip_mean = radius_hub_mean
     radius_tip_throat = radius_hub_throat if (radius_hub_throat is not None) else None
 
     # Areas
-    A_in  = 2.0 * jnp.pi * radius_mean_in  * h_in
+    A_in = 2.0 * jnp.pi * radius_mean_in * h_in
     A_out = 2.0 * jnp.pi * radius_mean_out * h_out
     A_throat = None
     if (r_throat is not None) and (height_throat is not None):
@@ -299,11 +316,13 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
 
     tip_clearance_height_ratio = None
     if tip_clearance_height is not None:
-        tip_clearance_height_ratio = _safe_div(jnp.asarray(tip_clearance_height, dtype=jnp.float64), height_mean)
+        tip_clearance_height_ratio = _safe_div(
+            jnp.asarray(tip_clearance_height, dtype=jnp.float64), height_mean
+        )
 
     # Hub–tip ratios
-    hub_tip_ratio_in   = _safe_div(radius_hub_in,  radius_tip_in)
-    hub_tip_ratio_out  = _safe_div(radius_hub_out, radius_tip_out)
+    hub_tip_ratio_in = _safe_div(radius_hub_in, radius_tip_in)
+    hub_tip_ratio_out = _safe_div(radius_hub_out, radius_tip_out)
     hub_tip_ratio_mean = _safe_div(radius_hub_mean, radius_tip_mean)
     hub_tip_ratio_throat = None
     if (radius_hub_throat is not None) and (radius_tip_throat is not None):
@@ -311,98 +330,91 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
 
     # Optional machine-level counts
     number_of_cascades = meta.get("number_of_cascades") if meta else None
-    number_of_stages   = meta.get("number_of_stages")   if meta else None
+    number_of_stages = meta.get("number_of_stages") if meta else None
 
     # Gauging angle (degrees) — computed if A_throat & A_out exist
     gauging_angle = None
     if (A_throat is not None) and (A_out is not None):
         ratio = _safe_div(A_throat, A_out)
-        ratio = jnp.clip(ratio, 0.0, 1.0)                     # safe domain for arccos
-        base_deg = jnp.degrees(jnp.arccos(ratio))             # arccosd(A_throat / A_out)
+        ratio = jnp.clip(ratio, 0.0, 1.0)  # safe domain for arccos
+        base_deg = jnp.degrees(jnp.arccos(ratio))  # arccosd(A_throat / A_out)
         if number_of_cascades is not None:
             n_casc = int(number_of_cascades)
             signs = jnp.array([(-1.0) ** i for i in range(n_casc)], dtype=jnp.float64)
-            gauging_angle = base_deg * signs                  # alternate +/- across cascades
+            gauging_angle = base_deg * signs  # alternate +/- across cascades
         else:
             gauging_angle = base_deg
 
     # Aliases to match your earlier list (equals hub radii here)
-    radius_mean_in     = radius_hub_in
-    radius_mean_out    = radius_hub_out
+    radius_mean_in = radius_hub_in
+    radius_mean_out = radius_hub_out
     radius_mean_throat = radius_hub_throat
 
     out = dict(prepared)
-    out.update({
-        # Radii (hub)
-        "radius_hub_in": radius_hub_in,
-        "radius_hub_out": radius_hub_out,
-        "radius_hub_mean": radius_hub_mean,
-        "radius_hub_throat": radius_hub_throat,
-
-        # Radii (tip)
-        "radius_tip_in": radius_tip_in,
-        "radius_tip_out": radius_tip_out,
-        "radius_tip_mean": radius_tip_mean,
-        "radius_tip_throat": radius_tip_throat,
-
-        # Aliases (per your key list)
-        "radius_mean_in": radius_mean_in,
-        "radius_mean_out": radius_mean_out,
-        "radius_mean_throat": radius_mean_throat,
-
-        # Heights
-        "height_in": height_in,
-        "height_out": height_out,
-        "height_mean": height_mean,
-        "height_throat": height_th,
-
-        # NEW alias for loss model compatibility
-        "height": height_mean,              # == height_mean
-
-        # Areas
-        "A_in": A_in,
-        "A_out": A_out,
-        "A_throat": A_throat,
-
-        # Geometry projections / angles
-        "meridional_chord": meridional_chord,
-        "flaring_angle": flaring_angle,  # deg
-
-        # Pitches
-        "pitch_in": pitch_in,
-        "pitch_out": pitch_out,
-        "pitch_mean": pitch_mean,
-
-        # NEW alias for loss model compatibility
-        "pitch": pitch_mean,              # == pitch_mean
-
-        # Ratios
-        "aspect_ratio": aspect_ratio,
-        "pitch_chord_ratio": pitch_chord_ratio,
-        "solidity": solidity,
-        "maximum_thickness_chord_ratio": maximum_thickness_chord_ratio,
-        "trailing_edge_thickness_opening_ratio": trailing_edge_thickness_opening_ratio,
-        "leading_edge_diameter_chord_ratio": leading_edge_diameter_chord_ratio,
-        "tip_clearance_height_ratio": tip_clearance_height_ratio,
-
-        # Leading edge (explicit fields for loss model)
-        "leading_edge_angle": prepared.get("leading_edge_angle"),         # deg (metal_angle_in)
-        "leading_edge_wedge_angle": prepared.get("leading_edge_wedge_angle"),  # deg (from YAML)
-        "leading_edge_diameter": leading_edge_diameter,                    # m (if radius available)
-
-        # Hub–tip ratios
-        "hub_tip_ratio_in": hub_tip_ratio_in,
-        "hub_tip_ratio_out": hub_tip_ratio_out,
-        "hub_tip_ratio_mean": hub_tip_ratio_mean,
-        "hub_tip_ratio_throat": hub_tip_ratio_throat,
-
-        # Machine-level (duplicated per row for convenience)
-        "number_of_cascades": number_of_cascades,
-        "number_of_stages": number_of_stages,
-
-        # Gauging (computed here if possible)
-        "gauging_angle": gauging_angle,
-    })
+    out.update(
+        {
+            # Radii (hub)
+            "radius_hub_in": radius_hub_in,
+            "radius_hub_out": radius_hub_out,
+            "radius_hub_mean": radius_hub_mean,
+            "radius_hub_throat": radius_hub_throat,
+            # Radii (tip)
+            "radius_tip_in": radius_tip_in,
+            "radius_tip_out": radius_tip_out,
+            "radius_tip_mean": radius_tip_mean,
+            "radius_tip_throat": radius_tip_throat,
+            # Aliases (per your key list)
+            "radius_mean_in": radius_mean_in,
+            "radius_mean_out": radius_mean_out,
+            "radius_mean_throat": radius_mean_throat,
+            # Heights
+            "height_in": height_in,
+            "height_out": height_out,
+            "height_mean": height_mean,
+            "height_throat": height_th,
+            # NEW alias for loss model compatibility
+            "height": height_mean,  # == height_mean
+            # Areas
+            "A_in": A_in,
+            "A_out": A_out,
+            "A_throat": A_throat,
+            # Geometry projections / angles
+            "meridional_chord": meridional_chord,
+            "flaring_angle": flaring_angle,  # deg
+            # Pitches
+            "pitch_in": pitch_in,
+            "pitch_out": pitch_out,
+            "pitch_mean": pitch_mean,
+            # NEW alias for loss model compatibility
+            "pitch": pitch_mean,  # == pitch_mean
+            # Ratios
+            "aspect_ratio": aspect_ratio,
+            "pitch_chord_ratio": pitch_chord_ratio,
+            "solidity": solidity,
+            "maximum_thickness_chord_ratio": maximum_thickness_chord_ratio,
+            "trailing_edge_thickness_opening_ratio": trailing_edge_thickness_opening_ratio,
+            "leading_edge_diameter_chord_ratio": leading_edge_diameter_chord_ratio,
+            "tip_clearance_height_ratio": tip_clearance_height_ratio,
+            # Leading edge (explicit fields for loss model)
+            "leading_edge_angle": prepared.get(
+                "leading_edge_angle"
+            ),  # deg (metal_angle_in)
+            "leading_edge_wedge_angle": prepared.get(
+                "leading_edge_wedge_angle"
+            ),  # deg (from YAML)
+            "leading_edge_diameter": leading_edge_diameter,  # m (if radius available)
+            # Hub–tip ratios
+            "hub_tip_ratio_in": hub_tip_ratio_in,
+            "hub_tip_ratio_out": hub_tip_ratio_out,
+            "hub_tip_ratio_mean": hub_tip_ratio_mean,
+            "hub_tip_ratio_throat": hub_tip_ratio_throat,
+            # Machine-level (duplicated per row for convenience)
+            "number_of_cascades": number_of_cascades,
+            "number_of_stages": number_of_stages,
+            # Gauging (computed here if possible)
+            "gauging_angle": gauging_angle,
+        }
+    )
 
     return _to_native(out)
 
@@ -425,25 +437,32 @@ _REQUIRED_KEYS = [
     "camberline_type",
 ]
 
+
 def _validate_row_inputs(row_name: str, row: Dict[str, Any]) -> None:
     missing = [k for k in _REQUIRED_KEYS if k not in row]
     if missing:
         raise KeyError(f"[{row_name}] Missing required keys: {missing}")
+
 
 def load_config_yaml(path: str) -> Dict[str, Any]:
     with open(path, "r") as f:
         cfg = yaml.safe_load(f)
     return cfg
 
+
 def prepare_all_rows(cfg: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     geom_section = cfg.get("geometry", [])
     if not isinstance(geom_section, list):
-        raise TypeError("`geometry` must be a list of row dictionaries (row-wise structure).")
+        raise TypeError(
+            "`geometry` must be a list of row dictionaries (row-wise structure)."
+        )
 
     prepared_by_name: Dict[str, Dict[str, Any]] = {}
     for item in geom_section:
         if not isinstance(item, dict) or len(item) != 1:
-            raise ValueError("Each `geometry` list item must be a single-key dict, e.g. {'stator_1': {...}}.")
+            raise ValueError(
+                "Each `geometry` list item must be a single-key dict, e.g. {'stator_1': {...}}."
+            )
         row_name, row_data = next(iter(item.items()))
         _validate_row_inputs(row_name, row_data)
 
@@ -452,13 +471,16 @@ def prepare_all_rows(cfg: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
 
     return prepared_by_name
 
-def calculate_full_geometries(prepared_by_name: Dict[str, Dict[str, Any]],
-                              meta: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
+
+def calculate_full_geometries(
+    prepared_by_name: Dict[str, Dict[str, Any]], meta: Optional[Dict[str, Any]] = None
+) -> Dict[str, Dict[str, Any]]:
     full_by_name: Dict[str, Dict[str, Any]] = {}
     for row_name, prepared_row in prepared_by_name.items():
         full_row = calculate_full_radial_outflow_geometry(prepared_row, meta=meta)
         full_by_name[row_name] = full_row
     return full_by_name
+
 
 def _infer_stages(geom_items: List[Dict[str, Any]]) -> int:
     """Heuristic: count 'rotor' rows as stages (adjust if your definition differs)."""
@@ -468,6 +490,7 @@ def _infer_stages(geom_items: List[Dict[str, Any]]) -> int:
         if str(data.get("cascade_type", "")).lower() == "rotor":
             n_rotors += 1
     return n_rotors
+
 
 def run_radial_outflow_pipeline_from_yaml(path: str) -> Dict[str, Dict[str, Any]]:
     """
@@ -479,7 +502,7 @@ def run_radial_outflow_pipeline_from_yaml(path: str) -> Dict[str, Dict[str, Any]
     cfg = load_config_yaml(path)
     geom_items = cfg.get("geometry", [])
     num_cascades = len(geom_items)
-    num_stages   = _infer_stages(geom_items)
+    num_stages = _infer_stages(geom_items)
 
     prepared = prepare_all_rows(cfg)
     meta = {"number_of_cascades": num_cascades, "number_of_stages": num_stages}
@@ -490,6 +513,7 @@ def run_radial_outflow_pipeline_from_yaml(path: str) -> Dict[str, Dict[str, Any]
 # ------------------------------------------------------------
 # Sanity checks (user-supplied formulae) — JAX only
 # ------------------------------------------------------------
+
 
 def sanity_check_row(
     row_full: Dict[str, Any],
@@ -503,7 +527,7 @@ def sanity_check_row(
     """
 
     camberline_type = row_full["camberline_type"]
-    radius_mean_in  = float(row_full["radius_mean_in"])
+    radius_mean_in = float(row_full["radius_mean_in"])
     radius_mean_out = float(row_full["radius_mean_out"])
     metal_angle1_deg = float(row_full["metal_angle_in"])
     metal_angle2_deg = float(row_full["metal_angle_out"])
@@ -517,7 +541,13 @@ def sanity_check_row(
 
     u = jnp.linspace(0.0, 1.0, int(u_points))
     _x, _y, _r, theta, *_rest = bp.compute_camberline_radial(
-        camberline_type, radius_mean_in, radius_mean_out, metal_angle1, metal_angle2, theta0, u
+        camberline_type,
+        radius_mean_in,
+        radius_mean_out,
+        metal_angle1,
+        metal_angle2,
+        theta0,
+        u,
     )
     d_theta = float(theta[-1] - theta[0])
 
@@ -541,7 +571,9 @@ def sanity_check_row(
             ok, name, info = fn(ctx)
             checks.append({"name": str(name), "ok": bool(ok), "info": str(info)})
         except Exception as ex:
-            checks.append({"name": f"check_{i+1}", "ok": False, "info": f"Exception: {ex}"})
+            checks.append(
+                {"name": f"check_{i+1}", "ok": False, "info": f"Exception: {ex}"}
+            )
 
     all_passed = all(item["ok"] for item in checks) if checks else True
 

@@ -418,7 +418,7 @@ def get_incidence_parameter(
     #     * ((math.cosd(theta_in) / math.cosd(theta_out))) ** (-1.4)
     #     * (math.smooth_abs(beta_in, "quadratic", epsilon=1e-1) - math.smooth_abs(beta_des,"quadratic", epsilon=1e-1)) # Absolute function give problem with JAX differentiation, so use smooth abs
     # )
-   
+
     # Address the change in suction/pressure surfaces
     if cascade_type == "stator":
         incidence = -(beta_in - beta_des)

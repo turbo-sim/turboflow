@@ -133,17 +133,13 @@ def get_profile_loss(flow_parameters, geometry):
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
     # a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
     a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
-    
 
     Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
     # Y_shock = math.smooth_maximum(0.0, Y_shock)  # TODO: smoothing
     Y_shock = jnp.maximum(0.0, Y_shock)  # TODO: smoothing
 
-
     # Compute compressible flow correction factors
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
-
-
 
     # Yp_reaction and Yp_impulse according to Aungier correlation
     # These formulas are valid for 40<abs(angle_out)<80
@@ -161,18 +157,17 @@ def get_profile_loss(flow_parameters, geometry):
         Yp_impulse - Yp_reaction
     )
 
-
     # Limit the extrapolation of the profile loss to avoid negative values for
     # blade profiles with little deflection
     # Low limit to 80% of the axial entry nozzle profile loss
     # This value is completely arbitrary
     # Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
-    Y_p =jnp.maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+    Y_p = jnp.maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
 
     # Avoid unphysical effect on the thickness by defining the variable aa
     # aa = math.smooth_maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
     aa = jnp.maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
-    
+
     Y_p = Y_p * ((t_max / c) / 0.2) ** aa
     Y_p = 0.914 * (2 / 3 * Y_p * Kp + Y_shock)
 
@@ -274,9 +269,9 @@ def get_secondary_loss(flow_parameters, geometry):
         * math.cosd(beta_out) ** 2
         / math.cosd(angle_m)
     )
-    far = (1 - 0.25 * jnp.sqrt(abs(2 - H / c))) / (H / c) * (H / c < 2) + 1 / (H / c) * (
-        H / c >= 2
-    )
+    far = (1 - 0.25 * jnp.sqrt(abs(2 - H / c))) / (H / c) * (H / c < 2) + 1 / (
+        H / c
+    ) * (H / c >= 2)
     Y_s = 1.2 * Ks * 0.0334 * far * Z * math.cosd(beta_out) / math.cosd(theta_in)
 
     return Y_s
@@ -410,7 +405,9 @@ def get_tip_clearance_loss(flow_parameters, geometry):
     elif cascade_type == "rotor":
         # JAX gives problems for t_cl=0 (non-differentiable function)
         # Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) ** 0.78
-        Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) # Linear approximation gives better solver convergence
+        Y_cl = (
+            0.37 * Z * c / H * (1e-9 + t_cl / H)
+        )  # Linear approximation gives better solver convergence
     else:
         raise ValueError("Specify the type of cascade")
 

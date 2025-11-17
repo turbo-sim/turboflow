@@ -31,6 +31,7 @@ class FrictionModel(eqx.Module):
 
 class ZeroFriction(FrictionModel):
     """Idealized frictionless case."""
+
     def get_cf_components(self, *args, **kwargs):
         cf_wall = jnp.array(0.0)
         cf_diff = jnp.array(0.0)
@@ -41,7 +42,9 @@ class ZeroFriction(FrictionModel):
 
 class ConstantFriction(FrictionModel):
     """Constant skin friction coefficient."""
+
     Cf: Float[Array, ""]
+
     def get_cf_components(self, *args, **kwargs):
         cf_wall = self.Cf
         cf_diff = jnp.array(0.0)
@@ -76,7 +79,6 @@ class AungierFriction(FrictionModel):
         cf_diff, E = get_cf_diffusion(b, A, dA_dm, alpha_in, b_in, m_total)
         cf_curv = get_cf_curvature(b, curvature, alpha)
         return cf_wall, cf_diff, cf_curv, E
-
 
 
 # ------------------------------------------------------------------
@@ -142,7 +144,7 @@ def make_friction_model(cfg: dict) -> FrictionModel:
             f"Unknown friction model type '{model_type}'.\n"
             f"Valid options are: {valid_str}."
         )
-    
+
 
 # -------------------------
 # Define core functions
@@ -190,8 +192,7 @@ def get_cf_wall(Re, roughness, diameter, x, L_total):
     # TODO: Verify that this correlation is indeed reported in the cited reference
     x_over_D = jnp.maximum(x / diameter, 0.001)  # Avoid singularity at x=0
     Cf_corr_factor = 1.0 + 0.25 * jnp.sqrt(1.0 / x_over_D)
-    Cf_turbulent = Cf_corr_factor*Cf_turbulent
-
+    Cf_turbulent = Cf_corr_factor * Cf_turbulent
 
     # Smooth blending using tanh (transition centered at Re=2300)
     transition_width = 500.0  # Controls smoothness (smaller = sharper transition)
@@ -225,5 +226,3 @@ def get_cf_diffusion(b, A, dA_dm, alpha_in, b_in, L_total):
 def get_cf_curvature(b, curvature, alpha):
     """Curvature loss coefficient cf,C following Aungier (1993)."""
     return (b * curvature * jnp.cos(jnp.deg2rad(alpha))) / 26.0
-
-
