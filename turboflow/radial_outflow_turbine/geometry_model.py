@@ -13,7 +13,7 @@
 # Notes:
 # - Radial outflow turbine conventions:
 #     * height_in/out come directly from YAML (blade_height_in/out).
-#     * A_in = 2π r_in * height_in; A_out = 2π r_out * height_out.
+#     * A_in = 2π radius_mean_in * height_in; A_out = 2π radius_mean_out * height_out.
 # - Throat opening formula:
 #     throat_opening = pitch_out * cos(metal_angle_out_rad + 0.5*(theta[-1]-theta[0]))
 #   computed if throat_location_fraction is provided (for r_throat, height_throat).
@@ -85,7 +85,7 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
 
     Inputs (from YAML):
       - cascade_type, N_blades
-      - r_in, r_out
+      - radius_mean_in, radius_mean_out
       - metal_angle_in (deg), metal_angle_out (deg)   # wrt tangential
       - blade_height_in, blade_height_out             # span at inlet/outlet
       - maximum_thickness, trailing_edge_thickness
@@ -105,8 +105,8 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     # Required
     cascade_type = row["cascade_type"]
     N_blades     = int(row["N_blades"])
-    r_in         = jnp.asarray(row["r_in"], dtype=jnp.float64)
-    r_out        = jnp.asarray(row["r_out"], dtype=jnp.float64)
+    radius_mean_in         = jnp.asarray(row["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out        = jnp.asarray(row["radius_mean_out"], dtype=jnp.float64)
     height_in    = jnp.asarray(row["blade_height_in"], dtype=jnp.float64)
     height_out   = jnp.asarray(row["blade_height_out"], dtype=jnp.float64)
     metal_angle_in_deg  = float(row["metal_angle_in"])
@@ -122,16 +122,16 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     u = jnp.linspace(0.0, 1.0, 400)
     # bp.compute_camberline_radial -> x, y, r, theta, metal_angle, phi, stagger, chord
     _x, _y, _r, theta, _metal_angle, _phi, stagger_rad, chord = bp.compute_camberline_radial(
-        camberline_type, r_in, r_out, ma1, ma2, theta0, u
+        camberline_type, radius_mean_in, radius_mean_out, ma1, ma2, theta0, u
     )
     stagger_rad = _normalize_stagger_rad(stagger_rad)
     stagger_deg = _rad2deg(stagger_rad)
     d_theta = theta[-1] - theta[0]
 
     # Pitches
-    pitch_in   = 2.0 * jnp.pi * r_in  / float(N_blades)
-    pitch_out  = 2.0 * jnp.pi * r_out / float(N_blades)
-    r_mean     = 0.5 * (r_in + r_out)
+    pitch_in   = 2.0 * jnp.pi * radius_mean_in  / float(N_blades)
+    pitch_out  = 2.0 * jnp.pi * radius_mean_out / float(N_blades)
+    r_mean     = 0.5 * (radius_mean_in + radius_mean_out)
     pitch_mean = 2.0 * jnp.pi * r_mean / float(N_blades)
 
     # Optional parameters
@@ -145,7 +145,7 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
 
     if throat_f is not None:
         throat_f = float(throat_f)
-        r_throat = r_in + throat_f * (r_out - r_in)
+        r_throat = radius_mean_in + throat_f * (radius_mean_out - radius_mean_in)
         height_throat = (1.0 - throat_f) * height_in + throat_f * height_out
 
         # throat_opening per spec: pitch_out * cos(metal_angle_out_rad + 0.5 * d_theta)
@@ -168,8 +168,8 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     prepared.update({
         "cascade_type": cascade_type,
         "N_blades": N_blades,
-        "r_in": r_in,
-        "r_out": r_out,
+        "radius_mean_in": radius_mean_in,
+        "radius_mean_out": radius_mean_out,
         "blade_height_in": height_in,
         "blade_height_out": height_out,
         "metal_angle_in": metal_angle_in_deg,
@@ -228,8 +228,8 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     """
 
     # Pull essentials as JAX scalars
-    r_in   = jnp.asarray(prepared["r_in"], dtype=jnp.float64)
-    r_out  = jnp.asarray(prepared["r_out"], dtype=jnp.float64)
+    radius_mean_in   = jnp.asarray(prepared["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out  = jnp.asarray(prepared["radius_mean_out"], dtype=jnp.float64)
     h_in   = jnp.asarray(prepared["blade_height_in"], dtype=jnp.float64)
     h_out  = jnp.asarray(prepared["blade_height_out"], dtype=jnp.float64)
     chord  = jnp.asarray(prepared["chord"], dtype=jnp.float64)
@@ -251,9 +251,9 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     tip_clearance_height = prepared.get("tip_clearance_height", None)
 
     # Radii (hub-only vocabulary retained)
-    radius_hub_in   = r_in
-    radius_hub_out  = r_out
-    radius_hub_mean = 0.5 * (r_in + r_out)
+    radius_hub_in   = radius_mean_in
+    radius_hub_out  = radius_mean_out
+    radius_hub_mean = 0.5 * (radius_mean_in + radius_mean_out)
     radius_hub_throat = jnp.asarray(r_throat, dtype=jnp.float64) if (r_throat is not None) else None
 
     # Heights
@@ -269,8 +269,8 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     radius_tip_throat = radius_hub_throat if (radius_hub_throat is not None) else None
 
     # Areas
-    A_in  = 2.0 * jnp.pi * r_in  * h_in
-    A_out = 2.0 * jnp.pi * r_out * h_out
+    A_in  = 2.0 * jnp.pi * radius_mean_in  * h_in
+    A_out = 2.0 * jnp.pi * radius_mean_out * h_out
     A_throat = None
     if (r_throat is not None) and (height_throat is not None):
         A_throat = 2.0 * jnp.pi * radius_hub_throat * height_th
@@ -414,8 +414,8 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
 _REQUIRED_KEYS = [
     "cascade_type",
     "N_blades",
-    "r_in",
-    "r_out",
+    "radius_mean_in",
+    "radius_mean_out",
     "metal_angle_in",
     "metal_angle_out",
     "maximum_thickness",
@@ -503,8 +503,8 @@ def sanity_check_row(
     """
 
     camberline_type = row_full["camberline_type"]
-    r_in  = float(row_full["r_in"])
-    r_out = float(row_full["r_out"])
+    radius_mean_in  = float(row_full["radius_mean_in"])
+    radius_mean_out = float(row_full["radius_mean_out"])
     metal_angle1_deg = float(row_full["metal_angle_in"])
     metal_angle2_deg = float(row_full["metal_angle_out"])
     theta0_deg = float(row_full.get("theta0", 0.0))
@@ -517,13 +517,13 @@ def sanity_check_row(
 
     u = jnp.linspace(0.0, 1.0, int(u_points))
     _x, _y, _r, theta, *_rest = bp.compute_camberline_radial(
-        camberline_type, r_in, r_out, metal_angle1, metal_angle2, theta0, u
+        camberline_type, radius_mean_in, radius_mean_out, metal_angle1, metal_angle2, theta0, u
     )
     d_theta = float(theta[-1] - theta[0])
 
     ctx = {
-        "r_in": r_in,
-        "r_out": r_out,
+        "radius_mean_in": radius_mean_in,
+        "radius_mean_out": radius_mean_out,
         "metal_angle1_rad": float(metal_angle1),
         "metal_angle2_rad": float(metal_angle2),
         "theta0_rad": float(theta0),

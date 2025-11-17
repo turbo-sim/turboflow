@@ -355,7 +355,8 @@ def plot_meridional_tangential(
         color = row_color(idx)
 
         camberline_type = geom["camberline_type"]
-        r1 = float(geom["r_in"]); r2 = float(geom["r_out"])
+        r1 = float(geom["r_in"])
+        r2 = float(geom["r_out"])
         N_blades = int(geom["N_blades"])
 
         theta = jnp.linspace(0.0, 2.0*jnp.pi, 200)
@@ -367,9 +368,11 @@ def plot_meridional_tangential(
         ax.plot(x_circ, y_circ, "k-", linewidth=0.5)
 
         # YAML angles meridional → tangential; then sign per cascade_type
-        sgn = +1.0 if str(geom.get("cascade_type","stator")).lower() == "stator" else -1.0
-        m1 = sgn * (90.0 - float(geom["metal_angle_in"]))
-        m2 = sgn * (90.0 - float(geom["metal_angle_out"]))
+        # sgn = +1.0 if str(geom.get("cascade_type","stator")).lower() == "stator" else -1.0
+        # m1 = sgn * (90.0 - float(geom["metal_angle_in"]))
+        # m2 = sgn * (90.0 - float(geom["metal_angle_out"]))
+        m1 = float(geom["metal_angle_in"])
+        m2 = float(geom["metal_angle_out"])
         theta0 = float(geom.get("theta0", 0.0))
 
         # thickness params

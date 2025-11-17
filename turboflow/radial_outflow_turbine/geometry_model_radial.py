@@ -60,8 +60,8 @@ def _opt(row: Dict[str, Any], *names, default=None):
 REQUIRED_GEOM_KEYS = {
     "cascade_type",
     "N_blades",
-    "r_in",
-    "r_out",
+    "radius_mean_in",
+    "radius_mean_out",
     "metal_angle_in",
     "metal_angle_out",
     "maximum_thickness",
@@ -115,7 +115,7 @@ ALLOW_STR_KEYS = {
 
 # at top-level with the other key sets
 VANELESS_REQUIRED = {
-    "r_in", "r_out", "b_in", "b_out",
+    "radius_mean_in", "radius_mean_out", "b_in", "b_out",
     # optional but commonly present:
     # "z_in", "z_out", "phi_in", "phi_out", "td_in", "td_out"
 }
@@ -222,8 +222,8 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     cascade_type = row["cascade_type"]
     N_blades     = int(row["N_blades"])
-    r_in         = jnp.asarray(row["r_in"], dtype=jnp.float64)
-    r_out        = jnp.asarray(row["r_out"], dtype=jnp.float64)
+    radius_mean_in         = jnp.asarray(row["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out        = jnp.asarray(row["radius_mean_out"], dtype=jnp.float64)
     height_in    = jnp.asarray(row["blade_height_in"], dtype=jnp.float64)
     height_out   = jnp.asarray(row["blade_height_out"], dtype=jnp.float64)
     metal_angle_in_deg  = float(row["metal_angle_in"])
@@ -236,16 +236,16 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     theta0 = _deg2rad(0.0)
     u = jnp.linspace(0.0, 1.0, 400)
     _x, _y, _r, theta, _metal_angle, _phi, stagger_rad, chord = bp.compute_camberline_radial(
-        camberline_type, r_in, r_out, ma1, ma2, theta0, u
+        camberline_type, radius_mean_in, radius_mean_out, ma1, ma2, theta0, u
     )
     stagger_rad = _normalize_stagger_rad(stagger_rad)
     stagger_deg = _rad2deg(stagger_rad)
     d_theta = theta[-1] - theta[0]
 
     # Pitches (from N_blades and radii)
-    pitch_in   = 2.0 * jnp.pi * r_in  / float(N_blades)
-    pitch_out  = 2.0 * jnp.pi * r_out / float(N_blades)
-    r_mean     = 0.5 * (r_in + r_out)
+    pitch_in   = 2.0 * jnp.pi * radius_mean_in  / float(N_blades)
+    pitch_out  = 2.0 * jnp.pi * radius_mean_out / float(N_blades)
+    r_mean     = 0.5 * (radius_mean_in + radius_mean_out)
     pitch_mean = 2.0 * jnp.pi * r_mean / float(N_blades)
 
     # Throat data (optional)
@@ -256,7 +256,7 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     throat_area = None
     if throat_f is not None:
         throat_f = float(throat_f)
-        r_throat = r_in + throat_f * (r_out - r_in)
+        r_throat = radius_mean_in + throat_f * (radius_mean_out - radius_mean_in)
         height_throat = (1.0 - throat_f) * height_in + throat_f * height_out
         metal_angle_out_rad = _deg2rad(metal_angle_out_deg)
         throat_opening = pitch_out * jnp.cos(metal_angle_out_rad + 0.5 * d_theta)
@@ -276,8 +276,8 @@ def prepare_radial_outflow_geometry(row: Dict[str, Any]) -> Dict[str, Any]:
     prepared.update({
         "cascade_type": cascade_type,
         "N_blades": N_blades,
-        "r_in": r_in,
-        "r_out": r_out,
+        "radius_mean_in": radius_mean_in,
+        "radius_mean_out": radius_mean_out,
         "blade_height_in": height_in,
         "blade_height_out": height_out,
         "metal_angle_in": metal_angle_in_deg,
@@ -315,8 +315,8 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     """
     Complete geometry using prepared values; returns a full per-component dict.
     """
-    r_in   = jnp.asarray(prepared["r_in"], dtype=jnp.float64)
-    r_out  = jnp.asarray(prepared["r_out"], dtype=jnp.float64)
+    radius_mean_in   = jnp.asarray(prepared["radius_mean_in"], dtype=jnp.float64)
+    radius_mean_out  = jnp.asarray(prepared["radius_mean_out"], dtype=jnp.float64)
     h_in   = jnp.asarray(prepared["blade_height_in"], dtype=jnp.float64)
     h_out  = jnp.asarray(prepared["blade_height_out"], dtype=jnp.float64)
     chord  = jnp.asarray(prepared["chord"], dtype=jnp.float64)
@@ -334,10 +334,10 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     le_radius_abs = prepared.get("leading_edge_radius_abs", None)
     tip_clearance_height = prepared.get("tip_clearance_height", None)
 
-    # We model hub/tip radii equal (annular line at r_in/out) for this cross-section
-    radius_hub_in   = r_in
-    radius_hub_out  = r_out
-    radius_hub_mean = 0.5 * (r_in + r_out)
+    # We model hub/tip radii equal (annular line at radius_mean_in/out) for this cross-section
+    radius_hub_in   = radius_mean_in
+    radius_hub_out  = radius_mean_out
+    radius_hub_mean = 0.5 * (radius_mean_in + radius_mean_out)
     radius_hub_throat = jnp.asarray(r_throat, dtype=jnp.float64) if (r_throat is not None) else None
 
     radius_tip_in   = radius_hub_in
@@ -354,8 +354,8 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
     throat_area_per_passage = prepared.get("throat_area", None)
 
     # Areas
-    A_in  = 2.0 * jnp.pi * r_in  * h_in
-    A_out = 2.0 * jnp.pi * r_out * h_out
+    A_in  = 2.0 * jnp.pi * radius_mean_in  * h_in
+    A_out = 2.0 * jnp.pi * radius_mean_out * h_out
     A_throat = None
     if (r_throat is not None) and (height_throat is not None):
         # A_throat = 2.0 * jnp.pi * radius_hub_throat * height_th
@@ -473,7 +473,7 @@ def calculate_full_radial_outflow_geometry(prepared: Dict[str, Any],
 
 
 # Adapter to axial-style “compute one component”
-def _compute_full_geometry_for_component(comp: Dict[str, Any], index: int, ncomp: int) -> Dict[str, Any]:
+def compute_full_geometry_for_component(comp: Dict[str, Any], index: int, ncomp: int) -> Dict[str, Any]:
     """
     Axial-compatible per-component builder using the radial pipeline.
     """
@@ -482,23 +482,23 @@ def _compute_full_geometry_for_component(comp: Dict[str, Any], index: int, ncomp
     geom = comp["geometry"]
 
     if component_type == "vaneless_channel":
-        r_in  = jnp.asarray(geom["r_in"], dtype=jnp.float64)
-        r_out = jnp.asarray(geom["r_out"], dtype=jnp.float64)
+        radius_mean_in  = jnp.asarray(geom["radius_mean_in"], dtype=jnp.float64)
+        radius_mean_out = jnp.asarray(geom["radius_mean_out"], dtype=jnp.float64)
         b_in  = jnp.asarray(geom["b_in"], dtype=jnp.float64)
         b_out = jnp.asarray(geom["b_out"], dtype=jnp.float64)
 
-        A_in  = 2.0 * jnp.pi * r_in  * b_in
-        A_out = 2.0 * jnp.pi * r_out * b_out
-        r_mean = 0.5 * (r_in + r_out)
+        A_in  = 2.0 * jnp.pi * radius_mean_in  * b_in
+        A_out = 2.0 * jnp.pi * radius_mean_out * b_out
+        r_mean = 0.5 * (radius_mean_in + radius_mean_out)
         b_mean = 0.5 * (b_in + b_out)
 
         out = {
             "name": name,
             "component_type": component_type,
-            "r_in": float(r_in), "r_out": float(r_out),
+            "radius_mean_in": float(radius_mean_in), "radius_mean_out": float(radius_mean_out),
             "b_in": float(b_in), "b_out": float(b_out),
             "A_in": float(A_in), "A_out": float(A_out),
-            "radius_mean_in": float(r_in), "radius_mean_out": float(r_out),
+            "radius_mean_in": float(radius_mean_in), "radius_mean_out": float(radius_mean_out),
             "height_in": float(b_in), "height_out": float(b_out),
             "height": float(b_mean),
             # pass-through for solver models:
@@ -553,7 +553,7 @@ def calculate_full_geometry(yaml_or_components):
     ncomp = len(components)
     out = []
     for i, comp in enumerate(components):
-        out.append(_compute_full_geometry_for_component(comp, i, ncomp))
+        out.append(compute_full_geometry_for_component(comp, i, ncomp))
     return out
 
 
