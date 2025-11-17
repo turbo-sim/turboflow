@@ -433,7 +433,7 @@ def compute_single_operation_point(
     """
 
     # Problem set-up (geometry, fluid, refs)
-    problem = AxialTurbineProblem(components, simulation_options)
+    problem = TurbomachineryProblem(components, simulation_options)
     problem.update_boundary_conditions(operating_point)
     solver_options = copy.deepcopy(solver_options)
 
@@ -616,7 +616,7 @@ def compute_single_operation_point(
 # }
 
 
-class AxialTurbineProblem(psv.NonlinearSystemProblem):
+class TurbomachineryProblem(psv.NonlinearSystemProblem):
     """
     Nonlinear system problem for a component-wise axial turbine analysis.
     """
