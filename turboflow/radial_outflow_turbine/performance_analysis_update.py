@@ -662,6 +662,15 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
                     "name": comp.get("name", f"channel_{idx+1}"),
                     "geometry": geom,
                     "model_options": comp.get("model_options", {}),
+                    # Dummy operating conditions: required by from_dict, but not actually
+                    # used by the turbine component-wise framework. We'll drive the
+                    # channel from the upstream cascade instead.
+                    "operating_conditions": {
+                        "p_in": 1.0e5,    # arbitrary but valid
+                        "h_in": 1.0e5,    # arbitrary but valid
+                        "v_in": 1.0,      # non-zero so nothing divides by zero
+                        "alpha_in": 0.0,  # degrees
+                    },
                 }
                 # fluid=None for now; injected later
                 ch = VanelessChannel.from_dict(
