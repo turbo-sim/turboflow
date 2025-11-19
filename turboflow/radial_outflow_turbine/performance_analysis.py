@@ -16,8 +16,8 @@ from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
 
-# from . import geometry_model_axial as geom
-from . import geometry_model_radial as geom
+from . import geometry_model_axial as geom
+# from . import geometry_model_radial as geom
 from . import flow_model as flow
 from . import deviation_model as dm
 import jaxprop as jxp

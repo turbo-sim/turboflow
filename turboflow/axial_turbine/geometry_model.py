@@ -131,7 +131,7 @@ def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
         inlet and outlet radii based on the specified throat location.
     """
     return (
-        1 - throat_location_fraction
+        1.0 - throat_location_fraction
     ) * radius_in + throat_location_fraction * radius_out
 
 

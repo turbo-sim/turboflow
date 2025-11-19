@@ -3,7 +3,9 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Tuple
 
+import time
 import jax
+import equinox as eqx
 
 jax.config.update("jax_enable_x64", True)
 import jax.numpy as jnp
@@ -87,13 +89,10 @@ def _extract_row_vars_and_choking(
 # ============================================================
 
 
-def evaluate_axial_turbine_componentwise(
-    variables: Dict[str, Any],  # solver vars (normalized)
+def evaluate_turbomachine(
+    variables: Dict[str, Any],          # solver vars (normalized)
     boundary_conditions: Dict[str, Any],
-    comp_objects: List[Any],  # BladeRow / VanelessChannel objects (in order)
-    geometry_components: List[
-        Dict[str, Any]
-    ],  # component-wise geometry (same order as comp_objects)
+    comp_objects: List[Any],            # BladeRow / VanelessChannel objects (in order)
     fluid: Any,
     reference_values: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -108,6 +107,8 @@ def evaluate_axial_turbine_componentwise(
     - For VanelessChannel: we call obj.evaluate(...) and map its outlet to the
       next inlet, but don't treat it as a cascade for stage/overall KPIs.
     """
+
+    t_eval_start = time.perf_counter()
 
     # ---------- inlet from boundary conditions ----------
     h0_in = boundary_conditions["h0_in"]
@@ -129,32 +130,55 @@ def evaluate_axial_turbine_componentwise(
     cascade_geoms: List[Dict[str, Any]] = []  # cascades only (for stage KPIs etc.)
 
     # ---------- main component loop ----------
-    for gi, (obj, geom) in enumerate(zip(comp_objects, geometry_components)):
+    for gi, obj in enumerate(comp_objects):
         # =====================================================
         # Blade row (axial or radial cascade)
         # =====================================================
         if isinstance(obj, BladeRow):
+
+            # --- timing for this blade row ---
+            t_row0 = time.perf_counter()
+
+            # TODO time the blade row code, ideally with some granularity, maybe 3 parts, the unscale part, the evaluate part and the postprocess part. And print the timings for the 3 and the total in one line. print() before the contiue statement
             row_counter += 1
+            geom = obj.geometry
             cascade_geoms.append(geom)
 
-            # unscale row vars + choking vars for this row
-            row_vars, choking_vars = _extract_row_vars_and_choking(
+
+            # unscale row vars + choking vars for this row via BladeRow helper
+            row_vars, choking_vars = BladeRow.unscale_row_vars_and_choking(
                 variables=variables,
                 index_1based=row_counter,
                 reference_values=reference_values,
             )
 
+            t_row1 = time.perf_counter()
+
+            # TODO: Remove cascade_type and use model_options rotational speed for omega (see for conversion)
+
             # rotor rows rotate; stators do not
             is_rotor = "rotor" in str(obj.cascade_type).lower()
             omega_i = jnp.asarray(omega_bc if is_rotor else 0.0, dtype=jnp.float64)
 
-            planes, cascade, res_i, handoff = obj.evaluate(
+            # NEW: BladeRow.evaluate returns a dict
+            row_result = obj.evaluate(
                 inlet_state=inlet,
                 row_vars=row_vars,
                 omega=omega_i,
                 reference_values=reference_values,
                 choking_vars=choking_vars,
             )
+
+            # force JAX to finish compute for this row before timing
+            exit_plane_for_timing = row_result["planes"][-1]
+            jax.block_until_ready(exit_plane_for_timing["pressure"])
+
+            t_row2 = time.perf_counter()
+
+            planes = row_result["planes"]
+            cascade = row_result["cascade_summary"]
+            res_i = row_result["residuals"]
+            handoff = row_result["handoff"]  # kept for future use if needed
 
             planes_seq += planes
             cascades_seq.append(cascade)
@@ -168,12 +192,24 @@ def evaluate_axial_turbine_componentwise(
                 "alpha": exit_plane["alpha"],  # already degrees
                 "v": exit_plane["v"],
             }
+            t_row3 = time.perf_counter()
+
+            print(
+                f"[flow] BladeRow {row_counter}: "
+                f"unscale={t_row1 - t_row0:.3e} s, "
+                f"eval={t_row2 - t_row1:.3e} s, "
+                f"post={t_row3 - t_row2:.3e} s, "
+                f"total={t_row3 - t_row0:.3e} s"
+            )
+
             continue
 
         # =====================================================
         # Vaneless channel
         # =====================================================
         if isinstance(obj, VanelessChannel):
+
+            t_vc0 = time.perf_counter()
             # Map BladeRow-style inlet to channel operating conditions (static)
             v_mag = inlet["v"]
             alphaD = _alpha_deg(inlet["alpha"])
@@ -181,42 +217,45 @@ def evaluate_axial_turbine_componentwise(
             st = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, inlet["s"])
             p_in = st["p"]
 
-            # Call channel; expected to return either:
-            #   (planes_ch, res_ch)  or  {"planes": ..., "residuals": ...}
-            result = obj.evaluate(
-                inlet_state={
-                    "p_in": p_in,
-                    "h_in": h_in,
-                    "v_in": v_mag,
-                    "alpha_in": alphaD,  # degrees
-                },
-                fluid=fluid,
-                reference_values=reference_values,
+            # Build a new OperatingConditions instance with updated inlet
+            oc_cls = obj.operating_conditions.__class__
+            oc_new = oc_cls(
+                p_in=jnp.asarray(p_in),
+                h_in=jnp.asarray(h_in),
+                v_in=jnp.asarray(v_mag),
+                alpha_in=jnp.asarray(alphaD),
             )
 
-            if isinstance(result, tuple) and len(result) == 2:
-                planes_ch, res_ch = result
-            elif isinstance(result, dict):
-                planes_ch = result.get("planes")
-                res_ch = result.get("residuals", {})
-            else:
-                raise TypeError("VanelessChannel.evaluate returned unsupported type.")
+            # Replace operating_conditions in the channel object
+            obj = eqx.tree_at(lambda c: c.operating_conditions, obj, oc_new)
 
-            # optional residual from channel (e.g., mass error)
-            if isinstance(res_ch, dict) and "mass_error_exit" in res_ch:
-                residuals[f"vaneless_mass_error_{gi+1}"] = res_ch["mass_error_exit"]
+            # Solve the channel; returns dict-of-arrays
+            result = obj.evaluate()
+
+            # force JAX to finish this solve before timing
+            jax.block_until_ready(result["p"][-1])
+
+            t_vc1 = time.perf_counter()
 
             # Update inlet to next component
-            v_m_out = planes_ch[1]["v_m"]
-            v_t_out = planes_ch[1]["v_t"]
+            v_m_out = result["v_m"][-1]
+            v_t_out = result["v_t"][-1]
             v_out = jnp.sqrt(v_m_out**2 + v_t_out**2)
             alpha = jnp.degrees(jnp.arctan2(v_t_out, v_m_out))
-            h0_out = planes_ch[1].get(
-                "enthalpy0", planes_ch[1]["enthalpy"] + 0.5 * v_out**2
-            )
-            s_out = planes_ch[1].get("entropy", inlet["s"])
+            h0_out = result["h0"][-1]
+            s_out = result["s"][-1]
 
             inlet = {"h0": h0_out, "s": s_out, "alpha": alpha, "v": v_out}
+
+            t_vc2 = time.perf_counter()
+
+            print(
+                f"[flow] VanelessChannel {gi + 1}: "
+                f"eval={t_vc1 - t_vc0:.3e} s, "
+                f"post={t_vc2 - t_vc1:.3e} s, "
+                f"total={t_vc2 - t_vc0:.3e} s"
+            )
+
             continue
 
         # =====================================================
@@ -232,6 +271,11 @@ def evaluate_axial_turbine_componentwise(
             "No cascades evaluated; cannot compute outlet residuals/overall KPIs."
         )
 
+
+    # TODO, time this final posrprocessign part
+
+    # --- timing for final aggregation & KPIs ---
+    t_agg0 = time.perf_counter()
     planes = tf.combine_to_dict_of_arrays(planes_seq)
     cascades = tf.combine_to_dict_of_arrays(cascades_seq)
 
@@ -251,6 +295,15 @@ def evaluate_axial_turbine_componentwise(
         cascade_geoms[-1],
     )
 
+     # force JAX to finish KPI computations before timing
+    jax.block_until_ready(overall["power"])
+
+    t_agg1 = time.perf_counter()
+    print(f"[flow] aggregation+KPIs took {t_agg1 - t_agg0:.3e} s")
+
+    t_eval_end = time.perf_counter()
+    print(f"[flow] evaluate_turbomachine total {t_eval_end - t_eval_start:.3e} s")
+
     return {
         "planes": planes,
         "cascades": cascades,
@@ -265,8 +318,10 @@ def evaluate_axial_turbine_componentwise(
             (o.cascade_type if isinstance(o, BladeRow) else "vaneless_channel")
             for o in comp_objects
         ],
-        "geometry_components": cascade_geoms,  # cascades-only list for reporting
+        # cascades-only list of geometry dicts (used in KPIs / reporting)
+        "geometry_components": cascade_geoms,
     }
+
 
 
 # ============================================================

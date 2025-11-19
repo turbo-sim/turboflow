@@ -3,42 +3,41 @@ from turboflow import utilities as utils
 
 import jax.numpy as jnp
 
+from turboflow.radial_outflow_turbine import blade_parametrization as bp
+
 # ==============================
-# Required keys (component-wise)
+# Required keys for AXIAL CASCADE geometry
 # ==============================
-REQUIRED_GEOM_KEYS = {
-    "cascade_type",
-    "radius_hub_in",
-    "radius_hub_out",
-    "radius_tip_in",
-    "radius_tip_out",
-    "pitch",
-    "chord",
-    "stagger_angle",
-    "opening",
-    "leading_edge_diameter",
-    "leading_edge_wedge_angle",
-    "leading_edge_angle",
-    "trailing_edge_thickness",
-    "tip_clearance",
-    "maximum_thickness",
+REQUIRED_AXIAL_GEOM_KEYS = {
+    "cascade_type",                     # "stator" / "rotor"
+    "camberline_type",
+    "N_blades",
+    "r_mean_in",
+    "r_mean_out",
+    "metal_angle_in",                   # deg
+    "metal_angle_out",                  # deg
+    "maximum_thickness",                # m
+    "trailing_edge_thickness",          # m
+    "blade_height_in",                  # m
+    "blade_height_out",                 # m
+    "maximum_thickness_location_fraction",
+    "leading_edge_wedge_angle",         # deg
+    "leading_edge_radius",              # m
+    "trailing_edge_radius",             # m
+    "trailing_edge_wedge_angle",        # deg
     "throat_location_fraction",
+    "chord_axial",                      # m
+    "tip_clearance",                    # m
 }
 
-ANGLE_KEYS = {"leading_edge_angle", "stagger_angle"}
-VALID_TYPES = {"stator", "rotor"}
+VALID_CASCADE_TYPES = {"stator", "rotor"}
+VALID_COMPONENT_TYPES = {"axial_cascade", "vaneless_channel"}
 
 
 # ==============================
 # Adapters / Input normalization
 # ==============================
 def _extract_components(obj):
-    """
-    Accept either:
-      - full YAML dict with 'components' key, or
-      - a list of component dicts
-    Return a list of component dicts.
-    """
     if isinstance(obj, dict) and "components" in obj:
         return obj["components"]
     if isinstance(obj, list):
@@ -48,57 +47,89 @@ def _extract_components(obj):
     )
 
 
+
 # ==============
 # Validation
 # ==============
-def _validate_single_component(c, index=0):
+def _validate_axial_cascade_component(c, index=0):
     """
-    Validate one component entry:
-      - has name (optional but recommended), component_type, geometry dict
-      - geometry has required keys, valid cascade_type, numeric types, non-negative for non-angles
+    Validate one component entry in the *raw geometry* format
+    for component_type == 'axial_cascade'.
     """
-    # Basic structure
     if "geometry" not in c or not isinstance(c["geometry"], dict):
         raise ValueError(f"Component #{index+1} missing 'geometry' dict.")
 
-    # Optional but helpful
+    name = c.get("name", f"component_{index+1}")
+    geom = c["geometry"]
+
+    # STRICT: all required keys present, and no unknown keys
+    utils.validate_keys(geom, REQUIRED_AXIAL_GEOM_KEYS, REQUIRED_AXIAL_GEOM_KEYS)
+
+    # cascade_type must be stator or rotor
+    ct = geom["cascade_type"]
+    if ct not in VALID_CASCADE_TYPES:
+        raise ValueError(
+            f"Component '{name}' has invalid cascade_type='{ct}'. "
+            f"Only {sorted(VALID_CASCADE_TYPES)} allowed."
+        )
+
+    # Numeric checks
+    for k, v in geom.items():
+        if k in ("cascade_type", "camberline_type"):
+            continue
+
+        if not isinstance(v, (int, float)) and not jnp.isscalar(v):
+            raise TypeError(
+                f"Component '{name}': parameter '{k}' must be a numeric scalar (int/float). "
+                f"Got {type(v)}."
+            )
+
+        val = float(v)
+        # allow angles (keys containing 'angle') to be negative
+        if ("angle" not in k) and not (val >= 0.0):
+            raise ValueError(
+                f"Component '{name}': parameter '{k}' must be non-negative. Got {v}."
+            )
+
+    if int(geom["N_blades"]) < 1:
+        raise ValueError(
+            f"Component '{name}': N_blades must be >= 1. Got {geom['N_blades']}."
+        )
+
+
+def _validate_vaneless_channel_component(c, index=0):
+    """
+    Minimal structural check for an 'vaneless_channel' (vaneless channel).
+    We only require that a geometry dict exists; its contents are not prescribed here.
+    """
+    if "geometry" not in c or not isinstance(c["geometry"], dict):
+        raise ValueError(f"Vaneless_channel component #{index+1} missing 'geometry' dict.")
+    # If later you want strict keys for vaneless_channel, add them here.
+
+
+def _validate_single_component(c, index=0):
+    """
+    Dispatch validation based on component_type.
+    """
     name = c.get("name", f"component_{index+1}")
     ctype = c.get("component_type", None)
     if ctype is None:
         raise ValueError(f"Component '{name}' missing 'component_type'.")
 
-    geom = c["geometry"]
-
-    # Keys
-    utils.validate_keys(geom, REQUIRED_GEOM_KEYS, REQUIRED_GEOM_KEYS)
-
-    # cascade_type
-    ct = geom["cascade_type"]
-    if ct not in VALID_TYPES:
+    if ctype not in VALID_COMPONENT_TYPES:
         raise ValueError(
-            f"Component '{name}' has invalid cascade_type='{ct}'. Only {sorted(VALID_TYPES)} allowed."
+            f"Component '{name}' has unsupported component_type='{ctype}'. "
+            f"Supported: {sorted(VALID_COMPONENT_TYPES)}."
         )
 
-    # Numeric checks (angles allowed to be negative)
-    for k, v in geom.items():
-        if k == "cascade_type":
-            continue
-        # jnp.isscalar handles Python floats/ints; at least ensure numeric
-        if not isinstance(v, (int, float)) and not jnp.isscalar(v):
-            raise TypeError(
-                f"Component '{name}': parameter '{k}' must be a numeric scalar (int/float). Got {type(v)}."
-            )
-        if k not in ANGLE_KEYS and not (float(v) >= 0.0):
-            raise ValueError(
-                f"Component '{name}': parameter '{k}' must be non-negative. Got {v}."
-            )
+    if ctype == "axial_cascade":
+        _validate_axial_cascade_component(c, index)
+    elif ctype == "vaneless_channel":
+        _validate_vaneless_channel_component(c, index)
 
+        
 
 def validate_turbine_geometry(yaml_or_components, display=False):
-    """
-    Component-wise validator. Iterates over components and validates each geometry dict.
-    Returns a message string if all pass.
-    """
     components = _extract_components(yaml_or_components)
     for i, comp in enumerate(components):
         _validate_single_component(comp, i)
@@ -109,93 +140,138 @@ def validate_turbine_geometry(yaml_or_components, display=False):
     return msg
 
 
+
 # =================
 # Core calculations
 # =================
 def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
-    """
-    throat = (1 - frac) * r_in + frac * r_out
-    Works with scalars or jax scalars.
-    """
     return (
         1.0 - throat_location_fraction
     ) * radius_in + throat_location_fraction * radius_out
 
 
-def _compute_full_geometry_for_component(comp):
+
+def _compute_full_geometry_for_axial_cascade(comp):
     """
-    Compute 'complete geometry' for a single component (stator/rotor axial cascade).
-    Returns a dict that includes:
-      - name, component_type
-      - original geometry fields
-      - all derived fields (heights, areas, ratios, angles, etc.)
+    Compute 'complete geometry' for a single axial cascade component
+    from the *raw* geometry specification.
     """
     name = comp.get("name", None)
     component_type = comp.get("component_type", None)
     g = comp["geometry"]
 
-    # Pull scalars
-    cascade_type = g["cascade_type"]  # 'stator' or 'rotor'
-    radius_hub_in = float(g["radius_hub_in"])
-    radius_hub_out = float(g["radius_hub_out"])
-    radius_tip_in = float(g["radius_tip_in"])
-    radius_tip_out = float(g["radius_tip_out"])
-    pitch = float(g["pitch"])
-    chord = float(g["chord"])
-    stagger_angle = float(g["stagger_angle"])
-    opening = float(g["opening"])
-    leading_edge_diameter = float(g["leading_edge_diameter"])
-    leading_edge_wedge_angle = float(g["leading_edge_wedge_angle"])
-    leading_edge_angle = float(g["leading_edge_angle"])
-    trailing_edge_thickness = float(g["trailing_edge_thickness"])
-    tip_clearance = float(g["tip_clearance"])
-    maximum_thickness = float(g["maximum_thickness"])
-    throat_location_fraction = float(g["throat_location_fraction"])
+    # --- Pull raw scalars ---------------------------------------------------
+    cascade_type = g["cascade_type"]
+    camberline_type = g["camberline_type"]
+    N_blades = int(g["N_blades"])
 
-    # Mean radii
+    r_mean_in = float(g["r_mean_in"])
+    r_mean_out = float(g["r_mean_out"])
+
+    blade_height_in = float(g["blade_height_in"])
+    blade_height_out = float(g["blade_height_out"])
+
+    metal_angle_in_deg = float(g["metal_angle_in"])
+    metal_angle_out_deg = float(g["metal_angle_out"])
+
+    maximum_thickness = float(g["maximum_thickness"])
+    trailing_edge_thickness = float(g["trailing_edge_thickness"])
+
+    maximum_thickness_location_fraction = float(
+        g["maximum_thickness_location_fraction"]
+    )
+    leading_edge_wedge_angle = float(g["leading_edge_wedge_angle"])
+    leading_edge_radius = float(g["leading_edge_radius"])
+    trailing_edge_radius = float(g["trailing_edge_radius"])
+    trailing_edge_wedge_angle = float(g["trailing_edge_wedge_angle"])
+    throat_location_fraction = float(g["throat_location_fraction"])
+    chord_axial = float(g["chord_axial"])
+    tip_clearance = float(g["tip_clearance"])
+
+    # --- 1) Hub & tip radii from mean radius + blade height -----------------
+    radius_hub_in = r_mean_in - 0.5 * blade_height_in
+    radius_tip_in = r_mean_in + 0.5 * blade_height_in
+
+    radius_hub_out = r_mean_out - 0.5 * blade_height_out
+    radius_tip_out = r_mean_out + 0.5 * blade_height_out
+
+    # --- 2) Camberline (cartesian, axial) to get stagger & chord -----------
+    metal_angle_in_rad = jnp.deg2rad(metal_angle_in_deg)
+    metal_angle_out_rad = jnp.deg2rad(metal_angle_out_deg)
+
+    x1 = 0.0
+    y1 = 0.0
+    N_cam_points = 64
+    u = jnp.linspace(0.0, 1.0, N_cam_points)
+
+    x_c, y_c, dydx, stagger_rad, chord = bp.compute_camberline_cartesian(
+        camberline_type,
+        x1,
+        y1,
+        metal_angle_in_rad,
+        metal_angle_out_rad,
+        chord_axial,
+        u,
+    )
+
+    stagger_angle = float(jnp.rad2deg(stagger_rad))
+    chord = float(chord)
+
+    # --- 3) Mean radii & throat radii --------------------------------------
     radius_mean_in = 0.5 * (radius_tip_in + radius_hub_in)
     radius_mean_out = 0.5 * (radius_tip_out + radius_hub_out)
+
     radius_hub_throat = calculate_throat_radius(
         radius_hub_in, radius_hub_out, throat_location_fraction
     )
     radius_tip_throat = calculate_throat_radius(
         radius_tip_in, radius_tip_out, throat_location_fraction
     )
-    radius_mean_throat = calculate_throat_radius(
-        radius_mean_in, radius_mean_out, throat_location_fraction
-    )
+    radius_mean_throat = 0.5 * (radius_tip_throat + radius_hub_throat)
 
-    # Shroud radii (tip + clearance)
+    # --- 4) Shroud radii (tip + clearance) ---------------------------------
     radius_shroud_in = radius_tip_in + tip_clearance
     radius_shroud_out = radius_tip_out + tip_clearance
     radius_shroud_throat = calculate_throat_radius(
         radius_shroud_in, radius_shroud_out, throat_location_fraction
     )
 
-    # Heights
+    # --- 5) Heights ---------------------------------------------------------
     height_in = radius_tip_in - radius_hub_in
     height_out = radius_tip_out - radius_hub_out
     height_throat = radius_tip_throat - radius_hub_throat
     height = 0.5 * (height_in + height_out)
 
-    # Areas
+    # --- 6) Pitch and opening (axial cascade) ------------------------------
+    pitch = 2.0 * jnp.pi * radius_mean_throat / max(N_blades, 1)
+    pitch_angle = 2.0 * jnp.pi / N_blades          # [rad] blade-to-blade angle
+    pitch_in = 2.0 * jnp.pi * radius_mean_in / N_blades
+    pitch_out = 2.0 * jnp.pi * radius_mean_out / N_blades
+
+    # Axial throat opening ≈ projection of pitch along normal to exit metal angle
+    opening = float(pitch) * math.cosd(metal_angle_out_deg)
+    if opening <= 0.0:
+        raise ValueError(
+            f"Component '{name}': computed opening <= 0. "
+            "Check N_blades, chord_axial, and metal angles."
+        )
+
+    # --- 7) Areas -----------------------------------------------------------
     A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
-    # Use opening definition: A_throat = (2*pi * r_mean_throat * h_throat) * (opening / pitch)
     A_throat = (2.0 * jnp.pi * radius_mean_throat * height_throat) * (opening / pitch)
 
-    # Gauging angle (sign convention: stator +, rotor -) to mimic prior alternating sign
+    # --- 8) Gauging angle ---------------------------------------------------
     base_gauge = math.arccosd(A_throat / A_out)
     gauging_angle = base_gauge if cascade_type == "stator" else -base_gauge
 
-    # Axial chord and flaring angle
+    # --- 9) Meridional chord & flaring angle -------------------------------
     meridional_chord = chord * math.cosd(stagger_angle)
-    # Avoid divide-by-zero if meridional_chord==0
     flaring_angle = math.arctand(
         (height_out - height_in) / max(meridional_chord, 1e-12) / 2.0
     )
 
-    # Ratios
+    # --- 10) Ratios & dimensionless parameters -----------------------------
     aspect_ratio = height / chord
     pitch_chord_ratio = pitch / chord
     solidity = 1.0 / pitch_chord_ratio
@@ -207,30 +283,53 @@ def _compute_full_geometry_for_component(comp):
         opening, 1e-12
     )
     tip_clearance_height_ratio = tip_clearance / max(height, 1e-12)
+    leading_edge_diameter = 2.0 * leading_edge_radius
     leading_edge_diameter_chord_ratio = leading_edge_diameter / chord
+    leading_edge_angle = metal_angle_in_deg  # metal at LE
 
-    # Full dict for this component
+    # --- 11) Full dict ------------------------------------------------------
     full = {
         # identifiers
         "name": name,
         "component_type": component_type,
-        # original geometry (echo back)
+
+        # raw geometry (echo back)
         "cascade_type": cascade_type,
+        "camberline_type": camberline_type,
+        "N_blades": N_blades,
+        "radius_mean_in": r_mean_in,
+        "radius_mean_out": r_mean_out,
+        "metal_angle_in": metal_angle_in_deg,
+        "metal_angle_out": metal_angle_out_deg,
+        "maximum_thickness": maximum_thickness,
+        "trailing_edge_thickness": trailing_edge_thickness,
+        "blade_height_in": blade_height_in,
+        "blade_height_out": blade_height_out,
+        "maximum_thickness_location_fraction": maximum_thickness_location_fraction,
+        "leading_edge_wedge_angle": leading_edge_wedge_angle,
+        "leading_edge_radius": leading_edge_radius,
+        "trailing_edge_radius": trailing_edge_radius,
+        "trailing_edge_wedge_angle": trailing_edge_wedge_angle,
+        "throat_location_fraction": throat_location_fraction,
+        "tip_clearance": tip_clearance,
+
+        # “classic” geometry
         "radius_hub_in": radius_hub_in,
         "radius_hub_out": radius_hub_out,
         "radius_tip_in": radius_tip_in,
         "radius_tip_out": radius_tip_out,
-        "pitch": pitch,
+        "pitch": float(pitch),
+        "pitch_in": float(pitch_in),
+        "pitch_out": float(pitch_out),
+        "pitch_angle": float(jnp.rad2deg(pitch_angle)),
         "chord": chord,
         "stagger_angle": stagger_angle,
+        "wrapping_angle": stagger_angle,  # alias
         "opening": opening,
+        "throat_opening": opening,
         "leading_edge_diameter": leading_edge_diameter,
-        "leading_edge_wedge_angle": leading_edge_wedge_angle,
         "leading_edge_angle": leading_edge_angle,
-        "trailing_edge_thickness": trailing_edge_thickness,
-        "tip_clearance": tip_clearance,
-        "maximum_thickness": maximum_thickness,
-        "throat_location_fraction": throat_location_fraction,
+
         # derived geometry
         "radius_mean_in": radius_mean_in,
         "radius_mean_out": radius_mean_out,
@@ -245,8 +344,11 @@ def _compute_full_geometry_for_component(comp):
         "height_out": height_out,
         "height_throat": height_throat,
         "A_in": A_in,
+        "area_in": A_in,
         "A_out": A_out,
+        "area_out": A_out,
         "A_throat": A_throat,
+        "area_throat": A_throat,
         "meridional_chord": meridional_chord,
         "flaring_angle": flaring_angle,
         "aspect_ratio": aspect_ratio,
@@ -266,21 +368,68 @@ def _compute_full_geometry_for_component(comp):
 
 def calculate_full_geometry(yaml_or_components):
     """
-    NEW BEHAVIOR:
-    Accept the new component-wise YAML (or components list) and return a
-    **list of per-component complete geometry dicts**.
+    For each component:
+      - if component_type == 'axial_cascade':
+            validate raw geometry and compute full geometry.
+      - if component_type == 'vaneless_channel':
+            validate minimal structure and just return flattened raw geometry.
+
+    Returns a list of per-component geometry dicts.
     """
     components = _extract_components(yaml_or_components)
 
-    # Validate first (raises on problems)
-    for i, comp in enumerate(components):
-        _validate_single_component(comp, i)
-
-    # Compute each component independently
     full_list = []
-    for comp in components:
-        full_list.append(_compute_full_geometry_for_component(comp))
+    for i, comp in enumerate(components):
+        # _validate_single_component(comp, i)
+        ctype = comp.get("component_type")
+
+        if ctype == "axial_cascade":
+            full = _compute_full_geometry_for_axial_cascade(comp)
+
+        elif ctype == "vaneless_channel":
+            # Flatten raw geometry: name, component_type, plus raw geometry fields
+            geom = comp["geometry"]
+            full = {
+                "name": comp.get("name", f"component_{i+1}"),
+                "component_type": ctype,
+                **geom,
+            }
+
+        full_list.append(full)
+
     return full_list
+
+# ==========================
+# NEW: standalone helper for raw cascade geometry
+# ==========================
+
+def calculate_full_geometry_for_axial_cascade(raw_geometry: dict, name: str | None = None):
+    """
+    Standalone helper to compute full geometry for a SINGLE axial cascade,
+    given only its raw geometry dict (the 'geometry' block from YAML).
+
+    Parameters
+    ----------
+    raw_geometry : dict
+        A dict containing all REQUIRED_AXIAL_GEOM_KEYS.
+    name : str or None
+        Optional component name to embed in the result.
+
+    Returns
+    -------
+    full : dict
+        Full geometry dict for this axial cascade (same format as entries
+        in calculate_full_geometry(...)).
+    """
+    comp = {
+        "name": name if name is not None else "axial_cascade_1",
+        "component_type": "axial_cascade",
+        "geometry": raw_geometry,
+    }
+
+    # Reuse the existing validator + core computation
+    # _validate_single_component(comp, index=0)
+    return _compute_full_geometry_for_axial_cascade(comp)
 
 
 # ==========================

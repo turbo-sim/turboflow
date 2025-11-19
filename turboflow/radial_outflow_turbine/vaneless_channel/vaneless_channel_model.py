@@ -12,7 +12,7 @@ import matplotlib.cm as cm
 from jax import debug as jdbg
 
 
-from typing import Any
+from typing import Any, Dict
 from jaxtyping import Array, Float, Scalar
 
 from .friction_models import FrictionModel, make_friction_model
@@ -113,7 +113,7 @@ class VanelessChannel(eqx.Module):
     operating_conditions: OperatingConditions
     model_options: ModelOptions
     solver_options: SolverOptions
-    fluid: Any
+    fluid: Any 
 
     @classmethod
     def from_dict(cls, config: dict, fluid):
@@ -155,6 +155,20 @@ class VanelessChannel(eqx.Module):
             self.fluid,
         )
 
+    def build_initial_guess(
+        self,
+        inlet_state: Dict[str, Any],
+        omega,
+        row_index: int,
+    ) -> Dict[str, Any]:
+        """
+        Dummy initial-guess interface to match BladeRow.
+
+        Vaneless channels have no solver unknowns in the global nonlinear
+        system, so this simply returns an empty dict.
+        """
+        return {}
+    
     def plot_geometry(
         self,
         fig=None,
@@ -997,7 +1011,10 @@ def solve_vaneless_channel_model(
         throw=solver_options.throw,
     )
 
-    return solution.ys
+    output = solution.ys
+    output["residuals"] = {}
+
+    return output
 
 
 # -----------------------------------------------------------------------------

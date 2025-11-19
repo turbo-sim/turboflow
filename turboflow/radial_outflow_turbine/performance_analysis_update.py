@@ -10,6 +10,7 @@ import itertools
 import numpy as np
 import pandas as pd
 
+import time
 import jax
 import jax.numpy as jnp
 import equinox as eqx
@@ -20,12 +21,10 @@ from scipy import optimize
 from .. import math
 from .. import pysolver_view as psv
 from .. import utilities as utils
-from . import geometry_model_axial as geom_ax
-from . import geometry_model_radial as geom_rad
 from . import flow_model_update as flow
 from . import deviation_model as dm
 import jaxprop as jxp
-import jaxprop.perfect_gas as pg
+
 
 import turboflow as tf
 
@@ -51,15 +50,6 @@ COMPONENT_CLASSES = {
     "vaneless_channel": VanelessChannel,
 }
 
-GEOMETRY_BUILDERS = {
-    # For axial cascades: pass [comp] and take the first (and only) geometry dict.
-    "axial_cascade": lambda comp: geom_ax.calculate_full_geometry([comp])[0],
-    # For radial cascades: same idea – calculate_full_geometry expects a list.
-    "radial_cascade": lambda comp: geom_rad.calculate_full_geometry([comp])[0],
-    # Vaneless channel: geometry is already “ready” in the YAML.
-    "vaneless_channel": lambda comp: copy.deepcopy(comp.get("geometry", {})),
-}
-
 
 # ====================== small helpers ======================
 
@@ -70,12 +60,6 @@ def _is_num(x):
 
 def assert_numeric_operation_point(op):
     for k, v in op.items():
-        if k == "fluid_name":
-            if not isinstance(v, str):
-                raise TypeError(
-                    f"operation_point['fluid_name'] must be str, got {type(v)}"
-                )
-            continue
         if not _is_num(v):
             raise TypeError(
                 f"operation_point['{k}'] must be numeric, got {v!r} ({type(v)})"
@@ -133,6 +117,32 @@ def _numpy_to_native(x):
         return type(x)(_numpy_to_native(e) for e in x)
     else:
         return x
+    
+def initialize_fluid_from_config(fluid_config):
+    fluid_name = fluid_config.get("name")
+    model = fluid_config.get("model")
+    model_options = fluid_config.get("model_options")
+    if model == "perfect_gas":
+        fluid = jxp.FluidPerfectGas(fluid_name, model_options["T_ref"], model_options["p_ref"])
+    elif model == "bicubic":
+        fluid = jxp.FluidBicubic(fluid_name, 
+                                backend= model_options.get("backend"),
+                                h_min=model_options.get("h_min"),
+                                h_max=model_options.get("h_max"),
+                                p_min=model_options.get("p_min"),
+                                p_max=model_options.get("p_max"),
+                                N_h=model_options.get("N_h"),
+                                N_p=model_options.get("N_p"),
+                                )
+    elif model == "coolprop":
+        fluid = jxp.FluidJAX(fluid_name,
+                             backend= model_options.get("backend"),
+                             )
+    else:
+        raise ValueError(f"Unknown fluid model: {model}")
+    
+    return fluid
+
 
 
 def generate_operation_points(performance_map):
@@ -154,7 +164,7 @@ def generate_operation_points(performance_map):
 
 
 def validate_operation_point(op_point):
-    REQUIRED_FIELDS = {"fluid_name", "p0_in", "T0_in", "p_out", "alpha_in", "omega"}
+    REQUIRED_FIELDS = {"p0_in", "T0_in", "p_out", "alpha_in", "omega"}
     fields = set(op_point.keys())
     if fields != REQUIRED_FIELDS:
         missing = REQUIRED_FIELDS - fields
@@ -173,7 +183,6 @@ def print_operation_points(operation_points):
         "-" * length,
     ]
     field_specs = {
-        "fluid_name": {"name": "Fluid", "unit": "", "width": 8},
         "alpha_in": {"name": "angle_in", "unit": "[deg]", "width": 10, "decimals": 1},
         "T0_in": {"name": "T0_in", "unit": "[degC]", "width": 12, "decimals": 2},
         "p0_in": {"name": "p0_in", "unit": "[kPa]", "width": 12, "decimals": 2},
@@ -218,7 +227,6 @@ def print_boundary_conditions(BC):
     lines.append("-" * 80)
     lines.append(" Operating point: ")
     lines.append("-" * 80)
-    lines.append(f" {'Fluid: ':<{column_width}} {BC['fluid_name']:<}")
     lines.append(f" {'Flow angle in: ':<{column_width}} {BC['alpha_in']:<.2f} deg")
     lines.append(
         f" {'Total temperature in: ':<{column_width}} {BC['T0_in'] - 273.15:<.2f} degC"
@@ -289,40 +297,6 @@ def latin_hypercube_sampling(bounds, n_samples):
     return qmc.scale(unit_samples, lower_bounds, upper_bounds)
 
 
-# ===================== component-wise geometry =====================
-
-
-def _build_component_geometry(components):
-    geoms = []
-    for comp in components:
-        ctype = str(comp.get("component_type", "")).lower()
-        builder = GEOMETRY_BUILDERS.get(ctype)
-        if builder is None:
-            geoms.append(copy.deepcopy(comp.get("geometry", {})))
-        else:
-            geoms.append(builder(comp))
-    return geoms
-
-
-# =================== tiny dynamic state pytree ===================
-
-
-class TurbineState(eqx.Module):
-    # per-component inlet state
-    h0_in: jnp.ndarray
-    s_in: jnp.ndarray
-    v_in: jnp.ndarray
-    alpha_in: jnp.ndarray  # degrees
-
-    # per-row unknowns
-    w_out: jnp.ndarray
-    s_out: jnp.ndarray
-    beta_out: jnp.ndarray
-    w_crit_throat: jnp.ndarray
-    s_crit_throat: jnp.ndarray
-    v_crit_in: jnp.ndarray
-
-
 # ============================ public API ============================
 
 
@@ -335,6 +309,9 @@ def compute_performance(
     export_results=True,
     logger=None,
 ):
+    
+
+
     if not config.get("components"):
         raise ValueError(
             "No 'components' found in config. Provide a list of components."
@@ -366,24 +343,30 @@ def compute_performance(
         for line in print_boundary_conditions(operation_point).splitlines():
             logger.info(line)
 
-        if i == 0:
-            initial_guess_cfg = extract_initial_guess_from_components(
-                config["components"]
-            )
-        else:
-            closest_x, closest_index = find_closest_operation_point(
-                operation_point,
-                operation_points[:i],
-                solution_data[:i],
-            )
-            logger.info(
-                f" Using solution from point {closest_index+1} as initial guess"
-            )
-            initial_guess_cfg = closest_x
+        # if i == 0:
+        #     initial_guess_cfg = extract_initial_guess_from_components(
+        #         config["components"]
+        #     )
+        # else:
+        #     closest_x, closest_index = find_closest_operation_point(
+        #         operation_point,
+        #         operation_points[:i],
+        #         solution_data[:i],
+        #     )
+        #     logger.info(
+        #         f" Using solution from point {closest_index+1} as initial guess"
+        #     )
+        #     initial_guess_cfg = closest_x
 
+        # TODO: Added by Roberto 19.11.2025. 
+        # TODO: Add the utility to initialize fluid, where we map from the strings to the objects
+        # perfect_gas --> jxp.FluidPerfectGas
+        # bicubic --> jxp.FluidBicubic
+        # coolprop --> jxp.FluidJAX
+        fluid = initialize_fluid_from_config(config["fluid"])
         solver, results = compute_single_operation_point(
             operation_point,
-            initial_guess_cfg,
+            fluid,
             config["components"],
             config.get("simulation_options", {}),
             config["performance_analysis"]["solver_options"],
@@ -463,23 +446,21 @@ def compute_performance(
 
 
 # ================= one operation point (solver) =================
-
+from ..utilities import print_object
 
 def compute_single_operation_point(
     operating_point,
-    initial_guess,
+    fluid,
     components,
     simulation_options,
     solver_options,
     logger=None,
 ):
-
-    fluid_name = operating_point["fluid_name"]
-    problem = TurbomachineryProblem(components, simulation_options)
+    problem = TurbomachineryProblem(components, simulation_options, fluid)
     problem.update_boundary_conditions(operating_point)
     solver_options = copy.deepcopy(solver_options)
 
-    # ---- per-row guesses via BladeRow objects
+    # ---- per-row guesses via component.build_initial_guess ----
     omega = problem.boundary_conditions["omega"]
     alpha_in = problem.boundary_conditions["alpha_in"]
     alpha_in_deg = np.degrees(alpha_in) if abs(alpha_in) <= np.pi * 1.01 else alpha_in
@@ -491,77 +472,43 @@ def compute_single_operation_point(
         "v": 0.5 * problem.reference_values["v0"],
     }
 
-    row_guess_dict = {}
-    row_counter = 0
+    row_guess_dict: Dict[str, Any] = {}
+    cascade_index = 0  # only counts BladeRow components
+
+    omega_global_jax = jnp.asarray(omega, dtype=jnp.float64)
+
     for obj in problem.comp_objects:
-        if not isinstance(obj, BladeRow):
-            continue
-        row_counter += 1
-        tag = f"_{row_counter}"
-        is_rotor = "rotor" in str(obj.cascade_type).lower()
-        omega_i = omega if is_rotor else 0.0
+        # Decide the angular speed seen by this component
+        if isinstance(obj, BladeRow):
+            # rotor rows rotate; stators do not
+            is_rotor = "rotor" in str(obj.cascade_type).lower()
+            omega_i = omega_global_jax if is_rotor else jnp.asarray(0.0)
+            cascade_index += 1
+            row_index = cascade_index
+        else:
+            # non-cascade components (e.g. VanelessChannel) ignore row_index and omega
+            omega_i = omega_global_jax
+            row_index = 0
+
         ig_row = obj.build_initial_guess(
             inlet_state=inlet_seed,
-            omega=jnp.array(omega_i),
-            choking_criterion=simulation_options.get(
-                "choking_criterion", "critical_mach_number"
-            ),
+            omega=omega_i,
+            row_index=row_index,
         )
-        row_guess_dict[f"w_out{tag}"] = ig_row["w_out"]
-        row_guess_dict[f"s_out{tag}"] = ig_row["s_out"]
-        row_guess_dict[f"beta_out{tag}"] = ig_row["beta_out"]
-        if "w_crit_throat" in ig_row:
-            row_guess_dict[f"w_crit_throat{tag}"] = ig_row["w_crit_throat"]
-        if "s_crit_throat" in ig_row:
-            row_guess_dict[f"s_crit_throat{tag}"] = ig_row["s_crit_throat"]
-        if "v_crit_in" in ig_row:
-            row_guess_dict[f"v_crit_in{tag}"] = ig_row["v_crit_in"]
 
+        # BladeRow returns dict with keys: w_out_i, s_out_i, beta_out_i, *crit*_i
+        # VanelessChannel returns {}
+        row_guess_dict.update(ig_row)
+
+    # Global inlet velocity variable if solver uses it
     if "v_in" not in row_guess_dict:
         row_guess_dict["v_in"] = inlet_seed["v"]
 
-    # prune to match choking (component-wise overrides beat global)
-    per_cascade_choking = []
-    for comp in components:
-        ctype = str(comp.get("component_type", "")).lower()
-        if ctype not in ("axial_cascade", "radial_cascade"):
-            continue
-        comp_opts = comp.get("model_options") or {}
-        per_cascade_choking.append(
-            comp_opts.get(
-                "choking_criterion",
-                simulation_options.get("choking_criterion", "critical_mach_number"),
-            )
-        )
-
-    pruned = {"v_in": row_guess_dict["v_in"]}
-    for i in range(len(per_cascade_choking)):
-        tag = f"_{i+1}"
-        pruned[f"w_out{tag}"] = row_guess_dict[f"w_out{tag}"]
-        pruned[f"s_out{tag}"] = row_guess_dict[f"s_out{tag}"]
-        pruned[f"beta_out{tag}"] = row_guess_dict[f"beta_out{tag}"]
-        crit = str(per_cascade_choking[i]).lower()
-        if crit == "critical_mach_number":
-            if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
-            if f"s_crit_throat{tag}" in row_guess_dict:
-                pruned[f"s_crit_throat{tag}"] = row_guess_dict[f"s_crit_throat{tag}"]
-        elif crit == "critical_isentropic_throat":
-            if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
-        elif crit == "critical_mass_flow_rate":
-            if f"v_crit_in{tag}" in row_guess_dict:
-                pruned[f"v_crit_in{tag}"] = row_guess_dict[f"v_crit_in{tag}"]
-            if f"w_crit_throat{tag}" in row_guess_dict:
-                pruned[f"w_crit_throat{tag}"] = row_guess_dict[f"w_crit_throat{tag}"]
-            if f"s_crit_throat{tag}" in row_guess_dict:
-                pruned[f"s_crit_throat{tag}"] = row_guess_dict[f"s_crit_throat{tag}"]
-    row_guess_dict = pruned
-
-    # pack & scale for solver
+    # ---- pack & scale for solver ----
     initial_guess_scaled = problem.scale_values(row_guess_dict)
     x0 = np.array(list(initial_guess_scaled.values()), dtype=float)
     problem.keys = list(initial_guess_scaled.keys())
+
     if not np.all(np.isfinite(x0)):
         bad = {k: v for k, v in zip(problem.keys, x0) if not np.isfinite(v)}
         raise ValueError(f"Initial guess contains non-finite values: {bad}")
@@ -569,6 +516,7 @@ def compute_single_operation_point(
     solver_methods = [solver_options["method"]] + [
         m for m in SOLVER_MAP.keys() if m != solver_options["method"]
     ]
+
     for method in solver_methods:
         solver_options["method"] = method
         solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
@@ -588,7 +536,6 @@ def compute_single_operation_point(
 
     return solver, problem.results
 
-
 # =================== problem (mapping-based) ===================
 
 
@@ -604,53 +551,44 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
       - Provide scale_values(...) and gradient(...) for the solver.
     """
 
-    def __init__(self, components, simulation_options):
+    def __init__(self, components, simulation_options, fluid):
         self.components = components  # raw YAML component dicts
-        self.model_options = (
-            simulation_options  # global sim options (e.g. choking criterion)
-        )
-        self.keys = []  # filled by compute_single_operation_point
+        self.model_options = simulation_options
+        self.keys = []
 
-        # 1) Build geometry per component (component-wise geometry, same length as components)
-        self.geometry_components = _build_component_geometry(self.components)
+        # ---- Fluid ----
+        self.fluid = fluid
 
-        # TODO: Roberto 17.11.2025
-        # Here we do not build the geometry. We just have to initialize the components, because the geometry is built
-        # internally within each component
-
-        # 2) Instantiate component objects
-        #
-        #    - For cascades: BladeRow objects (fluid injected later).
-        #    - For vaneless_channel: VanelessChannel objects (fluid injected later).
-        #    - Other component types: kept as-is (must be handled explicitly in flow_model).
+        # 1) Instantiate component objects (BladeRow / VanelessChannel / others)
         comp_objs: list[Any] = []
         cascade_geoms: list[Dict[str, Any]] = []
         cascade_indices: list[int] = []
 
-        for idx, (comp, geom) in enumerate(
-            zip(self.components, self.geometry_components)
-        ):
+        for idx, comp in enumerate(self.components):
             ctype = str(comp.get("component_type", "")).lower()
 
             # ------------------------------
             # Axial or radial cascade → BladeRow
             # ------------------------------
             if ctype in ("axial_cascade", "radial_cascade"):
+                partial_geom = comp["geometry"]
                 cfg_row = {
                     "name": comp.get("name", f"row_{idx+1}"),
-                    "cascade_type": geom["cascade_type"],
-                    "geometry": geom,
+                    "cascade_type": partial_geom["cascade_type"],
+                    "component_type": ctype,
+                    "geometry": partial_geom,             # RAW geometry goes in
                     "model_options": comp.get("model_options", {}),
                     "initial_guess": comp.get("initial_guess", {}),
                 }
                 # fluid=None for now; we inject it later in update_boundary_conditions
                 row = BladeRow.from_dict(
                     cfg_row,
-                    fluid=None,
+                    fluid=self.fluid,
                     model_options_global=self.model_options,
                 )
+
                 comp_objs.append(row)
-                cascade_geoms.append(geom)
+                cascade_geoms.append(row.geometry)   # full geometry from the row
                 cascade_indices.append(idx)
                 continue
 
@@ -658,13 +596,13 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             # Vaneless channel → VanelessChannel
             # ------------------------------
             if ctype == "vaneless_channel":
+                partial_geom = comp["geometry"]
+                solver_opts = comp.get("solver_options", None)
                 cfg_ch = {
                     "name": comp.get("name", f"channel_{idx+1}"),
-                    "geometry": geom,
+                    "geometry": partial_geom,            # RAW geometry passed in
                     "model_options": comp.get("model_options", {}),
-                    # Dummy operating conditions: required by from_dict, but not actually
-                    # used by the turbine component-wise framework. We'll drive the
-                    # channel from the upstream cascade instead.
+                    "solver_options": solver_opts,
                     "operating_conditions": {
                         "p_in": 1.0e5,    # arbitrary but valid
                         "h_in": 1.0e5,    # arbitrary but valid
@@ -672,10 +610,9 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
                         "alpha_in": 0.0,  # degrees
                     },
                 }
-                # fluid=None for now; injected later
                 ch = VanelessChannel.from_dict(
                     cfg_ch,
-                    fluid=None,
+                    fluid=self.fluid,
                 )
                 comp_objs.append(ch)
                 continue
@@ -695,32 +632,12 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         # These will be set in update_boundary_conditions
         self.boundary_conditions: Dict[str, Any] = {}
         self.reference_values: Dict[str, Any] = {}
-        self.fluid = None
 
-        # Optional: arrayview for cascades (legacy helpers / diagnostics)
-        self.geometry_components_arrayview = self._to_array_geometry(
-            self.geometry_components_cascades
-        )
+        # --- NEW: placeholders for solution state ---
+        self.vars_scaled = {}   # normalized vars as dict
+        self.vars_real = None   # unscaled solver vector (1D array)
+        self.results = None     # last flow-model result dict
 
-    # ------------------------------------------------------------------
-    # Helper: convert list-of-dicts geometry → dict-of-lists "arrayview"
-    # ------------------------------------------------------------------
-    def _to_array_geometry(self, rows):
-        """
-        Utility to keep your old 'arrayview' style geometry if needed:
-        geometry_components_arrayview["A_in"][i] == rows[i]["A_in"], etc.
-        """
-        if not rows:
-            return {"number_of_cascades": 0, "number_of_stages": 0}
-
-        all_keys = set().union(*[row.keys() for row in rows])
-        array_geom = {
-            "number_of_cascades": len(rows),
-            "number_of_stages": max(0, len(rows) // 2),
-        }
-        for k in all_keys:
-            array_geom[k] = [row.get(k) for row in rows]
-        return array_geom
 
     # ------------------------------------------------------------------
     # Boundary conditions + fluid injection
@@ -730,18 +647,15 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         Set boundary conditions, reference values, and inject fluid into
         all component objects (BladeRow, VanelessChannel, ...).
         """
+
         assert_numeric_operation_point(operation_point)
         self.boundary_conditions = operation_point
-
-        # ---- Create fluid ONCE ----
-        fluid = jxp.FluidJAX(operation_point["fluid_name"])
-        self.fluid = fluid
 
         # ---- Inject fluid into all components that have a `.fluid` field ----
         new_list = []
         for comp in self.comp_objects:
             if hasattr(comp, "fluid"):
-                comp = eqx.tree_at(lambda c: c.fluid, comp, fluid)
+                comp = eqx.tree_at(lambda c: c.fluid, comp, self.fluid)
             new_list.append(comp)
         self.comp_objects = new_list
 
@@ -750,7 +664,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         T0_in = operation_point["T0_in"]
         p_out = operation_point["p_out"]
 
-        st_in = fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in)
+        st_in = self.fluid.get_state(jxp.PT_INPUTS, p0_in, T0_in)
         h0_in = st_in["h"]
         s_in = st_in["s"]
 
@@ -758,7 +672,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions["s_in"] = s_in
 
         # ---- Isentropic outlet ----
-        st_out_s = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
+        st_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
         h_out_s = st_out_s["h"]
         d_out_s = st_out_s["d"]
 
@@ -767,9 +681,10 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
 
         # ---- Reference mass flow (use last component with A_out) ----
         A_out = None
-        for g in reversed(self.geometry_components):
-            if "A_out" in g:
-                A_out = g["A_out"]
+        for obj in reversed(self.comp_objects):
+            geom = getattr(obj, "geometry", None)
+            if isinstance(geom, dict) and "A_out" in geom:
+                A_out = geom["A_out"]
                 break
 
         if A_out is None:
@@ -786,7 +701,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             "d_out_s": d_out_s,
             "mass_flow_ref": mass_flow_ref,
             "s_min": s_in,
-            "s_range": fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out)["s"] - s_in,
+            "s_range": self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out)["s"] - s_in,
             "angle_min": -90.0,
             "angle_range": 180.0,
         }
@@ -839,23 +754,58 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         """
         try:
             # 1) unpack x into a dict with the keys determined in compute_single_operation_point
+            # ////////////////////////////////////
+
+            # t0 = time.perf_counter()
+
+            # time this part
             self.vars_scaled = dict(zip(self.keys, x))
 
+            vars_real_dict = self.scale_values(
+                self.vars_scaled,
+                to_normalized=False,
+            )
+            self.vars_real = jnp.array(
+                [vars_real_dict[k] for k in self.keys],
+                dtype=jnp.float64,
+            )
+
+            # t1 = time.perf_counter()
+            # print(
+            #     f"[residual] unpack+scale took {t1 - t0:.6e} s "
+            #     f"(len(x) = {len(x)})"
+            # )
+
+
+            # //////////////////////////////////////////////
+            # time this part
+
+            # t2 = time.perf_counter()
+
             # 2) Call the flow model with *scaled* variables; it will unscale internally
-            result = flow.evaluate_axial_turbine_componentwise(
+            self.results = flow.evaluate_turbomachine(
                 variables=self.vars_scaled,
                 boundary_conditions=self.boundary_conditions,
                 comp_objects=self.comp_objects,
-                geometry_components=self.geometry_components,  # NOTE: all components
                 fluid=self.fluid,
                 reference_values=self.reference_values,
             )
 
-            # 3) stash results for export
-            self.results = result
+            res_vec = jnp.array(list(self.results["residuals"].values()))
+            # jax.block_until_ready(res_vec)
 
-            # 4) flatten residuals dict into the vector the solver expects
-            return jnp.array(list(result["residuals"].values()))
+            # t3 = time.perf_counter()
+            # print(
+            #     f"[residual] flow.evaluate_turbomachine took {t3 - t2:.6e} s "
+            #     f"(n_residuals = {res_vec.size})"
+            # )
+
+            # =======================
+            # 3) return residual vector
+            # =======================
+
+            return res_vec
+        
         except Exception as e:
             bc_types = {
                 k: type(v).__name__
@@ -877,35 +827,35 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
 # ================= IG & distance utilities (unchanged) =================
 
 
-def extract_initial_guess_from_components(components):
-    ig, eff_tt, eff_ke, ma_list = {}, None, None, []
-    for comp in components:
-        ctype = str(comp.get("component_type", "")).lower()
-        if ctype not in ("axial_cascade", "radial_cascade"):
-            continue
-        ig_c = comp.get("initial_guess", {}) or {}
-        if eff_tt is None and "efficiency_tt" in ig_c:
-            eff_tt = ig_c["efficiency_tt"]
-        if eff_ke is None and "efficiency_ke" in ig_c:
-            eff_ke = ig_c["efficiency_ke"]
-        ma = (
-            ig_c.get("ma")
-            or ig_c.get("ma_out")
-            or ig_c.get("ma_rel_out")
-            or ig_c.get("ma_exit")
-            or ig_c.get("ma_2")
-            or ig_c.get("ma_1")
-        )
-        ma_list.append(ma if isinstance(ma, (int, float)) else None)
-    marker = {}
-    if eff_tt is not None:
-        marker["efficiency_tt"] = eff_tt
-    if eff_ke is not None:
-        marker["efficiency_ke"] = eff_ke
-    if ma_list:
-        for i, m in enumerate(ma_list):
-            marker[f"ma_{i+1}"] = 0.8 if m is None else m
-    return marker if marker else {"_empty_": True}
+# def extract_initial_guess_from_components(components):
+#     ig, eff_tt, eff_ke, ma_list = {}, None, None, []
+#     for comp in components:
+#         ctype = str(comp.get("component_type", "")).lower()
+#         if ctype not in ("axial_cascade", "radial_cascade"):
+#             continue
+#         ig_c = comp.get("initial_guess", {}) or {}
+#         if eff_tt is None and "efficiency_tt" in ig_c:
+#             eff_tt = ig_c["efficiency_tt"]
+#         if eff_ke is None and "efficiency_ke" in ig_c:
+#             eff_ke = ig_c["efficiency_ke"]
+#         ma = (
+#             ig_c.get("ma")
+#             or ig_c.get("ma_out")
+#             or ig_c.get("ma_rel_out")
+#             or ig_c.get("ma_exit")
+#             or ig_c.get("ma_2")
+#             or ig_c.get("ma_1")
+#         )
+#         ma_list.append(ma if isinstance(ma, (int, float)) else None)
+#     marker = {}
+#     if eff_tt is not None:
+#         marker["efficiency_tt"] = eff_tt
+#     if eff_ke is not None:
+#         marker["efficiency_ke"] = eff_ke
+#     if ma_list:
+#         for i, m in enumerate(ma_list):
+#             marker[f"ma_{i+1}"] = 0.8 if m is None else m
+#     return marker if marker else {"_empty_": True}
 
 
 def find_closest_operation_point(current_op_point, operation_points, solution_data):
