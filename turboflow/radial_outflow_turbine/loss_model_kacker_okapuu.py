@@ -400,6 +400,7 @@ def get_tip_clearance_loss(flow_parameters, geometry):
     )
 
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
+    # TODO: now we do not need to split like stator and rotor because every cascade specified the tip clearance. We just use the formula of the rotor for all.
     if cascade_type == "stator":
         Y_cl = 0.0
     elif cascade_type == "rotor":
@@ -616,7 +617,9 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     # Rotor curve
     f_data_R = [2.15, 1.7, 1.35, 1.12, 1.0, 1.0]
     f_data_R = jnp.array(f_data_R)
-
+    
+    # TODO: We can have a jax.lax.switch or a where, and apply the correct expression depending on the angular speed.
+    # TODO pass the angular speed as an input to this function
     if cascade_type == "stator":
         f = jnp.interp(r_ht, r_ht_data, f_data_S)
     elif cascade_type == "rotor":

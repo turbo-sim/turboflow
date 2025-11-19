@@ -420,6 +420,7 @@ def get_incidence_parameter(
     # )
 
     # Address the change in suction/pressure surfaces
+    # TODO: here we have to think how to handle the incidence angle convention for stators and for rotor blades
     if cascade_type == "stator":
         incidence = -(beta_in - beta_des)
     elif cascade_type == "rotor":
