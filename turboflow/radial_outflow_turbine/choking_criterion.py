@@ -259,9 +259,10 @@ def critical_mach_number(
     # Optional safety clipping on w at the throat (relative to v0)
     # This prevents the solver from wandering into totally unphysical
     # regions (e.g. |w| >> v0) that produce huge negative enthalpies.
-    w_min = 1.0e-3 * v0  # basically > 0
-    w_max = 5.0 * v0  # relative speed up to ~5× spouting velocity
-    w_throat = jnp.clip(w_throat_raw, w_min, w_max)
+    
+    # w_min = 1.0e-3 * v0  # basically > 0
+    # w_max = 5.0 * v0  # relative speed up to ~5× spouting velocity
+    # w_throat = jnp.clip(w_throat_raw, w_min, w_max)
 
     # Throat flow angle from geometric throat area ratio; sign from exit beta
     beta_throat = jnp.sign(exit_plane["beta"]) * math.arccosd(A_throat / A_out)
@@ -270,7 +271,7 @@ def critical_mach_number(
     # Evaluate throat plane
     # ------------------------------------------------------------------
     cascade_throat_input = {
-        "w": w_throat,
+        "w": w_throat_raw,
         "s": s_throat,
         "beta": beta_throat,
         "rothalpy": inlet_plane["rothalpy"],

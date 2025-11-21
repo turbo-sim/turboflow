@@ -13,3 +13,4 @@ from .loss_coefficient_conversion import *
 from .deviation_model import *
 
 from .vaneless_channel import *
+from .interspace_model import *

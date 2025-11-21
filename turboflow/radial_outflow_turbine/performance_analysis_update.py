@@ -7,7 +7,6 @@ import yaml
 import copy
 import datetime
 import itertools
-import numpy as np
 import pandas as pd
 
 import time
@@ -34,11 +33,12 @@ from .blade_row import (
 )
 from .blade_row import BladeRow
 from .vaneless_channel import VanelessChannel
+from .interspace_model import Interspace
 
 jax.config.update("jax_enable_x64", True)
 
 SOLVER_MAP = {"lm": "Lavenberg-Marquardt", "hybr": "Powell's hybrid"}
-NUMERIC = (int, float, np.floating)
+NUMERIC = (int, float, jnp.floating)
 
 
 # =========================== mappings ===========================
@@ -67,7 +67,7 @@ def assert_numeric_operation_point(op):
 
 
 def _looks_like_expr(s: str) -> bool:
-    return any(t in s for t in ("np.", "(", ")", "[", "]", "*", "/", "+", "-", "**"))
+    return any(t in s for t in ("jnp.", "(", ")", "[", "]", "*", "/", "+", "-", "**"))
 
 
 def _eval_item_if_str(x, ctx):
@@ -75,7 +75,7 @@ def _eval_item_if_str(x, ctx):
         if not _looks_like_expr(x):
             return x
         try:
-            return eval(x, {"__builtins__": {}, "np": np}, ctx)
+            return eval(x, {"__builtins__": {}, "jnp": jnp}, ctx)
         except Exception:
             return x
     elif isinstance(x, list):
@@ -201,9 +201,9 @@ def print_operation_points(operation_points):
         if key == "T0_in":
             return value - 273.15
         if key == "omega":
-            return (value * 60) / (2 * np.pi)
+            return (value * 60) / (2 * jnp.pi)
         if key == "alpha_in":
-            return np.degrees(value)
+            return jnp.degrees(value)
         if key in ["p0_in", "p_out"]:
             return value / 1.0e3
         return value
@@ -238,7 +238,7 @@ def print_boundary_conditions(BC):
         f" {'Static pressure out: ':<{column_width}} {BC['p_out'] / 1e5:<.3f} bar"
     )
     lines.append(
-        f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / np.pi:<.1f} RPM"
+        f" {'Angular speed: ':<{column_width}} {BC['omega'] * 60 / 2 / jnp.pi:<.1f} RPM"
     )
     lines.append("-" * 80)
     lines.append("")
@@ -249,19 +249,24 @@ def print_simulation_summary(solvers):
     width = 80
     sep = "-" * width
     times, failed_points = [], []
+
     for i, solver in enumerate(solvers):
         if solver is None:
             failed_points.append(i)
             continue
+
         ok = getattr(solver, "success", False)
         if not ok:
             failed_points.append(i)
+
         t = getattr(solver, "elapsed_time", None)
         if t is not None:
             try:
                 times.append(float(t))
             except Exception:
+                # Ignore non-castable timings
                 pass
+
     total_points = len(solvers)
     lines = [
         "",
@@ -270,35 +275,45 @@ def print_simulation_summary(solvers):
         sep,
         f" Simulation successful for {total_points - len(failed_points)} out of {total_points} points",
     ]
+
     if failed_points:
-        lines.append(f" Failed operation points: {', '.join(map(str, failed_points))}")
+        lines.append(
+            f" Failed operation points: {', '.join(map(str, failed_points))}"
+        )
+
     if times:
+        # Convert list → JAX array once, then use jnp reductions
+        times_arr = jnp.asarray(times, dtype=jnp.float64)
+
+        avg_time = jnp.mean(times_arr)
+        min_time = jnp.min(times_arr)
+        max_time = jnp.max(times_arr)
+        sum_time = jnp.sum(times_arr)
+
         lines.extend(
             [
-                f" Average calculation time per operation point: {np.mean(times):.3f} seconds",
-                f" Minimum calculation time of all operation points: {np.min(times):.3f} seconds",
-                f" Maximum calculation time of all operation points: {np.max(times):.3f} seconds",
-                f" Total calculation time for all operation points:   {np.sum(times):.3f} seconds",
+                f" Average calculation time per operation point: {avg_time:.3f} seconds",
+                f" Minimum calculation time of all operation points: {min_time:.3f} seconds",
+                f" Maximum calculation time of all operation points: {max_time:.3f} seconds",
+                f" Total calculation time for all operation points:   {sum_time:.3f} seconds",
             ]
         )
     else:
         lines.append(" No valid calculation times available.")
+
     lines.append(sep)
     lines.append("")
     return lines
-
 
 def latin_hypercube_sampling(bounds, n_samples):
     n_variables = len(bounds)
     sampler = qmc.LatinHypercube(d=n_variables, seed=1)
     unit_samples = sampler.random(n=n_samples)
-    lower_bounds = np.array([b[0] for b in bounds])
-    upper_bounds = np.array([b[1] for b in bounds])
+    lower_bounds = jnp.array([b[0] for b in bounds])
+    upper_bounds = jnp.array([b[1] for b in bounds])
     return qmc.scale(unit_samples, lower_bounds, upper_bounds)
 
-
 # ============================ public API ============================
-
 
 def compute_performance(
     operation_points,
@@ -319,7 +334,7 @@ def compute_performance(
 
     if isinstance(operation_points, dict):
         operation_points = generate_operation_points(operation_points)
-    elif not isinstance(operation_points, (list, np.ndarray)):
+    elif not isinstance(operation_points, (list, jnp.ndarray)):
         raise TypeError(
             "operation_points must be either list of dicts or a dict with ranges."
         )
@@ -463,7 +478,7 @@ def compute_single_operation_point(
     # ---- per-row guesses via component.build_initial_guess ----
     omega = problem.boundary_conditions["omega"]
     alpha_in = problem.boundary_conditions["alpha_in"]
-    alpha_in_deg = np.degrees(alpha_in) if abs(alpha_in) <= np.pi * 1.01 else alpha_in
+    alpha_in_deg = jnp.degrees(alpha_in) if abs(alpha_in) <= jnp.pi * 1.01 else alpha_in
 
     inlet_seed = {
         "h0": problem.boundary_conditions["h0_in"],
@@ -506,11 +521,11 @@ def compute_single_operation_point(
 
     # ---- pack & scale for solver ----
     initial_guess_scaled = problem.scale_values(row_guess_dict)
-    x0 = np.array(list(initial_guess_scaled.values()), dtype=float)
+    x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
     problem.keys = list(initial_guess_scaled.keys())
 
-    if not np.all(np.isfinite(x0)):
-        bad = {k: v for k, v in zip(problem.keys, x0) if not np.isfinite(v)}
+    if not jnp.all(jnp.isfinite(x0)):
+        bad = {k: v for k, v in zip(problem.keys, x0) if not jnp.isfinite(v)}
         raise ValueError(f"Initial guess contains non-finite values: {bad}")
 
     solver_methods = [solver_options["method"]] + [
@@ -545,9 +560,9 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
 
     Responsibilities:
       - Build per-component geometry once (via _build_component_geometry).
-      - Instantiate BladeRow / VanelessChannel objects once from the YAML components + geometry.
+      - Instantiate BladeRow / VanelessChannel / Interspace objects once from the YAML components + geometry.
       - Inject the fluid into each component using eqx.tree_at in update_boundary_conditions.
-      - Provide residual(x) that delegates to flow.evaluate_axial_turbine_componentwise.
+      - Provide residual(x) that delegates to flow.evaluate_turbomachine.
       - Provide scale_values(...) and gradient(...) for the solver.
     """
 
@@ -559,7 +574,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         # ---- Fluid ----
         self.fluid = fluid
 
-        # 1) Instantiate component objects (BladeRow / VanelessChannel / others)
+        # 1) Instantiate component objects (BladeRow / VanelessChannel / Interspace / others)
         comp_objs: list[Any] = []
         cascade_geoms: list[Dict[str, Any]] = []
         cascade_indices: list[int] = []
@@ -580,7 +595,8 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
                     "model_options": comp.get("model_options", {}),
                     "initial_guess": comp.get("initial_guess", {}),
                 }
-                # fluid=None for now; we inject it later in update_boundary_conditions
+                # fluid=self.fluid so it's immediately available; boundary BCs
+                # are still injected later in update_boundary_conditions.
                 row = BladeRow.from_dict(
                     cfg_row,
                     fluid=self.fluid,
@@ -618,6 +634,21 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
                 continue
 
             # ------------------------------
+            # Interspace → Interspace
+            # ------------------------------
+            if ctype == "interspace":
+                partial_geom = comp["geometry"]
+                inter_cfg = {
+                    "name": comp.get("name", f"interspace_{idx+1}"),
+                    "geometry": partial_geom,
+                    }
+                
+                inter = Interspace.from_dict(inter_cfg, fluid=self.fluid)
+                comp_objs.append(inter)
+                # no cascade geometry added here; interspace is not a cascade
+                continue
+
+            # ------------------------------
             # Fallback: keep as-is (must be handled in flow_model)
             # ------------------------------
             comp_objs.append(comp)
@@ -633,7 +664,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         self.boundary_conditions: Dict[str, Any] = {}
         self.reference_values: Dict[str, Any] = {}
 
-        # --- NEW: placeholders for solution state ---
+        # --- placeholders for solution state ---
         self.vars_scaled = {}   # normalized vars as dict
         self.vars_real = None   # unscaled solver vector (1D array)
         self.results = None     # last flow-model result dict
@@ -677,7 +708,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         d_out_s = st_out_s["d"]
 
         # ---- Reference velocity ----
-        v0 = np.sqrt(2 * (h0_in - h_out_s))
+        v0 = jnp.sqrt(2 * (h0_in - h_out_s))
 
         # ---- Reference mass flow (use last component with A_out) ----
         A_out = None
@@ -708,7 +739,7 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
 
         # ---- Inlet angle in degrees ----
         alpha = operation_point["alpha_in"]
-        alpha_deg = np.degrees(alpha) if abs(alpha) < np.pi * 1.1 else alpha
+        alpha_deg = jnp.degrees(alpha) if abs(alpha) < jnp.pi * 1.1 else alpha
         self.boundary_conditions["alpha_deg"] = float(alpha_deg)
 
     # ------------------------------------------------------------------
@@ -873,9 +904,9 @@ def get_operation_point_distance(point_1, point_2, delta=1e-8):
         if isinstance(point_1[key], (int, float)) and key in point_2:
             v1, v2 = point_1[key], point_2[key]
             if key == "alpha_in":
-                deviation = np.abs(v1 - v2) / 90
+                deviation = jnp.abs(v1 - v2) / 90
             else:
                 max_val = max(abs(v1), abs(v2), delta)
                 deviation = abs(v1 - v2) / max_val
             deviation_array.append(deviation)
-    return np.linalg.norm(deviation_array)
+    return jnp.linalg.norm(deviation_array)

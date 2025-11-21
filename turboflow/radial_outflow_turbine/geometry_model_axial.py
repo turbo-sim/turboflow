@@ -386,6 +386,15 @@ def calculate_full_geometry(yaml_or_components):
         if ctype == "axial_cascade":
             full = _compute_full_geometry_for_axial_cascade(comp)
 
+        elif ctype == "interspace":
+            # Flatten raw geometry: name, component_type, plus raw geometry fields
+            geom = comp["geometry"]
+            full = {
+                "name": comp.get("name", f"component_{i+1}"),
+                "component_type": ctype,
+                **geom,
+            }
+
         elif ctype == "vaneless_channel":
             # Flatten raw geometry: name, component_type, plus raw geometry fields
             geom = comp["geometry"]

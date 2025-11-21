@@ -21,6 +21,7 @@ from . import choking_criterion as cm
 from .blade_row import BladeRow
 from .blade_row import evaluate_cascade_throat as _blade_throat
 from .vaneless_channel import VanelessChannel
+from .interspace_model import Interspace
 
 
 # ============================================================
@@ -92,7 +93,7 @@ def _extract_row_vars_and_choking(
 def evaluate_turbomachine(
     variables: Dict[str, Any],          # solver vars (normalized)
     boundary_conditions: Dict[str, Any],
-    comp_objects: List[Any],            # BladeRow / VanelessChannel objects (in order)
+    comp_objects: List[Any],            # BladeRow / VanelessChannel / Interspace objects (in order)
     fluid: Any,
     reference_values: Dict[str, Any],
 ) -> Dict[str, Any]:
@@ -102,10 +103,12 @@ def evaluate_turbomachine(
 
     Notes
     -----
-    - For BladeRow: we unscale per-row unknowns from `variables` using row order
+    - BladeRow: we unscale per-row unknowns from `variables` using row order
       tags _1, _2, ...
-    - For VanelessChannel: we call obj.evaluate(...) and map its outlet to the
-      next inlet, but don't treat it as a cascade for stage/overall KPIs.
+    - VanelessChannel: we call obj.evaluate() and map its outlet to the next
+      inlet, but don't treat it as a cascade for stage/overall KPIs.
+    - Interspace: simple algebraic mapping between two blade rows; also does
+      not contribute planes or cascades, only updates the inlet for the next row.
     """
 
     t_eval_start = time.perf_counter()
@@ -139,11 +142,9 @@ def evaluate_turbomachine(
             # --- timing for this blade row ---
             t_row0 = time.perf_counter()
 
-            # TODO time the blade row code, ideally with some granularity, maybe 3 parts, the unscale part, the evaluate part and the postprocess part. And print the timings for the 3 and the total in one line. print() before the contiue statement
             row_counter += 1
             geom = obj.geometry
             cascade_geoms.append(geom)
-
 
             # unscale row vars + choking vars for this row via BladeRow helper
             row_vars, choking_vars = BladeRow.unscale_row_vars_and_choking(
@@ -154,13 +155,11 @@ def evaluate_turbomachine(
 
             t_row1 = time.perf_counter()
 
-            # TODO: Remove cascade_type and use model_options rotational speed for omega (see for conversion)
-
             # rotor rows rotate; stators do not
             is_rotor = "rotor" in str(obj.cascade_type).lower()
             omega_i = jnp.asarray(omega_bc if is_rotor else 0.0, dtype=jnp.float64)
 
-            # NEW: BladeRow.evaluate returns a dict
+            # BladeRow.evaluate returns a dict
             row_result = obj.evaluate(
                 inlet_state=inlet,
                 row_vars=row_vars,
@@ -205,11 +204,12 @@ def evaluate_turbomachine(
             continue
 
         # =====================================================
-        # Vaneless channel
+        # Vaneless channel (ODE-based model)
         # =====================================================
         if isinstance(obj, VanelessChannel):
 
             t_vc0 = time.perf_counter()
+
             # Map BladeRow-style inlet to channel operating conditions (static)
             v_mag = inlet["v"]
             alphaD = _alpha_deg(inlet["alpha"])
@@ -259,6 +259,58 @@ def evaluate_turbomachine(
             continue
 
         # =====================================================
+        # Interspace (algebraic mapping between blade rows)
+        # =====================================================
+        if isinstance(obj, Interspace):
+
+            t_is0 = time.perf_counter()
+
+            # We require an upstream BladeRow already evaluated
+            if not planes_seq or not cascade_geoms:
+                raise RuntimeError(
+                    "Interspace must follow at least one BladeRow; "
+                    "no previous cascade exit state available."
+                )
+
+            # We also require that the NEXT component is a BladeRow
+            if gi + 1 >= len(comp_objects) or not isinstance(comp_objects[gi + 1], BladeRow):
+                raise RuntimeError(
+                    "Interspace must be followed by a BladeRow to define the next inlet geometry."
+                )
+
+            prev_exit = planes_seq[-1]
+            prev_geom = cascade_geoms[-1]
+            next_row = comp_objects[gi + 1]
+            next_geom = next_row.geometry
+
+            h0_in_new, s_in_new, alpha_in_new, v_in_new = obj.evaluate(
+                h0_exit=prev_exit["enthalpy0"],
+                v_m_exit=prev_exit["v_m"],
+                v_t_exit=prev_exit["v_t"],
+                rho_exit=prev_exit["density"],
+                radius_exit=prev_geom["radius_mean_out"],
+                area_exit=prev_geom["A_out"],
+                blockage_exit=prev_exit["blockage"],
+                radius_inlet=next_geom["radius_mean_in"],
+                area_inlet=next_geom["A_in"],
+            )
+
+            inlet = {
+                "h0": h0_in_new,
+                "s": s_in_new,
+                "alpha": alpha_in_new,
+                "v": v_in_new,
+            }
+
+            t_is1 = time.perf_counter()
+            print(
+                f"[flow] Interspace {gi + 1}: "
+                f"total={t_is1 - t_is0:.3e} s"
+            )
+
+            continue
+
+        # =====================================================
         # Unsupported component type
         # =====================================================
         raise ValueError(
@@ -271,11 +323,9 @@ def evaluate_turbomachine(
             "No cascades evaluated; cannot compute outlet residuals/overall KPIs."
         )
 
-
-    # TODO, time this final posrprocessign part
-
     # --- timing for final aggregation & KPIs ---
     t_agg0 = time.perf_counter()
+
     planes = tf.combine_to_dict_of_arrays(planes_seq)
     cascades = tf.combine_to_dict_of_arrays(cascades_seq)
 
@@ -295,7 +345,7 @@ def evaluate_turbomachine(
         cascade_geoms[-1],
     )
 
-     # force JAX to finish KPI computations before timing
+    # force JAX to finish KPI computations before timing
     jax.block_until_ready(overall["power"])
 
     t_agg1 = time.perf_counter()
@@ -303,6 +353,16 @@ def evaluate_turbomachine(
 
     t_eval_end = time.perf_counter()
     print(f"[flow] evaluate_turbomachine total {t_eval_end - t_eval_start:.3e} s")
+
+    # Component-type tags in output, distinguishing interspace and vaneless
+    def _component_type_tag(o: Any) -> str:
+        if isinstance(o, BladeRow):
+            return o.cascade_type
+        if isinstance(o, VanelessChannel):
+            return "vaneless_channel"
+        if isinstance(o, Interspace):
+            return "interspace"
+        return type(o).__name__
 
     return {
         "planes": planes,
@@ -314,10 +374,7 @@ def evaluate_turbomachine(
         "component_names": [
             getattr(o, "name", f"component_{i+1}") for i, o in enumerate(comp_objects)
         ],
-        "component_types": [
-            (o.cascade_type if isinstance(o, BladeRow) else "vaneless_channel")
-            for o in comp_objects
-        ],
+        "component_types": [_component_type_tag(o) for o in comp_objects],
         # cascades-only list of geometry dicts (used in KPIs / reporting)
         "geometry_components": cascade_geoms,
     }
