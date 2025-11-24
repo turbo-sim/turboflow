@@ -585,7 +585,7 @@ class BladeRow(eqx.Module):
 
         Expects normalized keys:
             w_out_i, s_out_i, beta_out_i,
-            optional: w_crit_throat_i, s_crit_throat_i, v_crit_in
+            optional: w_crit_throat_i, s_crit_throat_i, v_crit_in_i
         """
         tag = f"_{index_1based}"
 
@@ -595,21 +595,27 @@ class BladeRow(eqx.Module):
         a_range = reference_values["angle_range"]
         a_min = reference_values["angle_min"]
 
+        # -------- main row unknowns (always present) --------
         row_vars = {
             "w_out": variables[f"w_out{tag}"] * v0,
             "s_out": variables[f"s_out{tag}"] * s_range + s_min,
             "beta_out": variables[f"beta_out{tag}"] * a_range + a_min,
         }
 
+        # -------- choking-related unknowns (optional) --------
         choking_vars: Dict[str, Any] = {}
+
         if f"w_crit_throat{tag}" in variables:
             choking_vars["w_crit_throat"] = variables[f"w_crit_throat{tag}"] * v0
+
         if f"s_crit_throat{tag}" in variables:
             choking_vars["s_crit_throat"] = (
                 variables[f"s_crit_throat{tag}"] * s_range + s_min
             )
-        if "v_crit_in" in variables:
-            choking_vars["v_crit_in"] = variables["v_crit_in"] * v0
+
+        # IMPORTANT: use the per-row key v_crit_in_i, not a global "v_crit_in"
+        if f"v_crit_in{tag}" in variables:
+            choking_vars["v_crit_in"] = variables[f"v_crit_in{tag}"] * v0
 
         return row_vars, choking_vars
 

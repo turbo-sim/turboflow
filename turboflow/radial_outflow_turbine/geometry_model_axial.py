@@ -244,26 +244,34 @@ def _compute_full_geometry_for_axial_cascade(comp):
 
     # --- 6) Pitch and opening (axial cascade) ------------------------------
     pitch = 2.0 * jnp.pi * radius_mean_throat / max(N_blades, 1)
+    # pitch = g["pitch"]
     pitch_angle = 2.0 * jnp.pi / N_blades          # [rad] blade-to-blade angle
     pitch_in = 2.0 * jnp.pi * radius_mean_in / N_blades
     pitch_out = 2.0 * jnp.pi * radius_mean_out / N_blades
 
-    # Axial throat opening ≈ projection of pitch along normal to exit metal angle
-    opening = float(pitch) * math.cosd(metal_angle_out_deg)
-    if opening <= 0.0:
-        raise ValueError(
-            f"Component '{name}': computed opening <= 0. "
-            "Check N_blades, chord_axial, and metal angles."
-        )
+    
+    gauging_angle = metal_angle_out_deg
 
     # --- 7) Areas -----------------------------------------------------------
     A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
-    A_throat = (2.0 * jnp.pi * radius_mean_throat * height_throat) * (opening / pitch)
+    # A_throat = (2.0 * jnp.pi * radius_mean_throat * height_throat) * (opening / pitch)
+    A_throat = A_out * math.cosd(gauging_angle)  # approximate
+
+    # Axial throat opening ≈ projection of pitch along normal to exit metal angle
+    # opening = float(pitch) * math.cosd(metal_angle_out_deg)
+    opening = A_throat * pitch / (2 * jnp.pi * radius_mean_throat * height_throat)
+
+    # if opening <= 0.0:
+    #     raise ValueError(
+    #         f"Component '{name}': computed opening <= 0. "
+    #         "Check N_blades, chord_axial, and metal angles."
+    #     )
+
 
     # --- 8) Gauging angle ---------------------------------------------------
-    base_gauge = math.arccosd(A_throat / A_out)
-    gauging_angle = base_gauge if cascade_type == "stator" else -base_gauge
+    # base_gauge = math.arccosd(A_throat / A_out)
+    # gauging_angle = base_gauge if cascade_type == "stator" else -base_gauge
 
     # --- 9) Meridional chord & flaring angle -------------------------------
     meridional_chord = chord * math.cosd(stagger_angle)

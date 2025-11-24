@@ -6,8 +6,8 @@ import jax.numpy as jnp
 import jax
 
 from .. import math
-from . import flow_model_update as fm
 from . import deviation_model as dm
+from . import blade_row as br
 
 CHOKING_CRITERIONS = [
     "critical_mass_flow_rate",
@@ -277,7 +277,7 @@ def critical_mach_number(
         "rothalpy": inlet_plane["rothalpy"],
     }
 
-    throat_plane, loss_dict = fm.evaluate_cascade_throat(
+    throat_plane, loss_dict = br.evaluate_cascade_throat(
         cascade_throat_input,
         fluid,
         geometry,
@@ -617,6 +617,132 @@ def critical_mass_flow_rate(
     return residuals_critical, updated_critical_state
 
 
+# def compute_critical_values(
+#     x_crit,
+#     inlet_plane,
+#     fluid,
+#     geometry,
+#     angular_speed,
+#     model_options,
+#     reference_values,
+# ):
+#     """
+#     Compute cascade performance at the critical conditions
+
+#     This function evaluates the performance of a cascade at its critical operating point defined by:
+
+#         1. Critical inlet absolute velocity,
+#         2. Critical throat relative velocity,
+#         3. Critical throat entropy.
+
+#     Using these variables, the function calculates the critical mass flow rate and residuals of the mass balance and the loss model equations.
+
+#     Parameters
+#     ----------
+#     x_crit : numpy.ndarray
+#         Array containing scaled critical variables `[v_in*, w_throat*, s_throat*]`.
+#     inlet_plane : dict
+#         Dictionary containing data on the inlet plane for the actual cascade operating condition.
+#     fluid : object
+#         A fluid object with methods for thermodynamic property calculations.
+#     geometry : dict
+#         Geometric parameters of the cascade.
+#     angular_speed : float
+#         Angular speed of the cascade.
+#     model_options : dict
+#         Options for the model used in the critical condition evaluation.
+#     reference_values : dict
+#         Reference values used in the calculations, including mass flow reference and other parameters.
+
+#     Returns
+#     -------
+#     numpy.ndarray
+#         An array containing the computed mass flow at the throat plane at critical state and the residuals
+#         for mass conservation and loss coefficient error.
+
+#     """
+
+#     # Define model options
+#     loss_model = model_options["loss_model"]
+
+#     # Load reference values
+#     mass_flow_ref = reference_values["mass_flow_ref"]
+#     v0 = reference_values["v0"]
+#     s_range = reference_values["s_range"]
+#     s_min = reference_values["s_min"]
+
+#     # Load input for critical cascade
+#     if "s" in inlet_plane:
+#         s_in = inlet_plane["s"]
+#     elif "entropy" in inlet_plane:
+#         s_in = inlet_plane["entropy"]
+#     else:
+#         raise KeyError(
+#             "compute_critical_values: inlet_plane must contain 's' or 'entropy'. "
+#             f"Available keys: {list(inlet_plane.keys())}"
+#         )
+#     # s_in = inlet_plane["s"]
+#     h0_in = inlet_plane["h0"]
+#     alpha_in = inlet_plane["alpha"]
+#     v_in, w_throat, s_throat = (
+#         x_crit[0] * v0,
+#         x_crit[1] * v0,
+#         x_crit[2] * s_range + s_min,
+#     )
+
+#     # Evaluate inlet plane
+#     critical_inlet_input = {
+#         "v": v_in,
+#         "s": s_in,
+#         "h0": h0_in,
+#         "alpha": alpha_in,
+#     }
+#     critical_inlet_plane = fm.evaluate_cascade_inlet(
+#         critical_inlet_input, fluid, geometry, angular_speed
+#     )
+
+#     # Evaluate throat plane
+#     critical_throat_input = {
+#         "w": w_throat,
+#         "s": s_throat,
+#         "beta": jnp.sign(geometry["gauging_angle"])
+#         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
+#         "rothalpy": critical_inlet_plane["rothalpy"],
+#     }
+
+#     critical_throat_plane, loss_dict = fm.evaluate_cascade_throat(
+#         critical_throat_input,
+#         fluid,
+#         geometry,
+#         critical_inlet_plane,
+#         angular_speed,
+#         model_options["blockage_model"],
+#         loss_model,
+#     )
+
+#     # Add residuals
+#     residuals = jnp.array(
+#         [
+#             (critical_inlet_plane["mass_flow"] - critical_throat_plane["mass_flow"])
+#             / mass_flow_ref,
+#             critical_throat_plane["loss_error"],
+#         ]
+#     )
+
+#     # Update critical state dictionary
+#     # critical_state["inlet_plane"] = critical_inlet_plane
+#     # critical_state["throat_plane"] = critical_throat_plane
+
+#     critical_state = {
+#         "inlet_plane": critical_inlet_plane,
+#         "throat_plane": critical_throat_plane,
+#     }
+
+#     output = jnp.insert(residuals, 0, critical_throat_plane["mass_flow"])
+
+#     return output, critical_state
+
+
 def compute_critical_values(
     x_crit,
     inlet_plane,
@@ -639,10 +765,14 @@ def compute_critical_values(
 
     Parameters
     ----------
-    x_crit : numpy.ndarray
+    x_crit : array-like
         Array containing scaled critical variables `[v_in*, w_throat*, s_throat*]`.
     inlet_plane : dict
         Dictionary containing data on the inlet plane for the actual cascade operating condition.
+        Must provide:
+          - either 's' or 'entropy'
+          - either 'h0' or 'enthalpy0'
+          - 'alpha'
     fluid : object
         A fluid object with methods for thermodynamic property calculations.
     geometry : dict
@@ -656,10 +786,9 @@ def compute_critical_values(
 
     Returns
     -------
-    numpy.ndarray
+    array
         An array containing the computed mass flow at the throat plane at critical state and the residuals
         for mass conservation and loss coefficient error.
-
     """
 
     # Define model options
@@ -671,28 +800,62 @@ def compute_critical_values(
     s_range = reference_values["s_range"]
     s_min = reference_values["s_min"]
 
-    # Load input for critical cascade
-    s_in = inlet_plane["s"]
-    h0_in = inlet_plane["h0"]
-    alpha_in = inlet_plane["alpha"]
+    # -----------------------------
+    # Load inlet-plane thermodynamics
+    # -----------------------------
+
+    # Entropy
+    if "s" in inlet_plane:
+        s_in = inlet_plane["s"]
+    elif "entropy" in inlet_plane:
+        s_in = inlet_plane["entropy"]
+    else:
+        raise KeyError(
+            "compute_critical_values: inlet_plane must contain 's' or 'entropy'. "
+            f"Available keys: {list(inlet_plane.keys())}"
+        )
+
+    # Stagnation enthalpy
+    if "h0" in inlet_plane:
+        h0_in = inlet_plane["h0"]
+    elif "enthalpy0" in inlet_plane:
+        h0_in = inlet_plane["enthalpy0"]
+    else:
+        raise KeyError(
+            "compute_critical_values: inlet_plane must contain 'h0' or 'enthalpy0'. "
+            f"Available keys: {list(inlet_plane.keys())}"
+        )
+
+    # Flow angle (we keep the same name you already use; extend if needed)
+    if "alpha" in inlet_plane:
+        alpha_in = inlet_plane["alpha"]
+    else:
+        raise KeyError(
+            "compute_critical_values: inlet_plane must contain 'alpha'. "
+            f"Available keys: {list(inlet_plane.keys())}"
+        )
+
+    # -----------------------------
+    # Critical variables (unscale)
+    # -----------------------------
     v_in, w_throat, s_throat = (
         x_crit[0] * v0,
         x_crit[1] * v0,
         x_crit[2] * s_range + s_min,
     )
 
-    # Evaluate inlet plane
+    # Evaluate inlet plane at critical conditions
     critical_inlet_input = {
         "v": v_in,
         "s": s_in,
         "h0": h0_in,
         "alpha": alpha_in,
     }
-    critical_inlet_plane = fm.evaluate_cascade_inlet(
+    critical_inlet_plane = br.evaluate_cascade_inlet(
         critical_inlet_input, fluid, geometry, angular_speed
     )
 
-    # Evaluate throat plane
+    # Evaluate throat plane at critical conditions
     critical_throat_input = {
         "w": w_throat,
         "s": s_throat,
@@ -701,7 +864,7 @@ def compute_critical_values(
         "rothalpy": critical_inlet_plane["rothalpy"],
     }
 
-    critical_throat_plane, loss_dict = fm.evaluate_cascade_throat(
+    critical_throat_plane, loss_dict = br.evaluate_cascade_throat(
         critical_throat_input,
         fluid,
         geometry,
@@ -711,7 +874,7 @@ def compute_critical_values(
         loss_model,
     )
 
-    # Add residuals
+    # Residuals: mass balance + loss model
     residuals = jnp.array(
         [
             (critical_inlet_plane["mass_flow"] - critical_throat_plane["mass_flow"])
@@ -720,19 +883,16 @@ def compute_critical_values(
         ]
     )
 
-    # Update critical state dictionary
-    # critical_state["inlet_plane"] = critical_inlet_plane
-    # critical_state["throat_plane"] = critical_throat_plane
-
+    # Pack critical state
     critical_state = {
         "inlet_plane": critical_inlet_plane,
         "throat_plane": critical_throat_plane,
     }
 
+    # First entry is the critical mass flow, then residuals
     output = jnp.insert(residuals, 0, critical_throat_plane["mass_flow"])
 
     return output, critical_state
-
 
 def critical_isentropic_throat(
     choking_input,
@@ -802,7 +962,7 @@ def critical_isentropic_throat(
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
     }
-    throat_plane, loss_dict = fm.evaluate_cascade_throat(
+    throat_plane, loss_dict = br.evaluate_cascade_throat(
         cascade_throat_input,
         fluid,
         geometry,
