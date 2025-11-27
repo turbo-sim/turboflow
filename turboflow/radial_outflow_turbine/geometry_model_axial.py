@@ -106,6 +106,15 @@ def _validate_vaneless_channel_component(c, index=0):
         raise ValueError(f"Vaneless_channel component #{index+1} missing 'geometry' dict.")
     # If later you want strict keys for vaneless_channel, add them here.
 
+def _validate_interspace_component(c, index=0):
+    """
+    Minimal structural check for an 'vaneless_channel' (vaneless channel).
+    We only require that a geometry dict exists; its contents are not prescribed here.
+    """
+    if "geometry" not in c or not isinstance(c["geometry"], dict):
+        raise ValueError(f"Vaneless_channel component #{index+1} missing 'geometry' dict.")
+    # If later you want strict keys for vaneless_channel, add them here.
+
 
 def _validate_single_component(c, index=0):
     """
@@ -124,6 +133,8 @@ def _validate_single_component(c, index=0):
 
     if ctype == "axial_cascade":
         _validate_axial_cascade_component(c, index)
+    elif ctype == "interspace":
+        _validate_interspace_component(c, index)
     elif ctype == "vaneless_channel":
         _validate_vaneless_channel_component(c, index)
 
@@ -187,6 +198,7 @@ def _compute_full_geometry_for_axial_cascade(comp):
     throat_location_fraction = float(g["throat_location_fraction"])
     chord_axial = float(g["chord_axial"])
     tip_clearance = float(g["tip_clearance"])
+    z_in = float(g["z_in"])
 
     # --- 1) Hub & tip radii from mean radius + blade height -----------------
     radius_hub_in = r_mean_in - 0.5 * blade_height_in
@@ -295,6 +307,8 @@ def _compute_full_geometry_for_axial_cascade(comp):
     leading_edge_diameter_chord_ratio = leading_edge_diameter / chord
     leading_edge_angle = metal_angle_in_deg  # metal at LE
 
+
+
     # --- 11) Full dict ------------------------------------------------------
     full = {
         # identifiers
@@ -370,6 +384,7 @@ def _compute_full_geometry_for_axial_cascade(comp):
         "tip_clearance_height_ratio": tip_clearance_height_ratio,
         "leading_edge_diameter_chord_ratio": leading_edge_diameter_chord_ratio,
         "gauging_angle": gauging_angle,
+        "z_in": z_in,
     }
     return full
 

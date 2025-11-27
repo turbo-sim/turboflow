@@ -412,6 +412,7 @@ def compute_stage_performance_componentwise(planes, component_types):
         return {}
 
     h = planes["enthalpy"]
+    # print(h)
     R = jnp.array(
         [
             (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])

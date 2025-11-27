@@ -287,6 +287,7 @@ class VanelessChannel(eqx.Module):
 
         return fig, ax
 
+
     def plot_solution_contour(
         self,
         solution: dict,
@@ -766,8 +767,8 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
     A_in = 2.0 * jnp.pi * r_in * b_in
 
     # Ensure minimum tangent distances
-    td_in = jnp.maximum(1e-3, td_in)
-    td_out = jnp.maximum(1e-3, td_out)
+    td_in = jnp.maximum(1e-5, td_in)
+    td_out = jnp.maximum(1e-5, td_out)
 
     # Construct the channel midline curve control points
     z = jnp.array(
@@ -811,10 +812,21 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
     def geom_handle(s):
         """Return geometric properties at given arclength s (scalar or array)."""
 
-        # Parameterize back to u-coordinate
+        # # Parameterize back to u-coordinate
         s = jnp.atleast_1d(s)
         u_midline = u_of_s(s)
         u_width = u_of_x(s)
+
+        # # Parameterize back to u-coordinate
+        # s = jnp.atleast_1d(s)
+
+        # # --- clamp s to stay strictly inside NURBS domain ---
+        # eps = jnp.maximum(1e-6 * s_total, 1e-9)
+        # s_clamped = jnp.minimum(s, s_total - eps)
+        # s_clamped = jnp.maximum(s_clamped, 0.0)
+
+        # u_midline = u_of_s(s_clamped)
+        # u_width = u_of_x(s_clamped)
 
         # Compute channel midline geometry and derivatives
         zr = channel_midline.get_value(u_midline)

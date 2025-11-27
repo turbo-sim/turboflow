@@ -33,7 +33,7 @@ REQUIRED_RADIAL_GEOM_KEYS = {
 }
 
 VALID_CASCADE_TYPES = {"stator", "rotor"}
-VALID_COMPONENT_TYPES = {"radial_cascade", "vaneless_channel"}
+VALID_COMPONENT_TYPES = {"radial_cascade", "vaneless_channel", "interspace"}
 
 
 # ==============================
@@ -106,6 +106,14 @@ def _validate_vaneless_channel_component(c, index=0):
     if "geometry" not in c or not isinstance(c["geometry"], dict):
         raise ValueError(f"Vaneless_channel component #{index+1} missing 'geometry' dict.")
 
+def _validate_interspace_component(c, index=0):
+    """
+    Minimal structural check for an 'vaneless_channel' (vaneless channel).
+    We only require that a geometry dict exists; its contents are not prescribed here.
+    """
+    if "geometry" not in c or not isinstance(c["geometry"], dict):
+        raise ValueError(f"Vaneless_channel component #{index+1} missing 'geometry' dict.")
+    # If later you want strict keys for vaneless_channel, add them here.
 
 def _validate_single_component(c, index=0):
     """
@@ -124,6 +132,8 @@ def _validate_single_component(c, index=0):
 
     if ctype == "radial_cascade":
         _validate_radial_cascade_component(c, index)
+    elif ctype == "interspace":
+        _validate_interspace_component(c, index)
     elif ctype == "vaneless_channel":
         _validate_vaneless_channel_component(c, index)
 
@@ -407,6 +417,15 @@ def calculate_full_geometry(yaml_or_components):
 
         if ctype == "radial_cascade":
             full = _compute_full_geometry_for_radial_cascade(comp)
+
+        elif ctype == "interspace":
+            # Flatten raw geometry: name, component_type, plus raw geometry fields
+            geom = comp["geometry"]
+            full = {
+                "name": comp.get("name", f"component_{i+1}"),
+                "component_type": ctype,
+                **geom,
+            }
 
         elif ctype == "vaneless_channel":
             # Flatten raw geometry: name, component_type, plus raw geometry fields
