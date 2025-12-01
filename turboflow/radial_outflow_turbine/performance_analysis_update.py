@@ -387,6 +387,25 @@ def compute_performance(
             config["performance_analysis"]["solver_options"],
             logger=logger,
         )
+        # ### Debug
+        # print("=== ROTOR GEOMETRY DEBUG ===")
+        # rotor_geom = results["geometry_components"][-1]  # last cascade assumed rotor
+        # keys_to_show = [
+        #     "cascade_type",
+        #     "radius_mean_in", "radius_mean_out",
+        #     "blade_height_in", "blade_height_out",
+        #     "A_in", "A_out", "A_throat",
+        #     "pitch", "chord",
+        #     "metal_angle_in", "metal_angle_out",
+        #     "leading_edge_angle", "gauging_angle",
+        #     "throat_location_fraction",
+        #     "tip_clearance",
+        # ]
+        # for k in keys_to_show:
+        #     if k in rotor_geom:
+        #         print(f"{k:30s} = {rotor_geom[k]}")
+        # print("=== END ROTOR GEOMETRY DEBUG ===")
+        # ### Debug
 
         solver_status = {
             "completed": True,
@@ -522,6 +541,10 @@ def compute_single_operation_point(
     # ---- pack & scale for solver ----
     initial_guess_scaled = problem.scale_values(row_guess_dict)
     x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
+    ##########
+    # print(initial_guess_scaled)
+    # print(x0)
+    ##########
     problem.keys = list(initial_guess_scaled.keys())
 
     if not jnp.all(jnp.isfinite(x0)):
@@ -532,19 +555,24 @@ def compute_single_operation_point(
         m for m in SOLVER_MAP.keys() if m != solver_options["method"]
     ]
 
-    for method in solver_methods:
-        solver_options["method"] = method
-        solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
-        try:
-            solver.solve(x0)
-        except Exception as e:
-            if solver.func_count == 0:
-                raise e
-            if logger:
-                logger.info(f" Error during solving: {e}")
-            solver.success = False
-        if solver.success:
-            break
+    # for method in solver_methods:
+    #     solver_options["method"] = method
+    #     solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
+    #     try:
+    #         solver.solve(x0)
+    #     except Exception as e:
+    #         if solver.func_count == 0:
+    #             raise e
+    #         if logger:
+    #             logger.info(f" Error during solving: {e}")
+    #         solver.success = False
+    #     if solver.success:
+    #         break
+
+    
+    solver_options["method"] = "lm"
+    solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
+    solver.solve(x0)
 
     if not solver.success and logger:
         logger.info("WARNING: All attempts failed to converge")
@@ -745,6 +773,36 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
     # ------------------------------------------------------------------
     # Scaling utilities
     # ------------------------------------------------------------------
+    # def scale_values(self, variables, to_normalized=True):
+    #     """
+    #     Convert values between normalized and real values using reference_values.
+    #     Keys:
+    #       - starting with "v" or "w": scale by v0
+    #       - starting with "s":        scale by s_range/s_min
+    #       - starting with "b":        scale by angle_range/angle_min
+    #     """
+    #     v0 = self.reference_values["v0"]
+    #     s_range = self.reference_values["s_range"]
+    #     s_min = self.reference_values["s_min"]
+    #     angle_range = self.reference_values["angle_range"]
+    #     angle_min = self.reference_values["angle_min"]
+
+    #     scaled_variables = {}
+    #     for key, val in variables.items():
+    #         if key.startswith(("v", "w")):
+    #             scaled_variables[key] = val / v0 if to_normalized else val * v0
+    #         elif key.startswith("s"):
+    #             scaled_variables[key] = (
+    #                 (val - s_min) / s_range if to_normalized else val * s_range + s_min
+    #             )
+    #         elif key.startswith("b"):
+    #             scaled_variables[key] = (
+    #                 (val - angle_min) / angle_range
+    #                 if to_normalized
+    #                 else val * angle_range + angle_min
+    #             )
+    #     return scaled_variables
+    
     def scale_values(self, variables, to_normalized=True):
         """
         Convert values between normalized and real values using reference_values.
@@ -753,10 +811,10 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
           - starting with "s":        scale by s_range/s_min
           - starting with "b":        scale by angle_range/angle_min
         """
-        v0 = self.reference_values["v0"]
-        s_range = self.reference_values["s_range"]
+        v0 = 10.0*self.reference_values["v0"]
+        s_range = 10.0*self.reference_values["s_range"]
         s_min = self.reference_values["s_min"]
-        angle_range = self.reference_values["angle_range"]
+        angle_range = 10.0*self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
 
         scaled_variables = {}
@@ -783,6 +841,11 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         Map the solver vector x → dict of scaled vars → call
         flow.evaluate_axial_turbine_componentwise.
         """
+
+        #####
+        # print("Residual function:")
+        # print(x)
+        #####
         try:
             # 1) unpack x into a dict with the keys determined in compute_single_operation_point
             # ////////////////////////////////////
@@ -791,6 +854,8 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
 
             # time this part
             self.vars_scaled = dict(zip(self.keys, x))
+            # print(self.vars_scaled)
+            # print("x", x, "x_norm", jnp.linalg.norm(x))
 
             vars_real_dict = self.scale_values(
                 self.vars_scaled,
@@ -823,6 +888,9 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             )
 
             res_vec = jnp.array(list(self.results["residuals"].values()))
+
+            # print(self.results["residuals"])
+
             # jax.block_until_ready(res_vec)
 
             # t3 = time.perf_counter()
@@ -852,6 +920,12 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         """
         Jacobian of the residual w.r.t. x, used by the nonlinear solver.
         """
+
+        #####
+        # print("Gradient function:")
+        # print(x)
+        #####
+
         return jax.jacfwd(self.residual, argnums=0)(x)
 
 

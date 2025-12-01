@@ -111,7 +111,7 @@ def evaluate_turbomachine(
       not contribute planes or cascades, only updates the inlet for the next row.
     """
 
-    t_eval_start = time.perf_counter()
+    # t_eval_start = time.perf_counter()
 
     # ---------- inlet from boundary conditions ----------
     h0_in = boundary_conditions["h0_in"]
@@ -140,7 +140,7 @@ def evaluate_turbomachine(
         if isinstance(obj, BladeRow):
 
             # --- timing for this blade row ---
-            t_row0 = time.perf_counter()
+            # t_row0 = time.perf_counter()
 
             row_counter += 1
             geom = obj.geometry
@@ -153,7 +153,7 @@ def evaluate_turbomachine(
                 reference_values=reference_values,
             )
 
-            t_row1 = time.perf_counter()
+            # t_row1 = time.perf_counter()
 
             # rotor rows rotate; stators do not
             is_rotor = "rotor" in str(obj.cascade_type).lower()
@@ -172,7 +172,7 @@ def evaluate_turbomachine(
             exit_plane_for_timing = row_result["planes"][-1]
             jax.block_until_ready(exit_plane_for_timing["pressure"])
 
-            t_row2 = time.perf_counter()
+            # t_row2 = time.perf_counter()
 
             planes = row_result["planes"]
             cascade = row_result["cascade_summary"]
@@ -191,15 +191,15 @@ def evaluate_turbomachine(
                 "alpha": exit_plane["alpha"],  # already degrees
                 "v": exit_plane["v"],
             }
-            t_row3 = time.perf_counter()
+            # t_row3 = time.perf_counter()
 
-            print(
-                f"[flow] BladeRow {row_counter}: "
-                f"unscale={t_row1 - t_row0:.3e} s, "
-                f"eval={t_row2 - t_row1:.3e} s, "
-                f"post={t_row3 - t_row2:.3e} s, "
-                f"total={t_row3 - t_row0:.3e} s"
-            )
+            # print(
+            #     f"[flow] BladeRow {row_counter}: "
+            #     f"unscale={t_row1 - t_row0:.3e} s, "
+            #     f"eval={t_row2 - t_row1:.3e} s, "
+            #     f"post={t_row3 - t_row2:.3e} s, "
+            #     f"total={t_row3 - t_row0:.3e} s"
+            # )
 
             continue
 
@@ -208,7 +208,7 @@ def evaluate_turbomachine(
         # =====================================================
         if isinstance(obj, VanelessChannel):
 
-            t_vc0 = time.perf_counter()
+            # t_vc0 = time.perf_counter()
 
             # Map BladeRow-style inlet to channel operating conditions (static)
             v_mag = inlet["v"]
@@ -235,7 +235,7 @@ def evaluate_turbomachine(
             # force JAX to finish this solve before timing
             jax.block_until_ready(result["p"][-1])
 
-            t_vc1 = time.perf_counter()
+            # t_vc1 = time.perf_counter()
 
             # Update inlet to next component
             v_m_out = result["v_m"][-1]
@@ -247,14 +247,14 @@ def evaluate_turbomachine(
 
             inlet = {"h0": h0_out, "s": s_out, "alpha": alpha, "v": v_out}
 
-            t_vc2 = time.perf_counter()
+            # t_vc2 = time.perf_counter()
 
-            print(
-                f"[flow] VanelessChannel {gi + 1}: "
-                f"eval={t_vc1 - t_vc0:.3e} s, "
-                f"post={t_vc2 - t_vc1:.3e} s, "
-                f"total={t_vc2 - t_vc0:.3e} s"
-            )
+            # print(
+            #     f"[flow] VanelessChannel {gi + 1}: "
+            #     f"eval={t_vc1 - t_vc0:.3e} s, "
+            #     f"post={t_vc2 - t_vc1:.3e} s, "
+            #     f"total={t_vc2 - t_vc0:.3e} s"
+            # )
 
             continue
 
@@ -263,7 +263,7 @@ def evaluate_turbomachine(
         # =====================================================
         if isinstance(obj, Interspace):
 
-            t_is0 = time.perf_counter()
+            # t_is0 = time.perf_counter()
 
             # We require an upstream BladeRow already evaluated
             if not planes_seq or not cascade_geoms:
@@ -302,11 +302,11 @@ def evaluate_turbomachine(
                 "v": v_in_new,
             }
 
-            t_is1 = time.perf_counter()
-            print(
-                f"[flow] Interspace {gi + 1}: "
-                f"total={t_is1 - t_is0:.3e} s"
-            )
+            # t_is1 = time.perf_counter()
+            # print(
+            #     f"[flow] Interspace {gi + 1}: "
+            #     f"total={t_is1 - t_is0:.3e} s"
+            # )
 
             continue
 
@@ -324,8 +324,8 @@ def evaluate_turbomachine(
         )
 
     # --- timing for final aggregation & KPIs ---
-    t_agg0 = time.perf_counter()
-
+    # t_agg0 = time.perf_counter()
+    # print(planes_seq)
     planes = tf.combine_to_dict_of_arrays(planes_seq)
     cascades = tf.combine_to_dict_of_arrays(cascades_seq)
 
@@ -333,6 +333,10 @@ def evaluate_turbomachine(
     p_calc = planes_seq[-1]["pressure"]
     p_error = (p_calc - boundary_conditions["p_out"]) / boundary_conditions["p0_in"]
     residuals["p_out"] = p_error
+
+    # ## Debug
+    # print("[flow] cascade component types:", [g["cascade_type"] for g in cascade_geoms])
+    # ## Debug
 
     # stage & overall KPIs (using cascade-only geometries)
     stage = compute_stage_performance_componentwise(
@@ -348,11 +352,11 @@ def evaluate_turbomachine(
     # force JAX to finish KPI computations before timing
     jax.block_until_ready(overall["power"])
 
-    t_agg1 = time.perf_counter()
-    print(f"[flow] aggregation+KPIs took {t_agg1 - t_agg0:.3e} s")
+    # t_agg1 = time.perf_counter()
+    # print(f"[flow] aggregation+KPIs took {t_agg1 - t_agg0:.3e} s")
 
-    t_eval_end = time.perf_counter()
-    print(f"[flow] evaluate_turbomachine total {t_eval_end - t_eval_start:.3e} s")
+    # t_eval_end = time.perf_counter()
+    # print(f"[flow] evaluate_turbomachine total {t_eval_end - t_eval_start:.3e} s")
 
     # Component-type tags in output, distinguishing interspace and vaneless
     def _component_type_tag(o: Any) -> str:
@@ -412,7 +416,101 @@ def compute_stage_performance_componentwise(planes, component_types):
         return {}
 
     h = planes["enthalpy"]
-    # print(h)
+
+    # # DEBUG BLOCK START
+    # h0 = planes["enthalpy0"]
+    # p  = planes["pressure"]
+    # v  = planes["v"]
+    # Ma = planes["Ma_rel"]
+
+    # # Optional fields (present in your key list)
+    # has_vt = "v_t" in planes
+    # has_u  = "blade_speed" in planes
+
+    # v_t = planes["v_t"] if has_vt else None
+    # u   = planes["blade_speed"] if has_u else None
+
+    # print("=== Stage performance debug ===")
+    # print("component_types:", component_types)
+    # print("number_of_stages:", number_of_stages)
+
+    # for i in range(number_of_stages):
+    #     i0 = i * 4
+    #     idx_st_in  = i0 + 0
+    #     idx_st_out = i0 + 1
+    #     idx_ro_in  = i0 + 2
+    #     idx_ro_out = i0 + 3
+
+    #     h_st_in  = h[idx_st_in]
+    #     h_st_out = h[idx_st_out]
+    #     h_ro_in  = h[idx_ro_in]
+    #     h_ro_out = h[idx_ro_out]
+
+    #     h0_st_in  = h0[idx_st_in]
+    #     h0_st_out = h0[idx_st_out]
+    #     h0_ro_in  = h0[idx_ro_in]
+    #     h0_ro_out = h0[idx_ro_out]
+
+    #     p_st_in  = p[idx_st_in]
+    #     p_st_out = p[idx_st_out]
+    #     p_ro_in  = p[idx_ro_in]
+    #     p_ro_out = p[idx_ro_out]
+
+    #     v_st_in  = v[idx_st_in]
+    #     v_st_out = v[idx_st_out]
+    #     v_ro_in  = v[idx_ro_in]
+    #     v_ro_out = v[idx_ro_out]
+
+    #     Ma_st_in  = Ma[idx_st_in]
+    #     Ma_st_out = Ma[idx_st_out]
+    #     Ma_ro_in  = Ma[idx_ro_in]
+    #     Ma_ro_out = Ma[idx_ro_out]   
+
+    #     print(f" Stage {i+1}:")
+    #     print("   h  (st_in, st_out, ro_in, ro_out) =",
+    #           h_st_in, h_st_out, h_ro_in, h_ro_out)
+    #     print("   h0 (st_in, st_out, ro_in, ro_out) =",
+    #           h0_st_in, h0_st_out, h0_ro_in, h0_ro_out)
+    #     print("   p  (st_in, st_out, ro_in, ro_out) =",
+    #           p_st_in, p_st_out, p_ro_in, p_ro_out)
+    #     print("   v  (st_in, st_out, ro_in, ro_out) =",
+    #           v_st_in, v_st_out, v_ro_in, v_ro_out)
+    #     print("   Ma  (st_in, st_out, ro_in, ro_out) =",
+    #           Ma_st_in, Ma_st_out, Ma_ro_in, Ma_ro_out)
+
+    #     if has_vt and has_u:
+    #         vt_st_in  = v_t[idx_st_in]
+    #         vt_st_out = v_t[idx_st_out]
+    #         vt_ro_in  = v_t[idx_ro_in]
+    #         vt_ro_out = v_t[idx_ro_out]
+
+    #         u_st_in  = u[idx_st_in]
+    #         u_st_out = u[idx_st_out]
+    #         u_ro_in  = u[idx_ro_in]
+    #         u_ro_out = u[idx_ro_out]
+
+    #         print("   v_t (st_in, st_out, ro_in, ro_out) =",
+    #               vt_st_in, vt_st_out, vt_ro_in, vt_ro_out)
+    #         print("   u   (st_in, st_out, ro_in, ro_out) =",
+    #               u_st_in, u_st_out, u_ro_in, u_ro_out)
+
+    #         # Euler turbine work vs. total enthalpy change in rotor
+    #         dh0_rotor = h0_ro_out - h0_ro_in
+    #         euler_rotor = u_ro_in * vt_ro_in - u_ro_out * vt_ro_out
+    #         print("   Δh0_rotor =", dh0_rotor,
+    #               "; Euler (uVθ in - uVθ out) =", euler_rotor)
+
+    #     # Same reaction definition as before
+    #     R_i = (h_ro_in - h_ro_out) / (h_st_in - h_ro_out)
+    #     print("   R_i (debug) =", R_i)
+
+    # beta = planes["beta"]
+    # print("Rotor beta_in, beta_out =", beta[2], beta[3])
+    # print("Rotor incidence =", beta[2] - 30.0)
+
+    # print("=== End stage debug ===")
+    # # DEBUG BLOCK END
+
     R = jnp.array(
         [
             (h[i * 4 + 1] - h[i * 4 + 3]) / (h[i * 4] - h[i * 4 + 3])

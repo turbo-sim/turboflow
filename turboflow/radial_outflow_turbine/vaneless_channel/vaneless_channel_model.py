@@ -948,15 +948,22 @@ def solve_vaneless_channel_model(
     h_in = operating_conditions.h_in
     v_in = operating_conditions.v_in
     alpha_in = operating_conditions.alpha_in
-    v_m_in = v_in * jnp.cos(jnp.deg2rad(alpha_in))
-    v_t_in = v_in * jnp.sin(jnp.deg2rad(alpha_in))
+    # v_m_in = v_in * jnp.cos(jnp.deg2rad(alpha_in))
+    # v_t_in = v_in * jnp.sin(jnp.deg2rad(alpha_in))
+    
+    
 
     # Compute inlet stagnation quantities
 
-    # print(p_in, h_in, v_in, alpha_in)
 
     state_in = fluid.get_state(jxp.HmassP_INPUTS, h_in, p_in)
-    h0_in = h_in + 0.5 * v_in**2
+    alpha_in = jnp.clip(alpha_in, -89.0, 89.0)
+    Ma_in = v_in / state_in["a"]
+    # jax.debug.print("Ma_in = {Ma_in}, alpha_in = {alpha_in}", Ma_in=Ma_in, alpha_in=alpha_in)
+    v_in_clip = jnp.clip(v_in, 1.0, 0.99*state_in["a"])
+    v_m_in = v_in_clip * jnp.cos(jnp.deg2rad(alpha_in))
+    v_t_in = v_in_clip * jnp.sin(jnp.deg2rad(alpha_in))
+    h0_in = h_in + 0.5 * v_in_clip**2
     s0_in = state_in.s
     p0_in = fluid.get_state(jxp.HmassSmass_INPUTS, h0_in, s0_in).p
 
@@ -978,6 +985,29 @@ def solve_vaneless_channel_model(
     ])
     # fmt: on
 
+    ###############
+    # jax.debug.print(
+    #     (
+    #         "y0: "
+    #         "v_m={v_m:.4f}, v_t={v_t:.4f}, h={h:.4f}, p={p:.4f}, "
+    #         "eta={eta:.4f}, eta_kin={eta_kin:.4f}, eta_loss={eta_loss:.4f}, "
+    #         "eta_loss_wall={eta_loss_wall:.4f}, eta_loss_diff={eta_loss_diff:.4f}, "
+    #         "eta_loss_curv={eta_loss_curv:.4f}, s_int0={s_int0:.4f}, theta0={theta0:.4f}"
+    #     ),
+    #     v_m=y0[0],
+    #     v_t=y0[1],
+    #     h=y0[2],
+    #     p=y0[3],
+    #     eta=y0[4],
+    #     eta_kin=y0[5],
+    #     eta_loss=y0[6],
+    #     eta_loss_wall=y0[7],
+    #     eta_loss_diff=y0[8],
+    #     eta_loss_curv=y0[9],
+    #     s_int0=y0[10],
+    #     theta0=y0[11],)
+    ##########
+
     # Define the upper integration limit
     m_total = geom_handle(s=0.0)["s_total"]
 
@@ -986,7 +1016,7 @@ def solve_vaneless_channel_model(
         "b_in": geometry.b_in,  # Only pass what you need
         "p_in": p_in,
         "h_in": h_in,
-        "v_in": v_in,
+        "v_in": v_in_clip,
         "alpha_in": alpha_in,
         "p0_in": p0_in,
         "h0_in": h0_in,
@@ -1025,6 +1055,8 @@ def solve_vaneless_channel_model(
 
     output = solution.ys
     output["residuals"] = {}
+
+
 
     return output
 
@@ -1142,6 +1174,8 @@ def evaluate_vaneless_channel_ode(t, y, args):
         s_int,
         theta,
     ) = y
+
+
 
     # Calculate velocity magnitude and direction
     v = jnp.sqrt(v_t**2 + v_m**2)
@@ -1320,6 +1354,18 @@ def evaluate_vaneless_channel_ode(t, y, args):
         "q_w": q_w,
         "htc": htc,
     }
+
+    # # Debug print: Mach number, meridional coordinate, velocity, pressure, enthalpy
+    # jax.debug.print(
+    #     "m={m_coord:.6f}, Ma={Ma:.4f}, v={v:.4f}, p={p:.4f}, h={h:.4f}, v_m={v_m:.4f}, v_t={v_t:.4f}",
+    #     m_coord=m_coord,
+    #     Ma=(v / a),
+    #     v=v,
+    #     p=p,
+    #     h=h,
+    #     v_m=v_m,
+    #     v_t=v_t,
+    # )
 
     return rhs, out
 

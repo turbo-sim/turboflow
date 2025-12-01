@@ -97,6 +97,7 @@ class NonlinearSystemSolver:
         logger=None,
         update_on="function",
         callback_func=None,
+        lm_factor=1.0, # New Arg
     ):
         # Initialize class variables
         self.problem = problem
@@ -118,6 +119,7 @@ class NonlinearSystemSolver:
             self.options["maxfev"] = self.maxiter
         elif method == "lm":
             self.options["maxiter"] = self.maxiter
+            self.options.setdefault("factor", lm_factor)
         else:
             raise ValueError(
                 f"Invalid solver. Available options: {', '.join(SOLVER_OPTIONS)}"

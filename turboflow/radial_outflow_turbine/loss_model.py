@@ -3,6 +3,9 @@ from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
 from .. import utilities as utils
 
+
+import jax.numpy as jnp
+
 LOSS_MODELS = ["kacker_okapuu", "moustapha", "benner", "isentropic", "custom"]
 LOSS_COEFFICIENTS = ["stagnation_pressure", "kinetic_energy"]
 
@@ -127,6 +130,9 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         )
 
     # Loss error vs. model sum
+    #  TODO clipping trick to prevent residual blow up in the first iteration
+    # Y_definition = jnp.clip(Y_definition, 0.0, 1.0)
+    loss_dict["loss_definition"] = Y_definition
     loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
 
     return loss_dict

@@ -256,16 +256,12 @@ def critical_mach_number(
     w_throat_raw = jnp.asarray(choking_input["w_crit_throat"], dtype=jnp.float64)
     s_throat = jnp.asarray(choking_input["s_crit_throat"], dtype=jnp.float64)
 
-    # Optional safety clipping on w at the throat (relative to v0)
-    # This prevents the solver from wandering into totally unphysical
-    # regions (e.g. |w| >> v0) that produce huge negative enthalpies.
     
-    # w_min = 1.0e-3 * v0  # basically > 0
-    # w_max = 5.0 * v0  # relative speed up to ~5× spouting velocity
-    # w_throat = jnp.clip(w_throat_raw, w_min, w_max)
-
+   
     # Throat flow angle from geometric throat area ratio; sign from exit beta
+    # TODO: beta_throat is the exit metal angle 
     beta_throat = jnp.sign(exit_plane["beta"]) * math.arccosd(A_throat / A_out)
+    
 
     # ------------------------------------------------------------------
     # Evaluate throat plane
@@ -287,6 +283,42 @@ def critical_mach_number(
         loss_model,
     )
 
+    # ---------------------------------------------
+    # DEBUG: throat loss & Y* diagnostics
+    # ---------------------------------------------
+    # jax.debug.print(
+    #     "  DIAGNOSTICS:\n"
+    #     "  Y_tot={Y_tot}\n"
+    #     "  Y_def={Y_def}\n"
+    #     "  loss_error (Y*)={loss_error}\n"
+    #     "  p_inlet={p_inlet},   p0_inlet_rel={p0_inlet_rel},   s_inlet={s_inlet}\n"
+    #     "  p_throat={p_throat}, p0_throat_rel={p0_throat_rel}, s_throat={s_throat}\n"
+    #     "  p_exit={p_exit},     p0_exit_rel={p0_exit_rel},     s_exit={s_exit}\n"
+    #     "  Ma_throat_rel={Ma_throat}\n"
+    #     "  beta_throat={beta_throat}\n"
+    #     "  h0_rel={h0_rel}, h={h}, h_is={h_is}",
+    #     Y_tot=loss_dict["loss_total"],
+    #     Y_def=loss_dict["loss_definition"],
+    #     loss_error=throat_plane["loss_error"],
+
+    #     p_inlet=inlet_plane["pressure"],
+    #     p0_inlet_rel=inlet_plane["pressure0_rel"],
+    #     s_inlet=inlet_plane["entropy"],
+
+    #     p_throat=throat_plane["pressure"],
+    #     p0_throat_rel=throat_plane["pressure0_rel"],
+    #     s_throat=throat_plane["entropy"],
+
+    #     p_exit=exit_plane["pressure"],
+    #     p0_exit_rel=exit_plane["pressure0_rel"],
+    #     s_exit=exit_plane["entropy"],
+
+    #     Ma_throat=throat_plane["Ma_rel"],
+    #     beta_throat=beta_throat,
+    #     h0_rel=throat_plane["enthalpy0_rel"],
+    #     h=throat_plane["enthalpy"],
+    #     h_is=throat_plane["h_is"],)
+
     # ------------------------------------------------------------------
     # Critical Mach number from loss/efficiency
     # ------------------------------------------------------------------
@@ -297,6 +329,7 @@ def critical_mach_number(
     )
 
     critical_mach = get_mach_crit(throat_plane["heat_capacity_ratio"], eta)
+    
 
     # ------------------------------------------------------------------
     # Choking residual: subsonic vs. choked
@@ -306,6 +339,7 @@ def critical_mach_number(
         beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
             exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
         )
+        
         choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
     else:
         # Choked regime → enforce M_throat_rel = M_crit
@@ -314,6 +348,22 @@ def critical_mach_number(
     # ------------------------------------------------------------------
     # Residuals
     # ------------------------------------------------------------------
+
+    # jax.debug.print(
+    #     "Choking check:\n"
+    #     "  Ma_rel={Ma_rel},  critical_mach={critical_mach}\n"
+    #     "  beta_exit={beta_exit}, beta_model={beta_model}\n"
+    #     "  choking_residual={choking_residual}",
+    #     Ma_rel=exit_plane["Ma_rel"],
+    #     critical_mach=critical_mach,
+    #     beta_exit=exit_plane["beta"],
+    #     beta_model=(
+    #         jnp.sign(exit_plane["beta"]) *
+    #         dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_mach, geometry, deviation_model)
+    #         if exit_plane["Ma_rel"] <= critical_mach else jnp.nan
+    #     ),
+    #     choking_residual=choking_residual,)
+    
     residual_values = jnp.array(
         [
             (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
@@ -324,6 +374,12 @@ def critical_mach_number(
     )
     residual_keys = ["m*", "Y*", "beta*"]
     residuals_critical = dict(zip(residual_keys, residual_values))
+
+    # jax.debug.print(
+    #     "Residuals: m*={m_star}, Y*={Y_star}, beta*={beta_star}",
+    #     m_star=(inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
+    #     Y_star=throat_plane["loss_error"],
+    #     beta_star=choking_residual,)
 
     # ------------------------------------------------------------------
     # Output critical state + throat plane (with suffix)
@@ -371,17 +427,45 @@ def get_mach_crit(gamma, eta):
     float
         Critical Mach number.
     """
-    eta = math.smooth_maximum(
-        0.0, eta, method="logsumexp"
-    )  # Prevent negative efficiency
+    # eta = math.smooth_maximum(
+    #     0.0, eta, method="logsumexp")  # Prevent negative efficiency
+    # alpha = gamma / (gamma - 1)
+    # T_hat_crit = (
+    #     2 * alpha
+    #     + eta
+    #     - 3
+    #     + jnp.sqrt((1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta))
+    # ) / (4 * alpha - 2)
+    # Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
+
+    eta = jnp.clip(eta, 0.0, 1.0)
     alpha = gamma / (gamma - 1)
+    inside_sqrt = (1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta)
     T_hat_crit = (
-        2 * alpha
-        + eta
-        - 3
-        + jnp.sqrt((1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta))
+        2 * alpha + eta - 3 + jnp.sqrt(inside_sqrt)
     ) / (4 * alpha - 2)
+
     Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
+
+    # --------------------------
+    # JAX DEBUG PRINT BLOCK
+    # --------------------------
+    # jax.debug.print(
+    #     "get_mach_crit:\n"
+    #     "  gamma={gamma}\n"
+    #     "  eta={eta}\n"
+    #     "  alpha={alpha}\n"
+    #     "  inside_sqrt={inside_sqrt}\n"
+    #     "  T_hat_crit={T_hat_crit}\n"
+    #     "  Ma_crit={Ma_crit}",
+    #     gamma=gamma,
+    #     eta=eta,
+    #     alpha=alpha,
+    #     inside_sqrt=inside_sqrt,
+    #     T_hat_crit=T_hat_crit,
+    #     Ma_crit=Ma_crit,
+    # )
+
     return Ma_crit
 
 
@@ -954,10 +1038,12 @@ def critical_isentropic_throat(
     angle_range = reference_values["angle_range"]
     angle_min = reference_values["angle_min"]
 
+    # TODO: beta is the exit metal angle 
+
     # Evaluate throat
     cascade_throat_input = {
-        "w": choking_input["w_crit_throat"] * v0,
-        "s": inlet_plane["s"],
+        "w": choking_input["w_crit_throat"],
+        "s": inlet_plane["entropy"],
         "beta": jnp.sign(exit_plane["beta"])
         * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
         "rothalpy": inlet_plane["rothalpy"],
