@@ -479,6 +479,183 @@ def latin_hypercube_sampling(bounds, n_samples):
 
 #     return solver_container
 
+# def compute_performance(
+#     operation_points,
+#     config,
+#     out_filename=None,
+#     out_dir="output",
+#     stop_on_failure=False,
+#     export_results=True,
+#     logger=None,
+# ):
+    
+
+
+#     if not config.get("components"):
+#         raise ValueError(
+#             "No 'components' found in config. Provide a list of components."
+#         )
+
+#     if isinstance(operation_points, dict):
+#         operation_points = generate_operation_points(operation_points)
+#     elif not isinstance(operation_points, (list, jnp.ndarray)):
+#         raise TypeError(
+#             "operation_points must be either list of dicts or a dict with ranges."
+#         )
+
+#     for op in operation_points:
+#         validate_operation_point(op)
+#         assert_numeric_operation_point(op)
+
+#     operation_point_data, overall_data = [], []
+#     plane_data, cascade_data, stage_data = [], [], []
+#     solver_data, solution_data, geometry_data = [], [], []
+#     solver_container = []
+
+#     message = print_operation_points(operation_points)
+#     for line in message.splitlines():
+#         logger.info(line)
+
+#     for i, operation_point in enumerate(operation_points):
+#         logger.info("")
+#         logger.info(f" Computing operation point {i+1} of {len(operation_points)}")
+#         for line in print_boundary_conditions(operation_point).splitlines():
+#             logger.info(line)
+
+#         # if i == 0:
+#         #     initial_guess_cfg = extract_initial_guess_from_components(
+#         #         config["components"]
+#         #     )
+#         # else:
+#         #     closest_x, closest_index = find_closest_operation_point(
+#         #         operation_point,
+#         #         operation_points[:i],
+#         #         solution_data[:i],
+#         #     )
+#         #     logger.info(
+#         #         f" Using solution from point {closest_index+1} as initial guess"
+#         #     )
+#         #     initial_guess_cfg = closest_x
+
+#         # TODO: Added by Roberto 19.11.2025. 
+#         # TODO: Add the utility to initialize fluid, where we map from the strings to the objects
+#         # perfect_gas --> jxp.FluidPerfectGas
+#         # bicubic --> jxp.FluidBicubic
+#         # coolprop --> jxp.FluidJAX
+#         fluid = initialize_fluid_from_config(config["fluid"])
+#         solver, results = compute_single_operation_point(
+#             operation_point,
+#             fluid,
+#             config["components"],
+#             config.get("simulation_options", {}),
+#             config["performance_analysis"]["solver_options"],
+#             logger=logger,
+#         )
+#         # ### Debug
+#         # print("=== ROTOR GEOMETRY DEBUG ===")
+#         # rotor_geom = results["geometry_components"][-1]  # last cascade assumed rotor
+#         # keys_to_show = [
+#         #     "cascade_type",
+#         #     "radius_mean_in", "radius_mean_out",
+#         #     "blade_height_in", "blade_height_out",
+#         #     "A_in", "A_out", "A_throat",
+#         #     "pitch", "chord",
+#         #     "metal_angle_in", "metal_angle_out",
+#         #     "leading_edge_angle", "gauging_angle",
+#         #     "throat_location_fraction",
+#         #     "tip_clearance",
+#         # ]
+#         # for k in keys_to_show:
+#         #     if k in rotor_geom:
+#         #         print(f"{k:30s} = {rotor_geom[k]}")
+#         # print("=== END ROTOR GEOMETRY DEBUG ===")
+#         # ### Debug
+
+#         solver_status = {
+#             "completed": True,
+#             "success": solver.success,
+#             "message": solver.message,
+#             "grad_count": solver.convergence_history["grad_count"][-1],
+#             "func_count": solver.convergence_history["func_count"][-1],
+#             "func_count_total": solver.convergence_history["func_count_total"][-1],
+#             "norm_residual": solver.convergence_history["norm_residual"][-1],
+#             "norm_step": solver.convergence_history["norm_step"][-1],
+#         }
+
+#         operation_point_data.append(pd.DataFrame([operation_point]))
+#         overall_data.append(
+#             pd.DataFrame.from_dict(results["overall"], orient="index").T
+#         )
+#         plane_data.append(utils.flatten_dataframe(pd.DataFrame(results["planes"])))
+#         cascade_data.append(utils.flatten_dataframe(pd.DataFrame(results["cascades"])))
+#         stage_data.append(utils.flatten_dataframe(pd.DataFrame(results["stage"])))
+#         geom_rows_df = pd.DataFrame(results["geometry_components"])
+#         geometry_data.append(utils.flatten_dataframe(geom_rows_df))
+#         solver_data.append(pd.DataFrame([solver_status]))
+#         solution_data.append(solver.problem.vars_real)
+#         solver_container.append(solver)
+
+#     dfs = {
+#         "operation point": pd.concat(operation_point_data, ignore_index=True),
+#         "overall": pd.concat(overall_data, ignore_index=True),
+#         "plane": pd.concat(plane_data, ignore_index=True),
+#         "cascade": pd.concat(cascade_data, ignore_index=True),
+#         "stage": pd.concat(stage_data, ignore_index=True),
+#         "geometry": pd.concat(geometry_data, ignore_index=True),
+#         "solver": pd.concat(solver_data, ignore_index=True),
+#     }
+
+#     if export_results:
+#         if not os.path.exists(out_dir):
+#             os.makedirs(out_dir)
+
+#         if out_filename is None:
+#             out_filename = "performance"
+
+#         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#         out_filenames = [f"{out_filename}_{current_time}", f"{out_filename}_latest"]
+
+#         # --- Attach converged solution ONCE, then drop problem ---
+#         solver = solver_container[-1]
+
+#         solver.x_solution_scaled = copy.deepcopy(solver.x_final)           # scaled vector
+#         solver.x_solution_real   = copy.deepcopy(solver.problem.vars_real) # unscaled physical vector
+#         solver.solution_keys     = copy.deepcopy(solver.problem.keys)      # variable names
+
+#         # optionally: keep last results too if you like
+#         # solver.solution_results = copy.deepcopy(solver.problem.results)
+
+#         # drop problem to keep pickle light / avoid recursion
+#         solver.problem = None
+
+#         import dill
+
+#         for fname in out_filenames:
+#             # YAML
+#             config_data = {k: v for k, v in config.items() if v}
+#             config_data = utils.convert_numpy_to_python(config_data, precision=12)
+#             with open(os.path.join(out_dir, f"{fname}.yaml"), "w") as f:
+#                 yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+
+#             # XLSX
+#             filepath_xlsx = os.path.join(out_dir, f"{fname}.xlsx")
+#             with pd.ExcelWriter(filepath_xlsx, engine="openpyxl") as writer:
+#                 for sheet_name, df in dfs.items():
+#                     df.to_excel(writer, sheet_name=sheet_name, index=True)
+
+#             # PKL
+#             filepath_pkl = os.path.join(out_dir, f"{fname}.pkl")
+#             with open(filepath_pkl, "wb") as f:
+#                 dill.dump(solver, f)
+
+#         logger.info(f" Performance data successfully written to {filepath_xlsx}")
+
+#     message = print_simulation_summary(solver_container)
+#     for line in message:
+#         logger.info(line)
+
+#     return solver_container
+
 def compute_performance(
     operation_points,
     config,
@@ -487,15 +664,15 @@ def compute_performance(
     stop_on_failure=False,
     export_results=True,
     logger=None,
+    use_previous_solution=False,
+    previous_pkl_path=None,
 ):
-    
-
-
     if not config.get("components"):
         raise ValueError(
             "No 'components' found in config. Provide a list of components."
         )
 
+    # Expand operation_points if given as a dict (performance map)
     if isinstance(operation_points, dict):
         operation_points = generate_operation_points(operation_points)
     elif not isinstance(operation_points, (list, jnp.ndarray)):
@@ -503,6 +680,7 @@ def compute_performance(
             "operation_points must be either list of dicts or a dict with ranges."
         )
 
+    # Validate all operation points
     for op in operation_points:
         validate_operation_point(op)
         assert_numeric_operation_point(op)
@@ -512,37 +690,70 @@ def compute_performance(
     solver_data, solution_data, geometry_data = [], [], []
     solver_container = []
 
+    # Print operation point summary
     message = print_operation_points(operation_points)
     for line in message.splitlines():
         logger.info(line)
 
+    # Loop over all operation points in the map / list
     for i, operation_point in enumerate(operation_points):
         logger.info("")
         logger.info(f" Computing operation point {i+1} of {len(operation_points)}")
         for line in print_boundary_conditions(operation_point).splitlines():
             logger.info(line)
 
-        # if i == 0:
-        #     initial_guess_cfg = extract_initial_guess_from_components(
-        #         config["components"]
-        #     )
-        # else:
-        #     closest_x, closest_index = find_closest_operation_point(
-        #         operation_point,
-        #         operation_points[:i],
-        #         solution_data[:i],
-        #     )
-        #     logger.info(
-        #         f" Using solution from point {closest_index+1} as initial guess"
-        #     )
-        #     initial_guess_cfg = closest_x
-
-        # TODO: Added by Roberto 19.11.2025. 
-        # TODO: Add the utility to initialize fluid, where we map from the strings to the objects
-        # perfect_gas --> jxp.FluidPerfectGas
-        # bicubic --> jxp.FluidBicubic
-        # coolprop --> jxp.FluidJAX
+        # Initialize fluid for this run
         fluid = initialize_fluid_from_config(config["fluid"])
+
+        # --------------------------------------------------------------
+        # Decide initial guess for this operation point
+        #
+        # Rules:
+        # - If i == 0:
+        #     - if use_previous_solution and previous_pkl_path given:
+        #           use that PKL solution as initial guess
+        #     - else:
+        #           build initial guess from components
+        # - If i > 0:
+        #     - always use previous converged solution from operation point i-1
+        # --------------------------------------------------------------
+        initial_guess_real = None
+
+        if i == 0:
+            if use_previous_solution and previous_pkl_path is not None:
+                import dill
+
+                with open(previous_pkl_path, "rb") as f:
+                    prev_solver = dill.load(f)
+
+                keys_prev = prev_solver.solution_keys
+                x_real_prev = prev_solver.x_solution_real
+                initial_guess_real = {k: v for k, v in zip(keys_prev, x_real_prev)}
+
+                logger.info(
+                    f" Using previous solution from '{previous_pkl_path}' "
+                    f"as initial guess for operation point {i+1}"
+                )
+            else:
+                logger.info(
+                    f" Building initial guess from components for operation point {i+1}"
+                )
+        else:
+            # Use previous converged solution from this performance run
+            prev_solver = solver_container[-1]
+            prev_keys = prev_solver.problem.keys
+            prev_vars_real = solution_data[-1]
+
+            initial_guess_real = {k: v for k, v in zip(prev_keys, prev_vars_real)}
+
+            logger.info(
+                f" Using solution from operation point {i} "
+                f"as initial guess for operation point {i+1}"
+            )
+
+        # --------------------------------------------------------------
+        # Solve single operation point
+        # --------------------------------------------------------------
         solver, results = compute_single_operation_point(
             operation_point,
             fluid,
@@ -550,26 +761,8 @@ def compute_performance(
             config.get("simulation_options", {}),
             config["performance_analysis"]["solver_options"],
             logger=logger,
+            initial_guess_real=initial_guess_real,
         )
-        # ### Debug
-        # print("=== ROTOR GEOMETRY DEBUG ===")
-        # rotor_geom = results["geometry_components"][-1]  # last cascade assumed rotor
-        # keys_to_show = [
-        #     "cascade_type",
-        #     "radius_mean_in", "radius_mean_out",
-        #     "blade_height_in", "blade_height_out",
-        #     "A_in", "A_out", "A_throat",
-        #     "pitch", "chord",
-        #     "metal_angle_in", "metal_angle_out",
-        #     "leading_edge_angle", "gauging_angle",
-        #     "throat_location_fraction",
-        #     "tip_clearance",
-        # ]
-        # for k in keys_to_show:
-        #     if k in rotor_geom:
-        #         print(f"{k:30s} = {rotor_geom[k]}")
-        # print("=== END ROTOR GEOMETRY DEBUG ===")
-        # ### Debug
 
         solver_status = {
             "completed": True,
@@ -582,6 +775,7 @@ def compute_performance(
             "norm_step": solver.convergence_history["norm_step"][-1],
         }
 
+        # Collect data for this OP
         operation_point_data.append(pd.DataFrame([operation_point]))
         overall_data.append(
             pd.DataFrame.from_dict(results["overall"], orient="index").T
@@ -592,9 +786,14 @@ def compute_performance(
         geom_rows_df = pd.DataFrame(results["geometry_components"])
         geometry_data.append(utils.flatten_dataframe(geom_rows_df))
         solver_data.append(pd.DataFrame([solver_status]))
+
+        # Store real (unscaled) solution vector for reuse as initial guess
         solution_data.append(solver.problem.vars_real)
         solver_container.append(solver)
 
+    # --------------------------------------------------------------
+    # Aggregate results into DataFrames
+    # --------------------------------------------------------------
     dfs = {
         "operation point": pd.concat(operation_point_data, ignore_index=True),
         "overall": pd.concat(overall_data, ignore_index=True),
@@ -605,6 +804,9 @@ def compute_performance(
         "solver": pd.concat(solver_data, ignore_index=True),
     }
 
+    # --------------------------------------------------------------
+    # Export results (YAML, XLSX, PKL)
+    # --------------------------------------------------------------
     if export_results:
         if not os.path.exists(out_dir):
             os.makedirs(out_dir)
@@ -615,41 +817,44 @@ def compute_performance(
         current_time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         out_filenames = [f"{out_filename}_{current_time}", f"{out_filename}_latest"]
 
-        # --- Attach converged solution ONCE, then drop problem ---
+        # Attach converged solution from the LAST operation point to the solver
         solver = solver_container[-1]
 
         solver.x_solution_scaled = copy.deepcopy(solver.x_final)           # scaled vector
         solver.x_solution_real   = copy.deepcopy(solver.problem.vars_real) # unscaled physical vector
         solver.solution_keys     = copy.deepcopy(solver.problem.keys)      # variable names
 
-        # optionally: keep last results too if you like
+        # Optionally: keep last results too, if you want them in the pickle
         # solver.solution_results = copy.deepcopy(solver.problem.results)
 
-        # drop problem to keep pickle light / avoid recursion
+        # Remove problem to keep pickle light / avoid recursive structures
         solver.problem = None
 
         import dill
 
         for fname in out_filenames:
-            # YAML
+            # YAML config export
             config_data = {k: v for k, v in config.items() if v}
             config_data = utils.convert_numpy_to_python(config_data, precision=12)
             with open(os.path.join(out_dir, f"{fname}.yaml"), "w") as f:
                 yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
 
-            # XLSX
+            # XLSX export
             filepath_xlsx = os.path.join(out_dir, f"{fname}.xlsx")
             with pd.ExcelWriter(filepath_xlsx, engine="openpyxl") as writer:
                 for sheet_name, df in dfs.items():
                     df.to_excel(writer, sheet_name=sheet_name, index=True)
 
-            # PKL
+            # PKL export (contains last solver with attached solution fields)
             filepath_pkl = os.path.join(out_dir, f"{fname}.pkl")
             with open(filepath_pkl, "wb") as f:
                 dill.dump(solver, f)
 
         logger.info(f" Performance data successfully written to {filepath_xlsx}")
 
+    # --------------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------------
     message = print_simulation_summary(solver_container)
     for line in message:
         logger.info(line)
@@ -755,6 +960,130 @@ def compute_performance(
 
 #     return solver, problem.results
 
+# def compute_single_operation_point(
+#     operating_point,
+#     fluid,
+#     components,
+#     simulation_options,
+#     solver_options,
+#     logger=None,
+# ):
+#     problem = TurbomachineryProblem(components, simulation_options, fluid)
+#     problem.update_boundary_conditions(operating_point)
+#     solver_options = copy.deepcopy(solver_options)
+
+#     # ------------------------------------------------------------------
+#     # NEW: read and remove USE_PREVIOUS_SOLUTION flag from options
+#     # ------------------------------------------------------------------
+#     use_pg_solution = bool(solver_options.pop("USE_PREVIOUS_SOLUTION", False))
+
+#     # Optional: allow overriding the path to the perfect-gas solution
+#     previous_pkl_path = solver_options.pop(
+#         "PREVIOUS_PKL_PATH",
+#         os.path.join("output", "performance_latest.pkl"),  # default location
+#     )
+
+#     # ------------------------------------------------------------------
+#     # Build initial guess
+#     #   - If use_pg_solution = False → original per-component logic
+#     #   - If use_pg_solution = True  → load x0 from perfect-gas .pkl
+#     # ------------------------------------------------------------------
+#     if use_pg_solution:
+#         # --------------------------------------------------------------
+#         # Reuse solution from perfect-gas solver as initial guess
+#         # --------------------------------------------------------------
+#         import dill
+
+#         with open(previous_pkl_path, "rb") as f:
+#             pg_solver = dill.load(f)
+
+#         # Scaled solution vector (the one root() used)
+#         x0 = jnp.array(pg_solver.x_solution_scaled, dtype=float)
+
+#         # Variable names (must match the structure of this problem)
+#         problem.keys = list(pg_solver.solution_keys)
+
+#         if len(x0) != len(problem.keys):
+#             raise ValueError(
+#                 f"Loaded perfect-gas solution has length {len(x0)} "
+#                 f"but this problem expects {len(problem.keys)} variables."
+#             )
+
+#         if logger:
+#             logger.info(
+#                 f" Using perfect-gas solution from '{previous_pkl_path}' as initial guess"
+#             )
+
+#     else:
+#         # --------------------------------------------------------------
+#         # ORIGINAL: build per-row initial guess from components
+#         # --------------------------------------------------------------
+#         omega = problem.boundary_conditions["omega"]
+#         alpha_in = problem.boundary_conditions["alpha_in"]
+#         alpha_in_deg = (
+#             jnp.degrees(alpha_in) if abs(alpha_in) <= jnp.pi * 1.01 else alpha_in
+#         )
+
+#         inlet_seed = {
+#             "h0": problem.boundary_conditions["h0_in"],
+#             "s": problem.boundary_conditions["s_in"],
+#             "alpha": alpha_in_deg,
+#             "v": 0.5 * problem.reference_values["v0"],
+#         }
+
+#         row_guess_dict: Dict[str, Any] = {}
+#         cascade_index = 0  # only counts BladeRow components
+
+#         omega_global_jax = jnp.asarray(omega, dtype=jnp.float64)
+
+#         for obj in problem.comp_objects:
+#             # Decide the angular speed seen by this component
+#             if isinstance(obj, BladeRow):
+#                 # rotor rows rotate; stators do not
+#                 is_rotor = "rotor" in str(obj.cascade_type).lower()
+#                 omega_i = omega_global_jax if is_rotor else jnp.asarray(0.0)
+#                 cascade_index += 1
+#                 row_index = cascade_index
+#             else:
+#                 # non-cascade components (e.g. VanelessChannel) ignore row_index and omega
+#                 omega_i = omega_global_jax
+#                 row_index = 0
+
+#             ig_row = obj.build_initial_guess(
+#                 inlet_state=inlet_seed,
+#                 omega=omega_i,
+#                 row_index=row_index,
+#             )
+
+#             # BladeRow returns dict with keys: w_out_i, s_out_i, beta_out_i, *crit*_i
+#             # VanelessChannel returns {}
+#             row_guess_dict.update(ig_row)
+
+#         # Global inlet velocity variable if solver uses it
+#         if "v_in" not in row_guess_dict:
+#             row_guess_dict["v_in"] = inlet_seed["v"]
+
+#         # ---- pack & scale for solver ----
+#         initial_guess_scaled = problem.scale_values(row_guess_dict)
+#         x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
+#         problem.keys = list(initial_guess_scaled.keys())
+
+#         if not jnp.all(jnp.isfinite(x0)):
+#             bad = {k: v for k, v in zip(problem.keys, x0) if not jnp.isfinite(v)}
+#             raise ValueError(f"Initial guess contains non-finite values: {bad}")
+
+#     # ------------------------------------------------------------------
+#     # Solve with LM (unchanged apart from options cleaned above)
+#     # ------------------------------------------------------------------
+#     solver_options["method"] = "lm"
+#     solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
+#     solver.solve(x0)
+
+#     if not solver.success and logger:
+#         logger.info("WARNING: All attempts failed to converge")
+
+#     return solver, problem.results
+
 def compute_single_operation_point(
     operating_point,
     fluid,
@@ -762,57 +1091,34 @@ def compute_single_operation_point(
     simulation_options,
     solver_options,
     logger=None,
+    initial_guess_real=None,   # <-- NEW
 ):
     problem = TurbomachineryProblem(components, simulation_options, fluid)
     problem.update_boundary_conditions(operating_point)
     solver_options = copy.deepcopy(solver_options)
 
     # ------------------------------------------------------------------
-    # NEW: read and remove USE_PREVIOUS_SOLUTION flag from options
-    # ------------------------------------------------------------------
-    use_pg_solution = bool(solver_options.pop("USE_PREVIOUS_SOLUTION", False))
-
-    # Optional: allow overriding the path to the perfect-gas solution
-    previous_pkl_path = solver_options.pop(
-        "PREVIOUS_PKL_PATH",
-        os.path.join("output", "performance_latest.pkl"),  # default location
-    )
-
-    # ------------------------------------------------------------------
     # Build initial guess
-    #   - If use_pg_solution = False → original per-component logic
-    #   - If use_pg_solution = True  → load x0 from perfect-gas .pkl
+    #   1) If initial_guess_real is provided: use it.
+    #   2) Else: build per-component initial guess (original logic).
     # ------------------------------------------------------------------
-    if use_pg_solution:
-        # --------------------------------------------------------------
-        # Reuse solution from perfect-gas solver as initial guess
-        # --------------------------------------------------------------
-        import dill
+    if initial_guess_real is not None:
+        # initial_guess_real is a dict: {var_name: real_value}
+        initial_guess_scaled = problem.scale_values(initial_guess_real)
+        x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
+        problem.keys = list(initial_guess_scaled.keys())
 
-        with open(previous_pkl_path, "rb") as f:
-            pg_solver = dill.load(f)
-
-        # Scaled solution vector (the one root() used)
-        x0 = jnp.array(pg_solver.x_solution_scaled, dtype=float)
-
-        # Variable names (must match the structure of this problem)
-        problem.keys = list(pg_solver.solution_keys)
-
-        if len(x0) != len(problem.keys):
+        if not jnp.all(jnp.isfinite(x0)):
+            bad = {k: v for k, v in zip(problem.keys, x0) if not jnp.isfinite(v)}
             raise ValueError(
-                f"Loaded perfect-gas solution has length {len(x0)} "
-                f"but this problem expects {len(problem.keys)} variables."
+                f"Initial guess (from previous solution) contains non-finite values: {bad}"
             )
 
         if logger:
-            logger.info(
-                f" Using perfect-gas solution from '{previous_pkl_path}' as initial guess"
-            )
+            logger.info(" Using previous solution as initial guess")
 
     else:
-        # --------------------------------------------------------------
-        # ORIGINAL: build per-row initial guess from components
-        # --------------------------------------------------------------
+        # ------- ORIGINAL per-row initial guess from components -------
         omega = problem.boundary_conditions["omega"]
         alpha_in = problem.boundary_conditions["alpha_in"]
         alpha_in_deg = (
@@ -868,7 +1174,7 @@ def compute_single_operation_point(
             raise ValueError(f"Initial guess contains non-finite values: {bad}")
 
     # ------------------------------------------------------------------
-    # Solve with LM (unchanged apart from options cleaned above)
+    # Solve with LM
     # ------------------------------------------------------------------
     solver_options["method"] = "lm"
     solver = psv.NonlinearSystemSolver(problem, logger=logger, **solver_options)
