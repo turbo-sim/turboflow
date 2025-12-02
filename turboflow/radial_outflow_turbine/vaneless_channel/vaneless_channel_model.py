@@ -27,8 +27,8 @@ jxp.set_plot_options(grid=False)
 class Geometry(eqx.Module):
     z_in: Float[Array, ""]  # Scalar JAX array
     z_out: Float[Array, ""]
-    r_in: Float[Array, ""]
-    r_out: Float[Array, ""]
+    radius_mean_in: Float[Array, ""]
+    radius_mean_out: Float[Array, ""]
     b_in: Float[Array, ""]
     b_out: Float[Array, ""]
     phi_in: Float[Array, ""]
@@ -431,8 +431,8 @@ class VanelessChannel(eqx.Module):
             - 'theta' : array of angles
         params : dict
             Geometry parameters including:
-            - params["geometry"]["r_in"]
-            - params["geometry"]["r_out"]
+            - params["geometry"]["radius_mean_in"]
+            - params["geometry"]["radius_mean_out"]
         number_of_streamlines : int, optional
             Number of streamlines to plot (default 5).
         ax : matplotlib.axes.Axes, optional
@@ -453,11 +453,11 @@ class VanelessChannel(eqx.Module):
             ax.grid(False)
 
         # Inlet and outlet circles
-        r_in = self.geometry.r_in
-        r_out = self.geometry.r_out
+        radius_mean_in = self.geometry.radius_mean_in
+        radius_mean_out = self.geometry.radius_mean_out
         theta = jnp.linspace(0, 2 * jnp.pi, 100)
-        ax.plot(r_in * jnp.cos(theta), r_in * jnp.sin(theta), "k")
-        ax.plot(r_out * jnp.cos(theta), r_out * jnp.sin(theta), "k")
+        ax.plot(radius_mean_in * jnp.cos(theta), radius_mean_in * jnp.sin(theta), "k")
+        ax.plot(radius_mean_out * jnp.cos(theta), radius_mean_out * jnp.sin(theta), "k")
 
         # Streamlines
         theta_stream = jnp.linspace(0, 2 * jnp.pi, number_of_streamlines + 1)
@@ -470,7 +470,7 @@ class VanelessChannel(eqx.Module):
                 ax.plot(x, y, color=color)
 
         # Axis limits
-        limit = 1.1 * r_out
+        limit = 1.1 * radius_mean_out
         ax.axis([-limit, limit, -limit, limit])
 
         fig.tight_layout(pad=1)
@@ -684,10 +684,10 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
     Construction procedure
     ---------------------------------------------------------------------------
     1. The **channel midline** is constructed from four control points:
-           (z_in, r_in),
-           (z_in + td_in*cos(phi_in), r_in + td_in*sin(phi_in)),
-           (z_out - td_out*cos(phi_out), r_out - td_out*sin(phi_out)),
-           (z_out, r_out)
+           (z_in, radius_mean_in),
+           (z_in + td_in*cos(phi_in), radius_mean_in + td_in*sin(phi_in)),
+           (z_out - td_out*cos(phi_out), radius_mean_out - td_out*sin(phi_out)),
+           (z_out, radius_mean_out)
        where `td_in` and `td_out` are pseudo-tangential control distances and
        `phi_in`, `phi_out` are inlet and outlet inclination angles.
 
@@ -713,7 +713,7 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
         Equinox module containing geometric parameters:
             {
                 "z_in", "z_out" : inlet/outlet axial coordinates [m],
-                "r_in", "r_out" : inlet/outlet radii [m],
+                "radius_mean_in", "radius_mean_out" : inlet/outlet radii [m],
                 "b_in", "b_out" : inlet/outlet channel heights [m],
                 "phi_in", "phi_out" : inlet/outlet wall angles [deg],
                 "td_in", "td_out" : inlet/outlet tangent distances [m]
@@ -754,8 +754,8 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
     # Extract geometry parameters with short names
     z_in = geometry.z_in
     z_out = geometry.z_out
-    r_in = geometry.r_in
-    r_out = geometry.r_out
+    radius_mean_in = geometry.radius_mean_in
+    radius_mean_out = geometry.radius_mean_out
     b_in = geometry.b_in
     b_out = geometry.b_out
     phi_in = geometry.phi_in
@@ -764,7 +764,7 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
     td_out = geometry.td_out
 
     # Compute inlet area
-    A_in = 2.0 * jnp.pi * r_in * b_in
+    A_in = 2.0 * jnp.pi * radius_mean_in * b_in
 
     # Ensure minimum tangent distances
     td_in = jnp.maximum(1e-5, td_in)
@@ -782,10 +782,10 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
 
     r = jnp.array(
         [
-            r_in,
-            r_in + td_in * jnp.sin(jnp.deg2rad(phi_in)),
-            r_out - td_out * jnp.sin(jnp.deg2rad(phi_out)),
-            r_out,
+            radius_mean_in,
+            radius_mean_in + td_in * jnp.sin(jnp.deg2rad(phi_in)),
+            radius_mean_out - td_out * jnp.sin(jnp.deg2rad(phi_out)),
+            radius_mean_out,
         ]
     )
 
@@ -874,7 +874,7 @@ def make_vaneless_channel_geometry(geometry: Geometry, tol=1e-6):
             "curvature": curvature,
             "s_total": s_total,
             "area_ratio": A / A_in,
-            "radius_ratio": r / r_in,
+            "radius_ratio": r / radius_mean_in,
         }
 
         # If s was scalar, return scalar values instead of 1-element arrays

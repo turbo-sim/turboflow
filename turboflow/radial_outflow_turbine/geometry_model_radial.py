@@ -15,12 +15,11 @@ REQUIRED_RADIAL_GEOM_KEYS = {
     "cascade_type",                     # "stator" / "rotor"
     "camberline_type",
     "N_blades",
-    "r_in",                             # mean radius at inlet
-    "r_out",                            # mean radius at outlet
+    "radius_mean_in",                             # mean radius at inlet
+    "radius_mean_out",                            # mean radius at outlet
     "metal_angle_in",                   # deg
     "metal_angle_out",                  # deg
     "maximum_thickness",                # m
-    "trailing_edge_thickness",          # m
     "blade_height_in",                  # m
     "blade_height_out",                 # m
     "maximum_thickness_location_fraction",
@@ -176,11 +175,9 @@ def _compute_full_geometry_for_radial_cascade(comp):
     camberline_type = g["camberline_type"]
     N_blades = int(g["N_blades"])
 
-    # YAML uses r_in, r_out; interpret as mean radii
-    r_in = float(g["r_in"])
-    r_out = float(g["r_out"])
-    radius_mean_in = r_in
-    radius_mean_out = r_out
+   
+    radius_mean_in = g["radius_mean_in"]
+    radius_mean_out = g["radius_mean_out"]
 
     blade_height_in = float(g["blade_height_in"])
     blade_height_out = float(g["blade_height_out"])
@@ -189,7 +186,7 @@ def _compute_full_geometry_for_radial_cascade(comp):
     metal_angle_out_deg = float(g["metal_angle_out"])
 
     maximum_thickness = float(g["maximum_thickness"])
-    trailing_edge_thickness = float(g["trailing_edge_thickness"])
+    
 
     maximum_thickness_location_fraction = float(
         g["maximum_thickness_location_fraction"]
@@ -197,6 +194,7 @@ def _compute_full_geometry_for_radial_cascade(comp):
     leading_edge_wedge_angle = float(g["leading_edge_wedge_angle"])
     leading_edge_radius = float(g["leading_edge_radius"])
     trailing_edge_radius = float(g["trailing_edge_radius"])
+    trailing_edge_thickness = g["trailing_edge_radius"]*2.0
     trailing_edge_wedge_angle = float(g["trailing_edge_wedge_angle"])
     throat_location_fraction = float(g["throat_location_fraction"])
     tip_clearance = float(g["tip_clearance"])  # acts like tip_clearance_height

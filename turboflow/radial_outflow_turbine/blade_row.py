@@ -1180,10 +1180,10 @@ class BladeRow(eqx.Module):
         title: str | None = None,
     ):
         """
-        Blade-to-blade (meridional–tangential) view for this BladeRow.
+        Blade-to-blade (meridional-tangential) view for this BladeRow.
 
         - component_type == "radial_cascade":
-            Plots blades arranged on a circular ring (r–θ mapped to x–y).
+            Plots blades arranged on a circular ring (r-θ mapped to x-y).
 
         - component_type == "axial_cascade":
             Plots a blade in (x: axial, y: tangential) using:
