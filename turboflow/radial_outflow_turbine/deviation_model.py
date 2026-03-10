@@ -1,14 +1,80 @@
 # import numpy as np
-from turboflow import math
+from typing import Dict, Literal
 
 import jax
 import jax.numpy as jnp
+from jax import lax
 
+from turboflow import math
 
 DEVIATION_MODELS = ["aungier", "ainley_mathieson", "zero_deviation"]
+_MODEL_TO_ID: Dict[str, int] = {name: i for i, name in enumerate(DEVIATION_MODELS)}
 
 
-def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
+@jax.jit
+def _get_subsonic_deviation_jit(
+    Ma_exit: jnp.ndarray,
+    Ma_crit_throat: jnp.ndarray,
+    A_throat: jnp.ndarray,
+    A_out: jnp.ndarray,
+    model_id: int,
+):
+    """JIT core: numeric-only inputs; model dispatch via lax.switch."""
+
+    def aungier_fn(args):
+        Ma_exit, Ma_crit, A_throat, A_out = args
+        gauging_angle = math.arccosd(A_throat / A_out)
+        Ma_0 = 0.5
+        beta_g = 90 - jnp.abs(gauging_angle)
+        delta_0 = (
+            math.arcsind(
+                math.cosd(gauging_angle)
+                * (1 + (1 - math.cosd(gauging_angle)) * (beta_g / 90) ** 2)
+            )
+            - beta_g
+        )
+        X = (Ma_exit - Ma_0) / (Ma_crit - Ma_0)
+        p = 1 - 10 * X**3 + 15 * X**4 - 6 * X**5
+        p = jnp.where(X < 0, 1.0, p)
+        p = jnp.where(X > 1, 0.0, p)
+        delta = delta_0 * p
+        beta = jnp.abs(gauging_angle) - delta
+        return beta, delta
+
+    def ainley_mathieson_fn(args):
+        Ma_exit, Ma_crit, A_throat, A_out = args
+        gauging_angle = math.arccosd(A_throat / A_out)
+        Ma_0 = 0.5
+        delta_0 = jnp.abs(gauging_angle) - (
+            35.0
+            + (80.0 - 35.0) / (79.0 - 40.0) * (jnp.abs(gauging_angle) - 40.0)
+        )
+        X = (Ma_exit - Ma_0) / (Ma_crit - Ma_0)
+        p = 1 - X
+        p = jnp.where(X < 0, 1.0, p)
+        p = jnp.where(X > 1, 0.0, p)
+        delta = delta_0 * p
+        beta = jnp.abs(gauging_angle) - delta
+        return beta, delta
+
+    def zero_dev_fn(args):
+        _, _, A_throat, A_out = args
+        beta = math.arccosd(A_throat / A_out)
+        return beta, jnp.array(0.0)
+
+    return lax.switch(
+        model_id,
+        (aungier_fn, ainley_mathieson_fn, zero_dev_fn),
+        (Ma_exit, Ma_crit_throat, A_throat, A_out),
+    )
+
+
+def get_subsonic_deviation(
+    Ma_exit,
+    Ma_crit_throat,
+    geometry,
+    model: Literal["aungier", "ainley_mathieson", "zero_deviation"],
+):
     """
     Calculate subsonic relative exit flow angle based on the selected deviation model.
 
@@ -40,25 +106,27 @@ def get_subsonic_deviation(Ma_exit, Ma_crit_throat, geometry, model):
         If an invalid deviation model is provided.
     """
 
-    # Function mappings for each deviation model
-    deviation_model_functions = {
-        DEVIATION_MODELS[0]: get_exit_flow_angle_aungier,
-        DEVIATION_MODELS[1]: get_exit_flow_angle_ainley_mathieson,
-        DEVIATION_MODELS[2]: get_exit_flow_angle_zero_deviation,
-    }
+    if model not in _MODEL_TO_ID:
+        options = ", ".join(f"'{k}'" for k in _MODEL_TO_ID)
+        raise ValueError(f"Invalid deviation model: '{model}'. Available options: {options}")
 
-    # Evaluate deviation model
-    if model in deviation_model_functions:
-        Ma_exit = jnp.float64(Ma_exit)
-        beta, delta = deviation_model_functions[model](
-            Ma_exit, Ma_crit_throat, geometry
-        )
-        return beta
-    else:
-        options = ", ".join(f"'{k}'" for k in deviation_model_functions)
-        raise ValueError(
-            f"Invalid deviation model: '{model}'. Available options: {options}"
-        )
+    if "A_throat" not in geometry or "A_out" not in geometry:
+        raise KeyError("geometry must contain 'A_throat' and 'A_out'")
+
+    model_id = _MODEL_TO_ID[model]
+    Ma_exit = jnp.asarray(Ma_exit)
+    Ma_crit_throat = jnp.asarray(Ma_crit_throat)
+    A_throat = jnp.asarray(geometry["A_throat"])
+    A_out = jnp.asarray(geometry["A_out"])
+
+    beta, _ = _get_subsonic_deviation_jit(
+        Ma_exit=Ma_exit,
+        Ma_crit_throat=Ma_crit_throat,
+        A_throat=A_throat,
+        A_out=A_out,
+        model_id=model_id,
+    )
+    return beta
 
 
 def get_exit_flow_angle_aungier(Ma_exit, Ma_crit, geometry):
