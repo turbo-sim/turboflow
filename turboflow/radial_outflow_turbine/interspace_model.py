@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+import jax
 import jax.numpy as jnp
 import equinox as eqx
 import jaxprop as jxp
@@ -9,8 +10,8 @@ from jaxtyping import Array, Float
 class Geometry(eqx.Module):
     z_in:  Float[Array, ""]
     z_out: Float[Array, ""]
-    r_in:  Float[Array, ""]
-    r_out: Float[Array, ""]
+    radius_mean_in: Float[Array, ""]
+    radius_mean_out: Float[Array, ""]
     b_in:  Float[Array, ""]
     b_out: Float[Array, ""]
     phi_in:  Float[Array, ""]
@@ -89,17 +90,19 @@ class Interspace(eqx.Module):
           h0_in, s_in, alpha_in [deg], v_in
         """
 
-        h0_in = h0_exit
-        v_t_in = v_t_exit * radius_exit / radius_inlet
-        v_m_in = v_m_exit * area_exit / area_inlet * (1.0 - blockage_exit)
-        v_in = jnp.sqrt(v_t_in**2 + v_m_in**2)
+        h0_in, h_in, alpha_in, v_in, rho_in = _evaluate_interspace_core(
+            h0_exit,
+            v_m_exit,
+            v_t_exit,
+            rho_exit,
+            radius_exit,
+            area_exit,
+            blockage_exit,
+            radius_inlet,
+            area_inlet,
+        )
 
-        # alpha in degrees, consistent with BladeRow inlet_state
-        alpha_in = jnp.degrees(jnp.arctan2(v_t_in, v_m_in))
-
-        h_in = h0_in - 0.5 * v_in**2
-        rho_in = rho_exit
-
+        # Entropy from fluid model (not jitted)
         st = self.fluid.get_state(jxp.DmassHmass_INPUTS, rho_in, h_in)
         s_in = st["s"]
 
@@ -114,4 +117,27 @@ class Interspace(eqx.Module):
         Interspace contributes no variables to the nonlinear solver.
         Returning {} keeps compute_single_operation_point generic.
         """
-        return {}
+        return {}, inlet_state
+
+
+@jax.jit
+def _evaluate_interspace_core(
+    h0_exit,
+    v_m_exit,
+    v_t_exit,
+    rho_exit,
+    radius_exit,
+    area_exit,
+    blockage_exit,
+    radius_inlet,
+    area_inlet,
+):
+    """JIT-friendly numeric core for interspace mapping (no fluid calls)."""
+    h0_in = h0_exit
+    v_t_in = v_t_exit * radius_exit / radius_inlet
+    v_m_in = v_m_exit * area_exit / area_inlet * (1.0 - blockage_exit)
+    v_in = jnp.sqrt(v_t_in**2 + v_m_in**2)
+    alpha_in = jnp.degrees(jnp.arctan2(v_t_in, v_m_in))
+    h_in = h0_in - 0.5 * v_in**2
+    rho_in = rho_exit
+    return h0_in, h_in, alpha_in, v_in, rho_in
