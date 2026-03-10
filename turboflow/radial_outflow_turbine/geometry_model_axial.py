@@ -1,9 +1,14 @@
+from functools import partial
+
+import jax
+import jax.numpy as jnp
+import equinox as eqx
+
 from turboflow import math
 from turboflow import utilities as utils
 
-import jax.numpy as jnp
-
-from turboflow.radial_outflow_turbine import blade_parametrization as bp
+# from turboflow.radial_outflow_turbine import blade_parametrization as bp
+from turboflow.radial_outflow_turbine import blade_parametrization_update as bp
 
 # ==============================
 # Required keys for AXIAL CASCADE geometry
@@ -11,13 +16,13 @@ from turboflow.radial_outflow_turbine import blade_parametrization as bp
 REQUIRED_AXIAL_GEOM_KEYS = {
     "cascade_type",                     # "stator" / "rotor"
     "camberline_type",
+    "thickness_model",
     "N_blades",
-    "r_mean_in",
-    "r_mean_out",
+    "radius_mean_in",
+    "radius_mean_out",
     "metal_angle_in",                   # deg
     "metal_angle_out",                  # deg
     "maximum_thickness",                # m
-    "trailing_edge_thickness",          # m
     "blade_height_in",                  # m
     "blade_height_out",                 # m
     "maximum_thickness_location_fraction",
@@ -28,6 +33,12 @@ REQUIRED_AXIAL_GEOM_KEYS = {
     "throat_location_fraction",
     "chord_axial",                      # m
     "tip_clearance",                    # m
+}
+OPTIONAL_AXIAL_GEOM_KEYS = {
+    # Optional thickness controls used by the Denton route.
+    "leading_edge_thickness",
+    "denton_thickness_shape_exponent",
+    "denton_tk_typ",  # alias for denton_thickness_shape_exponent
 }
 
 VALID_CASCADE_TYPES = {"stator", "rotor"}
@@ -62,8 +73,12 @@ def _validate_axial_cascade_component(c, index=0):
     name = c.get("name", f"component_{index+1}")
     geom = c["geometry"]
 
-    # STRICT: all required keys present, and no unknown keys
-    utils.validate_keys(geom, REQUIRED_AXIAL_GEOM_KEYS, REQUIRED_AXIAL_GEOM_KEYS)
+    # STRICT required keys + controlled optional keys.
+    utils.validate_keys(
+        geom,
+        REQUIRED_AXIAL_GEOM_KEYS,
+        REQUIRED_AXIAL_GEOM_KEYS | OPTIONAL_AXIAL_GEOM_KEYS,
+    )
 
     # cascade_type must be stator or rotor
     ct = geom["cascade_type"]
@@ -75,7 +90,7 @@ def _validate_axial_cascade_component(c, index=0):
 
     # Numeric checks
     for k, v in geom.items():
-        if k in ("cascade_type", "camberline_type"):
+        if k in ("cascade_type", "camberline_type", "thickness_model"):
             continue
 
         if not isinstance(v, (int, float)) and not jnp.isscalar(v):
@@ -156,80 +171,67 @@ def validate_turbine_geometry(yaml_or_components, display=False):
 # Core calculations
 # =================
 def calculate_throat_radius(radius_in, radius_out, throat_location_fraction):
-    return (
-        1.0 - throat_location_fraction
-    ) * radius_in + throat_location_fraction * radius_out
+    """JAX-friendly linear interpolation for throat radius."""
+    rin = jnp.asarray(radius_in, dtype=jnp.float64)
+    rout = jnp.asarray(radius_out, dtype=jnp.float64)
+    frac = jnp.asarray(throat_location_fraction, dtype=jnp.float64)
+    return (1.0 - frac) * rin + frac * rout
 
 
 
-def _compute_full_geometry_for_axial_cascade(comp):
-    """
-    Compute 'complete geometry' for a single axial cascade component
-    from the *raw* geometry specification.
-    """
-    name = comp.get("name", None)
-    component_type = comp.get("component_type", None)
-    g = comp["geometry"]
+# @partial(
+#     jax.jit,
+#     static_argnames=(
+#         "camberline_type_id",
+#         "N_cam_points",
+#     ),
+# )
+@eqx.filter_jit
+def _compute_axial_cascade_geometry_jit(
+    camberline_type_id: int,
+    N_blades,
+    radius_mean_in,
+    radius_mean_out,
+    blade_height_in,
+    blade_height_out,
+    metal_angle_in_deg,
+    metal_angle_out_deg,
+    maximum_thickness,
+    maximum_thickness_location_fraction,
+    leading_edge_wedge_angle,
+    leading_edge_radius,
+    trailing_edge_radius,
+    trailing_edge_wedge_angle,
+    throat_location_fraction,
+    chord_axial,
+    tip_clearance,
+    z_in,
+    N_cam_points: int = 64,
+):
+    """JIT-friendly core axial cascade geometry calculator (numbers only)."""
+    trailing_edge_thickness = trailing_edge_radius * 2.0
 
-    # --- Pull raw scalars ---------------------------------------------------
-    cascade_type = g["cascade_type"]
-    camberline_type = g["camberline_type"]
-    N_blades = int(g["N_blades"])
+    radius_hub_in = radius_mean_in - 0.5 * blade_height_in
+    radius_tip_in = radius_mean_in + 0.5 * blade_height_in
 
-    r_mean_in = float(g["r_mean_in"])
-    r_mean_out = float(g["r_mean_out"])
+    radius_hub_out = radius_mean_out - 0.5 * blade_height_out
+    radius_tip_out = radius_mean_out + 0.5 * blade_height_out
 
-    blade_height_in = float(g["blade_height_in"])
-    blade_height_out = float(g["blade_height_out"])
-
-    metal_angle_in_deg = float(g["metal_angle_in"])
-    metal_angle_out_deg = float(g["metal_angle_out"])
-
-    maximum_thickness = float(g["maximum_thickness"])
-    trailing_edge_thickness = float(g["trailing_edge_thickness"])
-
-    maximum_thickness_location_fraction = float(
-        g["maximum_thickness_location_fraction"]
-    )
-    leading_edge_wedge_angle = float(g["leading_edge_wedge_angle"])
-    leading_edge_radius = float(g["leading_edge_radius"])
-    trailing_edge_radius = float(g["trailing_edge_radius"])
-    trailing_edge_wedge_angle = float(g["trailing_edge_wedge_angle"])
-    throat_location_fraction = float(g["throat_location_fraction"])
-    chord_axial = float(g["chord_axial"])
-    tip_clearance = float(g["tip_clearance"])
-    z_in = float(g["z_in"])
-
-    # --- 1) Hub & tip radii from mean radius + blade height -----------------
-    radius_hub_in = r_mean_in - 0.5 * blade_height_in
-    radius_tip_in = r_mean_in + 0.5 * blade_height_in
-
-    radius_hub_out = r_mean_out - 0.5 * blade_height_out
-    radius_tip_out = r_mean_out + 0.5 * blade_height_out
-
-    # --- 2) Camberline (cartesian, axial) to get stagger & chord -----------
     metal_angle_in_rad = jnp.deg2rad(metal_angle_in_deg)
     metal_angle_out_rad = jnp.deg2rad(metal_angle_out_deg)
 
-    x1 = 0.0
-    y1 = 0.0
-    N_cam_points = 64
     u = jnp.linspace(0.0, 1.0, N_cam_points)
-
-    x_c, y_c, dydx, stagger_rad, chord = bp.compute_camberline_cartesian(
-        camberline_type,
-        x1,
-        y1,
+    _, _, _, stagger_rad, chord = bp.compute_camberline_cartesian_by_id(
+        camberline_type_id,
+        0.0,
+        0.0,
         metal_angle_in_rad,
         metal_angle_out_rad,
         chord_axial,
         u,
     )
+    stagger_angle = jnp.rad2deg(stagger_rad)
 
-    stagger_angle = float(jnp.rad2deg(stagger_rad))
-    chord = float(chord)
-
-    # --- 3) Mean radii & throat radii --------------------------------------
     radius_mean_in = 0.5 * (radius_tip_in + radius_hub_in)
     radius_mean_out = 0.5 * (radius_tip_out + radius_hub_out)
 
@@ -241,86 +243,59 @@ def _compute_full_geometry_for_axial_cascade(comp):
     )
     radius_mean_throat = 0.5 * (radius_tip_throat + radius_hub_throat)
 
-    # --- 4) Shroud radii (tip + clearance) ---------------------------------
     radius_shroud_in = radius_tip_in + tip_clearance
     radius_shroud_out = radius_tip_out + tip_clearance
     radius_shroud_throat = calculate_throat_radius(
         radius_shroud_in, radius_shroud_out, throat_location_fraction
     )
 
-    # --- 5) Heights ---------------------------------------------------------
     height_in = radius_tip_in - radius_hub_in
     height_out = radius_tip_out - radius_hub_out
     height_throat = radius_tip_throat - radius_hub_throat
     height = 0.5 * (height_in + height_out)
 
-    # --- 6) Pitch and opening (axial cascade) ------------------------------
-    pitch = 2.0 * jnp.pi * radius_mean_throat / max(N_blades, 1)
-    # pitch = g["pitch"]
-    pitch_angle = 2.0 * jnp.pi / N_blades          # [rad] blade-to-blade angle
+    # N_blades = jnp.maximum(N_blades, 1)
+    pitch = 2.0 * jnp.pi * radius_mean_throat / N_blades
+    pitch_angle = 2.0 * jnp.pi / N_blades
     pitch_in = 2.0 * jnp.pi * radius_mean_in / N_blades
     pitch_out = 2.0 * jnp.pi * radius_mean_out / N_blades
 
-    
     gauging_angle = metal_angle_out_deg
 
-    # --- 7) Areas -----------------------------------------------------------
     A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
     A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
-    # A_throat = (2.0 * jnp.pi * radius_mean_throat * height_throat) * (opening / pitch)
-    A_throat = A_out * math.cosd(gauging_angle)  # approximate
+    A_throat = A_out * math.cosd(gauging_angle)
 
-    # Axial throat opening ≈ projection of pitch along normal to exit metal angle
-    # opening = float(pitch) * math.cosd(metal_angle_out_deg)
-    opening = A_throat * pitch / (2 * jnp.pi * radius_mean_throat * height_throat)
-
-    # if opening <= 0.0:
-    #     raise ValueError(
-    #         f"Component '{name}': computed opening <= 0. "
-    #         "Check N_blades, chord_axial, and metal angles."
-    #     )
-
-
-    # --- 8) Gauging angle ---------------------------------------------------
-    # base_gauge = math.arccosd(A_throat / A_out)
-    # gauging_angle = base_gauge if cascade_type == "stator" else -base_gauge
-
-    # --- 9) Meridional chord & flaring angle -------------------------------
-    meridional_chord = chord * math.cosd(stagger_angle)
-    flaring_angle = math.arctand(
-        (height_out - height_in) / max(meridional_chord, 1e-12) / 2.0
+    opening = A_throat * pitch / (
+        2.0 * jnp.pi * radius_mean_throat * jnp.maximum(height_throat, 1e-12)
     )
 
-    # --- 10) Ratios & dimensionless parameters -----------------------------
+    meridional_chord = chord * math.cosd(stagger_angle)
+    flaring_angle = math.arctand(
+        (height_out - height_in)
+        / jnp.maximum(meridional_chord, 1e-12)
+        / 2.0
+    )
+
     aspect_ratio = height / chord
     pitch_chord_ratio = pitch / chord
     solidity = 1.0 / pitch_chord_ratio
     hub_tip_ratio_in = radius_hub_in / radius_tip_in
     hub_tip_ratio_out = radius_hub_out / radius_tip_out
-    hub_tip_ratio_throat = radius_hub_throat / max(radius_tip_throat, 1e-12)
+    hub_tip_ratio_throat = radius_hub_throat / jnp.maximum(radius_tip_throat, 1e-12)
     maximum_thickness_chord_ratio = maximum_thickness / chord
-    trailing_edge_thickness_opening_ratio = trailing_edge_thickness / max(
+    trailing_edge_thickness_opening_ratio = trailing_edge_thickness / jnp.maximum(
         opening, 1e-12
     )
-    tip_clearance_height_ratio = tip_clearance / max(height, 1e-12)
+    tip_clearance_height_ratio = tip_clearance / jnp.maximum(height, 1e-12)
     leading_edge_diameter = 2.0 * leading_edge_radius
     leading_edge_diameter_chord_ratio = leading_edge_diameter / chord
-    leading_edge_angle = metal_angle_in_deg  # metal at LE
+    leading_edge_angle = metal_angle_in_deg
 
-
-
-    # --- 11) Full dict ------------------------------------------------------
-    full = {
-        # identifiers
-        "name": name,
-        "component_type": component_type,
-
-        # raw geometry (echo back)
-        "cascade_type": cascade_type,
-        "camberline_type": camberline_type,
+    return {
         "N_blades": N_blades,
-        "radius_mean_in": r_mean_in,
-        "radius_mean_out": r_mean_out,
+        "radius_mean_in": radius_mean_in,
+        "radius_mean_out": radius_mean_out,
         "metal_angle_in": metal_angle_in_deg,
         "metal_angle_out": metal_angle_out_deg,
         "maximum_thickness": maximum_thickness,
@@ -334,27 +309,21 @@ def _compute_full_geometry_for_axial_cascade(comp):
         "trailing_edge_wedge_angle": trailing_edge_wedge_angle,
         "throat_location_fraction": throat_location_fraction,
         "tip_clearance": tip_clearance,
-
-        # “classic” geometry
         "radius_hub_in": radius_hub_in,
         "radius_hub_out": radius_hub_out,
         "radius_tip_in": radius_tip_in,
         "radius_tip_out": radius_tip_out,
-        "pitch": float(pitch),
-        "pitch_in": float(pitch_in),
-        "pitch_out": float(pitch_out),
-        "pitch_angle": float(jnp.rad2deg(pitch_angle)),
+        "pitch": pitch,
+        "pitch_in": pitch_in,
+        "pitch_out": pitch_out,
+        "pitch_angle": jnp.rad2deg(pitch_angle),
         "chord": chord,
         "stagger_angle": stagger_angle,
-        "wrapping_angle": stagger_angle,  # alias
+        "wrapping_angle": stagger_angle,
         "opening": opening,
         "throat_opening": opening,
         "leading_edge_diameter": leading_edge_diameter,
         "leading_edge_angle": leading_edge_angle,
-
-        # derived geometry
-        "radius_mean_in": radius_mean_in,
-        "radius_mean_out": radius_mean_out,
         "radius_mean_throat": radius_mean_throat,
         "radius_hub_throat": radius_hub_throat,
         "radius_tip_throat": radius_tip_throat,
@@ -386,7 +355,57 @@ def _compute_full_geometry_for_axial_cascade(comp):
         "gauging_angle": gauging_angle,
         "z_in": z_in,
     }
-    return full
+
+
+def _compute_full_geometry_for_axial_cascade(comp):
+    """
+    Compute 'complete geometry' for a single axial cascade component
+    from the *raw* geometry specification.
+    """
+    name = comp.get("name", None)
+    component_type = comp.get("component_type", None)
+    g = comp["geometry"]
+
+    cascade_type = g["cascade_type"]
+    camberline_type = g["camberline_type"]
+    camberline_type_id = bp.camberline_cartesian_type_id(camberline_type)
+
+    base_geom = _compute_axial_cascade_geometry_jit(
+        camberline_type_id=camberline_type_id,
+        N_blades=g["N_blades"],
+        radius_mean_in=g["radius_mean_in"],
+        radius_mean_out=g["radius_mean_out"],
+        blade_height_in=g["blade_height_in"],
+        blade_height_out=g["blade_height_out"],
+        metal_angle_in_deg=g["metal_angle_in"],
+        metal_angle_out_deg=g["metal_angle_out"],
+        maximum_thickness=g["maximum_thickness"],
+        maximum_thickness_location_fraction=g["maximum_thickness_location_fraction"],
+        leading_edge_wedge_angle=g["leading_edge_wedge_angle"],
+        leading_edge_radius=g["leading_edge_radius"],
+        trailing_edge_radius=g["trailing_edge_radius"],
+        trailing_edge_wedge_angle=g["trailing_edge_wedge_angle"],
+        throat_location_fraction=g["throat_location_fraction"],
+        chord_axial=g["chord_axial"],
+        tip_clearance=g["tip_clearance"],
+        z_in=g["z_in"],
+        N_cam_points=64,
+    )
+
+    out = {
+        "name": name,
+        "component_type": component_type,
+        "cascade_type": cascade_type,
+        "camberline_type": camberline_type,
+        # Keep raw model selectors so plotting/reconstruction can use YAML intent.
+        "thickness_model": g["thickness_model"],
+        "chord_axial": g["chord_axial"],
+        **base_geom,
+    }
+    for k in ("leading_edge_thickness", "denton_thickness_shape_exponent", "denton_tk_typ"):
+        if k in g:
+            out[k] = g[k]
+    return out
 
 
 def calculate_full_geometry(yaml_or_components):
