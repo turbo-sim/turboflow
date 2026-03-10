@@ -167,7 +167,11 @@ class VanelessChannel(eqx.Module):
         Vaneless channels have no solver unknowns in the global nonlinear
         system, so this simply returns an empty dict.
         """
-        return {}
+
+        # TODO: Initialize the initial guess here
+        # TODO: Replace row_index by component name
+        
+        return {}, inlet_state
     
     def plot_geometry(
         self,
@@ -960,7 +964,7 @@ def solve_vaneless_channel_model(
     alpha_in = jnp.clip(alpha_in, -89.0, 89.0)
     Ma_in = v_in / state_in["a"]
     # jax.debug.print("Ma_in = {Ma_in}, alpha_in = {alpha_in}", Ma_in=Ma_in, alpha_in=alpha_in)
-    v_in_clip = jnp.clip(v_in, 1.0, 0.99*state_in["a"])
+    v_in_clip = jnp.clip(v_in, 1.0, 1e6)
     v_m_in = v_in_clip * jnp.cos(jnp.deg2rad(alpha_in))
     v_t_in = v_in_clip * jnp.sin(jnp.deg2rad(alpha_in))
     h0_in = h_in + 0.5 * v_in_clip**2
