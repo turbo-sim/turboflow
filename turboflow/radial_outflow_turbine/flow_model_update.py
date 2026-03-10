@@ -89,7 +89,7 @@ def _extract_row_vars_and_choking(
 # Public API: evaluate an already-instantiated component list
 # ============================================================
 
-
+# @eqx.filter_jit
 def evaluate_turbomachine(
     variables: Dict[str, Any],          # solver vars (normalized)
     boundary_conditions: Dict[str, Any],
@@ -116,7 +116,7 @@ def evaluate_turbomachine(
     # ---------- inlet from boundary conditions ----------
     h0_in = boundary_conditions["h0_in"]
     s_in = boundary_conditions["s_in"]
-    alpha_in_deg = _alpha_deg(boundary_conditions["alpha_in"])
+    alpha_in_deg = boundary_conditions["alpha_in"]
 
     # inlet velocity from normalized var if present
     v_in = reference_values["v0"] * variables.get("v_in", 0.0)
@@ -131,6 +131,7 @@ def evaluate_turbomachine(
 
     row_counter = 0
     cascade_geoms: List[Dict[str, Any]] = []  # cascades only (for stage KPIs etc.)
+
 
     # ---------- main component loop ----------
     for gi, obj in enumerate(comp_objects):
@@ -212,7 +213,7 @@ def evaluate_turbomachine(
 
             # Map BladeRow-style inlet to channel operating conditions (static)
             v_mag = inlet["v"]
-            alphaD = _alpha_deg(inlet["alpha"])
+            alphaD = inlet["alpha"]
             h_in = inlet["h0"] - 0.5 * v_mag**2
             st = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, inlet["s"])
             p_in = st["p"]
@@ -398,7 +399,7 @@ def evaluate_cascade_throat(*args, **kwargs):
 # Stage & overall KPIs
 # ============================================================
 
-
+# @eqx.filter_jit
 def compute_stage_performance_componentwise(planes, component_types):
     """
     Stage reaction based on plane ordering: per stage we expect
@@ -519,7 +520,7 @@ def compute_stage_performance_componentwise(planes, component_types):
     )
     return {"reaction": R}
 
-
+# @eqx.filter_jit
 def compute_overall_performance_componentwise(
     planes, boundary_conditions, reference_values, last_geom
 ):
