@@ -3,7 +3,9 @@ from scipy import interpolate
 
 # import numpy as np
 import jax.numpy as jnp
+from jax import lax
 import jax
+import equinox as eqx
 
 from .. import math
 from . import deviation_model as dm
@@ -14,6 +16,51 @@ CHOKING_CRITERIONS = [
     "critical_mach_number",
     "critical_isentropic_throat",
 ]
+
+
+# @jax.jit
+@eqx.filter_jit
+def _critical_mach_residual_jit(
+    exit_ma_rel,
+    exit_beta,
+    critical_mach,
+    throat_ma_rel,
+    inlet_mass_flow,
+    throat_mass_flow,
+    mass_flow_ref,
+    loss_error,
+    beta_model_subsonic,
+):
+    """JIT core for residual assembly; numeric-only inputs."""
+
+    def subsonic_residual(_):
+        choking_residual = math.cosd(beta_model_subsonic) - math.cosd(exit_beta)
+        return jnp.array(
+            [
+                (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
+                loss_error,
+                choking_residual,
+            ],
+            dtype=jnp.float64,
+        )
+
+    def choked_residual(_):
+        choking_residual = throat_ma_rel - critical_mach
+        return jnp.array(
+            [
+                (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
+                loss_error,
+                choking_residual,
+            ],
+            dtype=jnp.float64,
+        )
+
+    return lax.cond(
+        exit_ma_rel <= critical_mach,
+        subsonic_residual,
+        choked_residual,
+        operand=None,
+    )
 
 
 def evaluate_choking(
@@ -241,12 +288,12 @@ def critical_mach_number(
     blockage = model_options["blockage_model"]
     deviation_model = model_options["deviation_model"]
 
-    A_throat = geometry["A_throat"]
-    A_out = geometry["A_out"]
+    A_throat = jnp.asarray(geometry["A_throat"], dtype=jnp.float64)
+    A_out = jnp.asarray(geometry["A_out"], dtype=jnp.float64)
 
     # Reference values
     v0 = reference_values["v0"]
-    mass_flow_ref = reference_values["mass_flow_ref"]
+    mass_flow_ref = jnp.asarray(reference_values["mass_flow_ref"], dtype=jnp.float64)
 
     # ------------------------------------------------------------------
     # IMPORTANT: choking_input is already in PHYSICAL units now
@@ -329,48 +376,24 @@ def critical_mach_number(
     )
 
     critical_mach = get_mach_crit(throat_plane["heat_capacity_ratio"], eta)
-    
 
     # ------------------------------------------------------------------
-    # Choking residual: subsonic vs. choked
+    # Choking residual: compute subsonic beta model, then JIT residuals
     # ------------------------------------------------------------------
-    if exit_plane["Ma_rel"] <= critical_mach:
-        # Subsonic regime → use deviation model
-        beta_model = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
-            exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
-        )
-        
-        choking_residual = math.cosd(beta_model) - math.cosd(exit_plane["beta"])
-    else:
-        # Choked regime → enforce M_throat_rel = M_crit
-        choking_residual = throat_plane["Ma_rel"] - critical_mach
+    beta_model_subsonic = jnp.sign(exit_plane["beta"]) * dm.get_subsonic_deviation(
+        exit_plane["Ma_rel"], critical_mach, geometry, deviation_model
+    )
 
-    # ------------------------------------------------------------------
-    # Residuals
-    # ------------------------------------------------------------------
-
-    # jax.debug.print(
-    #     "Choking check:\n"
-    #     "  Ma_rel={Ma_rel},  critical_mach={critical_mach}\n"
-    #     "  beta_exit={beta_exit}, beta_model={beta_model}\n"
-    #     "  choking_residual={choking_residual}",
-    #     Ma_rel=exit_plane["Ma_rel"],
-    #     critical_mach=critical_mach,
-    #     beta_exit=exit_plane["beta"],
-    #     beta_model=(
-    #         jnp.sign(exit_plane["beta"]) *
-    #         dm.get_subsonic_deviation(exit_plane["Ma_rel"], critical_mach, geometry, deviation_model)
-    #         if exit_plane["Ma_rel"] <= critical_mach else jnp.nan
-    #     ),
-    #     choking_residual=choking_residual,)
-    
-    residual_values = jnp.array(
-        [
-            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
-            throat_plane["loss_error"],
-            choking_residual,
-        ],
-        dtype=jnp.float64,
+    residual_values = _critical_mach_residual_jit(
+        exit_ma_rel=exit_plane["Ma_rel"],
+        exit_beta=exit_plane["beta"],
+        critical_mach=critical_mach,
+        throat_ma_rel=throat_plane["Ma_rel"],
+        inlet_mass_flow=inlet_plane["mass_flow"],
+        throat_mass_flow=throat_plane["mass_flow"],
+        mass_flow_ref=mass_flow_ref,
+        loss_error=throat_plane["loss_error"],
+        beta_model_subsonic=beta_model_subsonic,
     )
     residual_keys = ["m*", "Y*", "beta*"]
     residuals_critical = dict(zip(residual_keys, residual_values))
@@ -879,10 +902,10 @@ def compute_critical_values(
     loss_model = model_options["loss_model"]
 
     # Load reference values
-    mass_flow_ref = reference_values["mass_flow_ref"]
-    v0 = reference_values["v0"]
-    s_range = reference_values["s_range"]
-    s_min = reference_values["s_min"]
+    mass_flow_ref = jnp.asarray(reference_values["mass_flow_ref"], dtype=jnp.float64)
+    v0 = jnp.asarray(reference_values["v0"], dtype=jnp.float64)
+    s_range = jnp.asarray(reference_values["s_range"], dtype=jnp.float64)
+    s_min = jnp.asarray(reference_values["s_min"], dtype=jnp.float64)
 
     # -----------------------------
     # Load inlet-plane thermodynamics
@@ -890,9 +913,9 @@ def compute_critical_values(
 
     # Entropy
     if "s" in inlet_plane:
-        s_in = inlet_plane["s"]
+        s_in = jnp.asarray(inlet_plane["s"], dtype=jnp.float64)
     elif "entropy" in inlet_plane:
-        s_in = inlet_plane["entropy"]
+        s_in = jnp.asarray(inlet_plane["entropy"], dtype=jnp.float64)
     else:
         raise KeyError(
             "compute_critical_values: inlet_plane must contain 's' or 'entropy'. "
@@ -901,9 +924,9 @@ def compute_critical_values(
 
     # Stagnation enthalpy
     if "h0" in inlet_plane:
-        h0_in = inlet_plane["h0"]
+        h0_in = jnp.asarray(inlet_plane["h0"], dtype=jnp.float64)
     elif "enthalpy0" in inlet_plane:
-        h0_in = inlet_plane["enthalpy0"]
+        h0_in = jnp.asarray(inlet_plane["enthalpy0"], dtype=jnp.float64)
     else:
         raise KeyError(
             "compute_critical_values: inlet_plane must contain 'h0' or 'enthalpy0'. "
@@ -912,7 +935,7 @@ def compute_critical_values(
 
     # Flow angle (we keep the same name you already use; extend if needed)
     if "alpha" in inlet_plane:
-        alpha_in = inlet_plane["alpha"]
+        alpha_in = jnp.asarray(inlet_plane["alpha"], dtype=jnp.float64)
     else:
         raise KeyError(
             "compute_critical_values: inlet_plane must contain 'alpha'. "
@@ -927,6 +950,11 @@ def compute_critical_values(
         x_crit[1] * v0,
         x_crit[2] * s_range + s_min,
     )
+
+    # Geometry constants as arrays for JIT-compatibility
+    A_throat = jnp.asarray(geometry["A_throat"], dtype=jnp.float64)
+    A_out = jnp.asarray(geometry["A_out"], dtype=jnp.float64)
+    gauging_angle = jnp.asarray(geometry["gauging_angle"], dtype=jnp.float64)
 
     # Evaluate inlet plane at critical conditions
     critical_inlet_input = {
@@ -943,8 +971,7 @@ def compute_critical_values(
     critical_throat_input = {
         "w": w_throat,
         "s": s_throat,
-        "beta": jnp.sign(geometry["gauging_angle"])
-        * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
+        "beta": jnp.sign(gauging_angle) * math.arccosd(A_throat / A_out),
         "rothalpy": critical_inlet_plane["rothalpy"],
     }
 
@@ -1032,21 +1059,24 @@ def critical_isentropic_throat(
     loss_model = model_options["loss_model"]
     blockage = model_options["blockage_model"]
     deviation_model = model_options["deviation_model"]
-    A_throat = geometry["A_throat"]
-    A_out = geometry["A_out"]
-    v0 = reference_values["v0"]
-    angle_range = reference_values["angle_range"]
-    angle_min = reference_values["angle_min"]
+    A_throat = jnp.asarray(geometry["A_throat"], dtype=jnp.float64)
+    A_out = jnp.asarray(geometry["A_out"], dtype=jnp.float64)
+    v0 = jnp.asarray(reference_values["v0"], dtype=jnp.float64)
+    angle_range = jnp.asarray(reference_values["angle_range"], dtype=jnp.float64)
+    angle_min = jnp.asarray(reference_values["angle_min"], dtype=jnp.float64)
+    mass_flow_ref = jnp.asarray(reference_values["mass_flow_ref"], dtype=jnp.float64)
 
     # TODO: beta is the exit metal angle 
 
     # Evaluate throat
+    w_throat = jnp.asarray(choking_input["w_crit_throat"], dtype=jnp.float64)
+    s_inlet = jnp.asarray(inlet_plane["entropy"], dtype=jnp.float64)
+    rothalpy_in = jnp.asarray(inlet_plane["rothalpy"], dtype=jnp.float64)
     cascade_throat_input = {
-        "w": choking_input["w_crit_throat"],
-        "s": inlet_plane["entropy"],
-        "beta": jnp.sign(exit_plane["beta"])
-        * math.arccosd(geometry["A_throat"] / geometry["A_out"]),
-        "rothalpy": inlet_plane["rothalpy"],
+        "w": w_throat,
+        "s": s_inlet,
+        "beta": jnp.sign(exit_plane["beta"]) * math.arccosd(A_throat / A_out),
+        "rothalpy": rothalpy_in,
     }
     throat_plane, loss_dict = br.evaluate_cascade_throat(
         cascade_throat_input,
@@ -1059,13 +1089,14 @@ def critical_isentropic_throat(
     )
 
     # Evaluate critical mach
-    choking_residual = throat_plane["Ma_rel"] - min(exit_plane["Ma_rel"], 1)
+    choking_residual = throat_plane["Ma_rel"] - jnp.minimum(
+        exit_plane["Ma_rel"], jnp.array(1.0, dtype=jnp.float64)
+    )
 
     # Evaluate resiudals
     residual_values = jnp.array(
         [
-            (inlet_plane["mass_flow"] - throat_plane["mass_flow"])
-            / reference_values["mass_flow_ref"],
+            (inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
             choking_residual,
         ]
     )
