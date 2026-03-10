@@ -1,13 +1,46 @@
 # import numpy as np
-from .. import math
+from functools import partial
 
 import jax
 import jax.numpy as jnp
+
+from .. import math
 
 from . import loss_model_kacker_okapuu as lm_ko
 from .loss_coefficient_conversion import (
     convert_kinetic_energy_to_stagnation_pressure_loss,
 )
+
+_FLOW_KEYS = {
+    "Re_out",
+    "Re_in",
+    "Ma_rel_out",
+    "Ma_rel_in",
+    "p0_rel_in",
+    "p0_rel_is",
+    "p_in",
+    "p0_rel_out",
+    "p_out",
+    "beta_out",
+    "beta_in",
+    "gamma_out",
+}
+_GEOM_KEYS = {
+    "hub_tip_ratio_in",
+    "pitch",
+    "chord",
+    "leading_edge_angle",
+    "leading_edge_diameter",
+    "maximum_thickness",
+    "meridional_chord",
+    "height",
+    "opening",
+    "trailing_edge_thickness",
+    "tip_clearance",
+    "A_throat",
+    "A_out",
+    "gauging_angle",
+}
 
 
 def compute_losses(input_parameters):
@@ -50,16 +83,43 @@ def compute_losses(input_parameters):
     geometry = input_parameters["geometry"]
     beta_des = geometry["leading_edge_angle"]
 
+    cascade_type = geometry.get("cascade_type", "stator")
+    if cascade_type not in lm_ko._CASCADE_TO_ID:
+        raise ValueError(
+            f"Unsupported cascade_type '{cascade_type}'. Expected one of {list(lm_ko._CASCADE_TO_ID)}."
+        )
+    cascade_type_id = lm_ko._CASCADE_TO_ID[cascade_type]
+
+    flow_jax = {k: jnp.asarray(v) for k, v in flow_parameters.items() if k in _FLOW_KEYS}
+    geom_jax = {k: jnp.asarray(v) for k, v in geometry.items() if k in _GEOM_KEYS}
+
+    losses = _compute_losses_moustapha_jit(
+        flow_jax,
+        geom_jax,
+        cascade_type_id,
+        beta_des,
+    )
+
+    return losses
+
+
+@partial(jax.jit, static_argnames=("cascade_type_id",))
+def _compute_losses_moustapha_jit(
+    flow_parameters,
+    geometry,
+    cascade_type_id: int,
+    beta_des,
+):
     # Profile loss coefficient
-    Y_p = lm_ko.get_profile_loss(flow_parameters, geometry)
+    Y_p = lm_ko.get_profile_loss(flow_parameters, geometry, cascade_type_id)
 
     # Secondary loss coefficient
-    Y_s = lm_ko.get_secondary_loss(flow_parameters, geometry)
+    Y_s = lm_ko.get_secondary_loss(flow_parameters, geometry, cascade_type_id)
 
     # Tip clearance loss coefficient
-    Y_cl = lm_ko.get_tip_clearance_loss(flow_parameters, geometry)
+    Y_cl = lm_ko.get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id)
 
-    # Trailing edge loss coefficienct
+    # Trailing edge loss coefficient
     Y_te = lm_ko.get_trailing_edge_loss(flow_parameters, geometry)
 
     # Incidence loss for profile loss
@@ -67,13 +127,9 @@ def compute_losses(input_parameters):
 
     # Incidence correction factor for secondary loss coefficient
     Y_corr = get_secondary_loss_correction_factor(flow_parameters, geometry)
-    Y_s *= Y_corr
+    Y_s = Y_s * Y_corr
 
-    # Calculate total pressure loss coefficient
-    Y = Y_p + Y_s + Y_cl + Y_te + Y_inc
-
-    # Return a dictionary of loss components
-    losses = {
+    return {
         "loss_profile": Y_p,
         "loss_incidence": Y_inc,
         "loss_trailing": Y_te,
@@ -81,8 +137,6 @@ def compute_losses(input_parameters):
         "loss_clearance": Y_cl,
         "loss_total": Y_p + Y_te + Y_inc + Y_s + Y_cl,
     }
-
-    return losses
 
 
 # def get_profile_loss(flow_parameters, geometry):
@@ -469,15 +523,15 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     # Compute incidence parameter
     chi = get_incidence_parameter(le, s, theta_in, theta_out, beta_in, beta_des)
 
-    # Check if incidence parameter is within the range of the experimental data
-    if abs(chi) > 800:
-        raise Warning("Incidence parameter out of range: chi = {chi}")
-
-    # Calculate kinetic-energy loss coefficient
-    if chi >= 0:
-        dPhi = 0.778e-5 * chi + 0.56e-7 * chi**2 + 0.4e-10 * chi**3 + 2.054e-19 * chi**6
-    elif chi < 0:
-        dPhi = -5.1734e-6 * chi + 7.6902e-9 * chi**2
+    # Calculate kinetic-energy loss coefficient (piecewise) without Python branching
+    dPhi_pos = (
+        0.778e-5 * chi
+        + 0.56e-7 * chi**2
+        + 0.4e-10 * chi**3
+        + 2.054e-19 * chi**6
+    )
+    dPhi_neg = -5.1734e-6 * chi + 7.6902e-9 * chi**2
+    dPhi = jnp.where(chi >= 0, dPhi_pos, dPhi_neg)
 
     # Convert kinetic-energy loss coefficient to total pressure loss coeffcient
     Y_inc = convert_kinetic_energy_to_stagnation_pressure_loss(
@@ -543,19 +597,15 @@ def get_secondary_loss_correction_factor(flow_parameters, geometry):
     theta_out = geometry["gauging_angle"]
 
     chi = (
-        (abs(beta_in) - abs(theta_in))
+        (jnp.abs(beta_in) - jnp.abs(theta_in))
         / (180 - (theta_in + theta_out))
         * (math.cosd(theta_in) / math.cosd(theta_out)) ** -1.5
         * (le / c) ** -0.3
     )
 
-    if not (-0.4 < chi < 0.3):
-        raise Warning("Secondary incidence parameter out of range: chi = {chi}")
-
-    if chi >= 0:
-        Y_corr = jnp.exp(0.9 * chi) + 13 * chi**2 + 400 * chi**4
-    else:
-        Y_corr = jnp.exp(0.9 * chi)
+    Y_corr_pos = jnp.exp(0.9 * chi) + 13 * chi**2 + 400 * chi**4
+    Y_corr_neg = jnp.exp(0.9 * chi)
+    Y_corr = jnp.where(chi >= 0, Y_corr_pos, Y_corr_neg)
 
     return Y_corr
 

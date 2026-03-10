@@ -2,7 +2,7 @@ from . import loss_model_benner as br
 from . import loss_model_kacker_okapuu as ko
 from . import loss_model_moustapha as mo
 from .. import utilities as utils
-
+import jax
 
 import jax.numpy as jnp
 
@@ -81,22 +81,24 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     if model in model_funcs:
         loss_dict = model_funcs[model](input_parameters)
     elif model == "isentropic":
+        zero = jnp.array(0.0, dtype=jnp.float64)
         loss_dict = {
-            "loss_profile": 0.0,
-            "loss_incidence": 0.0,
-            "loss_trailing": 0.0,
-            "loss_secondary": 0.0,
-            "loss_clearance": 0.0,
-            "loss_total": 0.0,
+            "loss_profile": zero,
+            "loss_incidence": zero,
+            "loss_trailing": zero,
+            "loss_secondary": zero,
+            "loss_clearance": zero,
+            "loss_total": zero,
         }
     elif model == "custom":
-        val = float(opts["custom_value"])
+        zero = jnp.array(0.0, dtype=jnp.float64)
+        val = jnp.asarray(opts["custom_value"], dtype=jnp.float64)
         loss_dict = {
-            "loss_profile": 0.0,
-            "loss_incidence": 0.0,
-            "loss_trailing": 0.0,
-            "loss_secondary": 0.0,
-            "loss_clearance": 0.0,
+            "loss_profile": zero,
+            "loss_incidence": zero,
+            "loss_trailing": zero,
+            "loss_secondary": zero,
+            "loss_clearance": zero,
             "loss_total": val,
         }
     else:
@@ -105,7 +107,10 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         )
 
     # Apply tuning factors if any
-    tuning = {f"loss_{k}": v for k, v in opts.get("tuning_factors", {}).items()}
+    tuning = {
+        f"loss_{k}": jnp.asarray(v, dtype=jnp.float64)
+        for k, v in opts.get("tuning_factors", {}).items()
+    }
     apply_tuning_factors(loss_dict, tuning)
 
     # Compute loss coefficient definition
@@ -121,6 +126,20 @@ def evaluate_loss_model(loss_model_options, input_parameters):
         w = input_parameters["flow"]["w_out"]
         h = input_parameters["flow"]["h_out"]
         h_is = input_parameters["flow"]["h_is"]
+
+        # jax.debug.print(
+        #     "Loss model (kinetic_energy):\n"
+        #     "  w = {w}\n"
+        #     "  h = {h}\n"
+        #     "  h_is = {h_is}\n"
+        #     "  numerator (h - h_is) = {num}\n"
+        #     "  denominator (0.5*w^2) = {den}\n",
+        #     w=w,
+        #     h=h,
+        #     h_is=h_is,
+        #     num=(h - h_is),
+        #     den=(0.5 * w**2),)
+        
         Y_definition = (h - h_is) / (0.5 * w**2)
     else:
         # guarded above, but keep safety
@@ -132,6 +151,13 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     # Loss error vs. model sum
     #  TODO clipping trick to prevent residual blow up in the first iteration
     # Y_definition = jnp.clip(Y_definition, 0.0, 1.0)
+
+    # jax.debug.print(
+    #     " Y_def={Y_def},  Y_total={Y_total}\n",
+    #     Y_def=Y_definition,
+    #     Y_total=loss_dict["loss_total"],
+    # )
+    
     loss_dict["loss_definition"] = Y_definition
     loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
 
@@ -145,5 +171,5 @@ def apply_tuning_factors(loss_dict, tuning_factors):
     for key, factor in tuning_factors.items():
         if key not in loss_dict:
             raise KeyError(f"Tuning factor key '{key}' not found in loss dictionary.")
-        loss_dict[key] *= factor
+        loss_dict[key] = loss_dict[key] * factor
     return loss_dict

@@ -1,13 +1,48 @@
 # import numpy as np
-from turboflow import math
+from functools import partial
 
 import jax
 import jax.numpy as jnp
+import equinox as eqx
+
+from turboflow import math
 
 from . import loss_model_kacker_okapuu as lm_ko
 from .loss_coefficient_conversion import (
     convert_kinetic_energy_to_stagnation_pressure_loss,
 )
+
+_FLOW_KEYS = {
+    "Re_in",
+    "Re_out",
+    "Ma_rel_out",
+    "Ma_rel_in",
+    "p0_rel_in",
+    "p0_rel_is",
+    "p_in",
+    "p0_rel_out",
+    "p_out",
+    "beta_out",
+    "beta_in",
+    "gamma_out",
+}
+_GEOM_KEYS = {
+    "hub_tip_ratio_in",
+    "pitch",
+    "chord",
+    "leading_edge_angle",
+    "leading_edge_diameter",
+    "leading_edge_wedge_angle",
+    "maximum_thickness",
+    "meridional_chord",
+    "height",
+    "opening",
+    "trailing_edge_thickness",
+    "tip_clearance",
+    "A_throat",
+    "A_out",
+    "stagger_angle",
+}
 
 # TODO: Add smoothing to the min/max/abs/piecewise functions
 
@@ -75,39 +110,65 @@ def compute_losses(input_parameters):
     # TODO: Digitize Figure 2 from :cite:`moustapha_improved_1990`?
     beta_des = geometry["leading_edge_angle"]
 
+    cascade_type = geometry.get("cascade_type", "stator")
+    if cascade_type not in lm_ko._CASCADE_TO_ID:
+        raise ValueError(
+            f"Unsupported cascade_type '{cascade_type}'. Expected one of {list(lm_ko._CASCADE_TO_ID)}."
+        )
+    cascade_type_id = lm_ko._CASCADE_TO_ID[cascade_type]
+
+    delta_height_ref = options["inlet_displacement_thickness_height_ratio"]
+
+    flow_jax = {k: jnp.asarray(v) for k, v in flow_parameters.items() if k in _FLOW_KEYS}
+    geom_jax = {k: jnp.asarray(v) for k, v in geometry.items() if k in _GEOM_KEYS}
+
+    losses = _compute_losses_benner_jit(
+        flow_jax,
+        geom_jax,
+        cascade_type_id,
+        delta_height_ref,
+        beta_des,
+    )
+
+    return losses
+
+
+# @partial(jax.jit, static_argnames=("cascade_type_id",))
+@eqx.filter_jit
+def _compute_losses_benner_jit(
+    flow_parameters,
+    geometry,
+    cascade_type_id: int,
+    delta_height_ref,
+    beta_des,
+):
     # Calculate inlet displacement thickness to height ratio
-    delta_height = options["inlet_displacement_thickness_height_ratio"]
-    delta_height = delta_height * (flow_parameters["Re_in"] / 3e5) ** (-1 / 7)
+    delta_height = delta_height_ref * (flow_parameters["Re_in"] / 3e5) ** (-1 / 7)
 
     # Profile loss coefficient
-    Y_p = lm_ko.get_profile_loss(flow_parameters, geometry)
+    Y_p = lm_ko.get_profile_loss(flow_parameters, geometry, cascade_type_id)
 
     # Trailing edge coefficient
     Y_te = lm_ko.get_trailing_edge_loss(flow_parameters, geometry)
 
     # Secondary loss coefficient
-    # Y_s = 0.0
     Y_s = get_secondary_loss(flow_parameters, geometry, delta_height)
 
     # Tip clearance loss coefficient
-    # Y_cl = 0.0
-    Y_cl = lm_ko.get_tip_clearance_loss(flow_parameters, geometry)
+    Y_cl = lm_ko.get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id)
 
     # Incidence loss coefficient
-    # Y_inc = 0.0
-    Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des)
+    Y_inc = get_incidence_loss(flow_parameters, geometry, beta_des, cascade_type_id)
 
     # Penetration depth to blade height ratio
-    # ZTE = 0.0
     ZTE = get_penetration_depth(flow_parameters, geometry, delta_height)
 
     # Correct profile losses according to penetration depth
-    Y_p *= 1 - ZTE
-    Y_te *= 1 - ZTE
-    Y_inc *= 1 - ZTE
+    Y_p = Y_p * (1 - ZTE)
+    Y_te = Y_te * (1 - ZTE)
+    Y_inc = Y_inc * (1 - ZTE)
 
-    # Return a dictionary of loss components
-    losses = {
+    return {
         "loss_profile": Y_p,
         "loss_incidence": Y_inc,
         "loss_trailing": Y_te,
@@ -115,8 +176,6 @@ def compute_losses(input_parameters):
         "loss_clearance": Y_cl,
         "loss_total": Y_p + Y_te + Y_inc + Y_s + Y_cl,
     }
-
-    return losses
 
 
 def get_secondary_loss(flow_parameters, geometry, delta_height):
@@ -168,27 +227,26 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
 
     AR = height / chord
     CR = math.cosd(beta_in) / math.cosd(beta_out)
-    if AR <= 2:  # TODO: sigmoid blending to convert to smooth piecewise function
-        denom = (
-            jnp.sqrt(math.cosd(stagger))
-            * CR
-            * AR**0.55
-            * (math.cosd(beta_out) / (math.cosd(stagger))) ** 0.55
-        )
-        Y_sec = (0.038 + 0.41 * jnp.tanh(1.2 * delta_height)) / denom
-    else:
-        denom = (
-            jnp.sqrt(math.cosd(stagger))
-            * CR
-            * AR
-            * (math.cosd(beta_out) / (math.cosd(stagger))) ** 0.55
-        )
-        Y_sec = (0.052 + 0.56 * jnp.tanh(1.2 * delta_height)) / denom
+    denom_low = (
+        jnp.sqrt(math.cosd(stagger))
+        * CR
+        * AR**0.55
+        * (math.cosd(beta_out) / (math.cosd(stagger))) ** 0.55
+    )
+    denom_high = (
+        jnp.sqrt(math.cosd(stagger))
+        * CR
+        * AR
+        * (math.cosd(beta_out) / (math.cosd(stagger))) ** 0.55
+    )
+    Y_sec_low = (0.038 + 0.41 * jnp.tanh(1.2 * delta_height)) / denom_low
+    Y_sec_high = (0.052 + 0.56 * jnp.tanh(1.2 * delta_height)) / denom_high
+    Y_sec = jnp.where(AR <= 2, Y_sec_low, Y_sec_high)
 
     return Y_sec
 
 
-def get_incidence_loss(flow_parameters, geometry, beta_des):
+def get_incidence_loss(flow_parameters, geometry, beta_des, cascade_type_id: int):
     r"""
     Calculate the incidence loss coefficient according to the correlation proposed by :cite:`benner_influence_1997`.
 
@@ -220,11 +278,10 @@ def get_incidence_loss(flow_parameters, geometry, beta_des):
     We = geometry["leading_edge_wedge_angle"]
     theta_in = geometry["leading_edge_angle"]
     theta_out = math.arccosd(geometry["A_throat"] / geometry["A_out"])
-    type = geometry["cascade_type"]
 
     # Evaluate incidence model
     chi = get_incidence_parameter(
-        le, s, We, theta_in, theta_out, beta_in, beta_des, type
+        le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type_id
     )
     delta_phi2 = get_incidence_profile_loss_increment(chi)
     # Y_inc = delta_phi2
@@ -368,7 +425,7 @@ def get_incidence_profile_loss_increment(chi, chi_extrapolation=5, loss_limit=0.
 
 
 def get_incidence_parameter(
-    le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type
+    le, s, We, theta_in, theta_out, beta_in, beta_des, cascade_type_id: int
 ):
     r"""
     Calculate the incidence parameter according to the correlation proposed by :cite:`benner_influence_1997`.
@@ -421,12 +478,11 @@ def get_incidence_parameter(
 
     # Address the change in suction/pressure surfaces
     # TODO: here we have to think how to handle the incidence angle convention for stators and for rotor blades
-    if cascade_type == "stator":
-        incidence = -(beta_in - beta_des)
-    elif cascade_type == "rotor":
-        incidence = +(beta_in - beta_des)
-    else:
-        raise ValueError("Specify the type of cascade")
+    incidence = jnp.where(
+        cascade_type_id == lm_ko._CASCADE_TO_ID["stator"],
+        -(beta_in - beta_des),
+        +(beta_in - beta_des),
+    )
 
     cosine_ratio = math.cosd(theta_in) / math.cosd(theta_out)
     chi = (le / s) ** (-0.05) * (We) ** (-0.2) * cosine_ratio ** (-1.4) * incidence

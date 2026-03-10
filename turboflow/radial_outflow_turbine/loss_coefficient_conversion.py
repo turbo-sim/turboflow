@@ -1,8 +1,12 @@
+from functools import partial
+
+import jax
 import jax.numpy as jnp
 
 from .. import math
 
 
+@jax.jit
 def convert_stagnation_pressure_to_kinetic_energy_loss(Ma, gamma, Y):
     """
     Convert stagnation pressure loss coefficient ($Y$) to kinetic energy loss coefficient ($\Delta \phi^2$).
@@ -40,6 +44,7 @@ def convert_stagnation_pressure_to_kinetic_energy_loss(Ma, gamma, Y):
     return delta_phi2
 
 
+@partial(jax.jit, static_argnames=("limit_output",))
 def convert_kinetic_energy_to_stagnation_pressure_loss(
     Ma, gamma, delta_phi2, limit_output=True
 ):
@@ -90,6 +95,7 @@ def convert_kinetic_energy_to_stagnation_pressure_loss(
     return Y
 
 
+@jax.jit
 def convert_enthalpy_to_stagnation_pressure_loss(Ma, gamma, zeta):
     """
     Convert enthalpy loss coefficient ($\zeta$) to stagnation pressure loss coefficient ($Y$).
@@ -126,6 +132,7 @@ def convert_enthalpy_to_stagnation_pressure_loss(Ma, gamma, zeta):
     return Y
 
 
+@jax.jit
 def convert_stagnation_pressure_to_enthalpy_loss(Ma, gamma, Y):
     """
     Convert stagnation pressure loss coefficient ($Y$) to enthalpy loss coefficient ($\zeta$).

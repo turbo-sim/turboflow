@@ -1,7 +1,39 @@
 # import numpy as np
+from functools import partial
+
 import jax
 import jax.numpy as jnp
+import equinox as eqx
 from .. import math
+
+_CASCADE_TO_ID = {"stator": 0, "rotor": 1}
+_FLOW_KEYS = {
+    "Re_out",
+    "Ma_rel_out",
+    "Ma_rel_in",
+    "p0_rel_in",
+    "p0_rel_is",
+    "p_in",
+    "p0_rel_out",
+    "p_out",
+    "beta_out",
+    "beta_in",
+    "gamma_out",
+}
+_GEOM_KEYS = {
+    "hub_tip_ratio_in",
+    "pitch",
+    "chord",
+    "leading_edge_angle",
+    "maximum_thickness",
+    "meridional_chord",
+    "height",
+    "opening",
+    "trailing_edge_thickness",
+    "tip_clearance",
+    "A_throat",
+    "A_out",
+}
 
 
 def compute_losses(input_parameters):
@@ -38,68 +70,163 @@ def compute_losses(input_parameters):
     # Load data
     flow_parameters = input_parameters["flow"]
     geometry = input_parameters["geometry"]
+    cascade_type = geometry.get("cascade_type", "stator")
+    if cascade_type not in _CASCADE_TO_ID:
+        raise ValueError(f"Unsupported cascade_type '{cascade_type}'. Expected one of {list(_CASCADE_TO_ID)}.")
+    cascade_type_id = _CASCADE_TO_ID[cascade_type]
 
+    flow_jax = {k: jnp.asarray(v) for k, v in flow_parameters.items() if k in _FLOW_KEYS}
+    geom_jax = {k: jnp.asarray(v) for k, v in geometry.items() if k in _GEOM_KEYS}
+
+    losses = _compute_losses_jit(flow_jax, geom_jax, cascade_type_id)
+
+    return losses
+
+
+# @partial(jax.jit, static_argnames=("cascade_type_id",))
+@eqx.filter_jit
+def _compute_losses_jit(flow_parameters, geometry, cascade_type_id: int):
     # Profile loss coefficient
-    Y_p = get_profile_loss(flow_parameters, geometry)
+    Y_p = get_profile_loss(flow_parameters, geometry, cascade_type_id)
 
     # Secondary loss coefficient
-    Y_s = get_secondary_loss(flow_parameters, geometry)
+    Y_s = get_secondary_loss(flow_parameters, geometry, cascade_type_id)
 
     # Tip clearance loss coefficient
-    Y_cl = get_tip_clearance_loss(flow_parameters, geometry)
+    Y_cl = get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id)
 
-    # Trailing edge loss coefficienct
+    # Trailing edge loss coefficient
     Y_te = get_trailing_edge_loss(flow_parameters, geometry)
 
-    # Return a dictionary of loss components
-    losses = {
+    return {
         "loss_profile": Y_p,
-        "loss_incidence": 0.0,
+        "loss_incidence": jnp.asarray(0.0),
         "loss_trailing": Y_te,
         "loss_secondary": Y_s,
         "loss_clearance": Y_cl,
         "loss_total": Y_p + Y_te + Y_s + Y_cl,
     }
 
-    return losses
 
+# def get_profile_loss(flow_parameters, geometry):
+#     r"""
+#     Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
+#     The equation for :math:`\mathrm{Y_p}` is given by:
 
-def get_profile_loss(flow_parameters, geometry):
-    r"""
-    Calculate the profile loss coefficient for the current cascade using the Kacker and Okapuu loss model.
-    The equation for :math:`\mathrm{Y_p}` is given by:
+#     .. math::
 
-    .. math::
+#         \mathrm{Y_p} = \mathrm{Y_{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot
+#         \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (\mathrm{Y_{impulse}} - \mathrm{Y_{reaction}})
 
-        \mathrm{Y_p} = \mathrm{Y_{reaction}} - \left|\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right| \cdot
-        \left(\frac{\theta_\mathrm{in}}{\beta_\mathrm{out}}\right) \cdot (\mathrm{Y_{impulse}} - \mathrm{Y_{reaction}})
+#     where:
 
-    where:
+#         - :math:`\mathrm{Y_{reaction}}` is the reaction loss coefficient computed using Aungier correlation.
+#         - :math:`\mathrm{Y_{impulse}}` is the impulse loss coefficient computed using Aungier correlation.
+#         - :math:`\theta_\mathrm{in}` is the inlet metal angle.
+#         - :math:`\beta_\mathrm{out}` is the exit flow angle.
 
-        - :math:`\mathrm{Y_{reaction}}` is the reaction loss coefficient computed using Aungier correlation.
-        - :math:`\mathrm{Y_{impulse}}` is the impulse loss coefficient computed using Aungier correlation.
-        - :math:`\theta_\mathrm{in}` is the inlet metal angle.
-        - :math:`\beta_\mathrm{out}` is the exit flow angle.
+#     The function also applies various corrections based on flow parameters and geometry factors.
 
-    The function also applies various corrections based on flow parameters and geometry factors.
+#     Parameters
+#     ----------
+#     flow_parameters : dict
+#         Dictionary containing flow-related parameters.
+#     geometry : dict
+#         Dictionary with geometric parameters.
 
-    Parameters
-    ----------
-    flow_parameters : dict
-        Dictionary containing flow-related parameters.
-    geometry : dict
-        Dictionary with geometric parameters.
+#     Returns
+#     -------
+#     float
+#         Profile loss coefficient.
 
-    Returns
-    -------
-    float
-        Profile loss coefficient.
+#     """
 
-    """
+#     # TODO: explain smoothing/blending tricks
 
-    # TODO: explain smoothing/blending tricks
+#     # Load data
+#     Re = flow_parameters["Re_out"]
+#     Ma_rel_out = flow_parameters["Ma_rel_out"]
+#     Ma_rel_in = flow_parameters["Ma_rel_in"]
+#     p0rel_in = flow_parameters["p0_rel_in"]
+#     p0rel_is = flow_parameters["p0_rel_is"]
+#     p_in = flow_parameters["p_in"]
+#     p0rel_out = flow_parameters["p0_rel_out"]
+#     p_out = flow_parameters["p_out"]
+#     beta_out = flow_parameters["beta_out"]
 
-    # Load data
+#     r_ht_in = geometry["hub_tip_ratio_in"]
+#     s = geometry["pitch"]
+#     c = geometry["chord"]
+#     theta_in = geometry["leading_edge_angle"]
+#     t_max = geometry["maximum_thickness"]
+#     cascade_type = geometry["cascade_type"]
+
+#     # Reynolds number correction factor
+#     f_Re = (
+#         (Re / 2e5) ** (-0.4) * (Re < 2e5)
+#         + 1 * (Re >= 2e5 and Re <= 1e6)
+#         + (Re / 1e6) ** (-0.2) * (Re > 1e6)
+#     )
+
+#     # Mach number correction factor
+#     f_Ma = 1 + 60 * (Ma_rel_out - 1) ** 2 * (
+#         Ma_rel_out > 1
+#     )  ## TODO smoothing / mach crit
+
+#     # Compute losses related to shock effects at the inlet of the cascade
+#     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
+#     # a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+#     a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+
+#     Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
+#     # Y_shock = math.smooth_maximum(0.0, Y_shock)  # TODO: smoothing
+#     Y_shock = jnp.maximum(0.0, Y_shock)  # TODO: smoothing
+
+#     # Compute compressible flow correction factors
+#     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
+
+#     # Yp_reaction and Yp_impulse according to Aungier correlation
+#     # These formulas are valid for 40<abs(angle_out)<80
+#     # Extrapolating outside of this limits might give completely wrong results
+#     # If the optimization algorithm has upper and lower bounds for the outlet
+#     # angle there is no need to worry about this problem
+#     # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
+#     # angle_out_bis = max(abs(beta_out), 40)  # TODO smoothing
+#     angle_out_bis = math.smooth_maximum(math.smooth_abs(beta_out), 40.0)
+#     Yp_reaction = nozzle_blades(s / c, angle_out_bis)
+#     Yp_impulse = impulse_blades(s / c, angle_out_bis)
+
+#     # Formula according to Kacker-Okapuu
+#     Y_p = Yp_reaction - math.smooth_abs(theta_in / beta_out) * (theta_in / beta_out) * (
+#         Yp_impulse - Yp_reaction
+#     )
+
+#     # Limit the extrapolation of the profile loss to avoid negative values for
+#     # blade profiles with little deflection
+#     # Low limit to 80% of the axial entry nozzle profile loss
+#     # This value is completely arbitrary
+#     # Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+#     Y_p = jnp.maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+
+#     # Avoid unphysical effect on the thickness by defining the variable aa
+#     # aa = math.smooth_maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
+#     aa = jnp.maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
+
+#     Y_p = Y_p * ((t_max / c) / 0.2) ** aa
+#     Y_p = 0.914 * (2 / 3 * Y_p * Kp + Y_shock)
+
+#     # Corrected profile loss coefficient
+#     Y_p = f_Re * f_Ma * Y_p
+
+#     Y_p = 0
+
+#     return Y_p
+
+def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
+
+    # ================================================================
+    # 1. Load data
+    # ================================================================
     Re = flow_parameters["Re_out"]
     Ma_rel_out = flow_parameters["Ma_rel_out"]
     Ma_rel_in = flow_parameters["Ma_rel_in"]
@@ -115,71 +242,111 @@ def get_profile_loss(flow_parameters, geometry):
     c = geometry["chord"]
     theta_in = geometry["leading_edge_angle"]
     t_max = geometry["maximum_thickness"]
-    cascade_type = geometry["cascade_type"]
 
-    # Reynolds number correction factor
-    f_Re = (
-        (Re / 2e5) ** (-0.4) * (Re < 2e5)
-        + 1 * (Re >= 2e5 and Re <= 1e6)
-        + (Re / 1e6) ** (-0.2) * (Re > 1e6)
+    # # ---------------- Debug block 1 ----------------
+    # jax.debug.print(
+    #     "\n[get_profile_loss] INPUTS:\n"
+    #     "  Re={Re}\n"
+    #     "  Ma_in={Ma_in}, Ma_out={Ma_out}\n"
+    #     "  beta_out={beta_out}, theta_in={theta_in}\n"
+    #     "  s={s}, c={c}, t_max={t_max}",
+    #     Re=Re, Ma_in=Ma_rel_in, Ma_out=Ma_rel_out,
+    #     beta_out=beta_out, theta_in=theta_in, s=s, c=c, t_max=t_max
+    # )
+
+    # ================================================================
+    # 2. Correction factors
+    # ================================================================
+    f_Re = jnp.where(
+        Re < 2e5,
+        (Re / 2e5) ** (-0.4),
+        jnp.where(Re <= 1e6, 1.0, (Re / 1e6) ** (-0.2)),
     )
 
-    # Mach number correction factor
-    f_Ma = 1 + 60 * (Ma_rel_out - 1) ** 2 * (
-        Ma_rel_out > 1
-    )  ## TODO smoothing / mach crit
+    f_Ma = 1 + 60 * (Ma_rel_out - 1) ** 2 * (Ma_rel_out > 1)
 
-    # Compute losses related to shock effects at the inlet of the cascade
-    f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type)
-    # a = math.smooth_maximum(0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
-    a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)  # TODO: smoothing
+    f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type_id)
+    a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)
 
-    Y_shock = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in) / (p0rel_out - p_out)
-    # Y_shock = math.smooth_maximum(0.0, Y_shock)  # TODO: smoothing
-    Y_shock = jnp.maximum(0.0, Y_shock)  # TODO: smoothing
+    Y_shock_raw = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in)
+    Y_shock_den = (p0rel_out - p_out)
+    Y_shock = jnp.maximum(0.0, Y_shock_raw / Y_shock_den)
 
-    # Compute compressible flow correction factors
+    # # ---------------- Debug block 2 ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] Correction Factors:\n"
+    #     "  f_Re={f_Re}, f_Ma={f_Ma}\n"
+    #     "  a={a}, Y_shock_den={Y_shock_den}, Y_shock={Y_shock}",
+    #     f_Re=f_Re, f_Ma=f_Ma, a=a,
+    #     Y_shock_den=Y_shock_den, Y_shock=Y_shock
+    # )
+
+    # ================================================================
+    # 3. Compressibility correction + Aungier reaction/impulse losses
+    # ================================================================
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
 
-    # Yp_reaction and Yp_impulse according to Aungier correlation
-    # These formulas are valid for 40<abs(angle_out)<80
-    # Extrapolating outside of this limits might give completely wrong results
-    # If the optimization algorithm has upper and lower bounds for the outlet
-    # angle there is no need to worry about this problem
-    # angle_out_bis keeps the 40deg-losses for outlet angles lower than 40deg
-    # angle_out_bis = max(abs(beta_out), 40)  # TODO smoothing
     angle_out_bis = math.smooth_maximum(math.smooth_abs(beta_out), 40.0)
     Yp_reaction = nozzle_blades(s / c, angle_out_bis)
-    Yp_impulse = impulse_blades(s / c, angle_out_bis)
+    Yp_impulse  = impulse_blades(s / c, angle_out_bis)
 
-    # Formula according to Kacker-Okapuu
-    Y_p = Yp_reaction - math.smooth_abs(theta_in / beta_out) * (theta_in / beta_out) * (
-        Yp_impulse - Yp_reaction
-    )
+    # # ---------------- Debug block 3 ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] Aungier Losses:\n"
+    #     "  angle_out_bis={aob}\n"
+    #     "  Yp_reaction={Ypr}, Yp_impulse={Ypi}\n"
+    #     "  Kp={Kp}, K1={K1}, K2={K2}",
+    #     aob=angle_out_bis,
+    #     Ypr=Yp_reaction, Ypi=Yp_impulse,
+    #     Kp=Kp, K1=K1, K2=K2
+    # )
 
-    # Limit the extrapolation of the profile loss to avoid negative values for
-    # blade profiles with little deflection
-    # Low limit to 80% of the axial entry nozzle profile loss
-    # This value is completely arbitrary
-    # Y_p = math.smooth_maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
-    Y_p = jnp.maximum(Y_p, 0.8 * Yp_reaction)  # TODO: smoothing
+    # ================================================================
+    # 4. Kacker–Okapuu Y_p
+    # ================================================================
+    ratio = theta_in / beta_out
+    Y_p = Yp_reaction - math.smooth_abs(ratio) * ratio * (Yp_impulse - Yp_reaction)
 
-    # Avoid unphysical effect on the thickness by defining the variable aa
-    # aa = math.smooth_maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
-    aa = jnp.maximum(0.0, -theta_in / beta_out)  # TODO: smoothing
+    Y_p = jnp.maximum(Y_p, 0.8 * Yp_reaction)
 
-    Y_p = Y_p * ((t_max / c) / 0.2) ** aa
-    Y_p = 0.914 * (2 / 3 * Y_p * Kp + Y_shock)
+    aa = jnp.maximum(0.0, -ratio)
+    thickness_factor = ((t_max / c) / 0.2) ** aa
 
-    # Corrected profile loss coefficient
+    # # ---------------- Debug block 4 ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] KO Components:\n"
+    #     "  ratio theta/beta={ratio}\n"
+    #     "  abs_ratio={ar}\n"
+    #     "  aa={aa}\n"
+    #     "  thickness_factor={tf}\n"
+    #     "  Y_p (pre-compress.)={Yp}",
+    #     ratio=ratio,
+    #     ar=math.smooth_abs(ratio),
+    #     aa=aa,
+    #     tf=thickness_factor,
+    #     Yp=Y_p
+    # )
+
+    # ================================================================
+    # 5. Final: apply thickness, compressibility, Re, Mach
+    # ================================================================
+    Y_p = Y_p * thickness_factor
+    Y_p = 0.914 * (2/3 * Y_p * Kp + Y_shock)
     Y_p = f_Re * f_Ma * Y_p
+
+    # # ---------------- Debug block 5 ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] FINAL Y_p = {Yp}\n",
+    #     Yp=Y_p
+    # )
 
     # Y_p = 0
 
     return Y_p
 
 
-def get_secondary_loss(flow_parameters, geometry):
+
+def get_secondary_loss(flow_parameters, geometry, cascade_type_id: int):
     r"""
     The function calculates the secondary loss coefficient using the Kacker-Okapuu model.
     The main equation for :math:`\mathrm{Y_s}` is given by:
@@ -351,7 +518,7 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     return Y_te
 
 
-def get_tip_clearance_loss(flow_parameters, geometry):
+def get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id: int):
     r"""
     Calculate the tip clearance loss coefficient for the current cascade using the Kacker and Okapuu loss model.
     The equation for the tip clearance loss coefficent is given by:
@@ -388,7 +555,6 @@ def get_tip_clearance_loss(flow_parameters, geometry):
     H = geometry["height"]
     c = geometry["chord"]
     t_cl = geometry["tip_clearance"]
-    cascade_type = geometry["cascade_type"]
 
     # Calculate blade loading parameter Z
     angle_m = math.arctand((math.tand(beta_in) + math.tand(beta_out)) / 2)
@@ -401,16 +567,11 @@ def get_tip_clearance_loss(flow_parameters, geometry):
 
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
     # TODO: now we do not need to split like stator and rotor because every cascade specified the tip clearance. We just use the formula of the rotor for all.
-    if cascade_type == "stator":
-        Y_cl = 0.0
-    elif cascade_type == "rotor":
-        # JAX gives problems for t_cl=0 (non-differentiable function)
-        # Y_cl = 0.37 * Z * c / H * (1e-9 + t_cl / H) ** 0.78
-        Y_cl = (
-            0.37 * Z * c / H * (1e-9 + t_cl / H)
-        )  # Linear approximation gives better solver convergence
-    else:
-        raise ValueError("Specify the type of cascade")
+    Y_cl = jnp.where(
+        cascade_type_id == _CASCADE_TO_ID["stator"],
+        0.0,
+        0.37 * Z * c / H * (1e-9 + t_cl / H),
+    )
 
     return Y_cl
 
@@ -574,16 +735,19 @@ def get_compressible_correction_factors(Ma_rel_in, Ma_rel_out):
 
     # TODO: explain smoothing/blending tricks
 
-    K1 = 1 * (Ma_rel_out < 0.2) + (1 - 1.25 * (Ma_rel_out - 0.2)) * (
-        Ma_rel_out > 0.2 and Ma_rel_out < 1.00
-    )  # TODO: this can be converted to a smooth piecewise function (sigmoid blending)
+    # Original piecewise logic with upper bound at Ma_rel_out >= 1.0
+    K1 = jnp.where(
+        Ma_rel_out < 0.2,
+        1.0,
+        jnp.where(Ma_rel_out < 1.0, 1.0 - 1.25 * (Ma_rel_out - 0.2), 0.0),
+    )
     K2 = (Ma_rel_in / Ma_rel_out) ** 2
     Kp = 1 - K2 * (1 - K1)
     Kp = math.smooth_maximum(0.1, Kp)  # TODO: smoothing
     return [Kp, K2, K1]
 
 
-def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
+def get_hub_to_mean_mach_ratio(r_ht, cascade_type_id: int):
     r"""
     Compute the ratio between Mach at the hub and mean span at the inlet of the current cascade.
 
@@ -618,13 +782,10 @@ def get_hub_to_mean_mach_ratio(r_ht, cascade_type):
     f_data_R = [2.15, 1.7, 1.35, 1.12, 1.0, 1.0]
     f_data_R = jnp.array(f_data_R)
     
-    # TODO: We can have a jax.lax.switch or a where, and apply the correct expression depending on the angular speed.
-    # TODO pass the angular speed as an input to this function
-    if cascade_type == "stator":
-        f = jnp.interp(r_ht, r_ht_data, f_data_S)
-    elif cascade_type == "rotor":
-        f = jnp.interp(r_ht, r_ht_data, f_data_R)
-    else:
-        print("Specify the type of cascade")
-
+    # Select stator vs rotor curves by id
+    f = jnp.where(
+        cascade_type_id == _CASCADE_TO_ID["stator"],
+        jnp.interp(r_ht, r_ht_data, f_data_S),
+        jnp.interp(r_ht, r_ht_data, f_data_R),
+    )
     return f
