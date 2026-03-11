@@ -524,7 +524,6 @@ def compute_stage_performance_componentwise(planes, component_types):
 def compute_overall_performance_componentwise(
     planes, boundary_conditions, reference_values, last_geom
 ):
-    """Overall KPIs using last cascade’s geometry for blade-jet ratios."""
     angular_speed = boundary_conditions["omega"]
     v0 = reference_values["v0"]
     h_out_s = reference_values["h_out_s"]
