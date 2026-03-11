@@ -8,7 +8,7 @@ from turboflow import math
 from turboflow import utilities as utils
 
 # from turboflow.radial_outflow_turbine import blade_parametrization as bp
-from turboflow.radial_outflow_turbine import blade_parametrization_update as bp
+from turboflow.blade_parametrization import blade_parametrization_update as bp
 
 # ==============================
 # Required keys for AXIAL CASCADE geometry

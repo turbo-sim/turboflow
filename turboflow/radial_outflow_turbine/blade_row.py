@@ -21,7 +21,7 @@ from matplotlib.patches import Arc
 
 
 # from turboflow.radial_outflow_turbine import blade_parametrization as bp  
-from turboflow.radial_outflow_turbine import blade_parametrization_update as bp 
+from turboflow.blade_parametrization import blade_parametrization_update as bp 
 from . import geometry_model_axial, geometry_model_radial
 
 
