@@ -17,10 +17,10 @@ from . import geometry_model_axial as geom
 
 # from . import geometry_model_radial as geom
 
-from . import flow_model as flow
+from .Archives import flow_model as flow
 
 # from .. import properties as props
-from . import performance_analysis as pa
+from .Archives import performance_analysis as pa
 
 # from .. properties import perfect_gas_props
 # from ..properties import perfect_gas_props_custom_jvp as perfect_gas_props
