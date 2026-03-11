@@ -29,7 +29,7 @@ OUTPUT_NAME = "radial_outflow_perf"         # Base name for result files (withou
 
 
 # ---- Project imports (adjust paths if your modules are in another folder) ----
-from turboflow.radial_outflow_turbine import performance_analysis as perf
+from turboflow.radial_outflow_turbine.Archives import performance_analysis as perf
 from turboflow.radial_outflow_turbine import geometry_model as geom
 
 

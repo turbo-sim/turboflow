@@ -12,14 +12,14 @@ import jax.numpy as jnp
 import turboflow as tf
 import jaxprop as jxp
 
-from .. import math
-from .. import utilities as utils
-from . import loss_model as lm
-from . import choking_criterion as cm
+from ... import math
+from ... import utilities as utils
+from .. import loss_model as lm
+from .. import choking_criterion as cm
 
-from .blade_row import BladeRow
-from .blade_row import evaluate_cascade_throat as _blade_throat
-from .vaneless_channel import VanelessChannel
+from ..blade_row import BladeRow
+from ..blade_row import evaluate_cascade_throat as _blade_throat
+from ..vaneless_channel import VanelessChannel
 
 
 # ============================================================
