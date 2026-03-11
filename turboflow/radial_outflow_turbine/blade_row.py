@@ -17,10 +17,14 @@ from .. import math
 from .. import utilities as utils
 from . import loss_model as lm
 from . import choking_criterion as cm
+from matplotlib.patches import Arc 
 
 
-from turboflow.radial_outflow_turbine import blade_parametrization as bp  
+# from turboflow.radial_outflow_turbine import blade_parametrization as bp  
+from turboflow.radial_outflow_turbine import blade_parametrization_update as bp 
 from . import geometry_model_axial, geometry_model_radial
+
+
 
 
 # ============================================================
@@ -90,44 +94,6 @@ def _normalize_model_options(
 
     return mo
 
-# def _get_a(state) -> jnp.ndarray:
-#     """
-#     Extract speed of sound from a jaxprop fluid state.
-
-#     Accepts either key/attribute 'a' or 'speed_sound'.
-#     Raises a clear error if neither is present.
-#     """
-#     # dict-like interface
-#     try:
-#         if "a" in state:
-#             return state["a"]
-#     except Exception:
-#         pass
-
-#     try:
-#         if "speed_sound" in state:
-#             return state["speed_sound"]
-#     except Exception:
-#         pass
-
-    # # attribute-style fallback (if the state uses attributes)
-    # if hasattr(state, "a"):
-    #     return state.a
-    # if hasattr(state, "speed_sound"):
-    #     return state.speed_sound
-
-    # # Last resort: explicit error, no silent fallback
-    # keys = []
-    # try:
-    #     keys = list(state.keys())
-    # except Exception:
-    #     pass
-    # raise KeyError(
-    #     "Could not extract speed of sound from fluid state. "
-    #     "Expected key or attribute 'a' or 'speed_sound'. "
-    #     f"Available keys: {keys}"
-    # )
-
 # ============================================================
 # Local definitions (kept here for clarity; no imports)
 # ============================================================
@@ -158,8 +124,7 @@ def _validate_geometry_component(name: str, g: Dict[str, Any], require_throat: b
                 f"[{name}] Benner incidence requires: {throat_req}. Missing: {throat_missing}"
             )
 
-
-# @jax.jit
+@eqx.filter_jit
 def evaluate_velocity_triangle_in(blade_speed, v, alpha):
     # Promote to JAX arrays (float64 for consistency with the rest of the model)
     blade_speed = jnp.asarray(blade_speed, dtype=jnp.float64)
@@ -176,7 +141,6 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
 
     # Magnitude (hypot is stable and differentiable)
     w = jnp.sqrt(w_t**2 + w_m**2)
-    # w = jnp.hypot(w_t, w_m)
 
     # Flow angle in degrees; atan2 avoids the explicit division
     # Note: jnp.arctan2 takes (y, x). Here beta = atan2(w_t, w_m) in degrees.
@@ -194,8 +158,7 @@ def evaluate_velocity_triangle_in(blade_speed, v, alpha):
         "beta": beta,
     }
 
-
-# @jax.jit
+@eqx.filter_jit
 def evaluate_velocity_triangle_out(blade_speed, w, beta):
     # Promote to JAX arrays (float64 for consistency)
     blade_speed = jnp.asarray(blade_speed, dtype=jnp.float64)
@@ -228,8 +191,7 @@ def evaluate_velocity_triangle_out(blade_speed, w, beta):
         "beta": beta,
     }
 
-
-
+@eqx.filter_jit
 def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     """Boundary-layer blockage. If opening is None/inf → 0 (JIT-safe)."""
 
@@ -259,7 +221,56 @@ def compute_blockage_boundary_layer(blockage_model, Re, chord, opening):
     return blockage_factor
 
 
-# @eqx.filter_jit
+@eqx.filter_jit
+def _cascade_exit_numeric_core(
+    w,
+    beta,
+    blade_speed,
+    chord,
+    area,
+    blockage_factor,
+    rho,
+    mu,
+    a,
+):
+    """JIT-friendly numeric core for cascade exit kinematics/dimensionless groups."""
+    vt = evaluate_velocity_triangle_out(blade_speed, w, beta)
+    v = vt["v"]
+    w_mag = vt["w"]
+    w_m = vt["w_m"]
+
+    Ma = v / a
+    Ma_rel = w_mag / a
+    Re = rho * jnp.abs(w_mag) * chord / mu
+    mass_flow = rho * w_m * area * (1.0 - blockage_factor)
+
+    return vt, Ma, Ma_rel, Re, mass_flow
+
+@eqx.filter_jit
+def _cascade_throat_numeric_core(
+    w,
+    beta,
+    blade_speed,
+    chord,
+    area,
+    rho,
+    mu,
+    a,
+):
+    """JIT-friendly numeric core for throat kinematics/dimensionless groups (uses w, not w_m, for mass flow as in original)."""
+    vt = evaluate_velocity_triangle_out(blade_speed, w, beta)
+    v = vt["v"]
+    w_mag = vt["w"]
+
+    Ma = v / a
+    Ma_rel = w_mag / a
+    Re = rho * jnp.abs(w_mag) * chord / mu
+    mass_flow_no_blk = rho * w_mag * area  # original throat mass-flow uses w
+
+    return vt, Ma, Ma_rel, Re, mass_flow_no_blk
+
+
+@eqx.filter_jit
 def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     # ---- inputs → float64 JAX arrays ----
     h0 = jnp.asarray(cascade_inlet_input["h0"], dtype=jnp.float64)
@@ -329,7 +340,7 @@ def evaluate_cascade_inlet(cascade_inlet_input, fluid, geometry, angular_speed):
     return plane
 
 
-# @eqx.filter_jit
+@eqx.filter_jit
 def evaluate_cascade_exit(
     cascade_exit_input,
     fluid,
@@ -360,6 +371,13 @@ def evaluate_cascade_exit(
     # ---- thermodynamics ----
     # rothalpy = h + 0.5 w^2 - 0.5 U^2  →  h = rothalpy + 0.5 U^2 - 0.5 w^2
     h = rothalpy + 0.5 * blade_speed**2 - 0.5 * w**2
+
+    # jax.debug.print(
+    #     " s={s},  s_in={s_in}\n",
+    #     s=s,
+    #     s_in=inlet_plane["entropy"],
+    # )
+
     sp = fluid.get_state(jxp.HmassSmass_INPUTS, h, s)  # static properties
 
     rho = sp["d"]
@@ -374,10 +392,18 @@ def evaluate_cascade_exit(
     sg0r = fluid.get_state(jxp.HmassSmass_INPUTS, h0_rel, s)  # rel. stagnation
     sg0r = utils.add_string_to_keys(sg0r, "0_rel")
 
-    # nondim groups
-    Ma = v / a
-    Ma_rel = w / a
-    Re = rho * jnp.abs(w) * chord / mu
+    # nondim groups and refreshed kinematics using true properties (no blockage)
+    vt, Ma, Ma_rel, Re, mass_flow_no_blk = _cascade_exit_numeric_core(
+        w=w,
+        beta=beta,
+        blade_speed=blade_speed,
+        chord=chord,
+        area=area,
+        blockage_factor=jnp.array(0.0),  # mass_flow handled below with actual blockage
+        rho=rho,
+        mu=mu,
+        a=a,
+    )
     rothalpy_out = h0_rel - 0.5 * blade_speed**2  # (matches inlet def)
 
     # isentropic references (relative and static)
@@ -390,7 +416,8 @@ def evaluate_cascade_exit(
     blk = compute_blockage_boundary_layer(blockage, Re, chord, opening_eff)
     blk = jnp.asarray(blk, dtype=jnp.float64)
 
-    mass_flow = rho * w_m * area * (1.0 - blk)
+    # Full mass flow using blockage factor
+    mass_flow = mass_flow_no_blk * (1.0 - blk)
 
     # ---- losses ----
     min_val = jnp.array(1e-3, dtype=jnp.float64)
@@ -436,7 +463,7 @@ def evaluate_cascade_exit(
     }
     return plane, loss_dict
 
-
+@eqx.filter_jit
 def evaluate_cascade_throat(
     cascade_throat_input,
     fluid,
@@ -458,6 +485,27 @@ def evaluate_cascade_throat(
     radius = geometry["radius_mean_throat"]
 
     blade_speed = angular_speed * radius
+
+    # # ---------- DEBUG: throat inputs ----------
+    # jax.debug.print(
+    #     "\n[THROAT INPUT]\n"
+    #     "  w={w}\n"
+    #     "  beta={beta}\n"
+    #     "  s={s}\n"
+    #     "  rothalpy_in={H0}\n"
+    #     "  radius={r}, blade_speed={U}\n"
+    #     "  chord={chord}, opening={opening}, area={area}",
+    #     w=w,
+    #     beta=beta,
+    #     s=s,
+    #     H0=rothalpy,
+    #     r=radius,
+    #     U=blade_speed,
+    #     chord=chord,
+    #     opening=opening,
+    #     area=area,
+    # )
+
     velocity_triangle = evaluate_velocity_triangle_out(blade_speed, w, beta)
     v = velocity_triangle["v"]
 
@@ -469,7 +517,6 @@ def evaluate_cascade_throat(
     a = static_properties["a"]
 
     h0 = h + 0.5 * v**2
-    
     stagnation_properties = fluid.get_state(jxp.HmassSmass_INPUTS, h0, s)
     stagnation_properties = utils.add_string_to_keys(stagnation_properties, "0")
 
@@ -479,10 +526,44 @@ def evaluate_cascade_throat(
         relative_stagnation_properties, "0_rel"
     )
 
-    Ma = v / a
-    Ma_rel = w / a
-    Re = rho * jnp.abs(w) * chord / mu
+    # nondim and mass flow using throat-specific numeric core (matches original throat mass-flow definition)
+    vt_core, Ma, Ma_rel, Re, mass_flow_no_blk = _cascade_throat_numeric_core(
+        w=w,
+        beta=beta,
+        blade_speed=blade_speed,
+        chord=chord,
+        area=area,
+        rho=rho,
+        mu=mu,
+        a=a,
+    )
+    # overwrite velocity_triangle components with core output for consistency
+    velocity_triangle = {**velocity_triangle, **vt_core}
     rothalpy = h0_rel - 0.5 * blade_speed**2
+
+    # # ---------- DEBUG: throat state ----------
+    # jax.debug.print(
+    #     "[THROAT STATE]\n"
+    #     "  h={h}\n"
+    #     "  h0={h0}, h0_rel={h0_rel}\n"
+    #     "  p={p}, T={T}\n"
+    #     "  rho={rho}, mu={mu}, a={a}\n"
+    #     "  v={v}, w={w}, Ma={Ma}, Ma_rel={Ma_rel}\n"
+    #     "  Re={Re}",
+    #     h=h,
+    #     h0=h0,
+    #     h0_rel=h0_rel,
+    #     p=static_properties["p"],
+    #     T=static_properties["T"],
+    #     rho=rho,
+    #     mu=mu,
+    #     a=a,
+    #     v=v,
+    #     w=w,
+    #     Ma=Ma,
+    #     Ma_rel=Ma_rel,
+    #     Re=Re,
+    # )
 
     relative_stagnation_isentropic_properties = fluid.get_state(
         jxp.HmassSmass_INPUTS, h0_rel, inlet_plane["entropy"]
@@ -492,8 +573,18 @@ def evaluate_cascade_throat(
     )
 
     blockage_factor = compute_blockage_boundary_layer(
-        blockage, Re, chord, opening)
-    mass_flow = rho * w * area * (1 - blockage_factor)
+        blockage, Re, chord, opening
+    )
+    mass_flow = mass_flow_no_blk * (1 - blockage_factor)
+
+    # # ---------- DEBUG: throat mass flow / blockage ----------
+    # jax.debug.print(
+    #     "[THROAT FLOW]\n"
+    #     "  blockage_factor={blk}\n"
+    #     "  mass_flow={m_dot}",
+    #     blk=blockage_factor,
+    #     m_dot=mass_flow,
+    # )
 
     min_val = 1e-3
 
@@ -503,11 +594,8 @@ def evaluate_cascade_throat(
             "geometry": geometry,
             "flow": {
                 "p0_rel_in": inlet_plane["pressure0_rel"],
-                # "p0_rel_in": inlet_plane["p0_rel"],
                 "p0_rel_out": relative_stagnation_properties["pressure0_rel"],
-                # "p0_rel_out": relative_stagnation_properties["p0_rel"],
                 "p_in": inlet_plane["pressure"],
-                # "p_in": inlet_plane["p"],
                 "p_out": static_properties["p"],
                 "h_out": static_properties["h"],
                 "beta_out": beta,
@@ -524,6 +612,17 @@ def evaluate_cascade_throat(
         },
     )
 
+    # # ---------- DEBUG: throat losses ----------
+    # jax.debug.print(
+    #     "[THROAT LOSSES]\n"
+    #     "  Y_tot={Y_tot}\n"
+    #     "  Y_def={Y_def}\n"
+    #     "  loss_error (Y*)={Y_err}",
+    #     Y_tot=loss_dict["loss_total"],
+    #     Y_def=loss_dict["loss_definition"],
+    #     Y_err=loss_dict["loss_total"] - loss_dict["loss_definition"],
+    # )
+
     plane = {
         **velocity_triangle,
         **static_properties,
@@ -539,7 +638,6 @@ def evaluate_cascade_throat(
         "h_is": relative_static_isentropic_properties["h"],
     }
     return plane, loss_dict
-
 
 # ============================================================
 # BladeRow (Equinox module)
@@ -575,6 +673,76 @@ class BladeRow(eqx.Module):
 
     initial_guess_spec: Dict[str, Any] = eqx.field(static=True, default_factory=dict)
 
+    # @staticmethod
+    # def unscale_row_vars_and_choking(
+    #     variables: Dict[str, Any],
+    #     index_1based: int,
+    #     reference_values: Dict[str, Any],
+    # ) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    #     """
+    #     Convert normalized solver variables for a given row index into
+    #     physical row_vars and choking_vars.
+
+    #     Expects normalized keys:
+    #         w_out_i, s_out_i, beta_out_i,
+    #         optional: w_crit_throat_i, s_crit_throat_i, v_crit_in_i
+    #     """
+    #     tag = f"_{index_1based}"
+
+    #     v0 = reference_values["v0"]
+    #     s_range = reference_values["s_range"]
+    #     s_min = reference_values["s_min"]
+    #     a_range = reference_values["angle_range"]
+    #     a_min = reference_values["angle_min"]
+
+    #     # -------- main row unknowns (always present) --------
+    #     row_vars = {
+    #         "w_out": jnp.maximum(1.0, variables[f"w_out{tag}"] * v0),
+    #         # "s_out": jnp.clip(variables[f"s_out{tag}"], 0.0, 1.0) * s_range + s_min,
+    #         "s_out": variables[f"s_out{tag}"] * s_range + s_min,
+    #         "beta_out": jnp.clip(variables[f"beta_out{tag}"] * a_range + a_min, -89.0, 89.0)
+    #     }
+
+
+    #     # -------- choking-related unknowns (optional) --------
+    #     choking_vars: Dict[str, Any] = {}
+
+    #     # Reparameterized w_crit_throat: solver variable is z (dimensionless),
+    #     # mapped via tanh into a bounded physical velocity range.
+    #     # if f"w_crit_throat{tag}" in variables:
+    #     #     z = variables[f"w_crit_throat{tag}"]  # normalized solver variable (O(1))
+
+    #     #     # Choose a reference speed scale; v0 is a natural choice
+    #     #     a_ref = v0
+
+    #     #     # Max allowed factor
+    #     #     w_max_fac = 0.50
+
+    #     #     # Define a physical interval for w_throat
+    #     #     w_min = 0.01 * a_ref      # small but non-zero velocity
+    #     #     w_max = w_max_fac * a_ref   # upper bound on throat relative speed
+
+    #     #     # Map z ∈ R → w_throat ∈ [w_min, w_max]
+    #     #     w_throat = w_min + 0.5 * (w_max - w_min) * (jnp.tanh(z) + 1.0)
+
+    #     #     choking_vars["w_crit_throat"] = w_throat
+
+
+    #     if f"w_crit_throat{tag}" in variables:
+    #         choking_vars["w_crit_throat"] = jnp.maximum(1.0, variables[f"w_crit_throat{tag}"] * v0)
+
+    #     if f"s_crit_throat{tag}" in variables:
+    #         choking_vars["s_crit_throat"] = (
+    #             # jnp.clip(variables[f"s_crit_throat{tag}"], 0.0, 1.0) * s_range + s_min
+    #             variables[f"s_crit_throat{tag}"] * s_range + s_min
+    #         )
+
+    #     # # IMPORTANT: use the per-row key v_crit_in_i, not a global "v_crit_in"
+    #     # if f"v_crit_in{tag}" in variables:
+    #     #     choking_vars["v_crit_in"] = variables[f"v_crit_in{tag}"] * v0
+
+    #     return row_vars, choking_vars
+    
     @staticmethod
     def unscale_row_vars_and_choking(
         variables: Dict[str, Any],
@@ -582,44 +750,51 @@ class BladeRow(eqx.Module):
         reference_values: Dict[str, Any],
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         """
-        Convert normalized solver variables for a given row index into
-        physical row_vars and choking_vars.
+        Mu/sigma unscale to physical row_vars and choking_vars.
 
-        Expects normalized keys:
-            w_out_i, s_out_i, beta_out_i,
-            optional: w_crit_throat_i, s_crit_throat_i, v_crit_in_i
+        Scaling:
+          v*/w*: mu=0, sigma=v0
+          s*   : mu=s_min+0.5*s_range, sigma=max(0.5*s_range, s_floor)
+          beta*: mu=angle_min+0.5*angle_range, sigma=0.5*angle_range
         """
         tag = f"_{index_1based}"
 
-        v0 = 10.0*reference_values["v0"]
-        s_range = 10.0*reference_values["s_range"]
+        v0 = reference_values["v0"]
+        s_range = reference_values["s_range"]
         s_min = reference_values["s_min"]
-        a_range = 10.0*reference_values["angle_range"]
+        a_range = reference_values["angle_range"]
         a_min = reference_values["angle_min"]
 
-        # -------- main row unknowns (always present) --------
+        s_floor = jnp.maximum(
+            jnp.array(1e-6, dtype=jnp.float64),
+            0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
+        )
+        mu_s = s_min + 0.5 * s_range
+        sigma_s = jnp.maximum(0.5 * s_range, s_floor)
+
+        mu_b = a_min + 0.5 * a_range
+        sigma_b = 0.5 * a_range
+
+        w_out = variables[f"w_out{tag}"] * v0
+        s_out = variables[f"s_out{tag}"] * sigma_s + mu_s
+        beta_out = variables[f"beta_out{tag}"] * sigma_b + mu_b
+        beta_out = jnp.clip(beta_out, -89.0, 89.0)
+
         row_vars = {
-            "w_out": jnp.maximum(1.0, variables[f"w_out{tag}"] * v0),
-            # "s_out": jnp.clip(variables[f"s_out{tag}"], 0.0, 1.0) * s_range + s_min,
-            "s_out": variables[f"s_out{tag}"] * s_range + s_min,
-            "beta_out": jnp.clip(variables[f"beta_out{tag}"] * a_range + a_min, -89.0, 89.0)
+            "w_out": jnp.maximum(1.0, w_out),
+            "s_out": s_out,
+            "beta_out": beta_out,
         }
 
-        # -------- choking-related unknowns (optional) --------
         choking_vars: Dict[str, Any] = {}
 
         if f"w_crit_throat{tag}" in variables:
-            choking_vars["w_crit_throat"] = jnp.maximum(1.0, variables[f"w_crit_throat{tag}"] * v0)
+            w_ct = variables[f"w_crit_throat{tag}"] * v0
+            choking_vars["w_crit_throat"] = jnp.maximum(1.0, w_ct)
 
         if f"s_crit_throat{tag}" in variables:
-            choking_vars["s_crit_throat"] = (
-                # jnp.clip(variables[f"s_crit_throat{tag}"], 0.0, 1.0) * s_range + s_min
-                variables[f"s_crit_throat{tag}"] * s_range + s_min
-            )
-
-        # # IMPORTANT: use the per-row key v_crit_in_i, not a global "v_crit_in"
-        # if f"v_crit_in{tag}" in variables:
-        #     choking_vars["v_crit_in"] = variables[f"v_crit_in{tag}"] * v0
+            s_ct = variables[f"s_crit_throat{tag}"] * sigma_s + mu_s
+            choking_vars["s_crit_throat"] = s_ct
 
         return row_vars, choking_vars
 
@@ -697,8 +872,6 @@ class BladeRow(eqx.Module):
     # -----------------
     # Evaluation
     # -----------------
-
-    # TODO: return from evaluate should be a dictionary
 
     def evaluate(
         self,
@@ -779,6 +952,20 @@ class BladeRow(eqx.Module):
             **residuals_critical,
         }
 
+        # TODO: Mach residual to have least square formulation
+
+        # 5b) Optional subsonic constraint at row exit (inequality as residual)
+        # Residual is zero when Ma_rel_out <= Ma_rel_out_max, and grows linearly otherwise.
+        ma_lim = reference_values.get("Ma_rel_out_max", None)
+        if ma_lim is not None:
+            ma_scale = reference_values.get("Ma_rel_out_scale", 0.05)
+            ma_lim = jnp.asarray(ma_lim, dtype=jnp.float64)
+            ma_scale = jnp.asarray(ma_scale, dtype=jnp.float64)
+            ma_scale = jnp.maximum(jnp.array(1e-6, dtype=jnp.float64), ma_scale)
+            residuals["Ma_rel_out_max"] = jnp.maximum(
+                0.0, exit_plane["Ma_rel"] - ma_lim
+            ) / ma_scale
+
         # 6) Per-row summary
         cascade_summary = {
             **loss_dict,
@@ -838,7 +1025,7 @@ class BladeRow(eqx.Module):
         fluid = self.fluid
         ig = self.initial_guess_spec or {}
 
-        # ---------- 1) Required hints from YAML (no fallbacks) ----------
+        # ---------- 1) Required hints from YAML  ----------
         # Mach target
         
         Ma_exit_rel = jnp.asarray(ig["Ma_exit"], dtype=jnp.float64)
@@ -852,10 +1039,10 @@ class BladeRow(eqx.Module):
         eta_tt_row = jnp.clip(eta_tt_row, 0.5, 1.0)
 
         # ---------- 2) Inlet kinematics & rothalpy ----------
-        alpha_in = jnp.asarray(inlet_state["alpha"], dtype=jnp.float64)
-        v_in    = jnp.asarray(inlet_state["v"],     dtype=jnp.float64)
-        h0_in   = jnp.asarray(inlet_state["h0"],    dtype=jnp.float64)
-        s_in    = jnp.asarray(inlet_state["s"],     dtype=jnp.float64)
+        alpha_in = jnp.asarray(inlet_state["alpha_in"], dtype=jnp.float64)
+        v_in    = jnp.asarray(inlet_state["v_in"],     dtype=jnp.float64)
+        h0_in   = jnp.asarray(inlet_state["h0_in"],    dtype=jnp.float64)
+        s_in    = jnp.asarray(inlet_state["s_in"],     dtype=jnp.float64)
 
         omega = jnp.asarray(omega, dtype=jnp.float64)
         r_in  = jnp.asarray(g["radius_mean_in"],  dtype=jnp.float64)
@@ -885,7 +1072,7 @@ class BladeRow(eqx.Module):
             st = fluid.get_state(jxp.PSmass_INPUTS, p_arr, s_out_seed)
             h = st["h"]
             a = st["a"]
-            val = h - h0_rel_out + 0.5 * Ma_exit_rel**2 * a**2
+            val = h - h0_rel_out + 0.5 * Ma_exit_rel**2 * a**2 ## This is enthalpy residual
             return float(val)
 
         # static inlet pressure for bracket
@@ -915,6 +1102,13 @@ class BladeRow(eqx.Module):
         s_out = st_final["s"]
         a_out = st_final["a"]
         w_out = jnp.sqrt(jnp.maximum(0.0, h0_rel_out - h_out_eta) * 2.0)
+        w_m_out = w_out*jnp.cos(jnp.deg2rad(g["metal_angle_out"])) 
+        w_t_out = w_out*jnp.sin(jnp.deg2rad(g["metal_angle_out"]))
+        v_m_out = w_m_out
+        v_t_out = w_t_out + U_out
+        v_out = jnp.sqrt(v_m_out**2 + v_t_out**2)
+        # build_initial_guess expects/stores alpha_in in degrees for the next row
+        alpha_out_deg = jnp.degrees(jnp.atan2(v_t_out, v_m_out))
 
         # ---------- 5) Exit angle from throat area (no arbitrary fallback) ----------
         # beta_sign = -1.0 if ("rotor" in self.cascade_type) else +1.0
@@ -936,7 +1130,7 @@ class BladeRow(eqx.Module):
 
         def f_pressure_scalar(p_scalar: float) -> float:
             p_arr = jnp.asarray(p_scalar, dtype=jnp.float64)
-            st = fluid.get_state(jxp.PSmass_INPUTS, p_arr, s_out)
+            st = fluid.get_state(jxp.PSmass_INPUTS, p_arr, s_in)
             h = st["h"]
             a = st["a"]
             val = h - h0_rel_throat + 0.5 * 1.0**2 * a**2
@@ -948,7 +1142,7 @@ class BladeRow(eqx.Module):
         p_crit = root.root
         p_crit = jnp.asarray(p_crit, dtype=jnp.float64)
 
-        st_crit = fluid.get_state(jxp.PSmass_INPUTS, p_crit, s_out)
+        st_crit = fluid.get_state(jxp.PSmass_INPUTS, p_crit, s_in)
 
         w_crit_throat = st_crit["a"]
         w_crit = st_final["a"]
@@ -981,7 +1175,7 @@ class BladeRow(eqx.Module):
 
         if crit == "critical_mach_number":
             guess[f"w_crit_throat{tag}"] = w_crit
-            guess[f"s_crit_throat{tag}"] = s_out
+            guess[f"s_crit_throat{tag}"] = st_crit["s"]
 
         elif crit == "critical_isentropic_throat":
             guess[f"w_crit_throat{tag}"] = w_crit
@@ -996,8 +1190,152 @@ class BladeRow(eqx.Module):
                 f"BladeRow '{self.name}': unsupported choking_criterion "
                 f"'{self.choking_criterion}'."
             )
+        
+        inlet_seed = {
+            "h0_in": st_final["h"] + v_out**2/2,
+            "s_in": st_final["s"],
+            "alpha_in": alpha_out_deg,
+            "v_in": v_out,}
 
-        return guess
+        return guess, inlet_seed
+
+    def build_initial_guess_pr_zeta(
+        self,
+        inlet_state: Dict[str, Any],  # {"h0","s","alpha","v"}; alpha in degrees
+        omega,                        # scalar; 0 for stator, ω for rotor
+        row_index: int,
+    ) -> Dict[str, Any]:
+        """
+        Initial guess using total-to-static pressure ratio (PR_ts) and
+        enthalpy-based loss coefficient (zeta_h).
+
+        Expects in self.initial_guess_spec:
+            PR_ts  : p0_in / p_out (total-to-static)
+            zeta_h : fraction of ideal total-to-static enthalpy drop that is lost
+        """
+        g = self.geometry
+        fluid = self.fluid
+        ig = self.initial_guess_spec or {}
+
+        if "PR_ts" not in ig or "zeta_h" not in ig:
+            raise KeyError(
+                f"BladeRow '{self.name}': initial_guess_spec must contain 'PR_ts' and 'zeta_h'."
+            )
+
+        PR_ts = jnp.asarray(ig["PR_ts"], dtype=jnp.float64)
+        zeta_h = jnp.asarray(ig["zeta_h"], dtype=jnp.float64)
+        eta_row = 1.0 - zeta_h
+
+        alpha_in = jnp.asarray(inlet_state["alpha_in"], dtype=jnp.float64)
+        v_in = jnp.asarray(inlet_state["v_in"], dtype=jnp.float64)
+        h0_in = jnp.asarray(inlet_state["h0_in"], dtype=jnp.float64)
+        s_in = jnp.asarray(inlet_state["s_in"], dtype=jnp.float64)
+
+        # If p0_in is provided, use it; otherwise infer from (h0_in, s_in)
+        p0_in = inlet_state.get("p0_in", None)
+        if p0_in is None:
+            st0 = fluid.get_state(jxp.HmassSmass_INPUTS, h0_in, s_in)
+            p0_in = st0["p"]
+        p0_in = jnp.asarray(p0_in, dtype=jnp.float64)
+
+        omega = jnp.asarray(omega, dtype=jnp.float64)
+        r_in = jnp.asarray(g["radius_mean_in"], dtype=jnp.float64)
+        r_throat = jnp.asarray(g["radius_mean_throat"], dtype=jnp.float64)
+        r_out = jnp.asarray(g["radius_mean_out"], dtype=jnp.float64)
+
+        U_in = omega * r_in
+        U_throat = omega * r_throat
+        U_out = omega * r_out
+
+        vt_in = v_in * math.sind(alpha_in)
+        vm_in = v_in * math.cosd(alpha_in)
+        wt_in = vt_in - U_in
+        wm_in = vm_in
+        w_in = jnp.sqrt(wt_in**2 + wm_in**2)
+
+        h_in = h0_in - 0.5 * v_in**2
+        rothalpy_in = h_in + 0.5 * w_in**2 - 0.5 * U_in**2
+        h0_rel_out = rothalpy_in + 0.5 * U_out**2
+        h0_rel_throat = rothalpy_in + 0.5 * U_throat**2
+
+        # Exit static pressure from PR_ts
+        p_out = p0_in / PR_ts
+
+        # Isentropic reference at exit
+        st_is = fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
+        h_is = st_is["h"]
+
+        # Apply enthalpy loss coefficient on total-to-static drop
+        h_out = h_is + zeta_h * (h0_rel_out - h_is)  # = h0_rel_out - eta_row * (h0_rel_out - h_is)
+
+        # Exit state and kinematics
+        st_final = fluid.get_state(jxp.HmassP_INPUTS, h_out, p_out)
+        s_out = st_final["s"]
+        beta_out = g["metal_angle_out"]
+
+        w_out = jnp.sqrt(jnp.maximum(0.0, 2.0 * (h0_rel_out - h_out)))
+        w_m_out = w_out * jnp.cos(jnp.deg2rad(beta_out))
+        w_t_out = w_out * jnp.sin(jnp.deg2rad(beta_out))
+        v_m_out = w_m_out
+        v_t_out = w_t_out + U_out
+        v_out = jnp.sqrt(v_m_out**2 + v_t_out**2)
+        # build_initial_guess_pr_zeta expects/stores alpha_in in degrees for the next row
+        alpha_out_deg = jnp.degrees(jnp.atan2(v_t_out, v_m_out))
+        # alpha_out_deg = jnp.atan2(v_t_out, v_m_out)
+        # jax.debug.print(f"alpha_out_deg: {alpha_out_deg}, alpha_out_deg1: {alpha_out_deg1}")
+
+        # Critical throat (Mach_rel = 1)
+        def f_pressure_scalar(p_scalar: float) -> float:
+            p_arr = jnp.asarray(p_scalar, dtype=jnp.float64)
+            st = fluid.get_state(jxp.PSmass_INPUTS, p_arr, s_in)
+            h = st["h"]
+            a = st["a"]
+            val = h - h0_rel_throat + 0.5 * 1.0**2 * a**2
+            return float(val)
+
+        st_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)
+        p_ref = st_in["p"]
+        p_lo = float(jnp.maximum(1.0e3, 0.1 * p_ref))
+        p_hi = float(5.0 * p_ref)
+
+        root = optimize.root_scalar(
+            f_pressure_scalar, method="bisect", bracket=(p_lo, p_hi), xtol=1e-6
+        )
+        p_crit = jnp.asarray(root.root, dtype=jnp.float64)
+        st_crit = fluid.get_state(jxp.PSmass_INPUTS, p_crit, s_in)
+        w_crit_throat = st_crit["a"]
+
+        tag = f"_{row_index}" if row_index is not None and row_index > 0 else ""
+        crit = str(self.choking_criterion).lower()
+
+        guess: Dict[str, Any] = {
+            f"w_out{tag}": w_out,
+            f"s_out{tag}": s_out,
+            f"beta_out{tag}": beta_out,
+        }
+
+        if crit == "critical_mach_number":
+            guess[f"w_crit_throat{tag}"] = w_crit_throat
+            guess[f"s_crit_throat{tag}"] = st_crit["s"]
+        elif crit == "critical_isentropic_throat":
+            guess[f"w_crit_throat{tag}"] = w_crit_throat
+        # elif crit == "critical_mass_flow_rate":
+        #     guess[f"w_crit_throat{tag}"] = w_crit_throat
+        #     guess[f"s_crit_throat{tag}"] = st_crit["s"]
+        #     guess[f"v_crit_in{tag}"] = v_in_crit_next
+        else:
+            raise ValueError(
+                f"BladeRow '{self.name}': unsupported choking_criterion '{self.choking_criterion}'."
+            )
+
+        inlet_seed = {
+            "h0_in": st_final["h"] + 0.5 * v_out**2,
+            "s_in": st_final["s"],
+            "alpha_in": alpha_out_deg,
+            "v_in": v_out,
+        }
+
+        return guess, inlet_seed
     
     def plot_meridional(
         self,
@@ -1119,7 +1457,11 @@ class BladeRow(eqx.Module):
         if comp_type == "axial_cascade":
             # Required geometry keys (as in geometry_model_axial)
             z_in = g["z_in"]
-            meridional_chord = g["meridional_chord"]
+            meridional_chord = g.get("meridional_chord", g.get("chord_axial", g.get("chord")))
+            if meridional_chord is None:
+                raise KeyError(
+                    "Axial cascade requires one of 'meridional_chord', 'chord_axial', or 'chord'."
+                )
 
             radius_hub_in = g["radius_hub_in"]
             radius_hub_out = g["radius_hub_out"]
@@ -1208,6 +1550,45 @@ class BladeRow(eqx.Module):
         comp_type = str(getattr(self, "component_type", "")).lower()
         g = self.geometry
 
+        def _normalize_thickness_model(model):
+            tm = str(model).strip().lower()
+            if tm in ("b_spline", "bspline", "quartic_bspline"):
+                return "B_spline"
+            if tm == "denton":
+                return "Denton"
+            return "NACA"
+
+        def _resample_polyline(x, y, n_out):
+            x = jnp.asarray(x, dtype=jnp.float64)
+            y = jnp.asarray(y, dtype=jnp.float64)
+            n_out = int(max(2, n_out))
+            if x.size < 3 or n_out <= 2:
+                return x, y
+            ds = jnp.hypot(jnp.diff(x), jnp.diff(y))
+            s = jnp.concatenate((jnp.array([0.0], dtype=jnp.float64), jnp.cumsum(ds)))
+            s_end = float(s[-1])
+            if s_end <= 1e-15:
+                return x, y
+            su = jnp.linspace(0.0, s_end, n_out)
+            xu = jnp.interp(su, s, x)
+            yu = jnp.interp(su, s, y)
+            return xu, yu
+
+        def _split_cartesian_contour_to_segments(x, y, n_lower):
+            n_lower = int(n_lower)
+            n_te = int(x.size - 2 * n_lower)
+            if n_te < 0:
+                raise ValueError(
+                    f"Unexpected contour size for axial row: len={x.size}, n_lower={n_lower}."
+                )
+            x_lower = x[:n_lower]
+            y_lower = y[:n_lower]
+            x_te = x[n_lower : n_lower + n_te][::-1]
+            y_te = y[n_lower : n_lower + n_te][::-1]
+            x_upper = x[-n_lower:][::-1]
+            y_upper = y[-n_lower:][::-1]
+            return x_lower, y_lower, x_te, y_te, x_upper, y_upper
+
         # -------------------------------------------------
         # Create axes if needed
         # -------------------------------------------------
@@ -1222,6 +1603,7 @@ class BladeRow(eqx.Module):
         # -------------------------------------------------
         if comp_type == "radial_cascade":
             camberline_type = g["camberline_type"]
+            thickness_model = _normalize_thickness_model(g.get("thickness_model", "NACA"))
             r_in = g["radius_mean_in"]
             r_out = g["radius_mean_out"]
             N_blades = int(g["N_blades"])
@@ -1235,21 +1617,48 @@ class BladeRow(eqx.Module):
             t_te = g["trailing_edge_thickness"]
             wedge_trailing = jnp.deg2rad(g["trailing_edge_wedge_angle"])
             radius_leading = g["leading_edge_radius"]
-
-            x_b, y_b, *_ = bp.compute_blade_coordinates_radial(
-                camberline_type,
-                r_in,
-                r_out,
-                jnp.deg2rad(metal_angle_in),
-                jnp.deg2rad(metal_angle_out),
-                jnp.deg2rad(theta0),
-                loc_max,
-                t_max,
-                t_te,
-                wedge_trailing,
-                radius_leading,
-                n_points,
+            thickness_leading = float(g.get("leading_edge_thickness", 0.0))
+            denton_shape_exp = float(
+                g.get(
+                    "denton_thickness_shape_exponent",
+                    g.get("denton_tk_typ", 2.0),
+                )
             )
+
+            tm = str(thickness_model).strip().lower()
+            use_tblade3_strategy = (
+                str(camberline_type) == "curvature_based"
+                and tm in ("b_spline", "bspline", "quartic_bspline")
+            )
+            radial_builder = (
+                bp.compute_blade_coordinates_radial_segments_tblade3
+                if use_tblade3_strategy
+                else bp.compute_blade_coordinates_radial_segments
+            )
+            x_lower, y_lower, x_te, y_te, x_upper, y_upper, _, _ = (
+                radial_builder(
+                    camberline_type=camberline_type,
+                    r1=r_in,
+                    r2=r_out,
+                    metal_angle1=jnp.deg2rad(metal_angle_in),
+                    metal_angle2=jnp.deg2rad(metal_angle_out),
+                    theta0=jnp.deg2rad(theta0),
+                    loc_max=loc_max,
+                    thickness_max=t_max,
+                    thickness_trailing=t_te,
+                    wedge_trailing=wedge_trailing,
+                    radius_leading=radius_leading,
+                    N_points=n_points,
+                    thickness_model=thickness_model,
+                    thickness_leading=thickness_leading,
+                    thickness_shape_exponent=denton_shape_exp,
+                )
+            )
+
+            # Plotting-only densification to avoid visible polyline kinks.
+            x_lower, y_lower = _resample_polyline(x_lower, y_lower, n_points)
+            x_upper, y_upper = _resample_polyline(x_upper, y_upper, n_points)
+            x_te, y_te = _resample_polyline(x_te, y_te, max(80, n_points // 3))
 
             # Draw inlet and outlet circles
             theta = jnp.linspace(0.0, 2.0 * jnp.pi, 300)
@@ -1260,14 +1669,18 @@ class BladeRow(eqx.Module):
             d_theta = 2.0 * jnp.pi / N_blades
             for i in range(N_blades):
                 th = d_theta * i
-                Xb, Yb = bp.rotate_counterclockwise_2D(x_b, y_b, th)
+                xl, yl = bp.rotate_counterclockwise_2D(x_lower, y_lower, th)
+                xu, yu = bp.rotate_counterclockwise_2D(x_upper, y_upper, th)
+                xte, yte = bp.rotate_counterclockwise_2D(x_te, y_te, th)
                 ax.plot(
-                    Xb,
-                    Yb,
+                    xl,
+                    yl,
                     lw=1.1,
                     color="black",
                     label=self.name if i == 0 else None,
                 )
+                ax.plot(xu, yu, lw=1.1, color="black")
+                ax.plot(xte, yte, lw=1.1, color="black")
 
             if title is None:
                 title = f"Radial cascade - blade-to-blade"
@@ -1281,50 +1694,105 @@ class BladeRow(eqx.Module):
         # -------------------------------------------------
         if comp_type == "axial_cascade":
             camberline_type = g["camberline_type"]
+            thickness_model = _normalize_thickness_model(g.get("thickness_model", "NACA"))
 
             loc_max = g["maximum_thickness_location_fraction"]
             t_max = g["maximum_thickness"]
             t_te = g["trailing_edge_thickness"]
             wedge_trailing = jnp.deg2rad(g["trailing_edge_wedge_angle"])
             radius_leading = g["leading_edge_radius"]
+            thickness_leading = float(g.get("leading_edge_thickness", 0.0))
+            denton_shape_exp = float(
+                g.get(
+                    "denton_thickness_shape_exponent",
+                    g.get("denton_tk_typ", 2.0),
+                )
+            )
 
-            beta1_deg = g["leading_edge_angle"]
-            beta2_deg = g["gauging_angle"]
+            beta1_deg = g.get("metal_angle_in", g.get("leading_edge_angle"))
+            beta2_deg = g.get("metal_angle_out", g.get("gauging_angle"))
+            if beta1_deg is None or beta2_deg is None:
+                raise KeyError(
+                    "Axial cascade requires inlet/outlet metal angles. "
+                    "Expected 'metal_angle_in/out' or 'leading_edge_angle/gauging_angle'."
+                )
             beta1 = jnp.deg2rad(beta1_deg)
             beta2 = jnp.deg2rad(beta2_deg)
 
-            chord_axial = g["meridional_chord"]
+            chord_axial = g.get("chord_axial", g.get("meridional_chord", g.get("chord")))
+            if chord_axial is None:
+                raise KeyError(
+                    "Axial cascade requires one of 'chord_axial', 'meridional_chord', or 'chord'."
+                )
             pitch = g["pitch"]
 
             # Use the given z_in from geometry as axial start
             x1 = g["z_in"]
             y1 = 0.0
 
-            x_b, y_b, _, _ = bp.compute_blade_coordinates_cartesian(
-                camberline_type,
-                x1=x1,
-                y1=y1,
-                beta1=beta1,
-                beta2=beta2,
-                chord_ax=chord_axial,
-                loc_max=loc_max,
-                thickness_max=t_max,
-                thickness_trailing=t_te,
-                wedge_trailing=wedge_trailing,
-                radius_leading=radius_leading,
-                N_points=n_points,
+            tm = str(thickness_model).strip().lower()
+            use_tblade3_strategy = (
+                str(camberline_type) == "curvature_based"
+                and tm in ("b_spline", "bspline", "quartic_bspline")
             )
+            if use_tblade3_strategy:
+                x_lower, y_lower, x_te, y_te, x_upper, y_upper, _, _ = (
+                    bp.compute_blade_coordinates_cartesian_segments_tblade3(
+                        camberline_type=camberline_type,
+                        x1=x1,
+                        y1=y1,
+                        beta1=beta1,
+                        beta2=beta2,
+                        chord_ax=chord_axial,
+                        loc_max=loc_max,
+                        thickness_max=t_max,
+                        thickness_trailing=t_te,
+                        wedge_trailing=wedge_trailing,
+                        radius_leading=radius_leading,
+                        N_points=n_points,
+                        thickness_model=thickness_model,
+                        thickness_leading=thickness_leading,
+                        thickness_shape_exponent=denton_shape_exp,
+                    )
+                )
+            else:
+                x_b, y_b, _, _ = bp.compute_blade_coordinates_cartesian(
+                    camberline_type,
+                    x1=x1,
+                    y1=y1,
+                    beta1=beta1,
+                    beta2=beta2,
+                    chord_ax=chord_axial,
+                    loc_max=loc_max,
+                    thickness_max=t_max,
+                    thickness_trailing=t_te,
+                    wedge_trailing=wedge_trailing,
+                    radius_leading=radius_leading,
+                    N_points=n_points,
+                    thickness_model=thickness_model,
+                    thickness_leading=thickness_leading,
+                    thickness_shape_exponent=denton_shape_exp,
+                )
+                x_lower, y_lower, x_te, y_te, x_upper, y_upper = (
+                    _split_cartesian_contour_to_segments(x_b, y_b, int(n_points))
+                )
+
+            x_lower, y_lower = _resample_polyline(x_lower, y_lower, n_points)
+            x_upper, y_upper = _resample_polyline(x_upper, y_upper, n_points)
+            x_te, y_te = _resample_polyline(x_te, y_te, max(80, n_points // 2))
 
             # Periodic copies in tangential direction
             for k in range(-1, 4):
                 label = self.name if k == 0 else None
                 ax.plot(
-                    x_b,
-                    y_b + k * pitch,
+                    x_lower,
+                    y_lower + k * pitch,
                     lw=1.2,
                     color="black",
                     label=label,
                 )
+                ax.plot(x_upper, y_upper + k * pitch, lw=1.2, color="black")
+                ax.plot(x_te, y_te + k * pitch, lw=1.2, color="black")
 
             if title is None:
                 title = f"Axial cascade - blade-to-blade"
@@ -1336,4 +1804,3 @@ class BladeRow(eqx.Module):
         raise ValueError(
             f"BladeRow.plot_meridional_tangential: unsupported component_type='{self.component_type}'"
         )
-
