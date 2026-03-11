@@ -15,6 +15,7 @@ from jax import lax
 # --- geometry helpers -------------------------------------------------------
 
 
+@jax.jit
 def rotate_counterclockwise_2D(x, y, theta):
     ct = jnp.cos(theta)
     st = jnp.sin(theta)
@@ -26,6 +27,7 @@ def rotate_counterclockwise_2D(x, y, theta):
 # --- thickness (NACA 4-series modified) ------------------------------------
 
 
+@jax.jit
 def compute_thickness_distribution_NACA_modified(
     x_norm,
     chord,
@@ -85,6 +87,7 @@ def compute_thickness_distribution_NACA_modified(
 # --- camberline primitives --------------------------------------------------
 
 
+@jax.jit
 def _chord_from_theta(r1, r2, theta1, thetaN):
     return jnp.sqrt(r1**2 + r2**2 - 2.0 * r1 * r2 * jnp.cos(thetaN - theta1))
 
@@ -92,14 +95,18 @@ def _chord_from_theta(r1, r2, theta1, thetaN):
 # --- Throat opening ---------------------------------------------------------
 
 
+@jax.jit
 def compute_throat_opening(theta, metal_angle_out, pitch_at_exit):
     """
     throat_opening = pitch_at_exit * cos( metal_angle_out + 0.5*(theta[-1] - theta[0]) )
     """
     d_theta = theta[-1] - theta[0]
-    return pitch_at_exit * jnp.cos(metal_angle_out + 0.5 * d_theta)
+    # return pitch_at_exit * jnp.cos(metal_angle_out + 0.5 * d_theta)
+    # return pitch_at_exit * jnp.cos(metal_angle_out)
+    return pitch_at_exit * jnp.cos(metal_angle_out - 0.5 * d_theta)
 
 
+@jax.jit
 def compute_camberline_straight_polar(r1, r2, phi, theta0, u):
     L = jnp.sqrt((r2 / r1) ** 2 - jnp.sin(phi) ** 2) - jnp.cos(phi)
     x = r1 * jnp.cos(theta0) + u * L * jnp.cos(phi + theta0)
@@ -131,10 +138,12 @@ def _bisect_jax(fun, a, b, iters=64):
     return 0.5 * (a + b)
 
 
+@jax.jit
 def compute_camberline_circular_arc_polar(
     r1, r2, metal_angle1, metal_angle2, theta1, u
 ):
-    smax = float(jnp.arcsin(jnp.minimum(1.0, float(r2 / r1)))) - 1e-6
+    # Avoid Python float conversions so this stays compatible with jax.jit.
+    smax = jnp.arcsin(jnp.minimum(1.0, r2 / r1)) - 1e-6
     stag0 = metal_angle1 + theta1
     a = stag0 - smax
     b = stag0 + smax
@@ -190,11 +199,13 @@ def compute_camberline_circular_arc_polar(
     return x, y, r, theta, metal_angle, phi, stagger
 
 
+@jax.jit
 def compute_camberline_linear_angle_change_polar(
     r1, r2, metal_angle1, metal_angle2, theta0, u
 ):
     r = r1 + u * (r2 - r1)
-    n = int(max(2, r.shape[0]))
+    # Use static shape from u/r to keep this JIT-safe.
+    n = max(2, int(r.shape[0]))
     rs = jnp.linspace(r1, r2, n)
     metal_angle_rs = ((r2 - rs) / (r2 - r1)) * metal_angle1 + (
         (rs - r1) / (r2 - r1)
@@ -217,6 +228,7 @@ def compute_camberline_linear_angle_change_polar(
     return x, y, r, theta, metal_angle, phi, stagger
 
 
+@jax.jit
 def compute_camberline_linear_slope_change_polar(
     r1, r2, metal_angle1, metal_angle2, theta0, u
 ):
@@ -240,54 +252,199 @@ def compute_camberline_linear_slope_change_polar(
     return x, y, r, theta, metal_angle, phi, stagger
 
 
-def compute_camberline_radial(
-    camberline_type, r1, r2, metal_angle1, metal_angle2, theta0, u
+# ----------------------------------------------------------------------------
+# Camberline dispatch (avoid string arguments in jitted code)
+# ----------------------------------------------------------------------------
+
+_CAMBERLINE_RADIAL_TYPES = (
+    "straight",
+    "circular_arc",
+    "linear_angle_change",
+    "linear_slope_change",
+    "circular_arc_conformal",
+    "linear_angle_change_conformal",
+    "linear_slope_change_conformal",
+)
+
+_CAMBERLINE_CARTESIAN_TYPES = (
+    "NACA",
+    "circular_arc",
+    "linear_angle_change",
+    "linear_slope_change",
+)
+
+
+def camberline_radial_type_id(camberline_type: str) -> int:
+    """Map camberline string to a small integer for JIT-friendly dispatch."""
+    try:
+        return _CAMBERLINE_RADIAL_TYPES.index(camberline_type)
+    except ValueError as e:
+        raise ValueError(f"Unsupported camberline_type: {camberline_type}") from e
+
+
+def camberline_cartesian_type_id(camberline_type: str) -> int:
+    """Map cartesian camberline string to a small integer for JIT-friendly dispatch."""
+    try:
+        return _CAMBERLINE_CARTESIAN_TYPES.index(camberline_type)
+    except ValueError as e:
+        raise ValueError(
+            f"Unsupported camberline_type for cartesian camberline: {camberline_type}"
+        ) from e
+
+
+@jax.jit
+def _compute_camberline_cartesian_by_id(
+    camberline_type_id: jnp.ndarray, x1, y1, metal_angle1, metal_angle2, c_ax, u
 ):
-    if camberline_type == "straight":
-        x, y, r, theta, metal_angle, phi, stagger = compute_camberline_straight_polar(
-            r1, r2, metal_angle1, theta0, u
+    def naca(args):
+        x1, y1, a1, a2, c_ax, u = args
+        x, y, stagger, dydx = _compute_camberline_NACA(x1, y1, a1, a2, c_ax, u)
+        chord = c_ax / jnp.cos(stagger)
+        return x, y, dydx, stagger, chord
+
+    def circ(args):
+        x1, y1, a1, a2, c_ax, u = args
+        x, y, stagger, dydx = _compute_camberline_circular_arc_cart(x1, y1, a1, a2, c_ax, u)
+        chord = c_ax / jnp.cos(stagger)
+        return x, y, dydx, stagger, chord
+
+    def lin_ang(args):
+        x1, y1, a1, a2, c_ax, u = args
+        x, y, stagger, dydx = _compute_camberline_linear_angle_change_cart(x1, y1, a1, a2, c_ax, u)
+        chord = c_ax / jnp.cos(stagger)
+        return x, y, dydx, stagger, chord
+
+    def lin_slp(args):
+        x1, y1, a1, a2, c_ax, u = args
+        x, y, stagger, dydx = _compute_camberline_linear_slope_change_cart(x1, y1, a1, a2, c_ax, u)
+        chord = c_ax / jnp.cos(stagger)
+        return x, y, dydx, stagger, chord
+
+    branches = (naca, circ, lin_ang, lin_slp)
+    return lax.switch(camberline_type_id, branches, (x1, y1, metal_angle1, metal_angle2, c_ax, u))
+
+
+def compute_camberline_cartesian_by_id(
+    camberline_type_id: int | jnp.ndarray, x1, y1, metal_angle1, metal_angle2, c_ax, u
+):
+    """
+    JIT-friendly cartesian camberline entrypoint.
+
+    Use this from other jitted code to avoid passing string selectors.
+    """
+    camberline_type_id = jnp.asarray(camberline_type_id, dtype=jnp.int32)
+    return _compute_camberline_cartesian_by_id(
+        camberline_type_id, x1, y1, metal_angle1, metal_angle2, c_ax, u
+    )
+
+
+@jax.jit
+def _create_camberline_conformal_by_id(
+    camberline_type_id: jnp.ndarray, r1, r2, metal_angle1, metal_angle2, theta0, u
+):
+    x1 = 0.0
+    y1 = 0.0
+    c_ax = 1.0
+    x_lin, y_lin, dydx_lin, stagger, _ = _compute_camberline_cartesian_by_id(
+        camberline_type_id, x1, y1, metal_angle1, metal_angle2, c_ax, u
+    )
+    x_rad, y_rad = apply_conformal_mapping(x_lin, y_lin, x1, y1, r1, r2, c_ax, theta0)
+    r = jnp.sqrt(x_rad**2 + y_rad**2)
+    theta = jnp.arctan2(y_rad, x_rad)
+    metal_angle = jnp.arctan(dydx_lin)
+    phi = metal_angle + theta
+    d_theta = theta[-1] - theta[0]
+    stagger_pol = jnp.arctan2(r2 * jnp.sin(d_theta), (r2 * jnp.cos(d_theta) - r1))
+    return x_rad, y_rad, r, theta, metal_angle, phi, stagger_pol
+
+
+@jax.jit
+def compute_camberline_radial_by_id(
+    camberline_type_id: jnp.ndarray, r1, r2, metal_angle1, metal_angle2, theta0, u
+):
+    def straight(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi_out, stagger = compute_camberline_straight_polar(
+            r1, r2, a1, theta0, u
         )
-    elif camberline_type == "circular_arc":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            compute_camberline_circular_arc_polar(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        # Make output shapes consistent across switch branches (phi is constant along u for straight camberlines).
+        phi = jnp.full_like(u, phi_out)
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def circ_arc(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi, stagger = compute_camberline_circular_arc_polar(
+            r1, r2, a1, a2, theta0, u
         )
-    elif camberline_type == "linear_angle_change":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            compute_camberline_linear_angle_change_polar(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def lin_ang(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi, stagger = compute_camberline_linear_angle_change_polar(
+            r1, r2, a1, a2, theta0, u
         )
-    elif camberline_type == "linear_slope_change":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            compute_camberline_linear_slope_change_polar(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def lin_slp(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi, stagger = compute_camberline_linear_slope_change_polar(
+            r1, r2, a1, a2, theta0, u
         )
-    elif camberline_type == "circular_arc_conformal":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            create_camberline_circular_arc_conformal(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def circ_conf(args):
+        r1, r2, a1, a2, theta0, u = args
+        # cartesian id for circular_arc is 1 in _compute_camberline_cartesian_by_id
+        x, y, r, theta, metal_angle, phi, stagger = _create_camberline_conformal_by_id(
+            jnp.array(1, dtype=jnp.int32), r1, r2, a1, a2, theta0, u
         )
-    elif camberline_type == "linear_angle_change_conformal":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            compute_camberline_linear_angle_change_conformal(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def lin_ang_conf(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi, stagger = _create_camberline_conformal_by_id(
+            jnp.array(2, dtype=jnp.int32), r1, r2, a1, a2, theta0, u
         )
-    elif camberline_type == "linear_slope_change_conformal":
-        x, y, r, theta, metal_angle, phi, stagger = (
-            compute_camberline_linear_slope_change_conformal(
-                r1, r2, metal_angle1, metal_angle2, theta0, u
-            )
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    def lin_slp_conf(args):
+        r1, r2, a1, a2, theta0, u = args
+        x, y, r, theta, metal_angle, phi, stagger = _create_camberline_conformal_by_id(
+            jnp.array(3, dtype=jnp.int32), r1, r2, a1, a2, theta0, u
         )
-    else:
-        raise ValueError(f"Unsupported camberline_type: {camberline_type}")
+        return x, y, r, theta, metal_angle, phi, stagger
+
+    branches = (straight, circ_arc, lin_ang, lin_slp, circ_conf, lin_ang_conf, lin_slp_conf)
+    x, y, r, theta, metal_angle, phi, stagger = lax.switch(
+        camberline_type_id,
+        branches,
+        (r1, r2, metal_angle1, metal_angle2, theta0, u),
+    )
 
     chord = _chord_from_theta(r1, r2, theta[0], theta[-1])
     return x, y, r, theta, metal_angle, phi, stagger, chord
+
+
+def compute_camberline_radial(
+    camberline_type, r1, r2, metal_angle1, metal_angle2, theta0, u
+):
+    # Keep the public API (string-based) and preserve original output shapes.
+    #
+    # Note: for the "straight" camberline, `compute_camberline_straight_polar` returns a
+    # scalar `phi_out` (constant along the camberline). We keep that behavior here.
+    if camberline_type == "straight":
+        x, y, r, theta, metal_angle, phi_out, stagger = compute_camberline_straight_polar(
+            r1, r2, metal_angle1, theta0, u
+        )
+        chord = _chord_from_theta(r1, r2, theta[0], theta[-1])
+        return x, y, r, theta, metal_angle, phi_out, stagger, chord
+
+    camberline_type_id = jnp.array(
+        camberline_radial_type_id(camberline_type), dtype=jnp.int32
+    )
+    return compute_camberline_radial_by_id(
+        camberline_type_id, r1, r2, metal_angle1, metal_angle2, theta0, u
+    )
 
 
 # --- Blade coordinates (camber + thickness + TE arc) -----------------------
@@ -305,9 +462,10 @@ def compute_blade_coordinates_radial(
     thickness_trailing,
     wedge_trailing,
     radius_leading,
-    N_points,
+    N_points: int,
 ):
-    seg = int(jnp.ceil(N_points / 3.0))
+    # Use integer arithmetic to avoid tracer->Python conversions under jit.
+    seg = (N_points + 2) // 3  # ceil(N_points/3) for positive integers
     u = jnp.linspace(0.0, 1.0, seg)
     x_c, y_c, _, theta, _, phi, stagger, chord = compute_camberline_radial(
         camberline_type, r1, r2, metal_angle1, metal_angle2, theta0, u
@@ -341,7 +499,7 @@ def compute_blade_coordinates_radial(
     yc = y2 - jnp.sign(r2 - r1) * radius_trailing * sin_half * jnp.sin(phi2)
     angle1 = +(jnp.pi / 2.0 - wedge_trailing / 2.0) + phi2
     angle2 = -(jnp.pi / 2.0 - wedge_trailing / 2.0) + phi2
-    seg_tr = int(jnp.floor(N_points / 3.0))
+    seg_tr = N_points // 3
     angle = jnp.linspace(angle1, angle2, seg_tr)
     x_tr = xc + jnp.sign(r2 - r1) * radius_trailing * jnp.cos(angle)
     y_tr = yc + jnp.sign(r2 - r1) * radius_trailing * jnp.sin(angle)
@@ -366,23 +524,9 @@ def compute_blade_coordinates_cartesian(
     thickness_trailing,
     wedge_trailing,
     radius_leading,
-    N_points,
+    N_points: int,
 ):
-
-    print(
-        camberline_type,
-        x1,
-        y1,
-        beta1,
-        beta2,
-        chord_ax,
-        loc_max,
-        thickness_max,
-        thickness_trailing,
-        wedge_trailing,
-        radius_leading,
-        N_points,
-    )
+    # NOTE: no printing here; printing breaks jax.jit and is not part of the numerics.
     # Camberline
     u = jnp.linspace(0.0, 1.0, N_points)
     x_c, y_c, dydx, stagger, chord = compute_camberline_cartesian(
@@ -449,42 +593,35 @@ def compute_blade_coordinates_cartesian(
 def compute_camberline_cartesian(
     camberline_type: str, x1, y1, metal_angle1, metal_angle2, c_ax, u
 ):
-    if camberline_type == "NACA":
-        x, y, stagger, dydx = _compute_camberline_NACA(
-            x1, y1, metal_angle1, metal_angle2, c_ax, u
-        )
-    elif camberline_type == "circular_arc":
-        x, y, stagger, dydx = _compute_camberline_circular_arc_cart(
-            x1, y1, metal_angle1, metal_angle2, c_ax, u
-        )
-    elif camberline_type == "linear_angle_change":
-        x, y, stagger, dydx = _compute_camberline_linear_angle_change_cart(
-            x1, y1, metal_angle1, metal_angle2, c_ax, u
-        )
-    elif camberline_type == "linear_slope_change":
-        x, y, stagger, dydx = _compute_camberline_linear_slope_change_cart(
-            x1, y1, metal_angle1, metal_angle2, c_ax, u
-        )
-    else:
-        raise ValueError("Unsupported camberline_type for cartesian camberline")
-    chord = c_ax / jnp.cos(stagger)
-    return x, y, dydx, stagger, chord
+    # Keep the string API but use integer-id dispatch under the hood.
+    types = ("NACA", "circular_arc", "linear_angle_change", "linear_slope_change")
+    try:
+        camberline_type_id = jnp.array(types.index(camberline_type), dtype=jnp.int32)
+    except ValueError as e:
+        raise ValueError("Unsupported camberline_type for cartesian camberline") from e
+    return _compute_camberline_cartesian_by_id(
+        camberline_type_id, x1, y1, metal_angle1, metal_angle2, c_ax, u
+    )
 
 
 def _compute_camberline_circular_arc_cart(x1, y1, metal_angle1, metal_angle2, c_ax, u):
     x2 = x1 + c_ax
     stagger = (metal_angle1 + metal_angle2) / 2.0
     metal_angle = metal_angle1 + u * (metal_angle2 - metal_angle1)
-    if float(jnp.abs(metal_angle1 - metal_angle2)) > 1e-6:
-        x = x1 + (x2 - x1) * (jnp.sin(metal_angle) - jnp.sin(metal_angle1)) / (
-            jnp.sin(metal_angle2) - jnp.sin(metal_angle1)
-        )
-        y = y1 - (x2 - x1) * (jnp.cos(metal_angle) - jnp.cos(metal_angle1)) / (
-            jnp.sin(metal_angle2) - jnp.sin(metal_angle1)
-        )
-    else:
+    # JIT-safe branch: avoid Python `if float(...)`.
+    def curved(_):
+        denom = jnp.sin(metal_angle2) - jnp.sin(metal_angle1)
+        x = x1 + (x2 - x1) * (jnp.sin(metal_angle) - jnp.sin(metal_angle1)) / denom
+        y = y1 - (x2 - x1) * (jnp.cos(metal_angle) - jnp.cos(metal_angle1)) / denom
+        return x, y
+
+    def straight(_):
         x = x1 + u * (x2 - x1)
         y = y1 + (x - x1) * jnp.tan(stagger)
+        return x, y
+
+    use_curved = jnp.abs(metal_angle1 - metal_angle2) > 1e-6
+    x, y = lax.cond(use_curved, curved, straight, operand=None)
     dydx = jnp.tan(metal_angle)
     return x, y, stagger, dydx
 
@@ -521,22 +658,27 @@ def _compute_camberline_linear_angle_change_cart(
     x1, y1, metal_angle1, metal_angle2, c_ax, u
 ):
     x2 = x1 + c_ax
-    if float(jnp.abs(metal_angle1 - metal_angle2)) > 1e-6:
+    # JIT-safe branch: avoid Python `if float(...)`.
+    def varying(_):
         stagger = jnp.arctan(
             -jnp.log(jnp.cos(metal_angle2) / jnp.cos(metal_angle1))
             / (metal_angle2 - metal_angle1 + 1e-6)
         )
         metal_angle = metal_angle1 + u * (metal_angle2 - metal_angle1)
-        x = x1 + (metal_angle - metal_angle1) / (metal_angle2 - metal_angle1) * (
-            x2 - x1
-        )
+        x = x1 + (metal_angle - metal_angle1) / (metal_angle2 - metal_angle1) * (x2 - x1)
         y = y1 - (x2 - x1) / (metal_angle2 - metal_angle1) * jnp.log(
             jnp.cos(metal_angle) / jnp.cos(metal_angle1)
         )
-    else:
+        return x, y, stagger
+
+    def constant(_):
         stagger = metal_angle1
         x = x1 + u * (x2 - x1)
         y = y1 + (x - x1) * jnp.tan(stagger)
+        return x, y, stagger
+
+    use_varying = jnp.abs(metal_angle1 - metal_angle2) > 1e-6
+    x, y, stagger = lax.cond(use_varying, varying, constant, operand=None)
     metal_angle_x = metal_angle1 + (metal_angle2 - metal_angle1) * (x - x1) / (x2 - x1)
     dydx = jnp.tan(metal_angle_x)
     return x, y, stagger, dydx
