@@ -1,5 +1,6 @@
 import numpy as np
 
+from . import jax, jnp, JAX_AVAILABLE
 from .optimization import OptimizationProblem, combine_objective_and_constraints
 from .numerical_differentiation import approx_derivative, approx_jacobian_hessians
 
@@ -112,8 +113,14 @@ class RosenbrockProblemConstrained(OptimizationProblem):
         self.dim = dim
 
     def fitness(self, x):
+        
+        # Use jax.numpy if JAX is available, else use numpy
+        xp = jnp if JAX_AVAILABLE else np
+        # xp = np
+        x = xp.asarray(x)
+
         # Objective function
-        f = [np.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (x[:-1] - 1) ** 2)]
+        f = [xp.sum(100.0 * (x[1:] - x[:-1] ** 2) ** 2 + (x[:-1] - 1) ** 2)]
 
         # Equality constraints
         c_eq = []
@@ -122,29 +129,61 @@ class RosenbrockProblemConstrained(OptimizationProblem):
                 3 * x[k + 1] ** 3
                 + 2 * x[k + 2]
                 - 5
-                + np.sin(x[k + 1] - x[k + 2]) * np.sin(x[k + 1] + x[k + 2])
+                + xp.sin(x[k + 1] - x[k + 2]) * xp.sin(x[k + 1] + x[k + 2])
                 + 4 * x[k + 1]
-                - x[k] * np.exp(x[k] - x[k + 1])
+                - x[k] * xp.exp(x[k] - x[k + 1])
                 - 3
             )
             c_eq.append(val)
 
-        return combine_objective_and_constraints(f, c_eq, None)
+        
+        fitness = xp.concatenate((xp.asarray(f), xp.asarray(c_eq)))
+        
+        return fitness
 
-    def gradient(self, x):
-        gradient = approx_derivative(
-            self.fitness,
-            x,
-            method="2-point",
-            abs_step=1e-6 * np.abs(x),
-        )
-        return gradient
+        # c_ineq = None
 
-    def hessians(self, x):
-        H = approx_jacobian_hessians(
-            self.fitness, x, abs_step=1e-4, lower_triangular=True
-        )
-        return H
+        # return combine_objective_and_constraints(f, c_eq, c_ineq)
+
+
+    def gradient(self, x, method="automatic_differentiation"):
+        if method == "automatic_differentiation":
+            if not JAX_AVAILABLE:
+                print("JAX not available. Falling back to finite differences.")
+                method = "finite_differences"
+            else:
+                try:
+                    jac_fn = jax.jacobian(self.fitness)
+                    return np.array(jac_fn(jnp.array(x)))
+                except Exception as e:
+                    print(f"Automatic differentiation failed ({e}). Falling back to finite differences.")
+                    method = "finite_differences"
+
+        if method == "finite_differences":
+            return approx_derivative(
+                self.fitness,
+                x,
+                method="2-point",
+                abs_step=1e-8,
+            )
+
+        raise ValueError(f"Unsupported method '{method}'. Use 'finite_differences' or 'automatic_differentiation'.")
+
+
+    # def gradient(self, x):
+    #     gradient = approx_derivative(
+    #         self.fitness,
+    #         x,
+    #         method="2-point",
+    #         abs_step=1e-8,
+    #     )
+    #     return gradient
+
+    # def hessians(self, x):
+    #     H = approx_jacobian_hessians(
+    #         self.fitness, x, abs_step=1e-4, lower_triangular=True
+    #     )
+    #     return H
 
     def get_bounds(self):
         return ([-10] * self.dim, [+10] * self.dim)
@@ -199,11 +238,12 @@ class HS71Problem(OptimizationProblem):
 
         # Inequality constraints
         c_ineq = 25 - x[0] * x[1] * x[2] * x[3]
+        # c_ineq = None
 
         return combine_objective_and_constraints(f, c_eq, c_ineq)
 
     def get_bounds(self):
-        return (4 * [1], 4 * [5])
+        return (4 * [1.0], 4 * [5])
 
     def get_nec(self):
         return 1
@@ -271,3 +311,26 @@ class LorentzEquationsOpt(OptimizationProblem):
 
     def get_bounds(self):
         return (-10 * np.ones(3), 10 * np.ones(3))
+
+
+
+
+
+# class SimoneProblem(OptimizationProblem):
+
+#     def gradient(self, x):
+#         return (4 * (x[0] - 2) * (x[1] - 4)**4, 8 * (x[0] - 2)**2 * (x[1] - 4)**3)
+    
+#     def fitness(self, x):
+#         y=2*(x[0]-2)**2*(x[1]-4)**4
+#         print('x = [%14f,%14f]'%(x[0],x[1]))
+#         return np.atleast_1d(y)
+    
+#     def get_bounds(self):
+#         return (2*[-1e6], 2*[1e6])
+
+#     def get_nec(self):
+#         return 0
+
+#     def get_nic(self):
+#         return 0

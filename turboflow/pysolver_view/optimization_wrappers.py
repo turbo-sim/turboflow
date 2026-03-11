@@ -1,8 +1,11 @@
 import os
 import copy
+import ctypes
+import platform
 import warnings
 import numpy as np
 from scipy.optimize import minimize
+
 
 # Attempt to import pygmo and pygmo_plugins_nonfree
 try:
@@ -123,10 +126,14 @@ def minimize_scipy(problem, x0, method, solver_options):
     default_options = (
         default_options[method] if method in default_options.keys() else {}
     )
+    solver_options = solver_options.copy()  # Work with a copy to avoid side effects
     combined_options = default_options | solver_options  # Merge defaults with input
 
     # Convert bounds from Pygmo to Scipy convention
-    bounds = convert_pygmo_to_scipy_bounds(problem.get_bounds)
+    if problem.get_bounds() is None:
+        bounds = None
+    else:
+        bounds = convert_pygmo_to_scipy_bounds(problem.get_bounds)()
 
     # Define list of constraint dictionaries
     constr = []
@@ -145,7 +152,7 @@ def minimize_scipy(problem, x0, method, solver_options):
         tol=tol,
         jac=problem.f_jac,
         constraints=constr,
-        bounds=bounds(),
+        bounds=bounds,
         method=method,
         options=combined_options,
     )
@@ -190,7 +197,7 @@ def minimize_pygmo(problem, x0, method, options):
             "   1. Activate the Conda virtual environment with:\n\n"
             "           conda activate <your environment name>\n\n"
             "   2. Install 'pygmo' and 'pygmo_plugins_nonfree' by running the following command:\n\n"
-            "           conda install --channel conda-forge pygmo=2.19.6 pygmo_plugins_nonfree=0.24\n"
+            "           conda install --channel conda-forge pygmo=2.19.7 pygmo_plugins_nonfree=0.26\n"
         )
 
     if method == "snopt":
@@ -241,7 +248,7 @@ def _minimize_pygmo_de(problem, x0, options):
 
     return success, message
 
-def _minimize_pygmo_sga(problem, x0, solver_options):
+def _minimize_pygmo_sga(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to sga"""
 
     # Define solver options
@@ -249,8 +256,8 @@ def _minimize_pygmo_sga(problem, x0, solver_options):
         "gen": 10, 
         "pop_size": 10,
     }
-    solver_options = solver_options.copy()  # Work with a copy to avoid side effects
-    combined_options = default_options | solver_options
+    options = options.copy()  # Work with a copy to avoid side effects
+    combined_options = default_options | options
 
     # Set seed 
     if "seed" in list(combined_options.keys()):
@@ -263,9 +270,9 @@ def _minimize_pygmo_sga(problem, x0, solver_options):
     population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
 
-    # print solution
-    print("Best solution found:", population.champion_x)
-    print("Objective value of the best solution:", population.champion_f)
+    # # print solution
+    # print("Best solution found:", population.champion_x)
+    # print("Objective value of the best solution:", population.champion_f)
 
     # Evaluate final solution 
     final = problem.fitness(population.champion_x)
@@ -276,7 +283,7 @@ def _minimize_pygmo_sga(problem, x0, solver_options):
 
     return success, message
 
-def _minimize_pygmo_pso(problem, x0, solver_options):
+def _minimize_pygmo_pso(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to PSO"""
 
     # Define solver options
@@ -284,8 +291,8 @@ def _minimize_pygmo_pso(problem, x0, solver_options):
         "gen": 10, 
         "pop_size": 10,
     }
-    solver_options = solver_options.copy()  # Work with a copy to avoid side effects
-    combined_options = default_options | solver_options
+    options = options.copy()  # Work with a copy to avoid side effects
+    combined_options = default_options | options
 
     # Set seed 
     if "seed" in list(combined_options.keys()):
@@ -298,9 +305,9 @@ def _minimize_pygmo_pso(problem, x0, solver_options):
     population = pg.population(problem, int(combined_options["pop_size"]))
     population = algorithm.evolve(population)
 
-    # print solution
-    print("Best solution found:", population.champion_x)
-    print("Objective value of the best solution:", population.champion_f)
+    # # print solution
+    # print("Best solution found:", population.champion_x)
+    # print("Objective value of the best solution:", population.champion_f)
 
     # Evaluate final solution 
     final = problem.fitness(population.champion_x)
@@ -312,7 +319,7 @@ def _minimize_pygmo_pso(problem, x0, solver_options):
     return success, message
 
 
-def _minimize_pygmo_ipopt(problem, x0, solver_options):
+def _minimize_pygmo_ipopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to IPOPT"""
 
     # Define mapping from exit flag to status
@@ -346,9 +353,10 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
         "hessian_approximation": "limited-memory",  # Options: 'exact', 'limited-memory'
         "limited_memory_update_type": "bfgs",  # Options: 'bfgs', 'sr1'
         "line_search_method": "filter",  # Options: 'filter', 'cg-penalty', 'penalty'
-        "limited_memory_max_history": 10, # Max history for L-BFGS
+        "limited_memory_max_history": 30, # Max history for L-BFGS
+        "limited_memory_max_skipping": 100,  # TODO Not reseting improves convergence in some cases I testd
         "max_iter": 500,  # Maximum number of iterations.
-        "tol": 1.0,  # Desired convergence tolerance (relative). # 1.0
+        "tol": 1e-3,  # Desired convergence tolerance (relative). # TODO Can this be tightened when Hessian is not reseted?
         "dual_inf_tol": 1e6,  # Desired threshold for the dual infeasibility.
         "compl_inf_tol": 1e6,  # Desired threshold for the complementarity conditions
         "constr_viol_tol": 1e-6,  # Desired threshold for the constraint and variable bound violation.
@@ -361,82 +369,38 @@ def _minimize_pygmo_ipopt(problem, x0, solver_options):
     }
 
     # Define IPOPT tolerance settings based on generic input
-    tol_value = solver_options.pop("tolerance")
-    solver_options["constr_viol_tol"] = tol_value
+    options = options.copy()  # Work with a copy to avoid side effects
+    tol_value = options.pop("tolerance")
+    options["constr_viol_tol"] = tol_value
     # IPOPT will not converge if "tol" is too tight
     # This parameter is considered an "expert setting" not controlled by the generic tolerance input
 
     # Define IPOPT iteration limit settings based on generic input
-    max_iter = solver_options.pop("max_iterations")
-    solver_options["max_iter"] = max_iter
+    max_iter = int(options.pop("max_iterations"))
+    options["max_iter"] = max_iter
 
     # Combine default and given options
-    solver_options = default_options | solver_options
+    options = default_options | options
 
     # Solve the problem
     problem = copy.deepcopy(problem)
     problem = pg.problem(problem)
     algorithm = pg.algorithm(pg.ipopt())
     algorithm_handle = algorithm.extract(pg.ipopt)
-    _set_pygmo_options(algorithm_handle, solver_options)
-    population = pg.population(problem, size=1)
-    population.set_x(0, x0)
-
-    # Example data (replace with your actual computation)
-    # print("x0", x0)
- 
-          
-    # lb, ub = problem.get_bounds()
-    # print("Upper and lower bounds")
-    # for i in range(len(x0)):
-    #     if x0[i] < lb[i] or x0[i] > ub[i]:
-    #         print(lb[i], x0[i], ub[i])
-
-    # fitness = problem.fitness(x0)
-    # gradient = problem.gradient(x0)
-    
-    # Assume N (rows) and M (columns) for Jacobian are known or computed
-    # N = len(fitness)  # Number of rows in Jacobian
-    # M = len(gradient) // N  # Number of columns in Jacobian
-    
-    # # Reshape the Jacobian if it's flattened
-    # gradient_matrix = np.reshape(gradient, (N, M))
-    
-    # # Check for NaN values
-    # has_nan_fitness = np.isnan(fitness).any()
-    # has_nan_gradient = np.isnan(gradient).any()
-    
-    # # Print fitness
-    # print("Fitness:")
-    # if has_nan_fitness:
-    #     print("Contains NaNs!")
-    # print("[" + ", ".join(f"{val:.4e}" for val in fitness) + "]")
-    # print()
-    
-    # # Print Jacobian
-    # print("Jacobian:")
-    # if has_nan_gradient:
-    #     print("Contains NaNs!")
-    # for row in gradient_matrix:  # Loop through each row of the matrix
-    #     for i in range(0, len(row), 6):  # Print 6 items per line
-    #         chunk = row[i:i + 6]
-    #         print(", ".join(f"{val:.4e}" for val in chunk))
-    #     print()  # Add a blank line after each row
-
-
+    _set_pygmo_options(algorithm_handle, options)
+    population = pg.population(problem)
+    population.push_back(x0)
     population = algorithm.evolve(population)
-
 
     # Optimization output
     exitflag = algorithm_handle.get_last_opt_result()
     message = exitflag_mapping.get(exitflag, "Unknown Status")
     success = exitflag in (0, 1)
 
-
     return success, message
 
 
-def _minimize_pygmo_snopt(problem, x0, solver_options):
+def _minimize_pygmo_snopt(problem, x0, options):
     """Solve optimization problem using Pygmo's wrapper to SNOPT"""
 
     # Define default solver options
@@ -447,28 +411,29 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
         "Iterations limit": 500,
         "Major iterations limit": 1e6,
         "Minor iterations limit": 1e6,
-        "Hessian updates": 20,
+        # "Hessian": "full memory", # TODO check this option
+        "Hessian updates": 10,
     }
 
     # Work with a copy to avoid side effects
-    solver_options = solver_options.copy()
+    options = options.copy()
 
     # Define SNOPT tolerance settings based on generic input
-    tol_value = solver_options.pop("tolerance")
-    solver_options["Major feasibility tolerance"] = tol_value
-    solver_options["Minor feasibility tolerance"] = tol_value
+    tol_value = options.pop("tolerance")
+    options["Major feasibility tolerance"] = tol_value
+    options["Minor feasibility tolerance"] = tol_value
     # SNOPT will not converge if optimality tolerance is too tight
     # This parameter is considered an "expert setting" not controlled by the generic tolerance input
     # snopt_options["Major optimality tolerance"] = tol_value 
 
     # Define SNOPT iteration limit settings based on generic input
-    max_iter = solver_options.pop("max_iterations")
-    solver_options["Iterations limit"] = max_iter
-    solver_options["Major iterations limit"] = max_iter
-    solver_options["Minor iterations limit"] = 10*max_iter
+    max_iter = int(options.pop("max_iterations"))
+    options["Iterations limit"] = max_iter
+    options["Major iterations limit"] = max_iter
+    options["Minor iterations limit"] = 10*max_iter
 
     # Combine default and given options
-    solver_options = default_options | solver_options
+    options = default_options | options
 
     # Define SNOPT path
     lib = os.getenv("SNOPT_LIB")
@@ -478,14 +443,27 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
             "Please set the 'SNOPT_LIB' environment variable to the path of the SNOPT library."
         )
     
+    # Try to load the shared library explicitly
+    try:
+        if platform.system() == "Windows":
+            ctypes.WinDLL(lib)
+        else:
+            ctypes.CDLL(lib)
+        print(f"Successfully loaded SNOPT library: {lib}")
+    except OSError as e:
+        raise RuntimeError(
+            f"Failed to load SNOPT shared library at {lib}. "
+            f"This may indicate a license issue or incorrect path.\n{e}"
+        )
+
     # Solve the problem
     problem = copy.deepcopy(problem)
     problem = pg.problem(problem)
     algorithm = pg.algorithm(ppnf.snopt7(library=lib, minor_version=7))
     algorithm_handle = algorithm.extract(ppnf.snopt7)
-    _set_pygmo_options(algorithm_handle, solver_options)
-    population = pg.population(problem, size=1)
-    population.set_x(0, x0)
+    _set_pygmo_options(algorithm_handle, options)
+    population = pg.population(problem)
+    population.push_back(x0)
     population = algorithm.evolve(population)
 
     # Optimization output
@@ -525,8 +503,8 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
 #     algorithm = pg.algorithm(ppnf.worhp(screen_output=False, library=lib))
 #     algorithm_handle = algorithm.extract(ppnf.worhp)
 #     _set_pygmo_options(algorithm_handle, combined_options)
-#     population = pg.population(problem, size=1)
-#     population.set_x(0, x0)
+#     population = pg.population(problem)
+#     population.push_back(x0)
 #     population = algorithm.evolve(population)
 
 #     # Optimization output
@@ -536,7 +514,7 @@ def _minimize_pygmo_snopt(problem, x0, solver_options):
 #     return success, message
 
 
-def minimize_nlopt(problem, x0, method, solver_options):
+def minimize_nlopt(problem, x0, method, options):
     """
     Optimize a given problem using the specified NLOpt optimization method.
 
@@ -587,9 +565,9 @@ def minimize_nlopt(problem, x0, method, solver_options):
     }
 
     # Define solver options
-    solver_options = solver_options.copy()  # Work with a copy to avoid side effects
-    tol = solver_options.pop("tol")
-    max_iter = solver_options.pop("max_iter")
+    options = options.copy()  # Work with a copy to avoid side effects
+    tol = options.pop("tol")
+    max_iter = options.pop("max_iter")
     algorithm = pg.algorithm(pg.nlopt(solver=method))
     handle = algorithm.extract(pg.nlopt)
     handle.maxeval = max_iter

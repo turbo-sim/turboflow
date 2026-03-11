@@ -231,7 +231,7 @@ def savefig_in_formats(fig, path_without_extension, formats=[".png", ".svg"], dp
             fig.savefig(f"{path_without_extension}{ext}", bbox_inches="tight")
 
 
-def create_logger(name, path=None, use_datetime=True):
+def create_logger(name, path=None, use_datetime=True, to_console=False):
     """
     Creates and configures a logging object for recording logs during program execution.
 
@@ -244,6 +244,8 @@ def create_logger(name, path=None, use_datetime=True):
         will be created in the current working directory (cwd).
     use_datetime : bool, optional
         Determines whether the log filename should have a unique datetime identifier appended. Default is True.
+    to_console : bool, optional
+        Whether to print log messages to the console. Default is True.
 
     Returns
     -------
@@ -285,7 +287,51 @@ def create_logger(name, path=None, use_datetime=True):
     # Create logger object
     logger = logging.getLogger()
 
+    # Console handler (optional)
+    if to_console:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(console_handler)
+
     return logger
+
+
+def print_object(obj):
+    """
+    Prints all attributes and methods of an object, sorted alphabetically.
+
+    - Methods are identified as callable and printed with the prefix 'Method: '.
+    - Attributes are identified as non-callable and printed with the prefix 'Attribute: '.
+
+    Parameters
+    ----------
+    obj : object
+        The object whose attributes and methods are to be printed.
+
+    Returns
+    -------
+    None
+        This function does not return any value. It prints the attributes and methods of the given object.
+
+    """
+    # Retrieve all attributes and methods
+    attributes = dir(obj)
+
+    # Sort them alphabetically, case-insensitive
+    sorted_attributes = sorted(attributes, key=lambda x: x.lower())
+
+    # Iterate over sorted attributes
+    for attr in sorted_attributes:
+        # Retrieve the attribute or method from the object
+        attribute_or_method = getattr(obj, attr)
+
+        # Check if it is callable (method) or not (attribute)
+        if callable(attribute_or_method):
+            print(f"Method: {attr}")
+        else:
+            print(f"Attribute: {attr}")
+
 
 
 def print_dict(data, indent=0, return_output=False):
@@ -325,37 +371,66 @@ def print_dict(data, indent=0, return_output=False):
         print(output)
 
 
-def print_object(obj):
+def validate_keys(checked_dict, required_keys, allowed_keys=None):
     """
-    Prints all attributes and methods of an object, sorted alphabetically.
+    Validate the presence of required keys and check for any unexpected keys in a dictionary.
 
-    - Methods are identified as callable and printed with the prefix 'Method: '.
-    - Attributes are identified as non-callable and printed with the prefix 'Attribute: '.
+    Give required keys and allowed keys to have complete control
+    Give required keys twice to check that the list of keys is necessary and sufficient
+    Give only required keys to allow all extra additional key
 
     Parameters
     ----------
-    obj : object
-        The object whose attributes and methods are to be printed.
+    checked_dict : dict
+        The dictionary to be checked.
+    required_keys : set
+        A set of keys that are required in the dictionary.
+    allowed_keys : set
+        A set of keys that are allowed in the dictionary.
 
-    Returns
-    -------
-    None
-        This function does not return any value. It prints the attributes and methods of the given object.
-
+    Raises
+    ------
+    ConfigurationError
+        If either required keys are missing or unexpected keys are found.
     """
-    # Retrieve all attributes and methods
-    attributes = dir(obj)
 
-    # Sort them alphabetically, case-insensitive
-    sorted_attributes = sorted(attributes, key=lambda x: x.lower())
+    # Convert input lists to sets for set operations
+    checked_keys = set(checked_dict.keys())
+    required_keys = set(required_keys)
 
-    # Iterate over sorted attributes
-    for attr in sorted_attributes:
-        # Retrieve the attribute or method from the object
-        attribute_or_method = getattr(obj, attr)
+    # Set allowed_keys to all present keys if not provided
+    if allowed_keys is None:
+        allowed_keys = checked_keys
+    else:
+        allowed_keys = set(allowed_keys)
 
-        # Check if it is callable (method) or not (attribute)
-        if callable(attribute_or_method):
-            print(f"Method: {attr}")
-        else:
-            print(f"Attribute: {attr}")
+    # Check for extra and missing keys
+    missing_keys = required_keys - checked_keys
+    extra_keys = checked_keys - allowed_keys
+
+    # Prepare error messages
+    error_messages = []
+    if missing_keys:
+        error_messages.append(f"Missing required keys: {missing_keys}")
+    if extra_keys:
+        error_messages.append(f"Found unexpected keys: {extra_keys}")
+
+    # Raise combined error if there are any issues
+    if error_messages:
+        raise DictionaryValidationError("; ".join(error_messages))
+
+
+class DictionaryValidationError(Exception):
+    """Exception raised for errors in the configuration options."""
+
+    def __init__(self, message, key=None, value=None):
+        self.message = message
+        self.key = key
+        self.value = value
+        super().__init__(self._format_message())
+
+    def _format_message(self):
+        if self.key is not None and self.value is not None:
+            return f"{self.message} Key: '{self.key}', Value: {self.value}"
+        return self.message
+    

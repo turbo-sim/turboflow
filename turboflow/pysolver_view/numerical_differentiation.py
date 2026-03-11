@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize._numdiff import approx_derivative
 
+from . import jax, jnp, JAX_AVAILABLE
 
 DERIVATIVE_METHODS = [
     "2-point",
@@ -82,6 +83,7 @@ def forward_finite_differences(function_handle, x, abs_step=None, f0=None):
         abs_step = np.finfo(float).eps ** (1 / 2)
 
     # Ensure abs_step is an array of the same shape as x
+    x = np.atleast_1d(x)
     abs_step = np.broadcast_to(abs_step, x.shape)
 
     # Avoid one function evaluation if f0 is provided
@@ -126,6 +128,7 @@ def central_finite_differences(function_handle, x, abs_step=None):
         abs_step = np.finfo(float).eps ** (1 / 3)
 
     # Ensure abs_step is an array of the same shape as x
+    x = np.atleast_1d(x)
     abs_step = np.broadcast_to(abs_step, x.shape)
 
     # Compute gradient
@@ -235,3 +238,47 @@ def approx_jacobian_hessians(f, x, abs_step=1e-5, lower_triangular=True):
         Hessians = Hessians_L
 
     return Hessians
+
+
+def compute_hessians_jax(fitness_function, x, lower_triangular=True):
+    """
+    Compute the Hessians of a vector-valued fitness function.
+
+    Parameters
+    ----------
+    fitness_function : callable
+        The vector-valued function for which to compute the Hessians.
+    x : array-like
+        The point at which to compute the Hessians.
+    lower_triangular : bool, optional
+        If True, return the Hessians in lower triangular format. Default is True.
+
+    Returns
+    -------
+    Hessians : ndarray
+        A tensor where each slice along the first dimension corresponds to the Hessian
+        of a component of the fitness function. If lower_triangular is True, the Hessians
+        are returned in a flattened lower triangular format.
+    """
+    if not JAX_AVAILABLE:
+        raise ImportError("JAX is not installed. Install with `pip install pysolver_view[jax]` to use this feature.")
+
+    # Compute full Hessians with JAX
+    H_full = jax.jacfwd(jax.jacrev(fitness_function))(x)
+
+    # Convert to NumPy for post-processing
+    H_full = np.array(H_full)
+
+    if lower_triangular:
+        # Extract the lower triangular part
+        n = H_full.shape[1]
+        k = (n * (n + 1)) // 2  # Number of elements in the lower triangular part
+        H_lower_triangular = np.zeros((H_full.shape[0], k))
+
+        # Loop over all components of the fitness
+        for i in range(H_full.shape[0]):
+            H_lower_triangular[i] = H_full[i][np.tril_indices(n)]
+
+        return H_lower_triangular
+
+    return H_full
