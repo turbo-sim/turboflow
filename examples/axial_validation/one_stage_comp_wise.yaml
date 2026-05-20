@@ -1,0 +1,180 @@
+turbomachinery: axial_turbine
+
+fluid:
+  name: air
+  model: perfect_gas
+  model_options:
+    p_ref: 101325.0
+    T_ref: 288.15
+  # model: bicubic
+  # model_options:
+  #   backend: "HEOS"
+  #   N_h: 200
+  #   N_p: 200
+  #   h_min: 20000.0
+  #   h_max: 600000.0
+  #   p_min: 10000.0
+  #   p_max: 5.0e6 
+  # model: coolprop
+  # model_options:
+  #   backend: "HEOS"
+
+
+operation_points:
+  T0_in: 295.6
+  p0_in: 138000.0
+  p_out: 60052.21932114883
+  omega: 1627
+  alpha_in: 0
+
+performance_analysis:
+  performance_map:
+    T0_in: 295.6
+    p0_in: 13.8e4
+    p_out: 13.8e4/np.linspace(1.4, 5.0, 30)
+    # omega: 1627
+    omega: [1.1*1627, 1.0*1627, 0.9*1627, 0.7*1627, 0.5*1627, 0.3*1627] 
+    alpha_in: 0
+  solver_options:
+    method: lm
+    tolerance: 1e-8
+    max_iterations: 100
+    derivative_method: 2-point
+    derivative_abs_step: 1e-6
+    print_convergence: true
+    plot_convergence: false
+
+components:
+  - name: stator_1
+    component_type: axial_cascade
+    geometry:
+      cascade_type: "stator"
+      camberline_type: "linear_slope_change"
+      thickness_model: "NACA"
+      N_blades: 35
+      radius_mean_in: 0.1016
+      radius_mean_out: 0.1016
+      metal_angle_in: 0.0             
+      # metal_angle_out: 65.80565    
+      metal_angle_out: 65.88272377          
+      maximum_thickness: 0.00505
+      trailing_edge_thickness: 0.0005
+      blade_height_in: 0.03363        # = radius_tip_in - radius_hub_in
+      blade_height_out: 0.03363
+      maximum_thickness_location_fraction: 0.25
+      leading_edge_wedge_angle: 50.0
+      leading_edge_radius: 0.00127    # = 0.5 * leading_edge_diameter
+      trailing_edge_radius: 0.00025   # ≈ 0.5 * trailing_edge_thickness
+      trailing_edge_wedge_angle: 5.0
+      throat_location_fraction: 0.83333
+      chord_axial: 0.01912287           # = chord * cos(stagger_angle)
+      tip_clearance: 0.0
+
+      pitch: 0.018294
+      throat_opening: 0.00747503
+      chord: 0.02616
+      stagger_angle: 43.03
+      z_in: 0.0
+    model_options:
+      deviation_model: aungier
+      choking_criterion: critical_mach_number
+      blockage_model: 0.0
+      loss_model: benner
+      loss_coefficient: stagnation_pressure
+      inlet_displacement_thickness_height_ratio: 0.011
+      rotational_speed: 0.0 # RPM
+    initial_guess:
+      efficiency_tt: 0.9
+      Ma_exit: 0.8
+
+  # - name: interspace_1
+  #   component_type: vaneless_channel
+  #   geometry:
+  #     radius_mean_in:  0.1016        
+  #     radius_mean_out: 0.1016       
+  #     z_in: 0.0
+  #     z_out: 0.05
+  #     b_in: 0.03363
+  #     b_out: 0.03363
+  #     phi_in: 0.0
+  #     phi_out: 0.0
+  #     td_in: 0.01
+  #     td_out: 0.01
+  #   model_options:
+  #     friction_model:
+  #       type: aungier
+  #       roughness: 1.0e-6
+  #       Re_transition: 2300.0
+  #       Re_width: 500.0
+  #     heat_model:
+  #       type: adiabatic
+  #   solver_options:
+  #     solver_name: Dopri5
+  #     adjoint_name: DirectAdjoint
+  #     rtol: 1.0e-6
+  #     atol: 1.0e-6
+  #     n_points: 50
+  #     max_steps: 200
+  #     throw: true
+  #   initial_guess: None
+      
+
+
+  - name: interspace_1
+    component_type: interspace
+    geometry:
+      radius_mean_in:  0.1016        
+      radius_mean_out: 0.1016       
+      z_in: 0.0
+      z_out: 0.05
+      b_in: 0.03363
+      b_out: 0.03363
+      phi_in: 0.0
+      phi_out: 0.0
+      td_in: 0.01
+      td_out: 0.01
+    initial_guess: None
+      
+
+
+  - name: rotor_1
+    component_type: axial_cascade
+    geometry:
+      cascade_type: "rotor"
+      camberline_type: "linear_slope_change"
+      thickness_model: "NACA"
+      N_blades: 42
+      radius_mean_in: 0.1016
+      radius_mean_out: 0.1016
+      metal_angle_in: 29.6            # = leading_edge_angle
+      # metal_angle_out: -61.07125         # = 2*stagger - metal_angle_in
+      metal_angle_out: -61.9289807
+      maximum_thickness: 0.00447
+      trailing_edge_thickness: 0.0005
+      blade_height_in: 0.03363        # = radius_tip_in - radius_hub_in
+      blade_height_out: 0.03945       # = radius_tip_out - radius_hub_out
+      maximum_thickness_location_fraction: 0.25
+      leading_edge_wedge_angle: 50.0
+      leading_edge_radius: 0.00081    # = 0.5 * leading_edge_diameter
+      trailing_edge_radius: 0.00025   # ≈ 0.5 * trailing_edge_thickness
+      trailing_edge_wedge_angle: 5.0
+      throat_location_fraction: 0.83333
+      chord_axial: 0.02232606          # = chord * cos(stagger_angle)
+      tip_clearance: 0.0003
+
+      pitch: 0.01524
+      throat_opening: 0.00735223
+      chord: 0.02606
+      stagger_angle: -31.05
+      z_in: 0.06912287
+    model_options:
+      deviation_model: aungier
+      choking_criterion: critical_mach_number
+      blockage_model: 0.0
+      loss_model: benner
+      loss_coefficient: stagnation_pressure
+      inlet_displacement_thickness_height_ratio: 0.011
+      rotational_speed: 15000 # RPM
+    initial_guess:
+      efficiency_tt: 0.8
+      Ma_exit: 0.8
