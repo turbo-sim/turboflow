@@ -21,8 +21,8 @@ from . import choking_criterion as cm
 from .blade_row import BladeRow
 from .blade_row import evaluate_cascade_throat as _blade_throat
 from .vaneless_channel import VanelessChannel
-from .interspace_model import Interspace
-
+# from .interspace_model import Interspace
+from .interspace_model_update import Interspace
 
 # ============================================================
 # Helpers
@@ -39,50 +39,38 @@ def _suffix_keys(d: Dict[str, Any], suffix: str) -> Dict[str, Any]:
     return {f"{k}{suffix}": v for k, v in d.items()}
 
 
-def _extract_row_vars_and_choking(
-    variables: Dict[str, Any],
-    index_1based: int,
-    reference_values: Dict[str, Any],
-) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+def _geom_get(geom: Any, key: str) -> Any:
+    """Read geometry value from either a dict-based or object-based geometry."""
+    if isinstance(geom, dict):
+        if key in geom:
+            return geom[key]
+    elif hasattr(geom, key):
+        return getattr(geom, key)
+    raise KeyError(f"Geometry key '{key}' not available for {type(geom).__name__}.")
+
+
+def _geom_inlet_area(geom: Any) -> Any:
     """
-    Unscale per-row unknowns for row `index_1based` from solver variables.
-
-    Expected normalized keys:
-        w_out_i, s_out_i, beta_out_i, (optional) w_crit_throat_i, s_crit_throat_i, v_crit_in
-
-    Returns
-    -------
-    row_vars : dict
-        Unscaled row unknowns: {w_out, s_out, beta_out}
-    choking_vars : dict
-        Unscaled choking-related unknowns (subset, if present):
-        {w_crit_throat, s_crit_throat, v_crit_in}
+    Return inlet area from geometry.
+    Priority:
+      1) explicit `A_in` if available
+      2) reconstructed annulus area from radius_mean_in and b_in
     """
-    tag = f"_{index_1based}"
+    if isinstance(geom, dict):
+        if "A_in" in geom:
+            return geom["A_in"]
+        if "radius_mean_in" in geom and "b_in" in geom:
+            return 2.0 * jnp.pi * geom["radius_mean_in"] * geom["b_in"]
+    else:
+        if hasattr(geom, "A_in"):
+            return getattr(geom, "A_in")
+        if hasattr(geom, "radius_mean_in") and hasattr(geom, "b_in"):
+            return 2.0 * jnp.pi * getattr(geom, "radius_mean_in") * getattr(geom, "b_in")
 
-    v0 = reference_values["v0"]
-    s_range = reference_values["s_range"]
-    s_min = reference_values["s_min"]
-    a_range = reference_values["angle_range"]
-    a_min = reference_values["angle_min"]
-
-    row_vars = {
-        "w_out": variables[f"w_out{tag}"] * v0,
-        "s_out": variables[f"s_out{tag}"] * s_range + s_min,
-        "beta_out": variables[f"beta_out{tag}"] * a_range + a_min,
-    }
-
-    choking_vars: Dict[str, Any] = {}
-    if f"w_crit_throat{tag}" in variables:
-        choking_vars["w_crit_throat"] = variables[f"w_crit_throat{tag}"] * v0
-    if f"s_crit_throat{tag}" in variables:
-        choking_vars["s_crit_throat"] = (
-            variables[f"s_crit_throat{tag}"] * s_range + s_min
-        )
-    if "v_crit_in" in variables:
-        choking_vars["v_crit_in"] = variables["v_crit_in"] * v0
-
-    return row_vars, choking_vars
+    raise KeyError(
+        "Unable to infer inlet area: expected `A_in` or (`radius_mean_in`, `b_in`) "
+        f"on geometry type {type(geom).__name__}."
+    )
 
 
 # ============================================================
@@ -123,6 +111,7 @@ def evaluate_turbomachine(
     inlet = {"h0": h0_in, "s": s_in, "alpha": alpha_in_deg, "v": v_in}
 
     omega_bc = boundary_conditions["omega"]
+
 
     # ---------- collectors ----------
     planes_seq: List[Dict[str, Any]] = []
@@ -212,6 +201,15 @@ def evaluate_turbomachine(
             # t_vc0 = time.perf_counter()
 
             # Map BladeRow-style inlet to channel operating conditions (static)
+            # v_key = f"v_vaneless_{obj.name}"
+            # if v_key in variables:
+            #     v_mag = reference_values["v0"] * variables[v_key]
+            # else:
+            #     v_mag = inlet["v"]
+
+            # v_cap = 0.98 * jnp.sqrt(jnp.maximum(2.0 * inlet["h0"], 1.0))
+            # v_mag = jnp.clip(v_mag, 1.0, v_cap)
+
             v_mag = inlet["v"]
             alphaD = inlet["alpha"]
             h_in = inlet["h0"] - 0.5 * v_mag**2
@@ -232,6 +230,22 @@ def evaluate_turbomachine(
 
             # Solve the channel; returns dict-of-arrays
             result = obj.evaluate()
+
+            # # --- vaneless mass continuity residual ---
+            # A_in = 2.0 * jnp.pi * obj.geometry.radius_mean_in * obj.geometry.b_in
+            # v_m_in = v_mag * jnp.cos(jnp.deg2rad(alphaD))
+            # rho_in = st["d"]
+            # m_dot_in = rho_in * v_m_in * A_in
+
+            # if "mass_flow" in result:
+            #     m_dot_out = result["mass_flow"][-1]
+            # else:
+            #     m_dot_out = result["d"][-1] * result["v_m"][-1] * result["A"][-1]
+
+            # mass_error_exit = m_dot_in - m_dot_out
+            # residuals[f"mass_error_exit_{obj.name}"] = (
+            #     mass_error_exit / reference_values["mass_flow_ref"]
+            # )
 
             # force JAX to finish this solve before timing
             jax.block_until_ready(result["p"][-1])
@@ -264,27 +278,53 @@ def evaluate_turbomachine(
         # =====================================================
         if isinstance(obj, Interspace):
 
+            v_key = f"v_out_is_{obj.name}"
+            v_out_is = reference_values["v0"] * variables[v_key]
+            v_cap = 0.98 * jnp.sqrt(jnp.maximum(2.0 * inlet["h0"], 1.0))
+            v_out_is = jnp.clip(v_out_is, 1.0, v_cap)
+
             # t_is0 = time.perf_counter()
 
-            # We require an upstream BladeRow already evaluated
+            # We require an upstream BladeRow already evaluated.
             if not planes_seq or not cascade_geoms:
                 raise RuntimeError(
                     "Interspace must follow at least one BladeRow; "
                     "no previous cascade exit state available."
                 )
 
-            # We also require that the NEXT component is a BladeRow
-            if gi + 1 >= len(comp_objects) or not isinstance(comp_objects[gi + 1], BladeRow):
-                raise RuntimeError(
-                    "Interspace must be followed by a BladeRow to define the next inlet geometry."
-                )
+            # # We also require that the NEXT component is a BladeRow
+            # if gi + 1 >= len(comp_objects) or not isinstance(comp_objects[gi + 1], BladeRow):
+            #     raise RuntimeError(
+            #         "Interspace must be followed by a BladeRow to define the next inlet geometry."
+            #     )
 
             prev_exit = planes_seq[-1]
             prev_geom = cascade_geoms[-1]
-            next_row = comp_objects[gi + 1]
-            next_geom = next_row.geometry
 
-            h0_in_new, s_in_new, alpha_in_new, v_in_new = obj.evaluate(
+            if gi + 1 >= len(comp_objects):
+                raise RuntimeError(
+                    f"Interspace '{obj.name}' is the last component, so downstream inlet geometry is undefined."
+                )
+
+            next_comp = comp_objects[gi + 1]
+            if not hasattr(next_comp, "geometry"):
+                raise RuntimeError(
+                    f"Interspace '{obj.name}' is followed by '{type(next_comp).__name__}', "
+                    "which does not expose a geometry object."
+                )
+
+            next_geom = next_comp.geometry
+            radius_inlet = _geom_get(next_geom, "radius_mean_in")
+            area_inlet = _geom_inlet_area(next_geom)
+
+            alpha_target_deg = None
+            # if obj.name == "interspace_8" and getattr(next_comp, "name", "") == "stator_5":
+            #     alpha_target_deg = jnp.asarray(
+            #         _geom_get(next_geom, "leading_edge_angle"),
+            #         dtype=jnp.float64,
+            #     )
+
+            h0_in_new, s_in_new, alpha_in_new, v_in_new, mass_res = obj.evaluate(
                 h0_exit=prev_exit["enthalpy0"],
                 v_m_exit=prev_exit["v_m"],
                 v_t_exit=prev_exit["v_t"],
@@ -292,9 +332,15 @@ def evaluate_turbomachine(
                 radius_exit=prev_geom["radius_mean_out"],
                 area_exit=prev_geom["A_out"],
                 blockage_exit=prev_exit["blockage"],
-                radius_inlet=next_geom["radius_mean_in"],
-                area_inlet=next_geom["A_in"],
-            )
+                radius_inlet=radius_inlet,
+                area_inlet=area_inlet,
+                s_exit=prev_exit["entropy"],
+                mass_flow_exit=prev_exit["mass_flow"],
+                v_out_is=v_out_is,
+                mass_flow_ref=reference_values["mass_flow_ref"],
+                alpha_target_deg=alpha_target_deg,   
+                
+                )
 
             inlet = {
                 "h0": h0_in_new,
@@ -302,6 +348,8 @@ def evaluate_turbomachine(
                 "alpha": alpha_in_new,
                 "v": v_in_new,
             }
+
+            residuals[f"mass_error_exit_{obj.name}"] = mass_res
 
             # t_is1 = time.perf_counter()
             # print(
