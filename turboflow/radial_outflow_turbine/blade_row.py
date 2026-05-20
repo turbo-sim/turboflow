@@ -264,7 +264,15 @@ def _cascade_throat_numeric_core(
 
     Ma = v / a
     Ma_rel = w_mag / a
+    # TODO : Move clipping to loss model scripts
+
+    # Ma = math.smooth_minimum(Ma, 1.0)  # Clipping this to avoid unphysical Mach values to loss models 
+    # Ma_rel = math.smooth_minimum(Ma_rel, 1.0)  # Clipping this to avoid unphysical Mach values to loss models 
+
     Re = rho * jnp.abs(w_mag) * chord / mu
+    
+    # Re = math.smooth_maximum(Re, 1e2)  # Clipping this to avoid unphysical Re values to loss models
+    # jax.debug.print("Reynolds number at throat: {Re}, Mach number: {Ma_rel}", Re=Re, Ma=Ma_rel)
     mass_flow_no_blk = rho * w_mag * area  # original throat mass-flow uses w
 
     return vt, Ma, Ma_rel, Re, mass_flow_no_blk
@@ -602,9 +610,11 @@ def evaluate_cascade_throat(
                 "w_out": w,
                 "beta_in": inlet_plane["beta"],
                 "Ma_rel_in": jnp.maximum(min_val, inlet_plane["Ma_rel"]),
-                "Ma_rel_out": jnp.maximum(min_val, Ma_rel),
+                # "Ma_rel_out": jnp.maximum(min_val, Ma_rel),
+                "Ma_rel_out": math.smooth_minimum(Ma_rel, 2.0),
                 "Re_in": jnp.maximum(min_val, inlet_plane["Re"]),
-                "Re_out": jnp.maximum(min_val, Re),
+                # "Re_out": jnp.maximum(min_val, Re),
+                "Re_out": math.smooth_maximum(Re, 1e2),
                 "gamma_out": static_properties["gamma"],
                 "p0_rel_is": relative_stagnation_isentropic_properties["p"],
                 "h_is": relative_static_isentropic_properties["h"],
@@ -673,76 +683,6 @@ class BladeRow(eqx.Module):
 
     initial_guess_spec: Dict[str, Any] = eqx.field(static=True, default_factory=dict)
 
-    # @staticmethod
-    # def unscale_row_vars_and_choking(
-    #     variables: Dict[str, Any],
-    #     index_1based: int,
-    #     reference_values: Dict[str, Any],
-    # ) -> tuple[Dict[str, Any], Dict[str, Any]]:
-    #     """
-    #     Convert normalized solver variables for a given row index into
-    #     physical row_vars and choking_vars.
-
-    #     Expects normalized keys:
-    #         w_out_i, s_out_i, beta_out_i,
-    #         optional: w_crit_throat_i, s_crit_throat_i, v_crit_in_i
-    #     """
-    #     tag = f"_{index_1based}"
-
-    #     v0 = reference_values["v0"]
-    #     s_range = reference_values["s_range"]
-    #     s_min = reference_values["s_min"]
-    #     a_range = reference_values["angle_range"]
-    #     a_min = reference_values["angle_min"]
-
-    #     # -------- main row unknowns (always present) --------
-    #     row_vars = {
-    #         "w_out": jnp.maximum(1.0, variables[f"w_out{tag}"] * v0),
-    #         # "s_out": jnp.clip(variables[f"s_out{tag}"], 0.0, 1.0) * s_range + s_min,
-    #         "s_out": variables[f"s_out{tag}"] * s_range + s_min,
-    #         "beta_out": jnp.clip(variables[f"beta_out{tag}"] * a_range + a_min, -89.0, 89.0)
-    #     }
-
-
-    #     # -------- choking-related unknowns (optional) --------
-    #     choking_vars: Dict[str, Any] = {}
-
-    #     # Reparameterized w_crit_throat: solver variable is z (dimensionless),
-    #     # mapped via tanh into a bounded physical velocity range.
-    #     # if f"w_crit_throat{tag}" in variables:
-    #     #     z = variables[f"w_crit_throat{tag}"]  # normalized solver variable (O(1))
-
-    #     #     # Choose a reference speed scale; v0 is a natural choice
-    #     #     a_ref = v0
-
-    #     #     # Max allowed factor
-    #     #     w_max_fac = 0.50
-
-    #     #     # Define a physical interval for w_throat
-    #     #     w_min = 0.01 * a_ref      # small but non-zero velocity
-    #     #     w_max = w_max_fac * a_ref   # upper bound on throat relative speed
-
-    #     #     # Map z ∈ R → w_throat ∈ [w_min, w_max]
-    #     #     w_throat = w_min + 0.5 * (w_max - w_min) * (jnp.tanh(z) + 1.0)
-
-    #     #     choking_vars["w_crit_throat"] = w_throat
-
-
-    #     if f"w_crit_throat{tag}" in variables:
-    #         choking_vars["w_crit_throat"] = jnp.maximum(1.0, variables[f"w_crit_throat{tag}"] * v0)
-
-    #     if f"s_crit_throat{tag}" in variables:
-    #         choking_vars["s_crit_throat"] = (
-    #             # jnp.clip(variables[f"s_crit_throat{tag}"], 0.0, 1.0) * s_range + s_min
-    #             variables[f"s_crit_throat{tag}"] * s_range + s_min
-    #         )
-
-    #     # # IMPORTANT: use the per-row key v_crit_in_i, not a global "v_crit_in"
-    #     # if f"v_crit_in{tag}" in variables:
-    #     #     choking_vars["v_crit_in"] = variables[f"v_crit_in{tag}"] * v0
-
-    #     return row_vars, choking_vars
-    
     @staticmethod
     def unscale_row_vars_and_choking(
         variables: Dict[str, Any],
@@ -750,12 +690,12 @@ class BladeRow(eqx.Module):
         reference_values: Dict[str, Any],
     ) -> tuple[Dict[str, Any], Dict[str, Any]]:
         """
-        Mu/sigma unscale to physical row_vars and choking_vars.
+        Convert normalized solver variables for a given row index into
+        physical row_vars and choking_vars.
 
-        Scaling:
-          v*/w*: mu=0, sigma=v0
-          s*   : mu=s_min+0.5*s_range, sigma=max(0.5*s_range, s_floor)
-          beta*: mu=angle_min+0.5*angle_range, sigma=0.5*angle_range
+        Expects normalized keys:
+            w_out_i, s_out_i, beta_out_i,
+            optional: w_crit_throat_i, s_crit_throat_i, v_crit_in_i
         """
         tag = f"_{index_1based}"
 
@@ -765,38 +705,129 @@ class BladeRow(eqx.Module):
         a_range = reference_values["angle_range"]
         a_min = reference_values["angle_min"]
 
+        a_max = a_min + a_range
+
         s_floor = jnp.maximum(
             jnp.array(1e-6, dtype=jnp.float64),
-            0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
+            0.001 * jnp.maximum(jnp.abs(s_min), 1.0),
         )
-        mu_s = s_min + 0.5 * s_range
-        sigma_s = jnp.maximum(0.5 * s_range, s_floor)
+        s_sigma = jnp.maximum(s_range, s_floor)
 
-        mu_b = a_min + 0.5 * a_range
-        sigma_b = 0.5 * a_range
+        w_floor = 0.04 * v0   
+        w_ceil  = 1.50  * v0   
+        w_throat_ceil = 0.85 * v0
 
-        w_out = variables[f"w_out{tag}"] * v0
-        s_out = variables[f"s_out{tag}"] * sigma_s + mu_s
-        beta_out = variables[f"beta_out{tag}"] * sigma_b + mu_b
-        beta_out = jnp.clip(beta_out, -89.0, 89.0)
 
+        # -------- main row unknowns (always present) --------
         row_vars = {
-            "w_out": jnp.maximum(1.0, w_out),
-            "s_out": s_out,
-            "beta_out": beta_out,
+            # "w_out": jnp.maximum(1.0, variables[f"w_out{tag}"] * v0),
+            "w_out": jnp.clip(variables[f"w_out{tag}"] * v0, w_floor, w_ceil),
+            "s_out": jnp.clip(variables[f"s_out{tag}"], 0.0, 1.2) * s_sigma + s_min,
+            # "s_out": variables[f"s_out{tag}"] * s_range + s_min,
+            # "s_out": variables[f"s_out{tag}"] * s_sigma + s_min,
+            "beta_out": jnp.clip(variables[f"beta_out{tag}"] * a_range + a_min, a_min, a_max)
         }
 
+
+        # -------- choking-related unknowns (optional) --------
         choking_vars: Dict[str, Any] = {}
 
+        # Reparameterized w_crit_throat: solver variable is z (dimensionless),
+        # mapped via tanh into a bounded physical velocity range.
+        # if f"w_crit_throat{tag}" in variables:
+        #     z = variables[f"w_crit_throat{tag}"]  # normalized solver variable (O(1))
+
+        #     # Choose a reference speed scale; v0 is a natural choice
+        #     a_ref = v0
+
+        #     # Max allowed factor
+        #     w_max_fac = 0.50
+
+        #     # Define a physical interval for w_throat
+        #     w_min = 0.01 * a_ref      # small but non-zero velocity
+        #     w_max = w_max_fac * a_ref   # upper bound on throat relative speed
+
+        #     # Map z ∈ R → w_throat ∈ [w_min, w_max]
+        #     w_throat = w_min + 0.5 * (w_max - w_min) * (jnp.tanh(z) + 1.0)
+
+        #     choking_vars["w_crit_throat"] = w_throat
+
+
         if f"w_crit_throat{tag}" in variables:
-            w_ct = variables[f"w_crit_throat{tag}"] * v0
-            choking_vars["w_crit_throat"] = jnp.maximum(1.0, w_ct)
+            # choking_vars["w_crit_throat"] = jnp.maximum(1.0, variables[f"w_crit_throat{tag}"] * v0)
+            choking_vars["w_crit_throat"] = jnp.clip(variables[f"w_crit_throat{tag}"] * v0, w_floor, w_throat_ceil)
 
         if f"s_crit_throat{tag}" in variables:
-            s_ct = variables[f"s_crit_throat{tag}"] * sigma_s + mu_s
-            choking_vars["s_crit_throat"] = s_ct
+            choking_vars["s_crit_throat"] = (
+                jnp.clip(variables[f"s_crit_throat{tag}"], 0.0, 1.2) * s_sigma + s_min
+                # variables[f"s_crit_throat{tag}"] * s_range + s_min
+                # variables[f"s_crit_throat{tag}"] * s_sigma + s_min
+            )
+
+        # # IMPORTANT: use the per-row key v_crit_in_i, not a global "v_crit_in"
+        # if f"v_crit_in{tag}" in variables:
+        #     choking_vars["v_crit_in"] = variables[f"v_crit_in{tag}"] * v0
 
         return row_vars, choking_vars
+    
+    # @staticmethod
+    # def unscale_row_vars_and_choking(
+    #     variables: Dict[str, Any],
+    #     index_1based: int,
+    #     reference_values: Dict[str, Any],
+    # ) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    #     """
+    #     Mu/sigma unscale to physical row_vars and choking_vars.
+
+    #     Scaling:
+    #       v*/w*: mu=0, sigma=v0
+    #       s*   : mu=s_min+0.5*s_range, sigma=max(0.5*s_range, s_floor)
+    #       beta*: mu=angle_min+0.5*angle_range, sigma=0.5*angle_range
+    #     """
+    #     tag = f"_{index_1based}"
+
+    #     v0 = reference_values["v0"]
+    #     s_range = reference_values["s_range"]
+    #     s_min = reference_values["s_min"]
+    #     a_range = reference_values["angle_range"]
+    #     a_min = reference_values["angle_min"]
+
+    #     s_floor = jnp.maximum(
+    #         jnp.array(1e-6, dtype=jnp.float64),
+    #         0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
+    #     )
+    #     mu_s = s_min + 0.5 * s_range
+    #     sigma_s = jnp.maximum(0.5 * s_range, s_floor)
+
+    #     mu_b = a_min + 0.5 * a_range
+    #     sigma_b = 0.5 * a_range
+
+    #     w_out = variables[f"w_out{tag}"] * v0
+    #     s_out = variables[f"s_out{tag}"] * sigma_s + mu_s
+    #     beta_out = variables[f"beta_out{tag}"] * sigma_b + mu_b
+    #     beta_out = jnp.clip(beta_out, -89.0, 89.0)
+
+    #     # w_out_max = 10*v0
+
+    #     row_vars = {
+    #         "w_out": jnp.maximum(1.0, w_out),
+    #         # "w_out": jnp.clip(w_out, 1.0, w_out_max),
+    #         # "w_out": w_out,
+    #         "s_out": s_out,
+    #         "beta_out": beta_out,
+    #     }
+
+    #     choking_vars: Dict[str, Any] = {}
+
+    #     if f"w_crit_throat{tag}" in variables:
+    #         w_ct = variables[f"w_crit_throat{tag}"] * v0
+    #         choking_vars["w_crit_throat"] = jnp.maximum(1.0, w_ct)
+
+    #     if f"s_crit_throat{tag}" in variables:
+    #         s_ct = variables[f"s_crit_throat{tag}"] * sigma_s + mu_s
+    #         choking_vars["s_crit_throat"] = s_ct
+
+    #     return row_vars, choking_vars
 
     # -----------------
     # Constructors
@@ -1175,7 +1206,8 @@ class BladeRow(eqx.Module):
 
         if crit == "critical_mach_number":
             guess[f"w_crit_throat{tag}"] = w_crit
-            guess[f"s_crit_throat{tag}"] = st_crit["s"]
+            # guess[f"s_crit_throat{tag}"] = st_crit["s"]
+            guess[f"s_crit_throat{tag}"] = s_in + 0.7 * (s_out - s_in)
 
         elif crit == "critical_isentropic_throat":
             guess[f"w_crit_throat{tag}"] = w_crit
@@ -1216,6 +1248,8 @@ class BladeRow(eqx.Module):
         g = self.geometry
         fluid = self.fluid
         ig = self.initial_guess_spec or {}
+
+        s_crit_seed_factor = jnp.asarray(ig.get("s_crit_seed_factor", 0.7), dtype=jnp.float64)
 
         if "PR_ts" not in ig or "zeta_h" not in ig:
             raise KeyError(
@@ -1287,6 +1321,7 @@ class BladeRow(eqx.Module):
         # Critical throat (Mach_rel = 1)
         def f_pressure_scalar(p_scalar: float) -> float:
             p_arr = jnp.asarray(p_scalar, dtype=jnp.float64)
+            # jax.debug.print(f"Trying p_scalar, s_in: {p_arr}, {s_in}")
             st = fluid.get_state(jxp.PSmass_INPUTS, p_arr, s_in)
             h = st["h"]
             a = st["a"]
@@ -1294,14 +1329,19 @@ class BladeRow(eqx.Module):
             return float(val)
 
         st_in = fluid.get_state(jxp.HmassSmass_INPUTS, h_in, s_in)
+        # jax.debug.print(f"Initial guess: h_in={h_in}, s_in={s_in}, p_in={st_in['p']}")
+        
         p_ref = st_in["p"]
-        p_lo = float(jnp.maximum(1.0e3, 0.1 * p_ref))
+        p_lo = float(jnp.maximum(1.0e3, 0.5 * p_ref))
         p_hi = float(5.0 * p_ref)
+        # jax.debug.print(f"Finding critical throat: p_ref={p_ref}, bracket=({p_lo}, {p_hi})")
 
         root = optimize.root_scalar(
             f_pressure_scalar, method="bisect", bracket=(p_lo, p_hi), xtol=1e-6
         )
         p_crit = jnp.asarray(root.root, dtype=jnp.float64)
+        # jax.debug.print(f"p_crit: {p_crit}")
+
         st_crit = fluid.get_state(jxp.PSmass_INPUTS, p_crit, s_in)
         w_crit_throat = st_crit["a"]
 
@@ -1316,7 +1356,8 @@ class BladeRow(eqx.Module):
 
         if crit == "critical_mach_number":
             guess[f"w_crit_throat{tag}"] = w_crit_throat
-            guess[f"s_crit_throat{tag}"] = st_crit["s"]
+            # guess[f"s_crit_throat{tag}"] = st_crit["s"]
+            guess[f"s_crit_throat{tag}"] = s_in + s_crit_seed_factor*(s_out - s_in)
         elif crit == "critical_isentropic_throat":
             guess[f"w_crit_throat{tag}"] = w_crit_throat
         # elif crit == "critical_mass_flow_rate":
