@@ -34,7 +34,8 @@ from .blade_row import (
 )
 from .blade_row import BladeRow
 from .vaneless_channel import VanelessChannel
-from .interspace_model import Interspace
+# from .interspace_model import Interspace
+from .interspace_model_update import Interspace
 
 jax.config.update("jax_enable_x64", True)
 
@@ -139,6 +140,18 @@ def initialize_fluid_from_config(fluid_config):
                                 N_h=model_options.get("N_h"),
                                 N_p=model_options.get("N_p"),
                                 )
+        # fluid = jxp.FluidBicubic(fluid_name,
+        #                         backend="HEOS",
+        #                         h_min=model_options.get("h_min"),
+        #                         h_max=model_options.get("h_max"),
+        #                         p_min=model_options.get("p_min"),
+        #                         p_max=model_options.get("p_max"),
+        #                         N_h=model_options.get("N_h"),
+        #                         N_p=model_options.get("N_p"),
+        #                         metastable_phase=model_options.get("metastable_phase"),
+        #                         N_p_sat=model_options.get("N_p_sat"),
+        #                         gradient_method = "forward",
+        #                         )
     elif model == "coolprop":
         fluid = jxp.FluidJAX(fluid_name,
                              backend= model_options.get("backend"),
@@ -1021,7 +1034,7 @@ def compute_performance(
             "grad_count": solver.convergence_history["grad_count"][-1],
             "func_count": solver.convergence_history["func_count"][-1],
             "func_count_total": solver.convergence_history["func_count_total"][-1],
-            "norm_residual": solver.convergence_history["norm_residual"][-1],
+            # "norm_residual": solver.convergence_history["norm_residual"][-1],
             "norm_step": solver.convergence_history["norm_step"][-1],
         }
 
@@ -1167,29 +1180,8 @@ def compute_single_operation_point(
     bound_eps = max(1e-12, bound_eps)
     z_lo, z_hi = -1.0 + bound_eps, 1.0 - bound_eps
 
-    if initial_guess_real is not None:
-        # initial_guess_real is a dict: {var_name: real_value}
-        initial_guess_scaled = problem.scale_values(initial_guess_real)
-        x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
-        problem.keys = list(initial_guess_scaled.keys())
-
-        # z0 = jnp.array(list(initial_guess_scaled.values()), dtype=jnp.float64)
-        # z0 = jnp.clip(z0, z_lo, z_hi)
-
-        # # solver works on y in R, we bound inside residual with z=tanh(y)
-        # x0 = jnp.arctanh(z0).astype(float)
-
-        if not jnp.all(jnp.isfinite(x0)):
-            bad = {k: v for k, v in zip(problem.keys, x0) if not jnp.isfinite(v)}
-            raise ValueError(
-                f"Initial guess (from previous solution) contains non-finite values: {bad}"
-            )
-
-        if logger:
-            logger.info(" Using previous solution as initial guess")
-
-    else:
-        # ------- ORIGINAL per-row initial guess from components -------
+    def _build_component_initial_guess_real(*, emit_debug: bool) -> Dict[str, Any]:
+        # ------- per-row initial guess from components -------
         omega = problem.boundary_conditions["omega"]
         # alpha_in = problem.boundary_conditions["alpha_in"]
         alpha_in_deg = problem.boundary_conditions["alpha_in"]
@@ -1201,11 +1193,12 @@ def compute_single_operation_point(
             "h0_in": problem.boundary_conditions["h0_in"],
             "s_in": problem.boundary_conditions["s_in"],
             "alpha_in": alpha_in_deg,
-            "v_in": 0.1 * problem.reference_values["v0"],
+            "v_in": 0.02 * problem.reference_values["v0"],
             "p0_in": problem.boundary_conditions.get("p0_in"),
         }
 
-        jax.debug.print("Initial inlet seed: {inlet_seed}", inlet_seed=inlet_seed)
+        # if emit_debug:
+        #     jax.debug.print("Initial inlet seed: {inlet_seed}", inlet_seed=inlet_seed)
 
         row_guess_dict: Dict[str, Any] = {}
         cascade_index = 0  # only counts BladeRow components
@@ -1248,10 +1241,56 @@ def compute_single_operation_point(
             # VanelessChannel returns {}
             row_guess_dict.update(ig_row)
 
-
         # Global inlet velocity variable if solver uses it
         if "v_in" not in row_guess_dict:
-            row_guess_dict["v_in"] = 0.1 * problem.reference_values["v0"]
+            row_guess_dict["v_in"] = 0.02 * problem.reference_values["v0"]
+        return row_guess_dict
+
+    if initial_guess_real is not None:
+        # Build expected key-set for the current configuration, then project warm-start onto it.
+        component_guess_real = _build_component_initial_guess_real(emit_debug=False)
+        expected_keys = list(component_guess_real.keys())
+        previous_guess_real = dict(initial_guess_real)
+
+        merged_guess_real = dict(component_guess_real)
+        for k in expected_keys:
+            if k in previous_guess_real:
+                merged_guess_real[k] = previous_guess_real[k]
+
+        dropped_keys = [k for k in previous_guess_real.keys() if k not in merged_guess_real]
+        missing_keys = [k for k in expected_keys if k not in previous_guess_real]
+
+        if logger and (dropped_keys or missing_keys):
+            logger.warning(
+                " Previous-solution initial guess variable set differs from current model. "
+                f"Dropping {len(dropped_keys)} incompatible keys and filling {len(missing_keys)} "
+                "missing keys from component-based seed."
+            )
+
+        initial_guess_scaled = problem.scale_values(merged_guess_real)
+        x0 = jnp.array(list(initial_guess_scaled.values()), dtype=float)
+        problem.keys = list(initial_guess_scaled.keys())
+
+        # z0 = jnp.array(list(initial_guess_scaled.values()), dtype=jnp.float64)
+        # z0 = jnp.clip(z0, z_lo, z_hi)
+
+        # # solver works on y in R, we bound inside residual with z=tanh(y)
+        # x0 = jnp.arctanh(z0).astype(float)
+
+        if not jnp.all(jnp.isfinite(x0)):
+            bad = {k: v for k, v in zip(problem.keys, x0) if not jnp.isfinite(v)}
+            raise ValueError(
+                f"Initial guess (from previous solution) contains non-finite values: {bad}"
+            )
+
+        if logger:
+            if dropped_keys or missing_keys:
+                logger.info(" Using projected previous solution as initial guess")
+            else:
+                logger.info(" Using previous solution as initial guess")
+
+    else:
+        row_guess_dict = _build_component_initial_guess_real(emit_debug=True)
 
         # ---- pack & scale for solver ----
         initial_guess_scaled = problem.scale_values(row_guess_dict)
@@ -1277,9 +1316,9 @@ def compute_single_operation_point(
     #     library="scipy",
     #     method="slsqp",
     #     max_iterations=100,
-    #     tolerance=1e-8,
+    #     tolerance=1e-6,
     #     print_convergence=True,
-    #     plot_convergence=True,
+    #     plot_convergence=False,
     #     # logger=logger,
     #     problem_scale=10,
     #     update_on="gradient",
@@ -1444,10 +1483,13 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
         h0_in = st_in["h"]
         s_in = st_in["s"]
 
+        jax.debug.print("Inlet stagnation state: h0_in={h0_in:.2f} J/kg, s_in={s_in:.2f} J/kg-K", h0_in=h0_in, s_in=s_in)
+
         self.boundary_conditions["h0_in"] = h0_in
         self.boundary_conditions["s_in"] = s_in
 
         # ---- Isentropic outlet ----
+        # jax.debug.print("Computing isentropic outlet state for p_out={p_out:.2f} Pa", p_out=p_out)
         st_out_s = self.fluid.get_state(jxp.PSmass_INPUTS, p_out, s_in)
         h_out_s = st_out_s["h"]
         d_out_s = st_out_s["d"]
@@ -1478,8 +1520,8 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             "mass_flow_ref": mass_flow_ref,
             "s_min": s_in,
             "s_range": self.fluid.get_state(jxp.HmassP_INPUTS, h0_in, p_out)["s"] - s_in,
-            "angle_min": -90.0,
-            "angle_range": 180.0,
+            "angle_min": -85.0,
+            "angle_range": 170.0,
         }
 
         # Optional constraint configuration (kept out of the default flow unless provided)
@@ -1514,84 +1556,86 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
     # Scaling utilities
     # ------------------------------------------------------------------
     
-    # def scale_values(self, variables, to_normalized=True):
-    #     """
-    #     Legacy scaling using v0 / s_range / angle_range with an entropy floor.
-    #     """
-    #     v0 = self.reference_values["v0"]
-    #     s_range = self.reference_values["s_range"]
-    #     s_min = self.reference_values["s_min"]
-    #     angle_range = self.reference_values["angle_range"]
-    #     angle_min = self.reference_values["angle_min"]
-    
-    #     s_floor = jnp.maximum(
-    #         jnp.array(1e-6, dtype=jnp.float64),
-    #         0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
-    #     )
-    #     s_sigma = jnp.maximum(s_range, s_floor)
-    
-    #     scaled_variables = {}
-    #     for key, val in variables.items():
-    #         if key.startswith(("v", "w")):
-    #             scaled_variables[key] = val / v0 if to_normalized else val * v0
-    #         elif key.startswith("s"):
-    #             scaled_variables[key] = (
-    #                 (val - s_min) / s_sigma if to_normalized else val * s_sigma + s_min
-    #             )
-    #         elif key.startswith("b"):
-    #             scaled_variables[key] = (
-    #                 (val - angle_min) / angle_range
-    #                 if to_normalized
-    #                 else val * angle_range + angle_min
-    #             )
-    #     return scaled_variables
-
-    def scale_values(self, variables, to_normalized: bool = True):
+    def scale_values(self, variables, to_normalized=True):
         """
-        Mu/sigma scaling:
-          - v*/w*: mu=0,          sigma=v0
-          - s*    : mu=s_min+0.5*s_range, sigma=max(0.5*s_range, s_floor)
-          - beta* : mu=angle_min+0.5*angle_range, sigma=0.5*angle_range
+        Legacy scaling using v0 / s_range / angle_range with an entropy floor.
         """
         v0 = self.reference_values["v0"]
         s_range = self.reference_values["s_range"]
         s_min = self.reference_values["s_min"]
         angle_range = self.reference_values["angle_range"]
         angle_min = self.reference_values["angle_min"]
-
+    
         s_floor = jnp.maximum(
             jnp.array(1e-6, dtype=jnp.float64),
-            0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
+            0.001 * jnp.maximum(jnp.abs(s_min), 1.0),
         )
-        mu_s = s_min + 0.5 * s_range
-        # sigma_s = jnp.maximum(0.5 * s_range, s_floor)
-        sigma_s = 0.5 * s_range
-
-        mu_b = angle_min + 0.5 * angle_range
-        sigma_b = 0.5 * angle_range
-
+        s_sigma = jnp.maximum(s_range, s_floor)
+    
         scaled_variables = {}
         for key, val in variables.items():
             if key.startswith(("v", "w")):
-                mu = jnp.array(0.0, dtype=jnp.float64)
-                sigma = v0
+                scaled_variables[key] = val / v0 if to_normalized else val * v0
             elif key.startswith("s"):
-                mu = mu_s
-                sigma = sigma_s
+                scaled_variables[key] = (
+                    (val - s_min) / s_sigma if to_normalized else val * s_sigma + s_min
+                )
             elif key.startswith("b"):
-                mu = mu_b
-                sigma = sigma_b
-            else:
-                # Unknown key pattern; leave unchanged
-                scaled_variables[key] = val
-                continue
-
-            if to_normalized:
-                scaled_variables[key] = (val - mu) / sigma
-            else:
-                scaled_variables[key] = val * sigma + mu
-
+                scaled_variables[key] = (
+                    (val - angle_min) / angle_range
+                    if to_normalized
+                    else val * angle_range + angle_min
+                )
         return scaled_variables
+
+    # def scale_values(self, variables, to_normalized: bool = True):
+    #     """
+    #     Mu/sigma scaling:
+    #       - v*/w*: mu=0,          sigma=v0
+    #       - s*    : mu=s_min+0.5*s_range, sigma=max(0.5*s_range, s_floor)
+    #       - beta* : mu=angle_min+0.5*angle_range, sigma=0.5*angle_range
+    #     """
+    #     v0 = self.reference_values["v0"]
+    #     s_range = self.reference_values["s_range"]
+    #     s_min = self.reference_values["s_min"]
+    #     angle_range = self.reference_values["angle_range"]
+    #     angle_min = self.reference_values["angle_min"]
+
+    #     # s_floor = jnp.maximum(
+    #     #     jnp.array(1e-6, dtype=jnp.float64),
+    #     #     0.01 * jnp.maximum(jnp.abs(s_min), 1.0),
+    #     # )
+    #     mu_s = s_min + 0.5 * s_range
+
+    #     # sigma_s = jnp.maximum(0.5 * s_range, s_floor)
+        
+    #     sigma_s = 0.5 * s_range
+
+    #     mu_b = angle_min + 0.5 * angle_range
+    #     sigma_b = 0.5 * angle_range
+
+    #     scaled_variables = {}
+    #     for key, val in variables.items():
+    #         if key.startswith(("v", "w")):
+    #             mu = jnp.array(0.0, dtype=jnp.float64)
+    #             sigma = v0
+    #         elif key.startswith("s"):
+    #             mu = mu_s
+    #             sigma = sigma_s
+    #         elif key.startswith("b"):
+    #             mu = mu_b
+    #             sigma = sigma_b
+    #         else:
+    #             # Unknown key pattern; leave unchanged
+    #             scaled_variables[key] = val
+    #             continue
+
+    #         if to_normalized:
+    #             scaled_variables[key] = (val - mu) / sigma
+    #         else:
+    #             scaled_variables[key] = val * sigma + mu
+
+    #     return scaled_variables
 
     # ------------------------------------------------------------------
     # Residual & gradient
@@ -1653,6 +1697,26 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
             )
 
             res_vec = jnp.array(list(self.results["residuals"].values()))
+
+            # res = self.results["residuals"]
+            # keys = tuple(res.keys())
+            # vals = jnp.array([res[k] for k in keys], dtype=jnp.float64)
+
+            # k_top = 12
+            # idx = jnp.argsort(jnp.abs(vals))[-k_top:][::-1]
+
+            # key_map = " | ".join(f"{i}:{k}" for i, k in enumerate(keys))
+
+            # jax.debug.print(
+            #     "key_map: {km}\n"
+            #     "top_idx: {i}\n"
+            #     "top_vals: {v}\n"
+            #     "top_abs: {a}",
+            #     km=key_map,
+            #     i=idx,
+            #     v=vals[idx],
+            #     a=jnp.abs(vals[idx]),
+            # )
 
 
             # jax.debug.print("vars_scaled = {}", self.vars_scaled)
@@ -1734,9 +1798,6 @@ class TurbomachineryProblem(psv.NonlinearSystemProblem):
     #     Number of inequality constraints.
     #     """
     #     return 0
-    
-
-        
 
 
 # ================= IG & distance utilities (unchanged) =================
