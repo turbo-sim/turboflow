@@ -15,3 +15,4 @@ from .deviation_model import *
 
 from .vaneless_channel import *
 from .interspace_model import *
+from .interspace_model_update import *

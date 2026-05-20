@@ -63,6 +63,18 @@ environment.pickle
 .env
 venv/
 
+# Temporary excel/debug artifacts
+.tmp_xlsx_inspect/
+
+tmp_*.xlsx
+tmp_*.py
+tmp_common_funcs.py
+
+# Debug plots
+turboflow/Debug_plots/
+
+# Optional scratch archives/xmls
+*.zip
 
 # Results folders
 **/output/

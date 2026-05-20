@@ -14,7 +14,7 @@ import jax.numpy as jnp
 import matplotlib.pyplot as plt
 import yaml
 
-from turboflow.radial_outflow_turbine import blade_parametrization as bp
+from turboflow.blade_parametrization import blade_parametrization_update as bp
 from turboflow.radial_outflow_turbine import geometry_model as radial_gm
 from turboflow.axial_turbine import geometry_model2 as axial_gm
 

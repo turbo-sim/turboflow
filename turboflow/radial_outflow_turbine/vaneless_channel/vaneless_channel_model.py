@@ -170,7 +170,11 @@ class VanelessChannel(eqx.Module):
 
         # TODO: Initialize the initial guess here
         # TODO: Replace row_index by component name
-        
+
+        # v_seed = inlet_state.get("v_in", inlet_state.get("v", 1.0))
+        # key = f"v_vaneless_{self.name}"   # e.g. v_in_interspace_1
+        # return {key: v_seed}, inlet_state
+    
         return {}, inlet_state
     
     def plot_geometry(
@@ -961,7 +965,7 @@ def solve_vaneless_channel_model(
 
 
     state_in = fluid.get_state(jxp.HmassP_INPUTS, h_in, p_in)
-    alpha_in = jnp.clip(alpha_in, -89.0, 89.0)
+    alpha_in = jnp.clip(alpha_in, -85.0, 85.0)
     Ma_in = v_in / state_in["a"]
     # jax.debug.print("Ma_in = {Ma_in}, alpha_in = {alpha_in}", Ma_in=Ma_in, alpha_in=alpha_in)
     v_in_clip = jnp.clip(v_in, 1.0, 1e6)
@@ -1059,8 +1063,6 @@ def solve_vaneless_channel_model(
 
     output = solution.ys
     output["residuals"] = {}
-
-
 
     return output
 
@@ -1316,7 +1318,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
     rhs_extra = jnp.asarray([ds_int, dtheta])
     rhs = jnp.concatenate([rhs_core, rhs_eff, rhs_extra])
 
-    # Store esults
+    # Store results
     out = {
         **geom,
         "m": t,
@@ -1357,6 +1359,7 @@ def evaluate_vaneless_channel_ode(t, y, args):
         "E_diffusion": E,
         "q_w": q_w,
         "htc": htc,
+        "mass_flow": d*v_m*A,
     }
 
     # # Debug print: Mach number, meridional coordinate, velocity, pressure, enthalpy
