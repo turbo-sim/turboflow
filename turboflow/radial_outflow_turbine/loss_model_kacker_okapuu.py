@@ -243,7 +243,7 @@ def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
     theta_in = geometry["leading_edge_angle"]
     t_max = geometry["maximum_thickness"]
 
-    # # ---------------- Debug block 1 ----------------
+    # ---------------- Debug block ----------------
     # jax.debug.print(
     #     "\n[get_profile_loss] INPUTS:\n"
     #     "  Re={Re}\n"
@@ -257,6 +257,8 @@ def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
     # ================================================================
     # 2. Correction factors
     # ================================================================
+    # TODO add limiters to the Re and Ma to be in a reasonable range
+    # Rey 100 and 1e9, Ma 0.1, 3,
     f_Re = jnp.where(
         Re < 2e5,
         (Re / 2e5) ** (-0.4),
@@ -266,13 +268,23 @@ def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
     f_Ma = 1 + 60 * (Ma_rel_out - 1) ** 2 * (Ma_rel_out > 1)
 
     f_hub = get_hub_to_mean_mach_ratio(r_ht_in, cascade_type_id)
-    a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4)
+    a = jnp.maximum(0.0, f_hub * Ma_rel_in - 0.4) # Problematic for big optimizer step - maybe!
 
     Y_shock_raw = 0.75 * a**1.75 * r_ht_in * (p0rel_is - p_in)
+
+    # # ---------------- Debug block ----------------
+    # jax.debug.print("f_hub={f_hub}, a={a}, Y_shock_raw={Y_shock_raw}, p0rel_is={p0rel_is}, p_in={p_in}", 
+    #                 f_hub=f_hub, a=a, Y_shock_raw=Y_shock_raw, p0rel_is=p0rel_is, p_in=p_in
+    # )   
+
     Y_shock_den = (p0rel_out - p_out)
     Y_shock = jnp.maximum(0.0, Y_shock_raw / Y_shock_den)
 
-    # # ---------------- Debug block 2 ----------------
+    # # ---------------- Debug block ----------------
+    # jax.debug.print("Y_shock_raw={Y_shock_raw}, Y_shock_den={Y_shock_den}, Y_shock={Y_shock}",
+    #                 Y_shock_raw=Y_shock_raw, Y_shock_den=Y_shock_den, Y_shock=Y_shock)
+
+    # # ---------------- Debug block ----------------
     # jax.debug.print(
     #     "[get_profile_loss] Correction Factors:\n"
     #     "  f_Re={f_Re}, f_Ma={f_Ma}\n"
@@ -287,6 +299,10 @@ def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
     Kp, K2, K1 = get_compressible_correction_factors(Ma_rel_in, Ma_rel_out)
 
     angle_out_bis = math.smooth_maximum(math.smooth_abs(beta_out), 40.0)
+
+    # jax.debug.print("angle_out_bis = {angle_out_bis}", angle_out_bis=angle_out_bis)
+
+    # TODO check what is comming out of this when simulations blow up
     Yp_reaction = nozzle_blades(s / c, angle_out_bis)
     Yp_impulse  = impulse_blades(s / c, angle_out_bis)
 
@@ -331,10 +347,27 @@ def get_profile_loss(flow_parameters, geometry, cascade_type_id: int):
     # 5. Final: apply thickness, compressibility, Re, Mach
     # ================================================================
     Y_p = Y_p * thickness_factor
+
+    # # ---------------- Debug block ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] After thickness correction: Y_p = {Y_p}", Y_p=Y_p)
+
     Y_p = 0.914 * (2/3 * Y_p * Kp + Y_shock)
+
+    # # ---------------- Debug block ----------------
+    # jax.debug.print(
+    #     "[get_profile_loss] Y_p={Y_p}, Kp={Kp}, Y_shock={Y_shock}",
+    #     Y_p=Y_p, Kp=Kp, Y_shock=Y_shock)
+
+    # # ---------------- Debug block  ----------------
+    # jax.debug.print("f_Re={f_Re}, f_Ma={f_Ma}, Y_p (pre-corrected)={Yp}", 
+    #                 f_Re=f_Re, f_Ma=f_Ma, Yp=Y_p
+    # )
+
+
     Y_p = f_Re * f_Ma * Y_p
 
-    # # ---------------- Debug block 5 ----------------
+    # # ---------------- Debug block 6 ----------------
     # jax.debug.print(
     #     "[get_profile_loss] FINAL Y_p = {Yp}\n",
     #     Yp=Y_p
@@ -441,6 +474,8 @@ def get_secondary_loss(flow_parameters, geometry, cascade_type_id: int):
     ) * (H / c >= 2)
     Y_s = 1.2 * Ks * 0.0334 * far * Z * math.cosd(beta_out) / math.cosd(theta_in)
 
+    # Y_s = 0.0
+
     return Y_s
 
 
@@ -515,6 +550,8 @@ def get_trailing_edge_loss(flow_parameters, geometry):
     d_phi2 = math.smooth_maximum(d_phi2, d_phi2_impulse / 2)  # TODO: smoothing
     Y_te = 1 / (1 - d_phi2) - 1
 
+    # Y_te = 0.0
+
     return Y_te
 
 
@@ -549,8 +586,11 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id: int):
         Tip clearance loss coefficient.
     """
 
-    beta_out = flow_parameters["beta_out"]
-    beta_in = flow_parameters["beta_in"]
+    # beta_out = flow_parameters["beta_out"]
+    # beta_in = flow_parameters["beta_in"]
+
+    beta_in = jnp.clip(flow_parameters["beta_in"], -85.0, 85.0)
+    beta_out = jnp.clip(flow_parameters["beta_out"], -85.0, 85.0)
 
     H = geometry["height"]
     c = geometry["chord"]
@@ -558,11 +598,12 @@ def get_tip_clearance_loss(flow_parameters, geometry, cascade_type_id: int):
 
     # Calculate blade loading parameter Z
     angle_m = math.arctand((math.tand(beta_in) + math.tand(beta_out)) / 2)
+    cos_m = math.smooth_maximum(math.cosd(angle_m), 0.05)
     Z = (
         4
         * (math.tand(beta_in) - math.tand(beta_out)) ** 2
         * math.cosd(beta_out) ** 2
-        / math.cosd(angle_m)
+        / cos_m
     )
 
     # Empirical parameter (0 for stator, 0.37 for shrouded rotor)
@@ -744,6 +785,8 @@ def get_compressible_correction_factors(Ma_rel_in, Ma_rel_out):
     K2 = (Ma_rel_in / Ma_rel_out) ** 2
     Kp = 1 - K2 * (1 - K1)
     Kp = math.smooth_maximum(0.1, Kp)  # TODO: smoothing
+
+    
     return [Kp, K2, K1]
 
 

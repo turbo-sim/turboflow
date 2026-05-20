@@ -219,14 +219,20 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
 
     """
 
-    beta_in = flow_parameters["beta_in"]
-    beta_out = flow_parameters["beta_out"]
+    # beta_in = flow_parameters["beta_in"]
+    # beta_out = flow_parameters["beta_out"]
+    
+    beta_in = jnp.clip(flow_parameters["beta_in"], -85.0, 85.0)
+    beta_out = jnp.clip(flow_parameters["beta_out"], -85.0, 85.0)
+    
     height = geometry["height"]
     chord = geometry["chord"]
     stagger = geometry["stagger_angle"]
 
     AR = height / chord
     CR = math.cosd(beta_in) / math.cosd(beta_out)
+    CR = math.smooth_maximum(CR, 0.1)
+
     denom_low = (
         jnp.sqrt(math.cosd(stagger))
         * CR
@@ -239,9 +245,14 @@ def get_secondary_loss(flow_parameters, geometry, delta_height):
         * AR
         * (math.cosd(beta_out) / (math.cosd(stagger))) ** 0.55
     )
+
     Y_sec_low = (0.038 + 0.41 * jnp.tanh(1.2 * delta_height)) / denom_low
     Y_sec_high = (0.052 + 0.56 * jnp.tanh(1.2 * delta_height)) / denom_high
     Y_sec = jnp.where(AR <= 2, Y_sec_low, Y_sec_high)
+
+    # jax.debug.print("Secondary loss calculation:\n  " \
+    # "AR={AR}\n  CR={CR}\n  delta/H={delta}\n beta_in={beta_in}\n beta_out={beta_out}\n Y_sec={Y_sec}\n", 
+    # AR=AR, CR=CR, delta=delta_height, beta_in=beta_in, beta_out=beta_out, Y_sec=Y_sec)
 
     return Y_sec
 

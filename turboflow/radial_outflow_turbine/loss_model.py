@@ -157,6 +157,20 @@ def evaluate_loss_model(loss_model_options, input_parameters):
     #     Y_def=Y_definition,
     #     Y_total=loss_dict["loss_total"],
     # )
+
+    # jax.debug.print(
+    #     " Loss components:\n"
+    #     "  profile={loss_profile}\n"
+    #     "  incidence={loss_incidence}\n"
+    #     "  trailing={loss_trailing}\n"
+    #     "  secondary={loss_secondary}\n"
+    #     "  clearance={loss_clearance}\n",
+    #     loss_profile=loss_dict["loss_profile"],
+    #     loss_incidence=loss_dict["loss_incidence"],
+    #     loss_trailing=loss_dict["loss_trailing"],
+    #     loss_secondary=loss_dict["loss_secondary"],
+    #     loss_clearance=loss_dict["loss_clearance"],
+    # )
     
     loss_dict["loss_definition"] = Y_definition
     loss_dict["loss_error"] = Y_definition - loss_dict["loss_total"]
