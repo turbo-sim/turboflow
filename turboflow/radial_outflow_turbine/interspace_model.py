@@ -81,6 +81,7 @@ class Interspace(eqx.Module):
         blockage_exit,
         radius_inlet,
         area_inlet,
+        s_exit,
     ):
         """
         Propagate exit of i to inlet of i+1 (interspace), algebraic model:
@@ -105,6 +106,7 @@ class Interspace(eqx.Module):
         # Entropy from fluid model (not jitted)
         st = self.fluid.get_state(jxp.DmassHmass_INPUTS, rho_in, h_in)
         s_in = st["s"]
+        s_in = s_exit
 
         return h0_in, s_in, alpha_in, v_in
 
