@@ -17,7 +17,7 @@ from turboflow.radial_outflow_turbine.performance_analysis_update import compute
 # -----------------------
 # USER SETTINGS 
 # -----------------------
-YAML_PATH = r"../config/one_stage_comp_wise.yaml"   
+YAML_PATH = r"one_stage_comp_wise.yaml"   
 # SCRIPT_DIR = Path(__file__).resolve().parent
 # YAML_PATH = SCRIPT_DIR / "config" / "one_stage_comp_wise.yaml"
 USE_MAP   =True                          # True = use performance map, False = single point
