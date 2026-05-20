@@ -17,8 +17,6 @@ CHOKING_CRITERIONS = [
     "critical_isentropic_throat",
 ]
 
-
-# @jax.jit
 @eqx.filter_jit
 def _critical_mach_residual_jit(
     exit_ma_rel,
@@ -33,34 +31,65 @@ def _critical_mach_residual_jit(
 ):
     """JIT core for residual assembly; numeric-only inputs."""
 
-    def subsonic_residual(_):
-        choking_residual = math.cosd(beta_model_subsonic) - math.cosd(exit_beta)
-        return jnp.array(
-            [
-                (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
-                loss_error,
-                choking_residual,
-            ],
-            dtype=jnp.float64,
-        )
+    mass_residual = (inlet_mass_flow - throat_mass_flow) / mass_flow_ref
 
-    def choked_residual(_):
-        choking_residual = throat_ma_rel - critical_mach
-        return jnp.array(
-            [
-                (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
-                loss_error,
-                choking_residual,
-            ],
-            dtype=jnp.float64,
-        )
+    # Two branch residuals (same as before)
+    r_sub = math.cosd(beta_model_subsonic) - math.cosd(exit_beta)
+    r_chk = throat_ma_rel - critical_mach
 
-    return lax.cond(
-        exit_ma_rel <= critical_mach,
-        subsonic_residual,
-        choked_residual,
-        operand=None,
+    # Smooth switch centered at Ma_exit = Ma_crit (no bias/shift)
+    delta_M = jnp.array(2.0e-2, dtype=jnp.float64)   # tune: 5e-3 to 2e-2
+    w = 0.5 * (1.0 + jnp.tanh((exit_ma_rel - critical_mach) / delta_M))
+
+    choking_residual = (1.0 - w) * r_sub + w * r_chk
+
+    return jnp.array(
+        [mass_residual, loss_error, choking_residual],
+        dtype=jnp.float64,
     )
+
+# @eqx.filter_jit
+# def _critical_mach_residual_jit(
+#     exit_ma_rel,
+#     exit_beta,
+#     critical_mach,
+#     throat_ma_rel,
+#     inlet_mass_flow,
+#     throat_mass_flow,
+#     mass_flow_ref,
+#     loss_error,
+#     beta_model_subsonic,
+# ):
+#     """JIT core for residual assembly; numeric-only inputs."""
+
+#     def subsonic_residual(_):
+#         choking_residual = math.cosd(beta_model_subsonic) - math.cosd(exit_beta)
+#         return jnp.array(
+#             [
+#                 (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
+#                 loss_error,
+#                 choking_residual,
+#             ],
+#             dtype=jnp.float64,
+#         )
+
+#     def choked_residual(_):
+#         choking_residual = throat_ma_rel - critical_mach
+#         return jnp.array(
+#             [
+#                 (inlet_mass_flow - throat_mass_flow) / mass_flow_ref,
+#                 loss_error,
+#                 choking_residual,
+#             ],
+#             dtype=jnp.float64,
+#         )
+
+#     return lax.cond(
+#         exit_ma_rel <= critical_mach,
+#         subsonic_residual,
+#         choked_residual,
+#         operand=None,
+#     )
 
 
 def evaluate_choking(
@@ -402,7 +431,7 @@ def critical_mach_number(
     #     "Residuals: m*={m_star}, Y*={Y_star}, beta*={beta_star}",
     #     m_star=(inlet_plane["mass_flow"] - throat_plane["mass_flow"]) / mass_flow_ref,
     #     Y_star=throat_plane["loss_error"],
-    #     beta_star=choking_residual,)
+    #     beta_star=residual_values[2],)
 
     # ------------------------------------------------------------------
     # Output critical state + throat plane (with suffix)
@@ -462,6 +491,7 @@ def get_mach_crit(gamma, eta):
     # Ma_crit = jnp.sqrt(2 / (gamma - 1) * (1 / T_hat_crit - 1))
 
     eta = jnp.clip(eta, 0.0, 1.0)
+    # eta = math.smooth_maximum(0.0, eta, method="logsumexp")  # Prevent negative efficiency
     alpha = gamma / (gamma - 1)
     inside_sqrt = (1 + eta) ** 2 + 4 * alpha * (1 + alpha - 3 * eta)
     T_hat_crit = (
@@ -557,7 +587,7 @@ def critical_mass_flow_rate(
     Calculate condition for choking and evaluate wheter or not the cascade is choked, based on the `critical_mass_flow_rate` choking model.
 
     This choking model evaluate the critical state by optimizing the mass flow rate at the throat through the method of lagrange multipliers, and checks if the throat mach number exceed the critical. 
-    The exit flow angle is calculated by the selected devaition model at subsonic condition, and from the critical mass flow rate at supersonic conditions. 
+    The exit flow angle is calculated by the selected deviation model at subsonic condition, and from the critical mass flow rate at supersonic conditions. 
 
     Compute the gradient of the Lagrange function of the critical mass flow rate and the residuals of mass
     conservation and loss computation equations at the throat.
@@ -1087,7 +1117,15 @@ def critical_isentropic_throat(
         blockage,
         loss_model,
     )
+    # ma_cap = math.smooth_minimum(
+    #     exit_plane["Ma_rel"],
+    #     jnp.array(1.0, dtype=jnp.float64),
+    #     method="boltzmann",
+    #     alpha=40.0,   # try 20, 40, 80
+    # )
 
+    # choking_residual = throat_plane["Ma_rel"] - ma_cap
+    
     # Evaluate critical mach
     choking_residual = throat_plane["Ma_rel"] - jnp.minimum(
         exit_plane["Ma_rel"], jnp.array(1.0, dtype=jnp.float64)
