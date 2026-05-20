@@ -206,6 +206,10 @@ def _compute_axial_cascade_geometry_jit(
     chord_axial,
     tip_clearance,
     z_in,
+    throat_opening,
+    pitch,
+    chord,
+    stagger_angle,
     N_cam_points: int = 64,
 ):
     """JIT-friendly core axial cascade geometry calculator (numbers only)."""
@@ -221,19 +225,35 @@ def _compute_axial_cascade_geometry_jit(
     metal_angle_out_rad = jnp.deg2rad(metal_angle_out_deg)
 
     u = jnp.linspace(0.0, 1.0, N_cam_points)
-    _, _, _, stagger_rad, chord = bp.compute_camberline_cartesian_by_id(
-        camberline_type_id,
-        0.0,
-        0.0,
-        metal_angle_in_rad,
-        metal_angle_out_rad,
-        chord_axial,
-        u,
-    )
-    stagger_angle = jnp.rad2deg(stagger_rad)
+    # _, _, _, stagger_rad, chord = bp.compute_camberline_cartesian_by_id(
+    #     camberline_type_id,
+    #     0.0,
+    #     0.0,
+    #     metal_angle_in_rad,
+    #     metal_angle_out_rad,
+    #     chord_axial,
+    #     u,
+    # )
+    # stagger_angle = jnp.rad2deg(stagger_rad)
 
-    radius_mean_in = 0.5 * (radius_tip_in + radius_hub_in)
-    radius_mean_out = 0.5 * (radius_tip_out + radius_hub_out)
+
+    if chord is None and stagger_angle is None:
+        _, _, _, stagger_rad, chord = bp.compute_camberline_cartesian_by_id(
+            camberline_type_id,
+            0.0,
+            0.0,
+            metal_angle_in_rad,
+            metal_angle_out_rad,
+            chord_axial,
+            u,
+        )
+        stagger_angle = jnp.rad2deg(stagger_rad)
+    else:
+        chord = chord
+        stagger_angle = stagger_angle
+
+    # radius_mean_in = 0.5 * (radius_tip_in + radius_hub_in)
+    # radius_mean_out = 0.5 * (radius_tip_out + radius_hub_out)
 
     radius_hub_throat = calculate_throat_radius(
         radius_hub_in, radius_hub_out, throat_location_fraction
@@ -249,26 +269,47 @@ def _compute_axial_cascade_geometry_jit(
         radius_shroud_in, radius_shroud_out, throat_location_fraction
     )
 
-    height_in = radius_tip_in - radius_hub_in
-    height_out = radius_tip_out - radius_hub_out
-    height_throat = radius_tip_throat - radius_hub_throat
+    height_in = (radius_tip_in - radius_hub_in)
+    height_out = (radius_tip_out - radius_hub_out)
+    height_throat = (radius_tip_throat - radius_hub_throat)
     height = 0.5 * (height_in + height_out)
 
     # N_blades = jnp.maximum(N_blades, 1)
-    pitch = 2.0 * jnp.pi * radius_mean_throat / N_blades
+    if pitch is None:
+        pitch = 2.0 * jnp.pi * radius_mean_throat / N_blades
+    else:
+        pitch = pitch
+
     pitch_angle = 2.0 * jnp.pi / N_blades
     pitch_in = 2.0 * jnp.pi * radius_mean_in / N_blades
     pitch_out = 2.0 * jnp.pi * radius_mean_out / N_blades
 
     gauging_angle = metal_angle_out_deg
 
-    A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
-    A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
-    A_throat = A_out * math.cosd(gauging_angle)
+    # A_in = jnp.pi * (radius_tip_in**2 - radius_hub_in**2)
+    # A_out = jnp.pi * (radius_tip_out**2 - radius_hub_out**2)
+    # A_throat = A_out * math.cosd(gauging_angle)
 
-    opening = A_throat * pitch / (
-        2.0 * jnp.pi * radius_mean_throat * jnp.maximum(height_throat, 1e-12)
-    )
+    A_in = 2*jnp.pi * radius_mean_in * blade_height_in
+    A_out = 2*jnp.pi * radius_mean_out * blade_height_out
+
+    A_throat = A_out * math.cosd(gauging_angle - (pitch_angle/2.0))
+
+    # A_throat = (
+    #     2 * jnp.pi * radius_mean_throat * height_throat * geom["opening"] / geom["pitch"]
+    # )
+
+    if throat_opening is None:
+        opening = A_throat * pitch / (
+            2.0 * jnp.pi * radius_mean_throat * jnp.maximum(height_throat, 1e-12)
+        )
+    else:
+        opening = throat_opening
+
+    # A_throat = N_blades * opening * height_throat
+    A_throat = N_blades * opening * blade_height_out
+
+    # jax.debug.print("Computed geometry: A_in={:.4f}, A_out={:.4f}, A_throat={:.4f}", A_in, A_out, A_throat)
 
     meridional_chord = chord * math.cosd(stagger_angle)
     flaring_angle = math.arctand(
@@ -389,6 +430,10 @@ def _compute_full_geometry_for_axial_cascade(comp):
         chord_axial=g["chord_axial"],
         tip_clearance=g["tip_clearance"],
         z_in=g["z_in"],
+        throat_opening=g["throat_opening"] if "throat_opening" in g else None,
+        pitch=g["pitch"] if "pitch" in g else None,
+        chord=g["chord"] if "chord" in g else None,
+        stagger_angle=g["stagger_angle"] if "stagger_angle" in g else None,
         N_cam_points=64,
     )
 

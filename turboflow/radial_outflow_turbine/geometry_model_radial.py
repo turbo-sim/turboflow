@@ -35,7 +35,7 @@ REQUIRED_RADIAL_GEOM_KEYS = {
     "trailing_edge_wedge_angle",        # deg
     "throat_location_fraction",
     "tip_clearance",                    # acts like tip_clearance_height in original radial model
-    # "throat_opening",
+    "throat_opening",
 }
 OPTIONAL_RADIAL_GEOM_KEYS = {
     # Optional thickness controls used by the Denton route.
@@ -259,7 +259,9 @@ def _compute_radial_cascade_geometry_jit(
         # throat_opening = bp.compute_throat_opening(theta, metal_angle_out_rad, pitch_out)
         throat_opening = bp.compute_throat_opening(pitch_angle_rad, metal_angle_out_rad, pitch_out)
 
-    r_throat = radius_mean_out - (throat_opening/2)*jnp.sin(jnp.deg2rad(jnp.abs(metal_angle_out_deg)))
+    # r_throat = radius_mean_out - (throat_opening/2)*jnp.sin(jnp.deg2rad(jnp.abs(metal_angle_out_deg)))
+    # r_throat = radius_mean_out - (throat_opening/2)*jnp.sin(jnp.deg2rad(jnp.abs(metal_angle_out_deg) + (trailing_edge_wedge_angle/2.0) + (pitch_angle/2.0)))
+    r_throat = radius_mean_out
     throat_f = (r_throat - radius_mean_in)/(radius_mean_out - radius_mean_in)
     height_throat = (1.0 - throat_f) * height_in + throat_f * height_out
     

@@ -26,7 +26,7 @@ import jax
 import jax.numpy as jnp
 
 # Your JAX-only camberline module
-from turboflow.radial_outflow_turbine import blade_parametrization as bp
+from turboflow.blade_parametrization import blade_parametrization_update as bp
 
 
 # ---------------------------
