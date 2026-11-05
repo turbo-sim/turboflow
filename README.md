@@ -1,7 +1,7 @@
 
 # TurboFlow: Meanline Modelling of Axial Turbines
 
-**TurboFlow** is a Python package for mean-line modelling of axial turbines. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
+Python package for equation-oriented meanline modelling, performance prediction and design optimization of turbomachinery. It aims to offer flexible and reliable simulations for both performance prediction and design optimization, and should present a valuable resource for engineers and researchers working in the field of turbomachinery.
 
 [![PyPI](https://img.shields.io/pypi/v/turboflow.svg)](https://pypi.org/project/turboflow/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://turbo-sim.github.io/turboflow/)
@@ -50,6 +50,10 @@ This guide will walk you through the process of installing `Turboflow` via `pip`
 
 Congratulations! You have now successfully installed Turboflow in its own Conda virtual environment using pip. You're ready to start using Turboflow in your Python projects.
 
+<!-- research-software-metadata:start -->
+## Development and citation
 
+Roberto Agromayor originally developed TurboFlow. Subsequent development by Lasse Borg and Srinivas Prakash Diwanji.
 
-
+Citation metadata is provided in [CITATION.cff](CITATION.cff). For version-specific reproducibility, also record the release or commit used.
+<!-- research-software-metadata:end -->

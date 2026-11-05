@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+type: software
+message: If you use this software, please cite it using this metadata and record the version or commit used.
+title: 'TurboFlow: Python package for equation-oriented meanline modelling, performance prediction and design optimization
+  of turbomachinery'
+abstract: Python package for equation-oriented meanline modelling, performance prediction and design optimization
+  of turbomachinery.
+authors:
+- family-names: Anderson
+  given-names: Lasse Borg
+- family-names: Agromayor
+  given-names: Roberto
+  orcid: https://orcid.org/0009-0009-9289-1130
+- family-names: Diwanji
+  given-names: Srinivas Prakash
+version: 0.1.17
+repository-code: https://github.com/turbo-sim/turboflow
+url: https://github.com/turbo-sim/turboflow
